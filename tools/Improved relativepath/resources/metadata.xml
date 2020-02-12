@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<addOn>
+  <identifier>e59acf19-4a80-11e4-9553-005056977bd0</identifier>
+  <displayType>Function</displayType>
+  <translatedDisplayType>
+    <en_US>Function</en_US>
+    <ja_JP>関数</ja_JP>
+    <ko_KR>함수</ko_KR>
+    <zh_CN>函数</zh_CN>
+  </translatedDisplayType>
+  <name>Improved relativepath.m</name>
+  <author>Ken Chatfield</author>
+  <version>1.0.0.0</version>
+  <downloadUrl>https://www.mathworks.com/matlabcentral/mlc-downloads/downloads/submissions/41253/versions/1/download/zip?src=addons_ml_desktop_install&amp;profile_id=11207042&amp;license=722433&amp;release_family=R2019a</downloadUrl>
+  <licenseUrl>https://addons.mathworks.com/registry/v1/e59acf19-4a80-11e4-9553-005056977bd0/1.0.0.0/-/license</licenseUrl>
+  <previewImageUrl>https://www.mathworks.com/responsive_image/160/120/0/0/0/cache/matlabcentral/images/default_screenshot.jpg</previewImageUrl>
+  <releaseNotesUrl>https://www.mathworks.com/add-ons/e59acf19-4a80-11e4-9553-005056977bd0/18074a65-b9a1-2734-08c6-d5a00e1da59e/releaseNotes</releaseNotesUrl>
+  <installationFolder>Functions</installationFolder>
+</addOn>

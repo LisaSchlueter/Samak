@@ -1,0 +1,122 @@
+%% Very basic plots to illustrate leverages effects from data on the fit
+%% results - September 2010.
+
+if(~exist('printresult','var'))
+    disp('The print result is set to false by default and graphical outputs are not stored in files');
+end
+
+%% Basic data plot
+clear; clf;
+x = (2:.1:6)';
+A = [ones(size(x)) x];
+a = [4;3];
+e = randn(size(x))*2;
+y = A*a + e;
+handle = plot(x,y,'o');
+set(handle,'MarkerFaceColor','k','Color','k');
+set(gca,'FontSize',14,'XTick',0:10);
+axis([0 10 0 50])
+grid on;
+xlabel('x');
+ylabel('y');
+if(exist('printresult','var'))
+    if(printresult)
+        print -dpng 'data_basic.png';
+    end
+end
+
+%% Basic data fit
+s = cats(y,A);
+hold on;
+xe = (0:.1:10)';
+Xe = [ones(size(xe)) xe];
+plot(xe,Xe*s.xhat,'b-.','LineWidth',2);
+hold off;
+if(exist('printresult','var'))
+    if(printresult)
+        print -dpng 'basic_fit.png';
+    end
+end
+
+%% Central high point
+m = 20;
+xm = [x(1:m); (x(m)+x(m+1))/2; x(m+1:end)];
+Am = [ones(size(xm)) xm];
+pm = zeros(size(xm));
+pm(m+1) = 20;
+ym = Am*a + pm + [e(1:m); 0; e(m+1:end)];
+
+clf;
+handle = plot(xm,ym,'o');
+set(handle,'MarkerFaceColor','k','Color','k');
+set(gca,'FontSize',14,'XTick',0:10);
+axis([0 10 0 50])
+grid on;
+xlabel('x');
+ylabel('y');
+s = cats(ym,Am);
+hold on;
+xe = (0:.1:10)';
+Xe = [ones(size(xe)) xe];
+plot(xe,Xe*s.xhat,'b-.','LineWidth',2);
+hold off;
+if(exist('printresult','var'))
+    if(printresult)
+        print -dpng 'central_high_point.png';
+    end
+end
+
+%% Final low point
+xm = [x; 9];
+Am = [ones(size(xm)) xm];
+pm = zeros(size(xm));
+pm(42) = -30;
+ym = Am*a + pm + [e; 0];
+
+clf;
+handle = plot(xm,ym,'o');
+set(handle,'MarkerFaceColor','k','Color','k');
+set(gca,'FontSize',14,'XTick',0:10);
+axis([0 10 0 50])
+grid on;
+xlabel('x');
+ylabel('y');
+s = cats(ym,Am);
+hold on;
+xe = (0:.1:10)';
+Xe = [ones(size(xe)) xe];
+plot(xe,Xe*s.xhat,'b-.','LineWidth',2);
+hold off;
+if(exist('printresult','var'))
+    if(printresult)
+        print -dpng 'final_low_point.png';
+    end
+end
+
+%% Final good point
+xm = [x; 9];
+Am = [ones(size(xm)) xm];
+pm = zeros(size(xm));
+pm(42) = 1;
+ym = Am*a + pm + [e; 0];
+
+clf;
+handle = plot(xm,ym,'o');
+set(handle,'MarkerFaceColor','k','Color','k');
+set(gca,'FontSize',14,'XTick',0:10);
+axis([0 10 0 50])
+grid on;
+xlabel('x');
+ylabel('y');
+s = cats(ym,Am);
+hold on;
+xe = (0:.1:10)';
+Xe = [ones(size(xe)) xe];
+plot(xe,Xe*s.xhat,'b-.','LineWidth',2);
+hold off;
+if(exist('printresult','var'))
+    if(printresult)
+        print -dpng 'final_good_point.png';
+    end
+end
+

@@ -1,0 +1,10 @@
+	#!/bin/bash
+#input arguments: script name
+function RunMatlabScriptServer(){
+output='MatlabOutput.txt'
+#/remote/ceph/group/katrin/software/MATLAB/matlab_start.sh # set up enviroment for matlab license
+#/remote/ceph/group/katrin/software/MATLAB/R2019b/bin/matlab
+nice nohup /remote/ceph/group/katrin/software/MATLAB/matlab_start.sh -r "try; tic; run('$1'); catch ME;  fprintf('MATLAB error: \
+%s \n',ME.message); end; toc; quit" >> $output &
+}
+RunMatlabScriptServer $1

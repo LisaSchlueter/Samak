@@ -1,0 +1,16 @@
+%%  test new stacking cm
+M = MultiRunAnalysis('RunList','KNM1_175mvRW');
+Stack_WGTS_CD_MolPerCm2_RelErr = std(M.SingleRunData.WGTS_CD_MolPerCm2(M.SingleRunData.Select_all));
+Stack_WGTS_MolFrac_TTRelErr = std(M.SingleRunData.WGTS_MolFrac_TT(M.SingleRunData.Select_all));
+Stack_WGTS_MolFrac_DTRelErr = std(M.SingleRunData.WGTS_MolFrac_DT(M.SingleRunData.Select_all));
+Stack_WGTS_MolFrac_HTRelErr = std(M.SingleRunData.WGTS_MolFrac_HT(M.SingleRunData.Select_all));
+Stack_qUErr = std(M.SingleRunData.qU(:,M.SingleRunData.Select_all)')';
+%%
+CM = CovarianceMatrix('StudyObject',M.ModelObj,'nTrials',100,...
+    'Stack_WGTS_CD_MolPerCm2_RelErr',Stack_WGTS_CD_MolPerCm2_RelErr,...
+    'Stack_WGTS_MolFrac_TTRelErr',Stack_WGTS_MolFrac_TTRelErr,...
+    'Stack_WGTS_MolFrac_DTRelErr',Stack_WGTS_MolFrac_DTRelErr,...
+    'Stack_WGTS_MolFrac_HTRelErr',Stack_WGTS_MolFrac_HTRelErr,...
+    'Stack_qUErr',Stack_qUErr);
+CM.RecomputeFlag  = 'ON';
+CM.ComputeCM_Stacking('nStack',100,'meanTime',mean(M.SingleRunData.TimeSec(M.SingleRunData.Select_all)));

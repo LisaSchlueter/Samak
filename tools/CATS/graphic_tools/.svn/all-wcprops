@@ -1,0 +1,179 @@
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/svn/snif/!svn/ver/894/trunk/reanalyse/CATS/graphic_tools
+END
+respullplot.m
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/svn/snif/!svn/ver/62/trunk/reanalyse/CATS/graphic_tools/respullplot.m
+END
+levplot.m
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/snif/!svn/ver/1005/trunk/reanalyse/CATS/graphic_tools/levplot.m
+END
+covratioplot.m
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/snif/!svn/ver/1005/trunk/reanalyse/CATS/graphic_tools/covratioplot.m
+END
+sclchinparplot.m
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/snif/!svn/ver/62/trunk/reanalyse/CATS/graphic_tools/sclchinparplot.m
+END
+respdffit.m
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/svn/snif/!svn/ver/1005/trunk/reanalyse/CATS/graphic_tools/respdffit.m
+END
+dmseplot.m
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/snif/!svn/ver/890/trunk/reanalyse/CATS/graphic_tools/dmseplot.m
+END
+resplot.m
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/snif/!svn/ver/1005/trunk/reanalyse/CATS/graphic_tools/resplot.m
+END
+studresplot.m
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/svn/snif/!svn/ver/62/trunk/reanalyse/CATS/graphic_tools/studresplot.m
+END
+datamodelplot.m
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/snif/!svn/ver/62/trunk/reanalyse/CATS/graphic_tools/datamodelplot.m
+END
+dfxiplot.m
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/snif/!svn/ver/1005/trunk/reanalyse/CATS/graphic_tools/dfxiplot.m
+END
+plotcorh.m
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/svn/snif/!svn/ver/62/trunk/reanalyse/CATS/graphic_tools/plotcorh.m
+END
+dffitplot.m
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/snif/!svn/ver/62/trunk/reanalyse/CATS/graphic_tools/dffitplot.m
+END
+plotcovh.m
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/svn/snif/!svn/ver/62/trunk/reanalyse/CATS/graphic_tools/plotcovh.m
+END
+cookdplot.m
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/svn/snif/!svn/ver/1005/trunk/reanalyse/CATS/graphic_tools/cookdplot.m
+END
+stdrvslplot.m
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/snif/!svn/ver/1005/trunk/reanalyse/CATS/graphic_tools/stdrvslplot.m
+END
+resvarplot.m
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/snif/!svn/ver/62/trunk/reanalyse/CATS/graphic_tools/resvarplot.m
+END
+PrettyFigureFormat.m
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/snif/!svn/ver/1005/trunk/reanalyse/CATS/graphic_tools/PrettyFigureFormat.m
+END
+dfxsplot.m
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/snif/!svn/ver/1005/trunk/reanalyse/CATS/graphic_tools/dfxsplot.m
+END
+deleteparplot.m
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/snif/!svn/ver/62/trunk/reanalyse/CATS/graphic_tools/deleteparplot.m
+END
+tstattable.m
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/snif/!svn/ver/62/trunk/reanalyse/CATS/graphic_tools/tstattable.m
+END
+cats_graphical_outputs.m
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/snif/!svn/ver/62/trunk/reanalyse/CATS/graphic_tools/cats_graphical_outputs.m
+END
+rotateticklabel.m
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/snif/!svn/ver/1005/trunk/reanalyse/CATS/graphic_tools/rotateticklabel.m
+END
+deletevarplot.m
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/snif/!svn/ver/62/trunk/reanalyse/CATS/graphic_tools/deletevarplot.m
+END
+deletevarianceplot.m
+K 25
+svn:wc:ra_dav:version-url
+V 77
+/svn/snif/!svn/ver/62/trunk/reanalyse/CATS/graphic_tools/deletevarianceplot.m
+END
+dffitsplot.m
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/snif/!svn/ver/62/trunk/reanalyse/CATS/graphic_tools/dffitsplot.m
+END
+resdataplot.m
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/svn/snif/!svn/ver/62/trunk/reanalyse/CATS/graphic_tools/resdataplot.m
+END
+standresplot.m
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/snif/!svn/ver/62/trunk/reanalyse/CATS/graphic_tools/standresplot.m
+END
+stdrlevplot.m
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/snif/!svn/ver/1005/trunk/reanalyse/CATS/graphic_tools/stdrlevplot.m
+END
+corplot.m
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/snif/!svn/ver/1005/trunk/reanalyse/CATS/graphic_tools/corplot.m
+END

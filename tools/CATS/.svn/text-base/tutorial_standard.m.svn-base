@@ -1,0 +1,85 @@
+t = (.5:.5:9.5)';
+n = 500;
+y = n*(1/10*t+sin(t).*exp(-t)+t.^2.*exp(-t));
+e = randn(size(y));
+y = y + e.*sqrt(y);
+Vinv=diag(1./(y+(.02*n*ones(size(y))).^2+eps));
+%A=@(t)[ones(size(t)) n/10*t n*sin(t).*exp(-t) n*t.^2.*exp(-t)];
+A = [n/10*t n*sin(t).*exp(-t) t.^2 n*t.^2.*exp(-t)];
+S = [ones(size(t)) t.^3 t.*abs(cos(t)).*exp(-t)];
+x0 = [0;2.5;2.5];
+sigma = [50;2e-1;2e-1];
+Winv = diag(1./sigma.^2);
+L = [1 -1 1;0 1 1];
+c = [1;1];
+
+%% Perform the computations
+s = cats(y,A,'Vinv',Vinv,'S',S,'x0',x0,'Winv',Winv);
+
+%% Draw data and adjusted model
+figure(1); clf(1); set(gcf,'WindowStyle','dock');
+errorbar(t,y,sqrt(y+(.02*n*ones(size(y))).^2),'ok','LineWidth',2,'MarkerSize',10,'MarkerFaceColor','y');
+grid on; hold on; set(gcf,'Color','w');
+%plot(linspace(min(t),max(t),100),A(linspace(min(t),max(t),100)')*x,'b--','LineWidth',3);
+stairs(t-.25,[S A]*s.xhat,'b','LineWidth',3);
+hold off;
+title('Data and adjusted model');
+
+%% Draw residuals
+figure(2); clf(2); set(gcf,'WindowStyle','dock');
+errorbar(1:length([y; x0]),s.r,sqrt(diag(1-s.hatmat)),'ok','LineWidth',2,'MarkerSize',10,'MarkerFaceColor','y');
+grid on; set(gcf,'Color','w');
+title('residuals');
+
+%% Draw leverages
+figure(3); clf(3); set(gcf,'WindowStyle','dock');
+bar(1:length([y;x0]),s.leverage);
+grid on; set(gcf,'Color','w');
+title('Leverages');
+hold on;
+line([0 length([y;x0])+1],length(x0)/length(y)*[1 1],'LineStyle','--','LineWidth',2,'Color',.8*[1 1 1]);
+line([0 length([y;x0])+1],2*length(x0)/length(y)*[1 1],'LineStyle','-.','LineWidth',2,'Color','r');
+axis([0 length([y;x0])+1 0 1]);
+hold off;
+
+%% Draw parameter correlation matrix
+figure(4); clf(4); set(gcf,'WindowStyle','dock');
+nD=length(s.covx);
+XD=1:1:nD;
+YD=1:1:nD;
+imagesc(XD,YD,sqrt(diag(1./diag(s.covx)))*s.covx*sqrt(diag(1./diag(s.covx))));
+set(gca,'XTick',XD)
+set(gca,'XTickLabel',{num2str(XD')})
+set(gca,'YTick',YD)
+set(gca,'YTickLabel',{num2str(YD')})
+%set(gca,'YLabel',YD,YD-.5);
+caxis([-1 1]);
+cm=0:1/9:1;
+my_cm_blue=[1-cm;1-cm;ones(size(cm))]';
+my_cm_red=[ones(size(cm));1-cm;1-cm]';
+colormap([flipud(my_cm_blue);[1 1 1];my_cm_red]);
+colorbar;
+set(gcf,'Color',[1 1 1]);
+% set(gca,'GridLineStyle','-');
+% set(gca,'MinorGridLineStyle','-');
+% set(gca,'XGrid','on');
+% set(gca,'XMinorGrid','on');
+% set(gca,'YGrid','on');
+% set(gca,'YMinorGrid','on');
+set(gca,'XAxisLocation','top');
+%grid on;
+title('Parameter correlation matrix');
+
+%% Draw residuals
+for i=1:length(x0),
+    figure(4+i); clf(4+i); set(gcf,'WindowStyle','dock');
+    rx=@(i)(s.sqrtWinv(:,i));
+    ry=@(i)(s.sqrtVinv*A(:,i));
+    plot(ry(i),s.r(1:length(y)),'bo','MarkerSize',10,'LineWidth',2);
+    hold on;
+    plot(rx(i),s.r(length(y)+1:length(y)+length(x0)),'rd','MarkerSize',10,'LineWidth',2);
+    grid on; set(gcf,'Color','w');
+    title(['residuals for x(' num2str(i) ')']);
+    hold off;
+end
+

@@ -1,0 +1,499 @@
+\documentclass[samak_main.tex]{subfiles}
+\begin{document}
+\section{Statistical covariance matrix, $M{ij}^{p,STAT}$}
+\label{sec:covmat-stat}
+%\subsection{$M{ij}^{p,STAT}$ Definition}
+Statistical uncertainties are included as a diagonal covariance matrix with the elements along the diagonal corresponding to the measured number of electron events in retarding potential bin i:
+
+\begin{equation}
+M_{ij}^{stat} = N_{i}^\mathrm{data} \delta_{ij}
+\end{equation}
+where $\delta_{ij}$ is the Kronecker delta. This matrix corresponds to assigning an uncorrelated uncertainty of $\sqrt{N_{i}^\mathrm{data}}$ to the predicted number of electron events in each retarding potential bin, $qU_i$. By construction, the norm of this matrix is equal to $1/\sqrt{\sum{N_{i}^\mathrm{data}}}$.
+
+Note that the statistical uncertainty component can also be defined by the Pearson convention
+\begin{equation}
+M_{ij}^{stat} = N_{i}^\mathrm{pred} \delta_{ij}, 
+\end{equation}
+where $N_{i}^\mathrm{pred}$ correspond to the predicted number of events. Since $N^\mathrm{pred}$ is a function of the neutrino mass fit parameters it follows that Mstat is also dependent on those fit parameters. Thus, this  matrix must in principle be re-calculated at each iteration of the fit minimization. 
+
+Finally, the James convention could be used
+\begin{equation}
+M_{ij}^{stat} = \frac{(N_{i}^\mathrm{pred}+N_{i}^\mathrm{data})}{2} \delta_{ij}, 
+\end{equation}
+
+The differences between the three convention can be used to assess the systematics on the statistical uncertainty prescription.
+
+%\subsection{$M{ij}^{p,STAT}$ Construction, Display and Convergence}
+
+\section{Response function covariance matrix, $M{ij}^{p,RF}$}
+\label{sec:covmat-rf}
+
+%\subsection{$M{ij}^{p,RF}$ Definition}
+
+The transmission function of the KATRIN MAC-E spectrometer as a function of electron kinetic energy $E_{e}$ and retarding potential $qU$ is
+
+\begin{equation} 
+T(E_e,qU)=\left\{ 
+\begin{array}{lcc} 0 & {\rm if} & E_e-qU<0\\ \frac{1-\sqrt{1-\frac{E_e-qU}{K_e}\frac{B_S}{B_A}}}{1-\sqrt{1-\frac{\Delta E_e}{E_e}\frac{B_S}{B_A}}} & {\rm if} & 0\le E_e-qU\le \Delta E_e\\ 1 & {\rm if} & E_e-qU > \Delta E_e 
+\end{array} \right. 
+\end{equation} 
+
+\noindent where B$_{S}$ denotes the magnetic field strength
+in the source section and B$_{A}$ the field strength
+in the analyzing plane of the MAC-E filter. 
+The MAC-E filter energy resolution,
+$\Delta E_{e}/E_{e}=B_{A}/B_{{\rm max}}$ is the energy dependent relative sharpness of the filter. 
+
+Electrons guided through the source and the pumping section can undergo inelastic scattering with D-D or D-T molecules. 
+Taking into account the probability of multiple inelastic scattering, the response function, RF, can be written
+
+\begin{center}
+$RF(E_{e},qU)=\int_{0}^{E_{e}-qU}T(E_{e}-\epsilon,qU)\cdot$
+\par\end{center}
+
+\begin{center}
+$\left[P_{0}\delta(\epsilon)+P_{1}f(\epsilon)+P_{2}(f\otimes f)(\epsilon)+\ldots\right.$
+\par\end{center}
+
+\begin{center}
+$\ldots+P_{N_{IS}}(f\otimes \cdots f)(\epsilon){\rm d}\epsilon$
+\par\end{center}
+
+where $P_{n}$ is the probability that the electron scatters $n$ times off molecules before leaving the source and $f(\epsilon)$ is the energy loss function at each scattering. The symbol $\otimes$ defines the following convolution: $(f\otimes f)(\epsilon)=\int_{0}^{E_{e}-qU}f(\epsilon^{\prime})f(\epsilon-\epsilon^{\prime}){\rm d}\epsilon^{\prime}$. The response RF denotes the probability of an electron, emitted in the WGTS with starting energy E, to eventually reach the detector.
+
+%\subsection{$M{ij}^{p,RF}$ Construction, Display and Convergence}
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.35]{./figures/CMplot_RF.png}
+\caption{\label{f:CM_RF}  Left: Response function fractional covariance matrix.  Top right: fractional statistical (orange) and systematic uncertainties (the blue band represents the diagonal terms of the covariance matrix). Bottom right: Display of the Cauchy convergence, up to 1000 trials.}
+\end{center}
+\end{figure}
+
+The response function covariance matrix is built following the Multisim method. All parameters used for the computation of the response function and described in table \ref{t:samaksystematics} are varied simultaneously, including their guessed or known uncertainties and their correlations, when adequate. We assume a $5\%$ uncertainty on the column density, a $2\%$ uncertainty on all magnetic fields, and a $2\%$ uncertainty on the inelastic scattering cross section. A large number of trials (typically a few thousands) are then performed and the expected integral spectra, as expected in KATRIN, are built. The covariance matrix is then constructed according to the method described in section \ref{sec:multisim} and the convergence is checked, see section \ref{sec:covmattest}.  
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.5]{./figures/CMdecompose_RF.png}
+\caption{\label{f:CMdec_RF}  Decomposition of the response function fractional covariance matrix.}
+\end{center}
+\end{figure}
+
+The response function covariance matrix is displayed in figure \ref{f:CM_RF}, and its decomposition is shown in figure \ref{f:CMdec_RF}. For completeness, the covariance matrix is converted into a correlation matrix displayed in figure \ref{f:Cordec_RF}. 
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.3]{./figures/CorMdecompose_RF.png}
+\caption{\label{f:Cordec_RF}  Decomposition of the RF correlation matrix.}
+\end{center}
+\end{figure}
+
+\section{Subrun activity fluctuations covariance matrix, $M{ij}^{p,A}$}
+\label{sec:covmat-tasr}
+
+%\subsection{$M{ij}^{p,A}$ Definition}
+%\subsection{$M{ij}^{p,A}$ Construction, Display and Convergence}
+
+The tritium activity is considered as constant for each run. Experimentally this can be related to the fraction of DT in the WGTS, multiplied by the column density. Since the normalization of the tritium activity is considered as a free fit parameter, unless explicitly mentioned, fluctuation of the DT or column density concentration within a run, leading to a different value for each sub-runs, shall be considered as an uncertainty. Since the relative fluctuations of the column densities are much smaller that the relative variations of the DT fraction, from sub-runs to sub-runs, we do only consider the DT fluctuations in what follows.
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.35]{./figures/CMplot_TASR.png}
+\caption{\label{f:CM_TASR}  Left: Sub-run activity fluctuations fractional covariance matrix. Top right: fractional statistical (orange) and systematic uncertainties (the blue band represents the diagonal terms of the covariance matrix). Bottom right: Display of the Cauchy convergence, up to 1000 trials.}
+\end{center}
+\end{figure}
+
+The subrun activity fluctuations covariance matrix is constructed as follow. For a given run, or a list of runs considered (in case of the stack-run analysis, we determine the envelop of relative fluctuations of the DT fraction, written in the run  summaries. We then perform a simulation by generating a large number of KATRIN expected spectra including DT activity fluctuations following the pattern of variation seen in the data and reported in run summaries. Then the Mutlisim method is used to build the corresponding covariance matrix.
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.5]{./figures/CMdecompose_TASR.png}
+\caption{\label{f:CMdec_TASR}  Decomposition of the activity fluctuations fractional covariance matrix.}
+\end{center}
+\end{figure}
+
+The activity fluctuation covariance matrix is displayed in figure \ref{f:CM_TASR}, and its decomposition is shown in figure \ref{f:CMdec_TASR}. For completeness, the covariance matrix is converted into a correlation matrix displayed in figure \ref{f:Cordec_TASR}. 
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.3]{./figures/CorMdecompose_TASR.png}
+\caption{\label{f:Cordec_TASR}  Decomposition of the activity fluctuations fractional correlation matrix.}
+\end{center}
+\end{figure}
+
+\section{Molecular final states covariance matrix, $M{ij}^{p,FSD}$}
+\label{sec:covmat-covmat-fsd}
+
+%\subsection{$M{ij}^{p,FSD}$ Definition}
+After the $\beta$ decay, the electron shells of the decaying atom have to rearrange themselves into the eigenstates of the daughter atomic ion. Therefore, not only is the atomic ground state populated, but a fraction $P_{f}$ of the decay ends in states with excitation energy $E_{f}$.
+In the case of molecular tritium, one must consider the decay to electronic excited states of tritiated hydrogen isotopologues TT, DT and HT daughter molecules, as well as their respective rotational and vibrational excited states. The total decay rate is calculated by summing over all of possible final states $f$ of each daughter system, weighted by the respective concentrations. The corresponding distribution is called Final States Distribution, short FSD. 
+
+%\subsection{$M{ij}^{p,FSD}$ Construction, Display and Convergence}
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.35]{./figures/CMplot_FSD.png}
+\caption{\label{f:CM_FSD}  Left: FSD fractional covariance matrix. Top right: fractional statistical (orange) and systematic uncertainties (the blue band represents the diagonal terms of the covariance matrix). Bottom right: Display of the Cauchy convergence, up to 1000 trials.}
+\end{center}
+\end{figure}
+
+The covariance matrix for the final state distribution is computed following the multisim method. Since the small abundance of T-T and H-T in the first tritium campaign, we consider the DT molecule only. 
+
+In Samak we preliminary account for the FSD systematics according to a new prescription, described hereafter. 
+
+We assume first a $3\%$ uncertainty on the normalization of the probability to decay to the ground states, expected to be 57.4\% according to theoretical computations. The excited state probability is then fully correlated to the ground state probability such that the sum of both reaches xx \% (slighty less than 1, to be clarified). 
+
+In addition, we consider a $3\%$ bin-to-bin uncorrelated error on the individual exciting probabilities of each ground and excited states. 
+
+The multisim method is then applied to build the covariance matrix. 
+
+We already know that our current prescription overestimates the FSD systematics uncertainties. The procedure is currently being revised in order to match the expected uncertainties on the mean and variance of the FSD distributions. 
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.5]{./figures/CMdecompose_FSD.png}
+\caption{\label{f:CMdec_FSD}  Decomposition of the FSD fractional covariance matrix.}
+\end{center}
+\end{figure}
+
+The activity fluctuation covariance matrix is displayed in figure \ref{f:CM_FSD}, and its decomposition is shown in figure \ref{f:CMdec_FSD}. For completeness, the covariance matrix is converted into a correlation matrix displayed in figure \ref{f:Cordec_FSD}. 
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.3]{./figures/CorMdecompose_FSD.png}
+\caption{\label{f:CMdec_FSD}  Decomposition of the FSD fractional correlation matrix.}
+\end{center}
+\end{figure}
+
+\section{Background covariance matrix, $M{ij}^{p,B}$}
+\label{sec:covmat-covmat-bkg}
+
+%\subsection{$M{ij}^{p,B}$ Definition}
+
+Backgrounds are determined by the fit of the counts in each pixel, $p$, for each run or stack of runs, and assuming a flat spectrum in the integral mode (i.e. the background rate does not depend on the value of the retarding potential). The fit could be performed on the data beyond the endpoint, only. Then we extrapolate the background rate in each bins below the endpoint, assuming a flat spectrum as well.
+
+Uncertainties on the background prediction are treated as two orthogonal components: a normalization component based on the uncertainty of the measured rate, and a spectral shape component.
+
+Then two cases are being considered:
+
+\begin{itemize}
+\item  Background fit beyond the endpoint, only, and then fixed
+In that case the covariance matrix can be written
+\begin{equation}
+M_{ij}^{p,B} = M_{ij}^{p,B,rate} + M_{ij}^{p,B,shape}
+\end{equation}
+\item  Background fit together with the tritium spectrum
+\begin{equation}
+M_{ij}^{p,B} =  M_{ij}^{p,B,shape}
+\end{equation}
+\end{itemize}
+
+We now discuss both normalization and shape components.
+
+\subsection{Background rate covariance matrix}
+
+Let's assume a background rate $R_b$, measured with an uncerteinty $\sigma_{b,rate}$. 
+The rate uncertainties of this background population are included as a normalization error via a covariance matrix
+
+%M_{ij}^{p,B,rate} =  \sigma^2_{b,rate} B_i B_j , 
+\begin{equation}
+M_{ij}^{B,rate} =  B_i \left( \frac{\sigma_{b,rate}}{R_b} \right)^2 B_j , 
+\end{equation}
+where $B_i$ is the predicted umber of events for the  background 
+in the retarding potential bin $qU_i$. 
+
+\subsection{Background shape covariance matrix}
+
+The background shape uncertainties should be handled differently for each of the identified source of predicted backgrounds. However, at this stage, the energy spectrum of the background in the actual KATRIN settings is rather not yet understood completely. 
+
+In what follows, two different approaches can be pursued :
+
+\begin{itemize}
+\item{Tilted Background}\\
+Preliminary studies indicate that a linear background spectrum increasing as a function of the retarding potential (higher background at the endpoint). Therefore we model the nominal background as a flat spectrum, with a fully correlated shape uncertainty determined from the bin-by-bin differences, $\delta B_i$, between this flat model and an alternative increasing linear hypothesis, in which the background rate at 16.575 keV is reduced by a factor $r_b$, here arbitrarily taken at 50\%, with respect to the measured value at and beyond the endpoint. 
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.6]{./figures/BackgroundCovarianceMatrixBM1S_ModelS_1.png}
+\caption{\label{f:BM1}  Tilted Background. Nominal flat model and an alternative increasing linear modelling, in which the background rate at 16.575 keV is reduced by a factor $r_b$, here arbitrarily taken at 20\%, with respect to the measured value at and beyond the endpoint.}
+\end{center}
+\end{figure}
+
+\item{Measured Background}\\
+If the background is measured, a correlated shape uncertainty could be included in the final fit by building a covariance matrix from the differences in the measured stack background spectrum and a flat background hypothesis.
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.6]{./figures/BackgroundCovarianceMatrixBM1S_ModelD_1.png}
+\caption{\label{f:BM1}  Measured Background. Nominal flat model and an alternative background taken from a measurement on May 14 2018.}
+\end{center}
+\end{figure}
+
+\end{itemize}
+
+In what follows we will used the measured background modelling to extract the background shape uncertainty, included as a covariance matrix of the form
+\begin{equation}
+M_{ij}^{p,B,shape} =  \delta B_i \delta B_j , 
+\end{equation}
+where
+\begin{equation}
+\delta B_i = B_i^{measured} - B_i^{flat}.
+\end{equation}
+
+To maintain a true “shape” uncertainty, $B_i^{flat}$ is scaled to the normalization of the fitted background at the endpoint. Therefore the total amount of background can change and our prescription cannot strictly be considered as "shape-only", since the sum of the elements of $M_{ij}^{p,B,shape}$ might be different from zero.
+
+%\subsection{$M{ij}^{p,B}$ Construction, Display and Convergence}
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.35]{./figures/CMplot_BM1S.png}
+\caption{\label{f:CM_BM1}  Left: Background fractional covariance matrix, assuming a dedicated measured background as an alternative model. For this example, the background rate is taken at 300 mcps for the whole FPD detector. Top right: fractional statistical (orange) and systematic uncertainties (the blue band represents the diagonal terms of the covariance matrix). }
+\end{center}
+\end{figure}
+
+
+\section{Particle, Nuclear, and Atomic corrections covariance matrix, $M{ij}^{p,NAC}$}
+\label{sec:covmat-covmat-theonu}
+
+%\subsection{$M{ij}^{p,NAC}$ Definition}
+
+Theoretical corrections to the tritium $\beta$-decay spectrum arise
+at the particle, nuclear, atomic levels. In addition to the conventional 
+relativistic Fermi function the following effects can be included: 
+\begin{itemize}
+\item screening by the orbital electron $\textbf{S}$; 
+\item recoil of the He ion in its generation of the Coulomb field $\textbf{Q}$; 
+\item effect of the finite nuclear mass in the energy dependence of the
+phase space, V-A interference, and weak magnetism $\textbf{R}$; 
+\item interchange between the $\beta$-particle and the orbital electron
+$\textbf{I}$; 
+\item effect of the finite nuclear size on the solution of the Dirac equation
+for the electron $\textbf{C}$; 
+\item convolution of the lepton and nucleonic wave functions through the
+nuclear volume $\textbf{L\ensuremath{_{0}}}$; 
+\item first order radiative correction $\textbf{G}$.
+\end{itemize}
+
+In our analysis we slit the corrections into two components:
+\begin{itemize}
+\item Radiative corrections: $\textbf{G}$ (dominant). The associated covariance matrix is labelled $M^{RAD}$
+\item Other corrections: $\textbf{S,Q,R,I,C,L\ensuremath{_{0}}}$ (negligible). The associated covariance matrix is labelled $M^{TC}$
+\end{itemize}
+
+For the first tritium data analysis two paths can be considered:
+\begin{itemize}
+\item A) We neglect all theoretical corrections and include a dedicated covariance matrix, $M{ij}^{p,NAC}$, to account for this modelelling simplification. In this case the uncertainty on the spectral shape is determined by comparing the integral spectrum without any theoretical correction to the spectrum with the all corrections.
+
+We have
+\begin{equation}
+M{ij}^{p,NAC1} = M{ij}^{p,RAD} + M{ij}^{p,TC}
+\end{equation}
+
+The covariance matrix is then constructed as:
+\begin{equation}
+M{ij}^{p,NAC1} = (IS_i^{RAD+TC} - IS_i^{NoCorr}) (IS_j^{RAD+TC} - IS_j^{NoCorr}) 
+\end{equation}
+
+\item We include only the radiative correction in our model and the other theoretical uncertainties are treated with a dedicated covariance matrix, $M{ij}^{p,TC}$. In that case the uncertainty on the spectral shape is determined by comparing the integral spectrum with only the radiative correction to the spectrum with the all corrections.
+\end{itemize}
+
+We have
+\begin{equation}
+M{ij}^{p,NAC2} =  M{ij}^{p,TC}
+\end{equation}
+
+The covariance matrix is then constructed as:
+\begin{equation}
+M{ij}^{p,NAC2} = (IS_i^{RAD+TC} - IS_i^{RAD only}) (IS_j^{RAD+TC} - IS_j^{RAD only}) 
+\end{equation}
+
+%\subsection{$M{ij}^{p,NAC}$ Construction, Display and Convergence}
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.35]{./figures/CMplot_TCoffRAD.png}
+\caption{\label{f:CM_TCoffRAD}  Left: Radiative Corrections fractional covariance matrix $M{ij}^{p,NAC1}$.  Top right: fractional statistical (orange) and systematic uncertainties (the blue band represents the diagonal terms of the covariance matrix).}
+\end{center}
+\end{figure}
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.35]{./figures/CMplot_TCoffOther.png}
+\caption{\label{f:CM_TCoffTC}  Left: $\textbf{S,Q,R,I,C,L\ensuremath{_{0}}}$ theoretical corrections fractional covariance matrix $M{ij}^{p,NAC2}$.  Top right: fractional statistical (orange) and systematic uncertainties (the blue band represents the diagonal terms of the covariance matrix).}
+\end{center}
+\end{figure}
+
+It is worth noting that the square root of the diagonal terms of $M{ij}^{p,NAC1}$ is larger than the statistical error 100 eV below the endpoint and below. This suggests that theoretical corrections may not be neglibile far away from the endpoint. It may also be dominated by an overall normalization, however. To check how much the shape of the spectrum is distorted we perform a decomposition of the covariance matrix, displayed in figure \ref{f:CMdec_TCoff}. 
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.5]{./figures/CMdecompose_TCoff.png}
+\caption{\label{f:CMdec_TCoff}  Decomposition of the theoretical corrections fractional covariance matrix $M{ij}^{p,NAC1}$.}
+\end{center}
+\end{figure}
+
+The diagonal terms of the "shape" and 'mixed" matrices, $M{ij}^{p,NAC1}$, are compared to statistical uncertainties in figure \ref{f:CMdecEnvelop_TCoff}, for 1 day of data. 
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.2]{./figures/CMdecEnvelop_TCoff_Shape.png}
+\includegraphics[scale=0.2]{./figures/CMdecEnvelop_TCoff_Mixed.png}
+\caption{\label{f:CMdecEnvelop_TCoff}  Diagonal terms of both Shape (left) and Mixed (right) components of the theoretical corrections  covariance matrix $M{ij}^{p,NAC1}$, compared to statistical uncertainties for 1 day of First Tritium data.}
+\end{center}
+\end{figure}
+
+\section{Synchrotron radiation covariance matrix, $M{ij}^{p,SYNC}$}
+\label{sec:covmat-sync}
+
+%The synchrotron radiation covariance matrix is preliminarily built by considering %the envolp between two spectra, with and without the synchrotron radiation energy %loss included in the simulated data. 
+At this stage we neglect this covariance matrix in our analysis.
+
+%\subsection{$M{ij}^{p,SYNC}$ Definition} 
+%\subsection{$M{ij}^{p,SYNC}$ Construction, Display and Convergence}
+
+\section{Doppler broadening covariance matrix, $M{ij}^{p,DOP}$}
+\label{sec:covmat-dop}
+
+The doppler broadening covariance matrix is preliminarily built by considering the envelope between two spectra, with and without the doppler broadening  included in the simulated data. 
+
+%\subsection{$M{ij}^{p,DOP}$ Definition}
+%\subsection{$M{ij}^{p,DOP}$ Construction, Display and Convergence}
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.5]{./figures/CM_DOPoff.png}
+\caption{\label{f:CM_Doppler}  Left: Doppler effect fractional covariance matrix computed with the Flat200 MTD. Right: interpolated Doppler fractional covariance matrix, adapted for the FT-TL4 MTD.}
+\end{center}
+\end{figure}
+
+The doppler broadening covariance matrix is displayed in figure \ref{f:CM_Doppler}.
+
+
+\section{Systematic errors Summary}
+\label{sec:syst}
+
+\subsection{Systematic errors breakdown}
+
+Table \ref{t:samaksystematics} provides an overview of systematics effect currently accounted for in the Samak analysis. This includes, the response function, DT final state distributions, tritium activity fluctuations, doppler, synchrotron, background, and run stacking. Those effects have been investigated for the analysis of the first tritium data. Additional physical effects are and will be investigated. Reported values and correlation are still preliminary. 
+
+\begin{center}
+\begin{longtable}{llllllllllll}
+\caption{Preliminary Samak Systematics Effects.}\\
+\hline
+\hline
+ \textbf{Effect} & {\textbf{Parameter}} & {\textbf{rel. Error (\%)}} & {\textbf{correlation}} & {\textbf{method}} & \textbf{comment} \\
+\hline
+\hline
+\endfirsthead
+\multicolumn{12}{c}%
+{\tablename\ \thetable\ -- \textit{Continued from previous page}} \\
+\hline
+ \textbf{Effect} & {\textbf{Parameter}} & {\textbf{rel. Error (\%)}} & {\textbf{correlation}} & {\textbf{method}} & \textbf{comment} \\
+\hline
+\endhead
+\hline \multicolumn{12}{r}{\textit{Continued on next page}} \\
+\endfoot
+\hline
+\endlastfoot
+    \multicolumn{6}{c}{Response Function}  \\
+\hline   
+       {Magnetic fields} & {B\_WGTS} & 2\% & {uncorrelated} &   &  \\
+         & {B\_Max} & 2\% & {uncorrelated} &   &  \\
+         & {B\_AP} & 2\% & {uncorrelated} &   &  \\
+   
+   
+       {Column density} & {rho.d} & 5\% & {uncorrelated} & Multisim & overestimated \\
+   
+       {z-profile} &   & 0\% &   &   & not included yet \\
+   
+       {IS cross section} & {ISCS} & 2\% & {uncorrelated} & Multisim & overestimated \\
+   
+       {Energy loss} & {A1} & 0.50\% & {uncorrelated} & Multisim & correlated? \\
+         & {A} & 0.54\% & {uncorrelated} & Multisim & correlated? \\
+         & {w1} & 1.10\% & {uncorrelated} & Multisim & correlated? \\
+         & {w2} & 0.80\% & {uncorrelated} & Multisim & correlated? \\
+         & {eps1} & 0.00\% & {uncorrelated} & Multisim & correlated? \\
+         & {eps2} & 0.14\% & {uncorrelated} & Multisim & correlated? \\
+   
+       {Average over pixels} &   &   &   &   & not included yet \\
+       {Average over rings} &   &   &   &   & not included yet \\
+ \hline
+ \hline
+      \multicolumn{6}{c}{DT activity }  \\
+\hline
+       {Rate} &   &   &   & Fit & Free parameter \\
+   
+       {subrun fluctuation} &   & {about 1\%} & {uncorrelated} & Multisim & data driven (RS) \\
+\hline
+\hline
+      \multicolumn{6}{c}{DT Final State Distributions}  \\
+
+       {Ground state probability} & {Pgs} & 3\% & {with Pes} & Multisim & overestimated \\
+   
+       {Excited state probability} & {Pes} &   & {Pgs+Pes=1} & Multisim &  \\
+   
+       {Excitation probabilities} & {Pi} & 3\% & {uncorrelated} & Multisim & overestimated \\
+\hline   
+\hline
+      \multicolumn{6}{c}{Theoretical Corrections}  \\
+\hline   
+       {Radiative corrections} &   &   &   & on/off & overestimated \\
+   
+       {All but radiative corr.} &   &   &   & on/off & overestimated \\
+\hline
+\hline   
+      \multicolumn{6}{c}{Doppler}  \\
+\hline
+      &   &   &   & on/off & negligible \\
+\hline   
+\hline
+    \multicolumn{6}{c}{Synchrotron}  \\
+\hline
+    &   &   &   & on/off & negligible \\
+\hline
+\hline
+    \multicolumn{6}{c}{Background}  \\
+       {Rate} &   &   &   & Fit &  \\
+       {Shape} &   &   &   & deviation from flat & data driven \\
+\hline   
+\hline
+       \multicolumn{6}{c}{Run Stacking}  \\
+     &   &   &   & Multisim & data driven \\
+\hline
+\hline
+      \label{t:samaksystematics}%
+\end{longtable}
+\end{center}
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.3]{./figures/Stack-CombiCM-NormShape-Excl1.png}
+\includegraphics[scale=0.3]{./figures/Stack-CombiCM-NormShape-Excl200.png}
+\caption{\label{f:interpCM1}  Stack of the uncorrelated systematics in the ranges xxx (top) and xxx (bottom).}
+\end{center}
+\end{figure}
+
+
+\subsection{Combined Covariance Matrix}
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.3]{./figures/CombiCM-NormShape-Excl1.png}
+\caption{\label{f:interpCM1}  Combined covariance matrix considered in the analysis.}
+\end{center}
+\end{figure}
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.3]{./figures/CombiCM-NormShape-Excl1-NoRF.png}
+\caption{\label{f:interpCM1}  Combined covariance matrix considered in the analysis, excluding the response function covariance matrix.}
+\end{center}
+\end{figure}
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.5]{./figures/CMdecompose_Combi.png}
+\caption{\label{f:interpCM1}  Decomposition of the combined covariance matrix considered in the analysis.}
+\end{center}
+\end{figure}
+\end{document}

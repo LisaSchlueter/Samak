@@ -1,0 +1,110 @@
+10
+
+dir
+936
+https://dsm-trac.cea.fr/svn/snif/trunk/reanalyse/CATS/private
+https://dsm-trac.cea.fr/svn/snif
+
+
+
+2010-10-27T07:38:38.987148Z
+62
+mfechner
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+321f40c6-559f-47e1-bfc7-d466ebe9bfd9
+
+FMINSEARCHCON
+dir
+
+optimize
+dir
+
+fit
+dir
+
+fitChiSquare
+dir
+
+distribution_check.m
+file
+
+
+
+
+2010-11-09T15:50:59.000000Z
+eab3734626647dcdfbb8749cc2965eef
+2010-10-27T07:38:38.987148Z
+62
+mfechner
+has-props
+
+student_inv_cdf.m
+file
+
+
+
+
+2010-11-09T15:50:59.000000Z
+0e5ae23040a00dcce4965577fc1a3e6a
+2010-10-27T07:38:38.987148Z
+62
+mfechner
+has-props
+
+distrib.m
+file
+
+
+
+
+2010-11-09T15:50:59.000000Z
+e7bbd5205486d8ed1e0c293fbfd29a3b
+2010-10-27T07:38:38.987148Z
+62
+mfechner
+
+f_cdf.m
+file
+
+
+
+
+2010-11-09T15:50:59.000000Z
+fede3e863334d16037f703914d2290c6
+2010-10-27T07:38:38.987148Z
+62
+mfechner
+has-props
+
+FitLaw_GA
+dir
+
+student_cdf.m
+file
+
+
+
+
+2010-11-09T15:50:59.000000Z
+c7293a6b9d0183ecfa41123b7dac2b70
+2010-10-27T07:38:38.987148Z
+62
+mfechner
+has-props
+
+opt_reg_tips
+dir
+

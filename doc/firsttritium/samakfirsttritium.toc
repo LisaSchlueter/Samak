@@ -1,0 +1,74 @@
+\contentsline {title}{Simulation and Analysis of the First KATRIN Tritium Data with Samak \\(Draft Technical Note)}{1}{}
+\contentsline {abstract}{Abstract}{1}{}
+\tocdepth@munge 
+\contentsline {section}{\numberline {}Contents}{2}{}
+\tocdepth@restore 
+\contentsline {section}{\numberline {}Introduction}{4}{}
+\contentsline {section}{\numberline {}Tritium $\beta $-decay integral spectrum modelling}{4}{}
+\contentsline {section}{\numberline {}KATRIN First Tritium}{4}{}
+\contentsline {subsection}{\numberline {}Data}{4}{}
+\contentsline {subsubsection}{\numberline {}Analysis plane E- B- field Corrections}{5}{}
+\contentsline {subsection}{\numberline {}Focal Plane Detector (FPD)}{5}{}
+\contentsline {subsection}{\numberline {}Others inputs for the simulation}{6}{}
+\contentsline {section}{\numberline {}Measurement Time Distributions and expected signal}{6}{}
+\contentsline {section}{\numberline {}Pixel-wise $\chi ^2$ Fit}{7}{}
+\contentsline {subsection}{\numberline {}Covariance Matrices}{8}{}
+\contentsline {subsection}{\numberline {}Nuisance parameters and pull terms}{10}{}
+\contentsline {section}{\numberline {}Statistical covariance matrix, $M{ij}^{p,STAT}$}{10}{}
+\contentsline {section}{\numberline {}Response function covariance matrix, $M{ij}^{p,RF}$}{10}{}
+\contentsline {section}{\numberline {}Subrun activity fluctuations covariance matrix, $M{ij}^{p,A}$}{12}{}
+\contentsline {section}{\numberline {}Molecular final states covariance matrix, $M{ij}^{p,FSD}$}{12}{}
+\contentsline {section}{\numberline {}Background covariance matrix, $M{ij}^{p,B}$}{13}{}
+\contentsline {subsection}{\numberline {}Background rate covariance matrix}{13}{}
+\contentsline {subsection}{\numberline {}Background shape covariance matrix}{14}{}
+\contentsline {section}{\numberline {}Particle, Nuclear, and Atomic corrections covariance matrix, $M{ij}^{p,NAC}$}{14}{}
+\contentsline {section}{\numberline {}Synchrotron radiation covariance matrix, $M{ij}^{p,SYNC}$}{16}{}
+\contentsline {section}{\numberline {}Doppler broadening covariance matrix, $M{ij}^{p,DOP}$}{16}{}
+\contentsline {section}{\numberline {}Systematic errors Summary}{16}{}
+\contentsline {subsection}{\numberline {}Systematic errors breakdown}{16}{}
+\contentsline {subsection}{\numberline {}Combined Covariance Matrix}{17}{}
+\contentsline {section}{\numberline {}Fit Statistics}{18}{}
+\contentsline {subsection}{\numberline {}Rate+Shape Fit Statistic}{18}{}
+\contentsline {subsection}{\numberline {}Shape-Only Fit Statistic}{19}{}
+\contentsline {subsection}{\numberline {}Rate-Only Fit Statistic}{19}{}
+\contentsline {section}{\numberline {}Combining pixels}{20}{}
+\contentsline {subsection}{\numberline {}All pixel stacking $\chi ^2$ fit}{20}{}
+\contentsline {subsection}{\numberline {}Ring-wise pixel stacking $\chi ^2$ fit}{20}{}
+\contentsline {subsection}{\numberline {}Multi-pixel $\chi ^2$ fit}{20}{}
+\contentsline {subsubsection}{\numberline {}Multipixel $\chi ^2$ function}{20}{}
+\contentsline {section}{\numberline {}Stacking Runs}{21}{}
+\contentsline {section}{\numberline {}Application: Effective Endpoint}{22}{}
+\contentsline {subsection}{\numberline {}Effective endpoint dataset}{22}{}
+\contentsline {subsection}{\numberline {}Effective endpoint simulation}{23}{}
+\contentsline {subsection}{\numberline {}Effective endpoint analysis results with pixels stacked: Run-wise}{23}{}
+\contentsline {subsection}{\numberline {}Effective endpoint analysis results with pixels stacked and all run stacked}{24}{}
+\contentsline {subsection}{\numberline {}Effective endpoint analysis results with pixels grouped by rings and all run stacked}{25}{}
+\contentsline {subsection}{\numberline {}Effective endpoint analysis results synthesis}{26}{}
+\contentsline {subsection}{\numberline {}Effective endpoint theoretical expectation}{27}{}
+\contentsline {subsection}{\numberline {}Effective endpoint: qU scans}{27}{}
+\contentsline {section}{\numberline {}Application: Onset of the molecular excited states}{27}{}
+\contentsline {subsection}{\numberline {}FSD-onset dataset}{27}{}
+\contentsline {subsection}{\numberline {}FSD-onset run-wise analysis}{28}{}
+\contentsline {subsection}{\numberline {}Rejection of no-electronic excitation hypothesis}{28}{}
+\contentsline {subsection}{\numberline {}Assessment of the ground/excited states probabilities}{28}{}
+\contentsline {section}{\numberline {}Application: Column density}{29}{}
+\contentsline {subsection}{\numberline {}Assessement the column density from the 'endpoint' data}{29}{}
+\contentsline {subsection}{\numberline {}Analysis of runs at 100\%, 75\%, 50\%, and 25\% relative colmun densities}{29}{}
+\contentsline {subsection}{\numberline {}Response functions and Expected spectra for various column densities}{29}{}
+\contentsline {section}{\numberline {}Conclusions}{29}{}
+\contentsline {section}{\numberline {}Annex: Sanity Cross checks}{30}{}
+\contentsline {subsection}{\numberline {}Statistical-only uncertainty/sensitivity}{30}{}
+\contentsline {subsection}{\numberline {}N-1 test}{30}{}
+\contentsline {subsection}{\numberline {}Stat+1 test}{30}{}
+\contentsline {section}{\numberline {}Annex: The Mulmtisim method}{30}{}
+\contentsline {section}{\numberline {}Annex: Covariance Matrix Zoology}{31}{}
+\contentsline {subsection}{\numberline {}Resizing to another MTD}{31}{}
+\contentsline {subsection}{\numberline {}Nearest symmetric, positive definite matrix}{31}{}
+\contentsline {subsection}{\numberline {}Convergence}{32}{}
+\contentsline {subsubsection}{\numberline {}Cauchy Convergence Criterion}{32}{}
+\contentsline {subsubsection}{\numberline {}Convergence of the determinant}{32}{}
+\contentsline {subsubsection}{\numberline {}Results Tables}{33}{}
+\contentsline {section}{\numberline {}Acknowledgement}{41}{}
+\appendix 
+\contentsline {section}{\numberline {}List of Figures}{42}{}
+\contentsline {section}{\numberline {}List of Tables}{44}{}

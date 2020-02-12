@@ -1,0 +1,72 @@
+\BOOKMARK [0][-]{section*.2}{Simulation and Analysis of the First KATRIN Tritium Data with Samak \(Technical Note\)}{}% 2
+\BOOKMARK [1][-]{section*.1}{Abstract}{section*.2}% 1
+\BOOKMARK [1][-]{section*.3}{Introduction}{section*.2}% 3
+\BOOKMARK [1][-]{section*.4}{Tritium -decay integral spectrum modelling}{section*.2}% 4
+\BOOKMARK [1][-]{section*.5}{KATRIN First Tritium Settings}{section*.2}% 5
+\BOOKMARK [2][-]{section*.6}{Anticipated data}{section*.5}% 6
+\BOOKMARK [2][-]{section*.7}{WGTS}{section*.5}% 7
+\BOOKMARK [2][-]{section*.8}{MACE}{section*.5}% 8
+\BOOKMARK [2][-]{section*.9}{Analysis plane E-field maps}{section*.5}% 9
+\BOOKMARK [2][-]{section*.10}{Analysis plane B-field maps}{section*.5}% 10
+\BOOKMARK [2][-]{section*.11}{FPD}{section*.5}% 11
+\BOOKMARK [2][-]{section*.12}{Others}{section*.5}% 12
+\BOOKMARK [1][-]{section*.13}{Measurement Time Distributions}{section*.2}% 13
+\BOOKMARK [2][-]{section*.14}{MTD1h}{section*.13}% 14
+\BOOKMARK [2][-]{section*.15}{MTD6h1}{section*.13}% 15
+\BOOKMARK [2][-]{section*.16}{MTD6h2}{section*.13}% 16
+\BOOKMARK [1][-]{section*.17}{Pixel-wise 2 Fit}{section*.2}% 17
+\BOOKMARK [2][-]{section*.18}{Covariance Matrices}{section*.17}% 18
+\BOOKMARK [2][-]{section*.19}{Nuisance parameters and pull terms}{section*.17}% 19
+\BOOKMARK [1][-]{section*.20}{Statistical covariance matrix}{section*.2}% 20
+\BOOKMARK [2][-]{section*.21}{Mijp,STAT Definition}{section*.20}% 21
+\BOOKMARK [2][-]{section*.22}{Mijp,STAT Construction, Display and Convergence}{section*.20}% 22
+\BOOKMARK [1][-]{section*.23}{Response function covariance matrix}{section*.2}% 23
+\BOOKMARK [2][-]{section*.24}{Mijp,RF Definition}{section*.23}% 24
+\BOOKMARK [2][-]{section*.25}{Mijp,RF Construction, Display and Convergence}{section*.23}% 25
+\BOOKMARK [1][-]{section*.26}{subrun Activity fluctuations covariance matrix}{section*.2}% 26
+\BOOKMARK [2][-]{section*.27}{Mijp,A Definition}{section*.26}% 27
+\BOOKMARK [2][-]{section*.28}{Mijp,A Construction, Display and Convergence}{section*.26}% 28
+\BOOKMARK [1][-]{section*.29}{Molecular final states covariance matrix}{section*.2}% 29
+\BOOKMARK [2][-]{section*.30}{Mijp,FSD Definition}{section*.29}% 30
+\BOOKMARK [2][-]{section*.31}{Mijp,FSD Construction, Display and Convergence}{section*.29}% 31
+\BOOKMARK [1][-]{section*.32}{Background covariance matrix}{section*.2}% 32
+\BOOKMARK [2][-]{section*.33}{Mijp,B Definition}{section*.32}% 33
+\BOOKMARK [2][-]{section*.34}{Mijp,B Construction, Display and Convergence}{section*.32}% 34
+\BOOKMARK [1][-]{section*.35}{Particle, Nuclear, and Atomic corrections covariance matrix}{section*.2}% 35
+\BOOKMARK [2][-]{section*.36}{Mijp,NAC Definition}{section*.35}% 36
+\BOOKMARK [2][-]{section*.37}{Mijp,NAC Construction, Display and Convergence}{section*.35}% 37
+\BOOKMARK [1][-]{section*.38}{Synchrotron radiation covariance matrix}{section*.2}% 38
+\BOOKMARK [2][-]{section*.39}{Mijp,SYNC Definition}{section*.38}% 39
+\BOOKMARK [2][-]{section*.40}{Mijp,SYNC Construction, Display and Convergence}{section*.38}% 40
+\BOOKMARK [1][-]{section*.41}{Doppler broadening covariance matrix}{section*.2}% 41
+\BOOKMARK [2][-]{section*.42}{Mijp,DOP Definition}{section*.41}% 42
+\BOOKMARK [2][-]{section*.43}{Mijp,DOP Construction, Display and Convergence}{section*.41}% 43
+\BOOKMARK [1][-]{section*.44}{Pixel-wise Systematic errors Summary}{section*.2}% 44
+\BOOKMARK [2][-]{section*.45}{Pixel-wise Systematic errors breakdown}{section*.44}% 45
+\BOOKMARK [2][-]{section*.46}{Pixel-wise Systematic errors covariance matrices norms}{section*.44}% 46
+\BOOKMARK [1][-]{section*.47}{Combining pixels}{section*.2}% 47
+\BOOKMARK [2][-]{section*.48}{Multi-pixel 2 fit}{section*.47}% 48
+\BOOKMARK [3][-]{section*.49}{Multipixel 2 function}{section*.48}% 49
+\BOOKMARK [3][-]{section*.50}{Multipixel covariance matrix}{section*.48}% 50
+\BOOKMARK [2][-]{section*.51}{Pixel stacking 2 fit}{section*.47}% 51
+\BOOKMARK [3][-]{section*.52}{Pixel stacking 2 function}{section*.51}% 52
+\BOOKMARK [3][-]{section*.53}{Pixel stacking covariance matrix}{section*.51}% 53
+\BOOKMARK [1][-]{section*.54}{Stacking Runs}{section*.2}% 54
+\BOOKMARK [1][-]{section*.55}{Stacking Runs and pixels}{section*.2}% 55
+\BOOKMARK [2][-]{section*.56}{Run and pixel stacking 2 function}{section*.55}% 56
+\BOOKMARK [3][-]{section*.57}{Run and pixel stacking covariance matrix}{section*.56}% 57
+\BOOKMARK [1][-]{section*.58}{Application: Effective Endpoint}{section*.2}% 58
+\BOOKMARK [2][-]{section*.59}{Effective endpoint dataset}{section*.58}% 59
+\BOOKMARK [2][-]{section*.60}{Effective endpoint simulation}{section*.58}% 60
+\BOOKMARK [2][-]{section*.61}{Effective endpoint analysis results}{section*.58}% 61
+\BOOKMARK [1][-]{section*.62}{Application: Onset of the molecular excited states}{section*.2}% 62
+\BOOKMARK [2][-]{section*.63}{FSD-onset dataset}{section*.62}% 63
+\BOOKMARK [2][-]{section*.64}{FSD-onset simulation}{section*.62}% 64
+\BOOKMARK [2][-]{section*.65}{FSD-onset analysis results}{section*.62}% 65
+\BOOKMARK [1][-]{section*.66}{Application: Column density}{section*.2}% 66
+\BOOKMARK [1][-]{section*.67}{Conclusions}{section*.2}% 67
+\BOOKMARK [1][-]{section*.68}{Acknowledgement}{section*.2}% 68
+\BOOKMARK [1][-]{section*.69}{Annex: The Mulmtisim method}{section*.2}% 69
+\BOOKMARK [1][-]{section*.70}{Annex: Convergence tests of the covariance matrix}{section*.2}% 70
+\BOOKMARK [2][-]{section*.71}{Convergence of the determinant}{section*.70}% 71
+\BOOKMARK [2][-]{section*.72}{Convergence of the Hilbert-Schmidt norm}{section*.70}% 72

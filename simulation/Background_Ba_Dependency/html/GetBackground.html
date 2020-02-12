@@ -1,0 +1,212 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>GetBackground</title><meta name="generator" content="MATLAB 9.6"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2019-03-29"><meta name="DC.source" content="GetBackground.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><pre class="codeinput"><span class="comment">%---------------------------------------------------------------------------------------------------</span>
+<span class="comment">% Function to scale the Background (BKG) according to magnetic fields strength in</span>
+<span class="comment">% the analyzing plane (Ba)</span>
+<span class="comment">% Taken from Nikolaus Trost phD Thesis, computed for WGTS_B_T = 3.6 T</span>
+<span class="comment">% Scaled b us to match any other WGTS_B_T field configuration</span>
+<span class="comment">% Using: Bs * WGTS Section = Ba * Analysis plane section</span>
+<span class="comment">% (reducing Bs means reducing Analysis plane section, and therefore any volumic background)</span>
+<span class="comment">%</span>
+<span class="comment">% ---- AnchorBkg6G Option:-----</span>
+<span class="comment">% If AnchorBkg6G is empty:</span>
+<span class="comment">% Background is scaled according to ROI cut, based on FT Background level</span>
+<span class="comment">% If AnchorBkg6G is not empty:</span>
+<span class="comment">% Background is scaled according AnchorBkg6G level</span>
+<span class="comment">% ------------------------------------------------------------------------------------------</span>
+<span class="comment">% Lisa Schlueter (September 2018)</span>
+<span class="comment">% Inputs:</span>
+<span class="comment">%  - WGTS_B_T</span>
+<span class="comment">%  - MACE_Ba_T</span>
+<span class="comment">%  - FPD_ROIlow or AnchorBkg6G (if both filled, AnchorBkg6G will be used)</span>
+<span class="comment">% Output:</span>
+<span class="comment">%  - Background in cps</span>
+<span class="comment">%-------------------------------------------------------------------------------------------</span>
+<span class="keyword">function</span> BKG = GetBackground(varargin)
+<span class="comment">% ------------------------------------------------------------------------------------------------</span>
+p = inputParser;
+
+p.addParameter(<span class="string">'MACE_Ba_T'</span>,6e-4,@(x)all(isfloat(x)) &amp;&amp; all(x&gt;=0));
+p.addParameter(<span class="string">'WGTS_B_T'</span>,3.6*0.7,@(x)all(isfloat(x)) &amp;&amp; all(x&gt;=0)); <span class="comment">% B field reduction factor</span>
+<span class="comment">%p.addParameter('MACE_Ba_T',[]);</span>
+<span class="comment">%p.addParameter('WGTS_B_T',[]); % B field reduction factor</span>
+p.addParameter(<span class="string">'AnchorBkg6G'</span>,<span class="string">''</span>); <span class="comment">% if empty, Anchor based und ROIlow is used 335=FT, [26keV, 32 keV]ROI, 238 Nikolaus PhD (70%bfields)</span>
+p.addParameter(<span class="string">'FPD_ROIlow'</span>,14,@(x)isfloat(x));
+
+p.parse(varargin{:});
+
+MACE_Ba_T     = p.Results.MACE_Ba_T;
+WGTS_B_T      = p.Results.WGTS_B_T;
+AnchorBkg6G   = p.Results.AnchorBkg6G; <span class="comment">% scales Background as such, that Bkg is @Ba=6G at this level</span>
+FPD_ROIlow    = p.Results.FPD_ROIlow;  <span class="comment">% if AnchorBkg6G is empty -&gt; uses ROI cut to get AnchorBkg6G based on FT level</span>
+
+<span class="keyword">if</span> numel(MACE_Ba_T)==1 &amp;&amp; numel(WGTS_B_T)&gt;=1            <span class="comment">% In case Ba is scalar and BT is array</span>
+    BTsize = size(WGTS_B_T);
+    MACE_Ba_T = repmat(MACE_Ba_T,BTsize(1),BTsize(2));
+<span class="keyword">elseif</span> numel(MACE_Ba_T)&gt;=1 &amp;&amp; numel(WGTS_B_T)==1        <span class="comment">% In case BT is scalar and Ba is array</span>
+    BaSize = size(MACE_Ba_T);
+    WGTS_B_T = repmat(WGTS_B_T,BaSize(1),BaSize(2));
+<span class="keyword">elseif</span> numel(WGTS_B_T)~=numel(MACE_Ba_T)                <span class="comment">% In case both array with different size</span>
+    fprintf(2,<span class="string">'Error: Please insert Ba and B_T arrays of the same size OR one array and one scalar \n'</span>)
+    <span class="keyword">return</span>
+<span class="keyword">end</span>
+<span class="comment">%---------------------------------------------parser end -----------------------------------------------%</span>
+IE_suppression = 0.66019417475728148; <span class="comment">% for inner electrodes (IE) voltage of 200V (or 100V?)</span>
+<span class="comment">% CHANGE THAT</span>
+
+<span class="keyword">if</span> isempty(AnchorBkg6G)
+    AnchorBkg6G = GetAnchor6G(<span class="string">'FPD_ROIlow'</span>,FPD_ROIlow);
+<span class="keyword">end</span>
+
+<span class="comment">%%switch Anchor6G</span>
+    <span class="comment">%case 'OFF'</span>
+       <span class="comment">% BKG = arrayfun(@(x,y) ((2314.07270639/((3.6./y)*x*1.e4)+72.87100681)/2.*2.86587134-131.37016528)/1000.*IE_suppression,MACE_Ba_T,WGTS_B_T);</span>
+    <span class="comment">%case 'ON'</span>
+        BKG  = arrayfun(@(x,y) ((((2314.07270639/((3.6./y)*x*1.e4)+72.87100681)/2.*2.86587134-131.37016528)/1000.*IE_suppression )<span class="keyword">...</span>
+            ./ (((2314.07270639/((3.6./2.52)*6)+72.87100681)/2.*2.86587134-131.37016528)/1000.*IE_suppression) .* AnchorBkg6G),MACE_Ba_T,WGTS_B_T);
+<span class="comment">%end</span>
+<span class="keyword">end</span>
+</pre><pre class="codeoutput">
+ans =
+
+    0.4300
+
+</pre><p class="footer"><br><a href="https://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2019a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%REPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASH-
+% Function to scale the Background (BKG) according to magnetic fields strength in
+% the analyzing plane (Ba)
+% Taken from Nikolaus Trost phD Thesis, computed for WGTS_B_T = 3.6 T
+% Scaled b us to match any other WGTS_B_T field configuration
+% Using: Bs * WGTS Section = Ba * Analysis plane section
+% (reducing Bs means reducing Analysis plane section, and therefore any volumic background)
+%
+% REPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASH AnchorBkg6G Option:REPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASH-
+% If AnchorBkg6G is empty:
+% Background is scaled according to ROI cut, based on FT Background level
+% If AnchorBkg6G is not empty:
+% Background is scaled according AnchorBkg6G level
+% REPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASH
+% Lisa Schlueter (September 2018)
+% Inputs:
+%  - WGTS_B_T
+%  - MACE_Ba_T
+%  - FPD_ROIlow or AnchorBkg6G (if both filled, AnchorBkg6G will be used)
+% Output:
+%  - Background in cps
+%REPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASH-
+function BKG = GetBackground(varargin)
+% REPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASH
+p = inputParser;
+
+p.addParameter('MACE_Ba_T',6e-4,@(x)all(isfloat(x)) && all(x>=0));
+p.addParameter('WGTS_B_T',3.6*0.7,@(x)all(isfloat(x)) && all(x>=0)); % B field reduction factor
+%p.addParameter('MACE_Ba_T',[]);
+%p.addParameter('WGTS_B_T',[]); % B field reduction factor
+p.addParameter('AnchorBkg6G',''); % if empty, Anchor based und ROIlow is used 335=FT, [26keV, 32 keV]ROI, 238 Nikolaus PhD (70%bfields)
+p.addParameter('FPD_ROIlow',14,@(x)isfloat(x));
+
+p.parse(varargin{:});
+
+MACE_Ba_T     = p.Results.MACE_Ba_T;
+WGTS_B_T      = p.Results.WGTS_B_T;
+AnchorBkg6G   = p.Results.AnchorBkg6G; % scales Background as such, that Bkg is @Ba=6G at this level
+FPD_ROIlow    = p.Results.FPD_ROIlow;  % if AnchorBkg6G is empty -> uses ROI cut to get AnchorBkg6G based on FT level
+
+if numel(MACE_Ba_T)==1 && numel(WGTS_B_T)>=1            % In case Ba is scalar and BT is array
+    BTsize = size(WGTS_B_T);
+    MACE_Ba_T = repmat(MACE_Ba_T,BTsize(1),BTsize(2));
+elseif numel(MACE_Ba_T)>=1 && numel(WGTS_B_T)==1        % In case BT is scalar and Ba is array
+    BaSize = size(MACE_Ba_T);
+    WGTS_B_T = repmat(WGTS_B_T,BaSize(1),BaSize(2));
+elseif numel(WGTS_B_T)~=numel(MACE_Ba_T)                % In case both array with different size
+    fprintf(2,'Error: Please insert Ba and B_T arrays of the same size OR one array and one scalar \n')
+    return
+end
+%REPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASH-parser end REPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASHREPLACE_WITH_DASH_DASH-%
+IE_suppression = 0.66019417475728148; % for inner electrodes (IE) voltage of 200V (or 100V?)
+% CHANGE THAT
+
+if isempty(AnchorBkg6G)
+    AnchorBkg6G = GetAnchor6G('FPD_ROIlow',FPD_ROIlow);
+end
+
+%%switch Anchor6G
+    %case 'OFF'
+       % BKG = arrayfun(@(x,y) ((2314.07270639/((3.6./y)*x*1.e4)+72.87100681)/2.*2.86587134-131.37016528)/1000.*IE_suppression,MACE_Ba_T,WGTS_B_T);
+    %case 'ON'
+        BKG  = arrayfun(@(x,y) ((((2314.07270639/((3.6./y)*x*1.e4)+72.87100681)/2.*2.86587134-131.37016528)/1000.*IE_suppression )...
+            ./ (((2314.07270639/((3.6./2.52)*6)+72.87100681)/2.*2.86587134-131.37016528)/1000.*IE_suppression) .* AnchorBkg6G),MACE_Ba_T,WGTS_B_T);
+%end
+end
+
+
+
+##### SOURCE END #####
+--></body></html>

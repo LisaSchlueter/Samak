@@ -1,0 +1,351 @@
+function tutorial_advanced()
+sys.t_acc=.1;
+sys.t_li9=.03;
+sys.t_prc=.1;
+sys.s_acc=.05;
+sys.s_li9 = .0194;
+sys.s_prc = .0167;
+sys.dm2 = 2.4e-3;
+sys.s_dm2 = .1;
+
+test(100,sys);
+end
+
+
+function test(nobs,sys)
+
+set(figure(1),'Selected','on');
+close all; 
+set(0,'DefaultFigureWindowStyle','docked');
+%colordef white;
+set(0,'DefaultFigureColor','w');
+
+
+%% Fake data preparation
+x=linspace(10/(2*nobs),10-10/(2*nobs),nobs)';
+sigma_b2b = 0.01;
+
+t_acc = sys.t_acc;
+s_acc = sys.s_acc;
+t_li9 = sys.t_li9;
+s_li9 = sys.s_li9;
+t_prc = sys.t_prc;
+s_prc = sys.s_prc;
+dm2 = sys.dm2;
+s_dm2 = sys.s_dm2;
+
+norm = 3000;
+
+nu = (x>1).*(x-1).^2.*exp(-(x-1));
+ampbds = (x>1).*(sin(1.27*dm2*(1+s_dm2*randn)*1.05e3./(x+0.782)).^2);
+ampb = (x>1).*(sin(1.27*dm2*1.05e3./(x+0.782)).^2);
+nu = nu/sum(nu);
+acc = (x>.5).*exp(-x);
+acc = acc/sum(acc);
+li9 = (x>1).*(x<10).*(x-1).*(10-x);
+li9 = li9/sum(li9);
+prc = (1+.2*randn(size(x))).*(x>.5).*ones(size(x));
+prc = prc/sum(prc);
+s2t13 = .1;
+y=norm*(nu.*(1-s2t13*ampbds).*(1+1./(sqrt(norm*nu.*(1-s2t13*ampb))+eps).*randn(size(x))+sigma_b2b*randn(size(x)))) + ...
+    norm*(t_acc*acc.*(1+s_acc*randn(size(x))) + ...
+    t_li9*li9.*(1+s_li9*randn(size(x))) + ...
+    t_prc*prc.*(1+s_prc*randn(size(x))));
+
+A=-norm*ampb.*nu;
+S=norm*[nu acc li9 prc -2*s2t13*(1.27*dm2*1.05e3./(x+0.782)).^2.*sqrt(ampb.*(1-ampb))];
+Winv = diag(1./[.03 s_acc s_li9 s_prc s_dm2].^2);
+x0=[1 t_acc t_li9 t_prc dm2]';
+%List = [1 2]';
+Vinv=diag(1./(abs(y)+(norm*nu.*(1-s2t13*ampb)*sigma_b2b).^2+eps));
+
+nsys = size(S,2);
+npar = size(A,2);
+
+%% Chi2 Analysis Tool with Systematics
+s=cats(y,A,'Vinv',Vinv,'S',S,'Winv',Winv,'x0',x0);
+
+%% Save interesting variables to base workspace
+assignin('base','x',x);
+assignin('base','y',y);
+assignin('base','A',A);
+assignin('base','s',s);
+assignin('base','Vinv',Vinv);
+assignin('base','Winv',Winv);
+assignin('base','x0',x0);
+
+%% Data and Model plot
+figure(1); set(gcf,'WindowStyle','dock');
+grid on;
+subplot(1,4,[1 3]);
+dataplot = [S(1:nobs,5)*s.xhat(5) S(1:nobs,4)*s.xhat(4) S(1:nobs,3)*s.xhat(3) S(1:nobs,2)*s.xhat(2) S(1:nobs,1)*s.xhat(1)+A(1:nobs,1)*s.xhat(nsys+1)];
+bar(x,dataplot,'stacked');
+colormap(flipud(lines(5)));
+hold on;
+stairs([x; x(end)+(x(end)-x(end-1))]-10/(2*nobs),[s.yhat(1:nobs); s.yhat(nobs)],'Color',.5*ones(3,1),'LineWidth',2);
+stairs([x; x(end)+(x(end)-x(end-1))]-10/(2*nobs),[s.yhat(1:nobs)-A(1:nobs,1)*s.xhat(nsys+1); s.yhat(nobs)-A(nobs,1)*s.xhat(nsys+1)],'Color','k','LineWidth',2);
+errorbar(x,y,1./sqrt(diag(Vinv)),'ko','LineWidth',2,'MarkerFacecolor','y','MarkerSize',10);
+hold off;
+axis([0 10 min(min(min(dataplot,[],1))*1.2,0) max(y*1.2)]);
+set(gca,'Xtick',0:10);
+xlabel('E_{vis} in MeV');
+ylabel('N_{evt}');
+title('Data and Model');
+legend('Dm2 Systematic','Proton Recoils','Li9','Accidentals','\nu signal','Total Oscillation Model','No oscillation Model','Data');
+
+subplot(1,4,4);
+cmap = [.5*ones(1,3); circshift(lines(5),-1)];
+hold on;
+ini_p = [x0;0];
+pulls = zeros(nsys+npar,1);
+for i=1:length(s.xhat)
+    pulls(i) = (s.xhat(i)-ini_p(i))./sqrt(s.covx(i,i));
+    bar(i,pulls(i),'FaceColor',cmap(i,:));
+end
+%errorbar(1:length(x0),x0,1./sqrt(diag(Winv)),'ko','LineWidth',2,'MarkerFacecolor','y','MarkerSize',10);
+axis([0 length(x0)+2 -1.2*max(abs(pulls)) 1.2*max(abs(pulls))]);
+box on;
+hold off;
+
+
+%% Residuals and pulls plot
+figure(2); set(gcf,'WindowStyle','dock');
+
+subplot(1,2,1);
+bar(s.r(1:nobs));
+axis([0 length(s.r(1:nobs))+1 min(s.r(1:nobs))*1.2 max(s.r(1:nobs))*1.2]);
+grid off;
+set(gca,'Xtick',round(linspace(1,length(s.r(1:nobs)),10)));
+xlabel('Bin number');
+ylabel('R');
+title('Residuals');
+
+subplot(1,2,2);
+bar(s.r(nobs+1:nobs+nsys));
+axis([0 length(s.r(nobs+(1:nsys)))+1 min(s.r(nobs+(1:nsys)))*1.2 max(s.r(nobs+(1:nsys)))*1.2]);
+grid off;
+set(gca,'Xtick',round(linspace(1,length(s.r(nobs+(1:nsys))),min(8,nsys))));
+xlabel('Bin number');
+ylabel('R');
+title('Pulls');
+
+
+%% Residuals vs Endogenic variable
+figure(3); set(gcf,'WindowStyle','dock');
+plot(y,s.r(1:nobs),'bo');
+% Think more about this plot...
+%hold on;
+%plot(S*x0,s.r(1:nobs),'rx');
+%hold off;
+grid on;
+xlabel('N_{evt}');
+ylabel('R(y)');
+title('Residuals vs Endogenic var');
+
+%% Residuals vs Exogenic variables
+
+for i=1:nsys,
+    figure(3+i); set(gcf,'WindowStyle','dock');
+    plot([S(:,i); Winv(:,i)]*s.xhat(i),s.r,'o');
+    grid on;
+    xlabel('N_{evt}');
+    ylabel(['R(#' num2str(i) ')']);
+    title(['Residuals vs Systematic var #' num2str(i)]);
+end
+
+for i=1:npar,
+    figure(3+nsys+i); set(gcf,'WindowStyle','dock');
+    plot([A(:,i); zeros(nsys,1)]*s.xhat(nsys+i),s.r,'o');
+    grid on;
+    xlabel('N_{evt}');
+    ylabel(['R(#' num2str(i) ')']);
+    title(['Residuals vs Physical var #' num2str(i)]);
+end
+
+%% Leverages plot
+figure(4+nsys+npar); set(gcf,'WindowStyle','dock');
+bar(s.leverage);
+axis([0 length(s.leverage)+1 0 max(s.leverage)*1.2]);
+grid off;
+set(gca,'Xtick',round(linspace(1,length(s.leverage),min(10,nobs+nsys))));
+xlabel('E_{vis} in MeV');
+ylabel('L');
+title('Leverages');
+line([1-1 length(x)+1],2*(nsys+npar)/(nobs+nsys)*[1 1],'LineWidth',2,'LineStyle','--','Color',.5*ones(3,1));
+line([1-1 length(x)+1],(nsys+npar)/(nobs+nsys)*[1 1],'LineWidth',2,'LineStyle','-.','Color',.7*ones(3,1));
+
+%% Delete-1 variance
+figure(5+nsys+npar); set(gcf,'WindowStyle','dock');
+plot(s.s2_i,'kd','MarkerSize',10,'MarkerFaceColor','y','LineWidth',2);
+axis([0 length(s.s2_i)+1 s.mse-6/sqrt(nobs-npar-1) s.mse+6/sqrt(nobs-npar-1)]);
+line([1-1 length(x)+1],[s.mse s.mse],'LineWidth',2,'Color',.5*ones(3,1));
+grid off;
+set(gca,'Xtick',round(linspace(1,length(s.s2_i),min(8,nobs+nsys))));
+xlabel('E_{vis} in MeV');
+ylabel('\sigma_{i}');
+title('Delete-1 variance');
+if nobs+nsys-npar>5
+    line([1-1 length(x)+1],(s.mse+2/sqrt(nobs-npar-1))*[1 1],'LineWidth',2,'LineStyle','--','Color',.5*ones(3,1));
+    line([1-1 length(x)+1],(s.mse-2/sqrt(nobs-npar-1))*[1 1],'LineWidth',2,'LineStyle','--','Color',.5*ones(3,1));
+end
+
+%% Parameter correlation matrix
+figure(6+nsys+npar); set(gcf,'WindowStyle','dock');
+nD=length(s.covx);
+XD=1:nD;
+YD=1:nD;
+imagesc(XD,YD,sqrt(diag(1./diag(s.covx)))*s.covx*sqrt(diag(1./diag(s.covx))));
+set(gca,'XTick',XD)
+set(gca,'XTickLabel',{num2str(XD')})
+set(gca,'YTick',YD)
+set(gca,'YTickLabel',{num2str(YD')})
+%set(gca,'YLabel',YD,YD-.5);
+caxis([-1 1]);
+cm=0:1/9:1;
+my_cm_blue=[1-cm;1-cm;ones(size(cm))]';
+my_cm_red=[ones(size(cm));1-cm;1-cm]';
+colormap([flipud(my_cm_blue);[1 1 1];my_cm_red]);
+colorbar;
+set(gcf,'Color',[1 1 1]);
+% set(gca,'GridLineStyle','-');
+% set(gca,'MinorGridLineStyle','-');
+% set(gca,'XGrid','on');
+% set(gca,'XMinorGrid','on');
+% set(gca,'YGrid','on');
+% set(gca,'YMinorGrid','on');
+set(gca,'XAxisLocation','top');
+set(gca,'XTickLabel',{'nu' 'acc' 'li9' 'prc' 'dm2' 's2t13'})
+set(gca,'YTickLabel',{'nu' 'acc' 'li9' 'prc' 'dm2' 's2t13'})
+%grid on;
+title('Parameter Correlation matrix');
+
+%% Delete-1 parameters
+figure(7+nsys+npar); set(gcf,'WindowStyle','dock');
+XD=1:size(s.x_i,2);
+YD=1:size(s.x_i,1);
+diffxi = s.x_i-repmat(s.xhat,[1 size(s.x_i,2)]);
+imagesc(XD,YD,diffxi./repmat(max(abs(diffxi),[],2),[1 size(s.x_i,2)]));
+set(gca,'Xtick',round(linspace(1,length(XD),min(8,nobs+nsys))));
+set(gca,'YTick',round(linspace(1,length(YD),min(8,nsys+npar))));
+caxis([-1 1]);
+cm=0:1/9:1;
+my_cm_blue=[1-cm;1-cm;ones(size(cm))]';
+my_cm_red=[ones(size(cm));1-cm;1-cm]';
+colormap([flipud(my_cm_blue);[1 1 1];my_cm_red]);
+colorbar;
+set(gcf,'Color',[1 1 1]);
+colorbar;
+set(gca,'XAxisLocation','top');
+grid on;
+set(gca,'YTickLabel',{'nu' 'acc' 'li9' 'prc'})
+title('Delete-1 parameters (centered and rescaled)');
+
+%% Scale change in parameters
+figure(8+nsys+npar); set(gcf,'WindowStyle','dock');
+XD=1:size(s.dfxs,2);
+YD=1:size(s.dfxs,1);
+imagesc(XD,YD,s.dfxs);
+set(gca,'Xtick',round(linspace(1,length(XD),min(8,nobs+nsys))));
+set(gca,'YTick',round(linspace(1,length(YD),min(8,nsys+npar))));
+caxis([-1 1]);
+cm=0:1/9:1;
+my_cm_blue=[1-cm;1-cm;ones(size(cm))]';
+my_cm_red=[ones(size(cm));1-cm;1-cm]';
+colormap([flipud(my_cm_blue);[1 1 1];my_cm_red]);
+colorbar;
+set(gcf,'Color',[1 1 1]);
+colorbar;
+set(gca,'XAxisLocation','top');
+grid on;
+set(gca,'YTickLabel',{'nu' 'acc' 'li9' 'prc'})
+title('Scale change in parameters');
+
+%% Change in fitted values. DFFIT
+figure(9+nsys+npar); set(gcf,'WindowStyle','dock');
+bar(s.dffit);
+axis([0 length(s.dffit)+1 0 max(s.dffit)*1.2]);
+grid off;
+set(gca,'Xtick',round(linspace(1,length(s.dffit),min(10,nobs+nsys))));
+xlabel('Bin number');
+ylabel('dffit');
+title('Change in fitted values. DFFIT');
+
+%% Scaled change in fitted values. DFFITS (with studentized residuals)
+figure(10+nsys+npar); set(gcf,'WindowStyle','dock');
+bar(s.dffits);
+axis([0 length(s.dffits)+1 0 max(s.dffits)*1.2]);
+grid off;
+set(gca,'Xtick',round(linspace(1,length(s.dffits),min(10,nobs+nsys))));
+xlabel('Bin number');
+ylabel('dffits');
+title('Scaled change in fitted values. DFFITS');
+
+%% Change in covariance. COVRATIO
+figure(11+nsys+npar); set(gcf,'WindowStyle','dock');
+bar(s.covratio);
+axis([0 length(s.covratio)+1 0 max(s.covratio)*1.2]);
+grid off;
+set(gca,'Xtick',round(linspace(1,length(s.covratio),min(10,nobs+nsys))));
+xlabel('Bin number');
+ylabel('covratio');
+title('Change in covariance. COVRATIO');
+
+%% Cook's Distance
+figure(12+nsys+npar); set(gcf,'WindowStyle','dock');
+bar(s.cookd);
+axis([0 length(s.cookd)+1 0 max(s.cookd)*1.2]);
+grid off;
+set(gca,'Xtick',round(linspace(1,length(s.cookd),min(10,nobs+nsys))));
+xlabel('Bin number');
+ylabel('Cookd');
+title('Cook s Distance');
+line([1 length(x)],[1 1],'LineWidth',2,'LineStyle','--','Color',.5*ones(3,1));
+
+%% Residuals vs Leverages
+figure(13+nsys+npar); set(gcf,'WindowStyle','dock');
+lev_edges = [0 min(max(s.leverage)*1.4,1)];
+tmp_res_edges = max(abs(min(s.standres)),abs(max(s.standres)));
+res_edges = [-tmp_res_edges tmp_res_edges]*1.4;
+lev = linspace(lev_edges(1),lev_edges(2),500);
+res = linspace(res_edges(1),res_edges(2),500);
+[Lev,Res] = meshgrid(lev,res);
+D = abs(Res).^2/(npar).*Lev./(1-Lev);
+contourf(lev,res,D,[0 .5 1]);
+line(2*(nsys+npar)/(nobs+nsys)*[1 1],res_edges,'LineWidth',2,'LineStyle','-.','Color',.5*ones(3,1));
+line((nsys+npar)/(nobs+nsys)*[1 1],res_edges,'LineWidth',2,'LineStyle','--','Color',.7*ones(3,1));
+line(lev_edges,[2 2],'LineWidth',2,'LineStyle','--','Color',.7*ones(3,1));
+line(lev_edges,-[2 2],'LineWidth',2,'LineStyle','--','Color',.7*ones(3,1));
+line(lev_edges,[3 3],'LineWidth',2,'LineStyle','-.','Color',.5*ones(3,1));
+line(lev_edges,-[3 3],'LineWidth',2,'LineStyle','-.','Color',.5*ones(3,1));
+axis([lev_edges res_edges]);
+caxis([0 1]);
+mycm=[[1 1 1];[8/9 8/9 1];[1 8/9 8/9]];
+colormap(mycm);
+%colorbar;
+hold on;
+plot(s.leverage,s.standres,'kd','LineWidth',2,'MarkerSize',10,'MarkerFaceColor','y');
+grid on;
+hold off;
+xlabel('Leverages');
+ylabel('Standardized Residuals');
+title('Standardized Residuals vs Leverages');
+hold on;
+cookd_sel = s.cookd>=1;
+cookd_sel_i = find(cookd_sel);
+plot(s.leverage(cookd_sel),s.standres(cookd_sel),'ro','MarkerSize',20,'LineWidth',2);
+textx_offset = .02*(lev_edges(2)-lev_edges(1));
+texty_offset = .02*(res_edges(2)-res_edges(1));
+for i=1:length(find(cookd_sel))
+    text(s.leverage(cookd_sel_i(i))+textx_offset,s.standres(cookd_sel_i(i))+texty_offset,...
+        num2str(cookd_sel_i(i)),'Color','r','FontWeight','bold');
+end
+hold off;
+
+
+%%
+
+set(figure(1),'Selected','on');
+
+
+
+end

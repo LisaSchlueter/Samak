@@ -1,0 +1,38 @@
+--------------------------------------------------------------
+Tritium Beta Decay Spectrum with following properties:
+--------------------------------------------------------------
+   - EndPoint: 18573.7 eV 
+   - (Kinetic) Energy Range: [18371.1,18621.1] eV - 2500 bins 
+   - 2 body-decay phase space + relativistic Fermi function 
+   - Screening correction: OFF 
+   - Finite Extention of Nucleus Charge: OFF 
+   - Weak interaction finite size correction: OFF 
+   - Electron-Electron Exchange correction: OFF 
+   - Recoil Coulomb correction: OFF 
+   - Radiative corrections: ON (type 1)
+   - Weinheimer93 Phase Space: OFF
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+- - - - - Neutrinos 
+   - Effective Neutrino mass: 0 eV 
+   - Sterile Neutrino -  mass: 0 eV - mixing: 0
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+- - - - - WGTS 
+   - T-T - FSD: BlindingKNM1 (activity fraction = 0.95259)
+   - D-T - FSD: BlindingKNM1 (activity fraction = 0.0107538)
+   - H-T - FSD: BlindingKNM1 (activity fraction = 0.0353371)
+   - T-Decay Rate out of WGTS: 3.13107e+09 Counts in 2.01885e+06 sec 
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+- - - - - MACE 
+   - Integral Spectrum - Time Distribution: DataDriven 
+   - Transmission Function: WGTSMACE 
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+- - - - - Backgrounds 
+   - Flag: ON  - Type: FLAT
+   - Rate: 369.715 mcps per qU (renormalized for 148 pixel)
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+- - - - - FPD 
+   - Segmentation: OFF  
+   - Mean Efficiency: 0.9  
+   - Tritium e- FPD: 5564.94 cps at (qU>18371.1 eV)
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+--------------------------------------------------------------

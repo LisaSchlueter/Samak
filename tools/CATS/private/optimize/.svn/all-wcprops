@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 59
+/svn/snif/!svn/ver/62/trunk/reanalyse/CATS/private/optimize
+END
+license.txt
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/snif/!svn/ver/62/trunk/reanalyse/CATS/private/optimize/license.txt
+END
+optimize.m
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/svn/snif/!svn/ver/62/trunk/reanalyse/CATS/private/optimize/optimize.m
+END
+testoptimize.m
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/snif/!svn/ver/62/trunk/reanalyse/CATS/private/optimize/testoptimize.m
+END

@@ -1,0 +1,36 @@
+--------------------------------------------------------------
+Tritium Beta Decay Spectrum with following properties:
+--------------------------------------------------------------
+   - EndPoint: 18573.7 eV 
+   - (Kinetic) Energy Range: [18371.1,18621.1] eV - 2501 bins 
+   - 2 body-decay phase space + relativistic Fermi function 
+   - Screening correction: OFF 
+   - Finite Extention of Nucleus Charge: OFF 
+   - Weak interaction finite size correction: OFF 
+   - Electron-Electron Exchange correction: OFF 
+   - Recoil Coulomb correction: OFF 
+   - Radiative corrections: ON (type 1)
+   - Weinheimer93 Phase Space: OFF
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+- - - - - Neutrinos 
+   - Effective Neutrino mass: 0 eV 
+   - Sterile Neutrino -  mass: 0 eV - mixing: 0
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+- - - - - WGTS 
+   - T-T - FSD: Sibille0p5eV (activity fraction = 0.95259)
+   - D-T - FSD: Sibille0p5eV (activity fraction = 0.0107538)
+   - H-T - FSD: Sibille0p5eV (activity fraction = 0.0353371)
+   - T-Decay Rate out of WGTS: 8.03074e+08 Counts in 1.03252e+09 sec 
+   - T-Decay Rate out of WGTS: 9.4648e+08 Counts in 5.73624e+08 sec 
+   - T-Decay Rate out of WGTS: 2.01885e+06 Counts in 2.01885e+06 sec 
+   - T-Decay Rate out of WGTS: 2.01885e+06 Counts in 2.01885e+06 sec 
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+- - - - - MACE 
+   - Integral Spectrum - Time Distribution: KNM1 
+   - Transmission Function: WGTSMACE 
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+- - - - - Backgrounds 
+   - Flag: ON  - Type: FLAT
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+- - - - - FPD 
+   - Segmentation: RING  

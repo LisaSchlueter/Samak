@@ -1,0 +1,32 @@
+%\documentclass[prl,10pt,showpacs,preprintnumbers,amsmath,amssymb,superscriptaddress,amsmath,a4paper]{revtex4-1}
+\documentclass[10pt]{article}
+\include{samak_Preamble}
+\begin{document}
+\subfile{samak_titlepage.tex}
+\frontmatter
+\tableofcontents
+\newpage
+\mainmatter
+\section{Introduction}
+\subfile{samak_TritiumBetaDecayModel} 
+\subfile{samak_KatrinFirstTritium}
+\subfile{samak_TimeDistribution}
+\subfile{samak_chi2Fit}
+\subfile{samak_CovarianceMatrices.tex}
+\subfile{samak_FitStatistics}
+\subfile{samak_CombiningPixels}
+\subfile{samak_StackingRuns}
+\subfile{samak_ApplicationEffectiveEndpoint}
+\subfile{samak_ApplicationOnsetFSD}
+\subfile{samak_ApplicationColumnDensity} 
+\section{Conclusions}
+\subfile{samak_Annex}
+\subfile{samak_Acknowledgment}
+%\newpage
+%\bibliography{samak_bib}
+%\newpage
+\begin{appendix}
+  \listoffigures
+  \listoftables
+\end{appendix}
+\end{document}

@@ -1,0 +1,2096 @@
+\documentclass[prl,10pt,showpacs,preprintnumbers,amsmath,amssymb,superscriptaddress,amsmath,a4paper]{revtex4-1}
+\makeatletter
+\renewcommand*\env@matrix[1][c]{\hskip -\arraycolsep
+  \let\@ifnextchar\new@ifnextchar
+  \array{*\c@MaxMatrixCols #1}}
+\makeatother
+% Packages
+\usepackage{amsmath,array}
+\usepackage{graphicx}                % Include figure files
+\usepackage{dcolumn}                 % Align table columns on decimal point
+\usepackage{bm}                      % bold math
+\usepackage{longtable}
+
+% Commands
+\def\nuebar{\bar{\nu}_{\lowercase{e}}}
+\def\nubar{\bar{\nu}}
+\newcommand{\nnbe}{\stackrel{{\scriptscriptstyle (} - {\scriptscriptstyle )}}{\nu}\!\!\!\! _{\rm e}}
+\newcommand{\cnb}{C$\nu$B}
+\newcommand{\rnb}{R$\nu$B}
+
+% Path
+\graphicspath{./figures/}
+
+% Start
+\begin{document}
+
+\title{Simulation and Analysis of the First KATRIN Tritium Data with Samak \\(Draft Technical Note)}
+
+\author{T.~Lasserre}
+\affiliation{Commissariat a l'\'energie atomique et aux \'energies alternatives, Centre de Saclay, IRFU, 91191 Gif-sur-Yvette, France}
+  \affiliation{Astroparticules et Cosmologie APC, 10 rue Alice Domon et L\'eonie Duquet,
+    75205 Paris cedex 13, France}
+\affiliation{Max-Planck-Institut f\"ur Physik (Werner-Heisenberg-Institut), Foehringer Ring 6, 80805 M\"unchen, Germany}
+\affiliation{Institute for Advance Study, Technische Universit\"at M\"unchen, James-Franck-Str. 1, 85748 Garching}
+    \author{P. Morales}
+\affiliation{Max-Planck-Institut f\"ur Physik (Werner-Heisenberg-Institut), Foehringer Ring 6, 80805 M\"unchen, Germany}
+\affiliation{Physik-Department, Technische Universit\"at M\"unchen, James-Franck-Str. 1, 85748 Garching}
+
+\author{L. Schlueter}
+\affiliation{Max-Planck-Institut f\"ur Physik (Werner-Heisenberg-Institut), Foehringer Ring 6, 80805 M\"unchen, Germany}
+\affiliation{Physik-Department, Technische Universit\"at M\"unchen, James-Franck-Str. 1, 85748 Garching}
+
+  \date{\today}
+
+%========================================================================
+\begin{abstract}
+Samak is a framework that is devoted to perform fits to the KATRIN data, and to extract confidence intervals for both the neutrino mass and for light sterile neutrino oscillation parameters. This document describes the Samak simulation and analysis framework applied to the first KATRIN tritium data. We propose using a chisquare fit with systematics uncertainties accounted for through the covariance matrix approach. Pull terms are used too. This document explains how the analysis is performed with Samak and  describes how the  fit is performed and how covariance matrices are calculated for the first KATRIN tritium case. 
+\end{abstract}
+%========================================================================
+
+\maketitle
+
+\tableofcontents
+\newpage
+
+\section{Introduction}
+
+\section{Tritium $\beta$-decay integral spectrum modelling}
+\label{sec:IS}
+
+The tritium $\beta$-decay differential energy spectrum, $DS(E,E_{0},m_{\beta})$, is built based on the phase-space factor corrected by the Fermi function. $E_{0}$ is the endpoint energy, and $m_{\beta}$ the effective neutrino mass. Electrons are detected  on the focal plane detector after the high-pass MAC-E filter, which is put on a high electric potential $qU$. By varying the potential difference between the spectrometer 
+and the electron source the $\beta$-spectrum is scanned and an integral spectrum is obtained. The number of counts, $IS_{i},$at a specific retarding potential, $qU$, is calculated by integrating the differential spectrum from $qU_{i}$ to the endpoint, $E_{0}$ according to:
+\begin{equation}
+IS(E_{0},qU,m_{\beta})=\int_{0}^{\infty}DS(E_{E},E_{0},m_{\beta})\centerdot RF(E_{E},qU)\,{\rm d}E_{E}, 
+\end{equation}
+where RF is the KATRIN response function. 
+
+
+\section{KATRIN First Tritium}
+\label{sec:settings}
+
+\subsection{Data}
+The current foreseen measurement is period of XX days, starting from June XX and ending on June XX 2018. The run numbers consider in Samak range between 40538 to 41002. The main features of the run used in Samak's analysis are given in table \ref{tab:ftRun}, after exclusion of the folowwing runs:
+\begin{itemize}
+\item run 40761 - Stability Run - No Scan
+\item run 40762 - Stability Run - No Scan
+\item run 40769 - Sterile Neutrino Run? 31 qU bins
+\item run 40770 - Sterile Neutrino Run? 31 qU bins
+\item run 40773 - Sterile Neutrino Run - High Count Rate
+\item run 40805 - Sterile Neutrino Run? 18 qU bins
+\item run 40806 - Sterile Neutrino Run - High Count Rate
+\item run 40807 - Anomaleous DT uncertainty
+\item run 40995 - Sterile Neutrino Run - High Count Rate
+\end{itemize}
+
+Figure \ref{f:scRun} shows the run list considered in Samak, the time per run, and cumulated run time (about 6 days).
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.35]{./figures/KATRIN_FT_SC_Time_Events.png}
+\caption{\label{f:scRun}  List of runs considered in Samak, run statistics (counts over the whole FPD), and cumulated run time.}
+\end{center}
+\end{figure}
+
+Figure \ref{f:scRun_rhoD} shows the column density per run and its relative uncertainty.
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.35]{./figures/KATRIN_FT_SC_rhoD1.png}
+\caption{\label{f:scRun_rhoD}  Display of the column density per run (top) and its uncertainty.}
+\end{center}
+\end{figure}
+
+Figures \ref{f:scRun_DT},\ref{f:scRun_TT},\ref{f:scRun_HT} show the DT/TT/HT fractions in the WGTS per run and their relative uncertainties.
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.35]{./figures/KATRIN_FT_SC_DT1.png}
+\caption{\label{f:scRun_DT}  Display of the DT fraction per run (top) and its relative uncertainty.}
+\end{center}
+\end{figure}
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.35]{./figures/KATRIN_FT_SC_TT.png}
+\caption{\label{f:scRun_TT}  Display of the TT fraction per run (top) and its relative uncertainty.}
+\end{center}
+\end{figure}
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.35]{./figures/KATRIN_FT_SC_HT.png}
+\caption{\label{f:scRun_HT}  Display of the HT fraction per run (top) and its relative uncertainty.}
+\end{center}
+\end{figure}
+
+On may 19th first tritium data were taken and immediatly compared to the Samak's model. Figure \ref{f:datamodel40263} shows the overlay of the data and the model, prior doing any fit. The statistics is modest (1661 seconds), but this first comparison validated the excellent performances of the KATRIN setup.
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.6]{./figures/datamodel40263_FPD95.pdf}
+\caption{\label{f:datamodel40263}  First Tritium data (single run 40263) and comparison with Samak's model (not a fit). The blue band is a first estimate of the systematics, based on the Samak's covariance matrix approach.}
+\end{center}
+\end{figure}
+
+
+\subsubsection{Analysis plane E- B- field Corrections}
+
+The retarding potential and magnetic field in the main spectrometer analyzing plane were simulated by Jan Behrens. The simulation geometry includes the replaced DPS magnet and uses the updated alignment after the magnet was replaced. The simulations was performed with the standard settings, vessel at -18.4 kV, LFCS at 0.6 mT for 70\% beamline magnets. Inhomogeneity of the values are averaged over each single pixel. Pixel-wise inhomogeneities are provided as an uncertainty, corresponding on average to 1e-9 for the retarding potential, and 1e-11 for the magnetic field, therefore negligible in what follows.
+
+%\subsubsection{Analysis plane E-field maps}
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.5]{./figures/MACEEinhomogeneity-pixels.png}
+\includegraphics[scale=0.2]{./figures/MACEEinhomogeneity-map.png}
+\caption{\label{f:eAP1}  Electric potential inhomogeneities at the analysis plane.}
+\end{center}
+\end{figure}
+
+%\subsubsection{Analysis plane B-field maps}
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.5]{./figures/MACEBinhomogeneity-pixels.png}
+\includegraphics[scale=0.2]{./figures/MACEBinhomogeneity-map.png}
+\caption{\label{f:eAP1}  Magnetic field inhomogeneities at the analysis plane.}
+\end{center}
+\end{figure}
+
+\subsection{Focal Plane Detector (FPD)}
+
+The KATRIN focal plane detector (FPD) is composed of 148 pixels, gathered into a bulleye (4 pixels) and 12 rings of 12 pixels. Each pixel is looking at approximately the same fraction of the fluxtube. Therefore, appart from the bulleye, each ring is also looking at the same fraction of the flux tube and a similar count rate is expected. For the Samak analysis we exclude the two external rings, unless explicitely mentioned. The detection efficiency per pixel is taken to be constant, at 95\%. This parameter is anyways almost always considered as a free parameter in the analysis, unless explicitely mentioned (for the rate-only analysis, for instance).
+
+\subsection{Others inputs for the simulation}
+
+\begin{table}[h!]
+  \centering
+  \caption{Inputs for Samak's simulation}
+    \resizebox{0.7\textwidth}{!}{\begin{tabular}{l|cl|c}
+    \hline
+    \hline
+    \multicolumn{4}{c}{\textbf{Measurement Time Distribution}} \\
+    First Tritium  - 1.5h / 3h MTD per run & 26 qU bins &  &Read from Run summary\\
+    \hline
+    \multicolumn{4}{c}{\textbf{Tritium Beta Decay}} \\
+    $E_0$ & 18573.7 & eV & Free fit parameter \\
+    Work Function & 0 & eV & Not known yet... \\
+    Neutrino mass & 0 & eV & Not known yet... \\
+    \hline
+    \multicolumn{4}{c}{\textbf{Theoretical Corrections}} \\
+    Fermi Function & ON & &Relativistic \\
+    Radiative Corrections& ON & & \\
+    Screening & OFF &  &\\
+    Finite Extention of Nucleus Charge & OFF &  &\\
+    Weak interaction finite size & OFF & & \\
+    Electron-Electron Exchange & OFF & & \\
+    Recoil Coulomb & OFF & & \\
+    Weinheimer93 Phase Space & OFF &  &\\
+    \hline
+    \multicolumn{4}{c}{\textbf{Other Corrections}} \\
+    Synchrotron Radiation & ON &  &Negligible\\
+    Doppler Broadening & OFF &  &Negligible\\
+    \hline
+    \multicolumn{4}{c}{\textbf{Background Benchmark (FPD, 148 pixels)}} \\
+    Flat Energy Distribution & 300 mcps &  &  Fit free parameter\\
+    \hline
+    \multicolumn{4}{c}{\textbf{KATRIN Setup}} \\
+    Column density & 4.50E+17 & mol/cm$^{-2}$ &  Read from Run summary\\
+    B source & 2.52 & T \\
+    B pinch & 4.2 & T \\
+    Source section & 52.81 & cm$^2$ \\
+    IS Cross Section & 3.46E-22 & cm$^2$ \\
+    Number of scattering & 11 &  \\
+    B Analysis Plane & 9.00E-04 & T \\
+    Mean Detector Efficiency & 0.95 &  & Fit free parameter\\
+    \hline
+    \multicolumn{4}{c}{\textbf{Isotopologues}} \\
+    DT & ON &  &  Read from Run summary\\
+    TT & ON &  &  Read from Run summary\\
+    HT & OFF &  &  Read from Run summary\\
+    \hline
+    \multicolumn{4}{c}{\textbf{Excited States}} \\
+    DT & DOSS &  & $P_{gs}$ can be a fit parameter\\
+    TT & DOSS &  & $P_{gs}$ fixed\\
+    HT & OFF &   &\\
+    \end{tabular}}%
+  \label{t:siminputs}%
+\end{table}%
+
+
+\section{Measurement Time Distributions and expected signal}
+\label{sec:mtd}
+
+Three energy regions are of interest:
+-	Below -400 + E0 eV, for the systematics understanding and keV sterile neutrino analysis;
+-	Below -200 + E0 eV, for the systematics understanding and keV sterile neutrino analysis;
+-	above -200 + E0 eV, for the neutrino mass and light sterile neutrino search.
+
+\begin{table}[h!]
+  \centering
+  \caption{Measurement Time Distribution (MTD). The estimated swag time is 173 second.}
+  \begin{tabular}{lllllll}
+    qU    & qU-E0 & Fraction & swag (s) & 1.5h MTD (s) & 3h MTD (s) & 6h MTD (s) \\
+    \hline
+%    \hline
+    16575 & -2000 & 0.9\% & 0     & 50    & 100   & 200 \\
+    16775 & -1800 & 0.9\% & 9     & 50    & 100   & 200 \\
+%    \hline
+    16975 & -1600 & 0.9\% & 9     & 50    & 100   & 200 \\
+    17175 & -1400 & 0.9\% & 9     & 50    & 100   & 200 \\
+    17375 & -1200 & 0.9\% & 9     & 50    & 100   & 200 \\
+    17575 & -1000 & 0.9\% & 9     & 50    & 100   & 200 \\
+    17775 & -800  & 0.9\% & 9     & 50    & 100   & 200 \\
+    17975 & -600  & 0.9\% & 9     & 50    & 100   & 200 \\
+    18175 & -400  & 0.9\% & 9     & 50    & 100   & 200 \\
+    18275 & -300  & 0.9\% & 7     & 50    & 100   & 200 \\
+    18375 & -200  & 0.9\% & 7     & 50    & 100   & 200 \\
+    18400 & -175  & 1.2\% & 6     & 62.5  & 125   & 250 \\
+    18425 & -150  & 1.4\% & 6     & 75    & 150   & 300 \\
+    18450 & -125  & 1.9\% & 6     & 100   & 200   & 400 \\
+    18475 & -100  & 2.4\% & 5     & 125   & 250   & 500 \\
+    18485 & -90   & 2.8\% & 5     & 150   & 300   & 600 \\
+    18495 & -80   & 3.3\% & 5     & 175   & 350   & 700 \\
+    18505 & -70   & 3.8\% & 5     & 200   & 400   & 800 \\
+    18515 & -60   & 4.3\% & 5     & 225   & 450   & 900 \\
+    18525 & -50   & 4.7\% & 5     & 250   & 500   & 1000 \\
+    18535 & -40   & 5.7\% & 5     & 300   & 600   & 1200 \\
+    18545 & -30   & 7.1\% & 5     & 375   & 750   & 1500 \\
+    18555 & -20   & 8.5\% & 5     & 450   & 900   & 1800 \\
+    18565 & -10   & 8.5\% & 5     & 450   & 900   & 1800 \\
+    18575 & 0     & 8.5\% & 5     & 450   & 900   & 1800 \\
+    18585 & 10    & 8.5\% & 5     & 450   & 900   & 1800 \\
+    18595 & 20    & 8.5\% & 5     & 450   & 900   & 1800 \\
+    18615 & 40    & 8.5\% & 5     & 450   & 900   & 1800 \\
+%    \hline
+%    Time (s) &       &       & 173   & 5288  & 10575 & 21150 \\
+%    Time (h) &       &       &       & 1.5   & 3     & 6 \\
+%    \hline
+%    \hline
+    \end{tabular}%
+  \label{t:MTD}%
+\end{table}%
+
+
+The First Tritium measurement time distribution is shown in figure \ref{f:mtd}. It extends originally at 2000 keV below the endpoint. However, in the analysis, only the data beyond -1600 eV below the endpoint are considered.
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.5]{./figures/FT-TL3.png}
+\includegraphics[scale=0.5]{./figures/FT-TL4.png}
+\caption{\label{f:mtd}  First Tritium Measurement Time Distribution (top) and zoom on the last 200 eV below the original expected endpoint (18575 eV).}
+\end{center}
+\end{figure}
+
+Short repetitive scans are considered in order to obtain stables values at recurring retarding voltages, within 1.5 hour. However those short scans lead to low statistics per pixel beyond 200 eV below the endpoint. Longer scans of about 3 hours are thus considered too.
+
+\section{Pixel-wise $\chi^2$ Fit}
+\label{sec:pixelchisquare}
+
+Analysis is first performed on a pixel-wise basis, where each of the 148 pixels, p, is considered independently. 
+
+We estimate the value of a vector of $n$ parameters $\mathbf{X}=(X_1,X_2,...,X_n)$ by performing a $\chi^2$ fit of the predicted events, $N_{i}^\mathrm{model}$, to the measured data, $N_{i}^\mathrm{data}$, binned in retarding potentials, $qU_{i}$.
+
+The following $\chi^2$ function is used:
+\begin{equation}
+\chi^2_p(\mathbf{X}) = \sum_{ij}  \left( N_{p,i}^\mathrm{data}-N_{p,i}(\mathbf{X})^\mathrm{model}\right) M^p_{ij}(\mathbf{X})^{-1} \left( N_{p,i}^\mathrm{data}-N_{p,i}(\mathbf{X})^\mathrm{model}\right),
+\end{equation}
+where $N_{i}^\mathrm{data}$ is the measured number of electron events in the retarding potential bin i, $N_{i}(\mathbf{X})^\mathrm{model}$ is the predicted number of electron events in the retarding potential bin i, and M is the covariance matrix describing the uncertainties in the predicted number of electron events. M contains both statistical uncertainties as well as the systematic uncertainties in the electron integral spectrum including bin-to-bin correlations.\\
+
+In general, both $N_{i}$ and $M^p_{ij}$ could depend on the values of $\mathbf{X}$. However, when the predicted number of events in each retarding potential bin i is large, the statistical uncertainty in M can be estimated by the observed number of events $N_{i}^\mathrm{data}$.
+Furthermore, if the systematic variances and covariances are not very sensitive to the values of $\mathbf{X}$, then these can be approximated in M by their values for the prediction $\mathbf{X_{bf}}$. These two approximations remove the dependence of $M^p_{ij}$ on $\mathbf{X}$ in our fits.\\
+
+We perform a qU-dependent fit with a free overall normalization which tests if the measured integral  spectrum is distorted with respect to our nominal hypothesis.\\
+
+The best fit, $X_{best}$, is found by minimizing the $\chi^2$ as a function of $X$. The $\Delta\chi^2$ test statistic is then defined as the excursion of the $\chi^2$ about its minimum as a function of $X$:
+\begin{equation}
+\Delta\chi^2(\mathbf{X}) = \chi^2(\mathbf{X}) - \chi^2(\mathbf{X}_{bf}).
+\end{equation}
+
+In the large sample limit, $(\mathbf{X}_{bf})$ are gaussian-distributed about their true value and $\Delta\chi^2(\mathbf{X})$ follows a $\chi^2$ distribution with $N_{dof} = N_{qU} - N_{X}$ degree of freedom, where $N_{qU}$ is the number of bins, and $N_{X}$ the number of fitted parameters. The 90\% (68\%) confidence interval for $\mathbf{X})$ are then determined by the range of values of $\mathbf{X}$ for which $\Delta\chi^2(\mathbf{X})$ is less than a tabulated value. The minimum value of $\chi^2$ can also be used to evaluate the goodness-of-fit. If the predicted number of events in each retarding potential bin i is sufficiently large, then minimum of $\chi^2$ follows a $\chi^2$ distribution with $N_{dof}$ degrees of freedom.
+
+\subsection{Covariance Matrices}
+\label{sec:covmat}
+
+The covariance matrix formalism consists of using a covariance matrix, $M_{ij}$, in our $\chi^2$ definition to encode our knowledge of the uncertainties in $N_{i}^\mathrm{model}$, the predicted number of electron signal plus background events in retarding potential bin i, as well as the correlations between bins.\\
+
+There are 10 sources of uncertainty that contribute to our definition of $M_{ij}$:
+
+\begin{itemize}
+\item $M{ij}^{p,STAT}$, the statistical uncertainty in the predicted number of tritium events
+\item $M{ij}^{p,RF}$, the systematic uncertainty in the predicted response function
+\item $M{ij}^{p,FSD}$, the systematic uncertainty in the predicted correction for the D-T decay to D-He excited states
+\item $M{ij}^{p,STACK}$, the systematic uncertainty associated to run stacking
+\item $M{ij}^{p,A}$, the systematic uncertainty associated to the tritium activity fluctuations within a run
+\item $M{ij}^{p,RAD}$, the systematic uncertainty associated radiatice corrections in the computation of the tritium beta decay integral spectrum
+\item $M{ij}^{p,NAC}$, the systematic uncertainty associated to nuclear and atomic corrections in the computation of the tritium beta decay integral spectrum
+\item $M{ij}^{p,SYNC}$, the systematic uncertainty associated to synchrotron radiation loss in the WGTS
+\item $M{ij}^{p,DOP}$, the systematic uncertainty associated to doppler effect in the WGTS
+\item $M{ij}^{p,B}$, the spectral uncertainty in the predicted number of events for the background electrons
+\end{itemize}
+
+These sources of uncertainty are all considered uncorrelated. Therefore, the full covariance matrix used in the $\chi^2$ is just the sum of the covariance matrices describing each of these sources of uncertainty:
+
+\begin{equation}
+M^p_{ij} = M_{ij}^{p,STAT} + M_{ij}^{p,RF} + M_{ij}^{p,FSD} + M_{ij}^{p,STACK} + M_{ij}^{p,A}  + M_{ij}^{p,RAD} + M_{ij}^{p,NAC} + M_{ij}^{p,SYNC} + M_{ij}^{p,DOP} + M_{ij}^{p,B}.
+\end{equation}
+
+Moreover we will decompose the covariance matrix into statistics, tritium signal and background systematics, such as
+\begin{equation}
+M^p_{ij} = M_{ij}^{p,STAT} + M_{ij}^{p,T} + M_{ij}^{p,B}, 
+\end{equation}
+where
+\begin{equation}
+M_{ij}^{p,T} = M_{ij}^{p,STAT} M_{ij}^{p,RF} + M_{ij}^{p,FSD} + M_{ij}^{p,STACK} + M_{ij}^{p,A}  + M_{ij}^{p,RAD} + M_{ij}^{p,NAC} + M_{ij}^{p,SYNC} + M_{ij}^{p,DOP}.
+\end{equation}
+
+$M^p_{ij}$ is generated using the Multisim method as described in section \ref{sec:multisim}.\\
+
+In general, each of these covariance matrices $M^p_{ij}$ can be further decomposed into a sum of 3 sub-matrices: a normalization matrix, a shape matrix, and a mixed shape/normalization matrix according to:
+
+\begin{equation}
+M^p_{ij} = M^{p,norm}_{ij} + M^{p,shape}_{ij} + M^{p,mix}_{ij},
+\end{equation}
+
+where
+
+\begin{equation}
+M^{p,norm}_{ij} = \frac{IS_i IS_j}{N^2_T} \sum_{kl}{M^{p}_{ij}}
+\end{equation}
+
+\begin{equation}
+\begin{aligned}
+M^{p,shape}_{ij} = 
+& M^{p}_{ij} - \frac{IS_j}{N^2_T} \sum_{k}^{n}{M^{p}_{ik}} - \frac{IS_i}{N^2_T} \sum_{k}^{n}{M^{p}_{kj}} \\ &+\frac{IS_i IS_j}{N^2_T} \sum_{kl}{M^{p}_{ij}}
+\end{aligned}
+\end{equation}
+
+\begin{equation}
+\begin{aligned}
+M^{p,mix}_{ij} = 
+& \frac{IS_j}{N^2_T} \sum_{k}^{n}{M^{p}_{ik}} 
++ \frac{IS_i}{N^2_T} \sum_{k}^{n}{M^{p}_{kj}} \\
+& - \frac{2 IS_i IS_j}{N^2_T} \sum_{kl}{M^{p}_{ij}}
+\end{aligned}
+\end{equation}
+
+and
+
+\begin{equation}
+N_T  = \sum_{i}{IS_i}
+\end{equation}
+
+The shape matrix allows the predicted number of events $IS_i$ to migrate between bins while the normalization is held constant. This can describe uncertainties which conserve the total number of events $N_T$. 
+
+The mixed matrix describes uncertainties which change the overall normalization but affect each bin differently. 
+
+We will perform two generic kinds of analysis, rate+shape, where we consider the total covariance matrix, and shape-only, where we consider only the shape and mixed covariances matrices, getting read of the normalization component.
+
+In practice, the covariance matrices are computed for a given statistics, which is eventually a varying parameter. It is more convenient to work with a fractional error matrix, defined generically by
+
+\begin{equation}
+M_{ij} = M^{frac}_{ij} IS_i IS_j.
+\end{equation}
+\\
+\begin{equation}
+M =  M^{\textrm{Response Function}} + M^{\textrm{FSD}} + ...
+\end{equation}
+A covariance matrix can be converted into a fractional covariance matrix using the $IS_i(CV)$, where $CV$ denotes the centale values of each parameter of the model. 
+
+During the fit the fractional error matrix can then used and converted to a full covariance matrix that is is continuously recalculated using the specific fit parameters $\theta$, associated to the trial $IS_i(\theta)$.
+
+At the beginning of the minimization algorithm, fractional covariance matrices are created from each component of the total covariance matrix. This is done by dividing each matrix component by the relevant event population. This “fractionalization” first takes place at the beginning of the fit process, when all fit parameters are at their initializarion values and the related event populations are at their initial values too. At each iteration of the numerical minimization, the event populations are recalculated and the covariance matrices are “de-fractionalized”.
+
+\subsection{Nuisance parameters and pull terms}
+\label{sec:nuisancepar}
+
+Nuisance parameters are parameters that are not of primary interest but needed in order to construct a prediction (the nuisance parameters used in this analysis will be listed below).
+
+The pull term constrains the value of each parameter towards its central value while still allowing it to vary within the prescribed external uncertainty interval. This accounts for uncertainty on the parameter in the fit in a way that is roughly equivalent to a contribution to the covariance matrix. If a parameter is considered as a pull term, it must be disgarded in the covariance matrix, however. 
+
+The following sources of uncertainty are represented in full or in part by pull parameters and pull terms:
+
+\begin{itemize}
+\item The effective neutrino mass squared, $m^2_{e}$, with $\sigma_{m^2} = 2$ $eV^2$.
+\end{itemize}
+
+The following $\chi^2$ function is then used:
+\begin{equation}
+\begin{aligned}
+\chi^2_p(\mathbf{X}) = & \sum_{ij}  \left( N_{p,i}^\mathrm{data}-N_{p,i}(\mathbf{X})^\mathrm{model}\right) M^p_{ij}(\mathbf{X})^{-1} \left( N_{p,i}^\mathrm{data}-N_{p,i}(\mathbf{X})^\mathrm{model}\right) \\
+&+ \chi^2_{p,pulls},
+\end{aligned}
+\end{equation}
+%\\
+%\begin{equation}
+%\chi^2(\mathbf{X}) =  \sum_{ij}  \left( N_{i}^\mathrm{data}-N_{i}(\mathbf{X})^\mathrm{model}\right) M_{ij}(\mathbf{X})^{-1} %\left( N_{j}^\mathrm{data}-N_{j}(\mathbf{X})^\mathrm{model}\right) + \chi^2_{pulls},%
+%\end{equation}
+where
+\begin{equation}
+\chi^2_{p,pulls}(\mathbf{X}) =  \left( m^2_{e} / \sigma_{m^2} \right)^2
+\end{equation}
+
+It is worthwhile to note that while the pulled parameters must be minimized as part of the fit, they do not contribute a new degree of freedom if they are accompanied by a pull term in the statistic. In essence, a free parameter is added, but a data point is also added, with no net change in the number of degrees of freedom.
+
+\section{Statistical covariance matrix, $M{ij}^{p,STAT}$}
+\label{sec:covmat-stat}
+
+%\subsection{$M{ij}^{p,STAT}$ Definition}
+
+Statistical uncertainties are included as a diagonal covariance matrix with the elements along the diagonal corresponding to the measured number of electron events in retarding potential bin i:
+
+\begin{equation}
+M_{ij}^{stat} = N_{i}^\mathrm{data} \delta_{ij}
+\end{equation}
+where $\delta_{ij}$ is the Kronecker delta. This matrix corresponds to assigning an uncorrelated uncertainty of $\sqrt{N_{i}^\mathrm{data}}$ to the predicted number of electron events in each retarding potential bin, $qU_i$. By construction, the norm of this matrix is equal to $1/\sqrt{\sum{N_{i}^\mathrm{data}}}$.
+
+Note that the statistical uncertainty component can also be defined by the Pearson convention
+\begin{equation}
+M_{ij}^{stat} = N_{i}^\mathrm{pred} \delta_{ij}, 
+\end{equation}
+where $N_{i}^\mathrm{pred}$ correspond to the predicted number of events. Since $N^\mathrm{pred}$ is a function of the neutrino mass fit parameters it follows that Mstat is also dependent on those fit parameters. Thus, this  matrix must in principle be re-calculated at each iteration of the fit minimization. 
+
+Finally, the James convention could be used
+\begin{equation}
+M_{ij}^{stat} = \frac{(N_{i}^\mathrm{pred}+N_{i}^\mathrm{data})}{2} \delta_{ij}, 
+\end{equation}
+
+The differences between the three convention can be used to assess the systematics on the statistical uncertainty prescription.
+
+%\subsection{$M{ij}^{p,STAT}$ Construction, Display and Convergence}
+
+\section{Response function covariance matrix, $M{ij}^{p,RF}$}
+\label{sec:covmat-rf}
+
+%\subsection{$M{ij}^{p,RF}$ Definition}
+
+The transmission function of the KATRIN MAC-E spectrometer as a function of electron kinetic energy $E_{e}$ and retarding potential $qU$ is
+
+\begin{equation} 
+T(K_e,qU)=\left\{ 
+\begin{array}{lcc} 0 & {\rm if} & E_e-qU<0\\ \frac{1-\sqrt{1-\frac{E_e-qU}{K_e}\frac{B_S}{B_A}}}{1-\sqrt{1-\frac{\Delta E_e}{E_e}\frac{B_S}{B_A}}} & {\rm if} & 0\le E_e-qU\le \Delta E_e\\ 1 & {\rm if} & E_e-qU > \Delta E_e 
+\end{array} \right. 
+\end{equation} 
+
+\noindent where B$_{S}$ denotes the magnetic field strength
+in the source section and B$_{A}$ the field strength
+in the analyzing plane of the MAC-E filter. 
+The MAC-E filter energy resolution,
+$\Delta E_{e}/E_{e}=B_{A}/B_{{\rm max}}$ is the energy dependent relative sharpness of the filter. 
+
+Electrons guided through the source and the pumping section can undergo inelastic scattering with D-D or D-T molecules. 
+Taking into account the probability of multiple inelastic scattering, the response function, RF, can be written
+
+\begin{center}
+$RF(E_{e},qU)=\int_{0}^{E_{e}-qU}T(E_{e}-\epsilon,qU)\cdot$
+\par\end{center}
+
+\begin{center}
+$\left[P_{0}\delta(\epsilon)+P_{1}f(\epsilon)+P_{2}(f\otimes f)(\epsilon)+\ldots\right.$
+\par\end{center}
+
+\begin{center}
+$\ldots+P_{N_{IS}}(f\otimes \cdots f)(\epsilon){\rm d}\epsilon$
+\par\end{center}
+
+where $P_{n}$ is the probability that the electron scatters $n$ times off molecules before leaving the source and $f(\epsilon)$ is the energy loss function at each scattering. The symbol $\otimes$ defines the following convolution: $(f\otimes f)(\epsilon)=\int_{0}^{E_{e}-qU}f(\epsilon^{\prime})f(\epsilon-\epsilon^{\prime}){\rm d}\epsilon^{\prime}$. The response RF denotes the probability of an electron, emitted in the WGTS with starting energy E, to eventually reach the detector.
+
+%\subsection{$M{ij}^{p,RF}$ Construction, Display and Convergence}
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.35]{./figures/CMplot_RF.png}
+\caption{\label{f:CM_RF}  Left: Response function fractional covariance matrix.  Top right: fractional statistical (orange) and systematic uncertainties (the blue band represents the diagonal terms of the covariance matrix). Bottom right: Display of the Cauchy convergence, up to 1000 trials.}
+\end{center}
+\end{figure}
+
+The response function covariance matrix is built following the Multisim method. All parameters used for the computation of the response function and described in table \ref{t:samaksystematics} are varyied simultaneously, including their guessed or known uncertainties and their correlations, when adequate. We assume a $5\%$ uncertainty on the column density, a $2\%$ uncertainty on all magnetic fields, and a $2\%$ uncertainty on the inelastic scattering cross section. A large number of trials (typically a few thousands) are then performed and the expected integral spectra, as expected in KATRIN, are built. The covariance matrix is then constructed according to the method described in section \ref{sec:multisim} and the convergence is checked, see section \ref{sec:covmattest}.  
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.5]{./figures/CMdecompose_RF.png}
+\caption{\label{f:CMdec_RF}  Decomposition of the response function fractional covariance matrix.}
+\end{center}
+\end{figure}
+
+The response function covariance matrix is displayed in figure \ref{f:CM_RF}, and its decomposition is shown in figure \ref{f:CMdec_RF}. For completeness, the covariance matrix is converted into a correlation matrix displayed in figure \ref{f:Cordec_RF}. 
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.3]{./figures/CorMdecompose_RF.png}
+\caption{\label{f:Cordec_RF}  Decomposition of the RF correlation matrix.}
+\end{center}
+\end{figure}
+
+\section{Subrun activity fluctuations covariance matrix, $M{ij}^{p,A}$}
+\label{sec:covmat-tasr}
+
+%\subsection{$M{ij}^{p,A}$ Definition}
+%\subsection{$M{ij}^{p,A}$ Construction, Display and Convergence}
+
+The tritium activity is considered as constant for each run. Experimentally is can be related to the fraction of DT in the WGTS, multiplied by the column density. Since the normalization of the tritium activity is considered as a free fit parameter, unless excplicitely mentioned, fluctuation of the DT or column density concengtration within a run, leading to a different value for each sub-runs, shall bne considered as an uncertainty. Since the relative fluctuations of the column densities are much smaller that the relative variations of the DT fraction, from sub-runs to sub-runs, we do only consider the DT fluctuations in what follows.
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.35]{./figures/CMplot_TASR.png}
+\caption{\label{f:CM_TASR}  Left: Sub-run activity fluctuations fractional covariance matrix. Top right: fractional statistical (orange) and systematic uncertainties (the blue band represents the diagonal terms of the covariance matrix). Bottom right: Display of the Cauchy convergence, up to 1000 trials.}
+\end{center}
+\end{figure}
+
+The subrun activity fluctuations covariance matrix is constructed as follow. For a given run, or a list of runs considered (in case of the stack-run analysis, we determine the envelop of relative fluctuations of the DT fraction, written in the run  summaries. We then perform a simulation by generating a large number of KATRIN expected spectra including DT activity fluctuations following the pattern of variation seen in the data and reported in run summaries. Then the Mutlisim method is used to build the corresponding covariance matrix.
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.5]{./figures/CMdecompose_TASR.png}
+\caption{\label{f:CMdec_TASR}  Decomposition of the activity fluctuations fractional covariance matrix.}
+\end{center}
+\end{figure}
+
+The activity fluctuation covariance matrix is displayed in figure \ref{f:CM_TASR}, and its decomposition is shown in figure \ref{f:CMdec_TASR}. For completeness, the covariance matrix is converted into a correlation matrix displayed in figure \ref{f:Cordec_TASR}. 
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.3]{./figures/CorMdecompose_TASR.png}
+\caption{\label{f:Cordec_TASR}  Decomposition of the activity fluctuations fractional correlation matrix.}
+\end{center}
+\end{figure}
+
+\section{Molecular final states covariance matrix, $M{ij}^{p,FSD}$}
+\label{sec:covmat-covmat-fsd}
+
+%\subsection{$M{ij}^{p,FSD}$ Definition}
+After the $\beta$ decay the electron shell of the decaying atom has to rearrange itself into the eigenstates of the daughter atomic ion. Therefore, not only is the atomic ground state populated, but a fraction $P_{f}$ of the decay ends in states with excitation energy $E_{f}$.
+In the case of molecular tritium one must consider the decay to electronic excited states of tritiated hydrogen isotopologues TT, DT and HT daughter molecules, as well as their respective rotational and vibrational excited states. The total decay rate is calculated by summing over all of possible final states $f$ of each daughter system, weighted by the respective concentrations.
+
+%\subsection{$M{ij}^{p,FSD}$ Construction, Display and Convergence}
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.35]{./figures/CMplot_FSD.png}
+\caption{\label{f:CM_FSD}  Left: FSD fractional covariance matrix. Top right: fractional statistical (orange) and systematic uncertainties (the blue band represents the diagonal terms of the covariance matrix). Bottom right: Display of the Cauchy convergence, up to 1000 trials.}
+\end{center}
+\end{figure}
+
+The covariance matrix for the final state distribution is computed following the multisim method. We consider the DT molecule only. 
+
+In Samak we preliminary account for the FSD systematics according to a new prescription, described hereafter. 
+
+We assume first a $3\%$ uncertainty on the normalization of the probability to decay to the ground states, expected to be 57.4\% according to theoretical computations. The excited state probability is then fully correlated to the ground state proibability such that the sum of both reaches xx \% (slighty less than 1, to be clarified). 
+
+In addition we consider a $3\%$ bin-to-bin uncorrelated error on the individual exciting probabilities of each ground and excited states. 
+
+The multisim method is then applied to build the covariance matrix. 
+
+We already know that our current prescription overestimate the FSD systematics uncertainties. The procedure is currently being revised in order to match the expected uncertainties on the mean and variance of the FSD distributions. 
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.5]{./figures/CMdecompose_FSD.png}
+\caption{\label{f:CMdec_FSD}  Decomposition of the FSD fractional covariance matrix.}
+\end{center}
+\end{figure}
+
+The activity fluctuation covariance matrix is displayed in figure \ref{f:CM_FSD}, and its decomposition is shown in figure \ref{f:CMdec_FSD}. For completeness, the covariance matrix is converted into a correlation matrix displayed in figure \ref{f:Cordec_FSD}. 
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.3]{./figures/CorMdecompose_FSD.png}
+\caption{\label{f:CMdec_FSD}  Decomposition of the FSD fractional correlation matrix.}
+\end{center}
+\end{figure}
+
+\section{Background covariance matrix, $M{ij}^{p,B}$}
+\label{sec:covmat-covmat-bkg}
+
+%\subsection{$M{ij}^{p,B}$ Definition}
+
+Backgrounds are determined by the fit of the counts in each pixel, $p$, for each run or stack of runs, and assuming a flat spectrum in the integral mode (i.e. the background rate does not depend on the value of the retarding potential). The fit could be performed on the data beyond the endpoint, only. Then we extrapolate the background rate in each bins below the endpoint, assuming a flat spectrum as well.
+
+Uncertainties on the background prediction are treated as two orthogonal components: a normalization component based on the uncertainty of the measured rate, and a spectral shape component.
+
+Then two cases are being considered:
+
+\begin{itemize}
+\item  Background fit beyond the endpoint, only, and then fixed
+In that case the covariance matrix can be written
+\begin{equation}
+M_{ij}^{p,B} = M_{ij}^{p,B,rate} + M_{ij}^{p,B,shape}
+\end{equation}
+\item  Background fit together with the tritium spectrum
+\begin{equation}
+M_{ij}^{p,B} =  M_{ij}^{p,B,shape}
+\end{equation}
+\end{itemize}
+
+We now discuss both normalization and shape components.
+
+\subsection{Background rate covariance matrix}
+
+Let's assume a background rate $R_b$, measured with an uncerteinty $\sigma_{b,rate}$. 
+The rate uncertainties of this background population are included as a normalization error via a covariance matrix
+
+%M_{ij}^{p,B,rate} =  \sigma^2_{b,rate} B_i B_j , 
+\begin{equation}
+M_{ij}^{B,rate} =  B_i \left( \frac{\sigma_{b,rate}}{R_b} \right)^2 B_j , 
+\end{equation}
+where $B_i$ is the predicted umber of events for the  background 
+in the retarding potential bin $qU_i$. 
+
+\subsection{Background shape covariance matrix}
+
+The background shape uncertainties should be handled differently for each of the identified source of predicted backgrounds. However, at this stage, the energy spectrum of the background in the actual KATRIN settings is rather not yet understood completely. 
+
+In what follows, two different approaches can be pursued :
+
+\begin{itemize}
+\item{Tilted Background}\\
+Preliminary studies indicate that a linear background spectrum increasing as a function of the retarding potential (higher background at the endpoint). Therefore we model the nominal background as a flat spectrum, with a fully correlated shape uncertainty determined from the bin-by-bin differences, $\delta B_i$, between this flat model and an alternative increasing linear hypothesis, in which the background rate at 16.575 keV is reduced by a factor $r_b$, here arbitrarily taken at 50\%, with respect to the measured value at and beyond the endpoint. 
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.6]{./figures/BackgroundCovarianceMatrixBM1S_ModelS_1.png}
+\caption{\label{f:BM1}  Tilted Background. Nominal flat model and an alternative increasing linear modelling, in which the background rate at 16.575 keV is reduced by a factor $r_b$, here arbitrarily taken at 20\%, with respect to the measured value at and beyond the endpoint.}
+\end{center}
+\end{figure}
+
+\item{Measured Background}\\
+If the background is measured, a correlated shape uncertainty could be included in the final fit by building a covariance matrix from the differences in the measured stack background spectrum and a flat background hypothesis.
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.6]{./figures/BackgroundCovarianceMatrixBM1S_ModelD_1.png}
+\caption{\label{f:BM1}  Measured Background. Nominal flat model and an alternative background taken from a measurement on May 14 2018.}
+\end{center}
+\end{figure}
+
+\end{itemize}
+
+In what follows we will used the measured background modelling to extract the background shape uncertainty, included as a covariance matrix of the form
+\begin{equation}
+M_{ij}^{p,B,shape} =  \delta B_i \delta B_j , 
+\end{equation}
+where
+\begin{equation}
+\delta B_i = B_i^{measured} - B_i^{flat}.
+\end{equation}
+
+To maintain a true “shape” uncertainty, $B_i^{flat}$ is scaled to the normalization of the fitted background at the endpoint. Therefore the total amount of background can change and our prescription cannot strictly be considered as "shape-only", since the sum of the elements of $M_{ij}^{p,B,shape}$ might be different from zero.
+
+%\subsection{$M{ij}^{p,B}$ Construction, Display and Convergence}
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.35]{./figures/CMplot_BM1S.png}
+\caption{\label{f:CM_BM1}  Left: Background fractional covariance matrix, assuming a dedicated measured background as an alternative model. For this example, the background rate is taken at 300 mcps for the whole FPD detector. Top right: fractional statistical (orange) and systematic uncertainties (the blue band represents the diagonal terms of the covariance matrix). }
+\end{center}
+\end{figure}
+
+
+\section{Particle, Nuclear, and Atomic corrections covariance matrix, $M{ij}^{p,NAC}$}
+\label{sec:covmat-covmat-theonu}
+
+%\subsection{$M{ij}^{p,NAC}$ Definition}
+
+Theoretical corrections to the tritium $\beta$-decay spectrum arise
+at the particle, nuclear, atomic levels. In addition to the conventional 
+relativistic Fermi function the following effects can be included: 
+\begin{itemize}
+\item screening by the orbital electron $\textbf{S}$; 
+\item recoil of the He ion in its generation of the Coulomb field $\textbf{Q}$; 
+\item effect of the finite nuclear mass in the energy dependence of the
+phase space, V-A interference, and weak magnetism $\textbf{R}$; 
+\item interchange between the $\beta$-particle and the orbital electron
+$\textbf{I}$; 
+\item effect of the finite nuclear size on the solution of the Dirac equation
+for the electron $\textbf{C}$; 
+\item convolution of the lepton and nucleonic wave functions through the
+nuclear volume $\textbf{L\ensuremath{_{0}}}$; 
+\item first order radiative correction $\textbf{G}$.
+\end{itemize}
+
+In our analysis we slit the corrections into two components:
+\begin{itemize}
+\item Radiative corrections: $\textbf{G}$ (dominant). The associated covariance matrix is labelled $M^{RAD}$
+\item Other corrections: $\textbf{S,Q,R,I,C,L\ensuremath{_{0}}}$ (negligible). The associated covariance matrix is labelled $M^{TC}$
+\end{itemize}
+
+For the first tritium data analysis two paths can be considered:
+\begin{itemize}
+\item A) We neglect all theoretical corrections and include a dedicated covariance matrix, $M{ij}^{p,NAC}$, to account for this modelelling simplification. In this case the uncertainty on the spectral shape is determined by comparing the integral spectrum without any theoretical correction to the spectrum with the all corrections.
+
+We have
+\begin{equation}
+M{ij}^{p,NAC1} = M{ij}^{p,RAD} + M{ij}^{p,TC}
+\end{equation}
+
+The covariance matrix is then constructed as:
+\begin{equation}
+M{ij}^{p,NAC1} = (IS_i^{RAD+TC} - IS_i^{NoCorr}) (IS_j^{RAD+TC} - IS_j^{NoCorr}) 
+\end{equation}
+
+\item We include only the radiative correction in our model and the other theoretical uncertainties are treated with a dedicated covariance matrix, $M{ij}^{p,TC}$. In that case the uncertainty on the spectral shape is determined by comparing the integral spectrum with only the radiative correction to the spectrum with the all corrections.
+\end{itemize}
+
+We have
+\begin{equation}
+M{ij}^{p,NAC2} =  M{ij}^{p,TC}
+\end{equation}
+
+The covariance matrix is then constructed as:
+\begin{equation}
+M{ij}^{p,NAC2} = (IS_i^{RAD+TC} - IS_i^{RAD only}) (IS_j^{RAD+TC} - IS_j^{RAD only}) 
+\end{equation}
+
+%\subsection{$M{ij}^{p,NAC}$ Construction, Display and Convergence}
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.35]{./figures/CMplot_TCoffRAD.png}
+\caption{\label{f:CM_TCoffRAD}  Left: Radiative Corrections fractional covariance matrix $M{ij}^{p,NAC1}$.  Top right: fractional statistical (orange) and systematic uncertainties (the blue band represents the diagonal terms of the covariance matrix).}
+\end{center}
+\end{figure}
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.35]{./figures/CMplot_TCoffOther.png}
+\caption{\label{f:CM_TCoffTC}  Left: $\textbf{S,Q,R,I,C,L\ensuremath{_{0}}}$ theoretical corrections fractional covariance matrix $M{ij}^{p,NAC2}$.  Top right: fractional statistical (orange) and systematic uncertainties (the blue band represents the diagonal terms of the covariance matrix).}
+\end{center}
+\end{figure}
+
+It is worth noting that the square root of the diagonal terms of $M{ij}^{p,NAC1}$ is larger than the statistical error 100 eV below the endpoint and below. This suggests that theoretical corrections may not be neglibile far away from the endpoint. It may also be dominated by an overall normalization, however. To check how much the shape of the spectrum is distorted we perform a decomposition of the covariance matrix, displayed in figure \ref{f:CMdec_TCoff}. 
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.5]{./figures/CMdecompose_TCoff.png}
+\caption{\label{f:CMdec_TCoff}  Decomposition of the theoretical corrections fractional covariance matrix $M{ij}^{p,NAC1}$.}
+\end{center}
+\end{figure}
+
+The diagonal terms of the "shape" and 'mixed" matrices, $M{ij}^{p,NAC1}$, are compared to statistical uncertainties in figure \ref{f:CMdecEnvelop_TCoff}, for 1 day of data. 
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.2]{./figures/CMdecEnvelop_TCoff_Shape.png}
+\includegraphics[scale=0.2]{./figures/CMdecEnvelop_TCoff_Mixed.png}
+\caption{\label{f:CMdecEnvelop_TCoff}  Diagonal terms of both Shape (left) and Mixed (right) components of the theoretical corrections  covariance matrix $M{ij}^{p,NAC1}$, compared to statistical uncertainties for 1 day of First Tritium data.}
+\end{center}
+\end{figure}
+
+\section{Synchrotron radiation covariance matrix, $M{ij}^{p,SYNC}$}
+\label{sec:covmat-sync}
+
+%The synchrotron radiation covariance matrix is preliminarily built by considering %the envolp between two spectra, with and without the synchrotron radiation energy %loss included in the simulated data. 
+At this stage we neglect this covariance matrix in our analysis.
+
+%\subsection{$M{ij}^{p,SYNC}$ Definition} 
+%\subsection{$M{ij}^{p,SYNC}$ Construction, Display and Convergence}
+
+\section{Doppler broadening covariance matrix, $M{ij}^{p,DOP}$}
+\label{sec:covmat-dop}
+
+The doppler broadening covariance matrix is preliminarily built by considering the envolp between two spectra, with and without the doppler broadening  included in the simulated data. 
+
+%\subsection{$M{ij}^{p,DOP}$ Definition}
+%\subsection{$M{ij}^{p,DOP}$ Construction, Display and Convergence}
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.5]{./figures/CM_DOPoff.png}
+\caption{\label{f:CM_Doppler}  Left: Doppler effect fractional covariance matrix computed with the Flat200 MTD. Right: interpolated Doppler fractional covariance matrix, adapted for the FT-TL4 MTD.}
+\end{center}
+\end{figure}
+
+The doppler broadening covariance matrix is displayed in figure \ref{f:CM_Doppler}.
+
+\section{Systematic errors Summary}
+\label{sec:syst}
+
+\subsection{Systematic errors breakdown}
+
+Table \ref{t:samaksystematics} provides an overview of systematics effect currently accounted for in the Samak analysis. This includes, the response function, DT final state distributions, tritium activity fluctuations, doppler, synchrotron, background, and run stacking. Those effects have been investigated for the analysis of the first tritium data. Additional physical effects are and will be investigated. Reported values and correlation are still preliminary. 
+
+\begin{center}
+\begin{longtable}{llllllllllll}
+\caption{Preliminary Samak Systematics Effects.}\\
+\hline
+\hline
+ \textbf{Effect} & {\textbf{Parameter}} & {\textbf{rel. Error (\%)}} & {\textbf{correlation}} & {\textbf{method}} & \textbf{comment} \\
+\hline
+\hline
+\endfirsthead
+\multicolumn{12}{c}%
+{\tablename\ \thetable\ -- \textit{Continued from previous page}} \\
+\hline
+ \textbf{Effect} & {\textbf{Parameter}} & {\textbf{rel. Error (\%)}} & {\textbf{correlation}} & {\textbf{method}} & \textbf{comment} \\
+\hline
+\endhead
+\hline \multicolumn{12}{r}{\textit{Continued on next page}} \\
+\endfoot
+\hline
+\endlastfoot
+    \multicolumn{6}{c}{Response Function}  \\
+\hline   
+       {Magnetic fields} & {B\_WGTS} & 2\% & {uncorrelated} &   &  \\
+         & {B\_Max} & 2\% & {uncorrelated} &   &  \\
+         & {B\_AP} & 2\% & {uncorrelated} &   &  \\
+   
+   
+       {Column density} & {rho.d} & 5\% & {uncorrelated} & Multisim & overestimated \\
+   
+       {z-profile} &   & 0\% &   &   & not included yet \\
+   
+       {IS cross section} & {ISCS} & 2\% & {uncorrelated} & Multisim & overestimated \\
+   
+       {Energy loss} & {A1} & 0.50\% & {uncorrelated} & Multisim & correlated? \\
+         & {A} & 0.54\% & {uncorrelated} & Multisim & correlated? \\
+         & {w1} & 1.10\% & {uncorrelated} & Multisim & correlated? \\
+         & {w2} & 0.80\% & {uncorrelated} & Multisim & correlated? \\
+         & {eps1} & 0.00\% & {uncorrelated} & Multisim & correlated? \\
+         & {eps2} & 0.14\% & {uncorrelated} & Multisim & correlated? \\
+   
+       {Average over pixels} &   &   &   &   & not included yet \\
+       {Average over rings} &   &   &   &   & not included yet \\
+ \hline
+ \hline
+      \multicolumn{6}{c}{DT activity }  \\
+\hline
+       {Rate} &   &   &   & Fit & Free parameter \\
+   
+       {subrun fluctuation} &   & {about 1\%} & {uncorrelated} & Multisim & data driven (RS) \\
+\hline
+\hline
+      \multicolumn{6}{c}{DT Final State Distributions}  \\
+
+       {Ground state probability} & {Pgs} & 3\% & {with Pes} & Multisim & overestimated \\
+   
+       {Excited state probability} & {Pes} &   & {Pgs+Pes=1} & Multisim &  \\
+   
+       {Excitation probabilities} & {Pi} & 3\% & {uncorrelated} & Multisim & overestimated \\
+\hline   
+\hline
+      \multicolumn{6}{c}{Theoretical Corrections}  \\
+\hline   
+       {Radiative corrections} &   &   &   & on/off & overestimated \\
+   
+       {All but radiative corr.} &   &   &   & on/off & overestimated \\
+\hline
+\hline   
+      \multicolumn{6}{c}{Doppler}  \\
+\hline
+      &   &   &   & on/off & negligible \\
+\hline   
+\hline
+    \multicolumn{6}{c}{Synchrotron}  \\
+\hline
+    &   &   &   & on/off & negligible \\
+\hline
+\hline
+    \multicolumn{6}{c}{Background}  \\
+       {Rate} &   &   &   & Fit &  \\
+       {Shape} &   &   &   & deviation from flat & data driven \\
+\hline   
+\hline
+       \multicolumn{6}{c}{Run Stacking}  \\
+     &   &   &   & Multisim & data driven \\
+\hline
+\hline
+      \label{t:samaksystematics}%
+\end{longtable}
+\end{center}
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.3]{./figures/Stack-CombiCM-NormShape-Excl1.png}
+\includegraphics[scale=0.3]{./figures/Stack-CombiCM-NormShape-Excl200.png}
+\caption{\label{f:interpCM1}  Stack of the uncorrelated systematics in the ranges xxx (top) and xxx (bottom).}
+\end{center}
+\end{figure}
+
+
+\subsection{Combined Covariance Matrix}
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.3]{./figures/CombiCM-NormShape-Excl1.png}
+\caption{\label{f:interpCM1}  Combined covariance matrix considered in the analysis.}
+\end{center}
+\end{figure}
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.3]{./figures/CombiCM-NormShape-Excl1-NoRF.png}
+\caption{\label{f:interpCM1}  Combined covariance matrix considered in the analysis, excluding the response function covariance matrix.}
+\end{center}
+\end{figure}
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.5]{./figures/CMdecompose_Combi.png}
+\caption{\label{f:interpCM1}  Decomposition of the combined covariance matrix considered in the analysis.}
+\end{center}
+\end{figure}
+
+
+\section{Fit Statistics}
+\subsection{Rate+Shape  Fit Statistic}
+
+With a full nominal uncertainty matrix, we wish to incorporate uncertainty in the normalization of the simulation with respect to data.
+
+Omitting the indexing of pixels, the rate + shape $\chi^2$ statistic is defined as:
+\begin{equation}
+\begin{aligned}
+\chi^2(\mathbf{X}) = & \sum_{ij}  \left( N_{i}^\mathrm{data}-N_{i}(\mathbf{X})^\mathrm{model}\right) M_{ij}(\mathbf{X})^{-1} \left( N_{i}^\mathrm{data}-N_{i}(\mathbf{X})^\mathrm{model}\right) \\
+&+ \chi^2_{p,pulls},
+\end{aligned}
+\end{equation}
+where
+\begin{equation}
+\chi^2_{pulls}(\mathbf{X}) =  \left( m^2_{e} / \sigma_{m^2} \right)^2
+\end{equation}
+
+This $\chi^2$ statistic takes into account all potential spectral and normalization information contained in the data and the correlated uncertainties of the prediciton. 
+
+To be more precise, one can decompose the model and data into tritium signal (T) and background (B) components in each retarding potential bin $qU_i$, such as
+\begin{equation}
+N_{i}^\mathrm{data,model} = T_{i}^\mathrm{data,model} + B_{i}^\mathrm{data,model}.
+\end{equation}
+
+Moreover the covariance matrix, including both normalization and shape information, can be split into three components, such as
+\begin{equation}
+M_{ij} = M_{ij}^{STAT} + M_{ij}^{T} + M_{ij}^{B}, 
+\end{equation}
+which can also be written in terms of fractional matrices
+\begin{equation}
+M_{ij} = (M_{ij}^{frac,STAT} + M_{ij}^{frac,T}) \times N_i \cdot N_j + M_{ij}^{frac,B}\times B_i \dot B_j
+\end{equation}
+
+We remind here that the background covariance matrix can be decomposed as
+\begin{equation}
+M_{ij}^{p,B} = M_{ij}^{p,B,rate} + M_{ij}^{p,B,shape}.
+\end{equation}
+
+Two different types of fit can then be performed:
+\begin{itemize}
+\item{Background free parameter}
+
+In that case, Both $T$ and $B$, and thus $N$, can vary during the fit as free parameter and the normalization of the covariance matrices $M^{T}$ and $M^{B}$ are reajusted at each iteration. Since the background rate is free, the background covariance matrix shall be considered as $M^{p,B,shape}$, only.
+
+\item{Background a-priori determined and fixed}
+\end{itemize}
+
+In that case the normalization uncertainty shall be included as an uncertainty as well, and the background covariance matrix shall be considered as $M_{ij}^{p,B,rate} + M^{p,B,shape}$.
+
+\subsection{Shape-Only Fit Statistic}
+
+Limitations in our knowledge of the normalization uncertainties, particularly with regards to the source activity and the column density, drives us to attempt a shape-only analysis. The “shape-only” $\chi^2$ statistic is intended to neglect any normalization information associated with the signal prediction.
+
+This shape-only analysis is also justified because we do fit for the normalization of the tritium spectrum and the background simultaneously, and therefore the fully correlated part of the covariance matrix shall maybe not be considered.
+
+The covariance matrix boils down to three main components: uncertainties in the shape of the distribution, those in the normalization, and those in the bin-to-bin normalization (“mixed component”), as described in section xxx. The shape-only analysis shall disregard any normalization information altogether. We thus subtract the normalization component from the nominal covariance matrix component.  
+
+For removing normalization information from the fit we first define a renormalization factor $f$:
+\begin{equation}
+f  =   \frac{N_{i}^\mathrm{data}}{N_{i}^\mathrm{model}}
+\end{equation}
+
+This factor is used to guarantee that the signal+background model has the same total normalization as the data.  
+
+The shape-only $\chi^2$ statistic is defined as:
+\begin{equation}
+\begin{aligned}
+\chi^2_{SO}(\mathbf{X}) = & \sum_{ij}  \left( N_{i}^\mathrm{data}- f \cdot N_{i}(\mathbf{X})^\mathrm{model}\right) M^{SO}_{ij}(\mathbf{X})^{-1} \left( N_{i}^\mathrm{data}- f \cdot N_{i}(\mathbf{X})^\mathrm{model}\right) \\
+&+ \chi^2_{pulls},
+\end{aligned}
+\end{equation}
+where the covariance matrix is defined by
+\begin{equation}
+M^{SO} = M^{shape} + M^{mixed}.
+\end{equation}
+
+Because the signal normalization is treated as a nearly-free parameter, this statistic has one fewer degree of freedom than $\chi^2_{RS}$.
+
+
+\subsection{Rate-Only Fit Statistic}
+
+It might be interesting to perfom a rate-only analysis to compare our model and the data, to extract information on the tritium source activity or on the column density. 
+
+The rate-only statistic compares the measured rate of detected events to the predicted rate by summing over all retarding potentials $qU_i$.
+
+Let's define the total number of detected events as
+\begin{equation}
+N^{data}   =  \sum_i{N^{data}_i}.
+\end{equation}
+
+The number of predicted events is
+\begin{equation}
+N^{model}   =  \sum_i{N^{model}_i}.
+\end{equation}
+
+The covariance matrix is compactified to a single measure of uncertainty:
+\begin{equation}
+M_{RO} = \sum_{ij} M_{ij}
+\end{equation}
+
+The rate-only $\chi^2$ statistic is then defined as:
+\begin{equation}
+\chi^2_{RO} = \frac{\left( N^{data}  - N^{model}  \right)^2}{M_{RO}} + \chi^2_{pulls},  
+\end{equation}
+where pull terms can still be used.
+
+In this fit we do have a single degree of freedom, and the minimum value of $\chi^2_{RO}$ shall value zero at best-fit.
+
+
+\section{Combining pixels}
+\label{sec:combinepixels}
+
+Three methods are currently considered in Samak to gather the information coming from each pixels, the pixel stacking over the whole FPD, the pixel stacking over each ring, and the multi-pixel considering each pixels independently.
+
+\subsection{All pixel stacking $\chi^2$ fit}
+\label{sec:pixelstackschisquare}
+
+In this case we sum of all counts of each pixels per subrun, to form a single intergal spectrum for the whole FPD. This sum is performed for each run. Most of the time and unless explicitely mentioned we do exclude the two external rings of the FPD. The response function is then averaged over all pixels, for each retarding potential value considered. This analysis makes sense as long as the detector can be considered as uniform. 
+
+%\subsubsection{All pixel stacking $\chi^2$ function}
+%\label{sec:pixelstackchisquare}
+
+The $\chi_{FPD}^2$ statistic is defined as:
+\begin{equation}
+\begin{aligned}
+\chi_{FPD}^2(\mathbf{X}) = & \sum_{ij}  \left( N_{i}^\mathrm{data}-N_{i}(\mathbf{X})^\mathrm{model}\right) M_{ij}(\mathbf{X})^{-1} \left( N_{i}^\mathrm{data}-N_{i}(\mathbf{X})^\mathrm{model}\right) \\
+&+ \chi^2_{p,pulls},
+\end{aligned}
+\end{equation}
+where
+\begin{equation}
+\chi^2_{pulls}(\mathbf{X}) =  \left( m^2_{e} / \sigma_{m^2} \right)^2.
+\end{equation}
+Data are summed over all pixels considered, and the modelization includes an averaged response function, which is an approximation and worsen the energy resolution. The fractional covariance matrix combining all the effect can be used, with a statistics renormalized to the whole FPD detector, modulo exlcuded pixels. 
+
+%\subsubsection{All pixel stacking covariance matrix}
+%\label{sec:ringpixelstackcovmat}
+
+\subsection{Ring-wise pixel stacking $\chi^2$ fit}
+\label{sec:ringpixelstackschisquare}
+
+This case is similar to the all-pixel stacking, but with the difference that pixels are stacked for each ring. This means that 4 pixels are summed for the bulleye, and 12 pixels are summed for the next 12 rings. Rings are therefore analyzed independently. This analysis can safely be performed as long as data and input parameter do not singificantly have an azimuthal dependence. 
+
+A similar analyis as the one described in the previous section can be performed, and results are reported for each rings independently. 
+
+%\subsubsection{Ring-wise pixel pixel stacking $\chi^2$ function}
+%\label{sec:ringpixelstackchisquare}
+
+%\subsubsection{Ring-wise pixel pixel stacking covariance matrix}
+%\label{sec:ringpixelstackcovmat}
+
+
+\subsection{Multi-pixel $\chi^2$ fit}
+\label{sec:multipixelchisquare}
+
+In this case each pixel is considered and simulated independently. We do thus account for a response function, per pixel. Then each pixel can be analyzed and fitted independently, or a multipixel fit can be performed.
+
+\subsubsection{Multipixel $\chi^2$ function}
+\label{sec:multipixelschisquare}
+
+A given set of pixels, from 2 to 148, are considered and simulated independently for the fit. We first build an array $IS^{MP}$ constaining the $IS$ spectra for all qU values and pixels, in a raw. The size of  $IS^{MP}$ is $N_{qU} \times N_{pixels}$. The following $\chi^2$ function is then used:
+\begin{equation} 
+\begin{aligned}
+\chi^2(\mathbf{X}) =& 
+\sum_{kl}  \left( IS_{k}^\mathrm{MP,data}-IS_{k}(\mathbf{X})^\mathrm{MP,model}\right) \\
+ & M^{MP}_{kl}(\mathbf{X})^{-1} \left( IS_{l}^\mathrm{MP,data}-IS_{l}(\mathbf{X})^\mathrm{MP,model}\right),
+\end{aligned}
+\end{equation}
+where $IS_{k}^{\mathrm{MP,data}}$ is the measured number of electron events in the couple retarding potential and pixel $k$, $N_{k}(\mathbf{X})^{\mathrm{MP,model}}$ is the predicted number of electron events in the couple retarding potential and pixel $k$, and $M^{MP}_{kl}$ is the $N_{qU} \cdot N_{pixels} \times N_{qU} \cdot N_{pixels}$ covariance matrix gathering all pixels and retarding potential bins. 
+
+The multipixel fit can be perfomed with a covariance matrix, with a size of N(pixels) x N(qU bins) x N(qU bins). As a first approximation, and neglecting possible correlations among the pixels, the matrix is built as a bloc diagonal matrix of N(qU bins) x N(qU bins), for each pixel. The  N(pixels) are identical and may just vary because of different statistics in each pixels. Later a more fancy covariance matrix including pixel-to-pixel correlation might be elaborated.
+
+%\subsubsection{Multipixel covariance matrix}
+%\label{sec:multipixelcovmat}
+
+\section{Stacking Runs}
+\label{sec:stackruns}
+
+KATRIN data consist of a large set of runs, typically of 1 to 3 hours each. Each runs contains of 26 measurements, or subruns, at retarding potentials specifified by the measurement time distribution (MTD). Indeed 28 measurements, but the two lowest retarding potentials are not used because of detector issues. 
+
+In theory, each subrun retarding potentials $i$ value belonging to run $j$, let's call it $qU_{i,j}$, shall  be identical from one run to another, $qU_{i,j}=qU_{i}$. In that case one could easily sum the counts of the corresponding retarding potentials of each run. This would lead to a single spectrum of 26 qU values that could be simply analyzed by scaling the data taking time accordingly (cumulative subrun times), and averaging over the slow control parameters (colmun density, DT fraction, ...).
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.19]{./figures/StackRunPixel1.jpg}
+\caption{\label{f:StackRunPixel1} Stacking runs. qU-distribution for a subset of runs of the first tritium data.}
+\end{center}
+\end{figure}
+
+In practice, subrun retarding potential values can be slightly different from one run to another, within typically 100 meV. Therefore stacking runs at each retarding potential leads to a slight uncertainty in the count rate of each retarding potential. This uncertainty arises because we eventually compare our stakced-run data (sum of counts at each retarding potential) to a single spectrum model using count rates computed at the average values of each retarding potentials:
+\begin{equation}
+qU_{i,stacked-run-model} = \frac{1}{N_{runs}} \times \sum _j qU_{i,j}.
+\end{equation}
+If runs have different data taking time, the avergaged is weighted by the run length.
+The count rate of the model in bin $i$ is given then by
+\begin{equation}
+TBDIS_{i,stacked-run-model} =  \sum _j TBDIS(qU_{i,stacked-run-model})_{j}.
+\end{equation}
+For the modeling the slow control parameters are averaged.
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.17]{./figures/StackRunPixel2.jpg}
+\caption{\label{f:StackRunPixel2} Stacking runs. Data comparison of stacked and non-stacked data for a given retarding potential (300 eV below the endpoint), and runs ranging from run 40538 to run 40693.}
+\end{center}
+\end{figure}
+
+Figure \ref{f:StackRunPixel1} shows the qU distribution in a subset of runs of the first tritium data. All values lie within 100 meV with respect to the mean qU value per retarding potential.
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.23]{./figures/StackRunPixel3.jpg}
+\caption{\label{f:StackRunPixel3} Stacking runs. Sum of the count rates of 36 runs (40538-40693) compared to the stacked spectrum, in red (top). Residuals are displayed in the bottom frame.}
+\end{center}
+\end{figure}
+
+Figure \ref{f:StackRunPixel2} shows the result of the run stacking for a given retarding potential at 18275 V. 36 runs are stacked. The red data point lies at the averaged qU value, and count rates of each runs are summed. Statistical uncertainty is reduced by a factor of 6. This run stacking introduces an uncertainty in the count rate through the averaging, however. This is illustrated in figure \ref{f:StackRunPixel3}, where the sum of the count rates of each run (40538-40693) is compared to the stacked spectrum, in red (top). Residuals are displayed in figure \ref{f:StackRunPixel3} (bottom). 
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.22]{./figures/StackRunPixel4.jpg}
+\caption{\label{f:StackRunPixel4} Stacking runs. Fit of the stakec-run data with the Samak's corresponding model, assuming statistical uncetainties only. The p-value of this fit is small, meaning that run stacking systematics must be takien into account.}
+\end{center}
+\end{figure}
+ 
+To quantify the uncertainty associated to the stacking we first perform a fit of the stacked run data with the stacked-run model, taking only the statistical uncertainty into account. Results are displayed in figure \ref{f:StackRunPixel4}. The fit quality is poor, as expected, and calling for the accounting of run-stacking systematics, or for a better modeling of the run-stakec model. 
+ 
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.14]{./figures/StackRunPixel5.jpg}
+\caption{\label{f:StackRunPixel5} Stacking runs. qU-distribution of 36000 sample runs (left). Overlay of the simulated integral spectra (right).}
+\end{center}
+\end{figure}
+
+At this stage Samak deals with this issue through the covariance matrix approach, by simulating many run stacking fake experiments and subsequently applying the Multisim method. This simulation is illustrated in \ref{f:StackRunPixel5}.
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.17]{./figures/StackRunPixel6.jpg}
+\caption{\label{f:StackRunPixel6} Stacking runs. Stacking fractional covariance matrix (left). Integral spectrum with statistical error (88h) and the diagonal terms of the systematic uncertainty, in blue (top right). The convergence test is illustrated in the bottom right frame. }
+\end{center}
+\end{figure}
+
+The resulting run-stacking covariance matrix is shown in figure \ref{f:StackRunPixel6}.
+
+\section{Application: Effective Endpoint}
+\label{sec:appe0eff}
+
+One of the main physics goal of the first tritium data analysis is to assess the value of the tritium beta decay endpoint. Indeed, our current dataset allows only to constrain the DT effective endpoint, $E_{0,gs}(DT,W)$, defined as:
+\begin{equation}
+E_{0,gs}(DT,W) = E_{0,gs}(DT,t) + W,
+\end{equation}
+where $E_{0,gs}(DT,t)$ is the theoretical endpoint (initialized at 18573.7 eV in Samak) and $W$ is the so-called work function (not yet known).
+ 
+\subsection{Effective endpoint dataset}
+\label{sec:e0data}
+
+For the effective endpoint analysis, as a baseline, we use the 1.5 hour and 3 hour runs, from run 40538 to run 40693 and from run 40976 to run 41002. The cumulative run time for this analysis is 4.41 days, see figure \ref{f:E0analysis-runwise-Time}. 
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.35]{./figures/KATRIN_FT_AllPixels_Samak_chi2CMShape_402eVbelowE0_4.pdf}
+\caption{\label{f:E0analysis-runwise-Time}  Time of individual runs and cumulated time for the runs considered in Samak's effective endpoint data analysis.}
+\end{center}
+\end{figure}
+
+Figure \ref{f:E0analysis-runwise-SC} shows the two main slow control parameters used as input for the fits. The mean column density considered is $4.4598 10^{17}$ mol/cm$^2$, with a run-to-run standard deviation of $7.6 10^{12}$ mol/cm$^2$ (1.7 per mille, in relative). 
+
+The absolute uncertainty of the column density is prescribed as 10\%. However we observe relative fluctuations much smaller than this starting value. Improvement in the determination of the column density are thus necessary.
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.35]{./figures/KATRIN_FT_AllPixels_Samak_chi2CMShape_402eVbelowE0_3.pdf}
+\caption{\label{f:E0analysis-runwise-SC}  Column density and DT fraction values (taken from the run summaries) of the runs used in the effective endpoint run-wise analysis}. 
+\end{center}
+\end{figure}
+
+The mean DT fraction is 0.0104, with a run-to-run standard deviation of $4 10^{-5}$. The uncertainties on the DT fraction measured by the LARA system are reported on figure \ref{f:E0analysis-runwise-SC}, and seems much larger than the observed fluctuations among the run. Therefore LARA system uncertainties shall be investigated as they may be overestimated. 
+
+In what follows our baseline is to used the set of uncertainties reported by the expert group, as a starting point, knowing that they may be revised in the final analysis of the first tritium data.
+
+\subsection{Effective endpoint simulation}
+\label{sec:e0sim}
+
+blablabla
+
+\subsection{Effective endpoint analysis results with pixels stacked: Run-wise}
+\label{sec:e0results-pixelstack-runwise}
+
+We perform a fit of the endpoint, the tritium activity normalization, and the background, fixing the neutrino mass to zero, for each run (see section \ref{sec:e0data}). Three fit range are considered: 
+\begin{itemize}
+\item Long-range: [16975 - 18615] eV \\
+Statistics only: see figure \ref{f:e0fit-runwise-stackP-longrange-stat} and table \ref{t:e0fit-runwise-stackP-longrange-stat}\\
+Statistics + Systematics: see figure \ref{f:e0fit-runwise-stackP-longrange-sys} and table \ref{t:e0fit-runwise-stackP-longrange-sys}
+\item Middle-range: [18175 - 18615] eV\\
+Statistics only: see figure \ref{f:e0fit-runwise-stackP-midrange-stat} and table \ref{t:e0fit-runwise-stackP-midrange-stat}\\
+Statistics + Systematics: see figure \ref{f:e0fit-runwise-stackP-midrange-sys} and table \ref{t:e0fit-runwise-stackP-midrange-sys}
+\item Short-range: [18375 - 18615] eV\\
+Statistics only: see figure \ref{f:e0fit-runwise-stackP-shortrange-stat} and table \ref{t:e0fit-runwise-stackP-shortrange-stat}\\
+Statistics + Systematics: see figure \ref{f:e0fit-runwise-stackP-shortrange-sys} and table \ref{t:e0fit-runwise-stackP-shortrange-sys}
+\end{itemize}
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.35]{./figures/KATRIN_FT_AllPixels_Samak_chi2Stat_1602eVbelowE0-Magnus.pdf}
+\caption{\label{f:e0fit-runwise-stackP-longrange-stat}  Long-range: [16975 - 18615] eV - Fit of the endpoint (normalization and background are free parameters, neutrino mass is set to zero). Statistical uncertainties are considered. The averaged effective endpoint value is $<E_{0,eff}>=18573.71$ eV, with a run-to-run standard deviation of 0.2 eV.}
+\end{center}
+\end{figure}
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.35]{./figures/KATRIN_FT_AllPixels_Samak_chi2CMShape_1602eVbelowE0-Magnus.pdf}
+\caption{\label{f:e0fit-runwise-stackP-longrange-sys}  Long-range: [16975 - 18615] eV - Fit of the endpoint (normalization and background are free parameters, neutrino mass is set to zero). Statistical uncertainties and shape-only systematics are considered. The averaged effective endpoint value is $<E_{0,eff}>=18573.64$ eV, with a run-to-run standard deviation of 0.4 eV.}
+\end{center}
+\end{figure}
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.35]{./figures/KATRIN_FT_AllPixels_Samak_chi2Stat_402eVbelowE0-Magnus.pdf}
+\caption{\label{f:e0fit-runwise-stackP-midrange-stat}  Middle-range: [18175 - 18615] eV - Fit of the endpoint (normalization and background are free parameters, neutrino mass is set to zero). Statistical uncertainties are considered. The averaged effective endpoint value is $<E_{0,eff}>=18573.40$ eV, with a run-to-run standard deviation of 0.35 eV.}
+\end{center}
+\end{figure}
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.35]{./figures/KATRIN_FT_AllPixels_Samak_chi2CMShape_402eVbelowE0-Magnus.pdf}
+\caption{\label{f:e0fit-runwise-stackP-midrange-sys}  Middle-range: [18175 - 18615] eV - Fit of the endpoint (normalization and background are free parameters, neutrino mass is set to zero). Statistical uncertainties and shape-only systematics are considered. The averaged effective endpoint value is $<E_{0,eff}>=18573.70$ eV, with a run-to-run standard deviation of 0.5 eV.}
+\end{center}
+\end{figure}
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.35]{./figures/KATRIN_FT_AllPixels_Samak_chi2Stat_202eVbelowE0-Magnus.pdf}
+\caption{\label{f:e0fit-runwise-stackP-shortrange-stat}  Short-range: [18375 - 18615] eV - Fit of the endpoint (normalization and background are free parameters, neutrino mass is set to zero). Statistical uncertainties are considered. The averaged effective endpoint value is $<E_{0,eff}>=18573.67$ eV, with a run-to-run standard deviation of 0.6 eV.}
+\end{center}
+\end{figure}
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.35]{./figures/KATRIN_FT_AllPixels_Samak_chi2CMShape_202eVbelowE0-Magnus.pdf}
+\caption{\label{f:e0fit-runwise-stackP-shortrange-sys}  Short-range: [18375 - 18615] eV - Fit of the endpoint (normalization and background are free parameters, neutrino mass is set to zero). Statistical uncertainties and shape-only systematics are considered. The averaged effective endpoint value is $<E_{0,eff}>=18573.85$ eV, with a run-to-run standard deviation of 0.7 eV.}
+\end{center}
+\end{figure}
+
+\subsection{Effective endpoint analysis results with pixels stacked and all run stacked}
+\label{sec:e0results-pixelstackedrunstacked}
+
+We report preliminary results on the stacking of 39 runs at the nominal column density, from run 40538 to run 40693, focusing on the short-range analysis, in the range [18375 - 18615] eV.
+ 
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.42]{./figures/StackRunStackPixel-37runs-200eV-Stat.pdf}
+\caption{\label{f:allPixelstackRunstakc_stat}  Stacked-runs/Stacked-pixels. Fit results for the effective endpoint analysis results with pixels staked (whole FPD but last 2 rings)  and all run stacked (40667-40693). Statistical uncertainties only. }
+\end{center}
+\end{figure}
+
+Figure \ref{f:allPixelstackRunstakc_stat} shows the fit results with statistical uncertainties only. The p-value is about 2\%, indicating a tension between the data and our stacked-model. Nevertheless the enpoint determination leads to $<E_{0,eff}>=18573.8 \pm 0.1$ eV, assuming a vanishing neutrino mass. We note here that data/model tension is not only due to the effect of combining 39 qU values of each retarding potential, but by also averaging over all other slow control parameters (column density, isotropologue fractions, ...). 
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.42]{./figures/StackRunStackPixel-37runs-200eV-StatSys.pdf}
+\caption{\label{f:allPixelstackRunstakc_statsys}  Stacked-runs/Stacked-pixels. Fit results for the effective endpoint analysis results with pixels staked (whole FPD but last 2 rings)  and all run stacked (40667-40693). Statistical and systematics uncertainties.}
+\end{center}
+\end{figure}
+
+The fit with the stacking covariance matrix only (impact of 39 qU values averaged) does not significantly improve the fit quality. The fit results including our nominal systematics is presented in figure \ref{f:allPixelstackRunstakc_statsys}. As expected, the p-value increases to a reasonable value.  The effective endpoint fit leads to $<E_{0,eff}>=18574.1 \pm 0.4$ eV, inclreasing the uncertaities by a factor 4. The residuals exhibit an interesting pattern, being systematically below the model from 18375 eV to 18525 eV, which could point out that the central value of the column density of our model is not matching the data. We checked that this correlated pattern dissapears by forcing the central value the colmun density to be $\rho.d = 5.056 \cdot 10^{17}$ mol/cm$^2$ (obtained by performing a $\rho.d$ on the stacked-pixel/stacked-run data. It is worth noting the at quality of the fit without systematics improves as well, with a p-value of 18\%. Raising the colmun density shifts the effective endpoint value to $<E_{0,eff}>=18574.6 \pm 0.1 (stat) \pm 0.4 (stat+syst) $ eV. 
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.3]{./figures/StackRunStackPixel-37runs-Stat+1-E0.pdf}
+\caption{\label{f:stackrunstackpixel-e0-stat+1}  Stacked-runs/Stacked-pixels. Stat+1 statistical test.}
+\end{center}
+\end{figure}
+
+In order to isolate the impact of a certain systematics we perform the Stat+1 test. Results are displayed in figure \ref{f:stackrunstackpixel-e0-stat+1}. As a first observation we clearly see the large impact of the systematics on the uncertainty of the effective endpoint: 0.1 eV with statistical error only, and about 0.4 eV with all systematcis switched on (Combi). This increase of the error is currently led by the FSD and the response function systematics, as currently accounted for in Samak/KATRIN. We then observe that all systematics effects have the tendency to raise the effective enpoint value fitted, especially the FSD and the response function systematics. 
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.3]{./figures/StackRunStackPixel-37runs-N-1-E0.pdf}
+\caption{\label{f:stackrunstackpixel-e0-n-1}  Stacked-runs/Stacked-pixels. N-1 statistical test.}
+\end{center}
+\end{figure}
+
+To estimate  how much the sensitivity can be improved if a given  (single) variable would be better known we perform the N-1 statistical test displayed in figure \ref{f:stackrunstackpixel-e0-n-1}. We first observe that the activity fluctuation systematics impact most the effective endpoint value, as a single effect. Then we note that at least two effects, the response function and the FSD, shall be further understood (or better modeled for the case of the FSD) and reduced to lower the uncertainty on the effective endpoint. 
+
+\subsection{Effective endpoint analysis results with pixels grouped by rings and all run stacked}
+\label{sec:e0results-ringsrunsstacked}
+
+We report here preliminary results on the stacking of 27 runs at the nominal column density, from run 40667 to run 40693, focusing on the range [18375 - 18615] eV. We stack all pixels belonging to the same ring. The goal of this analysis is to include granularity by a factor 13 with respect to the whole-FPD fit (reported in the previous section), and to investigate radially dependent patterns in fitted parameters. Results with statistical-errors are presented. 
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.5]{./figures/FT_ring7}
+\caption{\label{f:ringstackRunstakc_1}  Example of a fit for the effective endpoint analysis results with pixels grouped by rings and all run stacked (40667-40693), for ring number 10. Only statistical uncertainties are considered here.}
+\end{center}
+\end{figure}
+
+Figure \ref{f:ringstackRunstakc_1} shows the fit parameter results (endpoint, background, nromalization, and $\chi^2$) displayed on the focal plane detector surface. Rings 12 and 13 show a different behavior in their fitted normalization. This justify their exclusion from the all-FPD stacking analysis. 
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.35]{./figures/FT_ring1}
+\includegraphics[scale=0.35]{./figures/FT_ring2}
+\\
+\includegraphics[scale=0.35]{./figures/FT_ring3}
+\includegraphics[scale=0.35]{./figures/FT_ring4}\caption{\label{f:ringstackRunstakc_1}  Stacked-run/Ring-Stack. Display of the fit results onto the FPD detector for the effective endpoint analysis results with pixels grouped by rings and all run stacked (40667-40693).}
+\end{center}
+\end{figure}
+
+Fit results for the effective endpoint are given in figure \ref{f:ringstackRunstakc_2} (left). The average value over the ring is $<E_{0,eff}>=18573.8 $ eV, with a standard deviation of 0.1 eV over the rings. Therefore no radial pattern is observed. We only note a slight lower value obtained for the bulleye, but not statistically significant. 
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.35]{./figures/FT_ring5}
+\includegraphics[scale=0.35]{./figures/FT_ring6}
+\caption{\label{f:ringstackRunstakc_2}  Stacked-run/Ring-Stack. Fit results for the effective endpoint and background with pixels grouped by rings and all run stacked (40667-40693).}
+\end{center}
+\end{figure}
+
+Ring-wise background results are shown in figure \ref{f:ringstackRunstakc_2} (right). All rings but the bulleye are analyzing the same fraction of the flux tube, therefore uncorrected fit results can be compared. We observe a significant radial evolution of the background rates, by about 50\% from the inner rings to the out rings. This increase was expected. 
+
+\subsection{Effective endpoint analysis results synthesis}
+\label{sec:e0results-synthesis}
+
+Results for the effective endpoint analysis with statistical fluctuations only and including systematics (shape-only covariance matrix) are summarized in tables \ref{t:endpoint-summary-stat} and \ref{t:endpoint-summary-sys}. Here only use a set of runs at the nominal column density. 
+
+\begin{table}[!h]
+  \centering
+  \caption{Samak's averaged effective endpoint Results - Statistical}
+    \begin{tabular}{l|c|c|c}
+    \hline
+    \hline
+    \textbf{All runs / stacked pixels} & $E_{0,gs}(DT,W=0)$ & Mean $E_{0,gs}(DT,W=0)$ Error & $E_{0,gs}(DT,W=0)$ STD \\
+    \hline
+    Short range (-200) & 18573.75 & 0.59 & 0.51 \\
+    Medium range (-400) & 18573.48 & 0.35  & 0.28 \\
+    Full range (-1700) & 18573.72 & 0.19 & 0.17 \\
+    \hline
+    \textbf{Stacked runs/pixels} & $E_{0,gs}(DT,W=0)$ & Mean $E_{0,gs}(DT,W=0)$ Error &   \\
+         \hline
+    Short range (-200) & 18573.76 & 0.09  &  \\
+    Medium range (-400) & 18573.48 & 0.05 &  \\
+    Full range (-1700) & 18573.70 & 0.03 &  \\
+       \hline
+    \textbf{Stacked runs/rings} & $E_{0,gs}(DT,W=0)$ & Mean $E_{0,gs}(DT,W=0)$ Error &   \\
+     \hline
+    Short range (-200) &  18573.8    &       &  \\
+    Medium range (-400) &       &       &  \\
+    Full range (-1700) &       &       &  \\
+\hline
+    \hline
+        \end{tabular}%
+  \label{t:endpoint-summary-stat}%
+\end{table}%
+
+Preliminary fit results are reported by marginalizing over the background, the normalization, and by setting the neutrino mass to zero. The 'All Run' analysis is performed by stacking all pixels (but the last two FPD rings) and by fitting each runs independently. The 'Stacked all runs' analysis is performed with the same FPD granlularity, but by stacking a given set of runs. The 'Ring" analysis gathers all pixels belonging to the same FPD ring. 
+
+\begin{table}[!h]
+  \centering
+  \caption{Samak's averaged effective endpoint Results - Statistical+Systematics}
+    \begin{tabular}{l|c|c|c}
+    \hline
+    \hline
+    \textbf{All runs / stacked pixels} & $E_{0,gs}(DT,W=0)$ & Mean $E_{0,gs}(DT,W=0)$ Error & $E_{0,gs}(DT,W=0)$ STD \\
+    \hline
+    Short range (-200) & 18573.82 & 0.82 & 0.53 \\
+    Medium range (-400) & 18573.68 & 0.77 & 0.34 \\
+    Full range (-1700) & 18573.17 & 0.72 & 0.42 \\
+%    Average (ranges) & 18573.56 & 0.77 & 0.43 \\
+    \hline
+    \textbf{Stacked runs/pixels} & $E_{0,gs}(DT,W=0)$ & Mean $E_{0,gs}(DT,W=0)$ Error &   \\
+     \hline
+   Short range (-200) & 18574.39 & 0.44 &  \\
+    Medium range (-400) & 18574.52 & 0.40 &  \\
+    Full range (-1700) & 18574.37 & 0.35 &  \\
+%    Average (ranges) & 18574.42 & 0.40 &  \\
+    \hline
+    \textbf{Stacked runs/rings} & $E_{0,gs}(DT,W=0)$ & Mean $E_{0,gs}(DT,W=0)$ Error &   \\
+         \hline
+   Short range (-200) &       &       &  \\
+    Medium range (-400) &       &       &  \\
+    Full range (-1700) &       &       &  \\
+    \hline
+    \hline
+    \end{tabular}%
+  \label{t:endpoint-summary-sys}%
+\end{table}%
+
+Without systematics all results point out a value of the endpoint at $<E_{0,eff}> \sim 18573.5 - 18573.8 $ eV, therefore significantly lower than 18575 eV. With systematics the values of the endpoints are slightly raised for the 'All Runs' analysis, and significantly shifted up for the stacked-analysis, up to 18574.5 eV. This shall further be studied. At this stage we assess the effective endpoint uncertainty to be about 0.5 eV, both from the stacked-run analysis (fit error) and from the all-run analysis standard deviation of the values obtained for each runs.  
+
+\subsection{Effective endpoint theoretical expectation}
+\label{sec:e0results}
+
+In this section we attempt to estimate the theoretical endpoint, $E_{0,gs}(DT)$ value of the tritium decay, when tritium is embedded into a DT molecule (based on Otten, 2008).
+
+After the beta decay, the energy surplus, $Q$, is shared between the kinetic energy of the electron, $T_e$, the total energy of the neutrino, $E_\nu$, the recoil energy, $E_{rec}(DT)$, of the daughter molecule, and the excitation of the daughter to a final state of energy, $V_j$. This can be written:
+\begin{equation}
+Q = E + E_\nu + E_{rec}(DT) + V_j = E_{0,gs}(DT) + E_{rec}(DT).
+\end{equation}
+
+Assuming a zero neutrino mass and the daughter being produced in its groundstate ($V_j$=0), the beta spectrum would terminate at the so-called endpoint $E_{0,gs}(DT)$:
+\begin{equation}
+E_{0,gs}(DT) = Q - E_{rec}(DT).
+\end{equation}
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.4]{./figures/DT-endpoint-2018.pdf}
+\caption{\label{f:endpointtheory}  Estimation of the theoretical expectation for the D-T endpoint value $E_{0,gs}(DT)$.}
+\end{center}
+\end{figure}
+
+$Q$ is given by the mass difference, $\Delta M(^3He,T)_a$, between the neutral He(3,2) and T(3,1) atoms (subscript a), corrected for the difference in the electronic binding energy $\Delta E_b$ between the atomic mother/daughter pair and the actual mother/daughter systems of the experiment. 
+\begin{equation}
+Q = \Delta M(T,He)_a -\Delta E_b.
+\end{equation}
+
+This correction $\Delta E_b$ can be calculated from a combination of ionization energies ($E_i$) and molecular dissociation energies ($E_d$), as illustrated in figure \ref{f:endpointtheory} (reproduced from Otten 2008, and adapted for DT). For the decay of gaseous DT into the groundstate of the molecular daughter ion (3HeD)+, we find:
+\begin{equation}
+E_{0,gs}(DT,t) = \Delta M(^3He,T)_a - E_d(DT) + E_d(^3HeD^+) - E_i(D) - E_{rec}(DT)
+\end{equation}
+which leads to
+\begin{equation}
+E_{0,gs}(DT,t) = 18573.7 eV.
+\end{equation}
+We are still investigating for the value of the dissociation energy for the ground electronic state of $^3HeD^+$, currently taken at 1.897 eV (as for TT).
+
+It is worth noting here that the $E_{0,gs}(DT)$ is related to the effective endpoint value measured in KATRIN by the relation
+\begin{equation}
+E_{0,gs}(DT,W) = E_{0,gs}(DT,t) + W,
+\end{equation}
+where $W$ is the so-called work function, that could be pixel and time dependent. The value of $W$ is estimated to be less than a few hundreds millivolt. In our current work the value of $W$ is set to 0, therefore we do only measure an effectivce endpoint value for the DT as long as $W$ is not measured.
+
+A calculation of the uncertainty on $E_{0,gs}(DT)$ shall be carried out. We preliminarily consider it at 0.7 eV, the difference of mass difference value taken from Audi, Wapstra 2003, and Thibault and Myers 2015. This shall be clarified with experts.
+
+\subsection{Effective endpoint: qU scans}
+\label{sec:e0qUscans}
+
+\section{Application: Onset of the molecular excited states}
+\label{sec:appfsdonset}
+
+\subsection{FSD-onset dataset}
+\label{sec:fsddata}
+
+blablabla
+
+\subsection{FSD-onset run-wise analysis}
+\label{sec:fsdrejection}
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.35]{./figures/FSDonset_run40689_excl7_eeFit.pdf}
+\caption{\label{f:tfrfs}  Fit of a single run, including the probability to decay to the ground state as a free parameter. }
+\end{center}
+\end{figure}
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.35]{./figures/fsdontset_run40689.pdf}
+\caption{\label{f:tfrfs}  Simulation of single 3h runs (based on the slow control data of run 40689) and fit with and without electronic excited states. }
+\end{center}
+\end{figure}
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.5]{./figures/FSDonset_run40689_excl7_eeFit_E0PGS.png}
+\caption{\label{f:tfrfs}  Fit of a single run, including the probability to decay to the ground state as a free parameter. Correlation between the ground state probability and the endpoint.}
+\end{center}
+\end{figure}
+
+
+\subsection{Rejection of no-electronic excitation hypothesis}
+\label{sec:fsdrejection}
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.3]{./figures/KATRIN_FT_AllPixels_Samak_stat_402eVbelowE_0_FSDonset_Pnoee3.pdf}
+\caption{\label{f:tfrfs}  Rejection of the no-electronic excitation hypothesis.}
+\end{center}
+\end{figure}
+
+\subsection{Assessment of the ground/excited states probabilities}
+\label{sec:fsdresults}
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.35]{./figures/KATRIN_FT_AllPixels_Samak_stat_402eVbelowE_0_FSDonset_Pgs_1.pdf}
+\caption{\label{f:tfrfs}  Fit of the ground state probability, marginalizing over the endpoint, normalization, and background, for each run from run 40667 to 40692. The averaged probability is 0.54.}
+\end{center}
+\end{figure}
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.35]{./figures/KATRIN_FT_AllPixels_Samak_stat_402eVbelowE_0_FSDonset_Pgs_3.pdf}
+\caption{\label{f:tfrfs}  Fit of the ground state probability, marginalizing over the endpoint, normalization, and background, for each run from run 40667 to 40692. Correlation between the endpoint and the ground state probability.}
+\end{center}
+\end{figure}
+
+\section{Application: Column density}
+\label{sec:appcd}
+
+blablabla
+
+\subsection{Assessement the column density from the 'endpoint' data}
+
+We present here results with pixels stacked and all run stacked.
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.35]{./figures/StackRunStackPixel-37runs-rhoDscan.pdf}
+\caption{\label{f:tfrfs}  .}
+\end{center}
+\end{figure}
+
+\subsection{Analysis of runs at 100\%, 75\%, 50\%, and 25\% relative colmun densities}
+
+blablabla
+
+\subsection{Response functions and Expected spectra for various column densities}
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.6]{./figures/FT-RFs.png}
+\caption{\label{f:tfrfs}  Samak response functions for three different colmumn densities. The relevant settings are given in section \ref{sec:settings}. No pixel-wise corrections of the electric potential and the magnetic field are applied here.}
+\end{center}
+\end{figure}
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.6]{./figures/FT-RFs-zoom.png}
+\caption{\label{f:tfrfs}  Zoom on the Samak response functions for three different colmumn densities. The relevant settings are given in section \ref{sec:settings}. No pixel-wise corrections of the electric potential and the magnetic field are applied here.}
+\end{center}
+\end{figure}
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.6]{./figures/FT-TDBISs.png}
+\caption{\label{f:tfrfs}  Integral spectra  for three different colmumn densities. The relevant settings are given in section \ref{sec:settings}.}
+\end{center}
+\end{figure}
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.6]{./figures/FT-TDBISs-ratio.png}
+\caption{\label{f:tfrfs}  Ratio of integral spectra for three different colmumn densities, with respect to the KATRIN nominal case $\rho d = 5 10^{17}$ $cm^{-2}$. The relevant settings are given in section \ref{sec:settings}.}
+\end{center}
+\end{figure}
+
+\section{Conclusions}
+blablabla
+
+\section{Annex: Sanity Cross checks}
+\label{sec:sanity}
+
+\subsection{Statistical-only uncertainty/sensitivity}
+
+The statistical uncertainty/sensitivity $\sigma_{stat}$ is defned as the sensitivity obtained with all nuisance parameters fixed at their best value and without covariance matrix. With this, the systematics sensitivity,$\sigma_{sys} $, can later be defined as 
+\begin{equation}
+\sigma_{sys} = \sqrt{\sigma_{tot}^2-\sigma_{stat}^2}
+\end{equation}
+
+\subsection{N-1 test}
+
+In the so called N-1 test the impact of a systematics quantity is investigated by calculating the sensitivity assuming that this systematics quantity is known with infinite precision and comparing it to the sensitivity with default setup. A handle to estimate the impact of the specific variable is
+\begin{equation}
+\sigma_{N-1,X} = \sqrt{\sigma_{tot}^2-\sigma_{N-X}^2}, 
+\end{equation}
+where $\sigma_{N-X}^2$ is the sensitivity assuming the quantity $X$ is known with infnite precision and $\sigma_{tot}$ is the sensitivity in the default setup.
+
+The N-1 test provides an estimate on how much the sensitivity can be improved if a certain variable is known better. However, in this test correlations among sets of parameters play a role. 
+
+\subsection{Stat+1 test}
+
+In the so called Stat+1 test the first step is to compute the statistics-only sensitivity. Second, one particular systematic effect is switched on and the sensitivity is calculated in this setup. An estimate of the impact of the specific variable is
+\begin{equation}
+\sigma_{stat+1,X} = \sqrt{\sigma_{stat+X}^2-\sigma_{stat}^2}, 
+\end{equation}
+where $\sigma_{stat+X}$ is the sensitivity assuming the quantity X is the only systematic effect to be considered and $\sigma_{stat}$ is the statistics only sensitivity. 
+
+The Stat+1 test is suitable to isolate the impact of a certain variable and to compare it between different fits.
+
+\section{Annex: The Mulmtisim method}
+\label{sec:multisim}
+
+The MultiSim technique of creating a covariance matrix involves studying correlations in the outputs of a process of many repeated random throws of input parameters (“MULTIple SIMulations”).
+
+The Multisim method can be used to propagate the uncertainties encoded in the covariance matrices, M, which describes the uncertainties in the integral spectrum prediction, IS.
+
+The method begins with a set of input parameters $Par_a$ related by a covariance matrix $M^{Par}_{ab} = \delta Par_a \delta Par_b$. These parameters are input to a particular system whose outputs are a set of variables $IS_i$, at the retarding potential $qU_i$. The goal of the MultiSim method is to find a covariance matrix $M_{ij}$ relating the values of the $IS_i$ at each retarding potential $qU_i$. 
+
+The method consists of performing multiple simulations (Multisims) of the Tritium signal plus background prediction, each with a different set of parameters for the KATRIN settings. The parameters for each simulation are drawn from the multi-variate gaussian distribution. To do this, we first generate a set of $IS(CV)_i$ outputs using the central values for our parameters $Par$ . Then, we generate a set of S correlated random deviations in the parameters $Par_a \rightarrow (Par_a + \delta Par_a)^s$: these are the multiple simulations. The correlated random draws $Par_a + \delta Par_a$ may be generated using a method such as Cholesky Decomposition of the matrix $M^{Par}_{ab}$ or via a toy-montecarlo simulation embedding all correlations. Each of these deviations is run through the system in question to produce a set of S fluctuated outputs $IS_i \rightarrow IS_i^s$. The covariance matrix $M_{ij}$ may then be generated according to the formula: 
+\begin{equation} 
+M_{ij} = \frac{1}{S-1} \sum_{s=1}^{S} (IS(CV)_i - IS_i^s)(IS(CV)_j - IS_j^s).
+\end{equation} 
+The number of simulations $S$ required to produce a matrix not affected by statistical fluctuations may be determined by monitoring the convergence of the determinant of $M_{ij}$ to a single value, or by monitoring the variance of $M_{ij}$ similarly.
+
+\section{Annex: Covariance Matrix Zoology}
+\label{sec:covmattest}
+
+\subsection{Resizing to another MTD}
+
+The covariance matrix could in principle be computed for an extended MTD with any arbitrary binning. Then, for an actual MTD we can propagate the original matrix on our final binning by interpolating linearly between each bin of the original covariance matrix. 
+
+An example is given in figure \ref{f:interpCM1} where we orinnaly compute the FSD+TASR covariance matrix for the MTD extended to -2 kV below the endpoint (left). Then we project and interpolate this matrix onto a MTD covering only the last -200 V below the endpoint (right).
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.4]{./figures/CMresizing_originalFT3.png}
+\caption{\label{f:interpCM1}  Resizing of the FSD+TASR covariance matrix from the FT-TL3 MTD (left) to the FT-TL4 MTD (right).}
+\end{center}
+\end{figure}
+
+As a cross check of the method one computes the resulting correlation matrices, to verify that no spurious coefficients are being strongly correlated or anti-correlated to each other. This justifies the choice of a linear or makima interpolation (slines could lead to unwanted spurious correlations between bins). An example for the case of the FSD+TASR is given in figure \ref{f:interpCM2} 
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.4]{./figures/CMresizing_interplatedFT4.png}
+\caption{\label{f:interpCM1}  Resizing of the FSD+TASR covariance matrix from the FT-TL3 MTD to the FT-TL4 MTD. On the left one displays the original bin-to-bin correlation matrix. On the right one sees the bin-to-bin correlation matrix obtained after linear interpolation of the original matrix. Clearly the experimental correlations are kept with this technique, and no spurious correlation has been induced by the interpolation.}
+\end{center}
+\end{figure}
+
+\subsection{Nearest symmetric, positive definite matrix}
+ 
+Due to numerical issues the covariance matrices are sometimes not well mathematically defined to perform further operations, like the Cholesky decomposition, mainly because the matrix is not symmetric and positive definite. We then turn them into an approcximated matrix that  does have the property that we need. A solution is to find the NEAREST matrix (SPD, based on minimizing the Frobenius norm of the difference) that has the desired property of being SPD. we use the algorithm defined by Higham. The nearest symmetric positive semidefinite matrix in the Frobenius norm to an arbitrary real matrix A is shown to be (B + H)/2, where H is the symmetric polar factor of B=(A + A')/2."
+%
+% http://www.sciencedirect.com/science/article/pii/0024379588902236
+%
+
+\subsection{Convergence}
+Covariance matrices for the integral spectrum, taking systematic effects into account originating from physical parameters whose values are only known within some uncertainty band e.g. magnetic fields, can be estimated unbiasedly by the sample covariance matrix $M_N$ in the following approach.\\
+In a simulation N sample spectra with n data points $x_i$ are computed, varying the corresponding parameters within their known or estimated uncertainty. These N sample spectra are employed to build the sample covariance matrix out of the sample variance $var(x_i)$, sample covariance $cov(x_i,x_j)$ and the sample mean $\bar{x_i}$ according to eq. \ref{eqvariance}. Since one has to stop the sampling at some point out of practical reasons, a convergence criterion is needed to find an adequate sample number N.
+\begin{align}
+var(x_i) &= \frac{1}{N} \sum_{i=1}^n (x_i-\bar{x_i})^2 \nonumber \\
+cov(x_i,x_j) &= \frac{1}{N-1} \sum_{i=1}^N (x_i-\bar{x_i})(x_j-\bar{x_j})^T \nonumber \\
+\bar{x_i} &= \frac{1}{N} \sum_{i=1}^N x_i \label{eqvariance}
+\end{align}
+\subsubsection{Cauchy Convergence Criterion}
+A method to test the sample covariance matrix series for convergence is the Cauchy Convergence Test.  
+\begin{equation}
+\forall \epsilon > 0, \exists N_0 \in \mathbb{N}, \forall k>0, ||M_{N_0+k} - M_{N_0} || < \epsilon 
+\end{equation}
+...
+\subsubsection{Convergence of the determinant}
+
+blabla
+
+\newpage
+\subsubsection{Results Tables}
+
+\begin{center}
+\begin{longtable}{llllllllllll}
+%\begin{table}[htbp]
+%  \centering
+\caption{List of runs and mains properties used for the simulation and fit}\\
+%    \begin{tabular}{llllllllllll}
+\hline
+run   & sec & $\rho$D & (\%)  & DT & (\%) & TT & (\%) & HT & (\%) & Counts & CPS \\
+\hline
+\endfirsthead
+\multicolumn{12}{c}%
+{\tablename\ \thetable\ -- \textit{Continued from previous page}} \\
+\hline
+run   & sec & $\rho$D & (\%)  & DT & (\%) & TT & (\%) & HT & (\%) & Counts & CPS \\
+\hline
+\endhead
+\hline \multicolumn{12}{r}{\textit{Continued on next page}} \\
+\endfoot
+\hline
+\endlastfoot
+40539 & 3880  & 4.46E+17 & 4.6E-03 & 1.05E-02 & 1.1   & 1.39E-04 & 59.5  & 4.76E-04 & 26.2  & 1.34E+07 & 3450 \\
+    40540 & 3876  & 4.46E+17 & 4.3E-03 & 1.04E-02 & 1.4   & 1.09E-04 & 97.6  & 4.58E-04 & 36.7  & 1.31E+07 & 3383 \\
+    40541 & 3885  & 4.46E+17 & 3.9E-03 & 1.04E-02 & 0.8   & 1.36E-04 & 54.3  & 4.93E-04 & 23.8  & 1.33E+07 & 3429 \\
+    40542 & 3877  & 4.46E+17 & 4.3E-03 & 1.04E-02 & 1.2   & 1.21E-04 & 77.0  & 4.51E-04 & 25.3  & 1.32E+07 & 3416 \\
+    40543 & 3882  & 4.46E+17 & 5.1E-03 & 1.04E-02 & 1.2   & 1.28E-04 & 72.1  & 4.72E-04 & 25.0  & 1.33E+07 & 3437 \\
+    40603 & 3877  & 4.46E+17 & 4.7E-03 & 1.04E-02 & 1.2   & 1.31E-04 & 69.5  & 4.53E-04 & 26.3  & 1.33E+07 & 3418 \\
+    40604 & 3887  & 4.46E+17 & 5.3E-03 & 1.03E-02 & 1.0   & 9.90E-05 & 78.4  & 4.28E-04 & 30.2  & 1.31E+07 & 3363 \\
+    40610 & 3871  & 4.46E+17 & 2.9E-03 & 1.04E-02 & 1.1   & 1.55E-04 & 62.6  & 5.18E-04 & 23.3  & 1.33E+07 & 3446 \\
+    40611 & 3876  & 4.46E+17 & 3.7E-03 & 1.05E-02 & 1.1   & 1.77E-04 & 49.6  & 4.88E-04 & 25.9  & 1.36E+07 & 3520 \\
+    40612 & 3877  & 4.46E+17 & 5.0E-03 & 1.04E-02 & 0.9   & 1.22E-04 & 91.4  & 4.79E-04 & 21.1  & 1.32E+07 & 3403 \\
+    40613 & 3881  & 4.46E+17 & 4.1E-03 & 1.04E-02 & 1.0   & 9.45E-05 & 79.4  & 4.46E-04 & 27.0  & 1.31E+07 & 3375 \\
+    40667 & 10457 & 4.46E+17 & 3.2E-03 & 1.04E-02 & 0.8   & 1.20E-04 & 40.1  & 4.65E-04 & 17.5  & 2.11E+07 & 2014 \\
+    40668 & 10435 & 4.46E+17 & 3.3E-03 & 1.04E-02 & 0.7   & 1.40E-04 & 53.0  & 4.93E-04 & 14.6  & 2.11E+07 & 2027 \\
+    40669 & 10462 & 4.46E+17 & 3.4E-03 & 1.04E-02 & 1.0   & 1.22E-04 & 62.6  & 4.60E-04 & 19.2  & 2.10E+07 & 2012 \\
+    40670 & 10449 & 4.46E+17 & 3.3E-03 & 1.04E-02 & 0.9   & 1.14E-04 & 54.7  & 4.58E-04 & 19.3  & 2.13E+07 & 2037 \\
+    40671 & 10496 & 4.46E+17 & 3.4E-03 & 1.04E-02 & 1.0   & 1.39E-04 & 41.7  & 4.49E-04 & 16.6  & 2.12E+07 & 2024 \\
+    40672 & 10436 & 4.46E+17 & 4.2E-03 & 1.04E-02 & 0.9   & 1.54E-04 & 41.3  & 4.83E-04 & 16.6  & 2.12E+07 & 2033 \\
+    40673 & 10450 & 4.46E+17 & 3.0E-03 & 1.04E-02 & 1.2   & 1.46E-04 & 49.4  & 4.92E-04 & 14.6  & 2.12E+07 & 2025 \\
+    40674 & 10430 & 4.46E+17 & 3.9E-03 & 1.04E-02 & 0.8   & 1.35E-04 & 54.8  & 4.88E-04 & 16.9  & 2.11E+07 & 2020 \\
+    40675 & 10450 & 4.46E+17 & 2.9E-03 & 1.04E-02 & 0.7   & 1.29E-04 & 36.5  & 4.91E-04 & 18.7  & 2.11E+07 & 2019 \\
+    40676 & 10423 & 4.46E+17 & 3.5E-03 & 1.04E-02 & 0.6   & 1.25E-04 & 41.7  & 4.54E-04 & 15.3  & 2.10E+07 & 2012 \\
+    40677 & 10445 & 4.46E+17 & 2.0E-03 & 1.04E-02 & 0.6   & 1.23E-04 & 54.9  & 4.70E-04 & 14.8  & 2.10E+07 & 2015 \\
+    40678 & 10433 & 4.46E+17 & 3.4E-03 & 1.04E-02 & 0.8   & 1.35E-04 & 44.0  & 4.80E-04 & 16.8  & 2.10E+07 & 2011 \\
+    40679 & 10450 & 4.46E+17 & 4.2E-03 & 1.04E-02 & 0.8   & 1.34E-04 & 50.1  & 4.87E-04 & 21.3  & 2.12E+07 & 2026 \\
+    40680 & 10432 & 4.46E+17 & 3.8E-03 & 1.04E-02 & 1.0   & 1.29E-04 & 48.8  & 4.82E-04 & 24.2  & 2.10E+07 & 2017 \\
+    40681 & 10449 & 4.46E+17 & 3.2E-03 & 1.04E-02 & 1.0   & 1.30E-04 & 40.8  & 4.48E-04 & 25.4  & 2.09E+07 & 2005 \\
+    40682 & 10431 & 4.46E+17 & 3.5E-03 & 1.04E-02 & 1.0   & 1.07E-04 & 57.4  & 4.68E-04 & 20.6  & 2.10E+07 & 2009 \\
+    40683 & 10449 & 4.46E+17 & 3.5E-03 & 1.05E-02 & 1.0   & 1.48E-04 & 57.1  & 4.96E-04 & 19.4  & 2.12E+07 & 2032 \\
+    40684 & 10434 & 4.46E+17 & 3.0E-03 & 1.05E-02 & 1.2   & 1.55E-04 & 43.4  & 5.04E-04 & 18.9  & 2.13E+07 & 2045 \\
+    40685 & 10461 & 4.46E+17 & 3.2E-03 & 1.04E-02 & 1.0   & 1.40E-04 & 41.9  & 4.93E-04 & 17.5  & 2.12E+07 & 2024 \\
+    40686 & 10436 & 4.46E+17 & 4.6E-03 & 1.04E-02 & 0.8   & 1.43E-04 & 55.1  & 5.10E-04 & 15.7  & 2.13E+07 & 2036 \\
+    40687 & 10448 & 4.46E+17 & 3.6E-03 & 1.05E-02 & 0.9   & 1.45E-04 & 55.6  & 4.98E-04 & 18.3  & 2.13E+07 & 2036 \\
+    40688 & 10434 & 4.46E+17 & 3.1E-03 & 1.04E-02 & 0.9   & 1.24E-04 & 51.2  & 4.95E-04 & 23.0  & 2.11E+07 & 2025 \\
+    40689 & 10448 & 4.46E+17 & 3.8E-03 & 1.04E-02 & 0.8   & 1.21E-04 & 50.7  & 4.85E-04 & 20.8  & 2.10E+07 & 2013 \\
+    40690 & 10433 & 4.46E+17 & 2.6E-03 & 1.05E-02 & 1.1   & 1.34E-04 & 35.0  & 4.87E-04 & 17.0  & 2.12E+07 & 2031 \\
+    40691 & 10446 & 4.46E+17 & 3.3E-03 & 1.04E-02 & 0.8   & 1.09E-04 & 53.4  & 4.45E-04 & 17.9  & 2.08E+07 & 1993 \\
+    40692 & 10432 & 4.46E+17 & 2.8E-03 & 1.03E-02 & 1.0   & 1.03E-04 & 51.1  & 4.12E-04 & 22.1  & 2.07E+07 & 1982 \\
+    40693 & 10488 & 4.46E+17 & 4.5E-03 & 1.04E-02 & 1.1   & 1.43E-04 & 56.6  & 4.79E-04 & 26.5  & 2.11E+07 & 2015 \\
+    40763 & 3706  & 2.14E+17 & 8.5E-03 & 1.06E-02 & 1.1   & 1.18E-04 & 64.2  & 4.70E-04 & 21.6  & 6.20E+06 & 1673 \\
+    40764 & 3724  & 2.14E+17 & 7.7E-03 & 1.06E-02 & 1.1   & 1.31E-04 & 61.2  & 4.59E-04 & 21.2  & 6.27E+06 & 1685 \\
+    40765 & 3700  & 2.14E+17 & 7.9E-03 & 1.06E-02 & 1.2   & 1.09E-04 & 85.8  & 4.15E-04 & 25.6  & 6.22E+06 & 1682 \\
+    40766 & 3705  & 2.14E+17 & 7.5E-03 & 1.06E-02 & 1.2   & 1.12E-04 & 76.3  & 4.47E-04 & 18.3  & 6.19E+06 & 1671 \\
+    40771 & 3698  & 1.09E+17 & 2.9E-02 & 1.07E-02 & 0.8   & 1.25E-04 & 64.9  & 4.34E-04 & 15.9  & 3.29E+06 & 891 \\
+    40772 & 3698  & 1.09E+17 & 1.6E-02 & 1.07E-02 & 1.0   & 8.75E-05 & 67.6  & 4.22E-04 & 25.9  & 3.26E+06 & 881 \\
+    40794 & 3699  & 1.09E+17 & 2.2E-02 & 1.10E-02 & 0.8   & 7.96E-05 & 94.2  & 4.39E-04 & 25.8  & 3.35E+06 & 907 \\
+    40795 & 3700  & 1.09E+17 & 1.7E-02 & 1.09E-02 & 1.1   & 1.11E-04 & 65.6  & 4.45E-04 & 18.0  & 3.36E+06 & 908 \\
+    40796 & 3698  & 1.09E+17 & 1.6E-02 & 1.09E-02 & 1.1   & 1.08E-04 & 53.8  & 4.56E-04 & 21.2  & 3.35E+06 & 906 \\
+    40797 & 3697  & 1.09E+17 & 1.6E-02 & 1.10E-02 & 0.9   & 1.41E-04 & 51.9  & 4.93E-04 & 20.0  & 3.42E+06 & 925 \\
+    40798 & 3692  & 1.09E+17 & 1.9E-02 & 1.09E-02 & 0.6   & 9.80E-05 & 56.1  & 4.50E-04 & 17.8  & 3.35E+06 & 906 \\
+    40799 & 3695  & 1.09E+17 & 1.6E-02 & 1.09E-02 & 0.7   & 1.39E-04 & 64.6  & 4.93E-04 & 20.6  & 3.37E+06 & 911 \\
+    40800 & 3693  & 1.09E+17 & 1.3E-02 & 1.09E-02 & 0.8   & 1.27E-04 & 48.4  & 4.83E-04 & 25.4  & 3.36E+06 & 910 \\
+    40801 & 3691  & 1.09E+17 & 1.6E-02 & 1.09E-02 & 1.1   & 9.68E-05 & 77.5  & 4.39E-04 & 20.8  & 3.34E+06 & 904 \\
+    40802 & 3689  & 1.09E+17 & 1.6E-02 & 1.09E-02 & 1.1   & 1.29E-04 & 81.4  & 4.76E-04 & 24.8  & 3.36E+06 & 912 \\
+    40803 & 3695  & 1.09E+17 & 1.3E-02 & 1.09E-02 & 0.9   & 1.04E-04 & 58.4  & 4.72E-04 & 27.4  & 3.32E+06 & 898 \\
+    40804 & 3696  & 1.09E+17 & 1.7E-02 & 1.09E-02 & 0.7   & 1.30E-04 & 48.2  & 5.00E-04 & 9.0   & 3.39E+06 & 916 \\
+    40926 & 3708  & 3.21E+17 & 9.8E-03 & 1.06E-02 & 1.1   & 1.09E-04 & 70.3  & 4.08E-04 & 24.2  & 9.43E+06 & 2544 \\
+    40927 & 3708  & 3.21E+17 & 1.0E-02 & 1.05E-02 & 1.3   & 1.07E-04 & 84.1  & 4.41E-04 & 27.9  & 9.35E+06 & 2521 \\
+    40928 & 3693  & 3.21E+17 & 1.1E-02 & 1.06E-02 & 1.5   & 1.26E-04 & 64.1  & 5.12E-04 & 23.6  & 9.42E+06 & 2551 \\
+    40929 & 3702  & 3.21E+17 & 1.0E-02 & 1.06E-02 & 1.4   & 1.20E-04 & 72.2  & 4.77E-04 & 23.9  & 9.44E+06 & 2550 \\
+    40930 & 3693  & 3.21E+17 & 5.4E-03 & 1.06E-02 & 1.1   & 1.13E-04 & 72.1  & 4.81E-04 & 23.6  & 9.44E+06 & 2556 \\
+    40931 & 3698  & 3.21E+17 & 6.9E-03 & 1.05E-02 & 0.9   & 7.07E-05 & 88.3  & 4.05E-04 & 28.9  & 9.19E+06 & 2485 \\
+    40932 & 3697  & 3.21E+17 & 1.1E-02 & 1.05E-02 & 0.8   & 1.03E-04 & 80.1  & 4.50E-04 & 23.9  & 9.34E+06 & 2526 \\
+    40933 & 3700  & 3.21E+17 & 6.7E-03 & 1.05E-02 & 0.9   & 9.54E-05 & 72.4  & 4.54E-04 & 23.2  & 9.38E+06 & 2535 \\
+    40934 & 3695  & 3.21E+17 & 5.5E-03 & 1.05E-02 & 1.0   & 9.11E-05 & 78.9  & 4.44E-04 & 27.6  & 9.35E+06 & 2530 \\
+    40935 & 3725  & 3.21E+17 & 7.7E-03 & 1.06E-02 & 0.9   & 1.62E-04 & 45.3  & 4.99E-04 & 18.4  & 9.59E+06 & 2573 \\
+    40976 & 3716  & 4.46E+17 & 5.2E-03 & 1.06E-02 & 0.8   & 1.39E-04 & 47.3  & 4.67E-04 & 22.4  & 1.31E+07 & 3520 \\
+    40977 & 3749  & 4.46E+17 & 5.2E-03 & 1.05E-02 & 1.0   & 1.32E-04 & 60.6  & 4.91E-04 & 18.0  & 1.31E+07 & 3500 \\
+    40979 & 3718  & 4.46E+17 & 5.5E-03 & 1.04E-02 & 1.0   & 6.90E-05 & 118.9 & 3.99E-04 & 29.4  & 1.27E+07 & 3416 \\
+    40980 & 3717  & 4.46E+17 & 5.2E-03 & 1.05E-02 & 1.1   & 1.12E-04 & 66.0  & 4.46E-04 & 26.0  & 1.30E+07 & 3501 \\
+    40982 & 3706  & 4.46E+17 & 3.8E-03 & 1.05E-02 & 0.9   & 1.20E-04 & 52.5  & 4.72E-04 & 22.3  & 1.29E+07 & 3494 \\
+    40983 & 3709  & 4.46E+17 & 4.6E-03 & 1.05E-02 & 1.0   & 1.47E-04 & 63.5  & 5.23E-04 & 16.9  & 1.31E+07 & 3533 \\
+    40985 & 3702  & 4.46E+17 & 3.8E-03 & 1.05E-02 & 0.9   & 1.48E-04 & 60.1  & 5.04E-04 & 19.5  & 1.29E+07 & 3477 \\
+    40986 & 3707  & 4.46E+17 & 5.3E-03 & 1.05E-02 & 0.8   & 1.67E-04 & 64.7  & 4.95E-04 & 24.5  & 1.31E+07 & 3530 \\
+    40988 & 3705  & 4.46E+17 & 4.7E-03 & 1.05E-02 & 1.1   & 1.67E-04 & 50.7  & 5.14E-04 & 20.8  & 1.31E+07 & 3545 \\
+    40989 & 3700  & 4.46E+17 & 5.0E-03 & 1.05E-02 & 0.7   & 1.49E-04 & 51.3  & 5.01E-04 & 17.8  & 1.30E+07 & 3526 \\
+    40991 & 3698  & 4.46E+17 & 4.0E-03 & 1.05E-02 & 0.7   & 1.41E-04 & 57.5  & 4.96E-04 & 22.8  & 1.30E+07 & 3507 \\
+    40992 & 3703  & 4.46E+17 & 3.9E-03 & 1.05E-02 & 1.0   & 1.66E-04 & 45.2  & 5.01E-04 & 21.0  & 1.31E+07 & 3538 \\
+    40994 & 3852  & 4.46E+17 & 4.7E-03 & 1.05E-02 & 0.7   & 1.34E-04 & 46.9  & 5.06E-04 & 17.3  & 1.35E+07 & 3493 \\
+    40997 & 3721  & 4.46E+17 & 4.5E-03 & 1.05E-02 & 1.0   & 1.28E-04 & 61.5  & 4.71E-04 & 19.7  & 1.30E+07 & 3500 \\
+    40998 & 3733  & 4.46E+17 & 5.1E-03 & 1.04E-02 & 1.0   & 1.11E-04 & 65.0  & 4.41E-04 & 27.8  & 1.33E+07 & 3558 \\
+    41001 & 3722  & 4.46E+17 & 3.9E-03 & 1.04E-02 & 1.0   & 1.01E-04 & 60.1  & 4.72E-04 & 29.3  & 1.29E+07 & 3464 \\
+    41002 & 3736  & 4.46E+17 & 4.6E-03 & 1.04E-02 & 0.9   & 1.17E-04 & 70.8  & 4.49E-04 & 28.9  & 1.32E+07 & 3531 \\
+%    \end{tabular}%
+  \label{tab:ftRun}%
+%\end{table}%
+\end{longtable}
+\end{center}
+\newpage
+\begin{table}[h!]
+  \centering
+  \caption{Effective endpoint analysis results, from run 40538 to run 40693. Short fitting range [18375 - 18615] eV. Statistical uncertainties only.}
+    \resizebox{0.6\textwidth}{!}{\begin{tabular}{llllll}
+    \textbf{Run number} & \textbf{Endpoint (eV)} & \textbf{Background} & \textbf{Normalization} & $\chi ^2/dof$ & \textbf{p-value} \\
+    40538 & 18574.556 +/- 0.777 & 0.313 +/- 0.013 & 0.9199 +/- 0.0171 & 6.18 / 15 & 0.976 \\
+    40539 & 18573.846 +/- 0.767 & 0.330 +/- 0.013 & 0.9470 +/- 0.0167 & 11.66 / 15 & 0.704 \\
+    40540 & 18575.309 +/- 0.780 & 0.305 +/- 0.013 & 0.9151 +/- 0.0171 & 9.49 / 15 & 0.85 \\
+    40541 & 18572.889 +/- 0.787 & 0.336 +/- 0.013 & 0.9746 +/- 0.0184 & 22.58 / 15 & 0.093 \\
+    40542 & 18573.209 +/- 0.759 & 0.318 +/- 0.013 & 0.9679 +/- 0.0177 & 18.41 / 15 & 0.242 \\
+    40543 & 18573.484 +/- 0.782 & 0.340 +/- 0.013 & 0.9532 +/- 0.0178 & 9.81 / 15 & 0.832 \\
+    40603 & 18573.667 +/- 0.773 & 0.327 +/- 0.013 & 0.9478 +/- 0.0176 & 7.68 / 15 & 0.936 \\
+    40604 & 18573.907 +/- 0.773 & 0.315 +/- 0.013 & 0.9730 +/- 0.0180 & 18.43 / 15 & 0.241 \\
+    40610 & 18573.361 +/- 0.781 & 0.349 +/- 0.013 & 0.9459 +/- 0.0176 & 12.40 / 15 & 0.648 \\
+    40611 & 18573.402 +/- 0.797 & 0.389 +/- 0.014 & 0.9301 +/- 0.0177 & 11.77 / 15 & 0.696 \\
+    40612 & 18573.121 +/- 0.799 & 0.341 +/- 0.013 & 0.9604 +/- 0.0184 & 12.49 / 15 & 0.642 \\
+    40613 & 18574.238 +/- 0.794 & 0.309 +/- 0.013 & 0.9377 +/- 0.0178 & 17.91 / 15 & 0.268 \\
+    40667 & 18573.582 +/- 0.501 & 0.324 +/- 0.008 & 0.9472 +/- 0.0122 & 8.20 / 15 & 0.915 \\
+    40668 & 18573.478 +/- 0.508 & 0.331 +/- 0.008 & 0.9415 +/- 0.0123 & 14.71 / 15 & 0.473 \\
+    40669 & 18573.327 +/- 0.501 & 0.332 +/- 0.008 & 0.9637 +/- 0.0124 & 13.18 / 15 & 0.588 \\
+    40670 & 18574.294 +/- 0.498 & 0.311 +/- 0.007 & 0.9377 +/- 0.0120 & 30.53 / 15 & 0.01 \\
+    40671 & 18574.359 +/- 0.509 & 0.321 +/- 0.007 & 0.9293 +/- 0.0121 & 23.24 / 15 & 0.079 \\
+    40672 & 18574.223 +/- 0.506 & 0.321 +/- 0.008 & 0.9254 +/- 0.0120 & 12.11 / 15 & 0.671 \\
+    40673 & 18573.167 +/- 0.505 & 0.337 +/- 0.008 & 0.9450 +/- 0.0123 & 24.83 / 15 & 0.052 \\
+    40674 & 18573.861 +/- 0.509 & 0.339 +/- 0.008 & 0.9335 +/- 0.0122 & 18.19 / 15 & 0.253 \\
+    40675 & 18573.248 +/- 0.507 & 0.344 +/- 0.008 & 0.9540 +/- 0.0124 & 16.17 / 15 & 0.371 \\
+    40676 & 18574.090 +/- 0.506 & 0.325 +/- 0.008 & 0.9341 +/- 0.0121 & 13.44 / 15 & 0.568 \\
+    40677 & 18573.903 +/- 0.503 & 0.332 +/- 0.008 & 0.9401 +/- 0.0121 & 10.10 / 15 & 0.813 \\
+    40678 & 18573.692 +/- 0.504 & 0.345 +/- 0.008 & 0.9350 +/- 0.0121 & 11.37 / 15 & 0.726 \\
+    40679 & 18574.353 +/- 0.510 & 0.335 +/- 0.008 & 0.9276 +/- 0.0121 & 15.38 / 15 & 0.425 \\
+    40680 & 18573.364 +/- 0.503 & 0.340 +/- 0.008 & 0.9522 +/- 0.0123 & 11.55 / 15 & 0.713 \\
+    40681 & 18573.031 +/- 0.504 & 0.333 +/- 0.008 & 0.9632 +/- 0.0125 & 17.25 / 15 & 0.304 \\
+    40682 & 18573.815 +/- 0.506 & 0.333 +/- 0.008 & 0.9439 +/- 0.0123 & 14.52 / 15 & 0.487 \\
+    40683 & 18574.123 +/- 0.505 & 0.332 +/- 0.008 & 0.9283 +/- 0.0120 & 11.55 / 15 & 0.712 \\
+    40684 & 18573.710 +/- 0.505 & 0.340 +/- 0.008 & 0.9336 +/- 0.0121 & 13.45 / 15 & 0.568 \\
+    40685 & 18573.241 +/- 0.499 & 0.325 +/- 0.008 & 0.9562 +/- 0.0123 & 18.32 / 15 & 0.246 \\
+    40686 & 18573.417 +/- 0.514 & 0.338 +/- 0.008 & 0.9316 +/- 0.0123 & 12.23 / 15 & 0.662 \\
+    40687 & 18573.920 +/- 0.503 & 0.341 +/- 0.008 & 0.9312 +/- 0.0120 & 10.59 / 15 & 0.781 \\
+    40688 & 18574.069 +/- 0.500 & 0.323 +/- 0.008 & 0.9340 +/- 0.0120 & 26.07 / 15 & 0.037 \\
+    40689 & 18573.821 +/- 0.500 & 0.329 +/- 0.008 & 0.9433 +/- 0.0121 & 17.13 / 15 & 0.311 \\
+    40690 & 18573.578 +/- 0.497 & 0.334 +/- 0.008 & 0.9529 +/- 0.0122 & 18.36 / 15 & 0.244 \\
+    40691 & 18574.242 +/- 0.512 & 0.330 +/- 0.008 & 0.9369 +/- 0.0123 & 21.41 / 15 & 0.124 \\
+    40692 & 18572.776 +/- 0.503 & 0.329 +/- 0.008 & 0.9794 +/- 0.0127 & 23.06 / 15 & 0.083 \\
+    40693 & 18574.311 +/- 0.505 & 0.325 +/- 0.008 & 0.9262 +/- 0.0120 & 19.82 / 15 & 0.179 \\
+    \end{tabular}}%
+  \label{t:e0fit-runwise-stackP-shortrange-stat}%
+\end{table}%
+\newpage
+\begin{table}[h!]
+  \centering
+  \caption{Effective endpoint analysis results, from run 40538 to run 40693. Short fitting range [18375 - 18615] eV. Statistical error and shape only systematics.}
+    \resizebox{0.6\textwidth}{!}{\begin{tabular}{llllll}
+    \textbf{Run number} & \textbf{Endpoint (eV)} & \textbf{Background} & \textbf{Normalization} & $\chi ^2/dof$ & \textbf{p-value} \\
+    40538 & 18574.579 +/- 0.954 & 0.313 +/- 0.013 & 0.9203 +/- 0.0211 & 6.18 / 15 & 0.977 \\
+    40539 & 18573.717 +/- 0.954 & 0.330 +/- 0.013 & 0.9446 +/- 0.0210 & 11.61 / 15 & 0.709 \\
+    40540 & 18575.347 +/- 0.944 & 0.305 +/- 0.013 & 0.9159 +/- 0.0212 & 9.49 / 15 & 0.851 \\
+    40541 & 18573.113 +/- 0.991 & 0.336 +/- 0.013 & 0.9776 +/- 0.0217 & 22.45 / 15 & 0.097 \\
+    40542 & 18573.091 +/- 0.952 & 0.318 +/- 0.013 & 0.9660 +/- 0.0215 & 18.37 / 15 & 0.244 \\
+    40543 & 18573.466 +/- 0.971 & 0.340 +/- 0.013 & 0.9530 +/- 0.0216 & 9.81 / 15 & 0.832 \\
+    40603 & 18573.569 +/- 0.964 & 0.327 +/- 0.013 & 0.9462 +/- 0.0214 & 7.65 / 15 & 0.937 \\
+    40604 & 18573.966 +/- 0.955 & 0.315 +/- 0.013 & 0.9739 +/- 0.0217 & 18.42 / 15 & 0.241 \\
+    40610 & 18573.374 +/- 0.970 & 0.349 +/- 0.013 & 0.9462 +/- 0.0214 & 12.40 / 15 & 0.648 \\
+    40611 & 18573.406 +/- 0.998 & 0.389 +/- 0.014 & 0.9301 +/- 0.0214 & 11.77 / 15 & 0.696 \\
+    40612 & 18573.264 +/- 1.003 & 0.341 +/- 0.013 & 0.9623 +/- 0.0217 & 12.43 / 15 & 0.646 \\
+    40613 & 18574.397 +/- 0.973 & 0.308 +/- 0.013 & 0.9403 +/- 0.0215 & 17.83 / 15 & 0.272 \\
+    40667 & 18573.576 +/- 0.754 & 0.324 +/- 0.008 & 0.9471 +/- 0.0173 & 8.20 / 15 & 0.915 \\
+    40668 & 18573.621 +/- 0.763 & 0.330 +/- 0.008 & 0.9440 +/- 0.0173 & 14.64 / 15 & 0.477 \\
+    40669 & 18573.456 +/- 0.754 & 0.332 +/- 0.008 & 0.9658 +/- 0.0174 & 13.13 / 15 & 0.592 \\
+    40670 & 18574.179 +/- 0.733 & 0.311 +/- 0.007 & 0.9357 +/- 0.0174 & 30.49 / 15 & 0.01 \\
+    40671 & 18574.673 +/- 0.742 & 0.321 +/- 0.008 & 0.9346 +/- 0.0173 & 22.92 / 15 & 0.086 \\
+    40672 & 18574.370 +/- 0.742 & 0.321 +/- 0.008 & 0.9280 +/- 0.0173 & 12.04 / 15 & 0.676 \\
+    40673 & 18573.242 +/- 0.773 & 0.337 +/- 0.008 & 0.9461 +/- 0.0172 & 24.82 / 15 & 0.052 \\
+    40674 & 18574.052 +/- 0.758 & 0.339 +/- 0.008 & 0.9365 +/- 0.0173 & 18.07 / 15 & 0.259 \\
+    40675 & 18573.467 +/- 0.765 & 0.344 +/- 0.008 & 0.9575 +/- 0.0173 & 16.03 / 15 & 0.38 \\
+    40676 & 18574.181 +/- 0.743 & 0.325 +/- 0.008 & 0.9357 +/- 0.0173 & 13.41 / 15 & 0.571 \\
+    40677 & 18573.912 +/- 0.749 & 0.332 +/- 0.008 & 0.9403 +/- 0.0173 & 10.10 / 15 & 0.814 \\
+    40678 & 18573.491 +/- 0.756 & 0.345 +/- 0.008 & 0.9317 +/- 0.0173 & 11.23 / 15 & 0.736 \\
+    40679 & 18574.649 +/- 0.743 & 0.334 +/- 0.008 & 0.9326 +/- 0.0173 & 15.09 / 15 & 0.445 \\
+    40680 & 18573.428 +/- 0.761 & 0.340 +/- 0.008 & 0.9533 +/- 0.0173 & 11.54 / 15 & 0.714 \\
+    40681 & 18573.202 +/- 0.763 & 0.333 +/- 0.008 & 0.9659 +/- 0.0174 & 17.16 / 15 & 0.309 \\
+    40682 & 18573.905 +/- 0.750 & 0.333 +/- 0.008 & 0.9455 +/- 0.0174 & 14.49 / 15 & 0.489 \\
+    40683 & 18574.167 +/- 0.746 & 0.332 +/- 0.008 & 0.9292 +/- 0.0173 & 11.55 / 15 & 0.713 \\
+    40684 & 18573.745 +/- 0.756 & 0.340 +/- 0.008 & 0.9343 +/- 0.0173 & 13.44 / 15 & 0.568 \\
+    40685 & 18573.306 +/- 0.758 & 0.325 +/- 0.008 & 0.9573 +/- 0.0173 & 18.30 / 15 & 0.247 \\
+    40686 & 18573.782 +/- 0.773 & 0.338 +/- 0.008 & 0.9371 +/- 0.0172 & 11.84 / 15 & 0.691 \\
+    40687 & 18573.847 +/- 0.752 & 0.341 +/- 0.008 & 0.9300 +/- 0.0173 & 10.57 / 15 & 0.782 \\
+    40688 & 18573.944 +/- 0.743 & 0.324 +/- 0.008 & 0.9318 +/- 0.0173 & 26.02 / 15 & 0.038 \\
+    40689 & 18573.799 +/- 0.745 & 0.329 +/- 0.008 & 0.9429 +/- 0.0173 & 17.13 / 15 & 0.311 \\
+    40690 & 18573.484 +/- 0.750 & 0.334 +/- 0.008 & 0.9513 +/- 0.0173 & 18.33 / 15 & 0.246 \\
+    40691 & 18574.512 +/- 0.743 & 0.330 +/- 0.008 & 0.9416 +/- 0.0174 & 21.17 / 15 & 0.131 \\
+    40692 & 18572.848 +/- 0.766 & 0.329 +/- 0.008 & 0.9806 +/- 0.0175 & 23.05 / 15 & 0.083 \\
+    40693 & 18574.395 +/- 0.741 & 0.325 +/- 0.008 & 0.9277 +/- 0.0173 & 19.79 / 15 & 0.18 \\
+    \end{tabular}}%
+  \label{t:e0fit-runwise-stackP-shortrange-sys}%
+\end{table}%
+
+\newpage
+\begin{table}[h!]
+  \centering
+  \caption{Effective endpoint analysis results, from run 40538 to run 40693. Medium fitting range [18175 - 18615] eV. Statistical error only.}
+    \resizebox{0.6\textwidth}{!}{\begin{tabular}{llllll}
+    \textbf{Run number} & \textbf{Endpoint (eV)} & \textbf{Background} & \textbf{Normalization} & $\chi ^2/dof$ & \textbf{p-value} \\
+    40538 & 18573.533 +/- 0.460 & 0.317 +/- 0.013 & 0.9474 +/- 0.0050 & 8.95 / 17 & 0.942 \\
+    40539 & 18573.708 +/- 0.461 & 0.331 +/- 0.013 & 0.9505 +/- 0.0050 & 11.71 / 17 & 0.817 \\
+    40540 & 18573.437 +/- 0.463 & 0.313 +/- 0.012 & 0.9634 +/- 0.0051 & 18.79 / 17 & 0.34 \\
+    40541 & 18573.865 +/- 0.457 & 0.332 +/- 0.013 & 0.9482 +/- 0.0050 & 24.95 / 17 & 0.096 \\
+    40542 & 18573.529 +/- 0.454 & 0.316 +/- 0.013 & 0.9582 +/- 0.0050 & 18.97 / 17 & 0.33 \\
+    40543 & 18573.449 +/- 0.461 & 0.340 +/- 0.013 & 0.9553 +/- 0.0051 & 10.33 / 17 & 0.889 \\
+    40603 & 18573.476 +/- 0.458 & 0.328 +/- 0.013 & 0.9565 +/- 0.0051 & 12.86 / 17 & 0.745 \\
+    40604 & 18574.060 +/- 0.456 & 0.315 +/- 0.012 & 0.9691 +/- 0.0051 & 18.53 / 17 & 0.356 \\
+    40610 & 18573.296 +/- 0.468 & 0.350 +/- 0.013 & 0.9435 +/- 0.0050 & 19.11 / 17 & 0.322 \\
+    40611 & 18572.988 +/- 0.468 & 0.391 +/- 0.014 & 0.9417 +/- 0.0050 & 12.42 / 17 & 0.774 \\
+    40612 & 18573.280 +/- 0.464 & 0.341 +/- 0.013 & 0.9555 +/- 0.0051 & 12.70 / 17 & 0.756 \\
+    40613 & 18573.268 +/- 0.464 & 0.313 +/- 0.012 & 0.9639 +/- 0.0051 & 20.21 / 17 & 0.264 \\
+    40667 & 18573.275 +/- 0.295 & 0.325 +/- 0.007 & 0.9572 +/- 0.0037 & 10.70 / 17 & 0.872 \\
+    40668 & 18573.084 +/- 0.296 & 0.332 +/- 0.007 & 0.9545 +/- 0.0037 & 19.71 / 17 & 0.29 \\
+    40669 & 18573.864 +/- 0.294 & 0.330 +/- 0.007 & 0.9491 +/- 0.0036 & 16.05 / 17 & 0.52 \\
+    40670 & 18573.814 +/- 0.295 & 0.313 +/- 0.007 & 0.9510 +/- 0.0036 & 32.17 / 17 & 0.014 \\
+    40671 & 18573.619 +/- 0.296 & 0.324 +/- 0.007 & 0.9516 +/- 0.0037 & 29.73 / 17 & 0.028 \\
+    40672 & 18573.569 +/- 0.297 & 0.323 +/- 0.007 & 0.9440 +/- 0.0037 & 14.78 / 17 & 0.612 \\
+    40673 & 18573.001 +/- 0.297 & 0.338 +/- 0.007 & 0.9487 +/- 0.0037 & 26.59 / 17 & 0.064 \\
+    40674 & 18573.042 +/- 0.298 & 0.342 +/- 0.007 & 0.9560 +/- 0.0037 & 23.14 / 17 & 0.145 \\
+    40675 & 18573.435 +/- 0.297 & 0.344 +/- 0.008 & 0.9472 +/- 0.0037 & 19.44 / 17 & 0.304 \\
+    40676 & 18573.376 +/- 0.297 & 0.328 +/- 0.007 & 0.9544 +/- 0.0037 & 16.48 / 17 & 0.49 \\
+    40677 & 18573.467 +/- 0.296 & 0.334 +/- 0.007 & 0.9536 +/- 0.0037 & 12.93 / 17 & 0.741 \\
+    40678 & 18573.142 +/- 0.297 & 0.347 +/- 0.008 & 0.9525 +/- 0.0037 & 17.85 / 17 & 0.398 \\
+    40679 & 18573.633 +/- 0.297 & 0.338 +/- 0.007 & 0.9481 +/- 0.0037 & 18.52 / 17 & 0.357 \\
+    40680 & 18573.435 +/- 0.296 & 0.340 +/- 0.007 & 0.9497 +/- 0.0037 & 11.98 / 17 & 0.801 \\
+    40681 & 18573.605 +/- 0.295 & 0.331 +/- 0.007 & 0.9470 +/- 0.0036 & 19.43 / 17 & 0.304 \\
+    40682 & 18573.583 +/- 0.297 & 0.334 +/- 0.007 & 0.9510 +/- 0.0037 & 15.23 / 17 & 0.579 \\
+    40683 & 18573.684 +/- 0.297 & 0.334 +/- 0.007 & 0.9407 +/- 0.0036 & 12.71 / 17 & 0.755 \\
+    40684 & 18573.513 +/- 0.296 & 0.341 +/- 0.008 & 0.9398 +/- 0.0036 & 14.22 / 17 & 0.651 \\
+    40685 & 18573.829 +/- 0.294 & 0.323 +/- 0.007 & 0.9390 +/- 0.0036 & 20.56 / 17 & 0.247 \\
+    40686 & 18573.081 +/- 0.299 & 0.340 +/- 0.007 & 0.9408 +/- 0.0036 & 12.95 / 17 & 0.74 \\
+    40687 & 18573.574 +/- 0.296 & 0.342 +/- 0.008 & 0.9413 +/- 0.0036 & 11.43 / 17 & 0.834 \\
+    40688 & 18573.569 +/- 0.296 & 0.326 +/- 0.007 & 0.9482 +/- 0.0037 & 27.61 / 17 & 0.05 \\
+    40689 & 18573.631 +/- 0.295 & 0.329 +/- 0.007 & 0.9490 +/- 0.0037 & 17.53 / 17 & 0.419 \\
+    40690 & 18573.885 +/- 0.294 & 0.333 +/- 0.007 & 0.9441 +/- 0.0036 & 18.96 / 17 & 0.331 \\
+    40691 & 18573.534 +/- 0.298 & 0.333 +/- 0.007 & 0.9585 +/- 0.0037 & 27.56 / 17 & 0.05 \\
+    40692 & 18572.865 +/- 0.296 & 0.329 +/- 0.007 & 0.9764 +/- 0.0038 & 23.35 / 17 & 0.138 \\
+    40693 & 18573.704 +/- 0.297 & 0.328 +/- 0.007 & 0.9423 +/- 0.0036 & 23.33 / 17 & 0.139 \\
+    \end{tabular}}%
+  \label{t:e0fit-runwise-stackP-midrange-stat}%
+\end{table}%
+\newpage
+\begin{table}[h!]
+  \centering
+  \caption{Effective endpoint analysis results, from run 40538 to run 40693. Medium fitting range [18175 - 18615] eV. Statistical error and shape only systematics.}
+    \resizebox{0.6\textwidth}{!}{\begin{tabular}{llllll}
+    \textbf{Run number} & \textbf{Endpoint (eV)} & \textbf{Background} & \textbf{Normalization} & $\chi ^2/dof$ & \textbf{p-value} \\
+    40538 & 18573.867 +/- 0.856 & 0.317 +/- 0.013 & 0.9496 +/- 0.0101 & 8.74 / 17 & 0.948 \\
+    40539 & 18573.601 +/- 0.864 & 0.331 +/- 0.013 & 0.9499 +/- 0.0100 & 11.69 / 17 & 0.819 \\
+    40540 & 18574.106 +/- 0.851 & 0.312 +/- 0.012 & 0.9679 +/- 0.0101 & 17.95 / 17 & 0.392 \\
+    40541 & 18573.837 +/- 0.857 & 0.332 +/- 0.013 & 0.9478 +/- 0.0101 & 24.94 / 17 & 0.096 \\
+    40542 & 18573.313 +/- 0.843 & 0.317 +/- 0.013 & 0.9568 +/- 0.0101 & 18.88 / 17 & 0.336 \\
+    40543 & 18573.400 +/- 0.857 & 0.340 +/- 0.013 & 0.9550 +/- 0.0101 & 10.33 / 17 & 0.889 \\
+    40603 & 18573.299 +/- 0.854 & 0.328 +/- 0.013 & 0.9553 +/- 0.0101 & 12.80 / 17 & 0.749 \\
+    40604 & 18574.075 +/- 0.835 & 0.315 +/- 0.013 & 0.9691 +/- 0.0102 & 18.53 / 17 & 0.356 \\
+    40610 & 18573.477 +/- 0.862 & 0.350 +/- 0.013 & 0.9449 +/- 0.0101 & 19.04 / 17 & 0.326 \\
+    40611 & 18573.089 +/- 0.886 & 0.391 +/- 0.014 & 0.9424 +/- 0.0100 & 12.40 / 17 & 0.775 \\
+    40612 & 18573.428 +/- 0.874 & 0.340 +/- 0.013 & 0.9562 +/- 0.0101 & 12.66 / 17 & 0.758 \\
+    40613 & 18573.730 +/- 0.863 & 0.312 +/- 0.012 & 0.9669 +/- 0.0101 & 19.82 / 17 & 0.284 \\
+    40667 & 18573.368 +/- 0.736 & 0.325 +/- 0.007 & 0.9578 +/- 0.0094 & 10.68 / 17 & 0.873 \\
+    40668 & 18573.349 +/- 0.746 & 0.332 +/- 0.008 & 0.9562 +/- 0.0094 & 19.56 / 17 & 0.298 \\
+    40669 & 18573.608 +/- 0.731 & 0.331 +/- 0.008 & 0.9470 +/- 0.0094 & 15.89 / 17 & 0.532 \\
+    40670 & 18574.020 +/- 0.713 & 0.312 +/- 0.007 & 0.9528 +/- 0.0094 & 32.06 / 17 & 0.015 \\
+    40671 & 18574.299 +/- 0.726 & 0.322 +/- 0.007 & 0.9561 +/- 0.0095 & 28.73 / 17 & 0.037 \\
+    40672 & 18574.121 +/- 0.724 & 0.322 +/- 0.007 & 0.9479 +/- 0.0094 & 14.10 / 17 & 0.66 \\
+    40673 & 18573.270 +/- 0.751 & 0.337 +/- 0.008 & 0.9505 +/- 0.0094 & 26.44 / 17 & 0.067 \\
+    40674 & 18573.824 +/- 0.739 & 0.341 +/- 0.008 & 0.9612 +/- 0.0095 & 21.87 / 17 & 0.19 \\
+    40675 & 18573.682 +/- 0.739 & 0.343 +/- 0.008 & 0.9488 +/- 0.0094 & 19.31 / 17 & 0.311 \\
+    40676 & 18573.918 +/- 0.725 & 0.327 +/- 0.007 & 0.9583 +/- 0.0094 & 15.82 / 17 & 0.536 \\
+    40677 & 18573.664 +/- 0.732 & 0.333 +/- 0.008 & 0.9550 +/- 0.0094 & 12.84 / 17 & 0.747 \\
+    40678 & 18573.127 +/- 0.741 & 0.347 +/- 0.008 & 0.9525 +/- 0.0094 & 17.84 / 17 & 0.399 \\
+    40679 & 18574.382 +/- 0.724 & 0.336 +/- 0.008 & 0.9531 +/- 0.0095 & 17.30 / 17 & 0.434 \\
+    40680 & 18573.504 +/- 0.739 & 0.339 +/- 0.008 & 0.9501 +/- 0.0094 & 11.97 / 17 & 0.802 \\
+    40681 & 18573.414 +/- 0.738 & 0.331 +/- 0.008 & 0.9454 +/- 0.0094 & 19.34 / 17 & 0.309 \\
+    40682 & 18573.784 +/- 0.730 & 0.333 +/- 0.008 & 0.9524 +/- 0.0094 & 15.14 / 17 & 0.586 \\
+    40683 & 18574.013 +/- 0.727 & 0.333 +/- 0.008 & 0.9430 +/- 0.0094 & 12.47 / 17 & 0.771 \\
+    40684 & 18573.627 +/- 0.737 & 0.341 +/- 0.008 & 0.9406 +/- 0.0094 & 14.20 / 17 & 0.653 \\
+    40685 & 18573.556 +/- 0.734 & 0.323 +/- 0.007 & 0.9370 +/- 0.0094 & 20.38 / 17 & 0.255 \\
+    40686 & 18573.708 +/- 0.753 & 0.338 +/- 0.008 & 0.9447 +/- 0.0094 & 12.16 / 17 & 0.79 \\
+    40687 & 18573.691 +/- 0.734 & 0.342 +/- 0.008 & 0.9421 +/- 0.0094 & 11.40 / 17 & 0.835 \\
+    40688 & 18573.749 +/- 0.725 & 0.325 +/- 0.007 & 0.9496 +/- 0.0094 & 27.52 / 17 & 0.051 \\
+    40689 & 18573.698 +/- 0.726 & 0.329 +/- 0.008 & 0.9495 +/- 0.0094 & 17.52 / 17 & 0.42 \\
+    40690 & 18573.583 +/- 0.729 & 0.334 +/- 0.008 & 0.9420 +/- 0.0094 & 18.75 / 17 & 0.343 \\
+    40691 & 18574.143 +/- 0.726 & 0.332 +/- 0.008 & 0.9626 +/- 0.0095 & 26.74 / 17 & 0.062 \\
+    40692 & 18572.922 +/- 0.741 & 0.329 +/- 0.007 & 0.9768 +/- 0.0094 & 23.34 / 17 & 0.139 \\
+    40693 & 18574.259 +/- 0.720 & 0.327 +/- 0.008 & 0.9463 +/- 0.0094 & 22.63 / 17 & 0.162 \\
+    \end{tabular}}%
+  \label{t:e0fit-runwise-stackP-midrange-sys}%
+\end{table}%
+
+\newpage
+\begin{table}[h!]
+  \centering
+  \caption{Effective endpoint analysis results, from run 40538 to run 40693. Long fitting range [16975 - 18615] eV. Statistical error only.}
+    \resizebox{0.6\textwidth}{!}{\begin{tabular}{llllll}
+    \textbf{Run number} & \textbf{Endpoint (eV)} & \textbf{Background} & \textbf{Normalization} & $\chi ^2/dof$ & \textbf{p-value} \\
+    40538 & 18573.935 +/- 0.233 & 0.314 +/- 0.012 & 0.9432 +/- 0.0003 & 19.22 / 23 & 0.688 \\
+    40539 & 18573.868 +/- 0.231 & 0.329 +/- 0.012 & 0.9535 +/- 0.0003 & 30.10 / 23 & 0.147 \\
+    40540 & 18573.535 +/- 0.234 & 0.313 +/- 0.012 & 0.9620 +/- 0.0003 & 22.36 / 23 & 0.499 \\
+    40541 & 18573.835 +/- 0.232 & 0.331 +/- 0.012 & 0.9525 +/- 0.0003 & 38.61 / 23 & 0.022 \\
+    40542 & 18573.920 +/- 0.231 & 0.313 +/- 0.012 & 0.9576 +/- 0.0003 & 28.64 / 23 & 0.192 \\
+    40543 & 18573.680 +/- 0.233 & 0.338 +/- 0.013 & 0.9555 +/- 0.0003 & 16.31 / 23 & 0.842 \\
+    40603 & 18573.759 +/- 0.233 & 0.325 +/- 0.012 & 0.9561 +/- 0.0003 & 24.77 / 23 & 0.362 \\
+    40604 & 18574.099 +/- 0.233 & 0.314 +/- 0.012 & 0.9680 +/- 0.0003 & 25.73 / 23 & 0.314 \\
+    40610 & 18573.683 +/- 0.235 & 0.347 +/- 0.013 & 0.9406 +/- 0.0003 & 26.72 / 23 & 0.268 \\
+    40611 & 18573.706 +/- 0.234 & 0.385 +/- 0.013 & 0.9372 +/- 0.0003 & 22.34 / 23 & 0.5 \\
+    40612 & 18573.720 +/- 0.234 & 0.337 +/- 0.012 & 0.9529 +/- 0.0003 & 16.53 / 23 & 0.832 \\
+    40613 & 18573.533 +/- 0.234 & 0.310 +/- 0.012 & 0.9630 +/- 0.0003 & 28.17 / 23 & 0.21 \\
+    40667 & 18573.594 +/- 0.164 & 0.323 +/- 0.007 & 0.9547 +/- 0.0002 & 14.92 / 23 & 0.897 \\
+    40668 & 18573.645 +/- 0.164 & 0.328 +/- 0.007 & 0.9495 +/- 0.0002 & 33.73 / 23 & 0.069 \\
+    40669 & 18573.597 +/- 0.165 & 0.331 +/- 0.007 & 0.9551 +/- 0.0002 & 28.37 / 23 & 0.202 \\
+    40670 & 18573.851 +/- 0.164 & 0.312 +/- 0.007 & 0.9553 +/- 0.0002 & 52.57 / 23 & 0 \\
+    40671 & 18573.631 +/- 0.165 & 0.324 +/- 0.007 & 0.9527 +/- 0.0002 & 34.88 / 23 & 0.053 \\
+    40672 & 18573.613 +/- 0.165 & 0.323 +/- 0.007 & 0.9452 +/- 0.0002 & 24.18 / 23 & 0.394 \\
+    40673 & 18573.535 +/- 0.164 & 0.333 +/- 0.007 & 0.9452 +/- 0.0002 & 45.18 / 23 & 0.004 \\
+    40674 & 18573.573 +/- 0.165 & 0.339 +/- 0.007 & 0.9496 +/- 0.0002 & 36.62 / 23 & 0.036 \\
+    40675 & 18573.662 +/- 0.165 & 0.341 +/- 0.007 & 0.9485 +/- 0.0002 & 37.06 / 23 & 0.032 \\
+    40676 & 18573.796 +/- 0.165 & 0.325 +/- 0.007 & 0.9500 +/- 0.0002 & 24.72 / 23 & 0.365 \\
+    40677 & 18573.754 +/- 0.165 & 0.332 +/- 0.007 & 0.9513 +/- 0.0002 & 26.66 / 23 & 0.271 \\
+    40678 & 18573.816 +/- 0.165 & 0.342 +/- 0.007 & 0.9470 +/- 0.0002 & 36.58 / 23 & 0.036 \\
+    40679 & 18574.099 +/- 0.164 & 0.334 +/- 0.007 & 0.9450 +/- 0.0002 & 43.06 / 23 & 0.007 \\
+    40680 & 18573.559 +/- 0.166 & 0.339 +/- 0.007 & 0.9482 +/- 0.0002 & 17.49 / 23 & 0.784 \\
+    40681 & 18573.427 +/- 0.166 & 0.332 +/- 0.007 & 0.9514 +/- 0.0002 & 26.55 / 23 & 0.275 \\
+    40682 & 18573.488 +/- 0.166 & 0.334 +/- 0.007 & 0.9541 +/- 0.0002 & 22.89 / 23 & 0.467 \\
+    40683 & 18573.849 +/- 0.165 & 0.332 +/- 0.007 & 0.9404 +/- 0.0002 & 17.81 / 23 & 0.768 \\
+    40684 & 18573.763 +/- 0.165 & 0.339 +/- 0.007 & 0.9379 +/- 0.0002 & 23.73 / 23 & 0.419 \\
+    40685 & 18573.782 +/- 0.165 & 0.323 +/- 0.007 & 0.9421 +/- 0.0002 & 24.69 / 23 & 0.366 \\
+    40686 & 18573.355 +/- 0.165 & 0.337 +/- 0.007 & 0.9408 +/- 0.0002 & 26.57 / 23 & 0.275 \\
+    40687 & 18573.740 +/- 0.165 & 0.341 +/- 0.007 & 0.9407 +/- 0.0002 & 23.76 / 23 & 0.417 \\
+    40688 & 18573.658 +/- 0.165 & 0.325 +/- 0.007 & 0.9492 +/- 0.0002 & 43.45 / 23 & 0.006 \\
+    40689 & 18573.764 +/- 0.165 & 0.328 +/- 0.007 & 0.9501 +/- 0.0002 & 29.45 / 23 & 0.166 \\
+    40690 & 18574.054 +/- 0.164 & 0.331 +/- 0.007 & 0.9453 +/- 0.0002 & 30.92 / 23 & 0.125 \\
+    40691 & 18573.661 +/- 0.165 & 0.331 +/- 0.007 & 0.9611 +/- 0.0002 & 46.33 / 23 & 0.003 \\
+    40692 & 18573.571 +/- 0.165 & 0.325 +/- 0.007 & 0.9663 +/- 0.0002 & 34.07 / 23 & 0.064 \\
+    40693 & 18573.820 +/- 0.165 & 0.327 +/- 0.007 & 0.9447 +/- 0.0002 & 44.24 / 23 & 0.005 \\
+    \end{tabular}}%
+  \label{t:e0fit-runwise-stackP-longrange-stat}%
+\end{table}%
+\newpage
+\begin{table}[h!]
+  \centering
+  \caption{Effective endpoint analysis results, from run 40538 to run 40693. Long fitting range [16975 - 18615] eV. Statistical error and shape only systematics.}
+    \resizebox{0.6\textwidth}{!}{\begin{tabular}{llllll}
+    \textbf{Run number} & \textbf{Endpoint (eV)} & \textbf{Background} & \textbf{Normalization} & $\chi ^2/dof$ & \textbf{p-value} \\
+    40538 & 18573.613 +/- 0.828 & 0.316 +/- 0.013 & 0.9416 +/- 0.0071 & 18.73 / 23 & 0.717 \\
+    40539 & 18572.983 +/- 0.853 & 0.332 +/- 0.013 & 0.9504 +/- 0.0071 & 28.14 / 23 & 0.21 \\
+    40540 & 18573.948 +/- 0.820 & 0.311 +/- 0.012 & 0.9623 +/- 0.0071 & 22.04 / 23 & 0.518 \\
+    40541 & 18573.373 +/- 0.836 & 0.333 +/- 0.013 & 0.9506 +/- 0.0071 & 37.93 / 23 & 0.026 \\
+    40542 & 18572.884 +/- 0.823 & 0.317 +/- 0.013 & 0.9547 +/- 0.0071 & 26.44 / 23 & 0.28 \\
+    40543 & 18573.027 +/- 0.835 & 0.340 +/- 0.013 & 0.9534 +/- 0.0071 & 15.38 / 23 & 0.88 \\
+    40603 & 18573.000 +/- 0.830 & 0.328 +/- 0.013 & 0.9541 +/- 0.0071 & 23.46 / 23 & 0.434 \\
+    40604 & 18574.054 +/- 0.805 & 0.315 +/- 0.012 & 0.9676 +/- 0.0071 & 25.58 / 23 & 0.321 \\
+    40610 & 18573.207 +/- 0.835 & 0.349 +/- 0.013 & 0.9390 +/- 0.0071 & 26.09 / 23 & 0.296 \\
+    40611 & 18572.542 +/- 0.863 & 0.389 +/- 0.014 & 0.9336 +/- 0.0071 & 19.63 / 23 & 0.664 \\
+    40612 & 18573.049 +/- 0.848 & 0.339 +/- 0.013 & 0.9506 +/- 0.0071 & 15.55 / 23 & 0.874 \\
+    40613 & 18573.319 +/- 0.840 & 0.311 +/- 0.012 & 0.9614 +/- 0.0071 & 27.77 / 23 & 0.225 \\
+    40667 & 18572.881 +/- 0.667 & 0.325 +/- 0.007 & 0.9523 +/- 0.0070 & 13.15 / 23 & 0.949 \\
+    40668 & 18572.462 +/- 0.690 & 0.332 +/- 0.007 & 0.9452 +/- 0.0070 & 28.64 / 23 & 0.193 \\
+    40669 & 18573.538 +/- 0.647 & 0.332 +/- 0.007 & 0.9544 +/- 0.0070 & 27.99 / 23 & 0.216 \\
+    40670 & 18573.258 +/- 0.656 & 0.314 +/- 0.007 & 0.9523 +/- 0.0070 & 50.45 / 23 & 0.001 \\
+    40671 & 18573.887 +/- 0.647 & 0.323 +/- 0.007 & 0.9521 +/- 0.0070 & 34.51 / 23 & 0.058 \\
+    40672 & 18573.604 +/- 0.654 & 0.323 +/- 0.007 & 0.9437 +/- 0.0070 & 23.59 / 23 & 0.427 \\
+    40673 & 18572.241 +/- 0.699 & 0.338 +/- 0.007 & 0.9405 +/- 0.0070 & 39.07 / 23 & 0.019 \\
+    40674 & 18573.012 +/- 0.677 & 0.341 +/- 0.008 & 0.9468 +/- 0.0070 & 34.78 / 23 & 0.055 \\
+    40675 & 18572.800 +/- 0.681 & 0.344 +/- 0.008 & 0.9448 +/- 0.0070 & 33.86 / 23 & 0.067 \\
+    40676 & 18573.245 +/- 0.662 & 0.327 +/- 0.007 & 0.9475 +/- 0.0070 & 23.26 / 23 & 0.445 \\
+    40677 & 18573.119 +/- 0.665 & 0.334 +/- 0.008 & 0.9486 +/- 0.0070 & 24.79 / 23 & 0.361 \\
+    40678 & 18572.155 +/- 0.692 & 0.348 +/- 0.008 & 0.9417 +/- 0.0070 & 27.57 / 23 & 0.233 \\
+    40679 & 18573.320 +/- 0.671 & 0.337 +/- 0.008 & 0.9410 +/- 0.0070 & 39.26 / 23 & 0.019 \\
+    40680 & 18573.338 +/- 0.657 & 0.340 +/- 0.008 & 0.9473 +/- 0.0070 & 17.13 / 23 & 0.803 \\
+    40681 & 18573.306 +/- 0.656 & 0.332 +/- 0.007 & 0.9505 +/- 0.0070 & 26.22 / 23 & 0.29 \\
+    40682 & 18573.510 +/- 0.653 & 0.334 +/- 0.008 & 0.9533 +/- 0.0070 & 22.63 / 23 & 0.482 \\
+    40683 & 18573.505 +/- 0.655 & 0.334 +/- 0.008 & 0.9386 +/- 0.0070 & 17.12 / 23 & 0.803 \\
+    40684 & 18573.204 +/- 0.664 & 0.341 +/- 0.008 & 0.9358 +/- 0.0070 & 22.34 / 23 & 0.5 \\
+    40685 & 18573.377 +/- 0.652 & 0.324 +/- 0.007 & 0.9407 +/- 0.0070 & 24.08 / 23 & 0.399 \\
+    40686 & 18572.804 +/- 0.690 & 0.339 +/- 0.008 & 0.9380 +/- 0.0070 & 24.87 / 23 & 0.357 \\
+    40687 & 18573.257 +/- 0.662 & 0.342 +/- 0.008 & 0.9386 +/- 0.0070 & 22.33 / 23 & 0.5 \\
+    40688 & 18573.257 +/- 0.658 & 0.326 +/- 0.007 & 0.9470 +/- 0.0070 & 42.05 / 23 & 0.009 \\
+    40689 & 18573.153 +/- 0.660 & 0.330 +/- 0.007 & 0.9475 +/- 0.0070 & 27.70 / 23 & 0.227 \\
+    40690 & 18573.118 +/- 0.660 & 0.335 +/- 0.008 & 0.9423 +/- 0.0070 & 27.81 / 23 & 0.223 \\
+    40691 & 18573.204 +/- 0.672 & 0.333 +/- 0.007 & 0.9578 +/- 0.0070 & 44.28 / 23 & 0.005 \\
+    40692 & 18572.443 +/- 0.675 & 0.328 +/- 0.007 & 0.9630 +/- 0.0070 & 30.11 / 23 & 0.146 \\
+    40693 & 18573.372 +/- 0.664 & 0.328 +/- 0.007 & 0.9417 +/- 0.0070 & 42.27 / 23 & 0.008 \\
+  \end{tabular}}%
+  \label{t:e0fit-runwise-stackP-longrange-sys}%
+\end{table}%
+
+\newpage
+\section*{Acknowledgement}
+We thanks ...
+We are grateful to ...
+
+\newpage
+\bibliography{samaktechnote}
+
+\newpage
+\begin{appendix}
+  \listoffigures
+  \listoftables
+\end{appendix}
+
+\end{document}

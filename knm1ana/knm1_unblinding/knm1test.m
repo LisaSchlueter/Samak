@@ -1,0 +1,33 @@
+%
+% KNM1 Final fit Results
+% Uniform Fit
+% Golden Run List
+% Golden Pixel List
+% 
+% Last Updated: 15/08/2019
+%
+
+%% settings
+RunList               = 'KNM1';
+exclDataStart         = 14; % 27 subruns
+RecomputeFlag         = 'OFF';
+BkgCM                 = 'OFF';
+
+%% Init Model Object and covariance matrix object
+Real = MultiRunAnalysis('RunList',RunList,...
+    'chi2','chi2Stat','DataType','Real',...
+    'exclDataStart',exclDataStart,...
+    'fixPar','mNu Norm E0 Bkg',...
+    'RadiativeFlag','ON',...
+    'minuitOpt','min ; minos',...
+    'FSDFlag','Sibille0p5eV',...%'SAENZ',...%Sibille0p5eV',...%'Sibille',...
+    'ELossFlag','KatrinT2',...
+    'AnaFlag','Ring',...
+    'RingMerge','Half',...
+    'SysBudget',22);
+
+SysEffects.TCoff_OTHER='OFF';
+SysEffects.FPDeff='OFF';
+Real.chi2='chi2CMShape'; Real.ComputeCM('SysEffects',SysEffects,'BkgCM',BkgCM);
+Real.Fit('CATS','OFF');
+Real.PlotFit('saveplot','pdf','ErrorBarScaling',1,'YLimRes',[-2.2,2.9],'Colors','RGB');

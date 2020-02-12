@@ -1,0 +1,97 @@
+<external_define name="ba" value="3E-4"/>
+<external_define name="cd" value="5E21" />
+
+<external_define name="IE_suppression" value="0.66019417475728148"/>
+<external_define name="bg" value="{((2314.07270639/([ba:3.4E-4]*1.E4)+72.87100681)/2.*2.86587134-131.37016528)/1000.*[IE_suppression]}"/>
+
+<include base="ssc.xml" />
+
+<print name="ba" value="[ba]"/>
+<print name="bg" value="[bg]"/>
+
+<kafit>
+
+    <Random Seed="[seed:12345]" />
+
+    <RuntimeSchedule Name="mySchedule"
+        File="time-3y-jopti30eV10mHz.dat"
+        TotalTime="3y" />
+
+    <BackgroundPoisson Name="UniformBackground"
+        TotalRate="[bg]" />
+
+    <SpectrumSimulator
+        Name="mySpecSim"
+        Spectrum="myIntSpec1"
+        Caching="true">
+        <Background Name="UniformBackground" />
+    </SpectrumSimulator>
+
+    <RunGenerator
+        Name="myRunGen"
+        Spectrum="myIntSpec1"
+        Caching="false"
+        RuntimeSchedule="mySchedule"
+        Randomize="false"
+        Segmentation="uniform"
+        SquaredNeutrinoMasses="0.0"
+        SquaredMixingParameters="1.0" >
+        <Background Name="UniformBackground" />
+    </RunGenerator>
+
+    <LoglikelihoodKatrin
+        Name="myKatrinLogL"
+        PDF="Gauss"
+        RunGenerator="myRunGen"
+        SpectrumSimulator="mySpecSim" >
+
+    </LoglikelihoodKatrin>
+
+    <Minuit
+        Name="myMinuit2"
+        Function="myKatrinLogL"
+        RandomizeStartValues="0.0"
+        Minimizer="migrad"
+        MaxFcnCalls="5000"
+        Tolerance="0.01"
+        PrintLevel="1" >
+
+        <Parameter Index="0" Name="mnu2" StartValue="0.0" Error="0.01" LowerLimit="-100.0" UpperLimit="100.0" Fixed="false" />
+        <Parameter Index="1" Name="E0"   StartValue="18575.0" Error="0.001" LowerLimit="18475.0" UpperLimit="18675.0" Fixed="false" />
+        <Parameter Index="2" Name="Sig"  StartValue="1.0" Error="0.0001" LowerLimit="0.5" UpperLimit="1.5" Fixed="false" />
+        <Parameter Index="3" Name="Bg"   StartValue="[bg]" Error="0.00001" LowerLimit="0.0" UpperLimit="1.0" Fixed="false" />
+    </Minuit>
+
+    <EnsembleTest
+        Name="myTester"
+        OutputFilename="fitter_[ba].root"
+        NumberOfFits="[nfits:1]"
+        Minimizer="myMinuit2"
+        MinosParameters="0"
+        ConfidenceLevel="1.0"
+        SystematicError="0.017"
+    />
+
+    <MTDOptimizer
+        Name="myOptimizer"
+        Function="myKatrinLogL"
+        Steps="1E4"
+        Steepness="3.0"
+        Iterations="1"
+        InelasticUncertainty="0.0"
+        PullMethod="False"
+        OptimizeColumnDensity="False"
+        MinTimePerBin="16h"
+        MaxRelRateError="0.01"
+        ParallelTempering="False"
+        ProposalStrategies="4;1;1;0;0"
+        OutputFilename="mtd_[ba].txt" >
+        <InputSchedule
+            TotalTime="3y" >
+            <Entry Interval="-30.0;-8.0" Binning="1.00" />
+            <Entry Interval="-8.0;-3.0"  Binning="0.25" />
+            <Entry Point="5.0" />
+        </InputSchedule>
+    </MTDOptimizer>
+
+</kafit>

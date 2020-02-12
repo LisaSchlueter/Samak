@@ -1,0 +1,1 @@
+M = MultiRunAnalysis('RunList','KNM1_m149mvRW','DataType','Real');

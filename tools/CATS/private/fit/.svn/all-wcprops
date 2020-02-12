@@ -1,0 +1,41 @@
+K 25
+svn:wc:ra_dav:version-url
+V 54
+/svn/snif/!svn/ver/62/trunk/reanalyse/CATS/private/fit
+END
+FitDemo.m
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/svn/snif/!svn/ver/62/trunk/reanalyse/CATS/private/fit/FitDemo.m
+END
+fitFunction.m
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/snif/!svn/ver/62/trunk/reanalyse/CATS/private/fit/fitFunction.m
+END
+myTestFunction.m
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/snif/!svn/ver/62/trunk/reanalyse/CATS/private/fit/myTestFunction.m
+END
+params2var.m
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/svn/snif/!svn/ver/62/trunk/reanalyse/CATS/private/fit/params2var.m
+END
+var2params.m
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/svn/snif/!svn/ver/62/trunk/reanalyse/CATS/private/fit/var2params.m
+END
+fit.m
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/svn/snif/!svn/ver/62/trunk/reanalyse/CATS/private/fit/fit.m
+END

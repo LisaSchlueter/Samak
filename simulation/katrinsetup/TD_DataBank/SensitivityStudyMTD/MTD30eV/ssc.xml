@@ -1,0 +1,67 @@
+<include base="fields.xml" />
+
+<ssc>
+    <WGTS Name="WGTS1"
+        BeamtubeLengthFront="5.0"
+        BeamtubeLengthRear="5.0"
+        BeamtubeRadius="0.045"
+        Flux="0.0191"
+        ColumnDensity="[cd]"
+        NSlices="1" NRings="1" NSegments="1"
+    />
+  
+    <FinalStatesRebinned Name="myFsdSaenzRebinned"
+        TritiumPurity="0.95"
+        DTvsHT="1.0"
+        Binning="0.1"
+        EmulateDoppler="True"
+        Temperature="30.0"
+        OrthoParaRatio="0.75"
+        Model="2"
+    />
+
+    <DifferentialSpectrum Name="myDiffSpec1"
+        Endpoint="18575.0"
+        NeutrinoMassesSquared="0.0" MixingParametersSquared="1.0"
+        FinalStatesName="myFsdSaenzRebinned"
+        CorrectionMode="endpoint"
+        Corrections="G" 
+        FermiFunctionMode="approx" />
+
+    <ElossAseev Name="myElossAseev" />
+
+    <TransmissionAnalytical Name="myTransmissionAnalytical"
+        BA="[ba]"
+        BMax="6.0"
+        Relativistic="true"
+    />
+
+    <Response Name="myResponse1"
+        EnergyLossName="myElossAseev"
+        EnergyLossBinWidth="0.2"
+        EnergyLossRange="0.0;100.0"
+        TransmissionName="myTransmissionAnalytical"
+        CrossSecInelastic="3.456E-22"
+        NScatterings="4"
+        DetailedTransmissionForNScatterings="0"
+        AngularChange="False"
+    />
+
+    <Detector Name="myDetector"
+        Efficiency="0.9"
+        DetectorPositionZ="13.98"
+    />
+
+    <IntegratedSpectrum Name="myIntSpec1"
+        SourceName="WGTS1"
+        ResponseName="myResponse1"
+        DetectorName="myDetector"
+        DopplerMode="off"
+        TritiumPurity="0.95"
+        IntegrationMinSteps="32"
+        IntegrationPrecision="1E-5"
+        IntegrationMethod="Romberg" >
+        <Spectrum Name="myDiffSpec1"/>
+    </IntegratedSpectrum>
+
+</ssc>

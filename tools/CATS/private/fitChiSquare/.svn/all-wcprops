@@ -1,0 +1,53 @@
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/svn/snif/!svn/ver/62/trunk/reanalyse/CATS/private/fitChiSquare
+END
+license.txt
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/snif/!svn/ver/62/trunk/reanalyse/CATS/private/fitChiSquare/license.txt
+END
+ModelEditor.m
+K 25
+svn:wc:ra_dav:version-url
+V 77
+/svn/snif/!svn/ver/62/trunk/reanalyse/CATS/private/fitChiSquare/ModelEditor.m
+END
+fitChiSquare.m
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/snif/!svn/ver/62/trunk/reanalyse/CATS/private/fitChiSquare/fitChiSquare.m
+END
+fitLibrary.m
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/snif/!svn/ver/62/trunk/reanalyse/CATS/private/fitChiSquare/fitLibrary.m
+END
+ModelEditor.fig
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/snif/!svn/ver/62/trunk/reanalyse/CATS/private/fitChiSquare/ModelEditor.fig
+END
+example_3_0.JPG
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/snif/!svn/ver/62/trunk/reanalyse/CATS/private/fitChiSquare/example_3_0.JPG
+END
+defaultChiSquareModels.mat
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/snif/!svn/ver/62/trunk/reanalyse/CATS/private/fitChiSquare/defaultChiSquareModels.mat
+END
+fitChiSquareExample.m
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/snif/!svn/ver/62/trunk/reanalyse/CATS/private/fitChiSquare/fitChiSquareExample.m
+END

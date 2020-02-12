@@ -1,0 +1,65 @@
+\BOOKMARK [1][-]{section.1}{Introduction}{}% 1
+\BOOKMARK [1][-]{section.2}{Tritium -decay integral spectrum modeling}{}% 2
+\BOOKMARK [1][-]{section.3}{KATRIN First Tritium}{}% 3
+\BOOKMARK [2][-]{subsection.3.1}{Data}{section.3}% 4
+\BOOKMARK [3][-]{subsubsection.3.1.1}{Analysis plane E- B- field Corrections}{subsection.3.1}% 5
+\BOOKMARK [2][-]{subsection.3.2}{Focal Plane Detector \(FPD\)}{section.3}% 6
+\BOOKMARK [2][-]{subsection.3.3}{Others inputs for the simulation}{section.3}% 7
+\BOOKMARK [1][-]{section.4}{Measurement Time Distributions and expected signal}{}% 8
+\BOOKMARK [1][-]{section.5}{Pixel-wise 2 Fit}{}% 9
+\BOOKMARK [2][-]{subsection.5.1}{Covariance Matrices}{section.5}% 10
+\BOOKMARK [2][-]{subsection.5.2}{Nuisance parameters and pull terms}{section.5}% 11
+\BOOKMARK [1][-]{section.6}{Statistical covariance matrix, Mijp,STAT}{}% 12
+\BOOKMARK [1][-]{section.7}{Response function covariance matrix, Mijp,RF}{}% 13
+\BOOKMARK [1][-]{section.8}{Subrun activity fluctuations covariance matrix, Mijp,A}{}% 14
+\BOOKMARK [1][-]{section.9}{Molecular final states covariance matrix, Mijp,FSD}{}% 15
+\BOOKMARK [1][-]{section.10}{Background covariance matrix, Mijp,B}{}% 16
+\BOOKMARK [2][-]{subsection.10.1}{Background rate covariance matrix}{section.10}% 17
+\BOOKMARK [2][-]{subsection.10.2}{Background shape covariance matrix}{section.10}% 18
+\BOOKMARK [1][-]{section.11}{Particle, Nuclear, and Atomic corrections covariance matrix, Mijp,NAC}{}% 19
+\BOOKMARK [1][-]{section.12}{Synchrotron radiation covariance matrix, Mijp,SYNC}{}% 20
+\BOOKMARK [1][-]{section.13}{Doppler broadening covariance matrix, Mijp,DOP}{}% 21
+\BOOKMARK [1][-]{section.14}{Systematic errors Summary}{}% 22
+\BOOKMARK [2][-]{subsection.14.1}{Systematic errors breakdown}{section.14}% 23
+\BOOKMARK [2][-]{subsection.14.2}{Combined Covariance Matrix}{section.14}% 24
+\BOOKMARK [1][-]{section.15}{Fit Statistics}{}% 25
+\BOOKMARK [2][-]{subsection.15.1}{Rate+Shape Fit Statistic}{section.15}% 26
+\BOOKMARK [2][-]{subsection.15.2}{Shape-Only Fit Statistic}{section.15}% 27
+\BOOKMARK [2][-]{subsection.15.3}{Rate-Only Fit Statistic}{section.15}% 28
+\BOOKMARK [1][-]{section.16}{Combining pixels}{}% 29
+\BOOKMARK [2][-]{subsection.16.1}{All pixel stacking 2 fit}{section.16}% 30
+\BOOKMARK [2][-]{subsection.16.2}{Ring-wise pixel stacking 2 fit}{section.16}% 31
+\BOOKMARK [2][-]{subsection.16.3}{Multi-pixel 2 fit}{section.16}% 32
+\BOOKMARK [3][-]{subsubsection.16.3.1}{Multipixel 2 function}{subsection.16.3}% 33
+\BOOKMARK [1][-]{section.17}{Stacking Runs}{}% 34
+\BOOKMARK [1][-]{section.18}{Application: Effective Endpoint}{}% 35
+\BOOKMARK [2][-]{subsection.18.1}{Effective endpoint dataset}{section.18}% 36
+\BOOKMARK [2][-]{subsection.18.2}{Effective endpoint simulation}{section.18}% 37
+\BOOKMARK [2][-]{subsection.18.3}{Effective endpoint analysis results with pixels stacked: Run-wise}{section.18}% 38
+\BOOKMARK [2][-]{subsection.18.4}{Effective endpoint analysis results with pixels stacked and all run stacked}{section.18}% 39
+\BOOKMARK [2][-]{subsection.18.5}{Effective endpoint analysis results with pixels grouped by rings and all run stacked}{section.18}% 40
+\BOOKMARK [2][-]{subsection.18.6}{Effective endpoint analysis results synthesis}{section.18}% 41
+\BOOKMARK [2][-]{subsection.18.7}{Effective endpoint theoretical expectation}{section.18}% 42
+\BOOKMARK [2][-]{subsection.18.8}{Effective endpoint: qU scans}{section.18}% 43
+\BOOKMARK [1][-]{section.19}{Application: Onset of the molecular excited states}{}% 44
+\BOOKMARK [2][-]{subsection.19.1}{FSD-onset dataset}{section.19}% 45
+\BOOKMARK [2][-]{subsection.19.2}{FSD-onset run-wise analysis}{section.19}% 46
+\BOOKMARK [2][-]{subsection.19.3}{Rejection of no-electronic excitation hypothesis}{section.19}% 47
+\BOOKMARK [2][-]{subsection.19.4}{Assessment of the ground/excited states probabilities}{section.19}% 48
+\BOOKMARK [1][-]{section.20}{Application: Column density}{}% 49
+\BOOKMARK [2][-]{subsection.20.1}{Assessement the column density from the 'endpoint' data}{section.20}% 50
+\BOOKMARK [2][-]{subsection.20.2}{Analysis of runs at 100\045, 75\045, 50\045, and 25\045 relative colmun densities}{section.20}% 51
+\BOOKMARK [2][-]{subsection.20.3}{Response functions and Expected spectra for various column densities}{section.20}% 52
+\BOOKMARK [1][-]{section.21}{Conclusions}{}% 53
+\BOOKMARK [1][-]{section.22}{Annex: Sanity Cross checks}{}% 54
+\BOOKMARK [2][-]{subsection.22.1}{Statistical-only uncertainty/sensitivity}{section.22}% 55
+\BOOKMARK [2][-]{subsection.22.2}{N-1 test}{section.22}% 56
+\BOOKMARK [2][-]{subsection.22.3}{Stat+1 test}{section.22}% 57
+\BOOKMARK [1][-]{section.23}{Annex: The Mulmtisim method}{}% 58
+\BOOKMARK [1][-]{section.24}{Annex: Covariance Matrix Zoology}{}% 59
+\BOOKMARK [2][-]{subsection.24.1}{Resizing to another MTD}{section.24}% 60
+\BOOKMARK [2][-]{subsection.24.2}{Nearest symmetric, positive definite matrix}{section.24}% 61
+\BOOKMARK [2][-]{subsection.24.3}{Convergence}{section.24}% 62
+\BOOKMARK [3][-]{subsubsection.24.3.1}{Cauchy Convergence Criterion}{subsection.24.3}% 63
+\BOOKMARK [3][-]{subsubsection.24.3.2}{Convergence of the determinant}{subsection.24.3}% 64
+\BOOKMARK [3][-]{subsubsection.24.3.3}{Results Tables}{subsection.24.3}% 65

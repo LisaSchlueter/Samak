@@ -1,0 +1,19 @@
+addpath(genpath('../../../Samak2.0'));
+close all
+
+% Build FSD Covariance Matrix with a given TD
+A = ref_run40257();
+
+% Define your CM Class with your number of trials, choose SysEffect,...
+myEffects = struct(...
+    'TCoff_RAD','OFF',...  % Radiative corrections (if switched off)
+    'TCoff_OTHER','ON'... % Other corrections (if switched off));
+    ); 
+D = CovarianceMatrix('StudyObject',A,...
+    'nTrials',0,...
+    'RunFlag','OFF', 'nRuns',1,...
+    'SysEffect',myEffects,...
+    'RecomputeFlag','ON');
+D.ComputeCM_TCoff;
+D.PlotCM
+%D.DecomposeCM

@@ -1,0 +1,150 @@
+\documentclass[samak_main.tex]{subfiles}
+\begin{document}
+\section{Pixel-wise $\chi^2$ Fit}
+\label{sec:pixelchisquare}
+
+Analysis is first performed on a pixel-wise basis, where each of the 148 pixels, p, is considered independently. 
+
+We estimate the value of a vector of $n$ parameters $\mathbf{X}=(X_1,X_2,...,X_n)$ by performing a $\chi^2$ fit of the predicted events, $N_{i}^\mathrm{model}$, to the measured data, $N_{i}^\mathrm{data}$, binned in retarding potentials, $qU_{i}$.
+
+The following $\chi^2$ function is used:
+\begin{equation}
+\chi^2_p(\mathbf{X}) = \sum_{ij}  \left( N_{p,i}^\mathrm{data}-N_{p,i}(\mathbf{X})^\mathrm{model}\right) M^p_{ij}(\mathbf{X})^{-1} \left( N_{p,i}^\mathrm{data}-N_{p,i}(\mathbf{X})^\mathrm{model}\right),
+\end{equation}
+where $N_{i}^\mathrm{data}$ is the measured number of electron events in the retarding potential bin i, $N_{i}(\mathbf{X})^\mathrm{model}$ is the predicted number of electron events in the retarding potential bin i, and M is the covariance matrix describing the uncertainties in the predicted number of electron events. M contains both statistical uncertainties as well as the systematic uncertainties in the electron integral spectrum including bin-to-bin correlations.\\
+
+In general, both $N_{i}$ and $M^p_{ij}$ could depend on the values of $\mathbf{X}$. However, when the predicted number of events in each retarding potential bin i is large, the statistical uncertainty in M can be estimated by the observed number of events $N_{i}^\mathrm{data}$.
+Furthermore, if the systematic variances and covariances are not very sensitive to the values of $\mathbf{X}$, then these can be approximated in M by their values for the prediction $\mathbf{X_{bf}}$. These two approximations remove the dependence of $M^p_{ij}$ on $\mathbf{X}$ in our fits.\\
+
+We perform a qU-dependent fit with a free overall normalization which tests if the measured integral  spectrum is distorted with respect to our nominal hypothesis.\\
+
+The best fit, $X_{best}$, is found by minimizing the $\chi^2$ as a function of $X$. The $\Delta\chi^2$ test statistic is then defined as the excursion of the $\chi^2$ about its minimum as a function of $X$:
+\begin{equation}
+\Delta\chi^2(\mathbf{X}) = \chi^2(\mathbf{X}) - \chi^2(\mathbf{X}_{bf}).
+\end{equation}
+
+In the large sample limit, $(\mathbf{X}_{bf})$ are gaussian-distributed about their true value and $\Delta\chi^2(\mathbf{X})$ follows a $\chi^2$ distribution with $N_{dof} = N_{qU} - N_{X}$ degree of freedom, where $N_{qU}$ is the number of bins, and $N_{X}$ the number of fitted parameters. The 90\% (68\%) confidence interval for $\mathbf{X})$ are then determined by the range of values of $\mathbf{X}$ for which $\Delta\chi^2(\mathbf{X})$ is less than a tabulated value. The minimum value of $\chi^2$ can also be used to evaluate the goodness-of-fit. If the predicted number of events in each retarding potential bin i is sufficiently large, then minimum of $\chi^2$ follows a $\chi^2$ distribution with $N_{dof}$ degrees of freedom.
+
+\subsection{Covariance Matrices}
+\label{sec:covmat}
+
+The covariance matrix formalism consists of using a covariance matrix, $M_{ij}$, in our $\chi^2$ definition to encode our knowledge of the uncertainties in $N_{i}^\mathrm{model}$, the predicted number of electron signal plus background events in retarding potential bin i, as well as the correlations between bins.\\
+
+There are 10 sources of uncertainty that contribute to our definition of $M_{ij}$:
+
+\begin{itemize}
+\item $M{ij}^{p,STAT}$, the statistical uncertainty in the predicted number of tritium events
+\item $M{ij}^{p,RF}$, the systematic uncertainty in the predicted response function
+\item $M{ij}^{p,FSD}$, the systematic uncertainty in the predicted correction for the D-T decay to D-He excited states
+\item $M{ij}^{p,STACK}$, the systematic uncertainty associated to run stacking
+\item $M{ij}^{p,A}$, the systematic uncertainty associated to the tritium activity fluctuations within a run
+\item $M{ij}^{p,RAD}$, the systematic uncertainty associated radiatice corrections in the computation of the tritium beta decay integral spectrum
+\item $M{ij}^{p,NAC}$, the systematic uncertainty associated to nuclear and atomic corrections in the computation of the tritium beta decay integral spectrum
+\item $M{ij}^{p,SYNC}$, the systematic uncertainty associated to synchrotron radiation loss in the WGTS
+\item $M{ij}^{p,DOP}$, the systematic uncertainty associated to doppler effect in the WGTS
+\item $M{ij}^{p,B}$, the spectral uncertainty in the predicted number of events for the background electrons
+\end{itemize}
+
+These sources of uncertainty are all considered uncorrelated. Therefore, the full covariance matrix used in the $\chi^2$ is just the sum of the covariance matrices describing each of these sources of uncertainty:
+
+\begin{equation}
+M^p_{ij} = M_{ij}^{p,STAT} + M_{ij}^{p,RF} + M_{ij}^{p,FSD} + M_{ij}^{p,STACK} + M_{ij}^{p,A}  + M_{ij}^{p,RAD} + M_{ij}^{p,NAC} + M_{ij}^{p,SYNC} + M_{ij}^{p,DOP} + M_{ij}^{p,B}.
+\end{equation}
+
+Moreover we will decompose the covariance matrix into statistics, tritium signal and background systematics, such as
+\begin{equation}
+M^p_{ij} = M_{ij}^{p,STAT} + M_{ij}^{p,T} + M_{ij}^{p,B}, 
+\end{equation}
+where
+\begin{equation}
+M_{ij}^{p,T} = M_{ij}^{p,STAT} M_{ij}^{p,RF} + M_{ij}^{p,FSD} + M_{ij}^{p,STACK} + M_{ij}^{p,A}  + M_{ij}^{p,RAD} + M_{ij}^{p,NAC} + M_{ij}^{p,SYNC} + M_{ij}^{p,DOP}.
+\end{equation}
+
+$M^p_{ij}$ is generated using the Multisim method as described in section \ref{sec:multisim}.\\
+
+In general, each of these covariance matrices $M^p_{ij}$ can be further decomposed into a sum of 3 sub-matrices: a normalization matrix, a shape matrix, and a mixed shape/normalization matrix according to:
+
+\begin{equation}
+M^p_{ij} = M^{p,norm}_{ij} + M^{p,shape}_{ij} + M^{p,mix}_{ij},
+\end{equation}
+
+where
+
+\begin{equation}
+M^{p,norm}_{ij} = \frac{IS_i IS_j}{N^2_T} \sum_{kl}{M^{p}_{ij}}
+\end{equation}
+
+\begin{equation}
+\begin{aligned}
+M^{p,shape}_{ij} = 
+& M^{p}_{ij} - \frac{IS_j}{N^2_T} \sum_{k}^{n}{M^{p}_{ik}} - \frac{IS_i}{N^2_T} \sum_{k}^{n}{M^{p}_{kj}} \\ &+\frac{IS_i IS_j}{N^2_T} \sum_{kl}{M^{p}_{ij}}
+\end{aligned}
+\end{equation}
+
+\begin{equation}
+\begin{aligned}
+M^{p,mix}_{ij} = 
+& \frac{IS_j}{N^2_T} \sum_{k}^{n}{M^{p}_{ik}} 
++ \frac{IS_i}{N^2_T} \sum_{k}^{n}{M^{p}_{kj}} \\
+& - \frac{2 IS_i IS_j}{N^2_T} \sum_{kl}{M^{p}_{ij}}
+\end{aligned}
+\end{equation}
+
+and
+
+\begin{equation}
+N_T  = \sum_{i}{IS_i}
+\end{equation}
+
+The shape matrix allows the predicted number of events $IS_i$ to migrate between bins while the normalization is held constant. This can describe uncertainties which conserve the total number of events $N_T$. 
+
+The mixed matrix describes uncertainties which change the overall normalization but affect each bin differently. 
+
+We will perform two generic kinds of analysis, rate+shape, where we consider the total covariance matrix, and shape-only, where we consider only the shape and mixed covariances matrices, getting read of the normalization component.
+
+In practice, the covariance matrices are computed for a given statistics, which is eventually a varying parameter. It is more convenient to work with a fractional error matrix, defined generically by
+
+\begin{equation}
+M_{ij} = M^{frac}_{ij} IS_i IS_j.
+\end{equation}
+\\
+\begin{equation}
+M =  M^{\textrm{Response Function}} + M^{\textrm{FSD}} + ...
+\end{equation}
+A covariance matrix can be converted into a fractional covariance matrix using the $IS_i(CV)$, where $CV$ denotes the centale values of each parameter of the model. 
+
+During the fit the fractional error matrix can then used and converted to a full covariance matrix that is is continuously recalculated using the specific fit parameters $\theta$, associated to the trial $IS_i(\theta)$.
+
+At the beginning of the minimization algorithm, fractional covariance matrices are created from each component of the total covariance matrix. This is done by dividing each matrix component by the relevant event population. This “fractionalization” first takes place at the beginning of the fit process, when all fit parameters are at their initializarion values and the related event populations are at their initial values too. At each iteration of the numerical minimization, the event populations are recalculated and the covariance matrices are “de-fractionalized”.
+
+\subsection{Nuisance parameters and pull terms}
+\label{sec:nuisancepar}
+
+Nuisance parameters are parameters that are not of primary interest but needed in order to construct a prediction (the nuisance parameters used in this analysis will be listed below).
+
+The pull term constrains the value of each parameter towards its central value while still allowing it to vary within the prescribed external uncertainty interval. This accounts for uncertainty on the parameter in the fit in a way that is roughly equivalent to a contribution to the covariance matrix. If a parameter is considered as a pull term, it must be disgarded in the covariance matrix, however. 
+
+The following sources of uncertainty are represented in full or in part by pull parameters and pull terms:
+
+\begin{itemize}
+\item The effective neutrino mass squared, $m^2_{e}$, with $\sigma_{m^2} = 2$ $eV^2$.
+\end{itemize}
+
+The following $\chi^2$ function is then used:
+\begin{equation}
+\begin{aligned}
+\chi^2_p(\mathbf{X}) = & \sum_{ij}  \left( N_{p,i}^\mathrm{data}-N_{p,i}(\mathbf{X})^\mathrm{model}\right) M^p_{ij}(\mathbf{X})^{-1} \left( N_{p,i}^\mathrm{data}-N_{p,i}(\mathbf{X})^\mathrm{model}\right) \\
+&+ \chi^2_{p,pulls},
+\end{aligned}
+\end{equation}
+%\\
+%\begin{equation}
+%\chi^2(\mathbf{X}) =  \sum_{ij}  \left( N_{i}^\mathrm{data}-N_{i}(\mathbf{X})^\mathrm{model}\right) M_{ij}(\mathbf{X})^{-1} %\left( N_{j}^\mathrm{data}-N_{j}(\mathbf{X})^\mathrm{model}\right) + \chi^2_{pulls},%
+%\end{equation}
+where
+\begin{equation}
+\chi^2_{p,pulls}(\mathbf{X}) =  \left( m^2_{e} / \sigma_{m^2} \right)^2
+\end{equation}
+
+It is worthwhile to note that while the pulled parameters must be minimized as part of the fit, they do not contribute a new degree of freedom if they are accompanied by a pull term in the statistic. In essence, a free parameter is added, but a data point is also added, with no net change in the number of degrees of freedom.
+\end{document}

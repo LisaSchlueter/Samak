@@ -1,0 +1,3313 @@
+
+                            < M A T L A B (R) >
+                  Copyright 1984-2017 The MathWorks, Inc.
+                   R2017a (9.2.0.556344) 64-bit (glnxa64)
+                               March 27, 2017
+
+ 
+To get started, type one of these: helpwin, helpdesk, or demo.
+For product information, visit www.mathworks.com.
+ 
+Erfolg
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[Warning: "Error reading character from command line"] 
+Ungültiger Dateideskriptor
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[Warning: "Error reading character from command line"] 
+Fminuit version 2.3.1, Copyright (C) 1996-2010 Giuseppe Allodi.
+The underlying MINUIT library (F. James) is Copyright (C) of CERN (Geneva, CH).
+Fminuit comes with ABSOLUTELY NO WARRANTY. This is free software, and you are 
+welcome to redistribute it under the terms of the General Public License.
+
+  MINUIT RELEASE 96.03  INITIALIZED.   DIMENSIONS 150/150  EPSMAC=  0.89E-15
+
+ PARAMETER DEFINITIONS:
+    NO.   NAME         VALUE      STEP SIZE      LIMITS
+     1 'mSq       '    0.0000      0.10000E-04     no limits
+     2 'dE0       '    0.0000      0.10000E-04     no limits
+     3 'B         '    0.0000      0.10000E-04     no limits
+     4 'dN        '    0.0000      0.10000E-04     no limits
+--------------------------------------------------------------
+Create Tritium Beta Decay Spectrum with following properties:
+--------------------------------------------------------------
+   - EndPoint: 18574.7 eV (Corrected by -1.7 eV molecule recoil) 
+   - (Kinetic) Energy Range: [18543,18578] eV - 176 bins 
+   - 2 body-decay phase space + relativistic Fermi function 
+   - Screening correction: OFF 
+   - Finite Extention of Nucleus Charge: OFF 
+   - Weak interaction finite size correction: OFF 
+   - Electron-Electron Exchange correction: OFF 
+   - Recoil Coulomb correction: OFF 
+   - Radiative corrections: OFF (type 1)
+   - Weinheimer93 Phase Space: OFF
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+- - - - - Neutrinos 
+   - Effective Neutrino mass: 0 eV 
+   - Sterile Neutrino -  mass: 0 eV - mixing: 0
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+- - - - - WGTS 
+   - T-T - FSD: DOSS (activity fraction = 1)
+   - D-T - FSD: OFF (activity fraction = 0)
+   - H-T - FSD: OFF (activity fraction = 0)
+   - T-purity: 1 - D-T/H-T ratio: 1 
+   - T-Decay Rate out of WGTS: 1.05218e+08 Counts in 9.46598e+06 sec 
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+- - - - - MACE 
+   - Integral Spectrum - Time Distribution: Flat30 
+   - Transmission Function: Kle 
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+- - - - - Backgrounds 
+   - Flag: ON  - Type: FLAT
+   - Rate on Pixel 1: 1.71519 mcps per qU
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+- - - - - FPD 
+   - Segmentation: PIXEL  
+   - Tritium e- FPD: 0.200625 cps at (qU>18543 eV)
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+--------------------------------------------------------------
+ 
+-----------------------------------------------------------------------------------
+  Fit TBD Pixel 	= 1 
+-----------------------------------------------------------------------------------
+  m^2 	 = 2.1858e+06 +- 	 1.3255e+06 	 meV^2 	 - Init: 0 	meV^2
+  dE0 	 = -336.376 +- 	 99.0747 	 meV 	 - Init: 0 	meV
+  B   	 = 1.80481 +- 	 0.0266748 	 mcps 	 - Init: 0 	mcps
+  N   	 = 0.15774 +- 	 0.00280247 	 	 - Init: 0 
+  Chi2	 = 30.3991 / 32 dof 
+-----------------------------------------------------------------------------------
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In alternatePrintPath
+  In print (line 82)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Datei oder Verzeichnis nicht gefunden
+[Warning: "Error reading character from command line"] 
+[> In alternatePrintPath
+  In print (line 82)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Datei oder Verzeichnis nicht gefunden
+Ungültiger Dateideskriptor
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[Warning: "Error reading character from command line"] 
+
+------------------------------------------------------------------------
+       Segmentation violation detected at Thu Feb 22 13:20:28 2018
+------------------------------------------------------------------------
+
+Configuration:
+  Crash Decoding      : Disabled - No sandbox or build area path
+  Crash Mode          : continue (default)
+  Current Graphics Driver: Unknown hardware 
+  Current Visual      : 0x20 (class 4, depth 24)
+  Default Encoding    : UTF-8
+  Deployed            : false
+  GNU C Library       : 2.23 stable
+  Host Name           : lisa-Lenovo-M30-70
+  MATLAB Architecture : glnxa64
+  MATLAB Entitlement ID: 1354367
+  MATLAB Root         : /home/lisa/Programme/Matlab
+  MATLAB Version      : 9.2.0.556344 (R2017a)
+  OpenGL              : hardware
+  Operating System    : Linux 4.4.0-112-generic #135-Ubuntu SMP Fri Jan 19 11:48:36 UTC 2018 x86_64
+  Processor ID        : x86 Family 6 Model 69 Stepping 1, GenuineIntel
+  Virtual Machine     : Java 1.7.0_60-b19 with Oracle Corporation Java HotSpot(TM) 64-Bit Server VM mixed mode
+  Window System       : The X.Org Foundation (11804000), display :0
+
+Fault Count: 1
+
+
+Abnormal termination:
+Segmentation violation
+
+Register State (from fault):
+  RAX = 0000000000000000  RBX = 00007f18d7830cf0
+  RCX = 00007f18d7830d90  RDX = 00007f18fc7a97a0
+  RSP = 00007f18d7830cc0  RBP = 00007f18d7830d40
+  RSI = 00007f18d7830cf0  RDI = 00007f18d0165ca0
+
+   R8 = 000000000000001e   R9 = 0000000000000001
+  R10 = 0000000000000d0e  R11 = 00007f18fc55f6a0
+  R12 = 00007f18fc7a97a0  R13 = 00007f185a321540
+  R14 = 00007f18d7830d70  R15 = 00007f185a3209b0
+
+  RIP = 00007f18d7d5fffa  EFL = 0000000000010202
+
+   CS = 0033   FS = 0000   GS = 0000
+
+Stack Trace (from fault):
+[  0] 0x00007f18d7d5fffa                      bin/glnxa64/libmwddux_impl.so+00434170
+[  1] 0x00007f18d7d67dfa                      bin/glnxa64/libmwddux_impl.so+00466426
+[  2] 0x00007f18d7d63370                      bin/glnxa64/libmwddux_impl.so+00447344
+[  3] 0x00007f18f83c27d2                             bin/glnxa64/libmwms.so+03168210
+[  4] 0x00007f18d7d6308a                      bin/glnxa64/libmwddux_impl.so+00446602
+[  5] 0x00007f18fad4ff65 /home/lisa/Programme/Matlab/bin/glnxa64/libboost_thread.so.1.56.0+00073573
+[  6] 0x00007f18fbd636ba              /lib/x86_64-linux-gnu/libpthread.so.0+00030394
+[  7] 0x00007f18fba9941d                    /lib/x86_64-linux-gnu/libc.so.6+01078301 clone+00000109
+[  8] 0x0000000000000000                                   <unknown-module>+00000000
+
+
+If this problem is reproducible, please submit a Service Request via:
+    http://www.mathworks.com/support/contact_us/
+
+A technical support engineer might contact you with further information.
+
+Thank you for your help.** This crash report has been saved to disk as /home/lisa/matlab_crash_dump.26976-1 **
+
+
+
+MATLAB is exiting because of fatal error
+
+                            < M A T L A B (R) >
+                  Copyright 1984-2017 The MathWorks, Inc.
+                   R2017a (9.2.0.556344) 64-bit (glnxa64)
+                               March 27, 2017
+
+ 
+To get started, type one of these: helpwin, helpdesk, or demo.
+For product information, visit www.mathworks.com.
+ 
+Erfolg
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[Warning: "Error reading character from command line"] 
+Ungültiger Dateideskriptor
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[Warning: "Error reading character from command line"] 
+Fminuit version 2.3.1, Copyright (C) 1996-2010 Giuseppe Allodi.
+The underlying MINUIT library (F. James) is Copyright (C) of CERN (Geneva, CH).
+Fminuit comes with ABSOLUTELY NO WARRANTY. This is free software, and you are 
+welcome to redistribute it under the terms of the General Public License.
+
+  MINUIT RELEASE 96.03  INITIALIZED.   DIMENSIONS 150/150  EPSMAC=  0.89E-15
+
+ PARAMETER DEFINITIONS:
+    NO.   NAME         VALUE      STEP SIZE      LIMITS
+     1 'mSq       '    0.0000      0.10000E-04     no limits
+     2 'dE0       '    0.0000      0.10000E-04     no limits
+     3 'B         '    0.0000      0.10000E-04     no limits
+     4 'dN        '    0.0000      0.10000E-04     no limits
+--------------------------------------------------------------
+Create Tritium Beta Decay Spectrum with following properties:
+--------------------------------------------------------------
+   - EndPoint: 18574.7 eV (Corrected by -1.7 eV molecule recoil) 
+   - (Kinetic) Energy Range: [18543,18578] eV - 176 bins 
+   - 2 body-decay phase space + relativistic Fermi function 
+   - Screening correction: OFF 
+   - Finite Extention of Nucleus Charge: OFF 
+   - Weak interaction finite size correction: OFF 
+   - Electron-Electron Exchange correction: OFF 
+   - Recoil Coulomb correction: OFF 
+   - Radiative corrections: OFF (type 1)
+   - Weinheimer93 Phase Space: OFF
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+- - - - - Neutrinos 
+   - Effective Neutrino mass: 0 eV 
+   - Sterile Neutrino -  mass: 0 eV - mixing: 0
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+- - - - - WGTS 
+   - T-T - FSD: DOSS (activity fraction = 1)
+   - D-T - FSD: OFF (activity fraction = 0)
+   - H-T - FSD: OFF (activity fraction = 0)
+   - T-purity: 1 - D-T/H-T ratio: 1 
+   - T-Decay Rate out of WGTS: 1.05218e+08 Counts in 9.46598e+06 sec 
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+- - - - - MACE 
+   - Integral Spectrum - Time Distribution: Flat30 
+   - Transmission Function: Kle 
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+- - - - - Backgrounds 
+   - Flag: ON  - Type: FLAT
+   - Rate on Pixel 1: 1.71519 mcps per qU
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+- - - - - FPD 
+   - Segmentation: PIXEL  
+   - Tritium e- FPD: 0.200625 cps at (qU>18543 eV)
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+--------------------------------------------------------------
+ 
+-----------------------------------------------------------------------------------
+  Fit TBD Pixel 	= 1 
+-----------------------------------------------------------------------------------
+  m^2 	 = 2.1858e+06 +- 	 1.3255e+06 	 meV^2 	 - Init: 0 	meV^2
+  dE0 	 = -336.376 +- 	 99.0747 	 meV 	 - Init: 0 	meV
+  B   	 = 1.80481 +- 	 0.0266748 	 mcps 	 - Init: 0 	mcps
+  N   	 = 0.15774 +- 	 0.00280247 	 	 - Init: 0 
+  Chi2	 = 30.3991 / 32 dof 
+-----------------------------------------------------------------------------------
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In print (line 36)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[> In alternatePrintPath
+  In print (line 82)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Datei oder Verzeichnis nicht gefunden
+[Warning: "Error reading character from command line"] 
+[> In alternatePrintPath
+  In print (line 82)
+  In publish_figure (line 7)
+  In fit_tbdpixel (line 246)] 
+Datei oder Verzeichnis nicht gefunden
+Ungültiger Dateideskriptor
+Ungültiger Dateideskriptor
+Ungültiger Dateideskriptor
+Ungültiger Dateideskriptor
+Ungültiger Dateideskriptor
+Ungültiger Dateideskriptor
+Ungültiger Dateideskriptor
+Ungültiger Dateideskriptor
+Ungültiger Dateideskriptor
+Ungültiger Dateideskriptor
+Ungültiger Dateideskriptor
+Ungültiger Dateideskriptor
+Ungültiger Dateideskriptor
+Ungültiger Dateideskriptor
+Ungültiger Dateideskriptor
+Ungültiger Dateideskriptor
+Ungültiger Dateideskriptor
+Ungültiger Dateideskriptor
+Ungültiger Dateideskriptor
+Ungültiger Dateideskriptor
+Ungültiger Dateideskriptor
+Ungültiger Dateideskriptor
+Ungültiger Dateideskriptor
+Ungültiger Dateideskriptor
+Ungültiger Dateideskriptor
+Ungültiger Dateideskriptor
+Ungültiger Dateideskriptor
+Ungültiger Dateideskriptor
+Ungültiger Dateideskriptor
+Ungültiger Dateideskriptor
+[Warning: "Error reading character from command line"] 
+[Warning: "Error reading character from command line"] 
+[Warning: "Error reading character from command line"] 
+[Warning: "Error reading character from command line"] 
+[Warning: "Error reading character from command line"] 
+[Warning: "Error reading character from command line"] 
+[Warning: "Error reading character from command line"] 
+[Warning: "Error reading character from command line"] 
+[Warning: "Error reading character from command line"] 
+[Warning: "Error reading character from command line"] 
+[Warning: "Error reading character from command line"] 
+[Warning: "Error reading character from command line"] 
+[Warning: "Error reading character from command line"] 
+[Warning: "Error reading character from command line"] 
+[Warning: "Error reading character from command line"] 
+[Warning: "Error reading character from command line"] 
+[Warning: "Error reading character from command line"] 
+[Warning: "Error reading character from command line"] 
+[Warning: "Error reading character from command line"] 
+[Warning: "Error reading character from command line"] 
+[Warning: "Error reading character from command line"] 
+[Warning: "Error reading character from command line"] 
+[Warning: "Error reading character from command line"] 
+[Warning: "Error reading character from command line"] 
+[Warning: "Error reading character from command line"] 
+[Warning: "Error reading character from command line"] 
+[Warning: "Error reading character from command line"] 
+[Warning: "Error reading character from command line"] 
+[Warning: "Error reading character from command line"] 
+[Warning: "Error reading character from command line"] 

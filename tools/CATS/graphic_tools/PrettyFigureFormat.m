@@ -1,0 +1,39 @@
+% My pretty format for figures - G. Mention 2010.
+
+FontName = 'Helvetica';
+FontSize = 16;
+FontWeight = 'bold';
+set(gca,'FontName',FontName,'FontSize',FontSize,'FontWeight',FontWeight)
+set(get(gca,'XLabel'),'FontName',FontName,'FontSize',FontSize,'FontWeight',FontWeight);
+set(get(gca,'YLabel'),'FontName',FontName,'FontSize',FontSize,'FontWeight',FontWeight);
+if sum(abs(get(gca,'TickLength'))) % check tick lengths are non zero
+    set(gca,'TickLength',[.03 .03]);
+end
+
+set(gca, ...
+  'Box'         , 'on'     , ...
+  'TickDir'     , 'in'     , ...
+  'TickLength'  , [.03 .03] , ...
+  'XMinorTick'  , 'on'      , ...
+  'YMinorTick'  , 'on'      , ...
+  'XGrid'       , 'on'      , ...
+  'YGrid'       , 'on'      , ...
+  'XMinorGrid'  , 'on'      , ...
+  'YMinorGrid'  , 'on'      , ...
+  'XColor'      , [.3 .3 .3], ...
+  'YColor'      , [.3 .3 .3], ...
+  'LineWidth'   , 1         );
+grid off;
+
+
+% set(gca,'XMinorTick','on');
+% set(gca,'YMinorTick','on');
+set(gca,'Layer','top')
+set(gcf,'Color','w');
+box on;
+Pos = get(gca,'Position');
+set(gca,'Position',[.13 .13 Pos(3) Pos(4)]);
+clear Pos;
+set(gca,'LineWidth',1);
+% cgrid(.8*ones(3,1),'-',.8*ones(3,1),'-');
+grid on;

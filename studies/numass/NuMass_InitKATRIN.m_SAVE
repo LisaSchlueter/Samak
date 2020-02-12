@@ -1,0 +1,71 @@
+function Spec = NuMass_InitKATRIN(varargin)
+%
+% Configurate KATRIN experiment
+%
+% Th. Lasserre, March 2017
+% modified: June 2017 - Marc Korzeczek
+%
+CommonOpt={...
+    'PS_Wein93','OFF', ...       % @(x)ismember(x,{'OFF','ON'}));
+    'PS_Wein93Coeff',0.716, ...  % @(x)isfloat(x) && x>0);
+    ... % TBD: Parameters
+    'mnuSq_i',0, ...    % @(x)isfloat(x));
+    'mnu4Sq_i',0, ...   % @(x)isfloat(x));
+    'sin2T4_i',0, ...   % @(x)isfloat(x));%Statflu
+    ... % TBD: Flag for Theoretical Corrections
+    'ScreeningFlag','OFF', ...          % @(x)ismember(x,{'OFF','ON'}));
+    'FiniteExtChargeFlag','OFF', ...    % @(x)ismember(x,{'OFF','ON'}));
+    'WintFiniteSizeFlag','OFF', ...     % @(x)ismember(x,{'OFF','ON'}));
+    'EEexchangeFlag','OFF', ...         % @(x)ismember(x,{'OFF','ON'}));
+    'RecoilCoulombFlag','OFF', ...      % @(x)ismember(x,{'OFF','ON'}));
+    'RadiativeFlag','OFF', ...          % @(x)ismember(x,{'OFF','ON'}));
+    'RecoilWmVmAFlag','OFF', ...        % @(x)ismember(x,{'OFF','ON'}));
+    ... % Doppler Effect Flag
+    'DopplerEffectFlag','OFF', ...  % @(x)ismember(x,{'OFF','ON'}));
+    'Eminus',5, ...                 % @(x)isfloat(x) && x>0);
+    'Eplus',2, ...                  % @(x)isfloat(x) && x>0);
+    'O_max',50.8*pi/180, ...        % @(x)isfloat(x) && x>0 && x<2*pi)
+    'setlog','OFF', ...             % @(x)strcmp(x,'ON') || strcmp(x,'OFF'));
+    'recomputeKernel','OFF', ...    % @(x)strcmp(x,'ON') || strcmp(x,'OFF'));
+    'realConv','OFF', ...           % @(x)strcmp(x,'ON') || strcmp(x,'OFF'));
+    ... % Broadening kernel parameters
+    'E_range',0.6, ...          % @(x)isfloat(x) && x>0);
+    'T',30, ...                 % @(x)isfloat(x) && x>0);
+    'u',0, ...                  % @(x)isfloat(x));
+    'o_e',0.095056255902670, ...% @(x)isfloat(x) && x>0); %0.134429846285963
+    ... % Binning
+    'nTeBinningFactor',10, ... % @(x)isfloat(x) && x>0);
+    ... %WGTSMACE
+    'WGTS_CosMaxAAngle',0.6324, ...  % @(x)isfloat(x) && x>0);
+    'WGTS_Tp',0.95, ...         % @(x)isfloat(x) && x>0);
+    'WGTS_DTHTr',0., ...        % @(x)isfloat(x) && x>=0);
+    'WGTS_FTR_cm',4.1, ...      % @(x)isfloat(x) && x>0);
+    'WGTS_CD_MolPerCm2',5e17, ...   % @(x)isfloat(x) && x>0);
+    'WGTS_B_T',3.6, ...         % @(x)isfloat(x) && x>0);
+    'TTFSD','SAENZ', ...     % @(x)ismember(x,{'OFF','DOSS','SAENZ'}));
+    'DTFSD','OFF', ...      % @(x)ismember(x,{'OFF','DOSS'}));
+    'HTFSD','OFF', ...      % @(x)ismember(x,{'OFF','SAENZ'}));
+    'MACE_Bmax_T',6, ...    %@(x)isfloat(x) && x>0);
+    'MACE_Ba_T',9e-4, ...   % @(x)isfloat(x) && x>0);
+    'MACE_R_eV',0.93, ...   % @(x)isfloat(x) && x>0);
+    'KTFFlag','Kle', ...    % @(x)ismember(x,{'OFF','MACE','MACE+WGTSIS','TL','SG','Kle'}));
+    ... %FPD
+    'FPD_Segmentation','OFF', ...  % @(x)ismember(x,{'OFF','RING','PIXEL'}));
+    'FPD_MeanEff',0.9, ...      % @(x)isfloat(x) && x>0);
+    'BKG_Flag','ON', ...        % @(x)ismember(x,{'ON','OFF'}));
+    'BKG_Type','FLAT', ...      % @(x)ismember(x,{'FLAT','SLOPE'}));
+    'BKG_RateAllFPDSec',300e-3, ...  % @(x)isfloat(x) && x>0);
+    'BKG_RateRingSec',10e-3, ...  % @(x)isfloat(x) && x>0);
+    'BKG_RatePixelSec',1e-3, ...  % @(x)isfloat(x) && x>0);
+    ... %KATRIN
+    'Normalization','NOMINAL', ...  % @(x)ismember(x,{'NOMINAL','COUNTS'}));
+    'TimeYear',3, ...       % @(x)isfloat(x) && x>0);
+    'TD','DR30', ...        % @(x)ismember(x,{'DR20','DR30','DR40','DR50','Kle15','Kle15Ext','Kle15Dyn','Flat20','Flat30','Flat50','Flat60','Flat100'}));
+    'quiet','ON' ...       % @(x)ismember(x,{'ON','OFF'}));
+    };
+
+Spec = TBD(CommonOpt{:},varargin{:});
+Spec.ComputeTBDDS(); Spec.ComputeTBDIS();
+
+end
+
