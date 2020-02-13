@@ -1,7 +1,0 @@
-#!/bin/bash
-# input: 1. user
-function SetUpServer(){
-git fetch --all
-git reset --hard origin/master
-}
-SetUpServer 
