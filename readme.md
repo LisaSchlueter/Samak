@@ -21,11 +21,10 @@ Structure:
 - knm1ana               - KNM1 analysis and studies
 - knm2ana               - KNM2 analysis and studies
 - tools             	- miscellaneous functions
-- tritium data  		- KATRIN tritium data and KATRIN MC data (for example twins)
+- tritium data  	- KATRIN tritium data and KATRIN MC data (for example twins)
 
 BINARY Files
 ----------
-- crucial binary files are stored with git lfs:
-- if not installed on your machine: download and install git lfs
-- run 'git lfs pull' to retreive all binary files
-
+- binary files are not stored on git, but on MPP storage server
+- download them by running ./GetBinaries.sh MPPusername
+- if you don't have a MPP account, contact us (emails above)

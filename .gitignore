@@ -15,6 +15,9 @@ Thumbs.db
 ehthumbs.db
 ehthumbs_vista.db
 
+# specific files
+./CopyFile2Ceph.sh 
+
 # Figures #
 ####################
 **/*.pdf
