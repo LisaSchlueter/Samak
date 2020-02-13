@@ -467,6 +467,7 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             p.addParameter('WGTS_CD_MolPerCm2',obj.WGTS_CD_MolPerCm2,@(x)isfloat(x) & x>0);
             p.addParameter('WGTS_CDSigma','',@(x)isfloat(X) & x>0); % product rho d sigma
             p.addParameter('saveFile','ON',@(x)ismember(x,{'ON','OFF'}));
+            p.addParameter('Method','Old',@(x)ismember(x,{'New','Old'}));
             
             p.parse(varargin{:});
             WGTS_DensityProfile        = p.Results.WGTS_DensityProfile;
@@ -476,8 +477,14 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             ISXsection_local           = p.Results.ISXsection;
             WGTS_CD_MolPerCm2_local    = p.Results.WGTS_CD_MolPerCm2;
             saveFile                   = p.Results.saveFile;
-            
-
+            Method                     = p.Results.Method;
+            % ---------------------------------------------------------
+            % comment on New Method: (Lisa, Feb 2020)
+            % -> no for loops and different integration style (less binning)
+            % - when lambdaintegral already computed: Old method much faster
+            % - when lambdaintegral not calculated (e.g. in covariance matrix!), then Method 'New' is more than 2x faster
+            % - both methods give the same result
+            % ---------------------------------------------------------
             switch WGTS_DensityProfile
                 case 'File'
                     % KATRIN WGTS density profile - READ FILE
@@ -490,56 +497,63 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             z_wgts = wgtsdp(:,1)/10;
             
             d = linspace(0,max(z_wgts),WGTS_ZCells); % Faster/Slower... 100 is good
-            
-            %%% Lisa modification 10.04. start
             dir_lambda = [getenv('SamakPath'),'inputs/WGTSMACE/WGTS_CDProfileIntegral/'];
             if ~exist(dir_lambda,'dir')
                 system(['mkdir ',dir_lambda]);
             end
             
             file_lambda = [dir_lambda,sprintf('LambdaIntegral_%s-WGTSProfile_%.0f-WGTSzCells_%.5gMolPerCm2.mat',WGTS_DensityProfile,WGTS_ZCells,WGTS_CD_MolPerCm2_local)];
-            if exist(file_lambda,'file')
+            if exist(file_lambda,'file') && strcmp(Method,'Old')
                 lfile = importdata(file_lambda);
                 lambdaInt = lfile.lambdaInt;
                 rho_wgt =lfile.rho_wgt;
             else
-                rho_wgt = @(z) interp1(z_wgts,wgtsdp(:,2)/5e17*WGTS_CD_MolPerCm2_local,z); % uniform
-                lambdaInt = cell2mat(arrayfun(@(zk) integral(rho_wgt,zk,max(z_wgts)),d,'UniformOutput',0));
-                rho_wgt = rho_wgt(d);
-                save(file_lambda,'lambdaInt','d','rho_wgt','wgtsdp','WGTS_DensityProfile');
+                switch Method
+                    case 'Old'
+                        rho_wgt = @(z) arrayfun(@(z2) interp1(z_wgts,wgtsdp(:,2)/5e17*WGTS_CD_MolPerCm2_local,z2),z); % uniform
+                        lambdaInt = cell2mat(arrayfun(@(zk) integral(rho_wgt,zk,max(z_wgts)),d,'UniformOutput',0));
+                        %lambdaInt = lambdaInt.*(1e4.*WGTS_CD_MolPerCm2_local./max(lambdaInt)); % renormalize lambdaInt?
+                        rho_wgt = rho_wgt(d);
+                        save(file_lambda,'lambdaInt','d','rho_wgt','wgtsdp','WGTS_DensityProfile');
+                    case 'New' % replace numerical integration
+                        rho_wgt = @(z) interp1(z_wgts,wgtsdp(:,2)/5e17*WGTS_CD_MolPerCm2_local,z); % uniform
+                        lambdaInt = @(z) arrayfun(@(z2) integral(rho_wgt,0,z2),z);
+                        %LambdaMax = lambdaInt(max(z_wgts)); % renormalize lambdaInt?
+                        %lambdaInt = @(z) lambdaInt(z).*(1e4.*WGTS_CD_MolPerCm2_local./LambdaMax);
+                end
+                
             end
-           
+            
             % Effective Column Density
-             lambda = @(z,theta) 1./cos(theta).*lambdaInt(z);
-            % old: lambda = @(z,theta) arrayfun(@(zk) 1./cos(theta).*integral(rho_wgt,zk,max(z_wgts)),z,'UniformOutput',0);
+            lambda = @(z,theta) 1./cos(theta).*lambdaInt(z);
             thetamax    = asin(sqrt(WGTS_B_T_local/MACE_Bmax_T_local)); %maximum allowed starting angle
             
             % Mean scattering probability for electron starting at (z,theta)
              Pis_z_angle = @(i,z,theta) poisspdf(i,lambda(z,theta).*ISXsection_local);
-            % old: Pis_z_angle = @(i,z,theta) poisspdf(i,cell2mat(lambda(z,theta)).*ISXsection_local);
-           
-            % Integral Mean scattering probability over all angles
+
+            % Integration over angles
             ntmp = 720;
             f = @(i,z,theta) sin(theta).*Pis_z_angle(i,z,theta);
-            Pis_z = @(i,z) 1./(1-cos(thetamax)).*simpsons(linspace(0,thetamax,ntmp),f(i,z,linspace(0,thetamax,ntmp)));
+            Pis_z = @(i,z) 1./(1-cos(thetamax)).*simpsons(linspace(0,thetamax,ntmp)',f(i,z,linspace(0,thetamax,ntmp)')); %Integral Mean scattering probability over all angles
             
-            % Mean scattering probabilities over WGTS
-            Pis = zeros(obj.NIS+1,numel(d));
-            for g = 1:1:obj.NIS+1 %Number of Inelastic Scatterings
-                j = g - 1;
-                for c = 1:1:numel(d)
-                    Pis(g,c) = (1/(WGTS_CD_MolPerCm2_local*1e4)*(rho_wgt(c).*Pis_z(j,c)));
-                    % old: Pis(g,c) = (1/(obj.WGTS_CD_MolPerCm2*1e4)*(rho_wgt(d(c)).*Pis_z(j,d(c))));
-                end
+            switch Method
+                case 'New'
+                    % Integratio over z
+                    rho_wgt2 = @(z) arrayfun(@(z2) interp1(z_wgts,wgtsdp(:,2)/5e17*WGTS_CD_MolPerCm2_local,z2),z); % uniform
+                    Intfun = arrayfun(@(y) @(x) Pis_z(y-1,x).*rho_wgt2(x)./(WGTS_CD_MolPerCm2_local*1e4),1:obj.NIS+1,'UniformOutput',0);
+                    Pis_m = cellfun(@(y) 100*integral(y,0,max(z_wgts)),Intfun)';
+                    obj.is_Pv(1:obj.NIS+1) = Pis_m ;
+                case 'Old'
+                    % Evaluate functions ->Binned from now: Mean scattering probabilities over WGTS
+                    Pis = zeros(obj.NIS+1,numel(d));
+                    for i=1:obj.NIS+1
+                        Pis(i,:) = (1/(WGTS_CD_MolPerCm2_local*1e4)*(rho_wgt(1:numel(d)).*Pis_z(i-1,1:numel(d))));
+                    end
+                    
+                    % Integration over z
+                    Pis_m = 100*simpsons(d,Pis,2);
+                    obj.is_Pv(1:numel(Pis_m)) = Pis_m; % Probabilities at fixed energy
             end
-            
-            %% Probabilities at fixed energy
-            Pis_m = zeros(1,obj.NIS+1);
-            for l = 1:1:obj.NIS+1
-                Pis_m(l) = 100*simpsons(d,Pis(l,:),2);
-                obj.is_Pv(l)  = Pis_m(l);
-            end
-            
             % Save
             %Pis_mean = mean(Pis_m,2); % Averaged Probabilites
             ISProb_dir = [getenv('SamakPath'),sprintf('/inputs/WGTSMACE/WGTS_ISProb/')];
@@ -977,23 +991,22 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             % Compute Response Function
             p = inputParser;
             p.addParameter('Debug','OFF',@(x)ismember(x,{'ON','OFF'}));
-            p.addParameter('ELossBinStep',0.2,@(x)isfloat(x)); % for ELoss Convolution
+            p.addParameter('ELossBinStep',0.1,@(x)isfloat(x)); % for ELoss Convolution
             p.addParameter('RFBinStep',0.04,@(x)isfloat(x));    % for Final RF Convolution 0.04
             p.addParameter('AdjustISProba','OFF',@(x)ismember(x,{'ON','OFF'}));    % for Final RF Convolution
             p.addParameter('pixel',1,@(x)isfloat(x));
             p.parse(varargin{:});
             Debug               = p.Results.Debug;
             ELossBinStep        = p.Results.ELossBinStep; 
-            RFBinStep           = p.Results.RFBinStep; 
-            AdjustISProba       = p.Results.AdjustISProba; 
+            RFBinStep           = p.Results.RFBinStep;
+            AdjustISProba       = p.Results.AdjustISProba;
             pixel               = p.Results.pixel;
-                        
+            
             % Binning for ELoss Convolution
-            % maxE = (obj.qUmax-obj.qUmin)*40; 
-            maxE = 9288; 
+            % maxE = (obj.qUmax-obj.qUmin)*40;
+            maxE = 9288;
             minE=-maxE; NbinE = (maxE-minE)/ELossBinStep;
             E = linspace(minE,maxE,NbinE); Estep = E(2) - E(1);
-            
             % IS Probabilities: labeling
             file_pis = cell(numel((obj.NIS+1):11),1);
             file_pis{1} = [getenv('SamakPath'), sprintf('/inputs/WGTSMACE/WGTS_ISProb/IS_%.5g-molPercm2_%.5g-Xsection_%.0f-NIS_%.3f-Bmax_%.3f-Bs.mat',...
@@ -1046,12 +1059,22 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             TF  = @obj.ComputeMaceTF;
             
             % Build Response Function - Change Binning
-            clear maxE ; maxE = (obj.qUmax-obj.qUmin)*1.5;
-            clear minE ; minE=-maxE; 
-            clear NbinE ; NbinE = (maxE-minE)/RFBinStep;
-            clear E; E = linspace(minE,maxE,NbinE);
-            clear Estep; Estep = E(2) - E(1);
-            
+            if strcmp(obj.TD,'RFcomparison')
+                %                 %RFBinStep = 0.01;
+                %                 clear E;clear Estep;
+                %                 E = 18540:0.01:18635;
+                %                 Estep = E(2) - E(1);
+                RFBinStep = 0.01;
+                maxE = 90;
+            else
+                clear maxE ; maxE = (obj.qUmax-obj.qUmin)*1.5;
+            end
+            %  else
+                clear minE ; minE=-maxE;
+                clear NbinE ; NbinE = (maxE-minE)/RFBinStep;
+                clear E; E = linspace(minE,maxE,NbinE);
+                clear Estep; Estep = E(2) - E(1);
+           % end
             RF = TF(qu+E,qu,'pixel',pixel)*obj.is_Pv(1) + ...
                 conv(TF(qu+E,qu,'pixel',pixel),obj.fscat(E),'same').*Estep;
             

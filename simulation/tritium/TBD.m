@@ -481,10 +481,10 @@ classdef TBD < handle & WGTSMACE %!dont change superclass without modifying pars
             % If requested by the user
             % For: T-T / D-T / H-T / T^-
             p=inputParser;
-            p.addParameter('Sigma',obj.FSD_Sigma,@(x)isfloat(x) || isempty(x));       % broadening of FSD
-            p.addParameter('MultiPos',obj.FSD_MultiPos,@(x) isfloat(x) || isempty(x));   %3 gaussians instead of using 1 gaussian per energy (for 3 RW settings): relative position
+            p.addParameter('Sigma',obj.FSD_Sigma,@(x)isfloat(x) || isempty(x));                % broadening of FSD
+            p.addParameter('MultiPos',obj.FSD_MultiPos,@(x) isfloat(x) || isempty(x));         %3 gaussians instead of using 1 gaussian per energy (for 3 RW settings): relative position
             p.addParameter('MultiWeights',obj.FSD_MultiWeights,@(x) isfloat(x) || isempty(x)); %3 gaussians instead of using 1 gaussian per energy: relative weight
-            p.addParameter('BinningFactor',4,@(x) isfloat(x) || isempty(x)); % enahnce binning: twice, 3 times,... as much bins
+            p.addParameter('BinningFactor',4,@(x) isfloat(x) || isempty(x));                   % enhance binning: twice, 3 times,... as much bins
             p.addParameter('SanityPlot','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('ZoomPlot','OFF',@(x)ismember(x,{'ON','OFF'})); % save also zoom to 1 final state
             p.addParameter('Dist',obj.FSD_Dist,@(x)ismember(x,{'Gauss','Rect'}));
@@ -512,7 +512,8 @@ classdef TBD < handle & WGTSMACE %!dont change superclass without modifying pars
             end
             
             FSDConvArg = {'MultiPos',MultiPos,'Dist',Dist,...
-                        'MultiWeights',MultiWeights,'BinningFactor',BinningFactor}; %arguments for FSD convolution (optional)
+                         'MultiWeights',MultiWeights,...
+                         'BinningFactor',BinningFactor}; %arguments for FSD convolution (optional)
             %% T-T FSD
             switch obj.TTFSD
                 case {'DOSS','DOSSNOEE'}
@@ -740,6 +741,8 @@ classdef TBD < handle & WGTSMACE %!dont change superclass without modifying pars
                     qUtmp,linspace(1,obj.nqU,obj.nqU*obj.nTeBinningFactor-(obj.nTeBinningFactor-1))');              
             elseif strcmp(obj.TD,'DScomparison')
                 obj.Te = ((18573.70-90):0.1:(18573.70+135))';
+            elseif strcmp(obj.TD,'RFcomparison')
+                obj.Te = (18540:0.01:18635)'; 
             else
                 % HARDCODED - 14/05/2018 - Thierry
                 nPoints = ceil((qUtmp(end)-qUtmp(1))/TeStep_local); % 0.1eV Binning necessary for doppler effect

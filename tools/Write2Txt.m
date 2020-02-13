@@ -17,7 +17,7 @@ fprintf(fileID,'%s\n',variableName);
 if nCol==1
     fprintf(fileID,'%.5g\n',variable);
 elseif nCol==2
-    fprintf(fileID,'%.20e %12.20e\n',variable);
+    fprintf(fileID,'%.10e %12.10e\n',variable);
 elseif nCol==3
     fprintf(fileID,'%.3f %.3f %.3f\n',variable);
 end

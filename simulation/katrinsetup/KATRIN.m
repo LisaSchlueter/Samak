@@ -66,7 +66,7 @@ classdef KATRIN < handle %!dont change superclass without modifying parsing rule
     methods
         function obj = KATRIN(varargin)
             p = inputParser;
-            p.addParameter('TDMode', 'Read', @(x)ismember(x,{'DataKr', 'DataTBD', 'Sim', 'Read'}));
+            p.addParameter('TDMode', 'Read', @(x)ismember(x,{'DataKr', 'DataTBD', 'Sim', 'Read','DScomparison','RFcomparison'}));
             p.addParameter('TD','Flat30'); %For DataKr: TD-Name; For DataTBD: Runnumber ; For Sim: meaningless
             p.addParameter('Normalization','NOMINAL',@(x)ismember(x,{'NOMINAL','COUNTS'}));
             p.addParameter('TimeSec',94672800,@(x)isfloat(x)); %3y
