@@ -142,7 +142,7 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
         Pixel_MACE_Ba_TCorr ; % Analysis Plane B field, Tesla
         Pixel_MACE_Ba_VCorr = zeros(1,148) ; % Analysis Plane E field, Tesla
         MACE_Ba_TallPixels;
-        
+        SynchrotronFlag; % ON/OFF
         recomputeRF;           % Flag to recompute Response Function, even if there is one saved in cache already
         
     end
@@ -208,7 +208,8 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
                 'SSC2','SSCMW','MACE','MACER','Kle','SSCW_DCOfficial','SSC_BC','WGTSMACE'}));
             
             p.addParameter('recomputeRF','OFF',@(x)ismember(x,{'OFF','ON'}));
-            
+            p.addParameter('SynchrotronFlag','ON',@(x)ismember(x,{'OFF','ON'}));
+
             % Parse unmatched parameters to FPD.m
             p.KeepUnmatched=1;
             p.parse(varargin{:});
@@ -264,6 +265,7 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             % Both WGTS & MACE
             obj.KTFFlag            = p.Results.KTFFlag;
             obj.recomputeRF        = p.Results.recomputeRF;
+            obj.SynchrotronFlag    = p.Results.SynchrotronFlag;
             
             obj.WGTS_MolFrac_Tm_i =  obj.WGTS_MolFrac_Tm; 
              
@@ -459,7 +461,7 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             % WGTS_CD_MolPerCm2
             GetSamakPath;
             p = inputParser;
-            p.addParameter('WGTS_DensityProfile','Table',@(x)ismember(x,{'Table','File'}));
+            p.addParameter('WGTS_DensityProfile','Flat',@(x)ismember(x,{'Table','File','Flat'}));
             p.addParameter('WGTS_ZCells',500,@(x)isfloat(x) && x>=1);
             p.addParameter('MACE_Bmax_T',obj.MACE_Bmax_T,@(x)isfloat(x));
             p.addParameter('WGTS_B_T',obj.WGTS_B_T,@(x)isfloat(x));
@@ -467,7 +469,7 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             p.addParameter('WGTS_CD_MolPerCm2',obj.WGTS_CD_MolPerCm2,@(x)isfloat(x) & x>0);
             p.addParameter('WGTS_CDSigma','',@(x)isfloat(X) & x>0); % product rho d sigma
             p.addParameter('saveFile','ON',@(x)ismember(x,{'ON','OFF'}));
-            p.addParameter('Method','Old',@(x)ismember(x,{'New','Old'}));
+            p.addParameter('Method','New',@(x)ismember(x,{'New','Old'}));
             
             p.parse(varargin{:});
             WGTS_DensityProfile        = p.Results.WGTS_DensityProfile;
@@ -493,6 +495,10 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
                     % KATRIN WGTS density profile - READ TABLE
                     wgtsdp(:,1) = (0:1:99)';
                     wgtsdp(:,2) = [5.16803e+19            8.76746e+19             1.2001e+20            1.49401e+20            1.76413e+20            2.01489e+20            2.24979e+20            2.47154e+20            2.68225e+20            2.88356e+20            3.07673e+20            3.26274e+20            3.44236e+20             3.6162e+20            3.78475e+20             3.9484e+20            4.10751e+20            4.26236e+20            4.41322e+20            4.56034e+20            4.70395e+20            4.84426e+20            4.98148e+20            5.11581e+20            5.24743e+20            5.37651e+20            5.50323e+20            5.62773e+20            5.75016e+20            5.87064e+20            5.98927e+20            6.10617e+20            6.22141e+20  6.335059999999999e+20            6.44719e+20            6.55785e+20            6.66708e+20            6.77492e+20             6.8814e+20  6.986540000000001e+20  7.090380000000001e+20            7.19295e+20            7.29427e+20             7.3944e+20  7.493379999999999e+20  7.591260000000001e+20            7.68812e+20            7.78401e+20            7.87904e+20  7.973299999999999e+20  7.973299999999999e+20            7.87904e+20            7.78401e+20            7.68812e+20  7.591260000000001e+20  7.493379999999999e+20             7.3944e+20            7.29427e+20            7.19295e+20  7.090380000000001e+20  6.986540000000001e+20             6.8814e+20            6.77492e+20            6.66708e+20            6.55785e+20            6.44719e+20  6.335059999999999e+20            6.22141e+20            6.10617e+20            5.98927e+20            5.87064e+20            5.75016e+20            5.62773e+20            5.50323e+20            5.37651e+20            5.24743e+20            5.11581e+20            4.98148e+20            4.84426e+20            4.70395e+20            4.56034e+20            4.41322e+20            4.26236e+20            4.10751e+20             3.9484e+20            3.78475e+20             3.6162e+20            3.44236e+20            3.26274e+20            3.07673e+20            2.88356e+20            2.68225e+20            2.47154e+20            2.24979e+20            2.01489e+20            1.76413e+20            1.49401e+20             1.2001e+20            8.76746e+19            5.16803e+19]';
+                case 'Flat'
+                    nBins = 1000;
+                    wgtsdp(:,1) = linspace(0,99,nBins)';
+                    wgtsdp(:,2) = ones(nBins,1)./wgtsdp(end,1)*5e22;
             end
             z_wgts = wgtsdp(:,1)/10;
             
@@ -512,14 +518,20 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
                     case 'Old'
                         rho_wgt = @(z) arrayfun(@(z2) interp1(z_wgts,wgtsdp(:,2)/5e17*WGTS_CD_MolPerCm2_local,z2),z); % uniform
                         lambdaInt = cell2mat(arrayfun(@(zk) integral(rho_wgt,zk,max(z_wgts)),d,'UniformOutput',0));
-                        %lambdaInt = lambdaInt.*(1e4.*WGTS_CD_MolPerCm2_local./max(lambdaInt)); % renormalize lambdaInt?
+                        lambdaInt = lambdaInt.*(1e4.*WGTS_CD_MolPerCm2_local./max(lambdaInt)); % renormalize lambdaInt?
                         rho_wgt = rho_wgt(d);
                         save(file_lambda,'lambdaInt','d','rho_wgt','wgtsdp','WGTS_DensityProfile');
                     case 'New' % replace numerical integration
-                        rho_wgt = @(z) interp1(z_wgts,wgtsdp(:,2)/5e17*WGTS_CD_MolPerCm2_local,z); % uniform
-                        lambdaInt = @(z) arrayfun(@(z2) integral(rho_wgt,0,z2),z);
-                        %LambdaMax = lambdaInt(max(z_wgts)); % renormalize lambdaInt?
-                        %lambdaInt = @(z) lambdaInt(z).*(1e4.*WGTS_CD_MolPerCm2_local./LambdaMax);
+                        if strcmp(WGTS_DensityProfile,'Flat')
+                            rho_wgt = wgtsdp(1,2).*(WGTS_CD_MolPerCm2_local./5e17);
+                           lambdaInt = @(z) z.*rho_wgt;
+                        else
+                            rho_wgt = @(z) interp1(z_wgts,wgtsdp(:,2)/5e17*WGTS_CD_MolPerCm2_local,z); % uniform
+                            lambdaInt = @(z) arrayfun(@(z2) integral(rho_wgt,0,z2),z);
+                        end
+                       
+                        LambdaMax = lambdaInt(max(z_wgts)); % renormalize lambdaInt?
+                        lambdaInt = @(z) lambdaInt(z).*(1e4.*WGTS_CD_MolPerCm2_local./LambdaMax);
                 end
                 
             end
@@ -577,7 +589,7 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             p.addParameter('WGTS_B_T',obj.WGTS_B_T,@(x)isfloat(x));
             p.addParameter('pixel',1,@(x)isfloat(x) && x>0);
             p.addParameter('SynchrotronLoss',40e-3,@(x)isfloat(x) && x>=0);  % Renormalization, for Test
-            p.addParameter('gammaFacApprox',1.018,@(x)isfloat(x) && x>=0);   % Approximation for Relativist Transmission (Gamma+1)/2=1.018
+            p.addParameter('gammaFacApprox','',@(x)isfloat(x) && x>=0 || isempty(x));   % Approximation for Relativist Transmission (Gamma+1)/2=1.018
 
             p.parse(varargin{:});
             
@@ -588,47 +600,54 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             SynchrotronLoss     = p.Results.SynchrotronLoss;
             gammaFacApprox      = p.Results.gammaFacApprox;
             
+            if isempty(gammaFacApprox)
+                gammaFacApprox = ((qu+obj.me)/obj.me+1)/2;
+            end
+            
             switch obj.FPD_Segmentation
                 case 'OFF'
                     Ba = MACE_Ba_T_local;
                 case {'RING','MULTIPIXEL','SINGLEPIXEL'}
                     Ba = MACE_Ba_T_local(pixel);
             end
-
-            % Samak Simulation Providing Synchrotron Loss in WGTS
-            PinchAngle =   [0.017453    0.034907     0.05236    0.069813    0.087266     0.10472     0.12217     0.13963     0.15708     0.17453     0.19199     0.20944     0.22689     0.24435      0.2618     0.27925     0.29671     0.31416     0.33161     0.34907     0.36652     0.38397     0.40143     0.41888     0.43633     0.45379     0.47124     0.48869     0.50615      0.5236     0.54105     0.55851     0.57596     0.59341     0.61087     0.62832     0.64577     0.66323     0.68068     0.69813     0.71558     0.73304     0.75049     0.76794      0.7854     0.80285      0.8203     0.83776     0.85521     0.87266];
-            SeLoss     =   [8.4048e-06   3.363e-05  7.5709e-05   0.0001347  0.00021067  0.00030374  0.00041402  0.00054166  0.00068685  0.00084979   0.0010307   0.0012299   0.0014476   0.0016842   0.0019401   0.0022157   0.0025114   0.0028278   0.0031655   0.0035251   0.0039073   0.0043129   0.0047428    0.005198   0.0056796   0.0061889   0.0067271   0.0072959   0.0078971   0.0085326   0.0092046   0.0099157    0.010669    0.011468    0.012316    0.013218    0.014179    0.015206    0.016306    0.017488    0.018763    0.020145     0.02165    0.023299    0.025119    0.027147    0.029428    0.032031    0.035047    0.038618];
-            DEsyn   = @(angleRad) interp1(PinchAngle,SeLoss,angleRad,'spline','extrap'); % data go till 50 deg, but computation needs 51 deg or so --> spline extrapolation
-
-            % Define Edge Location of Transmission MACE Filter
-            qumax = qu*(1+Ba/MACE_Bmax_T_local*gammaFacApprox) + SynchrotronLoss;
-           
-            % Iterative Solving for Synch. Loss in Transmission Slope
-            ThetaTR_1 = real(((te >= qu) & (te <= qumax) ) .* (asin(sqrt((te-qu-DEsyn(0))./te*WGTS_B_T_local/Ba*gammaFacApprox))));
-            ThetaTR_2 = real(( (te >= qu) & (te <= qumax) ) .* asin(sqrt((te-qu-DEsyn(ThetaTR_1))./te*WGTS_B_T_local/Ba*gammaFacApprox)));
-            ThetaTR_3 = real(( (te >= qu) & (te <= qumax) ) .* asin(sqrt((te-qu-DEsyn(ThetaTR_2))./te*WGTS_B_T_local/Ba*gammaFacApprox)));
-            ThetaTR_4 = real(( (te >= qu) & (te <= qumax) ) .* asin(sqrt((te-qu-DEsyn(ThetaTR_3))./te*WGTS_B_T_local/Ba*gammaFacApprox)));
-            SynchrotronCorr = DEsyn(ThetaTR_4)./max(DEsyn(ThetaTR_4)).*SynchrotronLoss;
             
-%             tmpA=( (te >= qu) & (te <= qumax) ).*ThetaTR_4;tmpA=tmpA(tmpA>0);
-%             tmpS=( (te >= qu) & (te <= qumax) ).*SynchrotronCorr;tmpS=tmpS(tmpS>0);
-%             f = @(tdeg) interp1(tmpA,tmpS,tdeg*pi/180);
-            
+            switch obj.SynchrotronFlag
+                case 'ON'
+                    % Samak Simulation Providing Synchrotron Loss in WGTS
+                    PinchAngle =   [0.017453    0.034907     0.05236    0.069813    0.087266     0.10472     0.12217     0.13963     0.15708     0.17453     0.19199     0.20944     0.22689     0.24435      0.2618     0.27925     0.29671     0.31416     0.33161     0.34907     0.36652     0.38397     0.40143     0.41888     0.43633     0.45379     0.47124     0.48869     0.50615      0.5236     0.54105     0.55851     0.57596     0.59341     0.61087     0.62832     0.64577     0.66323     0.68068     0.69813     0.71558     0.73304     0.75049     0.76794      0.7854     0.80285      0.8203     0.83776     0.85521     0.87266];
+                    SeLoss     =   [8.4048e-06   3.363e-05  7.5709e-05   0.0001347  0.00021067  0.00030374  0.00041402  0.00054166  0.00068685  0.00084979   0.0010307   0.0012299   0.0014476   0.0016842   0.0019401   0.0022157   0.0025114   0.0028278   0.0031655   0.0035251   0.0039073   0.0043129   0.0047428    0.005198   0.0056796   0.0061889   0.0067271   0.0072959   0.0078971   0.0085326   0.0092046   0.0099157    0.010669    0.011468    0.012316    0.013218    0.014179    0.015206    0.016306    0.017488    0.018763    0.020145     0.02165    0.023299    0.025119    0.027147    0.029428    0.032031    0.035047    0.038618];
+                    DEsyn   = @(angleRad) interp1(PinchAngle,SeLoss,angleRad,'spline','extrap'); % data go till 50 deg, but computation needs 51 deg or so --> spline extrapolation
+                    
+                    % Define Edge Location of Transmission MACE Filter
+                    qumax = qu*(1+Ba/MACE_Bmax_T_local*gammaFacApprox) + SynchrotronLoss;
+                    
+                    % Iterative Solving for Synch. Loss in Transmission Slope
+                    ThetaTR_1 = real(((te >= qu) & (te <= qumax) ) .* (asin(sqrt((te-qu-DEsyn(0))./te*WGTS_B_T_local/Ba*gammaFacApprox))));
+                    ThetaTR_2 = real(( (te >= qu) & (te <= qumax) ) .* asin(sqrt((te-qu-DEsyn(ThetaTR_1))./te*WGTS_B_T_local/Ba*gammaFacApprox)));
+                    ThetaTR_3 = real(( (te >= qu) & (te <= qumax) ) .* asin(sqrt((te-qu-DEsyn(ThetaTR_2))./te*WGTS_B_T_local/Ba*gammaFacApprox)));
+                    ThetaTR_4 = real(( (te >= qu) & (te <= qumax) ) .* asin(sqrt((te-qu-DEsyn(ThetaTR_3))./te*WGTS_B_T_local/Ba*gammaFacApprox)));
+                    SynchrotronCorr = DEsyn(ThetaTR_4)./max(DEsyn(ThetaTR_4)).*SynchrotronLoss;
+                    
+                    %             tmpA=( (te >= qu) & (te <= qumax) ).*ThetaTR_4;tmpA=tmpA(tmpA>0);
+                    %             tmpS=( (te >= qu) & (te <= qumax) ).*SynchrotronCorr;tmpS=tmpS(tmpS>0);
+                    %             f = @(tdeg) interp1(tmpA,tmpS,tdeg*pi/180);
+                case 'OFF'
+                    qumax = qu*(1+Ba/MACE_Bmax_T_local*gammaFacApprox);
+                    SynchrotronCorr = 0;
+            end
             % Compute Transmission of MACE
-            MaceTF = 0 + ( (te >= qu) & (te <= qumax) ) .* ...
+            MaceTF = 0 + ((te >= qu) & (te <= qumax)) .* ...
                 (1 - sqrt(1-(te-qu-SynchrotronCorr)./te * WGTS_B_T_local./Ba / gammaFacApprox )) ...
                 ./ (1 - sqrt(1 - WGTS_B_T_local/MACE_Bmax_T_local)) + ...
                 1 * (te > qumax);
             
+            % if obj.MACE_Sigma>0
+            %     out = TF_Convfun(MaceTF,qu',te,obj.MACE_Sigma);
+            % else
+            out = MaceTF;
+            % end
             
-           % if obj.MACE_Sigma>0
-           %     out = TF_Convfun(MaceTF,qu',te,obj.MACE_Sigma);
-           % else
-                out = MaceTF;
-           % end
-            
-            out(out>1)=1;
-            
+            out(out>1)=1; 
         end
         
         %% Computating of empirical energy loss function and convolutions
@@ -698,7 +717,7 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
                 tmp = importdata(file_eloss{file_logic});
             end
             
-            if ~isempty(file_logic) && all(E==tmp.E) && strcmp(obj.recomputeRF,'OFF') && strcmp(LoadOrSaveEloss,'ON')% if one exists and has correct binning
+            if ~isempty(file_logic)  && strcmp(obj.recomputeRF,'OFF') && strcmp(LoadOrSaveEloss,'ON') && numel(E)==numel(tmp.E) % if one exists and has correct binning
                 fscatnE = tmp.fscatnE;
                 fscatn  = tmp.fscatn;
                 if strcmp(Debug,'ON')
@@ -897,7 +916,7 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
                     pos3err 	= 4.75464867e-03;
                     sig3err 	= 1.33838628e-02;    
                     
-                                        %amptof 	= 1;     % not used
+                    %amptof 	= 1;     % not used
                     mutof 	= 0;  % not used
                     norm 	= 0;  % not used
                     mu1 	= 0;  % not used
@@ -1092,7 +1111,8 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
                     end
             end
             
-            out = interp1(E,RF,te-qu);   
+            out = interp1(E,RF,te-qu);
+            
         end
         
         function out  = ComputeRFTEST(obj,te,qu,varargin)  
@@ -1530,14 +1550,29 @@ end %LoadorSaveRF
             % Global fit of parametrized energy loss function to measured integral and t.o.f. data
             % Based on D2 scattering data
             % Same as en_loss_sc but compactified
+          
+            
             w  = @(e) (e - obj.Ei)./obj.Ei;
             y  = @(e) 1./(w(e)+1);
             gaussian = @(x,pos,sigma) exp( -0.5 .* ((x-pos)./sigma).^2 );
             dfdwH2   = @(y) 1.1262 .* y.^3 + 6.3982 .* y.^4  -7.8055 .* y.^5 + 2.1440 .* y.^6;
-            dsdW     = @(y,w) -1.4135 ./ (1.200943945173595e+03+1) .* ( y + 1./(1.200943945173595e+03-w) ) + 1.4135 .* (y.^2 + 1./(1.200943945173595e+03-w).^2) + 3.545431573764978.*y.* dfdwH2(y);
+            
+            N = 2;      % numver of electron in T2 molecule
+            Ni = 1.173; % eq. 39 and table I. (Volker's talk)
+            E0 = 18575;
+
+            Dsigma   = @(y,w) (Ni/N-2) ./ (E0/obj.Ei+1) .* ( y + 1./(E0/obj.Ei-w) ) + ...
+                (2-Ni/N) .* (y.^2 + 1./(E0/obj.Ei-w).^2) + log(E0/obj.Ei)/2 .*y.* dfdwH2(y);
+            
+            %Dsigma   = @(y,w) (Ni/N-2) ./ (1.200943945173595e+03+1) .* ( y + 1./(1.200943945173595e+03-w) ) + ...
+            %                  (2-Ni/N) .* (y.^2 + 1./(1.200943945173595e+03-w).^2) + 3.545431573764978.*y.* dfdwH2(y);
+            
             f = (e <=  0) .* 0 + ...
                 (e <  obj.Ei) .*   (amp1 .* gaussian(e , pos1, sig1)  + amp2 .* gaussian(e, pos2, sig2) + amp3 .* gaussian(e , pos3, sig3)) + ...
-                (e >= obj.Ei) .*  ((amp1 .* gaussian(obj.Ei, pos1, sig1)  + amp2 .* gaussian(obj.Ei, pos2, sig2) + amp3 .* gaussian(obj.Ei, pos3, sig3))  .* dsdW(y(e),w(e)) ./ dsdW(1,0));
+                (e >= obj.Ei) .*  ((amp1 .* gaussian(obj.Ei, pos1, sig1)  + ... 
+                                    amp2 .* gaussian(obj.Ei, pos2, sig2) + ...
+                                    amp3 .* gaussian(obj.Ei, pos3, sig3))...
+                                    .* Dsigma(y(e),w(e)) ./ Dsigma(1,0));
             f(isnan(f)) = 0;
         end
         

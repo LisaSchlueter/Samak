@@ -20,6 +20,8 @@ elseif nCol==2
     fprintf(fileID,'%.10e %12.10e\n',variable);
 elseif nCol==3
     fprintf(fileID,'%.3f %.3f %.3f\n',variable);
+elseif nCol==8
+    fprintf(fileID,'%.10f %.10f %.10f %.10f %.10f %.10f %.10f %.10f\n',variable);
 end
 fclose(fileID);
 fprintf('variables writen to txt file: %s.txt \n',filename)

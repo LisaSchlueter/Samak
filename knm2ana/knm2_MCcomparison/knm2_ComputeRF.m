@@ -1,7 +1,12 @@
 % calculate response function for MC comparison
-
+SynchrotronFlag = 'ON';
 savename = [getenv('SamakPath'),'knm2ana/knm2_MCcomparison/results/Knm2_SamakRF.mat'];
-T = ref_FakeRun_KNM2_RFcomparison('reComputeRF','OFF');
+
+if strcmp( SynchrotronFlag,'OFF')
+    savename = strrep(savename,'.mat','NoSynchrotron.mat');
+end
+
+T = ref_FakeRun_KNM2_RFcomparison('reComputeRF','ON','SynchrotronFlag',SynchrotronFlag);
 
 Te           = T.Te;
 RF           = T.RF;
