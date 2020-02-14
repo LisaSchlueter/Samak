@@ -48,7 +48,7 @@ classdef RingAnalysis < handle
             %             end
             if ~isempty(obj.RunAnaObj.RunNr) %RunAnalysis Object
                 obj.MultiObj = arrayfun(@(x) RunAnalysis(CommonArg{:},'RunNr',obj.RunAnaObj.RunNr,...
-                    'PixList',x),obj.RunAnaObj.RingPixList);
+                    'PixList',cell2mat(x)),obj.RunAnaObj.RingPixList);
             else %MultiRunAnalysis Object
                 obj.MultiObj = arrayfun(@(x) MultiRunAnalysis(CommonArg{:},'RunList',obj.RunAnaObj.StackFileName,...
                     'PixList',cell2mat(x)),(obj.RunAnaObj.RingPixList));
