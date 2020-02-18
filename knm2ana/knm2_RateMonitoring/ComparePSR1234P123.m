@@ -9,7 +9,10 @@
 % T. Lasserre
 %
 
+<<<<<<< HEAD
+=======
 
+>>>>>>> 0d399fb4d71c5a836619421cbfcdba3071236cf6
 % ServerConfig
 LocalPath=getenv('SamakPath');
 LocalPath=[LocalPath '/knm2ana/knm2_RateMonitoring'];
@@ -72,13 +75,19 @@ for j=1:3
     R         = A.MultiObj(1);
     
     %% Slow Control Data
+<<<<<<< HEAD
+=======
 
+>>>>>>> 0d399fb4d71c5a836619421cbfcdba3071236cf6
     p1 =(R.SingleRunData.WGTS_MolFrac_TT'+0.5*R.SingleRunData.WGTS_MolFrac_HT'+0.5*R.SingleRunData.WGTS_MolFrac_DT')./mean((R.SingleRunData.WGTS_MolFrac_TT'+0.5*R.SingleRunData.WGTS_MolFrac_HT'+0.5*R.SingleRunData.WGTS_MolFrac_DT')).*R.SingleRunData.WGTS_CD_MolPerCm2'./mean(R.SingleRunData.WGTS_CD_MolPerCm2);
     p2 = mean(R.SingleRunData.qU_RM,1); p2=p2-mean(p2);
     
     Activity  =  (R.SingleRunData.WGTS_MolFrac_TT'+0.5*R.SingleRunData.WGTS_MolFrac_HT'+0.5*R.SingleRunData.WGTS_MolFrac_DT').*(R.SingleRunData.WGTS_CD_MolPerCm2');
 
+<<<<<<< HEAD
+=======
 
+>>>>>>> 0d399fb4d71c5a836619421cbfcdba3071236cf6
     %% Time in days
     StartTimeStampDays = days(R.SingleRunData.StartTimeStamp-R.SingleRunData.StartTimeStamp(1));
     
@@ -142,6 +151,11 @@ switch PlotFlag
             xlim([0.9 3.1]);
             ylabel(sprintf('PR %0.f (cps)',i));
             PrettyFigureFormat
+<<<<<<< HEAD
+            
+            subplot(4,2,2*i)
+            errorbar([1 2 3],MeanEffU(:,i),SEMEffU(:,i),'s','MarkerSize',5,'LineWidth',2,'MarkerFaceColor',rgb('IndianRed'),'Color',rgb('IndianRed'));
+=======
         end
         
         % Effective Potential Shift - 4 plots
@@ -160,6 +174,7 @@ switch PlotFlag
             
            % subplot(4,2,2*i)
            % errorbar([1 2 3],MeanEffU(:,i),SEMEffU(:,i),'s','MarkerSize',5,'LineWidth',2,'MarkerFaceColor',rgb('IndianRed'),'Color',rgb('IndianRed'));
+>>>>>>> 0d399fb4d71c5a836619421cbfcdba3071236cf6
             xticks([1 2 3]);
             xticklabels({'RW1','RW2','RW3'});
             xlim([0.9 3.1]);
@@ -186,20 +201,28 @@ switch PlotFlag
             else
                 MyWidth = 2;
             end
+<<<<<<< HEAD
+            h(i)=errorbar([1 2 3]+0.01*i,MeanEffU(:,i),SEMEffU(:,i),'s-','MarkerSize',5,'LineWidth',MyWidth)
+=======
 
             h(i)=errorbar([1 2 3],MeanEffU(:,i),SEMEffU(:,i),'s-','MarkerSize',5,'LineWidth',MyWidth)
 
           %  h(i)=errorbar([1 2 3]+0.01*i,MeanEffU(:,i),SEMEffU(:,i),'s-','MarkerSize',5,'LineWidth',MyWidth)
 
+>>>>>>> 0d399fb4d71c5a836619421cbfcdba3071236cf6
             
             xticks([1 2 3]);
             xticklabels({'RW1','RW2','RW3'});
             xlim([0.9 3.1]);
             ylabel('mV');
+<<<<<<< HEAD
+            ylim([-200 +200]);
+=======
 
             ylim([-60 +210]);
            % ylim([-200 +200]);
 
+>>>>>>> 0d399fb4d71c5a836619421cbfcdba3071236cf6
         end
         hrw1=line([-0.5 1.5],[-50 -50]+50,'LineStyle','--','LineWidth',2,'Color','Black');
         hrw2=line([1.5 2.5],[-8 -8]-42+50,'LineStyle','--','LineWidth',2,'Color','Black');
