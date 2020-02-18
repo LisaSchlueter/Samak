@@ -9,6 +9,13 @@ D = importdata(filename);
 % qU frac is always the same
 % Time Sec of each point is approx time spent at -300 eV in actual data
 nqU = 20;
+qUData = 1.827409451376355e+04;
+%qUData = D.qU_RM;
+qUmin = mean(qUData)-1000e-3;
+qUmax = mean(qUData)+1000e-3;
+qU    = linspace(qUmin,qUmax,nqU)';
+qU    = [qU' D.qU(6:2:end,1)']';
+nqU   = numel(nqU);
 
 % qUmin = mean(D.qU_RM)-1000e-3;
 % qUmax = mean(D.qU_RM)+1000e-3;
@@ -29,15 +36,13 @@ nqU = numel(qU);
 % qU    = [qU' D.qU(6:2:end,1)']';
 % nqU   = numel(nqU);
 
-
 qUfrac = mean(D.qUfrac_RM).*ones(nqU,1);
 TimeSec = mean(D.qUfrac_RM).*mean(D.TimeSec)*nqU;
 % ---------------------------------------------------------------------- %
 % WGTS
 p = inputParser;
-
-p.addParameter('WGTS_CD_MolPerCm2',0.84*5*1e17,@(x)isfloat(x) && x>0);
-%p.addParameter('WGTS_CD_MolPerCm2',4.193018127856629e+17,@(x)isfloat(x) && x>0);
+%p.addParameter('WGTS_CD_MolPerCm2',0.84*5*1e17,@(x)isfloat(x) && x>0);
+p.addParameter('WGTS_CD_MolPerCm2',4.193018127856629e+17,@(x)isfloat(x) && x>0);
 p.addParameter('WGTS_CD_MolPerCm2_SubRun','',@(x)isfloat(x));
 p.addParameter('WGTS_MolFrac_TT',0.95,@(x)isfloat(x) && x>0);
 p.addParameter('WGTS_MolFrac_TT_SubRun','');
