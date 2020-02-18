@@ -23,7 +23,7 @@ RFF = dFitrium(:,2); % transmission probability
 dFitriumConst = importdata(savenameFconst);
 TeFconst = dFitriumConst(:,1); % energy
 RFFconst = dFitriumConst(:,2); % transmission probability
-%% plot ratio 
+%% plot ratio
 f2 = figure('Units','normalized','Position',[0,0.1,0.5,0.5]);
 l = plot(linspace(-5,90,100),ones(100,1),'-','LineWidth',2,'Color',rgb('Black'));
 hold on;
@@ -59,5 +59,26 @@ leg.EdgeColor = rgb('Silver');
 xlim([min(TeS),max(TeS)]);
 
 savename = sprintf('%sRF_Diff',plotdir);
+export_fig(f1,[savename,'.pdf']);
+print(f1,[savename,'.png'],'-dpng','-r300');
+
+
+%% overlay
+f1 = figure('Units','normalized','Position',[0.5,0.1,0.5,0.5]);
+l = plot(linspace(-5,90,100),zeros(100,1),'-','LineWidth',2,'Color',rgb('Black'));
+hold on;
+pS = plot(TeS,RFS,'-','LineWidth',2.5,'Color',rgb('DodgerBlue'));
+pK = plot(TeS,RFK,'-.','LineWidth',2.5,'Color',rgb('GoldenRod'));
+pF = plot(TeS,RFF,'--','LineWidth',2.5,'Color',rgb('ForestGreen'));
+pFconst = plot(TeS,RFFconst,':','LineWidth',2.5,'Color',rgb('IndianRed'));
+xlabel(sprintf('Energy - %.0f (eV)',qU));
+ylabel('Probability');
+PrettyFigureFormat('FontSize',22);
+leg = legend([pS,pK,pF,pFconst],'Samak','KaFit','Fitrium',sprintf('Fitrium (const. \\sigma)'));
+leg.EdgeColor = rgb('Silver');
+leg.Location = 'southeast';
+xlim([min(TeS),max(TeS)]);
+
+savename = sprintf('%sRF_Overlay',plotdir);
 export_fig(f1,[savename,'.pdf']);
 print(f1,[savename,'.png'],'-dpng','-r300');

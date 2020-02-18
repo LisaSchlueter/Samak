@@ -9,18 +9,18 @@ EIndex = (E>=0 & E<90);
 
 savedir = [getenv('SamakPath'),'knm2ana/knm2_MCcomparison/results/'];
 savename = sprintf('%sELoss_KatrinT2_%.2feVbinning.mat',savedir,ELossBinStep);
-if exist(savename,'file') && 2==1
+if exist(savename,'file') 
     load(savename);
 else
     A = ref_FakeRun_KNM2_RFcomparison;
     A.recomputeRF = 'ON';
     [~, ElossFunctions] = A.ComputeELossFunction('E',E);
-     save(savename,'ElossFunctions','E','Estep');
+     save(savename,'ElossFunctions','E','ELossBinStep');
 end
 Es = E(EIndex);
 S1 = ElossFunctions(1,EIndex);            % one scattering
-S2 = ElossFunctions(2,EIndex).*Estep;     % two scatterings
-S3 = ElossFunctions(3,EIndex).*Estep.^2;  % three scatterings
+S2 = ElossFunctions(2,EIndex).*ELossBinStep;     % two scatterings
+S3 = ElossFunctions(3,EIndex).*ELossBinStep.^2;  % three scatterings
 
 %% load Fitrium
 savenameF = sprintf('%sELoss_KatrinT2_Fitrium.dat',savedir);

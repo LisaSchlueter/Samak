@@ -1078,22 +1078,25 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             TF  = @obj.ComputeMaceTF;
             
             % Build Response Function - Change Binning
+            clear maxE ;
+            clear minE ;
+            clear NbinE ;
+            clear E;
+            clear Estep;
             if strcmp(obj.TD,'RFcomparison')
-                %                 %RFBinStep = 0.01;
-                %                 clear E;clear Estep;
-                %                 E = 18540:0.01:18635;
-                %                 Estep = E(2) - E(1);
                 RFBinStep = 0.01;
                 maxE = 90;
+                minE = -maxE;
+                Estep = RFBinStep;
+                E = minE:Estep:maxE;
             else
-                clear maxE ; maxE = (obj.qUmax-obj.qUmin)*1.5;
+                maxE = (obj.qUmax-obj.qUmin)*1.5;
+                minE=-maxE;
+                NbinE = (maxE-minE)/RFBinStep;
+                E = linspace(minE,maxE,NbinE);
+                Estep = E(2) - E(1);
             end
-            %  else
-                clear minE ; minE=-maxE;
-                clear NbinE ; NbinE = (maxE-minE)/RFBinStep;
-                clear E; E = linspace(minE,maxE,NbinE);
-                clear Estep; Estep = E(2) - E(1);
-           % end
+
             RF = TF(qu+E,qu,'pixel',pixel)*obj.is_Pv(1) + ...
                 conv(TF(qu+E,qu,'pixel',pixel),obj.fscat(E),'same').*Estep;
             
@@ -1111,8 +1114,15 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
                     end
             end
             
-            out = interp1(E,RF,te-qu);
-            
+            % check is (te-qU) is already contained in E
+            Etmp = round(E,5);
+            TeqUtmp = round(te-qu,5);
+            Index  = ismember(Etmp,TeqUtmp);
+            if sum(Index)==numel(te)
+                out = RF(Index);
+            else
+                out = interp1(E,RF,te-qu);
+            end
         end
         
         function out  = ComputeRFTEST(obj,te,qu,varargin)  
