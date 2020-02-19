@@ -187,6 +187,7 @@ classdef TBD < handle & WGTSMACE %!dont change superclass without modifying pars
         FSD_Sigma         % std of gaussian or width of rectangle    
         FSD_MultiPos      % rel. shifts 
         FSD_MultiWeights  % weighting
+        FSD_MultiSigma    % std of gaussian or width of rectangle for each peak
         FSD_Dist          % Gauss or Rect
         
         % Binning
@@ -268,6 +269,7 @@ classdef TBD < handle & WGTSMACE %!dont change superclass without modifying pars
             p.addParameter('FSD_Sigma','',@(x)isfloat(x) || isempty(x)); % std of gaussian or width of rectangle
             p.addParameter('FSD_MultiPos','',@(x) isfloat(x) || isempty(x));     % rel. shifts
             p.addParameter('FSD_MultiWeights','',@(x) isfloat(x) || isempty(x));  % weighting
+            p.addParameter('FSD_MultiSigma','',@(x) isfloat(x) || isempty(x));  % weighting
             p.addParameter('FSD_Dist','Gauss',@(x)ismember(x,{'Gauss','Rect'}));       % Gauss or Rect
             
             % Binning
@@ -329,6 +331,7 @@ classdef TBD < handle & WGTSMACE %!dont change superclass without modifying pars
             obj.FSD_Sigma              = p.Results.FSD_Sigma;        % std of gaussian or width of rectangle
             obj.FSD_MultiPos           = p.Results.FSD_MultiPos;     % rel. shifts
             obj.FSD_MultiWeights       = p.Results.FSD_MultiWeights; % weighting
+            obj.FSD_MultiSigma         = p.Results.FSD_MultiSigma;
             obj.FSD_Dist               = p.Results.FSD_Dist;             % Gauss or Rect
             
             % Integration Method
@@ -484,6 +487,7 @@ classdef TBD < handle & WGTSMACE %!dont change superclass without modifying pars
             p.addParameter('Sigma',obj.FSD_Sigma,@(x)isfloat(x) || isempty(x));                % broadening of FSD
             p.addParameter('MultiPos',obj.FSD_MultiPos,@(x) isfloat(x) || isempty(x));         %3 gaussians instead of using 1 gaussian per energy (for 3 RW settings): relative position
             p.addParameter('MultiWeights',obj.FSD_MultiWeights,@(x) isfloat(x) || isempty(x)); %3 gaussians instead of using 1 gaussian per energy: relative weight
+            p.addParameter('MultiSigma',obj.FSD_MultiSigma,@(x) isfloat(x) || isempty(x));      %3 gaussians instead of using 1 gaussian per energy: broadening / drift
             p.addParameter('BinningFactor',4,@(x) isfloat(x) || isempty(x));                   % enhance binning: twice, 3 times,... as much bins
             p.addParameter('SanityPlot','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('ZoomPlot','OFF',@(x)ismember(x,{'ON','OFF'})); % save also zoom to 1 final state
@@ -498,22 +502,37 @@ classdef TBD < handle & WGTSMACE %!dont change superclass without modifying pars
             ZoomPlot           = p.Results.ZoomPlot;
             Dist               = p.Results.Dist; 
             
-            if ~isempty(Sigma) && numel(Sigma)==1
-                Sigma = repmat(Sigma,[3,1]);
+            nPseudoRings = numel(obj.MACE_Ba_T);
+            
+            if ~isempty(MultiPos) % divide FSD into three peaks or not
+                nPeaks = numel(MultiPos)./nPseudoRings;
+            else
+                nPeaks = 1;
             end
             
+            if ~isempty(Sigma)
+                if numel(Sigma)==1
+                    Sigma = squeeze(repmat(Sigma,[3,nPeaks,nPseudoRings])); % 3 isotopologues x nPeaks x nRings
+                elseif numel(Sigma)==nPeaks % 1 psuedo-ring
+                    Sigma = squeeze(repmat(Sigma,[3,1])); 
+                elseif numel(Sigma)==nPeaks*nPseudoRings
+                    Sigma = squeeze(repmat(Sigma,[1,1,3])); 
+                    Sigma = permute(Sigma,[3,1,2]);
+                end
+            end
+
             if strcmp(obj.DopplerEffectFlag,'FSD')
                 % include Doppler Effect by Modification of FSD
                  if isempty(Sigma)
-                     Sigma = obj.DE_sigma.*ones(3,1);
+                     Sigma = obj.DE_sigma.*squeeze(ones(3,nPeaks,nPseudoRings));
                  else
                      Sigma = Sigma + obj.DE_sigma;
                  end
             end
             
-            FSDConvArg = {'MultiPos',MultiPos,'Dist',Dist,...
-                         'MultiWeights',MultiWeights,...
-                         'BinningFactor',BinningFactor}; %arguments for FSD convolution (optional)
+            FSDConvArg = {'BinningFactor',BinningFactor,'Dist',Dist,...
+                         'MultiWeights',MultiWeights,'MultiPos',MultiPos,...
+                         }; %arguments for FSD convolution (optional)
             %% T-T FSD
             switch obj.TTFSD
                 case {'DOSS','DOSSNOEE'}
@@ -552,12 +571,12 @@ classdef TBD < handle & WGTSMACE %!dont change superclass without modifying pars
             obj.TTexE = obj.TTexE';
             obj.TTexP = (ttfsdfile(TTexE_index,2))';
             if ~isempty(Sigma)   %broaden FSDs
-                [obj.TTexE,obj.TTexP] = FSD_Convfun(obj.TTexE,obj.TTexP,Sigma(1),...
+                [obj.TTexE,obj.TTexP] = FSD_Convfun(obj.TTexE,obj.TTexP,squeeze(Sigma(1,:,:)),...
                     FSDConvArg{:},'SanityPlot',SanityPlot,'ZoomPlot',ZoomPlot);
             end
             obj.TTGSTh = obj.GetFSDTh(obj.TTexE);          % Limit ground / excited states
-            obj.TTNormGS_i = sum(obj.TTexP(1:obj.TTGSTh));
-            obj.TTNormES_i = sum(obj.TTexP(obj.TTGSTh:end));
+            obj.TTNormGS_i = sum(obj.TTexP(:,1:obj.TTGSTh),2);
+            obj.TTNormES_i = sum(obj.TTexP(:,obj.TTGSTh:end),2);
             
             %% D-T FSD
             switch obj.DTFSD
@@ -589,11 +608,11 @@ classdef TBD < handle & WGTSMACE %!dont change superclass without modifying pars
             obj.DTexE = obj.DTexE';
             obj.DTexP = (dtfsdfile(DTexE_index,2))';
             if ~isempty(Sigma)  %broaden FSDs
-                [obj.DTexE,obj.DTexP] = FSD_Convfun(obj.DTexE,obj.DTexP,Sigma(2),FSDConvArg{:});
+                [obj.DTexE,obj.DTexP] = FSD_Convfun(obj.DTexE,obj.DTexP,squeeze(Sigma(2,:,:)),FSDConvArg{:});
             end
             obj.DTGSTh = obj.GetFSDTh(obj.DTexE); % Limit ground / excited states
-            obj.DTNormGS_i = sum(obj.DTexP(1:obj.DTGSTh));
-            obj.DTNormES_i = sum(obj.DTexP(obj.DTGSTh:end));
+            obj.DTNormGS_i = sum(obj.DTexP(:,1:obj.DTGSTh),2);
+            obj.DTNormES_i = sum(obj.DTexP(:,obj.DTGSTh:end),2);
             
             %% H-T FSD
             switch obj.HTFSD
@@ -621,11 +640,11 @@ classdef TBD < handle & WGTSMACE %!dont change superclass without modifying pars
             obj.HTexE = obj.HTexE';
             obj.HTexP = (htfsdfile(HTexE_index,2))';
             if ~isempty(Sigma)  %broaden FSDs
-                [obj.HTexE,obj.HTexP] = FSD_Convfun(obj.HTexE,obj.HTexP,Sigma(3),FSDConvArg{:});
+                [obj.HTexE,obj.HTexP] = FSD_Convfun(obj.HTexE,obj.HTexP,squeeze(Sigma(3,:,:)),FSDConvArg{:});
             end
             obj.HTGSTh = obj.GetFSDTh(obj.HTexE); % Limit ground / excited states
-            obj.HTNormGS_i = sum(obj.HTexP(1:obj.HTGSTh));
-            obj.HTNormES_i = sum(obj.HTexP(obj.HTGSTh:end));
+            obj.HTNormGS_i = sum(obj.HTexP(:,1:obj.HTGSTh),2);
+            obj.HTNormES_i = sum(obj.HTexP(:,obj.HTGSTh:end),2);
            %% T minus ion
             switch obj.TmFSD
                 case 'OFF'
@@ -643,57 +662,74 @@ classdef TBD < handle & WGTSMACE %!dont change superclass without modifying pars
         end
         function Threshold = GetFSDTh(obj,TexE)
             % Compute FSD threshold
-           energyTh = 10; %threshold energy, which divides GS and ES
-           indexTH = find(TexE<energyTh);
-           Threshold = indexTH(end); 
+            energyTh = 10; %threshold energy (eV), which divides GS and ES
+            if size(TexE,1)>1
+                Threshold = zeros(size(TexE,1),1);
+                for i=1:size(TexE,1)
+                    Threshold(i) = find(TexE(i,:)<energyTh,1,'last');
+                end
+            else
+                indexTH = find(TexE<energyTh);
+                Threshold = indexTH(end);
+            end
+            Threshold = ceil(mean(Threshold));
         end
         function [GES,TexE,TexP] = ComputeFSD_GSES(obj,TexE,TexP,TGSTh,state)
             % Normalization Factors Ground/Excited States
             switch state
                 case 'ground'
-                    TexE  = TexE(1:TGSTh);        %TGSTh = limit ground state-excited states
-                    TNorm_i = sum(TexP(1:TGSTh)); % initial Normalization
-                    TexP  = TexP(1:TGSTh)./TNorm_i;  %normalize to GS to 1
+                    TexE  = TexE(:,1:TGSTh);        %TGSTh = limit ground state-excited states
+                    TNorm_i = sum(TexP(:,1:TGSTh),2); % initial Normalization
+                    TexP  = TexP(:,1:TGSTh)./TNorm_i;  %normalize to GS to 1
                 case 'excited'
-                    TexE  = TexE(TGSTh+1:end);
-                    TNorm_i = sum(TexP(TGSTh+1:end)); % initial Normalization
-                    TexP  = TexP(TGSTh+1:end)./TNorm_i; %normalize ES to 1
-            end 
+                    TexE  = TexE(:,TGSTh+1:end);
+                    TNorm_i = sum(TexP(:,TGSTh+1:end),2); % initial Normalization
+                    TexP  = TexP(:,TGSTh+1:end)./TNorm_i; %normalize ES to 1
+            end
             
-             mNuSq_local = obj.mnuSq-2.*obj.mTSq;
-             Q_local = obj.Q;
-              
-             if sum(obj.mTSq)==0
-                 mNuSq_local = obj.mnuSq;
-                 TexP_M = repmat(TexP,obj.nTe,1); % probability
-                 TexE_M = repmat(TexE,obj.nTe,1); % energy
-                 Te_M = repmat(obj.Te,1,numel(TexP)); % energies of electron
-                 pe_M = repmat(obj.pe,1,numel(TexP)); % momentum of electron
-                 Q_M = Q_local'.*ones(obj.nTe,numel(TexP));
-                 me_M = obj.me*ones(obj.nTe,numel(TexP));
-                 sin2T4_M = obj.sin2T4*ones(obj.nTe,numel(TexP));
-                 mnuSq_M = mNuSq_local'.*ones(obj.nTe,numel(TexP));
-                 mnu4Sq_M = obj.mnu4Sq*ones(obj.nTe,numel(TexP));
-             else
-                 % Ground/Excited State
-                 TexP_M = repmat(TexP,obj.nTe,1); % probability
-                 TexE_M = repmat(TexE,obj.nTe,1); % energy
-                 
-                 Te_M = repmat(obj.Te,1,numel(TexP),obj.nPixels); % energies of electron
-                 pe_M = repmat(obj.pe,1,numel(TexP),obj.nPixels); % momentum of electron
-                 Q_M = permute(Q_local'.*ones(obj.nPixels,obj.nTe,numel(TexP)),[2 3 1]);
-                 me_M = obj.me*ones(obj.nTe,numel(TexP));
-                 sin2T4_M = obj.sin2T4*ones(obj.nTe,numel(TexP));
-                 mnuSq_M = permute(mNuSq_local'.*ones(obj.nPixels,obj.nTe,numel(TexP)),[2 3 1]);
-                 mnu4Sq_M = obj.mnu4Sq*ones(obj.nTe,numel(TexP));
-             end
-          % normal phase space formula, but
-          % actual energy of the electron =: initial energy of electron - excitation energy of daughter molecule 
-          % 1 differential spectrum per excitation energy of the daughter molecule (1 phase space per FSD state)
-          % Combination: weight by the exciation probability and sum (weighted mean)
+            mNuSq_local = obj.mnuSq-2.*obj.mTSq;
+            Q_local = obj.Q;
+            
+            if sum(obj.mTSq)==0
+                mNuSq_local = obj.mnuSq;
+                %   TexP_M = repmat(TexP,obj.nTe,1); % probability
+                %   TexE_M = repmat(TexE,obj.nTe,1); % energy
+                TexP_M = squeeze(permute(repmat(TexP,1,1,obj.nTe),[3,2,1])); % probability
+                TexE_M = squeeze(permute(repmat(TexE,1,1,obj.nTe),[3,2,1])); % energy
+                Te_M = squeeze(repmat(obj.Te,[1,size(TexP')])); % energies of electron
+                pe_M = squeeze(repmat(obj.pe,[1,size(TexP')])); % momentum of electron
+                Q_M = squeeze(Q_local'.*ones([obj.nTe,size(TexP')]));
+                me_M = squeeze(obj.me.*ones([obj.nTe,size(TexP')]));
+                sin2T4_M = squeeze(obj.sin2T4.*ones([obj.nTe,size(TexP')]));
+                mnuSq_M = squeeze(mNuSq_local'.*ones([obj.nTe,size(TexP')]));
+                mnu4Sq_M = squeeze(obj.mnu4Sq.*ones([obj.nTe,size(TexP')]));
+            else
+                % Ground/Excited State
+                TexP_M = repmat(TexP,obj.nTe,1); % probability
+                TexE_M = repmat(TexE,obj.nTe,1); % energy
+                
+                Te_M = repmat(obj.Te,1,numel(TexP),obj.nPixels); % energies of electron
+                pe_M = repmat(obj.pe,1,numel(TexP),obj.nPixels); % momentum of electron
+                Q_M = permute(Q_local'.*ones(obj.nPixels,obj.nTe,numel(TexP)),[2 3 1]);
+                me_M = obj.me*ones(obj.nTe,numel(TexP));
+                sin2T4_M = obj.sin2T4*ones(obj.nTe,numel(TexP));
+                mnuSq_M = permute(mNuSq_local'.*ones(obj.nPixels,obj.nTe,numel(TexP)),[2 3 1]);
+                mnu4Sq_M = obj.mnu4Sq*ones(obj.nTe,numel(TexP));
+            end
+            % normal phase space formula, but
+            % actual energy of the electron =: initial energy of electron - excitation energy of daughter molecule
+            % 1 differential spectrum per excitation energy of the daughter molecule (1 phase space per FSD state)
+            % Combination: weight by the exciation probability and sum (weighted mean)
+            %              GES = squeeze(real(0 + sum(...
+            %                  ((Q_M-Te_M-TexE_M)>=0)...% if (energy of electron - excitation energy of daughter molecule) < Endpoint (Q)
+            %                  .*pe_M.*(Te_M+me_M).*(Q_M-TexE_M-Te_M).*(((ones(obj.nTe,numel(TexP))-sin2T4_M)....
+            %                  .*(((Q_M-Te_M-TexE_M).^2-mnuSq_M)>=0)...
+            %                  .*((Q_M-TexE_M-Te_M).^2-mnuSq_M).^.5) ...
+            %                  + sin2T4_M.*(((Q_M-Te_M-TexE_M).^2-mnu4Sq_M)>=0)...
+            %                  .*((Q_M-TexE_M-Te_M).^2-mnu4Sq_M).^.5).*TexP_M,2)));
             GES = squeeze(real(0 + sum(...
                 ((Q_M-Te_M-TexE_M)>=0)...% if (energy of electron - excitation energy of daughter molecule) < Endpoint (Q)
-                .*pe_M.*(Te_M+me_M).*(Q_M-TexE_M-Te_M).*(((ones(obj.nTe,numel(TexP))-sin2T4_M)....
+                .*pe_M.*(Te_M+me_M).*(Q_M-TexE_M-Te_M).*(((ones([obj.nTe,size(TexP')])-sin2T4_M)....
                 .*(((Q_M-Te_M-TexE_M).^2-mnuSq_M)>=0)...
                 .*((Q_M-TexE_M-Te_M).^2-mnuSq_M).^.5) ...
                 + sin2T4_M.*(((Q_M-Te_M-TexE_M).^2-mnu4Sq_M)>=0)...
@@ -1015,7 +1051,7 @@ classdef TBD < handle & WGTSMACE %!dont change superclass without modifying pars
                             if ( (strcmp(obj.TTFSD,'SAENZNOEE')) || (strcmp(obj.TTFSD,'DOSSNOEE')) )
                                 obj.TTNormES = 0;
                             end
-                            TTps = (obj.TTNormGS).*GS + (obj.TTNormES).*ES;
+                            TTps = (obj.TTNormGS)'.*GS + (obj.TTNormES)'.*ES;
                             if strcmp(obj.TTFSD,'ROLL')
                                 % FSD with ROLL already includes also DT and HT
                                 obj.PhaseSpace = obj.PhaseSpace + TTps;
@@ -1038,7 +1074,7 @@ classdef TBD < handle & WGTSMACE %!dont change superclass without modifying pars
                             
                             % Build Ground + Exited States
                             %obj.DTNormES = 0;
-                            DTps = obj.DTNormGS .* GS + obj.DTNormES .* ES;
+                            DTps = obj.DTNormGS' .* GS + obj.DTNormES' .* ES;
                             obj.PhaseSpace = obj.PhaseSpace + 0.5*obj.WGTS_MolFrac_DT.*DTps;   
                     end
                 end
@@ -1056,7 +1092,7 @@ classdef TBD < handle & WGTSMACE %!dont change superclass without modifying pars
                                 obj.ComputeFSD_GSES(obj.HTexE,obj.HTexP,obj.HTGSTh,'excited');
                             
                             % Build Ground + Exited States
-                            HTps = obj.HTNormGS .* GS + obj.HTNormES .* ES;
+                            HTps = obj.HTNormGS' .* GS + obj.HTNormES' .* ES;
                             obj.PhaseSpace = obj.PhaseSpace + 0.5*obj.WGTS_MolFrac_HT.*HTps;
                     end
                     
@@ -1523,12 +1559,12 @@ classdef TBD < handle & WGTSMACE %!dont change superclass without modifying pars
                 (mnuSq_prev ~= obj.mnuSq) || ... % neutrino mass
                 (E0_prev ~= obj.Q) || ...        % endpoint
                 any(mTSq_prev ~= obj.mTSq) || ... % neutrino mass offset (TBDDS energy smearing)
-                ((~isempty(obj.TTNormGS)) && TTGS_prev ~= obj.TTNormGS) || ... %FSDs
-                ((~isempty(obj.TTNormES)) && TTES_prev ~= obj.TTNormES) || ...
-                ((~isempty(obj.DTNormGS)) && DTGS_prev ~= obj.DTNormGS) || ...
-                ((~isempty(obj.DTNormES)) && DTES_prev ~= obj.DTNormES) || ...
-                ((~isempty(obj.HTNormGS)) && HTGS_prev ~= obj.DTNormGS) || ...
-                ((~isempty(obj.HTNormES)) && HTES_prev ~= obj.DTNormES) || ...
+                ((~isempty(obj.TTNormGS)) && any(TTGS_prev ~= obj.TTNormGS)) || ... %FSDs
+                ((~isempty(obj.TTNormES)) && any(TTES_prev ~= obj.TTNormES)) || ...
+                ((~isempty(obj.DTNormGS)) && any(DTGS_prev ~= obj.DTNormGS)) || ...
+                ((~isempty(obj.DTNormES)) && any(DTES_prev ~= obj.DTNormES)) || ...
+                ((~isempty(obj.HTNormGS)) && any(HTGS_prev ~= obj.DTNormGS)) || ...
+                ((~isempty(obj.HTNormES)) && any(HTES_prev ~= obj.DTNormES)) || ...
                 (mnu4Sq_prev ~= obj.mnu4Sq) || (sin2T4_prev ~= obj.sin2T4) || ...; % steriles
                 (FracTm_prev ~= obj.WGTS_MolFrac_Tm);
              

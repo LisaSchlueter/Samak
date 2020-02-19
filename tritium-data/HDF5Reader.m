@@ -170,6 +170,7 @@ if  (any(diff(qU(:,1)) < 0))
     [qU,SortedIndex] = sort(qU);
     TBDIS = TBDIS(SortedIndex(:,1),:);
     qUfrac = qUfrac(SortedIndex(:,1),:);
+    EffCorr = EffCorr(SortedIndex(:,1),:);
     TimeperSubRunperPixel = TimeperSubRunperPixel(SortedIndex(:,1),:);
     if ~strcmp(Fitter,'Kafit')
         WGTS_CD_MolPerCm2_SubRun = WGTS_CD_MolPerCm2_SubRun(SortedIndex(:,1));
