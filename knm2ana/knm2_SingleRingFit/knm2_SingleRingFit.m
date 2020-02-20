@@ -6,12 +6,13 @@ p = inputParser;
 p.addParameter('RunList','KNM2_RW1',@(x)ischar(x));
 p.addParameter('freePar','E0 Bkg Norm',@(x)ischar(x));
 p.addParameter('Range',40,@(x)isfloat(x));              % fit range in eV below E0
+p.addParameter('ROIFlag','Default',@(x)ismember(x,{'Default','14keV'}));   
 p.parse(varargin{:});
 
 RunList = p.Results.RunList;
 freePar = p.Results.freePar;
 Range   = p.Results.Range;
-
+ROIFlag = p.Results.ROIFlag;
 %% settings
 RunAnaArg = {'RunList',RunList,...  % define run number -> see GetRunList
     'fixPar',freePar,...         % free Parameter !!
@@ -22,7 +23,8 @@ RunAnaArg = {'RunList',RunList,...  % define run number -> see GetRunList
     'chi2','chi2Stat',...              % statistics only
     'RingMerge','Full',...             % 'Full' == 4 Pseudo rings
     'fitter','minuit',...
-    'minuitOpt','min;minos'};             
+    'minuitOpt','min;minos',...
+    'ROIFlag',ROIFlag};             
 
 %% read data and set up model: MultiRunAnalysis
 A = MultiRunAnalysis(RunAnaArg{:}); % object of class MultiRunAnalysis
@@ -33,7 +35,7 @@ R = RingAnalysis('RunAnaObj',A,'RingList',1:4); % object of class RingAnalysis
 
 %% fit every ring - one after the other
 R.FitRings('SaveResult','ON',...  
-          'RecomputeFlag','ON',...  % load from storage or recalculate
+          'RecomputeFlag','OFF',...  % load from storage or recalculate
           'AsymErr','OFF');         % asymmetric from scan and more correct uncertainties -> only for mNuSq
 
 %% display

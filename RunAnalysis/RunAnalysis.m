@@ -27,6 +27,7 @@ classdef RunAnalysis < handle
         ELossFlag;
         DopplerEffectFlag; 
         FSDFlag         % final state distributions: Sibille, Sibille0p5eV, BlindingKNM1, OFF ...
+        ROIFlag;        % region of interest
         
         %Covariance Matrices
         FitCM_Obj;      % Fit Covariance Matrix Object
@@ -121,6 +122,8 @@ classdef RunAnalysis < handle
             p.addParameter('ELossFlag','',@(x)ismember(x,{'Aseev','Abdurashitov','CW_GLT','CW_G2LT','KatrinD2','KatrinT2'}));%default given later
             p.addParameter('FSDFlag','Sibille0p5eV',@(x)ismember(x,{'SAENZ','BlindingKNM1','Sibille','Sibille0p5eV','OFF','SibilleFull','BlindingKNM2'}));
             p.addParameter('DopplerEffectFlag','',@(x)ismember(x,{'OFF','FSD','FSD_Knm1'}));%default given later
+            p.addParameter('ROIFlag','Default',@(x)ismember(x,{'Default','14keV'})); % default->default counts in RS, 14kev->[14,32]keV ROI
+          
             % Fit Options
             p.addParameter('chi2','chi2Stat',@(x)ismember(x,{'chi2Stat', 'chi2CM', 'chi2CMFrac','chi2CMShape', 'chi2P','chi2Nfix'}));
             p.addParameter('fitter','minuit',@(x)ismember(x,{'minuit','matlab'}));
@@ -163,7 +166,7 @@ classdef RunAnalysis < handle
             p.addParameter('TwinBias_Q',18573.73,@(x)isfloat(x) || ismember(x,{'Fit'}));  % absolute (eV)
             p.addParameter('FitNBFlag','ON',@(x)ismember(x,{'ON','OFF','NormOnly'}));
             %fake MC option
-            p.addParameter('FakeInitFile','',@(x)isa(x,'function_handle'));
+            p.addParameter('FakeInitFile','',@(x)isa(x,'function_handle') || isempty(x));
             % Efficiency Correction Applied to Data 
             p.addParameter('DataEffCorr','RunSummary',@(x)ismember(x,{'OFF', 'ROI', 'PileUp','ROI+PileUp','RunSummary'}));
  
@@ -180,6 +183,7 @@ classdef RunAnalysis < handle
             obj.ELossFlag         = p.Results.ELossFlag;
             obj.FSDFlag           = p.Results.FSDFlag;
             obj.DopplerEffectFlag = p.Results.DopplerEffectFlag;
+            obj.ROIFlag           = p.Results.ROIFlag;
             obj.fitter            = p.Results.fitter;
             obj.minuitOpt         = p.Results.minuitOpt;
             obj.exclDataStart     = p.Results.exclDataStart;
@@ -274,6 +278,7 @@ classdef RunAnalysis < handle
             switch obj.DoRunAnalysisConstructor
                 case 'ON'
                     obj.ReadData;
+                    obj.SetROI;
                     obj.SimulateRun;
                     obj.InitFitPar;
                     obj.SetNPfactor;
@@ -310,6 +315,10 @@ classdef RunAnalysis < handle
                         HDF5readallruns('h5runlist',obj.RunNr,'DataSet',GetDataSet(obj.RunNr));
                     end
                     obj.RunData = load(filename);
+                    
+                    if strcmp(obj.ROIFlag,'14keV')
+                        obj.RunData.TBDIS ;
+                    end
                 case 'Twin'
                     matFilePath = [getenv('SamakPath'),'tritium-data/mat/','Twin',obj.DataSet,'/'];
                     matFileName = ['Twin',num2str(obj.RunNr),obj.SetTwinOrFakeFileName,'.mat'];
@@ -356,8 +365,12 @@ classdef RunAnalysis < handle
             end
             
             obj.RunData.matFilePath = matFilePath;
-            obj.RunData.TimeSec       = mean(obj.RunData.TimeSec(obj.PixList));
+            obj.RunData.TimeSec         = mean(obj.RunData.TimeSec(obj.PixList));
+            obj.RunData.TBDIS_Default = obj.RunData.TBDIS;
             obj.StackPixel;
+            if isfield(obj.RunData,'TBDIS_RM')
+                obj.RunData.TBDIS_RM_Default = obj.RunData.TBDIS_RM;
+            end
             obj.RunData.RunName          = num2str(obj.RunNr);
             fprintf(2,'RunAnalysis:ReadData: Reading Tritium Data from File:\n')
             disp(obj.RunData);
@@ -392,6 +405,7 @@ classdef RunAnalysis < handle
                         obj.RunData.qUfrac        = mean(obj.RunData.qUfrac(:,obj.PixList),2);
                         obj.RunData.EffCorr       = mean(obj.RunData.EffCorr(:,obj.PixList),2);
                         obj.RunData.TBDIS         = sum(obj.RunData.TBDIS(:,obj.PixList),2);
+                        obj.RunData.TBDIS_Default = sum(obj.RunData.TBDIS_Default(:,obj.PixList),2);
                         obj.RunData.TBDISE        = sqrt(obj.RunData.TBDIS./obj.RunData.EffCorr); % statstical uncertainty
                         obj.RunData.MACE_Ba_T     = mean(obj.RunData.MACE_Ba_T(obj.PixList));
                         obj.RunData.MACE_Bmax_T   = mean(obj.RunData.MACE_Bmax_T(obj.PixList));
@@ -402,8 +416,14 @@ classdef RunAnalysis < handle
                         
                         if isfield(obj.RunData,'TBDIS_RM')
                             obj.RunData.TBDIS_RM   = mean(obj.RunData.TBDIS_RM(obj.PixList));
+                            obj.RunData.TBDIS_RM_Default   = mean(obj.RunData.TBDIS_RM_Default(obj.PixList));
                             obj.RunData.qU_RM      = mean(obj.RunData.qU_RM(obj.PixList));
                             obj.RunData.qUfrac_RM  = mean(obj.RunData.qUfrac_RM(obj.PixList));
+                        end
+                        
+                        if isfield(obj.RunData,'TBDIS14keV')
+                            obj.RunData.TBDIS14keV      = sum(obj.RunData.TBDIS14keV(:,obj.PixList),2);
+                            obj.RunData.TBDIS14keV_RM   = mean(obj.RunData.TBDIS14keV_RM(obj.PixList));
                         end
                     case {'MultiPixel','SinglePixel'}
                         %Select pixellist
@@ -412,6 +432,7 @@ classdef RunAnalysis < handle
                         obj.RunData.qU           = obj.RunData.qU(:,obj.PixList);
                         obj.RunData.EffCorr      = obj.RunData.EffCorr(:,obj.PixList);
                         obj.RunData.TBDIS        = obj.RunData.TBDIS(:,obj.PixList);
+                        obj.RunData.TBDIS_Default= obj.RunData.TBDIS_Default(:,obj.PixList);
                         obj.RunData.TBDISE       = obj.RunData.TBDISE(:,obj.PixList);
                         obj.RunData.MACE_Ba_T    = obj.RunData.MACE_Ba_T(obj.PixList);
                         obj.RunData.MACE_Bmax_T  = obj.RunData.MACE_Bmax_T(obj.PixList);
@@ -438,6 +459,7 @@ classdef RunAnalysis < handle
                         obj.RunData.qU      = cell2mat(cellfun(@(x) mean(obj.RunData.qU(:,x),2),obj.RingPixList,'UniformOutput',false)');
                         obj.RunData.EffCorr = cell2mat(cellfun(@(x) mean(obj.RunData.EffCorr(:,x),2),obj.RingPixList,'UniformOutput',false)');
                         obj.RunData.TBDIS   = cell2mat(cellfun(@(x) sum(obj.RunData.TBDIS(:,x),2),obj.RingPixList,'UniformOutput',false)');
+                        obj.RunData.TBDIS_Default   = cell2mat(cellfun(@(x) sum(obj.RunData.TBDIS_Default(:,x),2),obj.RingPixList,'UniformOutput',false)');
                         obj.RunData.TBDISE  = sqrt(obj.RunData.TBDIS./obj.RunData.EffCorr); % statstical uncertainty
                         obj.RunData.MACE_Ba_T = cell2mat(cellfun(@(x) mean(obj.RunData.MACE_Ba_T(x)),obj.RingPixList,'UniformOutput',false)');
                         obj.RunData.MACE_Bmax_T =  mean(obj.RunData.MACE_Bmax_T(obj.PixList));%cell2mat(cellfun(@(x) mean(obj.RunData.MACE_Bmax_T(x)),obj.RingPixList,'UniformOutput',false)');
@@ -1446,11 +1468,18 @@ classdef RunAnalysis < handle
                     case 'StackPixel'
                         savedir = [getenv('SamakPath'),'tritium-data/fit/',obj.DataSet,'/Uniform/'];
                     case 'RING'
-                       savedir = [getenv('SamakPath'),'tritium-data/fit/',obj.DataSet,'/MultiRing/']; 
+                        savedir = [getenv('SamakPath'),'tritium-data/fit/',obj.DataSet,'/MultiRing/'];
                 end
                 MakeDir(savedir);
+                switch obj.ROIFlag
+                    case 'Default'
+                        RoiStr = '';
+                    case '14keV'
+                        RoiStr = '_14keVROI';
+                end
                 freePar = ConvertFixPar('freePar',obj.fixPar,'nPar',obj.nPar,'nPixels',numel(obj.RunData.MACE_Ba_T),'Mode','Reverse');
-                savename = [savedir,sprintf('Fit%s_%s_%s_%.0fpix.mat',obj.RunData.RunName.obj.DataType,freePar,numel(obj.PixList))];
+                savename = [savedir,sprintf('Fit%s_%s_%s_%.0fpix%s.mat',...
+                    obj.RunData.RunName.obj.DataType,freePar,numel(obj.PixList),RoiStr)];
                 FitResult = obj.FitResult;
                 save(savename,'FitResult');
             end
@@ -3459,6 +3488,34 @@ classdef RunAnalysis < handle
             elseif numel(obj.NonPoissonScaleFactor)~=numel(obj.RunData.MACE_Ba_T)
                 % NP scale factor should have same size as number of pseudorings
                 obj.NonPoissonScaleFactor = repmat(mean(obj.NonPoissonScaleFactor),[1,numel(obj.RunData.MACE_Ba_T)]);
+            end
+        end
+        function SetROI(obj)
+            % change region of interest (only for KNM2 and later)
+            % 2 options: Default and [14,32] keV ROI
+            if ~(strcmp(obj.DataSet,'Knm2') && strcmp(obj.DataType,'Real'))
+                fprintf('ROI change only available for KNM2 real data \n');
+                return
+            end
+            
+            switch obj.ROIFlag
+                case 'Default'
+                    obj.RunData.TBDIS      = obj.RunData.TBDIS_Default;
+                    obj.RunData.TBDIS_RM   = obj.RunData.TBDIS_RM_Default;
+                case '14keV'
+                    obj.RunData.TBDIS      = obj.RunData.TBDIS14keV;
+                    obj.RunData.TBDIS_RM   = obj.RunData.TBDIS14keV_RM;
+            end
+            
+            if isa(obj,'MultiRunAnalysis')
+                switch obj.ROIFlag
+                    case 'Default'
+                        obj.SingleRunData.TBDIS      = obj.SingleRunData.TBDIS_Default;
+                        obj.SingleRunData.TBDIS_RM   = obj.SingleRunData.TBDIS_RM_Default;
+                    case '14keV'
+                        obj.SingleRunData.TBDIS      = obj.SingleRunData.TBDIS14keV;
+                        obj.SingleRunData.TBDIS_RM   = obj.SingleRunData.TBDIS14keV_RM;
+                end
             end
         end
         function range = GetRange(obj)
