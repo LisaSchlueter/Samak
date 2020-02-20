@@ -416,7 +416,7 @@ classdef RunAnalysis < handle
                         
                         if isfield(obj.RunData,'TBDIS_RM')
                             obj.RunData.TBDIS_RM   = mean(obj.RunData.TBDIS_RM(obj.PixList));
-                            obj.RunData.TBDIS_RM_Default   = mean(obj.RunData.TBDIS_RM_Default(obj.PixList));
+                            obj.RunData.TBDIS_RM_Default   = obj.RunData.TBDIS_RM;
                             obj.RunData.qU_RM      = mean(obj.RunData.qU_RM(obj.PixList));
                             obj.RunData.qUfrac_RM  = mean(obj.RunData.qUfrac_RM(obj.PixList));
                         end
