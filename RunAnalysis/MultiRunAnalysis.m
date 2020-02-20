@@ -3156,6 +3156,8 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             elseif contains(ListName,'KNM1_Random')
                 FirstRun = 51410;  LastRun = 51937;
                 % exclude runs later
+            elseif contains(ListName,'KNM1rm') % Must be the last
+                FirstRun = 51489;  LastRun = 51937;
             elseif contains(ListName,'KNM1') % Must be the last
                 FirstRun = 51410;  LastRun = 51937;
             elseif contains(ListName,'KNM1_300mvRW')

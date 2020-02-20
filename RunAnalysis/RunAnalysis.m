@@ -163,7 +163,7 @@ classdef RunAnalysis < handle
             p.addParameter('TwinBias_Q',18573.73,@(x)isfloat(x) || ismember(x,{'Fit'}));  % absolute (eV)
             p.addParameter('FitNBFlag','ON',@(x)ismember(x,{'ON','OFF','NormOnly'}));
             %fake MC option
-            p.addParameter('FakeInitFile','',@(x)isa(x,'function_handle'));
+            p.addParameter('FakeInitFile','',@(x)isa(x,'function_handle') || isempty(x));
             % Efficiency Correction Applied to Data 
             p.addParameter('DataEffCorr','RunSummary',@(x)ismember(x,{'OFF', 'ROI', 'PileUp','ROI+PileUp','RunSummary'}));
  

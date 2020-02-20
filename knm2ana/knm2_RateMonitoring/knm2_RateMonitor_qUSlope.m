@@ -3,6 +3,8 @@
 % calculate rate - qU dependence with MC simulations
 % ------------------------------------------------------------
 
+vcorrect=[ 1.000000000000000   0.996586595279402   0.992150388075006   0.988038815639518]; 
+
 % You need to have Run GetSamakPath in your Working Directory Before
 savedir = [getenv('SamakPath'),'knm2ana/knm2_RateMonitoring/results'];
 MakeDir(savedir);
@@ -40,7 +42,7 @@ else
     RateErr = sqrt(Rate);
      
     % linear fit of rate around E0-300V
-    [par, err, chi2min,dof] = linFit(qU-18574,Rate,RateErr);
+    [par, err, chi2min,dof] = linFit((qU-qU(10)),Rate,RateErr);
     
     save(savename,'par','err','chi2min','dof','qUIndex','qU','Rate','RateErr','CommonArg');
 end
@@ -113,7 +115,7 @@ leg.EdgeColor = rgb('Silver');
         hold on;
         x = linspace(min(qU(i,:)),max(qU(i,:)),100)-18574;
         y = parRing(i,1).*x + parRing(i,2);
-        p1 = plot(x,y,'LineWidth',5);
+        p1 = plot(x,y.*vcorrect(i),'LineWidth',5);
         rd = plot(qUData(i)-18574,MeanRateData(i),'rs','MarkerSize',20,'LineWidth',4);
         hold off;
         PrettyFigureFormat('FontSize',22);
@@ -168,7 +170,7 @@ CorrectionFactorPSR1 = MeanRateSim/MeanRateData(1);
         hold on;
         x = linspace(min(qU(i,:)),max(qU(i,:)),100)-18574;
         y = parRing(i,1).*x + parRing(i,2);
-        p1 = plot(x,y,'LineWidth',5);
+        p1 = plot(x,y.*vcorrect(i),'LineWidth',5);
         rd = plot(qUData(i)-18574,MeanRateData(i).*CorrectionFactorPSR1,'rs','MarkerSize',20,'LineWidth',4);
         hold off;
         PrettyFigureFormat('FontSize',22);
@@ -185,7 +187,7 @@ CorrectionFactorPSR1 = MeanRateSim/MeanRateData(1);
     
     %% Calculate Rate Differences & Convert into Potential Shifts
     for i=1:4
-        RateDifferences(i) = (parRing(i,1).*(qUData(i)-18574) + parRing(i,2)) - MeanRateData(i).*CorrectionFactorPSR1;
+        RateDifferences(i) = (parRing(i,1).*(qUData(i)-18574) + parRing(i,2)).*vcorrect(i) - MeanRateData(i).*CorrectionFactorPSR1;
         mVDifferences(i)   = RateDifferences(i)./(parRing(i,1)/1e3);
     end
     

@@ -11,11 +11,7 @@ R = MultiRunAnalysis('RunList','KNM1',... % runlist defines which runs are analy
     'RadiativeFlag','ON',...              % theoretical radiative corrections applied in model
     'NonPoissonScaleFactor',1.064,...     % background uncertainty are enhanced
     'minuitOpt','min ; minos',...         % technical fitting options (minuit)
-<<<<<<< HEAD
     'FSDFlag','Sibille0p5eV',...               % final state distribution
-=======
-    'FSDFlag','Sibille0p5eV',...           % final state distribution
->>>>>>> 3524c217d88cc020597b2200c87e7b8139865847
     'ELossFlag','KatrinT2',...            % energy loss function
     'SysBudget',22,...
     'DopplerEffectFlag','FSD_Knm1');       % defines syst. uncertainties -> in GetSysErr.m;
