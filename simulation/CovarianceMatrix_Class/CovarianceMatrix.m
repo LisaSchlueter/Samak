@@ -2227,6 +2227,7 @@ function ComputeCM_Background(obj,varargin)
         nCommonTrials = min(nGoodTrials);
         TBDIS_V = cell2mat(cellfun(@(x) x(:,1:nCommonTrials),TBDIS_V,'UniformOutput',0));
         
+<<<<<<< HEAD
 % <<<<<<< HEAD
 %         % Build Integral Spectrum Underlying Background Spectrum
 %         TBDIS_V{rl} = Bkg_Fit(:,:).*obj.StudyObject.TimeSec(:,rl).*obj.StudyObject.qUfrac(:,rl);
@@ -2258,6 +2259,8 @@ function ComputeCM_Background(obj,varargin)
 %     obj.MultiCovMatFracShape.CM_BkgShape = obj.CovMatFracShape;
 %     save(obj.CovMatFile,'obj','TBDIS_V','BKG_Asimov','par','err','chi2min','Bkg_Fit');
 % =======
+=======
+>>>>>>> 8ad23ed1da5ab2ce33165647db9a1b8eb3a0bbef
         % Compute Covariance Matrix
         obj.CovMat     = cov(TBDIS_V');
         
@@ -2280,7 +2283,10 @@ function ComputeCM_Background(obj,varargin)
         save(obj.CovMatFile,'obj','TBDIS_V','BKG_Asimov','par','err','chi2min',...
             'Bkg_Fit','BKG_i','BKGIndex','BkgPlot_Data','Data','BKGnqU','MaxSlopeCpsPereV');
     end
+<<<<<<< HEAD
 %>>>>>>> 2680d1afe0066666933d7782d14d252046b5598f
+=======
+>>>>>>> 8ad23ed1da5ab2ce33165647db9a1b8eb3a0bbef
     
     % Display
     switch Display

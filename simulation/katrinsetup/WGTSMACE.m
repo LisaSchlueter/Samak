@@ -779,6 +779,10 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
                 end
                 
                 %Convolutions for multiple scatterings
+                %tmp = @(tau) f1scat(tau).*f1scat(E'-tau);
+                %f2scat = @(e) integral(tmp,-inf,inf,'ArrayValued',1);
+                %f2scatn = @(e) f2scat(e);%/simpsons(e,f2scat(e));
+                
                 f2scat = @(e) conv(f1scat(e),f1scat(e),'same');
                 f2scatn = @(e) f2scat(e);%/simpsons(e,f2scat(e));
                 
@@ -889,51 +893,13 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
                     obj.parKatrinD2 = [amp1, pos1, sig1, amp2, pos2, sig2, amp3, pos3, sig3, mutof, norm, mu1, mu2, mu3, n1];
                     obj.errKatrinD2 = [amp1err, pos1err, sig1err, amp2err, pos2err, sig2err, amp3err, pos3err, sig3err, mutoferr, normerr, mu1err, mu2err, mu3err, n1err];
                 case 'KatrinT2'
-                     % Ionization energy for T2 [eV]
-                    obj.Ei = 15.487;
-                    
+                    % Ionization energy for T2 [eV]
                     % Global fit of parametrized energy loss function to measured integral and t.o.f. data
                     % Author: V. Hannen, Data preparation: C. Rodenbeck, R. Sack, L. Schimpf
-                    % Last updated: 10/7/2019
-   
-                    amp1 	= 3.13912034e-02;
-                    pos1 	= 1.19359493e+01;
-                    sig1 	= 1.79712352e-01;
-                    amp2 	= 2.98192064e-01;
-                    pos2 	= 1.28267238e+01;
-                    sig2 	= 4.70786732e-01;
-                    amp3 	= 7.64887721e-02;
-                    pos3 	= 1.49725935e+01;
-                    sig3 	= 8.69999541e-01;
-
-                    amp1err 	= 1.33586229e-03;
-                    pos1err 	= 9.06581516e-03;
-                    sig1err 	= 0.04777842e-03;
-                    amp2err 	= 8.74058824e-04;
-                    pos2err 	= 2.29909787e-03;
-                    sig2err 	= 2.43500480e-03;
-                    amp3err 	= 4.38750490e-04;
-                    pos3err 	= 4.75464867e-03;
-                    sig3err 	= 1.33838628e-02;    
-                    
-                    %amptof 	= 1;     % not used
-                    mutof 	= 0;  % not used
-                    norm 	= 0;  % not used
-                    mu1 	= 0;  % not used
-                    mu2 	= 0;  % not used
-                    mu3 	= 0;  % not used
-                    %tail 	= 0;  % not used
-                    n1 	    = 0;  %not used
-                    
-                    mutoferr 	=  0;   % not used
-                    normerr 	=  0;   % not used
-                    mu1err   	=  0;   % not used
-                    mu2err  	=  0;   % not used
-                    mu3err  	=  0;   % not used
-                    n1err 	    =  0;   % not used
-                    
-                    obj.parKatrinT2 = [amp1, pos1, sig1, amp2, pos2, sig2, amp3, pos3, sig3, mutof, norm, mu1, mu2, mu3, n1];
-                    obj.errKatrinT2 = [amp1err, pos1err, sig1err, amp2err, pos2err, sig2err, amp3err, pos3err, sig3err, mutoferr, normerr, mu1err, mu2err, mu3err, n1err];
+                    % value from git repo: https://nuserv.uni-muenster.de:8443/katrin-git/KATRIN-eloss/blob/master/code/KNM1/
+                    % Last updated: 18/02/2020
+                    obj.Ei = 15.487;
+                    [obj.parKatrinT2, obj.errKatrinT2] = GetElossPara;
                 case 'Aseev'
                     obj.is_A1    = 0.204;   obj.is_A1e    = 0.001; % Normalization
                     obj.is_A2    = 0.0556;  obj.is_A2e    = 0.0003;% Normalization
@@ -1539,7 +1505,9 @@ end %LoadorSaveRF
             N  = 2.;      % number of electrons in H2 molecule
             Ni = 1.173;   % eq. 39 and table I.
             
-            dsdW = (Ni./N - 2)./(t+1) .* ( y + 1./(t-w) ) + (2 - Ni./N) .* (y.^2 + 1./(t-w).^2) + log(t).*y./N .* obj.dfdwH2(y);
+            dsdW = (Ni./N - 2)./(t+1) .* ( y + 1./(t-w) ) +...
+                (2 - Ni./N) .* (y.^2 + 1./(t-w).^2) + ...
+                log(t).*y./N .* obj.dfdwH2(y);
         end
         
         function f = en_loss_sc(obj,x, amp1, pos1, sig1, amp2, pos2, sig2, amp3, pos3, sig3)

@@ -42,63 +42,79 @@ elseif strcmp(Dist,'Rect')
         ((x >= mu-sigma/2)  & (x <= mu+sigma/2)).*1/sigma;
 end
 
-if isempty(MultiPos)
-    exP_SinglePeak = @(x) exP'.*distfun(x,exE',sigma);
-elseif numel(MultiPos)==3
-    exP_SinglePeak = @(x) ( MultiWeights(1).*exP'.*distfun(x,exE'-MultiPos(1),sigma)+...
-        MultiWeights(2).*exP'.*distfun(x,exE'-MultiPos(2),sigma)+...
-        MultiWeights(3).*exP'.*distfun(x,exE'-MultiPos(3),sigma));
-else
-    fprintf('MultiGauss only available for 3 gaussians \n');
-end
-exP_SumPeak = @(x) sum(exP_SinglePeak(x));
+nRings = ceil(numel(sigma)/3);% number of pseudo rings
+exP_rebin = cell(nRings,1);
+exE_rebin = cell(nRings,1);
 
-switch RebinMode
-    case 'Integral' %proper integration
-        %% rebinning step 1: define integration boundaries: keep the similar binning
-        % lower boundary
-        Elow = zeros(numel(exE),1);
-        Elow(1) = -inf;
-        Elow(2:end) = mean([exE(1:end-1);exE(2:end)]);
-        % upper boundary
-        Eup = zeros(numel(exE),1);
-        Eup(1:end-1) = mean([exE(1:end-1);exE(2:end)]);
-        Eup(end) = inf;
-        
-        if ~isempty(BinningFactor)
-            % enhance binning
-            if BinningFactor>=2
-                RebinStop = floor(BinningFactor/2);
-                for i=1:RebinStop
-                    Enew = Elow(2:end-1)+(Elow(2:end-1)-Eup(2:end-1))/2;
-                    Elow = sort([Elow;Enew]);
-                    Eup = sort([Eup;Enew]);
+for r=1:nRings
+    if isempty(MultiPos)
+        exP_SinglePeak = @(x) exP'.*distfun(x,exE',sigma(:,r));
+    elseif nRings==1
+        exP_SinglePeak = @(x) ( MultiWeights(1).*exP'.*distfun(x,exE'-MultiPos(1),sigma(1))+...
+            MultiWeights(2).*exP'.*distfun(x,exE'-MultiPos(2),sigma(2))+...
+            MultiWeights(3).*exP'.*distfun(x,exE'-MultiPos(3),sigma(3)));
+    elseif size(MultiPos,1)==3
+        exP_SinglePeak = @(x) ( MultiWeights(1,r).*exP'.*distfun(x,exE'-MultiPos(1,r),sigma(1,r))+...
+            MultiWeights(2,r).*exP'.*distfun(x,exE'-MultiPos(2,r),sigma(2,r))+...
+            MultiWeights(3,r).*exP'.*distfun(x,exE'-MultiPos(3,r),sigma(3,r)));
+    else
+        fprintf('MultiGauss only available for 3 gaussians \n');
+    end
+    exP_SumPeak = @(x) sum(exP_SinglePeak(x));
+    
+    switch RebinMode
+        case 'Integral' %proper integration
+            %% rebinning step 1: define integration boundaries: keep the similar binning
+            % lower boundary
+            Elow = zeros(numel(exE),1);
+            Elow(1) = -inf;
+            Elow(2:end) = mean([exE(1:end-1);exE(2:end)]);
+            % upper boundary
+            Eup = zeros(numel(exE),1);
+            Eup(1:end-1) = mean([exE(1:end-1);exE(2:end)]);
+            Eup(end) = inf;
+            
+            if ~isempty(BinningFactor)
+                % enhance binning
+                if BinningFactor>=2
+                    RebinStop = floor(BinningFactor/2);
+                    for i=1:RebinStop
+                        Enew = Elow(2:end-1)+(Elow(2:end-1)-Eup(2:end-1))/2;
+                        Elow = sort([Elow;Enew]);
+                        Eup = sort([Eup;Enew]);
+                    end
                 end
             end
-        end
-        %% rebinning step 2.1 probabilities: integrate gaussians
-        exP_broadened = arrayfun(@(a,b) integral(exP_SumPeak,a,b),Elow,Eup);
-        
-        % keep only entries with non-zero probability
-        keepIndex     = exP_broadened~=0;
-        exP_broadened = exP_broadened(keepIndex)';
-        
-        %% rebinning step 2.2 energies: weighted mean of integration boundaries
-        Weightfun = @(x) exP_SumPeak(x).*x;                                                       % weighted integral
-        exE_rebin = arrayfun(@(a,b) integral(Weightfun,a,b)./integral(exP_SumPeak,a,b),Elow,Eup); % weighted average
-        %exE_rebin = mean([Elow';Eup'])'; % unweighted average -> replaced by weighted average
-        %exE_rebin(end) = exE_rebin(end-1)+10;
-        exE_broadened = exE_rebin(keepIndex)';                                                         % exclude entries with zero probability
-    case 'Fast' % fast and approximate
-         exE_BinSize =  [exE(2)-exE(1),diff(exE)];
-         exP_broadened = exP_SumPeak(exE).*exE_BinSize;
-         
-         
-        % keep only entries with non-zero probability
-        keepIndex     = exP_broadened~=0;
-        exP_broadened = exP_broadened(keepIndex);
-        exE_broadened = exE(keepIndex);  
+            %% rebinning step 2.1 probabilities: integrate gaussians
+            exP_rebin{r} = arrayfun(@(a,b) integral(exP_SumPeak,a,b),Elow,Eup);
+            
+            %% rebinning step 2.2 energies: weighted mean of integration boundaries
+            Weightfun = @(x) exP_SumPeak(x).*x;                                                       % weighted integral
+            exE_rebin{r} = arrayfun(@(a,b) integral(Weightfun,a,b)./integral(exP_SumPeak,a,b),Elow,Eup); % weighted average
+            %exE_rebin = mean([Elow';Eup'])'; % unweighted average -> replaced by weighted average
+            %exE_rebin(end) = exE_rebin(end-1)+10;
+                                                                   % exclude entries with zero probability
+        case 'Fast' % fast and approximate
+            exE_BinSize =  [exE(2)-exE(1),diff(exE)];
+            exP_rebin{r} = exP_SumPeak(exE).*exE_BinSize;
+            exE_rebin{r} = exE;
+            
+%             % keep only entries with non-zero probability
+%             RmIndex     = exP_rebin~=0;
+%             exP_broadened{r} = exP_rebin(RmIndex);
+%             exE_broadened{r} = exE(RmIndex);
+    end
+    
 end
+
+% keep only entries with non-zero probability (common number of bins)
+exP_rebin = cell2mat(exP_rebin');
+exE_rebin = cell2mat(exE_rebin');
+RmIndex   = exP_rebin==0;  
+keepIndex = ~prod(RmIndex,2);
+exP_broadened = exP_rebin(keepIndex,:)';
+exE_broadened = exE_rebin(keepIndex,:)';
+exE_broadened(isnan(exE_broadened(:,end)),end) = mean(exE_broadened(~isnan(exE_broadened(:,end)),end));
 %% plot
 if strcmp(SanityPlot,'ON')
     f1 = figure('Units','normalized','Position',[0.1,0.1,0.5,0.5]);
@@ -121,13 +137,14 @@ if strcmp(SanityPlot,'ON')
     xlabel('Excitation energy (eV)')
     ylabel('Probability')
     ylim([0,max(exP)*1.1])
-    MakeDir('./plots');
+    savedir = [getenv('SamakPath'),'inputs/Plasma/plots/'];
+    MakeDir(savedir);
  
     if ~isempty(MultiPos)
-        savename = sprintf('./plots/FSD_%.3gSigma_Multi%s.pdf',sigma,Dist);
+        savename = sprintf('%sFSD_%.3gSigma_Multi%s.pdf',savedir,sigma,Dist);
         export_fig(f1,savename);
     else
-        savename = sprintf('./plots/FSD_%.3gSigma_Single%s.pdf',sigma,Dist);
+        savename = sprintf('%sFSD_%.3gSigma_Single%s.pdf',savedir,igma,Dist);
         export_fig(f1,savename);
     end
     

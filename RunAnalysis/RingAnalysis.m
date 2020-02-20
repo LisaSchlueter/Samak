@@ -37,7 +37,11 @@ classdef RingAnalysis < handle
                 'fixPar',obj.RunAnaObj.fixPar,'i_Q',obj.RunAnaObj.i_Q,'fitter',obj.RunAnaObj.fitter,...
                 'minuitOpt',obj.RunAnaObj.minuitOpt,'FSDFlag',obj.RunAnaObj.FSDFlag,...
                 'NonPoissonScaleFactor',obj.RunAnaObj.NonPoissonScaleFactor,'ELossFlag',obj.RunAnaObj.ELossFlag,...
+<<<<<<< HEAD
                 'FakeInitFile',obj.RunAnaObj.FakeInitFile};
+=======
+                'FakeInitFile',obj.RunAnaObj.FakeInitFile,'ROIFlag',obj.RunAnaObj.ROIFlag};
+>>>>>>> 8ad23ed1da5ab2ce33165647db9a1b8eb3a0bbef
             %             if ~isempty(obj.RunAnaObj.RunNr) %RunAnalysis Object
             %                 obj.MultiObj = arrayfun(@(x) RunAnalysis(CommonArg{:},'RunNr',obj.RunAnaObj.RunNr,...
             %                     'RingList',x),obj.RingList);
@@ -71,8 +75,15 @@ classdef RingAnalysis < handle
             savedir = [getenv('SamakPath'),sprintf('tritium-data/fit/%s/SingleRingFit/',obj.RunAnaObj.DataSet)];
             MakeDir(savedir);
             freePar = ConvertFixPar('freePar',obj.RunAnaObj.fixPar,'Mode','Reverse'); %convert fixed parameters (numbers) back to readable string with free parameters
-            savename = [savedir,sprintf('SingleRingFitResult_%s_%s_%.0fruns_fix%s_%s_%.0feVrange.mat',...
-                obj.RunAnaObj.RingMerge,obj.RunAnaObj.RunData.RunName,numel(obj.RunAnaObj.RunList),freePar,obj.RunAnaObj.chi2,range)];
+            switch obj.RunAnaObj.ROIFlag
+                case 'Default'
+                    RoiStr = '';
+                case '14keV'
+                    RoiStr = '_14keVROI';
+            end
+            savename = [savedir,sprintf('SingleRingFitResult_%s_%s_%.0fruns_fix%s_%s_%.0feVrange%s.mat',...
+                obj.RunAnaObj.RingMerge,obj.RunAnaObj.RunData.RunName,...
+                numel(obj.RunAnaObj.RunList),freePar,obj.RunAnaObj.chi2,range,RoiStr)];
             if exist(savename,'file') && strcmp(RecomputeFlag,'OFF')
                 obj.FitResult = importdata(savename);
             else
@@ -287,8 +298,14 @@ classdef RingAnalysis < handle
                 savedir = [getenv('SamakPath'),sprintf('tritium-data/plots/%s/SingleRingFit/',obj.RunAnaObj.DataSet)];
                 MakeDir(savedir);
                 fixParstr = strrep(strrep(strrep(obj.RunAnaObj.fixPar,'fix',''),';',''),' ','');
-                savename = sprintf('%s_ringwise_%sRuns_%.0frange_%s_Merge_%s_%s_Blind%s.pdf',...
-                    AnaType,obj.RunAnaObj.ModelObj.TD,range,obj.RunAnaObj.RingMerge,fixParstr,obj.RunAnaObj.DataType,Blind);
+                switch obj.RunAnaObj.ROIFlag
+                    case 'Default'
+                        RoiStr = '';
+                    case '14keV'
+                        RoiStr = '_14keVROI';
+                end
+                savename = sprintf('%s_ringwise_%sRuns_%.0frange_%s_Merge_%s_%s_Blind%s%s.pdf',...
+                    AnaType,obj.RunAnaObj.ModelObj.TD,range,obj.RunAnaObj.RingMerge,fixParstr,obj.RunAnaObj.DataType,Blind,RoiStr);
                 export_fig(gcf,[savedir,savename],'-painters');
                 fprintf('Save plot to %s \n',[savedir,savename])
             end

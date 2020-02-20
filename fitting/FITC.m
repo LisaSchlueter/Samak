@@ -570,9 +570,9 @@ classdef FITC < handle
                         if contains(obj.minuitOpt,'minos')
                             % read asymmetric uncertainties from text file
                             [errNeg, errPos] = GetAsymmErrMinos(minuitOutputStr);
-                            results = {results{:},errNeg, errPos};
-                            system(['rm ', minuitOutputStr]); % delete txt file      
+                            results = {results{:},errNeg, errPos};         
                         end
+                        system(['rm ', minuitOutputStr]); % delete txt file 
                 end
                 %'min  ; migrad ; imp;  minos; '],obj.fixPar);
                 

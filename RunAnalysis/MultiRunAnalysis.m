@@ -154,7 +154,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                 case 'ON'
                     cprintf('blue','MultiRunAnalysis: SimulateStackRuns\n');
             end
-
+            obj.SetROI;
             obj.SimulateStackRuns();
             obj.InitFitPar;
             obj.SetNPfactor
@@ -239,12 +239,13 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             % pixel dependent, not subrun dependent
             SingleRunTimeperPixel = squeeze(mean(obj.SingleRunData.TimeperSubRunperPixel,1))'; % time per run per pixel
             MACE_Ba_T                = obj.StackWmean(obj.SingleRunData.MACE_Ba_T,SingleRunTimeperPixel);
+            
             if isfield(obj.SingleRunData,'qU_RM') % rate monitor point
                 qU_RM      = obj.StackWmean(obj.SingleRunData.qU_RM,SingleRunTimeperPixel);
                 qUfrac_RM  = obj.StackWmean(obj.SingleRunData.qUfrac_RM,SingleRunTimeperPixel);
                 TBDIS_RM   = squeeze(sum(obj.SingleRunData.TBDIS_RM(:,obj.SingleRunData.Select_all),2));
             end
-          
+            
             if isfield(obj.SingleRunData,'MACE_Bmax_T')
                 MACE_Bmax_T = obj.StackWmean(obj.SingleRunData.MACE_Bmax_T,SingleRunTimeperPixel);
             end
@@ -261,15 +262,16 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             TBDIS                    = squeeze(sum(obj.SingleRunData.TBDIS(:,obj.SingleRunData.Select_all,:),2));
             TBDISE                   = sqrt(TBDIS./EffCorr);            
             qU                       = obj.StackWmean(obj.SingleRunData.qU,obj.SingleRunData.TimeperSubRunperPixel);
-
+            
             matFilePath       = obj.RunData.matFilePath;
             
-            %             if strcmp(saveStackRun,'OFF')
-            %                 savename = 'tmpname.mat';
-            %             end
+            if isfield(obj.SingleRunData,'TBDIS14keV')
+                TBDIS14keV      = squeeze(sum(obj.SingleRunData.TBDIS14keV(:,obj.SingleRunData.Select_all,:),2));
+                TBDIS14keV_RM   = squeeze(sum(obj.SingleRunData.TBDIS14keV_RM(:,obj.SingleRunData.Select_all),2));
+            end
             
             obj.RunData = struct(...
-                'TBDIS',TBDIS,'TBDISE',TBDISE,'EffCorr',EffCorr,...
+                'TBDIS',TBDIS,'TBDIS_Default',TBDIS,'TBDISE',TBDISE,'EffCorr',EffCorr,...
                 'qU',qU,'TimeSec',TimeSec,'qUfrac',qUfrac,...
                 'MACE_Ba_T',MACE_Ba_T,...
                 'TimeperSubRunperPixel',TimeperSubRunperPixel,...
@@ -284,9 +286,15 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                 obj.RunData.RW_BiasVoltage = RW_BiasVoltage;
             end
             if isfield(obj.SingleRunData,'qU_RM') %rate monitor
-                obj.RunData.qU_RM     = qU_RM;
-                obj.RunData.qUfrac_RM = qUfrac_RM;
-                obj.RunData.TBDIS_RM  = TBDIS_RM;
+                obj.RunData.qU_RM            = qU_RM;
+                obj.RunData.qUfrac_RM        = qUfrac_RM;
+                obj.RunData.TBDIS_RM         = TBDIS_RM;
+                obj.RunData.TBDIS_RM_Default = TBDIS_RM;
+            end
+            
+            if isfield(obj.SingleRunData,'TBDIS14keV')
+                obj.RunData.TBDIS14keV    = TBDIS14keV;
+                obj.RunData.TBDIS14keV_RM = TBDIS14keV_RM; 
             end
             
             if strcmp(saveStackRun,'ON')
@@ -308,15 +316,11 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                     save(savename,'RW_BiasVoltage','-append')
                     save(savename,'MACE_Bmax_T','-append')
                 end
+                if isfield(obj.SingleRunData,'TBDIS14keV')
+                     save(savename,'TBDIS14keV','-append');
+                     save(savename,'TBDIS14keV_RM','-append'); 
+                end
             end
-            % Define RunData
-            %obj.RunData = load(savename);
-            % obj.RunData.RunName = strrep(obj.StackFileName,'Twin','');
-            
-            
-            %             if strcmp(saveStackRun,'OFF')
-            %                 system(['rm ',savename]);
-            %             end
             
             switch obj.Debug
                 case 'ON'
@@ -1470,14 +1474,18 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                 obj.SingleRunData.(['Select_',RSvariables{i}]) = true(1,obj.nRuns);
  
             end
-            if numel(obj.PixList)>1 
-            obj.SingleRunData.TimeSec   = mean(obj.SingleRunData.TimeSec(obj.PixList,:));
+            if numel(obj.PixList)>1
+                obj.SingleRunData.TimeSec   = mean(obj.SingleRunData.TimeSec(obj.PixList,:));
             else
-            obj.SingleRunData.TimeSec   = obj.SingleRunData.TimeSec(obj.PixList,:);
+                obj.SingleRunData.TimeSec   = obj.SingleRunData.TimeSec(obj.PixList,:);
             end
             obj.SingleRunData.('Select_all') = true(1,obj.nRuns); % indicates if run is selected after passing all criterias
             if isfield(obj.SingleRunData,'StartTimeStamp')
-              obj.SingleRunData.StartTimeStamp = datetime(obj.SingleRunData.StartTimeStamp, 'ConvertFrom', 'posixtime' );
+                obj.SingleRunData.StartTimeStamp = datetime(obj.SingleRunData.StartTimeStamp, 'ConvertFrom', 'posixtime' );
+            end
+            obj.SingleRunData.TBDIS_Default = obj.SingleRunData.TBDIS;
+            if isfield(obj.SingleRunData,'TBDIS_RM')
+                obj.SingleRunData.TBDIS_RM_Default = obj.SingleRunData.TBDIS_RM;
             end
         end
         function StackPixelSingleRun(obj)
@@ -1490,21 +1498,29 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                     obj.SingleRunData.TBDISE      = sqrt(obj.SingleRunData.TBDIS./obj.SingleRunData.EffCorr); % statstical uncertainty
                     obj.SingleRunData.MACE_Ba_T   = mean(obj.SingleRunData.MACE_Ba_T(obj.PixList,:));
                     obj.SingleRunData.MACE_Bmax_T = mean(obj.SingleRunData.MACE_Bmax_T(obj.PixList,:));
-
+                    obj.SingleRunData.TBDIS_Default  = sum(obj.SingleRunData.TBDIS_Default(:,:,obj.PixList),3); % in case ROI is changed
+                    
                     if isfield(obj.SingleRunData,'qU_RM')
                         obj.SingleRunData.qU_RM     = mean(obj.SingleRunData.qU_RM(obj.PixList,:));
                         obj.SingleRunData.qUfrac_RM = mean(obj.SingleRunData.qUfrac_RM(obj.PixList,:));
                         obj.SingleRunData.TBDIS_RM  = sum(obj.SingleRunData.TBDIS_RM(obj.PixList,:));
                     end
- 
+                    
                     if isfield(obj.SingleRunData,'qU200')
                         obj.SingleRunData.qU200     = mean(obj.SingleRunData.qU200(obj.PixList,:));
                         obj.SingleRunData.TBDIS200  = sum(obj.SingleRunData.TBDIS200(obj.PixList,:));
                     end
-
-                    if isfield(obj.RunData,'TBDIS_V')
-                        obj.SingleRunData.TBDIS_V = squeeze(sum(obj.SingleRunData.TBDIS_V(:,:,:,obj.PixList),4));
+                    
+                    if isfield(obj.SingleRunData,'TBDIS14keV')
+                        obj.SingleRunData.TBDIS14keV    = sum(obj.SingleRunData.TBDIS14keV(:,:,obj.PixList),3);
+                        obj.SingleRunData.TBDIS14keV_RM = sum(obj.SingleRunData.TBDIS14keV_RM(obj.PixList,:));
+                        obj.SingleRunData.TBDIS_RM_Default  = sum(obj.SingleRunData.TBDIS_RM_Default(obj.PixList,:));
                     end
+                    
+                    if isfield(obj.RunData,'TBDIS_V')
+                        obj.SinRegleRunData.TBDIS_V = squeeze(sum(obj.SingleRunData.TBDIS_V(:,:,:,obj.PixList),4));
+                    end
+                    
                 case 'Ring'
                   dim = {size(obj.RunData.qU,1),numel(obj.SingleRunData.Runs),obj.nRings};
                    obj.SingleRunData.qU      = reshape(cell2mat(cellfun(@(x) mean(obj.SingleRunData.qU(:,:,x),3),obj.RingPixList,'UniformOutput',false)'),...
@@ -1512,18 +1528,26 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                    obj.SingleRunData.EffCorr = reshape(cell2mat(cellfun(@(x) mean(obj.SingleRunData.EffCorr(:,:,x),3),obj.RingPixList,'UniformOutput',false)'),...
                         dim{:});
                    obj.SingleRunData.TBDIS   = reshape(cell2mat(cellfun(@(x) sum(obj.SingleRunData.TBDIS(:,:,x),3),obj.RingPixList,'UniformOutput',false)'),...
-                        dim{:});
-                   obj.SingleRunData.TBDISE  = sqrt(obj.SingleRunData.TBDIS./obj.SingleRunData.EffCorr); 
+                       dim{:});
+                    obj.SingleRunData.TBDIS_Default   = reshape(cell2mat(cellfun(@(x) sum(obj.SingleRunData.TBDIS_Default(:,:,x),3),obj.RingPixList,'UniformOutput',false)'),...
+                       dim{:});
+                   obj.SingleRunData.TBDISE  = sqrt(obj.SingleRunData.TBDIS./obj.SingleRunData.EffCorr);
                    obj.SingleRunData.MACE_Ba_T = cell2mat(cellfun(@(x) mean(obj.SingleRunData.MACE_Ba_T(x,:)),...
                        obj.RingPixList,'UniformOutput',false))';
                    obj.SingleRunData.MACE_Bmax_T = cell2mat(cellfun(@(x) mean(obj.SingleRunData.MACE_Bmax_T(x,:)),...
                        obj.RingPixList,'UniformOutput',false))';
-                  
+                   
+                   if isfield(obj.SingleRunData,'TBDIS14keV')
+                       obj.SingleRunData.TBDIS14keV  = reshape(cell2mat(cellfun(@(x) sum(obj.SingleRunData.TBDIS14keV(:,:,x),3),obj.RingPixList,'UniformOutput',false)'),...
+                       dim{:});
+                   end
+                   
                    if strcmp(obj.RingMerge,'None')
                        % delete not used rings (otherwise problems with NaN)
                        obj.SingleRunData.qU(:,:,~ismember(1:13,obj.RingList)) = [];
                        obj.SingleRunData.EffCorr(:,:,~ismember(1:13,obj.RingList)) = [];
                        obj.SingleRunData.TBDIS(:,:,~ismember(1:13,obj.RingList)) = [];
+                       obj.SingleRunData.TBDIS_Default(:,:,~ismember(1:13,obj.RingList)) = [];
                        obj.SingleRunData.TBDISE(:,:,~ismember(1:13,obj.RingList)) = [];
                        obj.SingleRunData.MACE_Ba_T(:,~ismember(1:13,obj.RingList)) = [];
                        obj.SingleRunData.MACE_Bmax_T(:,~ismember(1:13,obj.RingList)) = [];
@@ -2499,11 +2523,19 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                     DataTypeLabel = 'KafitTwin_';
             end          
             fixParstr = ConvertFixPar('freePar',obj.fixPar,'Mode','Reverse');
+            
+            switch obj.ROIFlag
+                case 'Default'
+                    RoiStr = '';
+                case '14keV'
+                    RoiStr = '_14keVROI';
+            end
+            
             savefile = arrayfun(@(x) ...
-                sprintf('%sFit%s%.0f_%s_%.0fbE0_freePar%s.mat',...
+                sprintf('%sFit%s%.0f_%s_%.0fbE0_freePar%s%s.mat',...
                 savedir,DataTypeLabel,...
                 x,...
-                obj.chi2,obj.ModelObj.Q_i-obj.ModelObj.qU(obj.exclDataStart),fixParstr), ...
+                obj.chi2,obj.ModelObj.Q_i-obj.ModelObj.qU(obj.exclDataStart),fixParstr,RoiStr), ...
                 obj.RunList,'UniformOutput',0);
            
             % load fit results, which are already computed

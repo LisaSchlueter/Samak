@@ -7,13 +7,9 @@ InitFile = @ref_FakeRun_KNM2_CD84_2hours; %84 column density, 2 hours
 
 % linear drift of rear wall voltage
 nRuns    = sum([121,95,92]);
-<<<<<<< HEAD
+
 maxRWdrift = 0.4;
 %maxRWdrift = 1;
-=======
-%maxRWdrift = 0.4;
-maxRWdrift = 1;
->>>>>>> 2680d1afe0066666933d7782d14d252046b5598f
 RWpotential  = maxRWdrift/nRuns.*(1:nRuns);
 TwinBias_Q = 18573.60+RWpotential;
 meanE0  = mean(TwinBias_Q);
@@ -72,11 +68,7 @@ end
 %% result: 
 fprintf('- Linear drift of %.0f meV ofer %.0f runs--------------- \n',maxRWdrift*1e3,nRuns);
 fprintf('- Result without FSD correction------------------- \n');
-<<<<<<< HEAD
 fprintf('Delta mNuSq = %.2g eV2 \n',FitResult_uncorr.par(1));
-=======
-fprintf('Delta mNuSq = %.3f eV2 \n',FitResult_uncorr.par(1));
->>>>>>> 2680d1afe0066666933d7782d14d252046b5598f
 fprintf('Delta E0    = %.2g eV \n',FitResult_uncorr.par(2)+M.ModelObj.Q_i-meanE0);
 fprintf('------------------------------------------------- \n');
 
