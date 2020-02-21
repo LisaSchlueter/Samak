@@ -1,6 +1,6 @@
 
 KaFit = 'OFF'; % with or without Kafit
-RecomputeFlag = 'OFF';
+RecomputeFlag = 'ON';
 %% Load samak
 maxE = 9288;
 ELossBinStep = 0.1;

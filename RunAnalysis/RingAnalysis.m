@@ -293,15 +293,15 @@ classdef RingAnalysis < handle
             if strcmp(SavePlot,'ON')
                 savedir = [getenv('SamakPath'),sprintf('tritium-data/plots/%s/SingleRingFit/',obj.RunAnaObj.DataSet)];
                 MakeDir(savedir);
-                fixParstr = strrep(strrep(strrep(obj.RunAnaObj.fixPar,'fix',''),';',''),' ','');
                 switch obj.RunAnaObj.ROIFlag
                     case 'Default'
                         RoiStr = '';
                     case '14keV'
                         RoiStr = '_14keVROI';
                 end
+                freePar = ConvertFixPar('freePar',obj.RunAnaObj.fixPar,'Mode','Reverse');
                 savename = sprintf('%s_ringwise_%sRuns_%.0frange_%s_Merge_%s_%s_Blind%s%s.pdf',...
-                    AnaType,obj.RunAnaObj.ModelObj.TD,range,obj.RunAnaObj.RingMerge,fixParstr,obj.RunAnaObj.DataType,Blind,RoiStr);
+                    AnaType,obj.RunAnaObj.ModelObj.TD,range,obj.RunAnaObj.RingMerge,freePar,obj.RunAnaObj.DataType,Blind,RoiStr);
                 export_fig(gcf,[savedir,savename],'-painters');
                 fprintf('Save plot to %s \n',[savedir,savename])
             end
