@@ -37,7 +37,8 @@ classdef RingAnalysis < handle
                 'fixPar',obj.RunAnaObj.fixPar,'i_Q',obj.RunAnaObj.i_Q,'fitter',obj.RunAnaObj.fitter,...
                 'minuitOpt',obj.RunAnaObj.minuitOpt,'FSDFlag',obj.RunAnaObj.FSDFlag,...
                 'NonPoissonScaleFactor',obj.RunAnaObj.NonPoissonScaleFactor,'ELossFlag',obj.RunAnaObj.ELossFlag,...
-                'FakeInitFile',obj.RunAnaObj.FakeInitFile,'ROIFlag',obj.RunAnaObj.ROIFlag};
+                'FakeInitFile',obj.RunAnaObj.FakeInitFile,'ROIFlag',obj.RunAnaObj.ROIFlag,...
+                'MosCorrFlag',obj.RunAnaObj.MosCorrFlag};
             %             if ~isempty(obj.RunAnaObj.RunNr) %RunAnalysis Object
             %                 obj.MultiObj = arrayfun(@(x) RunAnalysis(CommonArg{:},'RunNr',obj.RunAnaObj.RunNr,...
             %                     'RingList',x),obj.RingList);
@@ -77,9 +78,14 @@ classdef RingAnalysis < handle
                 case '14keV'
                     RoiStr = '_14keVROI';
             end
+            if strcmp(obj.RunAnaObj.MosCorrFlag,'ON')
+                MosStr = '_MosCorr';
+            else
+                MosStr = '';
+            end
             savename = [savedir,sprintf('SingleRingFitResult_%s_%s_%.0fruns_fix%s_%s_%.0feVrange%s.mat',...
                 obj.RunAnaObj.RingMerge,obj.RunAnaObj.RunData.RunName,...
-                numel(obj.RunAnaObj.RunList),freePar,obj.RunAnaObj.chi2,range,RoiStr)];
+                numel(obj.RunAnaObj.RunList),freePar,obj.RunAnaObj.chi2,range,RoiStr,MosStr)];
             if exist(savename,'file') && strcmp(RecomputeFlag,'OFF')
                 obj.FitResult = importdata(savename);
             else
@@ -299,9 +305,14 @@ classdef RingAnalysis < handle
                     case '14keV'
                         RoiStr = '_14keVROI';
                 end
+                if strcmp(obj.RunAnaObj.MosCorrFlag,'ON')
+                    MosStr = '_MosCorr';
+                else
+                    MosStr = '';
+                end
                 freePar = ConvertFixPar('freePar',obj.RunAnaObj.fixPar,'Mode','Reverse');
-                savename = sprintf('%s_ringwise_%sRuns_%.0frange_%s_Merge_%s_%s_Blind%s%s.pdf',...
-                    AnaType,obj.RunAnaObj.ModelObj.TD,range,obj.RunAnaObj.RingMerge,freePar,obj.RunAnaObj.DataType,Blind,RoiStr);
+                savename = sprintf('%s_ringwise_%sRuns_%.0frange_%s_Merge_%s_%s_Blind%s%s%s.pdf',...
+                    AnaType,obj.RunAnaObj.ModelObj.TD,range,obj.RunAnaObj.RingMerge,freePar,obj.RunAnaObj.DataType,Blind,RoiStr,MosStr);
                 export_fig(gcf,[savedir,savename],'-painters');
                 fprintf('Save plot to %s \n',[savedir,savename])
             end

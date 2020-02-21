@@ -19,6 +19,7 @@ mkdir -p ./inputs/FSD/
 mkdir -p ./inputs/ELossFunction/
 mkdir -p ./inputs/WGTSMACE/
 mkdir -p ./fitting/fminuit/
+mkdir -p ./inputs/MonitorSpec/
 
 #---------------- start synchronization: 
 
@@ -48,6 +49,9 @@ rsync -i -a -v $1@pcltr-01.mpp.mpg.de:/remote/ceph/user/s/schluete/Samak/studies
 
 # FPD viewer frame
 rsync -i -a -v $1@pcltr-01.mpp.mpg.de:/remote/ceph/user/s/schluete/Samak/inputs/FPDFrame.fig ./inputs/
+
+# Main spectrometer qU drift from Monitor spectrometer (KNM2)
+rsync -i -a -v $1@pcltr-01.mpp.mpg.de:/remote/ceph/user/s/schluete/Samak/inputs/MonitorSpec/* ./inputs/MonitorSpec/
 
 }
 GetBinaries $1

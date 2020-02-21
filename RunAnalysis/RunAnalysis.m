@@ -28,6 +28,7 @@ classdef RunAnalysis < handle
         DopplerEffectFlag; 
         FSDFlag         % final state distributions: Sibille, Sibille0p5eV, BlindingKNM1, OFF ...
         ROIFlag;        % region of interest
+        MosCorrFlag;    % correct data qU by monitor spectrometer drift 
         
         %Covariance Matrices
         FitCM_Obj;      % Fit Covariance Matrix Object
@@ -88,7 +89,7 @@ classdef RunAnalysis < handle
                        % 'OFF'                         = Take uncorrected Data
                        % 'ROI', 'PileUp','ROI+PileUp'  = Take uncorrected Data and correct it in Samak
                        % 'RunSummary'                  = Take corrected Data directly from RunSummary      
-        
+
         % Class handling options
         DoRunAnalysisConstructor;
         
@@ -123,7 +124,8 @@ classdef RunAnalysis < handle
             p.addParameter('FSDFlag','Sibille0p5eV',@(x)ismember(x,{'SAENZ','BlindingKNM1','Sibille','Sibille0p5eV','OFF','SibilleFull','BlindingKNM2'}));
             p.addParameter('DopplerEffectFlag','',@(x)ismember(x,{'OFF','FSD','FSD_Knm1'}));%default given later
             p.addParameter('ROIFlag','Default',@(x)ismember(x,{'Default','14keV'})); % default->default counts in RS, 14kev->[14,32]keV ROI
-          
+            p.addParameter('MosCorrFlag','OFF',@(x)ismember(x,{'ON','OFF'}));
+            
             % Fit Options
             p.addParameter('chi2','chi2Stat',@(x)ismember(x,{'chi2Stat', 'chi2CM', 'chi2CMFrac','chi2CMShape', 'chi2P','chi2Nfix'}));
             p.addParameter('fitter','minuit',@(x)ismember(x,{'minuit','matlab'}));
@@ -184,6 +186,7 @@ classdef RunAnalysis < handle
             obj.FSDFlag           = p.Results.FSDFlag;
             obj.DopplerEffectFlag = p.Results.DopplerEffectFlag;
             obj.ROIFlag           = p.Results.ROIFlag;
+            obj.MosCorrFlag       = p.Results.MosCorrFlag;
             obj.fitter            = p.Results.fitter;
             obj.minuitOpt         = p.Results.minuitOpt;
             obj.exclDataStart     = p.Results.exclDataStart;
@@ -278,7 +281,7 @@ classdef RunAnalysis < handle
             switch obj.DoRunAnalysisConstructor
                 case 'ON'
                     obj.ReadData;
-                    obj.SetROI;
+                    obj.SetROI; 
                     obj.SimulateRun;
                     obj.InitFitPar;
                     obj.SetNPfactor;
@@ -372,6 +375,7 @@ classdef RunAnalysis < handle
                 obj.RunData.TBDIS_RM_Default = obj.RunData.TBDIS_RM;
             end
             obj.RunData.RunName          = num2str(obj.RunNr);
+            obj.SetMosCorr;
             fprintf(2,'RunAnalysis:ReadData: Reading Tritium Data from File:\n')
             disp(obj.RunData);
             %             catch ME
@@ -3336,7 +3340,11 @@ classdef RunAnalysis < handle
                         filename = [filename,'FitBFlagOFF'];
                 end
                 
+                if strcmp(obj.MosCorrFlag,'ON')
+                    filename = [filename,'_MosCorr'];
+                end
                 obj.TwinFakeLabel =filename;
+                
             elseif ismember(obj.DataType,{'Fake'})
 
                 if numel(obj.TwinBias_Q)==1
@@ -3516,6 +3524,40 @@ classdef RunAnalysis < handle
                         obj.SingleRunData.TBDIS      = obj.SingleRunData.TBDIS14keV;
                         obj.SingleRunData.TBDIS_RM   = obj.SingleRunData.TBDIS14keV_RM;
                 end
+            end
+        end
+        function SetMosCorr(obj)
+            % correct qU for long term drift -> input from monitor spectrometer
+            % cannot be reset -> if you want to change back to no correction
+            % -> re-run data import before: ReadData or ReadSingleRunData
+            
+            if strcmp(obj.MosCorrFlag,'OFF')
+                % no correction
+                return
+            end
+            
+            if ~(strcmp(obj.DataSet,'Knm2') && strcmp(obj.DataType,'Real'))
+                fprintf('MoS qU correction only available for KNM2 real data \n');
+                return
+            end
+            
+            try  [qUslope, StartTimeMean] = GetMosDriftKNM2('SanityPlot','OFF'); % eV/day
+            catch
+                fprintf('MoS qU correction file not found \n');
+            end
+            
+            fprintf('Correct qU with monitor spectrometer correction \n');
+            
+            if isa(obj,'MultiRunAnalysis')
+                LiveTimeDays            = days(obj.SingleRunData.StartTimeStamp-StartTimeMean);% live time with respect to whole KNM2
+                qUCorr                  = repmat(LiveTimeDays.*qUslope,[size(obj.SingleRunData.qU,1),1,148]);
+                obj.SingleRunData.qU    = obj.SingleRunData.qU+qUCorr;
+                obj.SingleRunData.qU_RM = obj.SingleRunData.qU_RM+LiveTimeDays.*qUslope;
+            else
+                LiveTimeDays      = days(obj.RunData.StartTimeStamp-StartTimeMean);% live time with respect to whole KNM2
+                qUCorr            = LiveTimeDays.*qUslope;
+                obj.RunData.qU    = obj.RunData.qU+qUCorr;
+                obj.RunData.qU_RM = obj.RunData.qU_RM+LiveTimeDays.*qUslope;
             end
         end
         function range = GetRange(obj)

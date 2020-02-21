@@ -624,7 +624,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                 end
                 
                 % Compute new mean for next iteration
-                 qUmeanPixel = obj.StackWmean(obj.SingleRunData.qU,obj.SingleRunData.TimeperSubRunperPixel);
+                qUmeanPixel = obj.StackWmean(obj.SingleRunData.qU,obj.SingleRunData.TimeperSubRunperPixel);
                 qUmean     = mean(qUmeanPixel(:,obj.PixList),2);
                  
                 switch CutOnSC
@@ -1487,6 +1487,8 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             if isfield(obj.SingleRunData,'TBDIS_RM')
                 obj.SingleRunData.TBDIS_RM_Default = obj.SingleRunData.TBDIS_RM;
             end
+            
+            obj.SetMosCorr;
         end
         function StackPixelSingleRun(obj)
             switch obj.AnaFlag
@@ -1658,6 +1660,11 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             end
             if ~isempty(WGTS_B_T)
                 TBDarg = {TBDarg{:},'WGTS_B_T',WGTS_B_T};
+            end
+            
+            if strcmp(obj.MosCorrFlag,'ON') 
+                % response function broadening
+               TBDarg = {TBDarg{:},'MACE_Sigma',std(obj.SingleRunData.qU,0,2)};
             end
             
             switch obj.AnaFlag
@@ -2277,28 +2284,32 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             Fit           = p.Results.Fit;
             
             LocalFontSize = 24;
-
-            % Get Fit Results
-            switch obj.chi2
-                case 'chi2Stat'
-                    if isempty(obj.SingleRun_FitResults.chi2Stat)
-                        obj.FitRunList('Recompute','ON')
-                    end
-                    FitResults = obj.SingleRun_FitResults.chi2Stat;
-                    chi2leg = 'statistics only';
-                case {'chi2CM','chi2CMShape'}
-                    if isempty(obj.SingleRun_FitResults.chi2CMall) || isempty(obj.SingleRun_fitResults.chi2CMcorr)
-                        obj.FitRunList('Recompute','ON')
-                    end
-                    FitResults = obj.SingleRun_FitResults.chi2CMall;
-                    chi2leg = 'stat. + syst.';
-            end
             
+            % Get Fit Results if fit results are plotted
+            if ismember(Parametery,{'mNuSq','E0','N','B','pVal'}) || ismember(Parameterx,{'mNuSq','E0','N','B','pVal'})
+                switch obj.chi2
+                    case 'chi2Stat'
+                        if isempty(obj.SingleRun_FitResults.chi2Stat)
+                            obj.FitRunList('Recompute','ON')
+                        end
+                        FitResults = obj.SingleRun_FitResults.chi2Stat;
+                        chi2leg = 'fits (statistics only)';
+                    case {'chi2CM','chi2CMShape'}
+                        if isempty(obj.SingleRun_FitResults.chi2CMall) || isempty(obj.SingleRun_fitResults.chi2CMcorr)
+                            obj.FitRunList('Recompute','ON')
+                        end
+                        FitResults = obj.SingleRun_FitResults.chi2CMall;
+                        chi2leg = 'fits (stat. + syst.)';
+                end
+            else
+                chi2leg = '';
+            end
             %% prepare y axis: depending on defined Parametery  
             switch Parametery
                 case 'E0'
-                    y = FitResults.E0;
-                    yErr = FitResults.E0Err;
+                    UnitStr = 'eV';
+                    y = FitResults.E0';
+                    yErr = FitResults.E0Err';
                     if strcmp(DisplayStyle,'Abs')
                         ystr = sprintf('{\\itE}_0^{fit} (eV)');
                     elseif strcmp(DisplayStyle,'Rel')
@@ -2306,6 +2317,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                         ystr = sprintf('{\\itE}_0^{fit} - \\langle{\\itE}_0^{fit}\\rangle (eV)');
                     end   
                 case 'mNuSq'
+                    UnitStr = sprintf('eV^2');
                     y = FitResults.mnuSq;
                     yErr = FitResults.mnuSqErr;
                     if strcmp(DisplayStyle,'Abs')
@@ -2315,6 +2327,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                         ystr = sprintf('{\\itm}_{\\beta}^2 - < m_{\\beta}^2 >  (eV^2)');
                     end
                 case 'B'
+                     UnitStr = 'cps';
                     y = FitResults.B.*1e3;
                     yErr = FitResults.BErr.*1e3;
                     if strcmp(DisplayStyle,'Abs')
@@ -2324,6 +2337,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                         ystr = sprintf('{\\itB} - \\langle{\\itB}\\rangle  (mcps)');
                     end
                 case 'N'
+                    UnitStr = '';
                     y = FitResults.N+1;
                     yErr = FitResults.NErr;
                     if strcmp(DisplayStyle,'Abs')
@@ -2333,15 +2347,18 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                         ystr = sprintf('{\\itN} - \\langle{\\itN}\\rangle');
                     end
                 case 'pVal'
+                    UnitStr = '';
                     y = FitResults.pValue;
                     yErr = zeros(numel(y),1);
                     ystr = sprintf('p-value (%.0f dof)',FitResults.dof(1));
                 case 'rate300'
+                     UnitStr = 'cps';
                     y = obj.SingleRunData.TBDIS_RM./(obj.SingleRunData.qUfrac_RM.*obj.SingleRunData.TimeSec);
                     ystd = std(y);
                     yErr = repmat(ystd,[1,numel(y)]);
                     ystr = sprintf('Rate @ 300 eV below E0');
                 case 'qU_RM'
+                    UnitStr = 'eV';
                     y = obj.SingleRunData.qU_RM;
                     ystd = std(y);
                     yErr = repmat(ystd,[1,numel(y)]);
@@ -2454,7 +2471,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                 end
                     x1 = min(x):2:max(x);
                     y1 = fitobject(1).*x1+fitobject(2);
-                    plot(x1,y1);
+                    pfit = plot(x1,y1,'LineWidth',2,'Color',rgb('GoldenRod'));
             end
             hold on;
             % plot data
@@ -2466,10 +2483,28 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             e2.CapSize = 0;
             xlabel(xstr);
             ylabel(ystr);
-            leg = legend([e2],sprintf('Scanwise fits (%s) \n Fit slope: %.2f\\pm%.2f cps/h',chi2leg,fitobject(1),err(1)));
+            xmin = min(x);
+            if strcmp(Parameterx,'time')
+                xlim([min(x)-numel(x)*0.05 max(x)+numel(x)*0.05]);
+            elseif xmin>0
+                xlim([min(x)*0.99 max(x)*1.01]);
+            elseif xmin<0
+                xlim([min(x)*1.01 max(x)*1.01]);
+            end
+            if strcmp(Fit,'ON')
+                if abs(fitobject(1))<0.01
+                    fitStr = sprintf('%.2f\\pm%.2f m%s/h',fitobject(1)*1e3,err(1)*1e3,UnitStr);
+                else
+                    fitStr = sprintf('%.2f\\pm%.1f %s/h',fitobject(1),err(1),UnitStr);
+                end
+                leg = legend([e2,pfit],sprintf('Scanwise %s',chi2leg),sprintf('Fit slope: %s',fitStr));
+            else
+                leg = legend(e2,sprintf('Scanwise %s',chi2leg));
+            end
             title(leg,sprintf('Correlation factor = %.2f',correlation));
             leg.EdgeColor = rgb('Silver');
             leg.Location = 'best';
+            leg.Title.FontWeight = 'normal';
             PrettyFigureFormat('Fontsize',LocalFontSize);
             hold off;
             if strcmp(saveplot,'ON')
@@ -2531,11 +2566,17 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                     RoiStr = '_14keVROI';
             end
             
+            if strcmp(obj.MosCorrFlag,'ON')
+                MosStr = '_MosCorr';
+            else
+                MosStr = '';
+            end
+            
             savefile = arrayfun(@(x) ...
-                sprintf('%sFit%s%.0f_%s_%.0fbE0_freePar%s%s.mat',...
+                sprintf('%sFit%s%.0f_%s_%.0fbE0_freePar%s%s%s.mat',...
                 savedir,DataTypeLabel,...
                 x,...
-                obj.chi2,obj.ModelObj.Q_i-obj.ModelObj.qU(obj.exclDataStart),fixParstr,RoiStr), ...
+                obj.chi2,obj.ModelObj.Q_i-obj.ModelObj.qU(obj.exclDataStart),fixParstr,RoiStr,MosStr), ...
                 obj.RunList,'UniformOutput',0);
            
             % load fit results, which are already computed

@@ -10,8 +10,8 @@ RingMerge = 'Full';
 chi2 = 'chi2Stat';
 
 PlotPar      = 2;
-SavePlot     = 'ON';
-linFitFlag   = 'ON';
+SavePlot     = 'OFF';
+linFitFlag   = 'OFF';
 PlotMode     = 'Abs';
 Blind        = 'ON';
 YLim         = '';%[-0.28,0.18];[-11 5];%%
@@ -53,8 +53,10 @@ else
     end
 end
 
-%% plot
+%% load results from 300eV analysis
 
+
+%% plot
 AllPar = cell2mat(cellfun(@(x) x.par,d,'UniformOutput',false)');
 AllPar(:,4) = AllPar(:,4)+1;% normalization
 AllErr = cell2mat(cellfun(@(x) x.err,d,'UniformOutput',false)');
@@ -82,6 +84,7 @@ if PlotPar==1 % neutrino mass: use average MINOS errors
    meanErr = (yErrPos - yErrNeg)./2;
    yErr(meanErr~=0) = meanErr(meanErr~=0);
 end
+
 %% linear fit
 linFitpar = zeros(nPeriods,2);
 linFiterr = zeros(nPeriods,2);
@@ -104,6 +107,18 @@ if strcmp(PlotMode,'Rel')
 elseif strcmp(PlotMode,'Abs')
     meanPar = zeros(nPeriods,1);
 end
+
+%% load 300ev analysis results
+yRM =  [86,40,-104;...
+    67,-9,-138;...
+    52,-34,-160;...
+    13,-90,-203]'.*1e-3;
+
+yE0 = y;
+yDiff = yE0-yRM;
+y = yDiff.*1e3;
+yErr = yErr.*1e3;
+%%
 Colors = {'DodgerBlue','GoldenRod','IndianRed'};
 Ebar = cell(nPeriods,1);
 l    = cell(nPeriods,1);
@@ -144,7 +159,7 @@ if strcmp(linFitFlag,'ON')
     leg = legend([l{:}],linFitleg1,linFitleg2,linFitleg3);
     %sprintf('%s , %.0f eV range',runname,Range),
 else
-    leg = legend('RW 1','RW 2','RW 3');
+    leg = legend([Ebar{:}],'RW 1','RW 2','RW 3');
 end
 leg.EdgeColor = rgb('Silver');
 %leg.Title.String = sprintf('%.0f eV range',Range);
@@ -152,24 +167,7 @@ hold off;
 leg.FontSize= get(gca,'FontSize')-2;
 leg.Location = 'best';
 %% axis labels
-switch PlotMode
-    case 'Rel'
-        if PlotPar==1
-            ylabel(sprintf('{\\itm}_\\nu^2 - \\langle{\\itm}_\\nu^2\\rangle (eV^2)'));
-        elseif PlotPar==2
-            ylabel(sprintf('{\\itE}_0^{fit} - \\langle{\\itE}_0^{fit}\\rangle (eV)'));
-        elseif  PlotPar==4
-            ylabel(sprintf('{\\itN} - \\langle{\\itN}\\rangle '));
-        end
-    case 'Abs'
-        if PlotPar==1
-            ylabel(sprintf('{\\itm}_\\nu^2 (eV^2)'));
-        elseif PlotPar==2
-            ylabel(sprintf('{\\itE}_0^{fit} - 18573.7 (eV)'));
-        elseif  PlotPar==4
-            ylabel(sprintf('{\\itN} '));
-        end
-end
+ylabel(sprintf('{\\itE}_0^{fit} - U_{300 eV} (meV)'))
 xlabel('Rings')
 
 switch RingMerge
@@ -192,9 +190,7 @@ ymin = min(min((y-meanPar)-yErr));
 ymax = max(max((y-meanPar)+yErr));
 if ~isempty(YLim)
     ylim([min(YLim),max(YLim)]);
-elseif PlotPar==4
-    ylim([ymin-5e-03,ymax+5e-03])
-elseif strcmp(PlotMode,'Rel') || ymin<0
+elseif ymin<0
     ylim([1.1*ymin,1.9*ymax]);
 else
     ylim([0.5*ymin,1.5*ymax]);
@@ -209,7 +205,7 @@ t.FontSize = get(gca,'FontSize');
 if strcmp(SavePlot,'ON')
     savedir = [getenv('SamakPath'),'tritium-data/plots/Knm2/SingleRingFit/'];
     MakeDir(savedir);
-    plotname = strrep(strrep(strrep(savename{1},'.mat',sprintf('_%.0f.pdf',PlotPar)),'KNM2_RW1_121runs_',''),'fit/','plots/');
+    plotname = strrep(strrep(strrep(savename{1},'.mat',sprintf('_%.0f_ComparePlasma300eV.pdf',PlotPar)),'KNM2_RW1_121runs_',''),'fit/','plots/');
     export_fig(gcf,plotname);
     fprintf('Save plot to %s \n',plotname);
 end
