@@ -21,7 +21,11 @@ ROIFlag      = p.Results.ROIFlag;
 chi2         = p.Results.chi2;
 RingMerge     = p.Results.RingMerge;
 RecomputeFlag = p.Results.RecomputeFlag;
+<<<<<<< HEAD
 MosCorrFlag   = p.Results.MosCorrFlag;
+=======
+MosCorrFlag = p.Results.MosCorrFlag;
+
 %% settings
 RunAnaArg = {'RunList',RunList,...  % define run number -> see GetRunList
     'fixPar',freePar,...         % free Parameter !!
@@ -36,6 +40,8 @@ RunAnaArg = {'RunList',RunList,...  % define run number -> see GetRunList
     'ROIFlag',ROIFlag,...
     'chi2',chi2,...
     'MosCorrFlag',MosCorrFlag};             
+            
+
 
 %% read data and set up model: MultiRunAnalysis
 A = MultiRunAnalysis(RunAnaArg{:}); % object of class MultiRunAnalysis
