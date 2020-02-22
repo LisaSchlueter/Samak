@@ -1662,10 +1662,10 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                 TBDarg = {TBDarg{:},'WGTS_B_T',WGTS_B_T};
             end
             
-            if strcmp(obj.MosCorrFlag,'ON') 
-                % response function broadening
-               TBDarg = {TBDarg{:},'MACE_Sigma',std(obj.SingleRunData.qU,0,2)};
-            end
+%             if strcmp(obj.MosCorrFlag,'ON') 
+%                 % response function broadening
+%                TBDarg = {TBDarg{:},'MACE_Sigma',std(obj.SingleRunData.qU,0,2)};
+%             end
             
             switch obj.AnaFlag
                 case 'StackPixel'
@@ -2536,7 +2536,9 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                 'ELossFlag',obj.ELossFlag,...
                 'NonPoissonScaleFactor',obj.NonPoissonScaleFactor,...
                 'chi2',obj.chi2,...
-                'NonPoissonScaleFactor',obj.NonPoissonScaleFactor};
+                'NonPoissonScaleFactor',obj.NonPoissonScaleFactor,...
+                'MosCorrFlag',obj.MosCorrFlag,...
+                'ROIFlag',obj.ROIFlag};
             
             obj.InitFitPar;
             parAll     = zeros(numel(obj.RunList),obj.nPar);

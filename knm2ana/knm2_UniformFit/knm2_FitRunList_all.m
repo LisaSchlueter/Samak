@@ -3,10 +3,11 @@
 Ranges = [40,90];
 ROIFlag = '14keV';
 
-parfor i=1:numel(Ranges)
+%parfor i=1%:numel(Ranges)
+i=1
     knm2_FitRunList(...
         'ROIFlag',ROIFlag,...
         'RunList','KNM2_Prompt',...
         'freePar','E0 Bkg Norm',...
         'Range',Ranges(i));
-end
+%end

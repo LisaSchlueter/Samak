@@ -375,6 +375,7 @@ classdef RunAnalysis < handle
                 obj.RunData.TBDIS_RM_Default = obj.RunData.TBDIS_RM;
             end
             obj.RunData.RunName          = num2str(obj.RunNr);
+            obj.RunData.StartTimeStamp = datetime(obj.RunData.StartTimeStamp, 'ConvertFrom', 'posixtime' );
             obj.SetMosCorr;
             fprintf(2,'RunAnalysis:ReadData: Reading Tritium Data from File:\n')
             disp(obj.RunData);

@@ -8,6 +8,7 @@ Range   = 90;
 ROIFlag =  '14keV';%Default';%'14keV';%'Default';
 RingMerge = 'Full';
 chi2 = 'chi2Stat';
+MosCorrFlag = 'OFF';
 
 PlotPar      = 2;
 SavePlot     = 'ON';
@@ -15,6 +16,11 @@ linFitFlag   = 'ON';
 PlotMode     = 'Abs';
 Blind        = 'ON';
 YLim         = '';%[-0.28,0.18];[-11 5];%%
+
+
+if ~contains(freePar,'mNu') && PlotPar==1
+    PlotPar = 2; % 
+end
 
 if PlotPar==1
     PlotMode = 'Rel'; % Blinding
@@ -26,11 +32,15 @@ switch ROIFlag
     case '14keV'
         RoiStr = '_14keVROI';
 end
-
+if strcmp(MosCorrFlag,'ON')
+    MosStr = '_MosCorr';
+else
+    MosStr = '';
+end
 savedir = [getenv('SamakPath'),'tritium-data/fit/Knm2/SingleRingFit/'];
-savename = arrayfun(@(x,y) sprintf('%sSingleRingFitResult_%s_KNM2_RW%.0f_%.0fruns_fix%s_%s_%.0feVrange%s.mat',...
+savename = arrayfun(@(x,y) sprintf('%sSingleRingFitResult_%s_KNM2_RW%.0f_%.0fruns_fix%s_%s_%.0feVrange%s%s.mat',...
     savedir,RingMerge,x,y,strrep(freePar,' ',''),...
-    chi2,Range,RoiStr),RunList,nRuns,...
+    chi2,Range,RoiStr,MosStr),RunList,nRuns,...
     'UniformOutput',false);
 
 if all(cellfun(@(x) exist(x,'file'),savename))
@@ -94,8 +104,8 @@ if strcmp(linFitFlag,'ON')
 end
 
 %% plot fit result
-fig2 = figure('Renderer','painters');
-set(fig2,'units','normalized','pos',[0.1, 0.1,0.6,0.5]);
+%fig2 = figure('Renderer','painters');
+%set(fig2,'units','normalized','pos',[0.1, 0.1,0.6,0.5]);
 plot(linspace(0.5,nRings+0.5,10),zeros(10,1),'-','Color',rgb('SlateGrey'),'LineWidth',2);
 hold on;
 
@@ -108,7 +118,7 @@ Colors = {'DodgerBlue','GoldenRod','IndianRed'};
 Ebar = cell(nPeriods,1);
 l    = cell(nPeriods,1);
 EbarArg = {'o','LineWidth',2,'LineStyle','none','MarkerSize',8};
-LineStyles = {'-',':','-.'};
+LineStyles = {'--','--','--'};%{'-',':','-.'};
 for i=1:nPeriods
     Ebar{i} = errorbar(RingList,(y(i,:)-meanPar(i)),yErr(i,:),EbarArg{:},...
         'Color',rgb(Colors{i}),'MarkerFaceColor',rgb(Colors{i}));
@@ -194,8 +204,10 @@ if ~isempty(YLim)
     ylim([min(YLim),max(YLim)]);
 elseif PlotPar==4
     ylim([ymin-5e-03,ymax+5e-03])
-elseif strcmp(PlotMode,'Rel') || ymin<0
+elseif strcmp(PlotMode,'Rel') || (ymin<0 && ymax>0)
     ylim([1.1*ymin,1.9*ymax]);
+elseif ymin<0 && ymax<0
+     ylim([1.1*ymin,ymax]);
 else
     ylim([0.5*ymin,1.5*ymax]);
 end

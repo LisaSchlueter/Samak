@@ -29,5 +29,5 @@ InputArg = [...
     ];
 
 parfor i=1:size(InputArg,1)
-    knm2_SingleRingFit(InputArg{i,:},'ROIFlag',ROIFlag,'MosCorrFlag',MosCorrFlag,RecomputeFlag,RecomputeFlag)
+    knm2_SingleRingFit(InputArg{i,:},'ROIFlag',ROIFlag,'MosCorrFlag',MosCorrFlag,'RecomputeFlag',RecomputeFlag)
 end
