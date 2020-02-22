@@ -5,20 +5,13 @@ RunList = [1,2,3];
 nRuns   = [121,95,92];
 freePar = 'E0 Bkg Norm';
 Range   = 90;
-ROIFlag =  '14keV';%Default';%'14keV';%'Default';
+ROIFlag =  '14keV';%Default'
 RingMerge = 'Full';
 chi2 = 'chi2Stat';
+MosCorrFlag = 'OFF';
+SavePlot     = 'ON';
+YLim         = [-150,100];%'';%[-0.28,0.18];[-11 5];%%
 
-PlotPar      = 2;
-SavePlot     = 'OFF';
-linFitFlag   = 'OFF';
-PlotMode     = 'Abs';
-Blind        = 'ON';
-YLim         = '';%[-0.28,0.18];[-11 5];%%
-
-if PlotPar==1
-    PlotMode = 'Rel'; % Blinding
-end
 %% retreive / calculate results
 switch ROIFlag
     case 'Default'
@@ -26,11 +19,15 @@ switch ROIFlag
     case '14keV'
         RoiStr = '_14keVROI';
 end
-
+if strcmp(MosCorrFlag,'ON')
+    MosStr = '_MosCorr';
+else
+    MosStr = '';
+end
 savedir = [getenv('SamakPath'),'tritium-data/fit/Knm2/SingleRingFit/'];
-savename = arrayfun(@(x,y) sprintf('%sSingleRingFitResult_%s_KNM2_RW%.0f_%.0fruns_fix%s_%s_%.0feVrange%s.mat',...
+savename = arrayfun(@(x,y) sprintf('%sSingleRingFitResult_%s_KNM2_RW%.0f_%.0fruns_fix%s_%s_%.0feVrange%s%s.mat',...
     savedir,RingMerge,x,y,strrep(freePar,' ',''),...
-    chi2,Range,RoiStr),RunList,nRuns,...
+    chi2,Range,RoiStr,MosStr),RunList,nRuns,...
     'UniformOutput',false);
 
 if all(cellfun(@(x) exist(x,'file'),savename))
@@ -53,10 +50,8 @@ else
     end
 end
 
-%% load results from 300eV analysis
-
-
-%% plot
+%% prepare variables
+PlotPar = 2;  %endpoint
 AllPar = cell2mat(cellfun(@(x) x.par,d,'UniformOutput',false)');
 AllPar(:,4) = AllPar(:,4)+1;% normalization
 AllErr = cell2mat(cellfun(@(x) x.err,d,'UniformOutput',false)');
@@ -66,101 +61,57 @@ nPeriods = numel(d);
 nRings = size(AllPar,1)/nPeriods;
 RingList = 1:nRings;
 
-y       = zeros(nPeriods,nRings);
-yErr    = zeros(nPeriods,nRings);
-yErrNeg = zeros(nPeriods,nRings);
-yErrPos = zeros(nPeriods,nRings);
+E0       = zeros(nPeriods,nRings);
+E0Err    = zeros(nPeriods,nRings);
 
 for i=1:nPeriods
     StartI    = ((i-1)*nRings)+1;
     EndI      = i*nRings;
-    y(i,:)    = AllPar(StartI:EndI,PlotPar);
-    yErr(i,:) = AllErr(StartI:EndI,PlotPar);
-    yErrNeg(i,:) = AllErrNeg(StartI:EndI,PlotPar);
-    yErrPos(i,:) = AllErrPos(StartI:EndI,PlotPar);
+    E0(i,:)    = AllPar(StartI:EndI,PlotPar);
+    E0Err(i,:) = AllErr(StartI:EndI,PlotPar);
 end
 
-if PlotPar==1 % neutrino mass: use average MINOS errors
-   meanErr = (yErrPos - yErrNeg)./2;
-   yErr(meanErr~=0) = meanErr(meanErr~=0);
+%% load 300ev analysis results
+if strcmp(MosCorrFlag,'ON')
+    yRM =  [64,72,-78;...
+           46,23,-112;...
+          32,-3,-134;...
+         -8,--58,-179]'.*1e-3;
+    
+    % 300eV analysis is relative -> set to reference Period2, ring1 reference
+    yRM = yRM+(E0(2,1)-yRM(2,1));
+else
+    yRM =  [86,40,-104;...
+            67,-9,-138;...
+            52,-34,-160;...
+            13,-90,-203]'.*1e-3;
 end
 
-%% linear fit
-linFitpar = zeros(nPeriods,2);
-linFiterr = zeros(nPeriods,2);
-linFitchi2min = zeros(nPeriods,1);
-linFitdof = zeros(nPeriods,1);
-if strcmp(linFitFlag,'ON')
-    for i=1:nPeriods
-        [linFitpar(i,:), linFiterr(i,:), linFitchi2min(i),linFitdof(i)] = linFit(RingList',y(i,:)',yErr(i,:)');
-    end
-end
-
+y = (E0-yRM)*1e3;
+%y2 = yRM*1e3;
+yErr = E0Err*1e3;
 %% plot fit result
 fig2 = figure('Renderer','painters');
 set(fig2,'units','normalized','pos',[0.1, 0.1,0.6,0.5]);
 plot(linspace(0.5,nRings+0.5,10),zeros(10,1),'-','Color',rgb('SlateGrey'),'LineWidth',2);
 hold on;
-
-if strcmp(PlotMode,'Rel')
-    meanPar =wmean(y',1./yErr'.^2)';
-elseif strcmp(PlotMode,'Abs')
-    meanPar = zeros(nPeriods,1);
-end
-
-%% load 300ev analysis results
-yRM =  [86,40,-104;...
-    67,-9,-138;...
-    52,-34,-160;...
-    13,-90,-203]'.*1e-3;
-
-yE0 = y;
-yDiff = yE0-yRM;
-y = yDiff.*1e3;
-yErr = yErr.*1e3;
-%%
 Colors = {'DodgerBlue','GoldenRod','IndianRed'};
 Ebar = cell(nPeriods,1);
+pRM  = cell(nPeriods,1);
 l    = cell(nPeriods,1);
 EbarArg = {'o','LineWidth',2,'LineStyle','none','MarkerSize',8};
 LineStyles = {'-',':','-.'};
 for i=1:nPeriods
-    Ebar{i} = errorbar(RingList,(y(i,:)-meanPar(i)),yErr(i,:),EbarArg{:},...
+    Ebar{i} = errorbar(RingList,y(i,:),yErr(i,:),EbarArg{:},...
         'Color',rgb(Colors{i}),'MarkerFaceColor',rgb(Colors{i}));
     Ebar{i}.CapSize = 0;
-    if strcmp(linFitFlag,'ON')
-       l{i} = plot(RingList,(linFitpar(i,1).*RingList+linFitpar(i,2)-meanPar(i))',...
-           'Color',rgb(Colors{i}),'LineWidth',2.5,'LineStyle',LineStyles{i});
-    end
+%     pRM = plot(RingList+0.1,yRM(i,:)*1e3,'d','LineWidth',2,'LineStyle','none','MarkerSize',8,...
+%          'Color',rgb(Colors{i}),'MarkerFaceColor',rgb(Colors{i}));
 end
 PrettyFigureFormat('FontSize',24);
 %% legend
-switch PlotPar
-    case 1
-        UnitStr = sprintf('eV^2');
-        Prefix = 'm';
-    case 2
-        UnitStr = sprintf('eV');
-          Prefix = 'm';
-    case 4
-        UnitStr = sprintf('');
-        Prefix = sprintf('10^{-3}');
-end
-if strcmp(linFitFlag,'ON')
-    if any(abs(linFitpar(:,1))<0.1)
-        linFitleg1 =  sprintf('RW 1: (%.1f \\pm %.1f) %s%s/ring , p-value = %.2f',linFitpar(1,1)*1e3,linFiterr(1,1)*1e3,Prefix,UnitStr,1-chi2cdf(linFitchi2min(1),linFitdof(1)));
-        linFitleg2 =  sprintf('RW 2: (%.1f \\pm %.1f) %s%s/ring , p-value = %.2f',linFitpar(2,1)*1e3,linFiterr(2,1)*1e3,Prefix,UnitStr,1-chi2cdf(linFitchi2min(2),linFitdof(2)));
-        linFitleg3 =  sprintf('RW 3: (%.1f \\pm %.1f) %s%s/ring , p-value = %.2f',linFitpar(3,1)*1e3,linFiterr(3,1)*1e3,Prefix,UnitStr,1-chi2cdf(linFitchi2min(3),linFitdof(3)));
-    else
-        linFitleg1 =  sprintf('RW 1: (%.1f \\pm %.1f) %s/ring , p-value = %.2f',linFitpar(1,1),linFiterr(1,1),UnitStr,1-chi2cdf(linFitchi2min(1),linFitdof(1)));
-        linFitleg2 =  sprintf('RW 2: (%.1f \\pm %.1f) %s/ring , p-value = %.2f',linFitpar(2,1),linFiterr(2,1),UnitStr,1-chi2cdf(linFitchi2min(2),linFitdof(2)));
-        linFitleg3 =  sprintf('RW 3: (%.1f \\pm %.1f) %s/ring , p-value = %.2f',linFitpar(3,1),linFiterr(3,1),UnitStr,1-chi2cdf(linFitchi2min(3),linFitdof(3)));
-    end
-    leg = legend([l{:}],linFitleg1,linFitleg2,linFitleg3);
-    %sprintf('%s , %.0f eV range',runname,Range),
-else
-    leg = legend([Ebar{:}],'RW 1','RW 2','RW 3');
-end
+
+leg = legend([Ebar{:}],'RW 1','RW 2','RW 3');
 leg.EdgeColor = rgb('Silver');
 %leg.Title.String = sprintf('%.0f eV range',Range);
 hold off;
@@ -186,18 +137,23 @@ end
 set(gca,'XMinorTick','off');
 xlim([min(RingList)-0.2,max(RingList)+0.2])
 
-ymin = min(min((y-meanPar)-yErr));
-ymax = max(max((y-meanPar)+yErr));
+ymin = min(min(y)-E0Err);
+ymax = max(max(y)+E0Err);
 if ~isempty(YLim)
     ylim([min(YLim),max(YLim)]);
-elseif ymin<0
-    ylim([1.1*ymin,1.9*ymax]);
-else
-    ylim([0.5*ymin,1.5*ymax]);
+% elseif ymin<0
+%     ylim([1.1*ymin,1.9*ymax]);
+% else
+%     ylim([0.5*ymin,1.5*ymax]);
 end
 
 %% title
-t = title(sprintf('%.0f eV range, %s ROI, Fit parameter: %s ',Range,ROIFlag,freePar));
+if strcmp(MosCorrFlag,'ON')
+    MosStr = ', MoS drift corrected';
+else
+    MosStr = '';
+end
+t = title(sprintf('%.0f eV range, %s ROI, Fit parameter: %s %s',Range,ROIFlag,freePar,MosStr));
 t.FontWeight = 'normal';
 t.FontSize = get(gca,'FontSize');
 
@@ -205,7 +161,7 @@ t.FontSize = get(gca,'FontSize');
 if strcmp(SavePlot,'ON')
     savedir = [getenv('SamakPath'),'tritium-data/plots/Knm2/SingleRingFit/'];
     MakeDir(savedir);
-    plotname = strrep(strrep(strrep(savename{1},'.mat',sprintf('_%.0f_ComparePlasma300eV.pdf',PlotPar)),'KNM2_RW1_121runs_',''),'fit/','plots/');
+    plotname = strrep(strrep(strrep(savename{1},'.mat',sprintf('_%.0f_ComparePlasmaShift300eV.pdf',PlotPar)),'KNM2_RW1_121runs_',''),'fit/','plots/');
     export_fig(gcf,plotname);
     fprintf('Save plot to %s \n',plotname);
 end

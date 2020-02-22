@@ -52,6 +52,9 @@ if strcmp(SanityPlot,'ON')
     leg.EdgeColor = rgb('Silver');
     leg.Location = 'southwest';
     ylim([min(KrPos-mean(KrPos)-KrPosErr)-0.02, max(KrPos-mean(KrPos)+KrPosErr)+0.02]);
+    
+    plotname = strrep(savename,'.mat','.pdf');
+    export_fig(fig1,plotname);
 end
 
 end

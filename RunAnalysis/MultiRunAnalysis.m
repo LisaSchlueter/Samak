@@ -2463,11 +2463,11 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             if strcmp(Fit,'ON')
                 if strcmp(Parameterx,'time')
                     %fitobject = fit(x,permute(y,[2 1]),'poly1')
-                    [fitobject,err,chi2min,dof] = linFit(x,permute(y,[2 1]),permute(yErr,[2 1]))
+                    [fitobject,err,chi2min,dof] = linFit(x,permute(y,[2 1]),permute(yErr,[2 1]));
                 elseif strcmp(Parameterx,'N')
-                    [fitobject,err,chi2min,dof] = linFit(x,y,yErr)
+                    [fitobject,err,chi2min,dof] = linFit(x,y,yErr);
                 else
-                    [fitobject,err,chi2min,dof] = linFit(permute(x,[2 1]),permute(y,[2 1]),yErr)
+                    [fitobject,err,chi2min,dof] = linFit(permute(x,[2 1]),permute(y,[2 1]),yErr);
                 end
                     x1 = min(x):2:max(x);
                     y1 = fitobject(1).*x1+fitobject(2);
@@ -2508,12 +2508,24 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             PrettyFigureFormat('Fontsize',LocalFontSize);
             hold off;
             if strcmp(saveplot,'ON')
+                if strcmp(obj.MosCorrFlag,'ON')
+                    MosStr = '_MosCorr';
+                else
+                    MosStr = '';
+                end
+                if strcmp(obj.ROIFlag,'14keV')
+                    RoiStr = '_14keV';
+                else
+                    RoiStr = '';
+                end
                 SaveDir = [getenv('SamakPath'),sprintf('tritium-data/plots/%s/correlations/',obj.DataSet)];
                 MakeDir(SaveDir);
-                SaveName = sprintf('Corr_%s_%s_%s.pdf',Parameterx,Parametery,obj.RunData.RunName);
+                SaveName = sprintf('Corr_%s_%s_%s_%.0feV%s%s.pdf',...
+                    Parameterx,Parametery,obj.RunData.RunName,obj.GetRange,RoiStr,MosStr);
                 export_fig(fig88,[SaveDir,SaveName]);
+                fprintf('Save plot to %s \n',[SaveDir,SaveName]);
             end
-        end    
+        end
         function FitResults = FitRunList(obj,varargin)
             
             % Fit all Runs in (stacked or not) RunList independently
