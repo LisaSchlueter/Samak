@@ -3549,6 +3549,8 @@ classdef RunAnalysis < handle
             
             fprintf('Correct qU with monitor spectrometer correction \n');
             
+            qUslope = -qUslope; % qU is defined positiv in code -> flip sign of slope
+            
             if isa(obj,'MultiRunAnalysis')
                 LiveTimeDays            = days(obj.SingleRunData.StartTimeStamp-StartTimeMean);% live time with respect to whole KNM2
                 qUCorr                  = repmat(LiveTimeDays.*qUslope,[size(obj.SingleRunData.qU,1),1,148]);

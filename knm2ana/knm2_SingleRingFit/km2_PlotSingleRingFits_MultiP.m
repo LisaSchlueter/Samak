@@ -8,7 +8,7 @@ Range   = 90;
 ROIFlag =  '14keV';%Default';%'14keV';%'Default';
 RingMerge = 'Full';
 chi2 = 'chi2Stat';
-MosCorrFlag = 'OFF';
+MosCorrFlag = 'ON';
 
 PlotPar      = 2;
 SavePlot     = 'ON';
@@ -118,7 +118,7 @@ Colors = {'DodgerBlue','GoldenRod','IndianRed'};
 Ebar = cell(nPeriods,1);
 l    = cell(nPeriods,1);
 EbarArg = {'o','LineWidth',2,'LineStyle','none','MarkerSize',8};
-LineStyles = {'--','--','--'};%{'-',':','-.'};
+LineStyles = {'-',':','-.'};
 for i=1:nPeriods
     Ebar{i} = errorbar(RingList,(y(i,:)-meanPar(i)),yErr(i,:),EbarArg{:},...
         'Color',rgb(Colors{i}),'MarkerFaceColor',rgb(Colors{i}));

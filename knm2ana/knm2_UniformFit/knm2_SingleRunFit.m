@@ -6,7 +6,7 @@ RunAnaArg = {'RunNr',56278,...  % define run number -> see GetRunList
     'AnaFlag','StackPixel',...         % FPD segmentations -> pixel combination
     'chi2','chi2Stat',...              % statistics only
     'NonPoissonScaleFactor',1,...
-    'MosCorrFlag','OFF'};        
+    'MosCorrFlag','ON'};        
 
 %% build object of MultiRunAnalysis class
 A = RunAnalysis(RunAnaArg{:});
