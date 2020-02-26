@@ -4,7 +4,7 @@
 % Rate Correction
 % Conversion of rate in Potential Fluctuation
 %
-% Last Modified: 04/02/2020
+% Last Modified: 26/02/2020
 % T. Lasserre
 %
 
@@ -17,7 +17,7 @@ for j=1:3
     DataType  = 'Real';
     RunAnaArg = {'RunList',RunList,'DataType',DataType,...
         'FSDFlag','BlindingKNM2','ELossFlag','KatrinT2',...
-        'AnaFlag','StackPixel','RingMerge','Full','AnaFlag','StackPixel','NonPoissonScaleFactor',1};
+        'AnaFlag','StackPixel','RingMerge','Full','NonPoissonScaleFactor',1};
     MR        = MultiRunAnalysis(RunAnaArg{:});
     range = 40;               % fit range in eV below endpoint        
     MR.exclDataStart = MR.GetexclDataStart(range); % find correct data, where to cut spectrum
@@ -37,17 +37,11 @@ for j=1:3
     for i=1:A.nRings
          R           = A.MultiObj(i);
          R.RMCorrection;
-         R.PlotFitRunListCorr('Parameterx','time','Parametery','rate300','Fit','ON','Detrend','OFF');
+         R.PlotFitRunListCorr('Parameterx','time','Parametery','rate300','Fit','ON','Detrend','ON');
          count(i,:)  = R.SingleRunData.TBDIS_RM;
          sstime(i,:) = mean(R.SingleRunData.qUfrac_RM,1).*R.SingleRunData.TimeSec;
          rate(i,:)   = count(i,:)./sstime(i,:);
          corrcount_norm{j,i} = rate(i,:) .* mean(sstime(i,:));
-%         rateE(i,:)  = sqrt(count(i,:))./sstime(i,:);
-%         cf(i,:)     = R.RMRateErosCorrectionqUActivity;
-%         rateEquivalentmV_E{j,i}   =  (rateE(i,:) ./737.8 *1e3 * 117 / numel(R.PixList));
-%        
-%         count_norm{j,i}     = rate(i,:) .* mean(sstime(i,:));
-%         corrcount_norm{j,i} = count_norm{j,i}  .* cf(i,:) ;
     end
     
     
