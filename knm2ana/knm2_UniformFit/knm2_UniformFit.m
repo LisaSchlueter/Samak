@@ -3,7 +3,6 @@
 % January 2020, Lisa
 
 RunAnaArg = {'RunList','KNM2_RW1',...  % define run number -> see GetRunList
-    'exclDataStart',40,...
     'fixPar','E0 Bkg Norm',...         % free Parameter !!
     'DataType','Real',...              % Real, Twin or Fake
     'FSDFlag','BlindingKNM2',...       % final state distribution (theoretical calculation)
@@ -16,8 +15,8 @@ RunAnaArg = {'RunList','KNM2_RW1',...  % define run number -> see GetRunList
 A = MultiRunAnalysis(RunAnaArg{:});
 
 %% modify some parameters in your analysis
-%range = 40;               % fit range in eV below endpoint        
-%A.exclDataStart = A.GetexclDataStart(range); % find correct data, where to cut spectrum
+range = 40;               % fit range in eV below endpoint        
+A.exclDataStart = A.GetexclDataStart(range); % find correct data, where to cut spectrum
 
 %% Fit -> fit results are in property: A.FitResult
 A.Fit;

@@ -4,8 +4,8 @@ for j = 1:3
         'FSDFlag','BlindingKNM2','ELossFlag','KatrinT2',...
         'AnaFlag','StackPixel','RingMerge','Full','NonPoissonScaleFactor',1};
     DataUni_RW2   = MultiRunAnalysis(Knm2AnaArg{:});
-    start = 90;               % fit range in eV below endpoint
-    stop  = 45;               % fit range in eV below endpoint
+    start = 90;               % fit start in eV below endpoint
+    stop  = 45;               % fit stop  in eV below endpoint
     DataUni_RW2.exclDataStart = find((DataUni_RW2.ModelObj.qU)>=18574-start,1);
     DataUni_RW2.exclDataStop = find((DataUni_RW2.ModelObj.qU)>=18574-stop,1);
     DataPSR_RW2   = RingAnalysis('RunAnaObj',DataUni_RW2,'RingList',1:4);
