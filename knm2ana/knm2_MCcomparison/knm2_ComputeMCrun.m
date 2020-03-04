@@ -4,14 +4,17 @@
 
 TwinBias_mnuSq = 0;%0.28;
 range = 40;
-KTFFlag = 'MACE';
+KTFFlag = 'WGTSMACE_NIS1';
 fitter = 'minuit';
 RecomputeFlag = 'ON';
 PlotChi2Curve = 'OFF';
+NIS = 1;
 
-if strcmp(KTFFlag,'MACE')
+if ~strcmp(KTFFlag,'WGTSMACE')
     scatStr = ['_',KTFFlag];
 end
+
+
 % label
 savedir = [getenv('SamakPath'),'knm2ana/knm2_MCcomparison/results/'];
 MakeDir(savedir);
@@ -20,7 +23,7 @@ savename = [savedir,sprintf('knm2_ComputeMCrunFitResult_mNuSq%.2feV2_%.0feV_%s%s
 if exist(savename,'file') && strcmp(RecomputeFlag,'OFF')
     load(savename);
 else
-    nStack = 1;
+    nStack = 100;
     RunAnaArg = {'RunNr',56341,...         %
         'fixPar','mNu E0 Bkg Norm',...     % free Parameter !!
         'DataType','Twin',...              % Real, Twin or Fake

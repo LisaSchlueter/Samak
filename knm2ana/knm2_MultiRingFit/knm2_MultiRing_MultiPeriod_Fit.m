@@ -1,16 +1,23 @@
-% Script to develop and test multi ring fit
+% Script to develop and test multi ring + multi period fit
 % based on KNM2 runs
-% October 2019, Lisa
+% March 2020, Lisa
 
-RunList = 'KNM2_RW3';%'KNM2_afterFix';%'KNM2_RW3';%
-
-%exclDataStart= 11;
+%% settings
+RunList = 'KNM2_Prompt'; % all data -> multi-period
 range = 40;
 chi2 = 'chi2Stat';%CMShape';
 pullFlag = 4;
-fixPar = 'E0 Norm Bkg qU';
+fixPar = 'E0 Norm Bkg';
 
-% read data and set up model
+MultiPos =  [-44.8,0,141.9;...
+            46.5,301.4,248.1;...
+           214.5,301.4 ,424.5;...
+          381.4,483.1,594.3]'*1e-03; % size: nPeriod x nPseudo-Rings --> here eg. 3x4
+      
+DriftPerDay = 6*ones(3,4)*1e-03;  % drift per day in eV
+
+MultiWeights = [1/3 1/3 1/3];
+%% read data and set up model
 RunArg = {'RunList',RunList,...
     'chi2','chi2Stat','DataType','Twin',...
     'fixPar',fixPar,...
@@ -24,17 +31,28 @@ RunArg = {'RunList',RunList,...
     'chi2',chi2,...
     'pullFlag',pullFlag,...
     'TwinBias_Q',18573.70,...
-    'ROIFlag','Default',...
+    'ROIFlag','14keV',...
     'MosCorrFlag','OFF'};
 
 MR = MultiRunAnalysis(RunArg{:});
 MR.exclDataStart = MR.GetexclDataStart(range);
+%% Modify FSD
+KNM2DurationDays = days(MR.SingleRunData.StartTimeStamp(end)-MR.SingleRunData.StartTimeStamp(1));
+MultiSigma = DriftPerDay*KNM2DurationDays; % rectangle width 6 meV/day --> about 6*
 
+MR.ModelObj.LoadFSD('MultiPos',MultiPos,...
+                    'Sigma',MultiSigma,...
+                    'MultiWeights',MultiWeights,...
+                    'SanityPlot','ON');
+                
+MR.ModelObj.ComputeTBDDS;
+MR.ModelObj.ComputeTBDIS;
+%% label 
 savedir = [getenv('SamakPath'),'knm2ana/knm2_MultiRingFit/results/'];
 MakeDir(savedir);
-savename = [savedir,sprintf('knm2_MultiRingFit_%s_%s_%s_pull%.0f_%.0feVrange_RingMerge%s.mat',...
-    RunList,chi2,strrep(fixPar,' ',''),pullFlag,range,MR.RingMerge)];
-
+savename = [savedir,sprintf('knm2_MultiRingFit_MultiPeriod_%s_%s_%s_pull%.0f_%.0feVrange_RingMerge%s.mat',...
+             RunList,chi2,strrep(fixPar,' ',''),pullFlag,range,MR.RingMerge)];
+%%
 if exist(savename,'file')
     load(savename)
     MR.FitResult = FitResults;
@@ -43,7 +61,7 @@ else
     FitResults = MR.FitResult;
     save(savename,'FitResults','RunArg');
 end
-%%
+%% display fit result (optional)
 MR.PlotFitMultiRing('PlotPar','qU','linFit','ON','savePlot','ON','Blind','OFF');
 
 plotdir = [getenv('SamakPath'),sprintf('tritium-data/plots/%s/MultiRingFit/',MR.DataSet)];

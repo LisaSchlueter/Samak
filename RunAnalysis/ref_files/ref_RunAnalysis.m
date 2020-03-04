@@ -35,6 +35,7 @@ p.addParameter('WGTS_MolFrac_DT_SubRun',D.WGTS_MolFrac_DT_SubRun);
 p.addParameter('WGTS_MolFrac_HT',D.WGTS_MolFrac_HT,@(x)isfloat(x)&& x>=0);
 p.addParameter('WGTS_MolFrac_HT_SubRun',D.WGTS_MolFrac_HT_SubRun);
 p.addParameter('WGTS_B_T',2.52,@(x)isfloat(x) && x>0);
+p.addParameter('NIS',7,@(x)isfloat(x) && x>0);
 p.addParameter('ISXsection',D.ISXsection,@(x)isfloat(x));
 %MACE
 p.addParameter('MACE_Bmax_T',D.MACE_Bmax_T,@(x)isfloat(x) & x>0);
@@ -84,6 +85,7 @@ WGTS_MolFrac_DT_SubRun   = p.Results.WGTS_MolFrac_DT_SubRun;
 WGTS_MolFrac_TT          = p.Results.WGTS_MolFrac_TT;
 WGTS_MolFrac_TT_SubRun   = p.Results.WGTS_MolFrac_TT_SubRun;
 ISXsection               = p.Results.ISXsection;
+NIS                      = p.Results.NIS;
 
 % Binning
 TD                       = p.Results.TD;
@@ -156,7 +158,7 @@ opt_wgts = {...
     'ELossFlag',ELossFlag,...
     'recomputeRF',recomputeRF,...
     'UseParallelRF',UseParallelRF,...
-    'NIS',7}; %Thierry WARNING 13/2/2019 
+    'NIS',NIS};
 
 opt_mace = {...
     'MACE_Bmax_T',MACE_Bmax_T,...

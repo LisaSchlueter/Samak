@@ -12,7 +12,7 @@ SanityPlot = p.Results.SanityPlot;
 savedir = [getenv('SamakPath'),'inputs/MonitorSpec/'];
 savename = sprintf('%sKnm2_Mos_qUDrift.mat',savedir);
 
-if exist(savename,'file')
+if exist(savename,'file') && 1==2
     load(savename);
 else
     d = importdata([savedir,'linepos_mos.txt']);

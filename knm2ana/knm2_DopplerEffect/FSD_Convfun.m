@@ -54,9 +54,9 @@ for r=1:nRings
             MultiWeights(2).*exP'.*distfun(x,exE'-MultiPos(2),sigma(2))+...
             MultiWeights(3).*exP'.*distfun(x,exE'-MultiPos(3),sigma(3)));
     elseif size(MultiPos,1)==3
-        exP_SinglePeak = @(x) ( MultiWeights(1,r).*exP'.*distfun(x,exE'-MultiPos(1,r),sigma(1,r))+...
-            MultiWeights(2,r).*exP'.*distfun(x,exE'-MultiPos(2,r),sigma(2,r))+...
-            MultiWeights(3,r).*exP'.*distfun(x,exE'-MultiPos(3,r),sigma(3,r)));
+        exP_SinglePeak = @(x) ( MultiWeights(1).*exP'.*distfun(x,exE'-MultiPos(1,r),sigma(1,r))+...
+            MultiWeights(2).*exP'.*distfun(x,exE'-MultiPos(2,r),sigma(2,r))+...
+            MultiWeights(3).*exP'.*distfun(x,exE'-MultiPos(3,r),sigma(3,r)));
     else
         fprintf('MultiGauss only available for 3 gaussians \n');
     end
@@ -117,12 +117,17 @@ exE_broadened = exE_rebin(keepIndex,:)';
 exE_broadened(isnan(exE_broadened(:,end)),end) = mean(exE_broadened(~isnan(exE_broadened(:,end)),end));
 %% plot
 if strcmp(SanityPlot,'ON')
+    if nRings>1
+        plotRing = 1; % plot for pseudo-ring number 1
+        exE_broadened_plot = exE_broadened(plotRing,:);
+        exP_broadened_plot = exP_broadened(plotRing,:);
+    end
     f1 = figure('Units','normalized','Position',[0.1,0.1,0.5,0.5]);
     exE_plot = linspace(min(exE),max(exE),5000);
     pSingleGaus = plot(exE_plot,exP_SinglePeak(exE_plot),'-.','LineWidth',1.5,'Color',rgb('Silver'));
     hold on;
     pFSD = plot(exE,exP,'-','LineWidth',2,'Color',rgb('DodgerBlue'));
-    pGaus_rebin = plot(exE_broadened,exP_broadened,'-','LineWidth',pFSD.LineWidth,'Color',rgb('Orange'));
+    pGaus_rebin = plot(exE_broadened_plot,exP_broadened_plot,'-','LineWidth',pFSD.LineWidth,'Color',rgb('Orange'));
     hold off;
     switch Dist
         case 'Gauss'

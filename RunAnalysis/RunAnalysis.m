@@ -126,7 +126,7 @@ classdef RunAnalysis < handle
             p.addParameter('DopplerEffectFlag','',@(x)ismember(x,{'OFF','FSD','FSD_Knm1'}));%default given later
             p.addParameter('ROIFlag','Default',@(x)ismember(x,{'Default','14keV'})); % default->default counts in RS, 14kev->[14,32]keV ROI
             p.addParameter('MosCorrFlag','OFF',@(x)ismember(x,{'ON','OFF'}));
-            p.addParameter('KTFFlag','WGTSMACE',@(x)ismember(x,{'WGTSMACE','MACE'}));
+            p.addParameter('KTFFlag','WGTSMACE',@(x)ismember(x,{'WGTSMACE','MACE','WGTSMACE_NIS1'}));
             
             % Fit Options
             p.addParameter('chi2','chi2Stat',@(x)ismember(x,{'chi2Stat', 'chi2CM', 'chi2CMFrac','chi2CMShape', 'chi2P','chi2Nfix'}));
@@ -673,6 +673,13 @@ classdef RunAnalysis < handle
             
             [TTFSD,DTFSD,HTFSD] = obj.SetDefaultFSD;
             
+            if strcmp(obj.KTFFlag,'WGTSMACE_NIS1')
+                obj.KTFFlag = 'WGTSMACE';
+                NIS = 1;
+            else
+                NIS = 7;
+            end
+            
             TBDarg  = {obj.RunData,...
                 'ISCS','Theory',...
                 'recomputeRF','OFF',...
@@ -685,7 +692,8 @@ classdef RunAnalysis < handle
                 'DopplerEffectFlag',obj.DopplerEffectFlag,...
                 'RadiativeFlag','ON',...
                 'RingMerge',obj.RingMerge...
-                'KTFFlag',obj.KTFFlag};
+                'KTFFlag',obj.KTFFlag,...
+                'NIS',NIS};
             
             if ~isempty(qU)
                 TBDarg = {TBDarg{:},'qU',qU};
@@ -1476,7 +1484,7 @@ classdef RunAnalysis < handle
                 switch obj.AnaFlag
                     case 'StackPixel'
                         savedir = [getenv('SamakPath'),'tritium-data/fit/',obj.DataSet,'/Uniform/'];
-                    case 'RING'
+                    case 'Ring'
                         savedir = [getenv('SamakPath'),'tritium-data/fit/',obj.DataSet,'/MultiRing/'];
                 end
                 MakeDir(savedir);
@@ -3692,32 +3700,34 @@ classdef RunAnalysis < handle
                     linFit(obj.RingList',y',yErr');
                 hold on;
                 plot(obj.RingList,linFitpar(1).*obj.RingList+linFitpar(2),'-','Color',e1.Color,'LineWidth',e1.LineWidth);
-                title(sprintf('Linear fit slope: %.1f \\pm %.1f meV/ring @ \\chi2 = %.1f (%.0f dof)',...
+                t = title(sprintf('Linear fit slope: %.1f \\pm %.1f meV/ring @ \\chi2 = %.1g (%.0f dof)',...
                     linFitpar(1)*1e3,linFiterr(1)*1e3,linFitchi2min,linFitdof));
+                t.FontWeight = 'normal';
             end
             
             %legend
-          
                 d=obj.GetPlotDescription('data');
                   if strcmp(Blind,'OFF')
                       resultsleg = d.fitleg;
                   else
                       resultsleg = '';  
                   end
-                leg = legend(e1,[sprintf('  \\chi^2 = %.1f (%.0f dof) \n',...
+                leg = legend(e1,[sprintf(' \\chi^2 = %.1g (%.0f dof) \n',...
                     obj.FitResult.chi2min,obj.FitResult.dof),resultsleg]);
                 leg.Title.String = sprintf('%s Multi-ring fit (%s)',upper(obj.DataSet),d.chi2);
                 leg.Location = legPos;
                 leg.FontSize = get(gca,'FontSize');
-                legend boxoff;
-          
+                leg.Title.FontWeight = 'normal';
+                leg.EdgeColor = rgb('Silver');
+                leg.Location = 'northwest';
             
             if strcmp(savePlot,'ON')
                 %grid on
                 plotdir = [getenv('SamakPath'),sprintf('tritium-data/plots/%s/MultiRingFit/',obj.DataSet)];
                 MakeDir(plotdir);
-                plotname = [plotdir,sprintf('MultiRing%s_%s_%s_fixPar%s_%s.pdf',...
-                    obj.RingMerge,obj.RunData.RunName,obj.chi2,strrep(strrep(obj.fixPar,'fix ',''),' ;',''),PlotPar)];
+                 freePar = ConvertFixPar('freePar',obj.fixPar,'nPar',obj.nPar,'nPixels',numel(obj.RunData.MACE_Ba_T),'Mode','Reverse');
+                plotname = [plotdir,sprintf('MultiRing%s_%s_%s_freePar%s_%s.pdf',...
+                    obj.RingMerge,obj.RunData.RunName,obj.chi2,freePar,PlotPar)];
                 export_fig(fig1,plotname,'-painters');
                 fprintf('Plot saved to %s \n',plotname)
             end

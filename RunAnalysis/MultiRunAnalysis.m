@@ -1673,12 +1673,18 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                 TTFSD = 'SAENZ';
             end
             if FSDflag==2
-                  DTFSD = 'HTFSD';
-                  HTFSD = 'SAENZ';
-                  TTFSD = 'DOSS';
-              end
-              % Test Thierry - end
-             
+                DTFSD = 'HTFSD';
+                HTFSD = 'SAENZ';
+                TTFSD = 'DOSS';
+            end
+            % Test Thierry - end
+            if strcmp(obj.KTFFlag,'WGTSMACE_NIS1')
+                obj.KTFFlag = 'WGTSMACE';
+                NIS = 1;
+            else
+                NIS = 7;
+            end
+            
             TBDarg = {obj.RunData,...
                 'ISCS','Theory',...
                 'recomputeRF','OFF',...
@@ -1690,7 +1696,8 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                 'RadiativeFlag',obj.RadiativeFlag,...
                 'RingMerge',obj.RingMerge...
                 'mNuSq_i',mNuSq_i,...
-                };
+                'KTFFlag',obj.KTFFlag,...
+                'NIS',NIS};
  
             if ~isempty(qU)
                 TBDarg = {TBDarg{:},'qU',qU};

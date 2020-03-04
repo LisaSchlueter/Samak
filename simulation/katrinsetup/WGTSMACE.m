@@ -783,30 +783,49 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
                 %f2scat = @(e) integral(tmp,-inf,inf,'ArrayValued',1);
                 %f2scatn = @(e) f2scat(e);%/simpsons(e,f2scat(e));
                 
-                f2scat = @(e) conv(f1scat(e),f1scat(e),'same');
-                f2scatn = @(e) f2scat(e);%/simpsons(e,f2scat(e));
+                 fscatnE      = zeros(7,numel(E)); % evaluate functions at E
+                 fscatnE(1,:) = f1scatn(E+ is_EOffset_local);  
+               
+                if obj.NIS>1
+                    f2scat = @(e) conv(f1scat(e),f1scat(e),'same');
+                    f2scatn = @(e) f2scat(e);%/simpsons(e,f2scat(e));
+                    fscatn(1:2) = {f1scatn; f2scatn};
+                    fscatnE(2,:) = f2scatn(E+ is_EOffset_local);
+                end
                 
-                f3scat = @(e) conv(f2scat(e),f1scat(e),'same');
-                f3scatn = @(e) f3scat(e);%/simpsons(e,f3scat(e));
+                if obj.NIS>2
+                    f3scat = @(e) conv(f2scat(e),f1scat(e),'same');
+                    f3scatn = @(e) f3scat(e);%/simpsons(e,f3scat(e));
+                    fscatn(1:3) = {f1scatn; f2scatn; f3scatn;};
+                    fscatnE(3,:) = f3scatn(E+ is_EOffset_local);
+                end
                 
-                f4scat = @(e) conv(f3scat(e),f1scat(e),'same');
-                f4scatn = @(e) f4scat(e);%/simpsons(e,f4scat(e));
+                if obj.NIS>3
+                    f4scat = @(e) conv(f3scat(e),f1scat(e),'same');
+                    f4scatn = @(e) f4scat(e);%/simpsons(e,f4scat(e));
+                    fscatn(1:4) = {f1scatn; f2scatn; f3scatn; f4scatn};
+                    fscatnE(4,:) = f4scatn(E+ is_EOffset_local);
+                end
                 
-                f5scat = @(e) conv(f4scat(e),f1scat(e),'same');
-                f5scatn = @(e) f5scat(e);%/simpsons(e,f5scat(e));
-                
-                fscatn(1:5) = {f1scatn; f2scatn; f3scatn; f4scatn; f5scatn};
+                if obj.NIS>4
+                    f5scat = @(e) conv(f4scat(e),f1scat(e),'same');
+                    f5scatn = @(e) f5scat(e);%/simpsons(e,f5scat(e));
+                    fscatn(1:5) = {f1scatn; f2scatn; f3scatn; f4scatn; f5scatn};
+                    fscatnE(5,:) = f5scatn(E+ is_EOffset_local);
+                end
                 
                 if obj.NIS>5
                     f6scat = @(e) conv(f5scat(e),f1scat(e),'same');
                     f6scatn = @(e) f6scat(e);%/simpsons(e,f6scat(e));
                     fscatn(1:6) = {f1scatn; f2scatn; f3scatn; f4scatn; f5scatn; f6scatn};
+                    fscatnE(6,:) = f6scatn(E+ is_EOffset_local);
                 end
                 
                 if obj.NIS>6
                     f7scat = @(e) conv(f6scat(e),f1scat(e),'same');
                     f7scatn = @(e) f7scat(e);%/simpsons(e,f7scat(e));
                     fscatn(1:7) = {f1scatn; f2scatn; f3scatn; f4scatn; f5scatn;f6scatn;f7scatn};
+                    fscatnE(7,:) = f7scatn(E+ is_EOffset_local);
                 end
                 
                 if obj.NIS>7
@@ -829,15 +848,7 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
                 
                 % output
               
-                fscatnE      = zeros(7,numel(E)); % evaluate functions at E
-                fscatnE(1,:) = f1scatn(E+ is_EOffset_local);
-                fscatnE(2,:) = f2scatn(E+ is_EOffset_local);
-                fscatnE(3,:) = f3scatn(E+ is_EOffset_local);
-                fscatnE(4,:) = f4scatn(E+ is_EOffset_local);
-                fscatnE(5,:) = f5scatn(E+ is_EOffset_local);
-                fscatnE(6,:) = f6scatn(E+ is_EOffset_local);
-                fscatnE(7,:) = f7scatn(E+ is_EOffset_local);
-                
+        
                 % save
                 if strcmp(LoadOrSaveEloss,'ON')
                     save(file_eloss{1},'fscatn','fscatnE','E');
@@ -1029,14 +1040,20 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             
             %% Retrieve/Compute Energy Loss Functions
             [~,ElossFunctions] = obj.ComputeELossFunction('E',E); % load if already exists, otherwise compute
-
-            scatterings  = obj.is_Pv(2)*ElossFunctions(1,:) + ...
+            
+            if numel(obj.is_Pv)<8 && obj.NIS<7
+                obj.is_Pv(obj.NIS+2:end) = 0; 
+                obj.is_Pv =  [obj.is_Pv;zeros(8,1)]; %add some zeros
+            end
+            
+            scatterings  = obj.is_Pv(2)*ElossFunctions(1,:) + ... % first scattering
                 obj.is_Pv(3)*ElossFunctions(2,:).*(E(2)-E(1))^1 + ...
                 obj.is_Pv(4)*ElossFunctions(3,:).*(E(2)-E(1))^2 + ...
                 obj.is_Pv(5)*ElossFunctions(4,:).*(E(2)-E(1))^3 + ...
                 obj.is_Pv(6)*ElossFunctions(5,:).*(E(2)-E(1))^4 + ...
                 obj.is_Pv(7)*ElossFunctions(6,:).*(E(2)-E(1))^5 + ...
                 obj.is_Pv(8)*ElossFunctions(7,:).*(E(2)-E(1))^6;
+                     
      
             obj.fscat       = @(e)interp1(E,scatterings,e);
            

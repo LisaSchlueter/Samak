@@ -7,7 +7,7 @@ function SamakTwinConverter(varargin)
 p = inputParser;
 p.addParameter('DataSet','Knm2',@(x)ischar(x));
 p.addParameter('RunNr',56341,@(x)isfloat(x));
-p.addParameter('TwinLabel','_E018573.70eV',@(x)ischar(x));
+p.addParameter('TwinLabel','_E018573.70eV_WGTSMACE_NIS1',@(x)ischar(x));
 p.parse(varargin{:});
 DataSet            = p.Results.DataSet;
 RunNr              = p.Results.RunNr;
@@ -40,9 +40,10 @@ if contains(TwinLabel,'mNuSq')
 else
     extraStr = '';
 end
-
-if contains(TwinLabel,'MACE')
-     extraStr = [extraStr,'MACE_'];
+if contains(TwinLabel,'WGTSMACE_NIS1')
+    extraStr = [extraStr,'WGTSMACE_NIS1_'];
+elseif contains(TwinLabel,'MACE')
+    extraStr = [extraStr,'MACE_'];
 end
 
 twinh5name = ['Twin_',extraStr,h5name];

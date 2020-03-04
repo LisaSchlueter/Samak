@@ -32,7 +32,7 @@ M = RunAnalysis(RunAnaArg{:});
 mTSqBias =[0, 0.1,0.2,0.3];
 
 % label
-savedirPlot  = [getenv('SamakPath'),'knm2ana/knm2_MultiRingFit/plots/'];
+savedirPlot  = [getenv('SamakPath'),'knm2ana/knm2_MultiRingFit_FakeData/plots/'];
 savenamePlot = [savedirPlot,sprintf('knm2_FakeRun_MultiRingFit_RadialqUfit_4Rings_mTSqfree_Sigma2_%.1f-%.1feV2.pdf',min(mTSqBias),max(mTSqBias))];
 savedir = strrep(savedirPlot,'plots','results');
 MakeDir(savedir); MakeDir(savedirPlot);
