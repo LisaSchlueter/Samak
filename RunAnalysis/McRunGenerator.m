@@ -140,7 +140,8 @@ classdef McRunGenerator < handle
                     'DTFSD',DTFSD,...
                     'HTFSD',HTFSD,...
                     'TTFSD',TTFSD,...
-                    'Q_i',TwinQ(i)};
+                    'Q_i',TwinQ(i),...
+                    'KTFFlag',obj.RunObj.KTFFlag};
 
                 switch obj.RunObj.AnaFlag
                     case 'StackPixel'
@@ -235,6 +236,9 @@ classdef McRunGenerator < handle
             tmpDataType      = obj.RunObj.DataType;
             tmpexclDataStart = obj.RunObj.exclDataStart;
             tmpfixPar        = obj.RunObj.fixPar;
+            tmpKTF = obj.RunObj.KTFFlag;
+            obj.RunObj.KTFFlag = 'WGTSMACE';
+            
             
             %set range and fixed parameter to something reliable
             if strcmp(obj.RunObj.DataSet,'FirstTritium.katrin')
@@ -267,6 +271,7 @@ classdef McRunGenerator < handle
             obj.RunObj.DataType      = tmpDataType;
             obj.RunObj.exclDataStart = tmpexclDataStart; 
             obj.RunObj.fixPar        = tmpfixPar;
+            obj.RunObj.KTFFlag       = tmpKTF;
         end
         function BkgRelPix = GetRingWiseBkg(obj)
             % Get (relative) Background for 12 rings

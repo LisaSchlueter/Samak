@@ -25,11 +25,12 @@ classdef RunAnalysis < handle
         SingleRunObj;   % cell with TBD Objects of singl runs
         AnaFlag;        % SinglePixel, MultiPixel or StackPixel, Ring
         ELossFlag;
+        KTFFlag;
         DopplerEffectFlag; 
         FSDFlag         % final state distributions: Sibille, Sibille0p5eV, BlindingKNM1, OFF ...
         ROIFlag;        % region of interest
         MosCorrFlag;    % correct data qU by monitor spectrometer drift 
-        
+       
         %Covariance Matrices
         FitCM_Obj;      % Fit Covariance Matrix Object
         FitCM;          % Current (Combined Systematics) Fit Covariance Matrices
@@ -103,7 +104,7 @@ classdef RunAnalysis < handle
         TwinBias_Time;              % absolute (s)
         TwinBias_Bkg;               % relative (%) can be ringwise or scalar
         TwinBias_mnuSq;             % absolute value for neutrino mass
-        TwinBias_Q;                 % absolute value for endpoint or 'Fit' -> take fit value
+        TwinBias_Q;                 % absolute value for endpoint or 'Fit' -> take fit value      
         FitNBFlag;                  % use normlization and background from fit
         
         TwinFakeLabel;               % for labeling twin or fake runs with extra info: e.g. qU-bias,...
@@ -125,6 +126,7 @@ classdef RunAnalysis < handle
             p.addParameter('DopplerEffectFlag','',@(x)ismember(x,{'OFF','FSD','FSD_Knm1'}));%default given later
             p.addParameter('ROIFlag','Default',@(x)ismember(x,{'Default','14keV'})); % default->default counts in RS, 14kev->[14,32]keV ROI
             p.addParameter('MosCorrFlag','OFF',@(x)ismember(x,{'ON','OFF'}));
+            p.addParameter('KTFFlag','WGTSMACE',@(x)ismember(x,{'WGTSMACE','MACE'}));
             
             % Fit Options
             p.addParameter('chi2','chi2Stat',@(x)ismember(x,{'chi2Stat', 'chi2CM', 'chi2CMFrac','chi2CMShape', 'chi2P','chi2Nfix'}));
@@ -187,6 +189,7 @@ classdef RunAnalysis < handle
             obj.DopplerEffectFlag = p.Results.DopplerEffectFlag;
             obj.ROIFlag           = p.Results.ROIFlag;
             obj.MosCorrFlag       = p.Results.MosCorrFlag;
+            obj.KTFFlag           = p.Results.KTFFlag;
             obj.fitter            = p.Results.fitter;
             obj.minuitOpt         = p.Results.minuitOpt;
             obj.exclDataStart     = p.Results.exclDataStart;
@@ -682,7 +685,7 @@ classdef RunAnalysis < handle
                 'DopplerEffectFlag',obj.DopplerEffectFlag,...
                 'RadiativeFlag','ON',...
                 'RingMerge',obj.RingMerge...
-                };
+                'KTFFlag',obj.KTFFlag};
             
             if ~isempty(qU)
                 TBDarg = {TBDarg{:},'qU',qU};
@@ -3334,6 +3337,10 @@ classdef RunAnalysis < handle
                     % if nothing of the above: do not specify name further
                 end
                 
+                if ~strcmp(obj.KTFFlag,'WGTSMACE')
+                    str_bias = [str_bias,'_',obj.KTFFlag];
+                end
+                
                 filename = [ringfiles,str_bias];
                 switch obj.FitNBFlag
                     case 'OFF'
@@ -3505,7 +3512,7 @@ classdef RunAnalysis < handle
             % 2 options: Default and [14,32] keV ROI
             if ~(strcmp(obj.DataSet,'Knm2') && strcmp(obj.DataType,'Real'))
                 fprintf('ROI change only available for KNM2 real data \n');
-                return
+                return;
             end
             
             switch obj.ROIFlag
