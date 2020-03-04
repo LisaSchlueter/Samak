@@ -2497,7 +2497,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                     DataTypeLabel = 'FitriumTwin_';
                 case 'KafitTwin'
                     DataTypeLabel = 'KafitTwin_';
-            end          
+            end
             fixParstr = ConvertFixPar('freePar',obj.fixPar,'Mode','Reverse');
             savefile = arrayfun(@(x) ...
                 sprintf('%sFit%s%.0f_%s_%.0fbE0_freePar%s.mat',...

@@ -89,6 +89,10 @@ classdef FITC < handle
         i_qUOffset; %retarding potential offset per ring or pixel
         i_mTSq;     % neutrino mass squared offset per ring or pixel
         i_FracTm;   % fraction T- ions
+
+        i_mnu4Sq;
+        i_sin2T4;
+
         parinit; % initial parameters for the fit
         
         % data
@@ -163,6 +167,8 @@ classdef FITC < handle
             p.addParameter('i_BSlope',0,@(x)isfloat(x));
             p.addParameter('i_mTSq',[],@(x)isfloat(x));
             p.addParameter('i_FracTm',[],@(x)isfloat(x));
+            p.addParameter('i_mnu4Sq',0,@(x)isfloat(x));
+            p.addParameter('i_sin2T4',0,@(x)isfloat(x));
             
             p.parse(varargin{:});
             
@@ -202,6 +208,8 @@ classdef FITC < handle
             obj.i_BSlope        = p.Results.i_BSlope;
             obj.i_FracTm        = p.Results.i_FracTm;
             obj.UncMPixFlag     = p.Results.UncMPixFlag;
+            obj.i_mnu4Sq        = p.Results.i_mnu4Sq;
+            obj.i_sin2T4        = p.Results.i_sin2T4;
             
             if isempty(obj.SO) && isempty(obj.SOCell)
                 error('You should provide a TBD object to use this class. Ex.: FIT(''SO'',TBDObject)');
@@ -222,6 +230,8 @@ classdef FITC < handle
                 readdata(obj);
                 preparevars(obj);
                 obj.RESULTS = startfit(obj);
+
+
                 displayresults(obj);
             end
             
@@ -293,7 +303,9 @@ classdef FITC < handle
                                obj.i_qUOffset,...
                                obj.i_BSlope,...
                                obj.i_mTSq,...
-                               obj.i_FracTm];
+                               obj.i_FracTm,...
+                               obj.i_mnu4Sq,...
+                               obj.i_sin2T4];
                 
                 % initilization for pulls (default all zero)
                 if obj.pulls == 0
@@ -316,7 +328,8 @@ classdef FITC < handle
             BkgSlopetol = 5*1e-6; % background slope constrain (cps/eV)
             mNuSqtol = 1;         % neutrino mass pull tolerance (eV^2)
             mTSqtol = 1;          % tachyonic neutrino mass (nu-mass offset) from ring to ring (eV^2)
-            
+            sin2T4tol = 0.5;
+
             PullTerm = 0;
             % 1: neutrino mass pull
             if any(ismember(obj.pullFlag,1))
@@ -380,8 +393,13 @@ classdef FITC < handle
                     (o4index/0.76-o3index/0.39)^2/Normtol.^2 + ...
                     (o4index/0.76-o2index/0.14)^2/Normtol.^2;
             end
-            
+
+            % 9: mixing angle pull
             if any(ismember(obj.pullFlag,9))
+                PullTerm = PullTerm + (par(4*obj.SO.nPixels+12))^2/sin2T4tol^2 + exp(-50*par(4*obj.SO.nPixels+12));
+            end
+            
+            if any(ismember(obj.pullFlag,10))
                 
             end
         end
@@ -411,6 +429,8 @@ classdef FITC < handle
             BSlope_fit  = par(3*obj.SO.nPixels+9);
             mTSq_fit    =par(3*obj.SO.nPixels+10:4*obj.SO.nPixels+9);
             FracTm_fit = par(4*obj.SO.nPixels+10);
+            mnu4Sq_fit   = par(4*obj.SO.nPixels+11);
+            sin2T4_fit   = par(4*obj.SO.nPixels+12);
             
             obj.SO.ComputeTBDDS(...
                 'mSq_bias',mnu_fit,...
@@ -426,7 +446,10 @@ classdef FITC < handle
                 'qUOffset_bias',qUOffset_fit,...
                 'BSlope_bias',BSlope_fit,...
                 'mTSq_bias',mTSq_fit,...
-                'FracTm_bias',FracTm_fit);
+                'FracTm_bias',FracTm_fit,...
+                'mnu4Sq_bias',mnu4Sq_fit,...
+                'sin2T4_bias',sin2T4_fit);
+
             obj.SO.ComputeTBDIS();
             
             % exclude data points: data and model TBDIS
@@ -571,8 +594,8 @@ classdef FITC < handle
                             % read asymmetric uncertainties from text file
                             [errNeg, errPos] = GetAsymmErrMinos(minuitOutputStr);
                             results = {results{:},errNeg, errPos};
-                            system(['rm ', minuitOutputStr]); % delete txt file      
                         end
+                        system(['rm ', minuitOutputStr]); % delete txt file 
                 end
                 %'min  ; migrad ; imp;  minos; '],obj.fixPar);
                 
@@ -633,9 +656,18 @@ classdef FITC < handle
             FracTm_fit      = par(4*obj.SO.nPixels+10);
             FracTm_fit_err  = err(4*obj.SO.nPixels+10);
             
+            % Sterile Neutrino Parameters
+            mnu4Sq_fit      = par(4*obj.SO.nPixels+11);
+            mnu4Sq_fit_err  = err(4*obj.SO.nPixels+11);
+            sin2T4_fit      = par(4*obj.SO.nPixels+12);
+            sin2T4_fit_err  = err(4*obj.SO.nPixels+12);
+            
             cprintf('blue','===============================================\n');
             cprintf('blue','  m^2       = %g +/- %g eV^2\n', mnuSq_report,err(1));
             cprintf('blue','  m         = %g +/- %g eV\n', mnu_report,err_mnu);
+            cprintf('blue',' - - - - - - - - - - - - - - - - - - - - - - - \n');
+            cprintf('blue','  mnu4Sq    = %g +/- %g eV\n', mnu4Sq_fit + obj.SO.mnu4Sq_i,mnu4Sq_fit_err);
+            cprintf('blue','  sin2T4    = %g +/- %g eV\n', sin2T4_fit + obj.SO.sin2T4_i,sin2T4_fit_err);
             cprintf('blue',' - - - - - - - - - - - - - - - - - - - - - - - \n');
             cprintf('blue','  (E0)eff   = %0.9g +/- %g eV\n', obj.SO.Q_i+e0_fit,err(2));
             cprintf('blue',' - - - - - - - - - - - - - - - - - - - - - - - \n');

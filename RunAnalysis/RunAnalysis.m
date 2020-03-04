@@ -1387,7 +1387,7 @@ classdef RunAnalysis < handle
                obj.FitCMFrac = StatCMFrac; 
                obj.FitCMFracShape = StatCMFrac;
             end
-                    
+            
             F = FITC('SO',obj.ModelObj,'DATA',Data,'fitter',obj.fitter,...
                 'chi2name',obj.chi2,'minuitOpt',obj.minuitOpt,...
                 'COVMAT', real(obj.FitCM),'COVMATFrac', real(obj.FitCMFrac),...
@@ -3417,7 +3417,7 @@ classdef RunAnalysis < handle
             end
         end
         function InitFitPar(obj)
-            obj.nPar = 4*obj.ModelObj.nPixels+10; % number of avaibale fit parameter
+            obj.nPar = 4*obj.ModelObj.nPixels+12; % number of avaibale fit parameter
             
             if strcmp(obj.AnaFlag,'StackPixel') % number of FPD segmentations
                 nFPDSeg = 1;
