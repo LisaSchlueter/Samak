@@ -23,12 +23,10 @@ nqU   = numel(nqU);
 % 
 % qU   = [qU' D.qU(6:2:end,1)']';
 % nqU  = numel(nqU);
-
-
-qUmin = mean(D.qU_RM)-1;
-qUmax = mean(D.qU_RM)+1;
-qU = sort([D.qU(1:4:end,1);linspace(qUmin,qUmax,nqU)']);
-nqU = numel(qU);
+% qUmin = mean(D.qU_RM)-1;
+% qUmax = mean(D.qU_RM)+1;
+% qU = sort([D.qU(1:4:end,1);linspace(qUmin,qUmax,nqU)']);
+% nqU = numel(qU);
 
 % qUmin = mean(D.qU_RM)-1000e-3;
 % qUmax = mean(D.qU_RM)+1000e-3;

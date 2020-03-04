@@ -3,19 +3,19 @@
 %% settings
 RunList = [1,2,3];
 nRuns   = [121,95,92];
-freePar = 'E0 Bkg Norm';
+freePar = 'mNu E0 Bkg Norm';
 Range   = 90;
 ROIFlag =  '14keV';%Default';%'14keV';%'Default';
 RingMerge = 'Full';
 chi2 = 'chi2Stat';
 MosCorrFlag = 'ON';
 
-PlotPar      = 2;
+PlotPar      = 1;
 SavePlot     = 'ON';
 linFitFlag   = 'ON';
-PlotMode     = 'Abs';
+PlotMode     = 'Rel';
 Blind        = 'ON';
-YLim         = '';%[-0.28,0.18];[-11 5];%%
+YLim         = [-4 4];%[-0.3,0.18];%[-11 5];%%
 
 
 if ~contains(freePar,'mNu') && PlotPar==1
@@ -104,8 +104,8 @@ if strcmp(linFitFlag,'ON')
 end
 
 %% plot fit result
-%fig2 = figure('Renderer','painters');
-%set(fig2,'units','normalized','pos',[0.1, 0.1,0.6,0.5]);
+fig2 = figure('Renderer','painters');
+set(fig2,'units','normalized','pos',[0.1, 0.1,0.6,0.5]);
 plot(linspace(0.5,nRings+0.5,10),zeros(10,1),'-','Color',rgb('SlateGrey'),'LineWidth',2);
 hold on;
 

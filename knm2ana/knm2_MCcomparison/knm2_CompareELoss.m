@@ -3,7 +3,7 @@ KaFit = 'OFF'; % with or without Kafit
 RecomputeFlag = 'ON';
 %% Load samak
 maxE = 9288;
-ELossBinStep = 0.1;
+ELossBinStep = 0.01;
 minE=-maxE; NbinE = (maxE-minE)/ELossBinStep;
 E = minE:ELossBinStep:maxE;
 EIndex = (E>=0 & E<90);
@@ -18,6 +18,7 @@ else
     [~, ElossFunctions] = A.ComputeELossFunction('E',E);
      save(savename,'ElossFunctions','E','ELossBinStep');
 end
+
 Es = E(EIndex);
 S1 = ElossFunctions(1,EIndex);            % one scattering
 S2 = ElossFunctions(2,EIndex).*ELossBinStep;     % two scatterings

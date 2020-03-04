@@ -4,14 +4,18 @@
 
 TwinBias_mnuSq = 0.28;
 range = 40;
+NoScattering = 'ON';
 fitter = 'matlab';
 RecomputeFlag = 'OFF';
 PlotChi2Curve = 'ON';
 
+if strcmp(NoScattering,'ON')
+    scatStr = '_MACE';
+end
 % label
 savedir = [getenv('SamakPath'),'knm2ana/knm2_MCcomparison/results/'];
 MakeDir(savedir);
-savename = [savedir,sprintf('knm2_ComputeMCrunFitResult_mNuSq%.2feV2_%.0feV_%s.mat',TwinBias_mnuSq,range,fitter)];
+savename = [savedir,sprintf('knm2_ComputeMCrunFitResult_mNuSq%.2feV2_%.0feV_%s%s.mat',TwinBias_mnuSq,range,fitter,scatStr)];
 
 if exist(savename,'file') && strcmp(RecomputeFlag,'OFF')
     load(savename);

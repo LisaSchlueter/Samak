@@ -2,7 +2,10 @@
 % Generate 1 MC run
 % Convert to HDF5-format for other fitters
 
-MCdata = 'Kafit';
+MCdata = 'Fitrium';
+
+% convert to mat (has to be done only 1. time)
+HDF5Reader('RunNr',56341,'Fitter',MCdata,'Version','RunSummary-Prompt4b-fpd00','TimeBias',100,'ExtraLabel','mc_');
 
 mNuSq = 0; % 0== no neutrino mass, something else -> non-zero
 if mNuSq>0

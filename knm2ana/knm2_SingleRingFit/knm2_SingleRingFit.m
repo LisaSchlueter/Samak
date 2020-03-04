@@ -6,7 +6,7 @@ p = inputParser;
 p.addParameter('RunList','KNM2_RW3',@(x)ischar(x));
 p.addParameter('freePar','E0 Bkg Norm',@(x)ischar(x));
 p.addParameter('Range',90,@(x)isfloat(x));              % fit range in eV below E0
-p.addParameter('ROIFlag','14keV ',@(x)ismember(x,{'Default','14keV'}));  
+p.addParameter('ROIFlag','14keV',@(x)ismember(x,{'Default','14keV'}));  
 p.addParameter('chi2','chi2Stat',@(x)ismember(x,{'chi2Stat','chi2CMShape'}));  
 p.addParameter('RingMerge','Full',@(x)ismember(x,{'Default','None','Full','Half','Azi'}));
 p.addParameter('RecomputeFlag','ON',@(x)ismember(x,{'ON','OFF'}));
@@ -21,10 +21,8 @@ ROIFlag      = p.Results.ROIFlag;
 chi2         = p.Results.chi2;
 RingMerge     = p.Results.RingMerge;
 RecomputeFlag = p.Results.RecomputeFlag;
-<<<<<<< HEAD
 MosCorrFlag   = p.Results.MosCorrFlag;
-=======
-MosCorrFlag = p.Results.MosCorrFlag;
+
 
 %% settings
 RunAnaArg = {'RunList',RunList,...  % define run number -> see GetRunList
