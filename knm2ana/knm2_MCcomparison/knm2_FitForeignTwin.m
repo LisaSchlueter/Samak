@@ -5,7 +5,12 @@
 MCdata = 'Fitrium';
 
 % convert to mat (has to be done only 1. time)
-HDF5Reader('RunNr',56341,'Fitter',MCdata,'Version','RunSummary-Prompt4b-fpd00','TimeBias',100,'ExtraLabel','mc_');
+switch MCdata
+    case 'Fitrium'
+        HDF5Reader('RunNr',56341,'Fitter',MCdata,'Version','RunSummary-Prompt4b-fpd00','TimeBias',100,'ExtraLabel','mc_');
+    case 'Kafit'
+        HDF5Reader('RunNr',56341,'Fitter',MCdata,'Version','RunSummary-Prompt4b-fpd00','TimeBias',100,'ExtraLabel','Kafit_');
+end
 
 mNuSq = 0; % 0== no neutrino mass, something else -> non-zero
 if mNuSq>0
@@ -46,7 +51,7 @@ else
     R.exclDataStart = R.GetexclDataStart(range);
     R.Fit;
     FitResult = R.FitResult;
-    R.fitter = 'matlab';
+    %R.fitter = 'matlab';
     %ScanResults = R.GetAsymFitError('Mode','Uniform',...% equidistant steps
     %    'ParScanMax',R.FitResult.err(1)*1.4,...
     %    'SanityPlot','OFF');

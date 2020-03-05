@@ -32,6 +32,8 @@ BinningFactor      = p.Results.BinningFactor;
 Dist               = p.Results.Dist;
 RebinMode          = p.Results.RebinMode;
 
+sigma(sigma<1e-3) = 1e-3;
+
 % replacement distribution
 if strcmp(Dist,'Gauss')
     %gaussian: replace every final state with a gaussian with a width sigma
@@ -121,6 +123,9 @@ if strcmp(SanityPlot,'ON')
         plotRing = 1; % plot for pseudo-ring number 1
         exE_broadened_plot = exE_broadened(plotRing,:);
         exP_broadened_plot = exP_broadened(plotRing,:);
+    else
+       exE_broadened_plot = exE_broadened;
+        exP_broadened_plot = exP_broadened; 
     end
     f1 = figure('Units','normalized','Position',[0.1,0.1,0.5,0.5]);
     exE_plot = linspace(min(exE),max(exE),5000);

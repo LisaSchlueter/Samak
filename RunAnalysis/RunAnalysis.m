@@ -72,6 +72,7 @@ classdef RunAnalysis < handle
 
         % Plot Option
         PlotColor;      % Color of Plots, different for Twins & Data
+        PlotColorLight; % Color of Plots, different for Twins & Data
         ErrorBarScaling;% Scaling of Error Bars for Plots only 
         
         % rhoD scan
@@ -1776,13 +1777,16 @@ classdef RunAnalysis < handle
             % Real / Twin Color Flag
             if strcmp(obj.DataSet,'FirstTritium.katrin')
                 obj.PlotColor = rgb('CadetBlue');
+                obj.PlotColorLight = rgb('PowderBlue');
             else
                 switch obj.DataType
                     case 'Real'
                         % obj.PlotColor = rgb('SteelBlue');
                         obj.PlotColor = rgb('DodgerBlue');
+                        obj.PlotColorLight = rgb('PowderBlue');
                     case {'Twin','FitriumTwin','KafitTwin'}
-                        obj.PlotColor = rgb('FireBrick');
+                        obj.PlotColor = [0.8,0,0];%rgb('Crimson');
+                        obj.PlotColorLight =  rgb('LightCoral');
                     case 'Fake'
                         obj.PlotColor = rgb('ForestGreen');
                 end
@@ -2017,7 +2021,7 @@ classdef RunAnalysis < handle
                      if strcmp(obj.chi2,'chi2Stat')
                          [lstat , pstat]  = boundedline(DataStat(:,1),DataStat(:,2),DataStat(:,3));
                          lstat.LineStyle= '--'; lstat.Color = rgb('DarkSlateGray'); lstat.LineWidth=LocalLineWidth;
-                         pstat.FaceColor = obj.PlotColor;
+                         pstat.FaceColor = obj.PlotColorLight;
                          
                      elseif ~strcmp(obj.chi2,'chi2Stat') && numel(hdata)==1
                          DataSys = [qU,zeros(numel(qU),1), ones(numel(qU),1)];
@@ -2026,11 +2030,6 @@ classdef RunAnalysis < handle
                          lsys = l(1);  lstat = l(2);
                          psys = p(1);  pstat = p(2);
                          if strcmp(Colors,'RGB')
-                             if strcmp(obj.DataType,'Real')
-                                 pstat.FaceColor = rgb('PowderBlue');%obj.PlotColor;%pstat.FaceAlpha=0.6;
-                             else
-                                 pstat.FaceColor = rgb('LightSalmon');
-                             end
                              psys.FaceColor =obj.PlotColor; %psys.FaceAlpha=0.3;
                              lstat.Color = rgb('Silver');
                          else

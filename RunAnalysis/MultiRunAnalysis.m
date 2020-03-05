@@ -3445,12 +3445,12 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             legend_str = cell(obj.nRuns,1);
             %counter = 1; %counter
             figScatter = figure(2);
-            set(figScatter, 'Units', 'normalized', 'Position', [0.9, 0.9, 1, 0.8]);
+            set(figScatter, 'Units', 'normalized', 'Position', [0.1, 0.1, 0.7, 0.7]);
             x = linspace(obj.RunData.qU(obj.exclDataStart)-18700,obj.RunData.qU(end)-18400,10);
             plot(x,zeros(numel(x),1),'-','Color',rgb('DarkSlateGray'),'LineWidth',2);
             hold on;
-            pt = plot(x,obj.StackTolerance.*ones(numel(x),1),'--','Color',rgb('DarkSlateGray'),'LineWidth',2);
-            plot(x,-obj.StackTolerance.*ones(numel(x),1),'--','Color',rgb('DarkSlateGray'),'LineWidth',2);
+            %pt = plot(x,obj.StackTolerance.*ones(numel(x),1),'--','Color',rgb('DarkSlateGray'),'LineWidth',2);
+            %plot(x,-obj.StackTolerance.*ones(numel(x),1),'--','Color',rgb('DarkSlateGray'),'LineWidth',2);
             
             % Compute Actual qU mean of stacked runs
             qUmean      = obj.RunData.qU;
@@ -3460,40 +3460,37 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                 c = colormap(jet(obj.nRuns));
                 % Plot
                 if(obj.SingleRunData.Select_all(rr))
-                    p = scatter(obj.RunData.qU(obj.exclDataStart:end)-obj.ModelObj.Q_i,...
+                    p = scatter(obj.RunData.qU(obj.exclDataStart:end)-18574,...
                         obj.SingleRunData.qU(obj.exclDataStart:end,rr)-qUmean(obj.exclDataStart:end),...
                         80,c(rr,:),'o','filled','MarkerEdgeColor',rgb('DimGray'));
                 else
-                    p = scatter(obj.RunData.qU(obj.exclDataStart:end)-obj.ModelObj.Q_i,...
+                    p = scatter(obj.RunData.qU(obj.exclDataStart:end)-18574,...
                         obj.SingleRunData.qU(obj.exclDataStart:end,rr)-qUmean(obj.exclDataStart:end),...
                         80,c(rr,:),'x','filled','MarkerEdgeColor',rgb('DimGray'));
                 end
                 
                 PrettyFigureFormat;
                 hold on;
-                set(gca,'FontSize',22);
-                xlabel(sprintf('mean retarding potential < qU >  -  %.1f  (eV)',obj.ModelObj.Q_i),'FontSize',20);
-                ylabel('qU  -  < qU > (eV)','FontSize',20);
+                set(gca,'FontSize',24);
+                xlabel(sprintf('Mean retarding potential \\langleqU\\rangle - 18574 (eV)'),'FontSize',24);
+                ylabel(sprintf('qU - \\langleqU\\rangle (eV)'),'FontSize',24);
                 legend_str{rr} = sprintf('%u',obj.RunList(rr));
                 %counter = counter +1;
             end
-            
-            title(sprintf('%.0f Runs Analyzed - %0.f Runs Stacked - Starting qU-E_0 = %g eV',obj.nRuns,numel(obj.StackedRuns),obj.RunData.qU(obj.exclDataStart)-obj.ModelObj.Q_i));
             
             if strcmp(legendFlag,'ON')
                 myleg= legend(legend_str{:},'Location','bestoutside');
                 myleg.NumColumns = 3;
                 myleg.Title.String = sprintf('%.0f runs',obj.nRuns);
-                else
-                    myleg = legend([pt],'qU tolerance','Location','northwest');
-                
+            else
+                myleg = legend(p,sprintf('%.0f runs (%.0f - %.0f) \n\\langle\\sigma\\rangle = %.0f meV',...
+                       obj.nRuns,obj.RunList(1),obj.RunList(end),1e3*mean(std(obj.SingleRunData.qU,0,2))),'Location','northeast');
             end
-            legend('boxoff');
+            myleg.EdgeColor = rgb('Silver');
             myleg.FontSize = 22;
-            grid on;
-            xlim(1.05.*[min(obj.RunData.qU(obj.exclDataStart:end)-obj.ModelObj.Q_i) max(obj.RunData.qU(obj.exclDataStart:end)-obj.ModelObj.Q_i)]);
+            xlim(1.05.*[min(obj.RunData.qU(obj.exclDataStart:end)-obj.ModelObj.Q_i) 0]);%max(obj.RunData.qU(obj.exclDataStart:end)-obj.ModelObj.Q_i)]);
             hold off;
-            
+
             if abs(min(ylim))<=obj.StackTolerance
                 ylim([-max(ylim) ,max(ylim)]);
             elseif abs(min(ylim))<=abs(max(ylim))
@@ -3505,9 +3502,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                  if exist('./plots','dir')~=7
                     mkdir plots
                 end
-%                 if exist('./plots/png','dir')~=7
-%                     mkdir plots/png
-%                 end
+
                 save_name = sprintf('./plots/ScatterPlot-StackedRuns_%u-%u_excl%u.png',min(obj.StackedRuns),max(obj.StackedRuns),obj.exclDataStart);
                 if contains(save_name,' ')
                     save_name=strrep(save_name,' ','_');

@@ -487,7 +487,7 @@ classdef TBD < handle & WGTSMACE %!dont change superclass without modifying pars
             p.addParameter('Sigma',obj.FSD_Sigma,@(x)isfloat(x) || isempty(x));                % broadening of FSD
             p.addParameter('MultiPos',obj.FSD_MultiPos,@(x) isfloat(x) || isempty(x));         %3 gaussians instead of using 1 gaussian per energy (for 3 RW settings): relative position
             p.addParameter('MultiWeights',obj.FSD_MultiWeights,@(x) isfloat(x) || isempty(x)); %3 gaussians instead of using 1 gaussian per energy: relative weight
-            p.addParameter('BinningFactor',4,@(x) isfloat(x) || isempty(x));                   % enhance binning: twice, 3 times,... as much bins
+            p.addParameter('BinningFactor',1,@(x) isfloat(x) || isempty(x));                   % enhance binning: twice, 3 times,... as much bins
             p.addParameter('SanityPlot','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('ZoomPlot','OFF',@(x)ismember(x,{'ON','OFF'})); % save also zoom to 1 final state
             p.addParameter('Dist',obj.FSD_Dist,@(x)ismember(x,{'Gauss','Rect'}));
@@ -512,7 +512,7 @@ classdef TBD < handle & WGTSMACE %!dont change superclass without modifying pars
             if ~isempty(Sigma)
                 if numel(Sigma)==1
                     Sigma = squeeze(repmat(Sigma,[3,nPeaks,nPseudoRings])); % 3 isotopologues x nPeaks x nRings
-                elseif numel(Sigma)==nPeaks % 1 psuedo-ring
+                elseif numel(Sigma)==nPeaks % sigma is not ringwise
                     Sigma = squeeze(repmat(Sigma,[3,1])); 
                 elseif numel(Sigma)==nPeaks*nPseudoRings
                     Sigma = squeeze(repmat(Sigma,[1,1,3])); 

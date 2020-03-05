@@ -1,5 +1,5 @@
 RunList = 'KNM1';
-[Twin, ~, ~, ~, ~, ~,~,~] = ComputeLoadTwinObjects('RunList',RunList);
+[Twin, ~, ~, ~, ~, ~,~] = ComputeLoadTwinObjects('RunList',RunList);
 savedir = [getenv('SamakPath'),'knm1ana/knm1Twins/results/'];
 
 FitRange40 = round(-Twin.ModelObj.qU(14)+18573.7); %for labeling

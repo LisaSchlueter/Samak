@@ -14,7 +14,7 @@ TeK = dKaFit(:,1); % energy
 RFK = dKaFit(:,2); % transmission probability
 
 %% Load Fitrium
-savenameF = [getenv('SamakPath'),'knm2ana/knm2_MCcomparison/results/test.dat'];%Knm2_FitriumRF.dat'];
+savenameF = [getenv('SamakPath'),'knm2ana/knm2_MCcomparison/results/Knm2_FitriumRF.dat'];
 savenameFconst = [getenv('SamakPath'),'knm2ana/knm2_MCcomparison/results/Knm2_FitriumRF_RXconst.dat'];
 dFitrium = importdata(savenameF);
 TeF = dFitrium(:,1); % energy
@@ -58,13 +58,33 @@ leg = legend([pK,pF,pFconst],'Samak - KaFit','Samak - Fitrium',sprintf('Samak - 
 leg.EdgeColor = rgb('Silver');
 leg.Location = 'southwest';
 xlim([min(TeS),max(TeS)]);
-
+ylim([-7 6]*1e-04);
 savename = sprintf('%sRF_Diff',plotdir);
 export_fig(f1,[savename,'.pdf']);
 print(f1,[savename,'.png'],'-dpng','-r300');
 
 
-% %% overlay
+ %% ratio
+ f1 = figure('Units','normalized','Position',[0.5,0.1,0.5,0.5]);
+l = plot(linspace(-5,90,100),zeros(100,1),'-','LineWidth',2,'Color',rgb('Black'));
+hold on;
+pK = plot(TeS,1-RFS./RFK,'-','LineWidth',2.5,'Color',rgb('DodgerBlue'));
+pF = plot(TeS,1-RFS./RFF,'-.','LineWidth',2.5,'Color',rgb('GoldenRod'));
+pFconst = plot(TeS,1-RFS./RFFconst,':','LineWidth',2.5,'Color',rgb('IndianRed'));
+xlabel(sprintf('Energy - %.0f (eV)',qU));
+ylabel('1- Rel. probability diff.');
+PrettyFigureFormat('FontSize',22);
+leg = legend([pK,pF,pFconst],'Samak / KaFit','Samak / Fitrium',sprintf('Samak / Fitrium (const. \\sigma)'));
+leg.EdgeColor = rgb('Silver');
+leg.Location = 'southeast';
+xlim([min(TeS),max(TeS)]);
+ylim([-9 9]*1e-04);
+savename = sprintf('%sRF_Ratio',plotdir);
+export_fig(f1,[savename,'.pdf']);
+print(f1,[savename,'.png'],'-dpng','-r300');
+
+%% over lay
+ 
 % f1 = figure('Units','normalized','Position',[0.5,0.1,0.5,0.5]);
 % l = plot(linspace(-5,90,100),zeros(100,1),'-','LineWidth',2,'Color',rgb('Black'));
 % hold on;
