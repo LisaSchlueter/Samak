@@ -1,4 +1,4 @@
-function [E0,RectWidth,MultiWeights] = ConvertPlasmaDriftDay2E0Run(varargin)
+function [E0,RectWidth,MultiWeights,RectStd] = ConvertPlasmaDriftDay2E0Run(varargin)
 p = inputParser;
 p.addParameter('DriftPerDay',[6*1e-03, 0, 6*1e-03]',@(x)all(isfloat(x)));
 p.addParameter('E0OffseteV',[0,0.1,-0.1]',@(x)all(isfloat(x)));
@@ -17,7 +17,7 @@ savename = sprintf('%sMCplasmaDriftE0_E0ref%.3feV_Drifts-%.0fmeV_%.0fmeV_%.0fmeV
     savedir, E0ref,...
     DriftPerDay(1)*1e3,DriftPerDay(2)*1e3,DriftPerDay(3)*1e3,...
     E0OffseteV(1)*1e3,E0OffseteV(2)*1e3,E0OffseteV(2)*1e3);
-if exist(savename,'file')
+if exist(savename,'file') 
     load(savename)
 else
     MR = MultiRunAnalysis('RunList','KNM2_Prompt','DataType','Real');
@@ -47,12 +47,16 @@ else
     
     % find max shift within 1 period
     RectWidth = zeros(3,1);
+    RectStd   = zeros(3,1);
     tmp1 = find(MR.RunList<FirstRunRW2); % end RW1
     tmp2 = find(MR.RunList>=FirstRunRW2 & MR.RunList<FirstRunRW3); % end RW2
     RectWidth(1) = E0(1)-E0(tmp1(end));
     RectWidth(2) = E0(tmp1(end)+1)-E0(tmp2(end));
     RectWidth(3) = E0(tmp2(end)+1)-E0(end);
-    
+    RectStd(1)   = std(E0(1:tmp1(end)));
+    RectStd(2)   = std(E0(tmp1(end)+1:tmp2(end)));
+    RectStd(3)   = std(E0(tmp2(end)+1:end));
+      
     TimeSec = zeros(3,1);
     TimeSec(1) = sum(MR.SingleRunData.TimeSec(1:tmp1(end)));
     TimeSec(2) = sum(MR.SingleRunData.TimeSec(tmp1(end)+1:tmp2(end)));
@@ -60,14 +64,33 @@ else
     MultiWeights = TimeSec./sum(TimeSec);
     
     save(savename,'E0','KNM2LiveTimeDays','KNM2LiveTimeDaysRel','E0Shift',...
-        'StartTimeStamp','FirstRunRW2','FirstRunRW3','RectWidth','MultiWeights');
+        'StartTimeStamp','FirstRunRW2','FirstRunRW3','RectWidth','RectStd','MultiWeights');
 end
 if strcmp(SanityPlot,'ON')
-    f2 = figure('Units','normalized','Position',[0.1,0.1,0.5,0.5]);
+    f2 = figure('Units','normalized','Position',[0.1,0.1,0.65,0.55]);
+    s1 = subplot(1,8,1:6);
     plot(KNM2LiveTimeDays,E0-mean(E0),'s','MarkerSize',3,'MarkerFaceColor',rgb('DodgerBlue'),'Color',rgb('DodgerBlue'));
     PrettyFigureFormat('FontSize',24);
     xlabel('Live time (days)');
     ylabel(sprintf('E_0^{MC} - \\langleE_0^{MC}\\rangle  (eV)'));
     xlim([min(KNM2LiveTimeDays)-1 max(KNM2LiveTimeDays)+1]);
+    ax = gca;
+    ax.Position = [ax.Position(1) ax.Position(2) ax.Position(3)+0.023 ax.Position(4)];
+    
+    s2 = subplot(1,8,7:8);
+    BinWidth = 0.01;
+    h1 = histogram(E0-mean(E0));
+    h1.Orientation='horizontal';
+    h1.BinWidth = BinWidth;
+    h1.FaceColor = rgb('DodgerBlue');
+    h1.FaceAlpha = 1;
+    PrettyFigureFormat;
+    
+    % get rid of box and x axis
+    box off
+    set(get(gca,'XAxis'),'Visible','off')
+    set(get(gca,'YAxis'),'Visible','off')
+    
+    linkaxes([s1,s2],'y');
 end
 end

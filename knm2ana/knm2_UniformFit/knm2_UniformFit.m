@@ -3,8 +3,8 @@
 % January 2020, Lisa
 
 RunAnaArg = {'RunList','KNM2_Prompt',...  % define run number -> see GetRunList
-    'fixPar','E0 Bkg Norm',...         % free Parameter !!
-    'DataType','Real',...              % Real, Twin or Fake
+    'fixPar','mNu E0 Bkg Norm',...         % free Parameter !!
+    'DataType','Twin',...              % Real, Twin or Fake
     'FSDFlag','BlindingKNM2',...       % final state distribution (theoretical calculation)
     'ELossFlag','KatrinT2',...         % energy loss function     ( different parametrizations available)
     'AnaFlag','StackPixel',...         % FPD segmentations -> pixel combination

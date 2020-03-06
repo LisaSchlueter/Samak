@@ -3424,7 +3424,7 @@ classdef RunAnalysis < handle
                     case 'Knm1'
                         obj.DopplerEffectFlag = 'OFF'; %always included by 'FSD_Doppler'
                     case 'Knm2'
-                        obj.DopplerEffectFlag = 'OFF';%'FSD'
+                        obj.DopplerEffectFlag = 'FSD';
                     case 'FirstTritium.katrin'
                         obj.DopplerEffectFlag = 'OFF';
                 end
