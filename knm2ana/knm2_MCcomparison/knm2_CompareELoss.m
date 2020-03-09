@@ -6,7 +6,7 @@ maxE = 9288;
 ELossBinStep = 0.1;
 minE=-maxE; NbinE = (maxE-minE)/ELossBinStep;
 E = minE:ELossBinStep:maxE;
-EIndex = (E>=0 & E<90);
+EIndex = (E>=0 & E<=1000);
 
 savedir = [getenv('SamakPath'),'knm2ana/knm2_MCcomparison/results/'];
 savename = sprintf('%sELoss_KatrinT2_%.2feVbinning.mat',savedir,ELossBinStep);
@@ -14,7 +14,7 @@ if exist(savename,'file') && strcmp(RecomputeFlag,'OFF')
     load(savename);
 else
     A = ref_FakeRun_KNM2_RFcomparison;
-    A.recomputeRF = 'ON';
+    A.recomputeRF = RecomputeFlag;
     [~, ElossFunctions] = A.ComputeELossFunction('E',E);
      save(savename,'ElossFunctions','E','ELossBinStep');
 end

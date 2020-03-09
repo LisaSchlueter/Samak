@@ -2,7 +2,7 @@
 % Generate 1 MC run
 % Convert to HDF5-format for other fitters
 
-MCdata = 'Fitrium';
+MCdata = 'Kafit';
 
 % convert to mat (has to be done only 1. time)
 switch MCdata
@@ -40,7 +40,7 @@ else
         'NonPoissonScaleFactor',1,...      % Non-Poiss. background contribution (1 == no NP background)
         'TwinBias_Q',18573.70,...          % MC endpoint (eV)
         'TwinBias_mnuSq',0,...
-        'DopplerEffectFlag','OFF',...
+        'DopplerEffectFlag','FSD',...
         'fitter','minuit',...
         'TwinBias_Time',100,...
         'TwinBias_mNuSq',mNuSq};               % MC neutrino mass squared (eV^2)
@@ -70,5 +70,7 @@ fprintf('---------------------------------------\n');
 %% chi2 curve
 if strcmp(PlotChi2Curve,'ON')
     R.PlotChi2Curve('Parameter','mNu','ScanResult',ScanResults,'FitResult',FitResult);
-    
 end 
+
+
+qUF = R.ModelObj.qU;

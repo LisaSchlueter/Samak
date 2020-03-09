@@ -7,7 +7,7 @@ function SamakTwinConverter(varargin)
 p = inputParser;
 p.addParameter('DataSet','Knm2',@(x)ischar(x));
 p.addParameter('RunNr',56341,@(x)isfloat(x));
-p.addParameter('TwinLabel','_E018573.70eV_WGTSMACE_NIS1',@(x)ischar(x));
+p.addParameter('TwinLabel','_E018573.70eV',@(x)ischar(x));
 p.parse(varargin{:});
 DataSet            = p.Results.DataSet;
 RunNr              = p.Results.RunNr;

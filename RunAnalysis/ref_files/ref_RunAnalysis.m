@@ -46,7 +46,7 @@ p.addParameter('recomputeRF','OFF',@(x)ismember(x,{'ON','OFF'}));               
 p.addParameter('UseParallelRF','ON',@(x)ismember(x,{'OFF','ON'}));                                   % calculate response function in parallel
 
 % Theory
-p.addParameter('ISCS','Theory',@(x)ismember(x,{'Aseev','Theory'}));                                  % inelastic scattering cross section
+p.addParameter('ISCS','Theory',@(x)ismember(x,{'Aseev','Theory','Edep'}));                                  % inelastic scattering cross section
 p.addParameter('DTFSD','BlindingKNM1',@(x)ismember(x,{'OFF','DOSS','BlindingKNM1','HTFSD','TTFSD','Sibille','Sibille0p5eV','SibilleFull','BlindingKNM2'}));                % final state distributions
 p.addParameter('HTFSD','BlindingKNM1',@(x)ismember(x,{'OFF','SAENZ','BlindingKNM1','Sibille','Sibille0p5eV','SibilleFull','BlindingKNM2'})); 
 p.addParameter('TTFSD','BlindingKNM1',@(x)ismember(x,{'OFF','DOSS','SAENZ','BlindingKNM1','Sibille','Sibille0p5eV','SibilleFull','BlindingKNM2'}));

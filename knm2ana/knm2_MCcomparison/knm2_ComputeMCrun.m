@@ -3,17 +3,17 @@
 % Convert to HDF5-format for other fitters
 
 TwinBias_mnuSq = 0;%0.28;
-range = 40;
-KTFFlag = 'WGTSMACE_NIS1';
+range = 90;
+KTFFlag = 'WGTSMACE';%_NIS1';
 fitter = 'minuit';
 RecomputeFlag = 'ON';
 PlotChi2Curve = 'OFF';
-NIS = 1;
 
 if ~strcmp(KTFFlag,'WGTSMACE')
     scatStr = ['_',KTFFlag];
+else
+    scatStr = '';
 end
-
 
 % label
 savedir = [getenv('SamakPath'),'knm2ana/knm2_MCcomparison/results/'];
@@ -43,17 +43,15 @@ else
         RunAnaArg = {RunAnaArg{:},'TwinBias_Time',7409*nStack};
     end
     
-    R = RunAnalysis(RunAnaArg{:});
+    T = RunAnalysis(RunAnaArg{:});
 
     if nStack>1
-        R.exclDataStart = R.GetexclDataStart(range);
-        R.Fit;
-        FitResult = R.FitResult;
+         T.Fit
+        FitResult = T.FitResult;
         
         % ScanResults = R.GetAsymFitError('Mode','Uniform',...% equidistant steps
         %                                 'ParScanMax',R.FitResult.err(1)*1.4,...  
         %                                   'SanityPlot','OFF');
-        
         save(savename,'FitResult','R');
         
         if exist('ScanResults','var')
@@ -69,13 +67,13 @@ if nStack>1
     else
         fprintf('mNuSq    = %.3g (%.3f +%.3f)eV^2 \n',FitResult.par(1),FitResult.errNeg(1),FitResult.errPos(1));
     end
-    fprintf('Delta E0 = %.3f (+-%.3f)eV \n',FitResult.par(2)+R.ModelObj.Q_i-18573.70,FitResult.err(2));
+    fprintf('Delta E0 = %.3f (+-%.3f)eV \n',FitResult.par(2)+T.ModelObj.Q_i-18573.70,FitResult.err(2));
     fprintf('N        = %.3f (+-%.4f) \n',FitResult.par(4)+1,FitResult.err(4));
-    fprintf('B        = %.1f (+-%.1f) mcps \n',(FitResult.par(3)+R.ModelObj.BKG_RateSec_i)*1e3,1e3*FitResult.err(3));
+    fprintf('B        = %.1f (+-%.1f) mcps \n',(FitResult.par(3)+T.ModelObj.BKG_RateSec_i)*1e3,1e3*FitResult.err(3));
     fprintf('chi2     = %.1e / %.0f dof \n', FitResult.chi2min,FitResult.dof);
     fprintf('---------------------------------------\n');
     %% Sanity Plot: chi2-curve
     if strcmp(PlotChi2Curve,'ON') && exist('ScanResults','var')
-        R.PlotChi2Curve('Parameter','mNu','ScanResult',ScanResults,'FitResult',FitResult);
+        T.PlotChi2Curve('Parameter','mNu','ScanResult',ScanResults,'FitResult',FitResult);
     end
 end

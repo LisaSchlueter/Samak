@@ -147,7 +147,7 @@ exE_broadened = exE_rebin(keepIndex,:)';
 exE_broadened(isnan(exE_broadened(:,end)),end) = mean(exE_broadened(~isnan(exE_broadened(:,end)),end));
 
 MakeDir(savedir);
-save(savename,'exE_broadened','exP_broadened','exE','exP_SinglePeak','MultiPos','MultiWeights','BinningFactor','Dist');
+save(savename,'exE_broadened','exP_broadened','exE','exP_SinglePeak','MultiPos','MultiWeights','BinningFactor','Dist','nRings');
 end
 %% plot
 if strcmp(SanityPlot,'ON')
