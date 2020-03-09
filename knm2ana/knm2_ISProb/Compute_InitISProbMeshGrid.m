@@ -24,13 +24,13 @@ else
             savedir,A.WGTS_CD_MolPerCm2,maxEis,IsProbBinStep,A.NIS+1,BmaxSamples(i),A.WGTS_B_T);
         if ~exist(file_pis,'file')
             A.MACE_Bmax_T = BmaxSamples(i);
-            A.ComputeISProb('Energy',reshape(Eiscs,[1,1,numel(Eiscs)]));
+            A.ComputeISProb('Energy',reshape(Eiscs,[1,1,numel(Eiscs)]),...
+                            'Method','Exact');
         end
         
         d = importdata(file_pis);
         ISProb(:,:,i) = d.Pis_m(:,:);
     end
-    
     
     RhoDSigma = A.WGTS_CD_MolPerCm2.*A.ISXsection(Eiscs);
     ThetaFun = @(bmax,bs)  asin(sqrt(bs./bmax));

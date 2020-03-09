@@ -269,37 +269,7 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             
             obj.WGTS_MolFrac_Tm_i =  obj.WGTS_MolFrac_Tm;
             
-            obj.ISCS = 'Edep';
-            if strcmp(obj.ISCS,'Edep') % energy dependent
-                % inelastic scattering cross section in m^2
-                % energy E in eV
-                MtotSq = 1.5356; % nuclear matrix element for T2
-                dE = -0.0097; % relativistic and 1/E^^ correction near tritium end point
-                cTot = 1.18;
-                Ekin = @(E) 0.5*obj.me.*(1-obj.me.^2./(obj.me+E).^2);
-                Eryd = obj.Eryd*1e3; % rydberg energy in eV
-                obj.ISXsection = @(E) (4*pi*obj.bohrR^2)./(Ekin(E)./Eryd).*...
-                                      (MtotSq.*log(4*cTot.*Ekin(E)./Eryd)+dE); 
-            else
-                if obj.ISXsection==0 || isempty(obj.ISXsection)
-                    % inelastic scattering cross section
-                    switch obj.ISCS
-                        case 'Aseev'
-                            obj.ISXsection   = 3.42e-22; % Obsolete!
-                        case 'Theory'
-                            %                     Z           = 1;      % charge of incident particle
-                            %                     EekeV       = 18.6;   % kinetic energy of incident particle keV
-                            %                     Xis = @(E) 4*pi*obj.bohrR^2*Z^2.*(obj.Eryd./E).*(1.5487.*log(E/obj.Eryd)+2.2212); % E in keV
-                            %                     ISXsection_local  = Xis(EekeV);
-                            %obj.ISXsection   = 3.49e-22;  % Phys. Rev. A 35 (1987) 591-597 using relativistic kin. energy (wrong!)
-                            obj.ISXsection   = 3.637e-22;%3.642e-22;  % NEW FERENC T2 versus H2
-                    end
-                end
-                if ~isa(obj.ISXsection,'function_handle')
-                    obj.ISXsection = @(E) obj.ISXsection;
-                end
-            end
-            
+            obj.GetISXsection; % inel. scattering cross section
             
             if( strcmp(obj.quiet, 'OFF') )
                 fprintf('------------------- End WGTS Constructor----------------- \n');
@@ -342,8 +312,7 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
                             obj.WGTS_CD_MolPerCm2.*obj.WGTS_CDDist;
                     end
             end
-        end
-        
+        end    
         function          SetPixel_MACE_BaEa(obj)
             
             % Set Analysis Plane Pixel-wise E/B fields
@@ -378,10 +347,9 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
                             obj.ErrMACE_Ba_T = cell2mat(cellfun(@(x) rms(Ba_mpix(x)),obj.FPD_RingPixList,'UniformOutput',false)');          
                     end
             end
-        end
-        
-        %% Decay to Molecular Excited States
+        end 
         function        ComputeIsotropologActivityWeight(obj)
+             %% Decay to Molecular Excited States
             obj.WGTS_fTT = 2*obj.WGTS_Tp-1;
             obj.WGTS_fDT = 2.*(1-obj.WGTS_Tp).*obj.WGTS_DTHTr./(1+obj.WGTS_DTHTr);
             obj.WGTS_fHT = 2.*(1-obj.WGTS_Tp)./(1+obj.WGTS_DTHTr);
@@ -401,13 +369,42 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
                 case 'OFF'
                     obj.WGTS_fHT = 0;
             end
-        end
-        
+        end    
         function        ComputeTritiumPurity(obj)
             obj.WGTS_epsT = obj.WGTS_MolFrac_TT + 0.5*obj.WGTS_MolFrac_DT + 0.5*obj.WGTS_MolFrac_HT + obj.WGTS_MolFrac_Tm;
         end
         
         %% Transmission Function (FPD-Segmentation dependent)
+        function GetISXsection(obj)
+            % define inel. scattering cross section according to ISCS Flag
+            if strcmp(obj.ISCS,'Edep')
+                % energy dependent inelastic scattering cross section
+                % Unit: (m^2),  energy E in eV
+                % Reference: High energy (Born approximation) electron inelastic total cross section
+                %            (Bethe 1930, 1932; Inokuti71 eq. 4.41, 4.55, IKP67, Liu73, Liu87)
+                MtotSq = 1.5356; % nuclear matrix element for T2
+                dE = -0.0097; % relativistic and 1/E^^ correction near tritium end point
+                cTot = 1.18;
+                Ekin = @(E) 0.5*obj.me.*(1-obj.me.^2./(obj.me+E).^2);
+                Eryd = obj.Eryd*1e3; % rydberg energy in eV
+                obj.ISXsection = @(E) (4*pi*obj.bohrR^2)./(Ekin(E)./Eryd).*...
+                    (MtotSq.*log(4*cTot.*Ekin(E)./Eryd)+dE);
+            else
+                if obj.ISXsection==0 || isempty(obj.ISXsection)
+                    % inelastic scattering cross section
+                    switch obj.ISCS
+                        case 'Aseev'
+                            obj.ISXsection   = 3.42e-22; % Troitzk measurement. Obsolete!
+                        case 'Theory'
+                            obj.ISXsection   = 3.637e-22;%3.642e-22;  % NEW FERENC T2 versus H2
+                    end
+                end
+                
+                if ~isa(obj.ISXsection,'function_handle')
+                    obj.ISXsection = @(E) obj.ISXsection;
+                end
+            end
+        end
         function out    = GetRF(obj,varargin)
             % Return TF of a specific pixel or all pixels
             switch obj.KTFFlag
@@ -468,7 +465,6 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             end
             
         end
-        
         function out    = ComputeISProb(obj,varargin)
             % Compute:
             % - Inelastic Scattering Probabilities in WGTS
@@ -487,7 +483,7 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             p.addParameter('WGTS_CD_MolPerCm2',obj.WGTS_CD_MolPerCm2,@(x)isfloat(x) & x>0);
             p.addParameter('WGTS_CDSigma','',@(x)isfloat(X) & x>0); % product rho d sigma
             p.addParameter('saveFile','ON',@(x)ismember(x,{'ON','OFF'}));
-            p.addParameter('Method','Exact',@(x)ismember(x,{'Exact','Interp'}));
+            p.addParameter('Method','Interp',@(x)ismember(x,{'Exact','Interp'}));
             p.addParameter('Energy',18575,@(x)all(isfloat(x)));
             
             p.parse(varargin{:});
@@ -508,9 +504,20 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             % - when lambdaintegral not calculated (e.g. in covariance matrix!), then Method 'New' is more than 2x faster
             % - both methods give the same result
             % ---------------------------------------------------------
-            if strcmp(Method,'Interp')
-                
-                
+            if strcmp(Method,'Interp')  
+                try
+                    fprintf('Interpolation of inel. scattering probabilities ...')
+                    out = ISProbInterp('WGTS_CD_MolPerCm2',WGTS_CD_MolPerCm2_local,...
+                        'MACE_Bmax_T',MACE_Bmax_T_local,...
+                        'WGTS_B_T',WGTS_B_T_local,...
+                        'NIS',obj.NIS,...
+                        'ISXsection', ISXsection_local(squeeze(Energy)),...
+                        'SanityPlot','ON');
+                     fprintf('succesful! \n')
+                    return
+                catch
+                    fprintf(2,'\n Interpolation failed - Calculate inel. scattering prob. exact \n')
+                end  
             end
             
             switch WGTS_DensityProfile
@@ -656,7 +663,6 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             
             out(out>1)=1; 
         end
-        
         %% Computating of empirical energy loss function and convolutions
         % Parameterization see SSC paper
         function [fscatn,fscatnE] = ComputeELossFunction(obj,varargin)
@@ -1027,7 +1033,7 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             E = linspace(minE,maxE,NbinE); Estep = E(2) - E(1);
 
             % binning for isProb E==te-qu
-            IsProbBinStep = 1;
+            IsProbBinStep = 2;
             maxEis = 500;
             Eiscs = 18575+(-maxEis:IsProbBinStep:maxEis);
             
@@ -1044,7 +1050,7 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             for i=1:numel(NIStmp)
                 file_pis{i+1} = strrep(file_pis{1},sprintf('%.0f-NIS',obj.NIS+1),sprintf('%.0f-NIS',NIStmp(i)));
             end
-              
+            
             % IS Probabilities: load from lookup table or compute new
             if strcmp(obj.recomputeRF,'OFF')
                 % file names
@@ -1072,14 +1078,12 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             end
             
             %% Retrieve/Compute Energy Loss Functions           
-             %obj.recomputeRF = 'ON';
             [~,ElossFunctions] = obj.ComputeELossFunction('E',E); % load if already exists, otherwise compute
             if numel(obj.is_Pv)<8 && obj.NIS<7
                 obj.is_Pv(obj.NIS+2:end) = 0; 
                 obj.is_Pv =  [obj.is_Pv;zeros(8,1)]; %add some zeros
             end
             
-          %  obj.recomputeRF = 'OFF';
             % cut eloss function to response function window
              EindexStart = find(E>=minE_rf,1)-5;
              EindexStop  = find(E>=maxE_rf,1)+5;
