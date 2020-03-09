@@ -20,7 +20,7 @@ mkdir -p ./inputs/ELossFunction/
 mkdir -p ./inputs/WGTSMACE/
 mkdir -p ./fitting/fminuit/
 mkdir -p ./inputs/MonitorSpec/
-
+mkdir -p ./inputs/WGTSMACE/WGTS_ISProb/
 #---------------- start synchronization: 
 
 # synchronize hdf5 data folder with webtrium data folder
@@ -52,6 +52,9 @@ rsync -i -a -v $1@pcltr-01.mpp.mpg.de:/remote/ceph/user/s/schluete/Samak/inputs/
 
 # Main spectrometer qU drift from Monitor spectrometer (KNM2)
 rsync -i -a -v $1@pcltr-01.mpp.mpg.de:/remote/ceph/user/s/schluete/Samak/inputs/MonitorSpec/* ./inputs/MonitorSpec/
+
+# energy-dependent inel. scattering cross section: pre-calculated mesh grid
+rsync -i -a -v $1@pcltr-01.mpp.mpg.de:/remote/ceph/user/s/schluete/Samak/inputs/WGTSMACE/WGTS_ISProb/InitISProbMeshGrid.mat ./inputs/WGTSMACE/WGTS_ISProb/InitISProbMeshGrid.mat
 
 }
 GetBinaries $1
