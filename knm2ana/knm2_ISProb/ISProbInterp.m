@@ -18,7 +18,13 @@ WGTS_B_T          = p.Results.WGTS_B_T;
 NIS               = p.Results.NIS;
 SanityPlot        = p.Results.SanityPlot;
 
-[RhoDSigma,Theta,ISProb] = Compute_InitISProbMeshGrid;
+if WGTS_CD_MolPerCm2<(2*1e17)
+    DataSet = 'Knm1';
+else 
+    DataSet = 'Knm2';
+end
+    
+[RhoDSigma,Theta,ISProb] = Compute_InitISProbMeshGrid('DataSet',DataSet);
 
 
 is_Pv = zeros(NIS+1,numel(squeeze(ISXsection)));
@@ -36,11 +42,21 @@ if strcmp(SanityPlot,'ON')
     
     Scattering = 0;
     
-    figure('Units','normalized','Position',[0.1,0.1,0.5,0.5]);
-    surf(X,Y,squeeze(ISProb(Scattering+1,:,:))');
-    xlabel(sprintf('\\rhod \\sigma'));
+    figure('Units','normalized','Position',[0.1,0.1,0.45,0.63]);
+    s = surf(X.*1e4,Y,squeeze(ISProb(Scattering+1,:,:))');
+    s.LineStyle = 'none';
+    xlabel(sprintf('\\rhod\\sigma'));
     ylabel(sprintf('\\theta_{max}'));
-    zlabel(sprintf('%.0f Inel. scattering prob.',Scattering));
-    PrettyFigureFormat;
+    zlabel(sprintf('%.0f Inel. scattering prob. (%%)',Scattering));
+    PrettyFigureFormat('FontSize',24);
+    c = colorbar;
+    c.Label.String = sprintf('%.0f inel. scattering prob. (%%)',Scattering);
+    c.Label.FontSize = get(gca,'FontSize');
+    view(90,90);
+    xlim([min(min(X)),max(max(X))].*1e4);
+    ylim([min(min(Y)),max(max(Y))]);
+    grid off
+    set(gca,'XMinorTick','off');
+    set(gca,'YMinorTick','off');
 end
 end

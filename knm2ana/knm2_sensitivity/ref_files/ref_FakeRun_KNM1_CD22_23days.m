@@ -19,7 +19,7 @@ p.addParameter('WGTS_MolFrac_HT_SubRun','');
 p.addParameter('WGTS_B_T',2.52,@(x)isfloat(x) && x>0);
 
 % Theory
-p.addParameter('ISCS','Theory',@(x)ismember(x,{'Aseev','Theory'}));
+p.addParameter('ISCS','Edep',@(x)ismember(x,{'Aseev','Theory'}));
 p.addParameter('DTFSD','Sibille0p5eV',@(x)ismember(x,{'OFF','DOSS','BlindingKNM1','SibilleFull','Sibille0p5eV'}));
 p.addParameter('HTFSD','Sibille0p5eV',@(x)ismember(x,{'OFF','SAENZ','BlindingKNM1','SibilleFull','Sibille0p5eV'}));
 p.addParameter('TTFSD','Sibille0p5eV',@(x)ismember(x,{'OFF','DOSS','SAENZ','BlindingKNM1','SibilleFull','Sibille0p5eV'}));

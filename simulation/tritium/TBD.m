@@ -533,7 +533,7 @@ classdef TBD < handle & WGTSMACE %!dont change superclass without modifying pars
                          'MultiWeights',MultiWeights,'MultiPos',MultiPos,...
                          }; %arguments for FSD convolution (optional)
             %% T-T FSD
-            FSDdir = [getenv('SamakPath'),'/inputs/FSD/'];
+            FSDdir = [getenv('SamakPath'),'inputs/FSD/'];
             switch obj.TTFSD
                 case {'DOSS','DOSSNOEE'}
                     ttfsdfilename = [FSDdir,'FSD_DOSS_T2_rebinned.dat'];
@@ -602,9 +602,9 @@ classdef TBD < handle & WGTSMACE %!dont change superclass without modifying pars
                 case {'Sibille'}
                     dtfsdfilename = [FSDdir,'FSD_KNM1_DT_Doppler.txt'];
                 case {'SibilleFull'}
-                    dtfsdfilename = [FSDdir,'inputs/FSD/FSD_KNM1_DT_Doppler0p5eV_FullRange.txt'];
+                    dtfsdfilename = [FSDdir,'FSD_KNM1_DT_Doppler0p5eV_FullRange.txt'];
                 case {'Sibille0p5eV'}
-                    dtfsdfilename = [FSDdir,'inputs/FSD/FSD_KNM1_DT_Doppler0p5eV.txt'];
+                    dtfsdfilename = [FSDdir,'FSD_KNM1_DT_Doppler0p5eV.txt'];
             end
             dtfsdfile = importdata(dtfsdfilename);
             [obj.DTexE, DTexE_index] = sort(dtfsdfile(:,1));

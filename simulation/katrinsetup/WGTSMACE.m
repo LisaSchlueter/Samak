@@ -516,7 +516,7 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
                      fprintf('succesful! \n')
                     return
                 catch
-                    fprintf(2,'\n Interpolation failed - Calculate inel. scattering prob. exact \n')
+                    fprintf(2,'failed - calculate exact inel. scattering probabilities \n')
                 end  
             end
             
