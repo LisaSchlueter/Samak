@@ -7,7 +7,7 @@
 % Last Modified: 26/02/2020
 % T. Lasserre
 %
-
+QAplots = 'OFF';
 % Loop on Period
 for j=1:3
     
@@ -36,7 +36,7 @@ for j=1:3
     cf    = zeros(A.nRings,numel(A.RunAnaObj.RunList));
     for i=1:A.nRings
          R           = A.MultiObj(i);
-         R.RMCorrection;
+         R.RMCorrection('QAplots',QAplots);
          R.PlotFitRunListCorr('Parameterx','time','Parametery','rate300','Fit','ON','Detrend','ON');
          count(i,:)  = R.SingleRunData.TBDIS_RM;
          sstime(i,:) = mean(R.SingleRunData.qUfrac_RM,1).*R.SingleRunData.TimeSec;

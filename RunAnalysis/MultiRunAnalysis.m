@@ -1305,72 +1305,35 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             p.addParameter('qUCorrection','ON',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('saveplot','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('pixlist','uniform',@(x)ismember(x,{'uniform','ring1','ring2','ring3','ring4'}));
+            p.addParameter('QAplots','ON',@(x)ismember(x,{'ON','OFF'}));
             p.parse(varargin{:});
             ActivityCorrection = p.Results.ActivityCorrection;
             qUCorrection       = p.Results.ActivityCorrection;
             saveplot           = p.Results.saveplot;
             pixlist            = p.Results.pixlist;
+            QAplots            = p.Results.QAplots;
             
             rhoD = obj.SingleRunData.WGTS_CD_MolPerCm2;
             T2 = obj.SingleRunData.WGTS_MolFrac_TT;
             DT = obj.SingleRunData.WGTS_MolFrac_DT;
             HT = obj.SingleRunData.WGTS_MolFrac_HT;
             Activity = rhoD.*(T2+0.5*DT+0.5*HT);
-            meanActivity = mean(Activity)
+            meanActivity = mean(Activity);
             qU = obj.SingleRunData.qU_RM-mean(obj.SingleRunData.qU_RM);
             
             rate = obj.SingleRunData.TBDIS_RM./(obj.SingleRunData.qUfrac_RM.*obj.SingleRunData.TimeSec);
             correlation = corr(Activity(:),rate(:));
-            fig88 = figure('Renderer','painters');
-            set(fig88,'units','normalized','pos',[0.1, 0.1,1,0.6]);
-            PlotStyle = { 'o','MarkerSize',8,'MarkerFaceColor',rgb('SkyBlue'),...%rgb('IndianRed'),...%
-                'LineWidth',2,'Color',obj.PlotColor};
-            e1 = errorbar(Activity,rate,repmat(0,[1,numel(Activity)]),PlotStyle{:});
-            e1.CapSize = 0;
-            e2 = errorbar(Activity,rate,repmat(std(rate),[1,numel(rate)]),PlotStyle{:});
-            e2.CapSize = 0;
-            xlabel(sprintf('Activity'));
-            ylabel(sprintf('Rate (raw)'));
-            leg = legend([e2],sprintf('Activity vs. rate'));
-            title(leg,sprintf('Correlation factor = %.2f',correlation));
-            leg.EdgeColor = rgb('Silver');
-            leg.Location = 'best';
-            PrettyFigureFormat;
-            if strcmp(saveplot,'ON')
-                SaveDir = [getenv('SamakPath'),sprintf('tritium-data/plots/%s/corrections/',obj.DataSet)];
-                MakeDir(SaveDir);
-                SaveName = sprintf('RateCorrection_raw_%s_%s.pdf',obj.RunData.RunName,pixlist);
-                export_fig(fig88,[SaveDir,SaveName]);
-            end
-            
-            if strcmp(ActivityCorrection,'ON')
-                obj.SingleRunData.TBDIS_RM = obj.SingleRunData.TBDIS_RM.*(meanActivity./Activity);
-                rate0 = rate;
-                rate = obj.SingleRunData.TBDIS_RM./(obj.SingleRunData.qUfrac_RM.*obj.SingleRunData.TimeSec);
-                DiffAct = abs(rate - rate0)/mean(rate0);
-                fig88 = figure('Renderer','painters');
-                set(fig88,'units','normalized','pos',[0.1, 0.1,1,0.6]);
-                histogram(DiffAct)
-                leg = legend(sprintf('\\sigma = %.2f x10^{-4}',std(DiffAct)*10.^4));
-                title(leg,sprintf('Activity Correction percentage'));
-                PrettyFigureFormat;
-                if strcmp(saveplot,'ON')
-                    SaveDir = [getenv('SamakPath'),sprintf('tritium-data/plots/%s/corrections/',obj.DataSet)];
-                    MakeDir(SaveDir);
-                    SaveName = sprintf('CorrectionPercentage_Activity_%s_%s.pdf',obj.RunData.RunName,pixlist);
-                    export_fig(fig88,[SaveDir,SaveName]);
-                end
-                correlation = corr(Activity(:),rate(:));
+            if strcmp(QAplots,'ON')
                 fig88 = figure('Renderer','painters');
                 set(fig88,'units','normalized','pos',[0.1, 0.1,1,0.6]);
                 PlotStyle = { 'o','MarkerSize',8,'MarkerFaceColor',rgb('SkyBlue'),...%rgb('IndianRed'),...%
-                     'LineWidth',2,'Color',obj.PlotColor};
-                e1 = errorbar(Activity,rate,repmat(std(Activity),[1,numel(Activity)]),PlotStyle{:});
+                    'LineWidth',2,'Color',obj.PlotColor};
+                e1 = errorbar(Activity,rate,zeros(1,numel(Activity)),PlotStyle{:});
                 e1.CapSize = 0;
                 e2 = errorbar(Activity,rate,repmat(std(rate),[1,numel(rate)]),PlotStyle{:});
                 e2.CapSize = 0;
                 xlabel(sprintf('Activity'));
-                ylabel(sprintf('Rate (Activity corrected)'));
+                ylabel(sprintf('Rate (raw)'));
                 leg = legend([e2],sprintf('Activity vs. rate'));
                 title(leg,sprintf('Correlation factor = %.2f',correlation));
                 leg.EdgeColor = rgb('Silver');
@@ -1379,75 +1342,126 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                 if strcmp(saveplot,'ON')
                     SaveDir = [getenv('SamakPath'),sprintf('tritium-data/plots/%s/corrections/',obj.DataSet)];
                     MakeDir(SaveDir);
-                    SaveName = sprintf('RateCorrection_Activity_%s_%s.pdf',obj.RunData.RunName,pixlist);
+                    SaveName = sprintf('RateCorrection_raw_%s_%s.pdf',obj.RunData.RunName,pixlist);
                     export_fig(fig88,[SaveDir,SaveName]);
                 end
-                if strcmp(qUCorrection,'ON')
-                    fitobject = fit(permute(qU,[2 1]),permute(rate,[2 1]),'poly1')
-                    coeffs = coeffvalues(fitobject);
-                    correlation = corr(qU(:),rate(:));
+            end
+            
+            if strcmp(ActivityCorrection,'ON')
+                obj.SingleRunData.TBDIS_RM = obj.SingleRunData.TBDIS_RM.*(meanActivity./Activity);
+                rate0 = rate;
+                rate = obj.SingleRunData.TBDIS_RM./(obj.SingleRunData.qUfrac_RM.*obj.SingleRunData.TimeSec);
+                DiffAct = abs(rate - rate0)/mean(rate0);
+                if strcmp(QAplots,'ON')
                     fig88 = figure('Renderer','painters');
                     set(fig88,'units','normalized','pos',[0.1, 0.1,1,0.6]);
-                    plot(fitobject,qU,rate);
-                    hold on;
+                    histogram(DiffAct)
+                    leg = legend(sprintf('\\sigma = %.2f x10^{-4}',std(DiffAct)*10.^4));
+                    title(leg,sprintf('Activity Correction percentage'));
+                    PrettyFigureFormat;
+                    if strcmp(saveplot,'ON')
+                        SaveDir = [getenv('SamakPath'),sprintf('tritium-data/plots/%s/corrections/',obj.DataSet)];
+                        MakeDir(SaveDir);
+                        SaveName = sprintf('CorrectionPercentage_Activity_%s_%s.pdf',obj.RunData.RunName,pixlist);
+                        export_fig(fig88,[SaveDir,SaveName]);
+                    end
+                end
+                correlation = corr(Activity(:),rate(:));
+                if strcmp(QAplots,'ON')
+                    fig88 = figure('Renderer','painters');
+                    set(fig88,'units','normalized','pos',[0.1, 0.1,1,0.6]);
                     PlotStyle = { 'o','MarkerSize',8,'MarkerFaceColor',rgb('SkyBlue'),...%rgb('IndianRed'),...%
                          'LineWidth',2,'Color',obj.PlotColor};
-                    e1 = errorbar(qU,rate,repmat(std(qU),[1,numel(qU)]),PlotStyle{:});
+                    e1 = errorbar(Activity,rate,repmat(std(Activity),[1,numel(Activity)]),PlotStyle{:});
                     e1.CapSize = 0;
-                    e2 = errorbar(qU,rate,repmat(std(rate),[1,numel(rate)]),PlotStyle{:});
+                    e2 = errorbar(Activity,rate,repmat(std(rate),[1,numel(rate)]),PlotStyle{:});
                     e2.CapSize = 0;
-                    xlabel(sprintf('qU - \\langle qU \\rangle'));
+                    xlabel(sprintf('Activity'));
                     ylabel(sprintf('Rate (Activity corrected)'));
-                    leg = legend([e2],sprintf('qU vs. rate'));
+                    leg = legend([e2],sprintf('Activity vs. rate'));
                     title(leg,sprintf('Correlation factor = %.2f',correlation));
                     leg.EdgeColor = rgb('Silver');
                     leg.Location = 'best';
                     PrettyFigureFormat;
-                    hold off;
                     if strcmp(saveplot,'ON')
                         SaveDir = [getenv('SamakPath'),sprintf('tritium-data/plots/%s/corrections/',obj.DataSet)];
                         MakeDir(SaveDir);
-                        SaveName = sprintf('RateCorrection_qU_raw_%s_%s.pdf',obj.RunData.RunName,pixlist);
+                        SaveName = sprintf('RateCorrection_Activity_%s_%s.pdf',obj.RunData.RunName,pixlist);
                         export_fig(fig88,[SaveDir,SaveName]);
+                    end
+                end
+                if strcmp(qUCorrection,'ON')
+                    fitobject = fit(permute(qU,[2 1]),permute(rate,[2 1]),'poly1');
+                    coeffs = coeffvalues(fitobject);
+                    correlation = corr(qU(:),rate(:));
+                    if strcmp(QAplots,'ON')
+                        fig88 = figure('Renderer','painters');
+                        set(fig88,'units','normalized','pos',[0.1, 0.1,1,0.6]);
+                        plot(fitobject,qU,rate);
+                        hold on;
+                        PlotStyle = { 'o','MarkerSize',8,'MarkerFaceColor',rgb('SkyBlue'),...%rgb('IndianRed'),...%
+                             'LineWidth',2,'Color',obj.PlotColor};
+                        e1 = errorbar(qU,rate,repmat(std(qU),[1,numel(qU)]),PlotStyle{:});
+                        e1.CapSize = 0;
+                        e2 = errorbar(qU,rate,repmat(std(rate),[1,numel(rate)]),PlotStyle{:});
+                        e2.CapSize = 0;
+                        xlabel(sprintf('qU - \\langle qU \\rangle'));
+                        ylabel(sprintf('Rate (Activity corrected)'));
+                        leg = legend([e2],sprintf('qU vs. rate'));
+                        title(leg,sprintf('Correlation factor = %.2f',correlation));
+                        leg.EdgeColor = rgb('Silver');
+                        leg.Location = 'best';
+                        PrettyFigureFormat;
+                        hold off;
+                        if strcmp(saveplot,'ON')
+                            SaveDir = [getenv('SamakPath'),sprintf('tritium-data/plots/%s/corrections/',obj.DataSet)];
+                            MakeDir(SaveDir);
+                            SaveName = sprintf('RateCorrection_qU_raw_%s_%s.pdf',obj.RunData.RunName,pixlist);
+                            export_fig(fig88,[SaveDir,SaveName]);
+                        end
                     end
                     slope = repmat(coeffs(1,1),[1,numel(obj.SingleRunData.TBDIS_RM)]).*qU;
                     rate1 = rate;
                     rate = rate-slope;
                     DiffqU = abs(rate - rate1)/mean(rate1);
-                    fig88 = figure('Renderer','painters');
-                    set(fig88,'units','normalized','pos',[0.1, 0.1,1,0.6]);
-                    histogram(DiffqU)
-                    leg = legend(sprintf('\\sigma = %.2f x10^{-4}',std(DiffqU)*10.^4));
-                    title(leg,sprintf('qU Correction percentage'));
-                    PrettyFigureFormat;
-                    if strcmp(saveplot,'ON')
-                        SaveDir = [getenv('SamakPath'),sprintf('tritium-data/plots/%s/corrections/',obj.DataSet)];
-                        MakeDir(SaveDir);
-                        SaveName = sprintf('CorrectionPercentage_qU_%s_%s.pdf',obj.RunData.RunName,pixlist);
-                        export_fig(fig88,[SaveDir,SaveName]);
+                    if strcmp(QAplots,'ON')
+                        fig88 = figure('Renderer','painters');
+                        set(fig88,'units','normalized','pos',[0.1, 0.1,1,0.6]);
+                        histogram(DiffqU)
+                        leg = legend(sprintf('\\sigma = %.2f x10^{-4}',std(DiffqU)*10.^4));
+                        title(leg,sprintf('qU Correction percentage'));
+                        PrettyFigureFormat;
+                        if strcmp(saveplot,'ON')
+                            SaveDir = [getenv('SamakPath'),sprintf('tritium-data/plots/%s/corrections/',obj.DataSet)];
+                            MakeDir(SaveDir);
+                            SaveName = sprintf('CorrectionPercentage_qU_%s_%s.pdf',obj.RunData.RunName,pixlist);
+                            export_fig(fig88,[SaveDir,SaveName]);
+                        end
                     end
                     obj.SingleRunData.TBDIS_RM = rate.*(obj.SingleRunData.qUfrac_RM.*obj.SingleRunData.TimeSec);
                     correlation = corr(qU(:),rate(:));
-                    fig88 = figure('Renderer','painters');
-                    set(fig88,'units','normalized','pos',[0.1, 0.1,1,0.6]);
-                    PlotStyle = { 'o','MarkerSize',8,'MarkerFaceColor',rgb('SkyBlue'),...%rgb('IndianRed'),...%
-                         'LineWidth',2,'Color',obj.PlotColor};
-                    e1 = errorbar(qU,rate,repmat(std(qU),[1,numel(qU)]),PlotStyle{:});
-                    e1.CapSize = 0;
-                    e2 = errorbar(qU,rate,repmat(std(rate),[1,numel(rate)]),PlotStyle{:});
-                    e2.CapSize = 0;
-                    xlabel(sprintf('qU - \\langle qU \\rangle'));
-                    ylabel(sprintf('Rate (Activity & qU corrected)'));
-                    leg = legend([e2],sprintf('qU vs. rate'));
-                    title(leg,sprintf('Correlation factor = %.2f',correlation));
-                    leg.EdgeColor = rgb('Silver');
-                    leg.Location = 'best';
-                    PrettyFigureFormat;
-                    if strcmp(saveplot,'ON')
-                        SaveDir = [getenv('SamakPath'),sprintf('tritium-data/plots/%s/corrections/',obj.DataSet)];
-                        MakeDir(SaveDir);
-                        SaveName = sprintf('RateCorrection_qU_%s_%s.pdf',obj.RunData.RunName,pixlist);
-                        export_fig(fig88,[SaveDir,SaveName]);
+                    if strcmp(QAplots,'ON')
+                        fig88 = figure('Renderer','painters');
+                        set(fig88,'units','normalized','pos',[0.1, 0.1,1,0.6]);
+                        PlotStyle = { 'o','MarkerSize',8,'MarkerFaceColor',rgb('SkyBlue'),...%rgb('IndianRed'),...%
+                             'LineWidth',2,'Color',obj.PlotColor};
+                        e1 = errorbar(qU,rate,repmat(std(qU),[1,numel(qU)]),PlotStyle{:});
+                        e1.CapSize = 0;
+                        e2 = errorbar(qU,rate,repmat(std(rate),[1,numel(rate)]),PlotStyle{:});
+                        e2.CapSize = 0;
+                        xlabel(sprintf('qU - \\langle qU \\rangle'));
+                        ylabel(sprintf('Rate (Activity & qU corrected)'));
+                        leg = legend([e2],sprintf('qU vs. rate'));
+                        title(leg,sprintf('Correlation factor = %.2f',correlation));
+                        leg.EdgeColor = rgb('Silver');
+                        leg.Location = 'best';
+                        PrettyFigureFormat;
+                        if strcmp(saveplot,'ON')
+                            SaveDir = [getenv('SamakPath'),sprintf('tritium-data/plots/%s/corrections/',obj.DataSet)];
+                            MakeDir(SaveDir);
+                            SaveName = sprintf('RateCorrection_qU_%s_%s.pdf',obj.RunData.RunName,pixlist);
+                            export_fig(fig88,[SaveDir,SaveName]);
+                        end
                     end
                 end
             end
@@ -1546,6 +1560,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             end
             
             obj.SetMosCorr;
+
         end
         function StackPixelSingleRun(obj)
             switch obj.AnaFlag
@@ -2324,7 +2339,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                 fprintf('save plot as  %s \n',savename)
             end
         end
-        function FitResults = PlotFitRunListCorr(obj, varargin)
+        function [correlation,par,err,chi2min,dof] = PlotFitRunListCorr(obj, varargin)
             %correlations between Fit parameters and Slow Control
             p=inputParser;
             p.addParameter('Parametery','E0',@(x)ismember(x,{'mNuSq','E0','N','B','pVal','rate300','qU_RM'}));
@@ -2413,7 +2428,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                     yErr = zeros(numel(y),1);
                     ystr = sprintf('p-value (%.0f dof)',FitResults.dof(1));
                 case 'rate300'
-                     UnitStr = 'cps';
+                    UnitStr = 'cps';
                     y = obj.SingleRunData.TBDIS_RM./(obj.SingleRunData.qUfrac_RM.*obj.SingleRunData.TimeSec);
                     ystd = std(y);
                     yErr = repmat(ystd,[1,numel(y)]);
@@ -2519,26 +2534,25 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             end
             
             correlation = corr(x(:),y(:));
-            meany = mean(y)
             
             %% Plot
             fig88 = figure('units','normalized','pos',[0.1, 0.1,1,0.6]);
             if strcmp(Fit,'ON')
                 if strcmp(Parameterx,'time')
-                    [fitobject,err,chi2min,dof] = linFit(x,permute(y,[2 1]),permute(yErr,[2 1]))
+                    [par,err,chi2min,dof] = linFit(x,permute(y,[2 1]),permute(yErr,[2 1]))
                 elseif strcmp(Parameterx,'N')
-                    [fitobject,err,chi2min,dof] = linFit(x,y,yErr)
+                    [par,err,chi2min,dof] = linFit(x,y,yErr)
                 elseif strcmp(Parameterx,'Act') || strcmp(Parameterx,'RhoD')
-                    [fitobject,err,chi2min,dof] = linFit(permute(x,[2 1]),permute(y,[2 1]),permute(yErr,[2 1]))
+                    [par,err,chi2min,dof] = linFit(permute(x,[2 1]),permute(y,[2 1]),permute(yErr,[2 1]))
                 else
-                    [fitobject,err,chi2min,dof] = linFit(x,y,yErr)
+                    [par,err,chi2min,dof] = linFit(x,y,yErr)
                 end
                     x1 = min(x):(max(x)-min(x))/100:max(x);
-                    y1 = fitobject(1).*x1+fitobject(2);
+                    y1 = par(1).*x1+par(2);
                     pfit = plot(x1,y1,'LineWidth',2,'Color',rgb('GoldenRod'));
             end
             if(strcmp(Detrend,'ON'))
-                y = y(:) - fitobject(1).*x;
+                y = y(:) - par(1).*x;
                 obj.SingleRunData.TBDIS_RM = permute(y,[2 1]).*(obj.SingleRunData.qUfrac_RM.*obj.SingleRunData.TimeSec);
             end
             hold on;
@@ -2560,10 +2574,10 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                 xlim([min(x)*1.01 max(x)*1.01]);
             end
             if strcmp(Fit,'ON')
-                if abs(fitobject(1))<0.01
-                    fitStr = sprintf('%.2g\\pm%.2g m%s/h',fitobject(1)*1e3,err(1)*1e3,UnitStr);
+                if abs(par(1))<0.01
+                    fitStr = sprintf('%.2g\\pm%.2g m%s/h',par(1)*1e3,err(1)*1e3,UnitStr);
                 else
-                    fitStr = sprintf('%.2g\\pm%.2g %s/h',fitobject(1),err(1),UnitStr);
+                    fitStr = sprintf('%.2g\\pm%.2g %s/h',par(1),err(1),UnitStr);
                 end
                 leg = legend([e2,pfit],sprintf('Scanwise %s',chi2leg),sprintf('Fit slope: %s',fitStr));
             else

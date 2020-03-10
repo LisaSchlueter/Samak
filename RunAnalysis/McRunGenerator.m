@@ -483,6 +483,7 @@ classdef McRunGenerator < handle
             end
             TBDISE                = sqrt(TBDIS);
             TimeperSubRunperPixel = qUfrac.*TimeSec(1);
+            StartTimeStamp = datetime('today');
             
             
             if contains(func2str(obj.InitFile),'KNM1')
@@ -505,6 +506,7 @@ classdef McRunGenerator < handle
                 'WGTS_MolFrac_DT_SubRun','WGTS_MolFrac_HT_SubRun','WGTS_MolFrac_TT_SubRun',...
                 'ISXsection','MACE_Bmax_T',...
                 'MACE_Ba_T','qU','qUfrac',...
+                'StartTimeStamp',...
                 '-v7.3','-nocompression');       
         end
         function CleanUpFakeRuns(obj)
