@@ -864,7 +864,7 @@ classdef TBD < handle & WGTSMACE %!dont change superclass without modifying pars
                                 parTe = obj.Te;
                                 parqU = obj.qU;
                                 parRF = zeros(obj.nTe,obj.nqU);
-                                 %                               parfor ii = 1:obj.nqU
+                                %                               parfor ii = 1:obj.nqU
                                 for ii = 1:obj.nqU
                                     parRF(:,ii) = tfloc(parTe,parqU(ii));
                                 end
@@ -892,8 +892,7 @@ classdef TBD < handle & WGTSMACE %!dont change superclass without modifying pars
                                     parTe = obj.Te;
                                     parfor ii = 1:parnqU
                                         parRF(:,ii,ri) = tfloc(parTe,parqU(ii,ri),'pixel',ri);
-                                    end
-                                    
+                                    end  
                                 end
                                 obj.RF = parRF;
                         end

@@ -481,7 +481,6 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             p.addParameter('WGTS_B_T',obj.WGTS_B_T,@(x)isfloat(x));
             p.addParameter('ISXsection',obj.ISXsection,@(x)isfloat(x) || isa(x,'function_handle'));
             p.addParameter('WGTS_CD_MolPerCm2',obj.WGTS_CD_MolPerCm2,@(x)isfloat(x) & x>0);
-            p.addParameter('WGTS_CDSigma','',@(x)isfloat(X) & x>0); % product rho d sigma
             p.addParameter('saveFile','ON',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('Method','Interp',@(x)ismember(x,{'Exact','Interp'}));
             p.addParameter('Energy',18575,@(x)all(isfloat(x)));
@@ -506,14 +505,14 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             % ---------------------------------------------------------
             if strcmp(Method,'Interp')  
                 try
-                    fprintf('Interpolation of inel. scattering probabilities ...')
+                    %fprintf('Interpolation of inel. scattering probabilities ...')
                     out = ISProbInterp('WGTS_CD_MolPerCm2',WGTS_CD_MolPerCm2_local,...
                         'MACE_Bmax_T',MACE_Bmax_T_local,...
                         'WGTS_B_T',WGTS_B_T_local,...
                         'NIS',obj.NIS,...
                         'ISXsection', ISXsection_local(squeeze(Energy)),...
-                        'SanityPlot','ON');
-                     fprintf('succesful! \n')
+                        'SanityPlot','OFF');
+                     %fprintf('succesful! \n')
                     return
                 catch
                     fprintf(2,'failed - calculate exact inel. scattering probabilities \n')
@@ -1002,15 +1001,28 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             p.addParameter('ELossRange',9288,@(x)isfloat(x));   %  ELoss range
             p.addParameter('RFBinStep',0.04,@(x)isfloat(x));    % for Final RF Convolution 0.04
             p.addParameter('AdjustISProba','OFF',@(x)ismember(x,{'ON','OFF'}));    % for Final RF Convolution
-          
+            p.addParameter('ElossFunctions','',@(x)isfloat(x)); % for covariance matrix only
+            p.addParameter('MACE_Bmax_T',obj.MACE_Bmax_T,@(x)isfloat(x)); 
+            p.addParameter('WGTS_B_T',obj.WGTS_B_T,@(x)isfloat(x));
+            p.addParameter('MACE_Ba_T',obj.MACE_Ba_T, @(x)all(isfloat(x)));
+            p.addParameter('ISXsection',obj.ISXsection,@(x)isfloat(x) || isa(x,'function_handle'));
+            p.addParameter('WGTS_CD_MolPerCm2',obj.WGTS_CD_MolPerCm2,@(x)isfloat(x) & x>0);
             p.addParameter('pixel',1,@(x)isfloat(x));
+            
             p.parse(varargin{:});
+            
             Debug               = p.Results.Debug;
-            ELossBinStep        = p.Results.ELossBinStep; 
+            ELossBinStep        = p.Results.ELossBinStep;
             ELossRange          = p.Results.ELossRange;
             RFBinStep           = p.Results.RFBinStep;
             AdjustISProba       = p.Results.AdjustISProba;
             pixel               = p.Results.pixel;
+            ElossFunctions      = p.Results.ElossFunctions;
+            MACE_Bmax_T_local          = p.Results.MACE_Bmax_T;
+            WGTS_B_T_local             = p.Results.WGTS_B_T;
+            ISXsection_local           = p.Results.ISXsection;
+            WGTS_CD_MolPerCm2_local    = p.Results.WGTS_CD_MolPerCm2;
+            MACE_Ba_T_local            = p.Results.MACE_Ba_T;
             
             % binning for response function
             if strcmp(obj.TD,'RFcomparison')
@@ -1041,10 +1053,10 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             file_pis = cell(numel((obj.NIS+1):11),1);
             if strcmp(obj.ISCS,'Edep')
                 file_pis{1} = [getenv('SamakPath'), sprintf('inputs/WGTSMACE/WGTS_ISProb/IS_%.5g-molPercm2_Edep-Xsection-max%.0feV_Xstep%.1feV_%.0f-NIS_%.3g-Bmax_%.3g-Bs.mat',...
-                    obj.WGTS_CD_MolPerCm2,maxEis,IsProbBinStep,obj.NIS+1,obj.MACE_Bmax_T,obj.WGTS_B_T)];
+                    WGTS_CD_MolPerCm2_local,maxEis,IsProbBinStep,obj.NIS+1,MACE_Bmax_T_local,WGTS_B_T_local)];
             else
                 file_pis{1} = [getenv('SamakPath'), sprintf('inputs/WGTSMACE/WGTS_ISProb/IS_%.5g-molPercm2_%.5g-Xsection_%.0f-NIS_%.3g-Bmax_%.3g-Bs.mat',...
-                    obj.WGTS_CD_MolPerCm2,obj.ISXsection(18575),obj.NIS+1,obj.MACE_Bmax_T,obj.WGTS_B_T)];
+                               WGTS_CD_MolPerCm2_local,ISXsection_local(18575),obj.NIS+1,MACE_Bmax_T_local,WGTS_B_T_local)];
             end
             NIStmp = (obj.NIS+2):11;
             for i=1:numel(NIStmp)
@@ -1062,10 +1074,18 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
                 if ~isempty(file_logic) % if one of the files exist: load it
                     w = load(file_pis{file_logic});
                 else % if not: compute scattering probabilities
-                    w.Pis_m = obj.ComputeISProb('Energy',reshape(Eiscs,[1,1,numel(Eiscs)]));
+                    w.Pis_m = obj.ComputeISProb('Energy',reshape(Eiscs,[1,1,numel(Eiscs)]),...
+                        'MACE_Bmax_T',MACE_Bmax_T_local,...
+                        'WGTS_B_T',WGTS_B_T_local,...
+                        'ISXsection',ISXsection_local,...
+                        'WGTS_CD_MolPerCm2',WGTS_CD_MolPerCm2_local);
                 end
             elseif strcmp(obj.recomputeRF,'ON')
-                w.Pis_m = obj.ComputeISProb('Energy',reshape(Eiscs,[1,1,numel(Eiscs)]));
+                w.Pis_m = obj.ComputeISProb('Energy',reshape(Eiscs,[1,1,numel(Eiscs)]),...
+                    'MACE_Bmax_T',MACE_Bmax_T_local,...
+                    'WGTS_B_T',WGTS_B_T_local,...
+                    'ISXsection',ISXsection_local,...
+                    'WGTS_CD_MolPerCm2',WGTS_CD_MolPerCm2_local);
             end
             
             % IS Probabilities: Adjust Probabilities with SSC (1.1e17mol/cm2)
@@ -1077,10 +1097,13 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
                     obj.is_Pv = w.Pis_m /100 .* ratioMasterSamak;
             end
             
-            %% Retrieve/Compute Energy Loss Functions           
-            [~,ElossFunctions] = obj.ComputeELossFunction('E',E); % load if already exists, otherwise compute
+            %% Retrieve/Compute Energy Loss Functions
+            if isempty(ElossFunctions)
+                [~,ElossFunctions] = obj.ComputeELossFunction('E',E); % load if already exists, otherwise compute
+            end
+            
             if numel(obj.is_Pv)<8 && obj.NIS<7
-                obj.is_Pv(obj.NIS+2:end) = 0; 
+                obj.is_Pv(obj.NIS+2:end) = 0;
                 obj.is_Pv =  [obj.is_Pv;zeros(8,1)]; %add some zeros
             end
             
@@ -1098,15 +1121,17 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
                 ISProb(6,:).*ElossFunctions(5,EindexStart:EindexStop).*(E(2)-E(1))^4 + ...
                 ISProb(7,:).*ElossFunctions(6,EindexStart:EindexStop).*(E(2)-E(1))^5 + ...
                 ISProb(8,:).*ElossFunctions(7,EindexStart:EindexStop).*(E(2)-E(1))^6;
-                     
+            
             obj.fscat       = @(e)interp1(Eel,scatterings,e);
-           
+            
             % Retreive Transmission Function
             TF  = @obj.ComputeMaceTF;
             ISProb0 = interp1(Eiscs',obj.is_Pv(1,:)',qu+E_rf);
-             
+            
             RF = TF(qu+E_rf,qu,'pixel',pixel).*ISProb0 + ...
-                conv(TF(qu+E_rf,qu,'pixel',pixel),obj.fscat(E_rf),'same').*Estep_rf;
+                conv(TF(qu+E_rf,qu,'pixel',pixel,...
+                'MACE_Bmax_T',MACE_Bmax_T_local,'WGTS_B_T',WGTS_B_T_local,'MACE_Ba_T',MACE_Ba_T_local),...
+                obj.fscat(E_rf),'same').*Estep_rf;
             
             switch obj.FPD_Segmentation
                 case {'SINGLEPIXEL','MULTIPIXEL'}
