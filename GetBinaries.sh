@@ -55,7 +55,7 @@ rsync -i -a -v $1@pcltr-01.mpp.mpg.de:/remote/ceph/user/s/schluete/Samak/inputs/
 rsync -i -a -v $1@pcltr-01.mpp.mpg.de:/remote/ceph/user/s/schluete/Samak/inputs/MonitorSpec/* ./inputs/MonitorSpec/
 
 # energy-dependent inel. scattering cross section: pre-calculated mesh grid
-rsync -i -a -v $1@pcltr-01.mpp.mpg.de:/remote/ceph/user/s/schluete/Samak/inputs/WGTSMACE/WGTS_ISProb/InitISProbMeshGrid.mat ./inputs/WGTSMACE/WGTS_ISProb/InitISProbMeshGrid_*
+rsync -i -a -v $1@pcltr-01.mpp.mpg.de:/remote/ceph/user/s/schluete/Samak/inputs/WGTSMACE/WGTS_ISProb/InitISProbMeshGrid* ./inputs/WGTSMACE/WGTS_ISProb/
 
 }
 GetBinaries $1
