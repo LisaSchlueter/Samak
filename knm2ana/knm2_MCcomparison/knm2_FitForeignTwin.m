@@ -4,6 +4,14 @@
 
 MCdata = 'Kafit';
 
+% convert to mat (has to be done only 1. time)
+switch MCdata
+    case 'Fitrium'
+        HDF5Reader('RunNr',56341,'Fitter',MCdata,'Version','RunSummary-Prompt4b-fpd00','TimeBias',100,'ExtraLabel','mc_');
+    case 'Kafit'
+        HDF5Reader('RunNr',56341,'Fitter',MCdata,'Version','RunSummary-Prompt4b-fpd00','TimeBias',100,'ExtraLabel','Kafit_');
+end
+
 mNuSq = 0; % 0== no neutrino mass, something else -> non-zero
 if mNuSq>0
     mNu_str = 'mNu';
@@ -32,7 +40,7 @@ else
         'NonPoissonScaleFactor',1,...      % Non-Poiss. background contribution (1 == no NP background)
         'TwinBias_Q',18573.70,...          % MC endpoint (eV)
         'TwinBias_mnuSq',0,...
-        'DopplerEffectFlag','OFF',...
+        'DopplerEffectFlag','FSD',...
         'fitter','minuit',...
         'TwinBias_Time',100,...
         'TwinBias_mNuSq',mNuSq};               % MC neutrino mass squared (eV^2)
@@ -43,7 +51,7 @@ else
     R.exclDataStart = R.GetexclDataStart(range);
     R.Fit;
     FitResult = R.FitResult;
-    R.fitter = 'matlab';
+    %R.fitter = 'matlab';
     %ScanResults = R.GetAsymFitError('Mode','Uniform',...% equidistant steps
     %    'ParScanMax',R.FitResult.err(1)*1.4,...
     %    'SanityPlot','OFF');
@@ -62,5 +70,7 @@ fprintf('---------------------------------------\n');
 %% chi2 curve
 if strcmp(PlotChi2Curve,'ON')
     R.PlotChi2Curve('Parameter','mNu','ScanResult',ScanResults,'FitResult',FitResult);
-    
 end 
+
+
+qUF = R.ModelObj.qU;

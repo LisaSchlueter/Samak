@@ -1,9 +1,9 @@
 % Plot Covariance Matrix for 1 single systematic effect
 % systematics setting
 
-myEffect      = 'RF';
+myEffect      = 'LongPlasma';
 RecomputeFlag = 'OFF';
-nTrials       = 1000; 
+nTrials       = 2; 
 SysBudget     = 31; % 31= knm2 preliminary input
 
 % model setting

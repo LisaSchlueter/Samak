@@ -35,16 +35,18 @@ p.addParameter('WGTS_MolFrac_DT_SubRun',D.WGTS_MolFrac_DT_SubRun);
 p.addParameter('WGTS_MolFrac_HT',D.WGTS_MolFrac_HT,@(x)isfloat(x)&& x>=0);
 p.addParameter('WGTS_MolFrac_HT_SubRun',D.WGTS_MolFrac_HT_SubRun);
 p.addParameter('WGTS_B_T',2.52,@(x)isfloat(x) && x>0);
+p.addParameter('NIS',7,@(x)isfloat(x) && x>0);
 p.addParameter('ISXsection',D.ISXsection,@(x)isfloat(x));
 %MACE
 p.addParameter('MACE_Bmax_T',D.MACE_Bmax_T,@(x)isfloat(x) & x>0);
 p.addParameter('MACE_Ba_T',D.MACE_Ba_T,@(x)isfloat(x) & x>0);
+p.addParameter('MACE_Sigma',0,@(x)all(isfloat(x)));                                                  % response function broadening
 p.addParameter('KTFFlag','WGTSMACE',@(x)ismember(x,{'OFF','MACE','WGTSMACE'}));                      % WGTSMACE== normal response function
 p.addParameter('recomputeRF','OFF',@(x)ismember(x,{'ON','OFF'}));                                    % if ON: complete RF calculated from scratch
 p.addParameter('UseParallelRF','ON',@(x)ismember(x,{'OFF','ON'}));                                   % calculate response function in parallel
 
 % Theory
-p.addParameter('ISCS','Theory',@(x)ismember(x,{'Aseev','Theory'}));                                  % inelastic scattering cross section
+p.addParameter('ISCS','Edep',@(x)ismember(x,{'Aseev','Theory','Edep'}));                                  % inelastic scattering cross section
 p.addParameter('DTFSD','BlindingKNM1',@(x)ismember(x,{'OFF','DOSS','BlindingKNM1','HTFSD','TTFSD','Sibille','Sibille0p5eV','SibilleFull','BlindingKNM2'}));                % final state distributions
 p.addParameter('HTFSD','BlindingKNM1',@(x)ismember(x,{'OFF','SAENZ','BlindingKNM1','Sibille','Sibille0p5eV','SibilleFull','BlindingKNM2'})); 
 p.addParameter('TTFSD','BlindingKNM1',@(x)ismember(x,{'OFF','DOSS','SAENZ','BlindingKNM1','Sibille','Sibille0p5eV','SibilleFull','BlindingKNM2'}));
@@ -83,6 +85,7 @@ WGTS_MolFrac_DT_SubRun   = p.Results.WGTS_MolFrac_DT_SubRun;
 WGTS_MolFrac_TT          = p.Results.WGTS_MolFrac_TT;
 WGTS_MolFrac_TT_SubRun   = p.Results.WGTS_MolFrac_TT_SubRun;
 ISXsection               = p.Results.ISXsection;
+NIS                      = p.Results.NIS;
 
 % Binning
 TD                       = p.Results.TD;
@@ -119,7 +122,7 @@ recomputeRF              = p.Results.recomputeRF;
 UseParallelRF            = p.Results.UseParallelRF;
 MACE_Bmax_T              = p.Results.MACE_Bmax_T;
 MACE_Ba_T                = p.Results.MACE_Ba_T; 
-
+MACE_Sigma               = p.Results.MACE_Sigma;
 % ---------------------------------------------------------------------- %
 % Create Tritium spectrum object 
 opt_calc = {...
@@ -155,12 +158,13 @@ opt_wgts = {...
     'ELossFlag',ELossFlag,...
     'recomputeRF',recomputeRF,...
     'UseParallelRF',UseParallelRF,...
-    'NIS',7}; %Thierry WARNING 13/2/2019 
+    'NIS',NIS};
 
 opt_mace = {...
     'MACE_Bmax_T',MACE_Bmax_T,...
     'MACE_Ba_T',MACE_Ba_T,...
-    'MACE_Ba_Setting','Data'}; %do not use pixelmap correction from txt file, use values from runsummary
+    'MACE_Ba_Setting','Data',... %do not use pixelmap correction from txt file, use values from runsummary
+    'MACE_Sigma',MACE_Sigma};
 
 opt_wgtsmace = {...
     'KTFFlag',KTFFlag};

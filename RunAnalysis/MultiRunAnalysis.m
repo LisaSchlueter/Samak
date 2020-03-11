@@ -624,7 +624,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                 end
                 
                 % Compute new mean for next iteration
-                 qUmeanPixel = obj.StackWmean(obj.SingleRunData.qU,obj.SingleRunData.TimeperSubRunperPixel);
+                qUmeanPixel = obj.StackWmean(obj.SingleRunData.qU,obj.SingleRunData.TimeperSubRunperPixel);
                 qUmean     = mean(qUmeanPixel(:,obj.PixList),2);
                  
                 switch CutOnSC
@@ -1299,100 +1299,171 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                 
             end
         end
-        function Correction300eVRate(obj,varargin)
+        function RMCorrection(obj,varargin)
+            %corrects the RM rate for activity and retarding potential
             p = inputParser;
             p.addParameter('ActivityCorrection','ON',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('qUCorrection','ON',@(x)ismember(x,{'ON','OFF'}));
+            p.addParameter('saveplot','OFF',@(x)ismember(x,{'ON','OFF'}));
+            p.addParameter('pixlist','uniform',@(x)ismember(x,{'uniform','ring1','ring2','ring3','ring4'}));
+            p.addParameter('QAplots','ON',@(x)ismember(x,{'ON','OFF'}));
             p.parse(varargin{:});
             ActivityCorrection = p.Results.ActivityCorrection;
-            qUCorrection = p.Results.ActivityCorrection;
+            qUCorrection       = p.Results.ActivityCorrection;
+            saveplot           = p.Results.saveplot;
+            pixlist            = p.Results.pixlist;
+            QAplots            = p.Results.QAplots;
             
             rhoD = obj.SingleRunData.WGTS_CD_MolPerCm2;
             T2 = obj.SingleRunData.WGTS_MolFrac_TT;
             DT = obj.SingleRunData.WGTS_MolFrac_DT;
             HT = obj.SingleRunData.WGTS_MolFrac_HT;
             Activity = rhoD.*(T2+0.5*DT+0.5*HT);
-            meanActivity = mean(Activity)
-            qU = obj.SingleRunData.qU_RM-wmean(obj.SingleRunData.qU_RM,ones(1,numel(obj.SingleRunData.qU_RM)));
+            meanActivity = mean(Activity);
+            qU = obj.SingleRunData.qU_RM-mean(obj.SingleRunData.qU_RM);
             
             rate = obj.SingleRunData.TBDIS_RM./(obj.SingleRunData.qUfrac_RM.*obj.SingleRunData.TimeSec);
             correlation = corr(Activity(:),rate(:));
-            fig88 = figure('Renderer','painters');
-            set(fig88,'units','normalized','pos',[0.1, 0.1,0.5,0.5]);
-            PlotStyle = { 'o','MarkerSize',8,'MarkerFaceColor',rgb('SkyBlue'),...%rgb('IndianRed'),...%
-                'LineWidth',2,'Color',obj.PlotColor};
-            e1 = errorbar(Activity,rate,repmat(std(Activity),[1,numel(Activity)]),PlotStyle{:});
-            e1.CapSize = 0;
-            e2 = errorbar(Activity,rate,repmat(std(rate),[1,numel(rate)]),PlotStyle{:});
-            e2.CapSize = 0;
-            xlabel(sprintf('Activity'));
-            ylabel(sprintf('Rate (raw)'));
-            leg = legend([e2],sprintf('Activity vs. rate'));
-            title(leg,sprintf('Correlation factor = %.2f',correlation));
-            legend boxoff;
-            leg.Location = 'north';
-            PrettyFigureFormat;
-            
-            if strcmp(ActivityCorrection,'ON')
-                obj.SingleRunData.TBDIS_RM = obj.SingleRunData.TBDIS_RM.*(meanActivity./Activity);
-                rate = obj.SingleRunData.TBDIS_RM./(obj.SingleRunData.qUfrac_RM.*obj.SingleRunData.TimeSec);
-                correlation = corr(Activity(:),rate(:));
+            if strcmp(QAplots,'ON')
                 fig88 = figure('Renderer','painters');
-                set(fig88,'units','normalized','pos',[0.1, 0.1,0.5,0.5]);
+                set(fig88,'units','normalized','pos',[0.1, 0.1,1,0.6]);
                 PlotStyle = { 'o','MarkerSize',8,'MarkerFaceColor',rgb('SkyBlue'),...%rgb('IndianRed'),...%
-                     'LineWidth',2,'Color',obj.PlotColor};
-                e1 = errorbar(Activity,rate,repmat(std(Activity),[1,numel(Activity)]),PlotStyle{:});
+                    'LineWidth',2,'Color',obj.PlotColor};
+                e1 = errorbar(Activity,rate,zeros(1,numel(Activity)),PlotStyle{:});
                 e1.CapSize = 0;
                 e2 = errorbar(Activity,rate,repmat(std(rate),[1,numel(rate)]),PlotStyle{:});
                 e2.CapSize = 0;
                 xlabel(sprintf('Activity'));
-                ylabel(sprintf('Rate (Activity corrected)'));
+                ylabel(sprintf('Rate (raw)'));
                 leg = legend([e2],sprintf('Activity vs. rate'));
                 title(leg,sprintf('Correlation factor = %.2f',correlation));
-                legend boxoff;
-                leg.Location = 'north';
+                leg.EdgeColor = rgb('Silver');
+                leg.Location = 'best';
                 PrettyFigureFormat;
+                if strcmp(saveplot,'ON')
+                    SaveDir = [getenv('SamakPath'),sprintf('tritium-data/plots/%s/corrections/',obj.DataSet)];
+                    MakeDir(SaveDir);
+                    SaveName = sprintf('RateCorrection_raw_%s_%s.pdf',obj.RunData.RunName,pixlist);
+                    export_fig(fig88,[SaveDir,SaveName]);
+                end
+            end
+            
+            if strcmp(ActivityCorrection,'ON')
+                obj.SingleRunData.TBDIS_RM = obj.SingleRunData.TBDIS_RM.*(meanActivity./Activity);
+                rate0 = rate;
+                rate = obj.SingleRunData.TBDIS_RM./(obj.SingleRunData.qUfrac_RM.*obj.SingleRunData.TimeSec);
+                DiffAct = abs(rate - rate0)/mean(rate0);
+                if strcmp(QAplots,'ON')
+                    fig88 = figure('Renderer','painters');
+                    set(fig88,'units','normalized','pos',[0.1, 0.1,1,0.6]);
+                    histogram(DiffAct)
+                    leg = legend(sprintf('\\sigma = %.2f x10^{-4}',std(DiffAct)*10.^4));
+                    title(leg,sprintf('Activity Correction percentage'));
+                    PrettyFigureFormat;
+                    if strcmp(saveplot,'ON')
+                        SaveDir = [getenv('SamakPath'),sprintf('tritium-data/plots/%s/corrections/',obj.DataSet)];
+                        MakeDir(SaveDir);
+                        SaveName = sprintf('CorrectionPercentage_Activity_%s_%s.pdf',obj.RunData.RunName,pixlist);
+                        export_fig(fig88,[SaveDir,SaveName]);
+                    end
+                end
+                correlation = corr(Activity(:),rate(:));
+                if strcmp(QAplots,'ON')
+                    fig88 = figure('Renderer','painters');
+                    set(fig88,'units','normalized','pos',[0.1, 0.1,1,0.6]);
+                    PlotStyle = { 'o','MarkerSize',8,'MarkerFaceColor',rgb('SkyBlue'),...%rgb('IndianRed'),...%
+                         'LineWidth',2,'Color',obj.PlotColor};
+                    e1 = errorbar(Activity,rate,repmat(std(Activity),[1,numel(Activity)]),PlotStyle{:});
+                    e1.CapSize = 0;
+                    e2 = errorbar(Activity,rate,repmat(std(rate),[1,numel(rate)]),PlotStyle{:});
+                    e2.CapSize = 0;
+                    xlabel(sprintf('Activity'));
+                    ylabel(sprintf('Rate (Activity corrected)'));
+                    leg = legend([e2],sprintf('Activity vs. rate'));
+                    title(leg,sprintf('Correlation factor = %.2f',correlation));
+                    leg.EdgeColor = rgb('Silver');
+                    leg.Location = 'best';
+                    PrettyFigureFormat;
+                    if strcmp(saveplot,'ON')
+                        SaveDir = [getenv('SamakPath'),sprintf('tritium-data/plots/%s/corrections/',obj.DataSet)];
+                        MakeDir(SaveDir);
+                        SaveName = sprintf('RateCorrection_Activity_%s_%s.pdf',obj.RunData.RunName,pixlist);
+                        export_fig(fig88,[SaveDir,SaveName]);
+                    end
+                end
                 if strcmp(qUCorrection,'ON')
-                    fitobject = fit(permute(qU,[2 1]),permute(rate,[2 1]),'poly1')
+                    fitobject = fit(permute(qU,[2 1]),permute(rate,[2 1]),'poly1');
                     coeffs = coeffvalues(fitobject);
                     correlation = corr(qU(:),rate(:));
-                    fig88 = figure('Renderer','painters');
-                    set(fig88,'units','normalized','pos',[0.1, 0.1,0.5,0.5]);
-                    plot(fitobject,qU,rate);
-                    hold on;
-                    PlotStyle = { 'o','MarkerSize',8,'MarkerFaceColor',rgb('SkyBlue'),...%rgb('IndianRed'),...%
-                         'LineWidth',2,'Color',obj.PlotColor};
-                    e1 = errorbar(qU,rate,repmat(std(qU),[1,numel(qU)]),PlotStyle{:});
-                    e1.CapSize = 0;
-                    e2 = errorbar(qU,rate,repmat(std(rate),[1,numel(rate)]),PlotStyle{:});
-                    e2.CapSize = 0;
-                    xlabel(sprintf('qU - \\langle qU \\rangle'));
-                    ylabel(sprintf('Rate (Activity corrected)'));
-                    leg = legend([e2],sprintf('qU vs. rate'));
-                    title(leg,sprintf('Correlation factor = %.2f',correlation));
-                    legend boxoff;
-                    leg.Location = 'north';
-                    PrettyFigureFormat;
-                    hold off;
+                    if strcmp(QAplots,'ON')
+                        fig88 = figure('Renderer','painters');
+                        set(fig88,'units','normalized','pos',[0.1, 0.1,1,0.6]);
+                        plot(fitobject,qU,rate);
+                        hold on;
+                        PlotStyle = { 'o','MarkerSize',8,'MarkerFaceColor',rgb('SkyBlue'),...%rgb('IndianRed'),...%
+                             'LineWidth',2,'Color',obj.PlotColor};
+                        e1 = errorbar(qU,rate,repmat(std(qU),[1,numel(qU)]),PlotStyle{:});
+                        e1.CapSize = 0;
+                        e2 = errorbar(qU,rate,repmat(std(rate),[1,numel(rate)]),PlotStyle{:});
+                        e2.CapSize = 0;
+                        xlabel(sprintf('qU - \\langle qU \\rangle'));
+                        ylabel(sprintf('Rate (Activity corrected)'));
+                        leg = legend([e2],sprintf('qU vs. rate'));
+                        title(leg,sprintf('Correlation factor = %.2f',correlation));
+                        leg.EdgeColor = rgb('Silver');
+                        leg.Location = 'best';
+                        PrettyFigureFormat;
+                        hold off;
+                        if strcmp(saveplot,'ON')
+                            SaveDir = [getenv('SamakPath'),sprintf('tritium-data/plots/%s/corrections/',obj.DataSet)];
+                            MakeDir(SaveDir);
+                            SaveName = sprintf('RateCorrection_qU_raw_%s_%s.pdf',obj.RunData.RunName,pixlist);
+                            export_fig(fig88,[SaveDir,SaveName]);
+                        end
+                    end
                     slope = repmat(coeffs(1,1),[1,numel(obj.SingleRunData.TBDIS_RM)]).*qU;
+                    rate1 = rate;
                     rate = rate-slope;
+                    DiffqU = abs(rate - rate1)/mean(rate1);
+                    if strcmp(QAplots,'ON')
+                        fig88 = figure('Renderer','painters');
+                        set(fig88,'units','normalized','pos',[0.1, 0.1,1,0.6]);
+                        histogram(DiffqU)
+                        leg = legend(sprintf('\\sigma = %.2f x10^{-4}',std(DiffqU)*10.^4));
+                        title(leg,sprintf('qU Correction percentage'));
+                        PrettyFigureFormat;
+                        if strcmp(saveplot,'ON')
+                            SaveDir = [getenv('SamakPath'),sprintf('tritium-data/plots/%s/corrections/',obj.DataSet)];
+                            MakeDir(SaveDir);
+                            SaveName = sprintf('CorrectionPercentage_qU_%s_%s.pdf',obj.RunData.RunName,pixlist);
+                            export_fig(fig88,[SaveDir,SaveName]);
+                        end
+                    end
                     obj.SingleRunData.TBDIS_RM = rate.*(obj.SingleRunData.qUfrac_RM.*obj.SingleRunData.TimeSec);
                     correlation = corr(qU(:),rate(:));
-                    fig88 = figure('Renderer','painters');
-                    set(fig88,'units','normalized','pos',[0.1, 0.1,0.5,0.5]);
-                    PlotStyle = { 'o','MarkerSize',8,'MarkerFaceColor',rgb('SkyBlue'),...%rgb('IndianRed'),...%
-                         'LineWidth',2,'Color',obj.PlotColor};
-                    e1 = errorbar(qU,rate,repmat(std(qU),[1,numel(qU)]),PlotStyle{:});
-                    e1.CapSize = 0;
-                    e2 = errorbar(qU,rate,repmat(std(rate),[1,numel(rate)]),PlotStyle{:});
-                    e2.CapSize = 0;
-                    xlabel(sprintf('qU - \\langle qU \\rangle'));
-                    ylabel(sprintf('Rate (Activity & qU corrected)'));
-                    leg = legend([e2],sprintf('qU vs. rate'));
-                    title(leg,sprintf('Correlation factor = %.2f',correlation));
-                    legend boxoff;
-                    leg.Location = 'north';
-                    PrettyFigureFormat;
+                    if strcmp(QAplots,'ON')
+                        fig88 = figure('Renderer','painters');
+                        set(fig88,'units','normalized','pos',[0.1, 0.1,1,0.6]);
+                        PlotStyle = { 'o','MarkerSize',8,'MarkerFaceColor',rgb('SkyBlue'),...%rgb('IndianRed'),...%
+                             'LineWidth',2,'Color',obj.PlotColor};
+                        e1 = errorbar(qU,rate,repmat(std(qU),[1,numel(qU)]),PlotStyle{:});
+                        e1.CapSize = 0;
+                        e2 = errorbar(qU,rate,repmat(std(rate),[1,numel(rate)]),PlotStyle{:});
+                        e2.CapSize = 0;
+                        xlabel(sprintf('qU - \\langle qU \\rangle'));
+                        ylabel(sprintf('Rate (Activity & qU corrected)'));
+                        leg = legend([e2],sprintf('qU vs. rate'));
+                        title(leg,sprintf('Correlation factor = %.2f',correlation));
+                        leg.EdgeColor = rgb('Silver');
+                        leg.Location = 'best';
+                        PrettyFigureFormat;
+                        if strcmp(saveplot,'ON')
+                            SaveDir = [getenv('SamakPath'),sprintf('tritium-data/plots/%s/corrections/',obj.DataSet)];
+                            MakeDir(SaveDir);
+                            SaveName = sprintf('RateCorrection_qU_%s_%s.pdf',obj.RunData.RunName,pixlist);
+                            export_fig(fig88,[SaveDir,SaveName]);
+                        end
+                    end
                 end
             end
         end
@@ -1488,6 +1559,9 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             if isfield(obj.SingleRunData,'TBDIS_RM')
                 obj.SingleRunData.TBDIS_RM_Default = obj.SingleRunData.TBDIS_RM;
             end
+            
+            obj.SetMosCorr;
+
         end
         function StackPixelSingleRun(obj)
             switch obj.AnaFlag
@@ -1615,14 +1689,20 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                 TTFSD = 'SAENZ';
             end
             if FSDflag==2
-                  DTFSD = 'HTFSD';
-                  HTFSD = 'SAENZ';
-                  TTFSD = 'DOSS';
-              end
-              % Test Thierry - end
-             
+                DTFSD = 'HTFSD';
+                HTFSD = 'SAENZ';
+                TTFSD = 'DOSS';
+            end
+            % Test Thierry - end
+            if strcmp(obj.KTFFlag,'WGTSMACE_NIS1')
+                obj.KTFFlag = 'WGTSMACE';
+                NIS = 1;
+            else
+                NIS = 7;
+            end
+            
             TBDarg = {obj.RunData,...
-                'ISCS','Theory',...
+                'ISCS','Edep',...
                 'recomputeRF','OFF',...
                 'ELossFlag',obj.ELossFlag,...
                 'PixList',obj.PixList,...
@@ -1632,7 +1712,8 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                 'RadiativeFlag',obj.RadiativeFlag,...
                 'RingMerge',obj.RingMerge...
                 'mNuSq_i',mNuSq_i,...
-                };
+                'KTFFlag',obj.KTFFlag,...
+                'NIS',NIS};
  
             if ~isempty(qU)
                 TBDarg = {TBDarg{:},'qU',qU};
@@ -1660,6 +1741,11 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             if ~isempty(WGTS_B_T)
                 TBDarg = {TBDarg{:},'WGTS_B_T',WGTS_B_T};
             end
+            
+%             if strcmp(obj.MosCorrFlag,'ON') 
+%                 % response function broadening
+%                TBDarg = {TBDarg{:},'MACE_Sigma',std(obj.SingleRunData.qU,0,2)};
+%             end
             
             switch obj.AnaFlag
                 case 'StackPixel'
@@ -1694,7 +1780,6 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             end
             obj.ModelObj.ComputeTBDDS;
             obj.ModelObj.ComputeTBDIS;
-            
         end
     end % Preparation for Fit Methods end
     
@@ -2261,7 +2346,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                 fprintf('save plot as  %s \n',savename)
             end
         end
-        function FitResults = PlotFitRunListCorr(obj, varargin)
+        function [correlation,par,err,chi2min,dof] = PlotFitRunListCorr(obj, varargin)
             %correlations between Fit parameters and Slow Control
             p=inputParser;
             p.addParameter('Parametery','E0',@(x)ismember(x,{'mNuSq','E0','N','B','pVal','rate300','qU_RM'}));
@@ -2270,36 +2355,44 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             p.addParameter('DisplayStyle','Abs',@(x)ismember(x,{'Rel','Abs'}));
             p.addParameter('YLim','',@(x)isfloat(x) || isempty(x));
             p.addParameter('Fit','OFF',@(x)ismember(x,{'ON','OFF'}));
-            p.parse(varargin{:});           
+            p.addParameter('Detrend','OFF',@(x)ismember(x,{'ON','OFF'}));
+            p.addParameter('pixlist','uniform',@(x)ismember(x,{'uniform','ring1','ring2','ring3','ring4'}));
+            p.parse(varargin{:});
             Parametery    = p.Results.Parametery;
             Parameterx    = p.Results.Parameterx;            
             saveplot      = p.Results.saveplot;
             DisplayStyle  = p.Results.DisplayStyle;
             Fit           = p.Results.Fit;
+            Detrend       = p.Results.Detrend;
+            pixlist       = p.Results.pixlist;
             
             LocalFontSize = 24;
-
-            % Get Fit Results
-            switch obj.chi2
-                case 'chi2Stat'
-                    if isempty(obj.SingleRun_FitResults.chi2Stat)
-                        obj.FitRunList('Recompute','ON')
-                    end
-                    FitResults = obj.SingleRun_FitResults.chi2Stat;
-                    chi2leg = 'statistics only';
-                case {'chi2CM','chi2CMShape'}
-                    if isempty(obj.SingleRun_FitResults.chi2CMall) || isempty(obj.SingleRun_fitResults.chi2CMcorr)
-                        obj.FitRunList('Recompute','ON')
-                    end
-                    FitResults = obj.SingleRun_FitResults.chi2CMall;
-                    chi2leg = 'stat. + syst.';
-            end
             
+            % Get Fit Results if fit results are plotted
+            if ismember(Parametery,{'mNuSq','E0','N','B','pVal'}) || ismember(Parameterx,{'mNuSq','E0','N','B','pVal'})
+                switch obj.chi2
+                    case 'chi2Stat'
+                        if isempty(obj.SingleRun_FitResults.chi2Stat)
+                            obj.FitRunList('Recompute','ON')
+                        end
+                        FitResults = obj.SingleRun_FitResults.chi2Stat;
+                        chi2leg = 'fits (statistics only)';
+                    case {'chi2CM','chi2CMShape'}
+                        if isempty(obj.SingleRun_FitResults.chi2CMall) || isempty(obj.SingleRun_fitResults.chi2CMcorr)
+                            obj.FitRunList('Recompute','ON')
+                        end
+                        FitResults = obj.SingleRun_FitResults.chi2CMall;
+                        chi2leg = 'fits (stat. + syst.)';
+                end
+            else
+                chi2leg = '';
+            end
             %% prepare y axis: depending on defined Parametery  
             switch Parametery
                 case 'E0'
-                    y = FitResults.E0;
-                    yErr = FitResults.E0Err;
+                    UnitStr = 'eV';
+                    y = FitResults.E0';
+                    yErr = FitResults.E0Err';
                     if strcmp(DisplayStyle,'Abs')
                         ystr = sprintf('{\\itE}_0^{fit} (eV)');
                     elseif strcmp(DisplayStyle,'Rel')
@@ -2307,6 +2400,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                         ystr = sprintf('{\\itE}_0^{fit} - \\langle{\\itE}_0^{fit}\\rangle (eV)');
                     end   
                 case 'mNuSq'
+                    UnitStr = sprintf('eV^2');
                     y = FitResults.mnuSq;
                     yErr = FitResults.mnuSqErr;
                     if strcmp(DisplayStyle,'Abs')
@@ -2316,6 +2410,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                         ystr = sprintf('{\\itm}_{\\beta}^2 - < m_{\\beta}^2 >  (eV^2)');
                     end
                 case 'B'
+                     UnitStr = 'cps';
                     y = FitResults.B.*1e3;
                     yErr = FitResults.BErr.*1e3;
                     if strcmp(DisplayStyle,'Abs')
@@ -2325,6 +2420,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                         ystr = sprintf('{\\itB} - \\langle{\\itB}\\rangle  (mcps)');
                     end
                 case 'N'
+                    UnitStr = '';
                     y = FitResults.N+1;
                     yErr = FitResults.NErr;
                     if strcmp(DisplayStyle,'Abs')
@@ -2334,15 +2430,18 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                         ystr = sprintf('{\\itN} - \\langle{\\itN}\\rangle');
                     end
                 case 'pVal'
+                    UnitStr = '';
                     y = FitResults.pValue;
                     yErr = zeros(numel(y),1);
                     ystr = sprintf('p-value (%.0f dof)',FitResults.dof(1));
                 case 'rate300'
+                    UnitStr = 'cps';
                     y = obj.SingleRunData.TBDIS_RM./(obj.SingleRunData.qUfrac_RM.*obj.SingleRunData.TimeSec);
                     ystd = std(y);
                     yErr = repmat(ystd,[1,numel(y)]);
                     ystr = sprintf('Rate @ 300 eV below E0');
                 case 'qU_RM'
+                    UnitStr = 'eV';
                     y = obj.SingleRunData.qU_RM;
                     ystd = std(y);
                     yErr = repmat(ystd,[1,numel(y)]);
@@ -2353,7 +2452,8 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             switch Parameterx
                 case 'RhoD'
                     x = obj.SingleRunData.WGTS_CD_MolPerCm2;
-                    xErr = std(obj.SingleRunData.WGTS_CD_MolPerCm2_SubRun);
+                    %xErr = std(obj.SingleRunData.WGTS_CD_MolPerCm2_SubRun);
+                    xErr = repmat(0,[1,numel(x)]);
                     if strcmp(DisplayStyle,'Abs')
                         xstr = sprintf('Column density (mol \\cdot cm^{-2})');
                     elseif strcmp(DisplayStyle,'Rel')
@@ -2363,7 +2463,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                 case 'Act'
                     x = obj.SingleRunData.WGTS_CD_MolPerCm2 .* (obj.SingleRunData.WGTS_MolFrac_TT + 0.5*obj.SingleRunData.WGTS_MolFrac_DT + 0.5*obj.SingleRunData.WGTS_MolFrac_HT);
                     xstd = std(x);
-                    xErr = repmat(xstd,[1,numel(x)]);
+                    xErr = repmat(0,[1,numel(x)]);
                     xstr = sprintf('Activity');
                 case 'E0'
                     x = FitResults.E0;
@@ -2446,16 +2546,21 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             fig88 = figure('units','normalized','pos',[0.1, 0.1,1,0.6]);
             if strcmp(Fit,'ON')
                 if strcmp(Parameterx,'time')
-                    %fitobject = fit(x,permute(y,[2 1]),'poly1')
-                    [fitobject,err,chi2min,dof] = linFit(x,permute(y,[2 1]),permute(yErr,[2 1]))
+                    [par,err,chi2min,dof] = linFit(x,permute(y,[2 1]),permute(yErr,[2 1]))
                 elseif strcmp(Parameterx,'N')
-                    [fitobject,err,chi2min,dof] = linFit(x,y,yErr)
+                    [par,err,chi2min,dof] = linFit(x,y,yErr)
+                elseif strcmp(Parameterx,'Act') || strcmp(Parameterx,'RhoD')
+                    [par,err,chi2min,dof] = linFit(permute(x,[2 1]),permute(y,[2 1]),permute(yErr,[2 1]))
                 else
-                    [fitobject,err,chi2min,dof] = linFit(permute(x,[2 1]),permute(y,[2 1]),yErr)
+                    [par,err,chi2min,dof] = linFit(x,y,yErr)
                 end
-                    x1 = min(x):2:max(x);
-                    y1 = fitobject(1).*x1+fitobject(2);
-                    plot(x1,y1);
+                    x1 = min(x):(max(x)-min(x))/100:max(x);
+                    y1 = par(1).*x1+par(2);
+                    pfit = plot(x1,y1,'LineWidth',2,'Color',rgb('GoldenRod'));
+            end
+            if(strcmp(Detrend,'ON'))
+                y = y(:) - par(1).*x;
+                obj.SingleRunData.TBDIS_RM = permute(y,[2 1]).*(obj.SingleRunData.qUfrac_RM.*obj.SingleRunData.TimeSec);
             end
             hold on;
             % plot data
@@ -2467,19 +2572,49 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             e2.CapSize = 0;
             xlabel(xstr);
             ylabel(ystr);
-            leg = legend([e2],sprintf('Scanwise fits (%s) \n Fit slope: %.2f\\pm%.2f cps/h',chi2leg,fitobject(1),err(1)));
+            xmin = min(x);
+            if strcmp(Parameterx,'time')
+                xlim([min(x)-numel(x)*0.05 max(x)+numel(x)*0.05]);
+            elseif xmin>0
+                xlim([min(x)*0.99 max(x)*1.01]);
+            elseif xmin<0
+                xlim([min(x)*1.01 max(x)*1.01]);
+            end
+            if strcmp(Fit,'ON')
+                if abs(par(1))<0.01
+                    fitStr = sprintf('%.2g\\pm%.2g m%s/h',par(1)*1e3,err(1)*1e3,UnitStr);
+                else
+                    fitStr = sprintf('%.2g\\pm%.2g %s/h',par(1),err(1),UnitStr);
+                end
+                leg = legend([e2,pfit],sprintf('Scanwise %s',chi2leg),sprintf('Fit slope: %s',fitStr));
+            else
+                leg = legend(e2,sprintf('Scanwise %s',chi2leg));
+            end
             title(leg,sprintf('Correlation factor = %.2f',correlation));
             leg.EdgeColor = rgb('Silver');
             leg.Location = 'best';
+            leg.Title.FontWeight = 'normal';
             PrettyFigureFormat('Fontsize',LocalFontSize);
             hold off;
             if strcmp(saveplot,'ON')
+                if strcmp(obj.MosCorrFlag,'ON')
+                    MosStr = '_MosCorr';
+                else
+                    MosStr = '';
+                end
+                if strcmp(obj.ROIFlag,'14keV')
+                    RoiStr = '_14keV';
+                else
+                    RoiStr = '';
+                end
                 SaveDir = [getenv('SamakPath'),sprintf('tritium-data/plots/%s/correlations/',obj.DataSet)];
                 MakeDir(SaveDir);
-                SaveName = sprintf('Corr_%s_%s_%s.pdf',Parameterx,Parametery,obj.RunData.RunName);
+                SaveName = sprintf('Corr_%s_%s_%s_%s_%.0feV%s%s.pdf',...
+                    Parameterx,Parametery,obj.RunData.RunName,pixlist,obj.GetRange,RoiStr,MosStr);
                 export_fig(fig88,[SaveDir,SaveName]);
+                fprintf('Save plot to %s \n',[SaveDir,SaveName]);
             end
-        end    
+        end
         function FitResults = FitRunList(obj,varargin)
             
             % Fit all Runs in (stacked or not) RunList independently
@@ -2496,13 +2631,16 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             FitListArg = {'exclDataStart',obj.exclDataStart,...
                 'fixPar',obj.fixPar,...
                 'AnaFlag',obj.AnaFlag,...
+                'RingMerge',obj.RingMerge,...
                 'DataType',obj.DataType,...
                 'FitNBFlag',obj.FitNBFlag,...
                 'FSDFlag',obj.FSDFlag,...
                 'ELossFlag',obj.ELossFlag,...
                 'NonPoissonScaleFactor',obj.NonPoissonScaleFactor,...
                 'chi2',obj.chi2,...
-                'NonPoissonScaleFactor',obj.NonPoissonScaleFactor};
+                'NonPoissonScaleFactor',obj.NonPoissonScaleFactor,...
+                'MosCorrFlag',obj.MosCorrFlag,...
+                'ROIFlag',obj.ROIFlag};
             
             obj.InitFitPar;
             parAll     = zeros(numel(obj.RunList),obj.nPar);
@@ -2532,24 +2670,30 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                     RoiStr = '_14keVROI';
             end
             
+            if strcmp(obj.MosCorrFlag,'ON')
+                MosStr = '_MosCorr';
+            else
+                MosStr = '';
+            end
+            
             savefile = arrayfun(@(x) ...
-                sprintf('%sFit%s%.0f_%s_%.0fbE0_freePar%s%s.mat',...
+                sprintf('%sFit%s%.0f_%s_%.0fbE0_freePar%s%s%s.mat',...
                 savedir,DataTypeLabel,...
                 x,...
-                obj.chi2,obj.ModelObj.Q_i-obj.ModelObj.qU(obj.exclDataStart),fixParstr,RoiStr), ...
+                obj.chi2,obj.ModelObj.Q_i-obj.ModelObj.qU(obj.exclDataStart),fixParstr,RoiStr,MosStr), ...
                 obj.RunList,'UniformOutput',0);
-           
+            
             % load fit results, which are already computed
             fprintf('Attempt to load fit results from file %s \n',savefile{1});
-           LoadFilesIndex             = cellfun(@(x) exist(x,'file')==2,savefile);            %logicals, indicate which runs are already fitted
-           fprintf('Retrieve %.0f Fit Results from file\n',sum( LoadFilesIndex));
-           LoadFiles                  = cellfun(@(x) importdata(x),savefile(LoadFilesIndex)); % import those runs
-           parAll(LoadFilesIndex,:)   = cell2mat(arrayfun(@(x) x.FitResult.par,LoadFiles,'UniformOutput',false)); %asign to variables
-           errAll(LoadFilesIndex,:)   = cell2mat(arrayfun(@(x) x.FitResult.err,LoadFiles,'UniformOutput',false)); 
-           chi2minAll(LoadFilesIndex) = cell2mat(arrayfun(@(x) x.FitResult.chi2min,LoadFiles,'UniformOutput',false));
-           dofAll(LoadFilesIndex)     = cell2mat(arrayfun(@(x) x.FitResult.dof,LoadFiles,'UniformOutput',false));
-                
-           % calculate missing fit results
+            LoadFilesIndex             = cellfun(@(x) exist(x,'file')==2,savefile);            %logicals, indicate which runs are already fitted
+            fprintf('Retrieve %.0f Fit Results from file\n',sum( LoadFilesIndex));
+            LoadFiles                  = cellfun(@(x) importdata(x),savefile(LoadFilesIndex)); % import those runs
+            parAll(LoadFilesIndex,:)   = cell2mat(arrayfun(@(x) x.FitResult.par',LoadFiles,'UniformOutput',false))'; %asign to variables
+            errAll(LoadFilesIndex,:)   = cell2mat(arrayfun(@(x) x.FitResult.err',LoadFiles,'UniformOutput',false))';
+            chi2minAll(LoadFilesIndex) = cell2mat(arrayfun(@(x) x.FitResult.chi2min,LoadFiles,'UniformOutput',false));
+            dofAll(LoadFilesIndex)     = cell2mat(arrayfun(@(x) x.FitResult.dof,LoadFiles,'UniformOutput',false));
+            
+            % calculate missing fit results
            if sum(LoadFilesIndex)==numel(obj.RunList) % all runs are already fitted
                fprintf('Fit results from all runs loaded from file \n');
            else
@@ -3108,29 +3252,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                 case 'FT_RD72'
                     RunList = [40926:40935];
             end
-            
-            % ------------------------------------------------------- %
-            % FT Remove Runs
-            %             RunList = RunList(RunList~=40531); % Large DT
-            %             RunList = RunList(RunList~=40976); % Large DT
-            %             RunList = RunList(RunList~=40977); % Large DT
-            %             RunList = RunList(RunList~=40979); % Large DT
-            %             RunList = RunList(RunList~=40980); % Large DT
-            %             RunList = RunList(RunList~=40982); % Large DT
-            %             RunList = RunList(RunList~=40983); % Large DT
-            %             RunList = RunList(RunList~=41032); % Low DT
-            %             RunList = RunList(RunList~=40995);  % Weird Time
-            %             RunList = RunList(RunList~=40670); % Large RhoD
-            %             RunList = RunList(RunList~=40671); % Large RhoD
-            %             RunList = RunList(RunList~=40692); % Large RhoD
-            %             RunList = RunList(RunList~=40693); % Large RhoD
-            %             RunList = RunList(RunList~=40540); % Low RhoD
-            %             RunList = RunList(RunList~=40541); % Low RhoD
-            %             RunList = RunList(RunList~=40604); % Low RhoD
-            %             RunList = RunList(RunList~=41019); % Low RhoD
-            %             RunList = RunList(RunList~=41026); % Low RhoD
-            % ------------------------------------------------------- %
-            
+             
         end
         function RunList = GetKNM1RunList(obj,ListName)
             Version = 'RunSummary-Durable3a-fpd00';
@@ -3228,61 +3350,37 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             
         end
         function RunList = GetKNM2RunList(obj,ListName)
-            % Run Summary version
-            Version = 'RunSummary-Prompt4b-fpd00';
+            % KNM2 run lists
+            RunListDir = [getenv('SamakPath'),'inputs/RunLists/KNM2/'];
+            runsRW1 = sort(importdata([RunListDir,'KNM2_RW1.dat']));
+            runsRW2 = sort(importdata([RunListDir,'KNM2_RW2.dat']));
+            runsRW3 = sort(importdata([RunListDir,'KNM2_RW3.dat']));
             
-            % Excluded Runs
-            RunExcListIE       = unique([56175,56185,56283,56318,56408,56410,56631, 56687, 56705, 57021, 57037]);      % Inner electrode power supply breakdown
-            RunExclListNaN     = [56331,56630];                                                                      % NaN value in K35
-            RunExclListT2      = [56348,56632:56638,56665:56668,56675:56683];    % No T2 value or LARA problem
-            RunExclListFPD     = [56280, 56304]; % detector slow control
-            RunExclListqU      = [56160:56277,56332];        % voltage spike or other HV problems
-            RunExclListE0      = 56343;        % endpoint very low
-            RunExclListOther   = [56415, 56604];        % other BREW comments
-            RunExcList = [RunExcListIE,RunExclListNaN,RunExclListT2,RunExclListFPD,...
-                RunExclListqU,RunExclListE0,RunExclListOther];
-
-            if ismember(ListName,{'KNM2_Prompt','KNM2_RandHalf'})  % all runs 
-                FirstRun = 56160;  LastRun = 57137;
+            if ismember(ListName,{'KNM2_Prompt','KNM2_RandHalf'})  % all runs
+                h5list = sort([runsRW1,runsRW2,runsRW3]);
             elseif strcmp(ListName,'KNM2_RW1')   % rear wall setting 1 (different names for back compatibility)
-                FirstRun = 56160;  LastRun = 56479;
+                h5list = runsRW1;
             elseif strcmp(ListName,'KNM2_RW2')   % rear wall setting 2
-                % FirstRun = 56560;  
-                % LastRun = 56713; Original
-FirstRun = 56561;  
-LastRun = 56683; % THIERRY - 27/2/2020 WARNING
+                h5list = runsRW2;
             elseif strcmp(ListName,'KNM2_RW3')   % rear wall setting 3
-                FirstRun = 57015;  LastRun = 57137;
+                h5list = runsRW3;
             elseif strcmp(ListName,'KNM2_RW12') % rear wall setting 1 + 2
-                 FirstRun = 56160;  LastRun = 56713;
+                h5list = sort([runsRW1,runsRW2]);
             elseif strcmp(ListName,'KNM2_RW23') % rear wall setting 2 + 3
-                 FirstRun = 56560;  LastRun = 57137; 
+                h5list = sort([runsRW2,runsRW3]);
             elseif strcmp(ListName,'KNM2_RW13') % rear wall setting 1 + 3
-                 FirstRun = 56160;  LastRun = 57137; 
-                 RunExcList = [RunExcList,56560:56713];
+                h5list = sort([runsRW1,runsRW3]);
             else
-                fprintf('RunList Name unknown! \n'); 
+                fprintf('RunList Name unknown! \n');
             end
             
-            % Read All KNM2 HD5 File
-            tmp = dir([getenv('SamakPath'), '/tritium-data/hdf5/',GetDataSet(FirstRun), '/*.h5']);
-            h5list = arrayfun(@(x) x.name,tmp,'UniformOutput',0);
-            h5list =  extractBefore(h5list,'.h5');
-            h5list = str2double(extractAfter(h5list,Version));
-            h5list(isnan(h5list)) = []; % %delete everything that has a different version
-            
-            % Truncate to exclude Runs from RunExcList:
-            h5list(h5list<FirstRun)=[];
-            h5list(h5list>LastRun)=[];
-            h5list(ismember(h5list,RunExcList))=[];
-            HDF5readallruns('h5runlist',h5list,'reConvert','OFF','DataSet',GetDataSet(FirstRun)); %looks for unconverted runs and converts if needed
-            
+            HDF5readallruns('h5runlist',h5list,'reConvert','OFF','DataSet',GetDataSet(h5list(1))); %looks for unconverted runs and converts if needed
             RunList=sort(h5list);
             
-            if strcmp(ListName,'KNM2_RandHalf')              % random half
-               RandIndex = randperm(numel(RunList));         % randomly permute runlist indices
-               nRunsHalf = ceil(numel(RunList)/2);           % take only half of all runs
-               RunList   = RunList(RandIndex(1:nRunsHalf));
+            if strcmp(ListName,'KNM2_RandHalf')               % random half
+                RandIndex = randperm(numel(RunList));         % randomly permute runlist indices
+                nRunsHalf = ceil(numel(RunList)/2);           % take only half of all runs
+                RunList   = RunList(RandIndex(1:nRunsHalf));
             end
         end
         function RunList = GetFakeRunList(obj)
@@ -3320,12 +3418,12 @@ LastRun = 56683; % THIERRY - 27/2/2020 WARNING
             legend_str = cell(obj.nRuns,1);
             %counter = 1; %counter
             figScatter = figure(2);
-            set(figScatter, 'Units', 'normalized', 'Position', [0.9, 0.9, 1, 0.8]);
+            set(figScatter, 'Units', 'normalized', 'Position', [0.1, 0.1, 0.7, 0.7]);
             x = linspace(obj.RunData.qU(obj.exclDataStart)-18700,obj.RunData.qU(end)-18400,10);
             plot(x,zeros(numel(x),1),'-','Color',rgb('DarkSlateGray'),'LineWidth',2);
             hold on;
-            pt = plot(x,obj.StackTolerance.*ones(numel(x),1),'--','Color',rgb('DarkSlateGray'),'LineWidth',2);
-            plot(x,-obj.StackTolerance.*ones(numel(x),1),'--','Color',rgb('DarkSlateGray'),'LineWidth',2);
+            %pt = plot(x,obj.StackTolerance.*ones(numel(x),1),'--','Color',rgb('DarkSlateGray'),'LineWidth',2);
+            %plot(x,-obj.StackTolerance.*ones(numel(x),1),'--','Color',rgb('DarkSlateGray'),'LineWidth',2);
             
             % Compute Actual qU mean of stacked runs
             qUmean      = obj.RunData.qU;
@@ -3335,40 +3433,37 @@ LastRun = 56683; % THIERRY - 27/2/2020 WARNING
                 c = colormap(jet(obj.nRuns));
                 % Plot
                 if(obj.SingleRunData.Select_all(rr))
-                    p = scatter(obj.RunData.qU(obj.exclDataStart:end)-obj.ModelObj.Q_i,...
+                    p = scatter(obj.RunData.qU(obj.exclDataStart:end)-18574,...
                         obj.SingleRunData.qU(obj.exclDataStart:end,rr)-qUmean(obj.exclDataStart:end),...
                         80,c(rr,:),'o','filled','MarkerEdgeColor',rgb('DimGray'));
                 else
-                    p = scatter(obj.RunData.qU(obj.exclDataStart:end)-obj.ModelObj.Q_i,...
+                    p = scatter(obj.RunData.qU(obj.exclDataStart:end)-18574,...
                         obj.SingleRunData.qU(obj.exclDataStart:end,rr)-qUmean(obj.exclDataStart:end),...
                         80,c(rr,:),'x','filled','MarkerEdgeColor',rgb('DimGray'));
                 end
                 
                 PrettyFigureFormat;
                 hold on;
-                set(gca,'FontSize',22);
-                xlabel(sprintf('mean retarding potential < qU >  -  %.1f  (eV)',obj.ModelObj.Q_i),'FontSize',20);
-                ylabel('qU  -  < qU > (eV)','FontSize',20);
+                set(gca,'FontSize',24);
+                xlabel(sprintf('Mean retarding potential \\langleqU\\rangle - 18574 (eV)'),'FontSize',24);
+                ylabel(sprintf('qU - \\langleqU\\rangle (eV)'),'FontSize',24);
                 legend_str{rr} = sprintf('%u',obj.RunList(rr));
                 %counter = counter +1;
             end
-            
-            title(sprintf('%.0f Runs Analyzed - %0.f Runs Stacked - Starting qU-E_0 = %g eV',obj.nRuns,numel(obj.StackedRuns),obj.RunData.qU(obj.exclDataStart)-obj.ModelObj.Q_i));
             
             if strcmp(legendFlag,'ON')
                 myleg= legend(legend_str{:},'Location','bestoutside');
                 myleg.NumColumns = 3;
                 myleg.Title.String = sprintf('%.0f runs',obj.nRuns);
-                else
-                    myleg = legend([pt],'qU tolerance','Location','northwest');
-                
+            else
+                myleg = legend(p,sprintf('%.0f runs (%.0f - %.0f) \n\\langle\\sigma\\rangle = %.0f meV',...
+                       obj.nRuns,obj.RunList(1),obj.RunList(end),1e3*mean(std(obj.SingleRunData.qU,0,2))),'Location','northeast');
             end
-            legend('boxoff');
+            myleg.EdgeColor = rgb('Silver');
             myleg.FontSize = 22;
-            grid on;
-            xlim(1.05.*[min(obj.RunData.qU(obj.exclDataStart:end)-obj.ModelObj.Q_i) max(obj.RunData.qU(obj.exclDataStart:end)-obj.ModelObj.Q_i)]);
+            xlim(1.05.*[min(obj.RunData.qU(obj.exclDataStart:end)-obj.ModelObj.Q_i) 0]);%max(obj.RunData.qU(obj.exclDataStart:end)-obj.ModelObj.Q_i)]);
             hold off;
-            
+
             if abs(min(ylim))<=obj.StackTolerance
                 ylim([-max(ylim) ,max(ylim)]);
             elseif abs(min(ylim))<=abs(max(ylim))
@@ -3380,9 +3475,7 @@ LastRun = 56683; % THIERRY - 27/2/2020 WARNING
                  if exist('./plots','dir')~=7
                     mkdir plots
                 end
-%                 if exist('./plots/png','dir')~=7
-%                     mkdir plots/png
-%                 end
+
                 save_name = sprintf('./plots/ScatterPlot-StackedRuns_%u-%u_excl%u.png',min(obj.StackedRuns),max(obj.StackedRuns),obj.exclDataStart);
                 if contains(save_name,' ')
                     save_name=strrep(save_name,' ','_');
@@ -3468,7 +3561,6 @@ LastRun = 56683; % THIERRY - 27/2/2020 WARNING
             % 2. Residuals
             %------------------------------------------------------------------
 
-           
             % Plot
             fig123 = figure(123);
             set(fig123, 'Units', 'normalized', 'Position', [0.9, 0.9, 0.8, 1.2]);

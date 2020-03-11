@@ -2,9 +2,11 @@ function  [plotHandle, cbHandle]  = PlotRingWiseFitPar(obj,varargin)
 p=inputParser;
 p.addParameter('PlotPar','qU',@(x)ismember(x,{'qU','mTSq','Norm','Bkg'}));
 p.addParameter('PlotParRef','',@(x)isfloat(x)); % plot parameter with respect to reference value (optional)
+p.addParameter('SaveAs','',@(x)ischar(x) || isempty(x));
 p.parse(varargin{:});
 PlotPar = p.Results.PlotPar;
 PlotParRef = p.Results.PlotParRef;
+SaveAs = p.Results.SaveAs;
 
 if ~strcmp(obj.AnaFlag,'Ring')
     fprintf('This routine makes only sense for multi-ring analysis \n')
@@ -40,4 +42,9 @@ xpixel = xpixel-xpixel(1);
 [plotHandle, cbHandle] = FPDViewer(xpixel);
 cbHandle.Label.String = clabel;
 cbHandle.Label.FontSize = get(gca,'FontSize')+4;
+
+
+if ~isempty(SaveAs)
+    export_fig(gca,'SaveAs');
+end
 end

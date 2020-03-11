@@ -3,9 +3,6 @@
 % calculate rate - qU dependence with MC simulations
 % ------------------------------------------------------------
 
-%vcorrect=[ 1.000000000000000   0.996586595279402   0.992150388075006   0.988038815639518]; 
-vcorrect=[ 1 1 1 1]; 
-
 % You need to have Run GetSamakPath in your Working Directory Before
 savedir = [getenv('SamakPath'),'knm2ana/knm2_RateMonitoring/results'];
 MakeDir(savedir);
@@ -40,10 +37,10 @@ else
     qUIndex = find((A.RunData.qU-18574)<-95); % all Data points around rate monitor point
     qU      = A.RunData.qU(qUIndex);
     Rate    = A.RunData.TBDIS(qUIndex)./(A.RunData.qUfrac().*A.RunData.TimeSec);
-    RateErr = sqrt(A.RunData.TBDIS(qUIndex))./(A.RunData.qUfrac().*A.RunData.TimeSec);
+    RateErr = sqrt(Rate);
      
     % linear fit of rate around E0-300V
-    [par, err, chi2min,dof] = linFit((qU-qU(10)),Rate,RateErr);
+    [par, err, chi2min,dof] = linFit(qU-18574,Rate,RateErr);
     
     save(savename,'par','err','chi2min','dof','qUIndex','qU','Rate','RateErr','CommonArg');
 end
@@ -60,22 +57,20 @@ end
         
 %% Sanity plot: Uniform - All Pixels
 f1 = figure('Units','normalized','Position',[0.1,0.1,0.5,0.5]);
-e1 = errorbar((qU-qU(10)),Rate,RateErr,'-x','LineWidth',2);
+e1 = errorbar(qU-18574,Rate,RateErr,'-x','LineWidth',2);
 hold on;
-x = (qU-qU(10));
+x = linspace(min(qU),max(qU),100)-18574;
 y = par(1).*x+par(2);
 p1 = plot(x,y,'LineWidth',2);
-ud=plot(qUDataUniform-qU(10),MeanRateDataUniform,'rs','MarkerSize',20);
+ud=plot(qUDataUniform-18574,MeanRateDataUniform,'rs','MarkerSize',20);
 hold off;
 PrettyFigureFormat('FontSize',22);
 xlabel('Retarding energy - 18574 (eV)');
 ylabel('Rate (cps)');
-leg = legend([e1,p1,ud],sprintf('MC simulation'),...
+leg = legend([e1,p1,ud(1)],sprintf('MC simulation'),...
     sprintf('Linear fit slope = %.2f \\pm %.2f cps/mV',par(1)/1e3,err(1)/1e3),...
     'KNM2 RW2 Data');
 leg.EdgeColor = rgb('Silver');
-
-return;
 
 %% Sanity plot: Pseudo-Ring Wise
     clear par err;
@@ -118,7 +113,7 @@ return;
         hold on;
         x = linspace(min(qU(i,:)),max(qU(i,:)),100)-18574;
         y = parRing(i,1).*x + parRing(i,2);
-        p1 = plot(x,y.*vcorrect(i),'LineWidth',5);
+        p1 = plot(x,y,'LineWidth',5);
         rd = plot(qUData(i)-18574,MeanRateData(i),'rs','MarkerSize',20,'LineWidth',4);
         hold off;
         PrettyFigureFormat('FontSize',22);
@@ -173,7 +168,7 @@ CorrectionFactorPSR1 = MeanRateSim/MeanRateData(1);
         hold on;
         x = linspace(min(qU(i,:)),max(qU(i,:)),100)-18574;
         y = parRing(i,1).*x + parRing(i,2);
-        p1 = plot(x,y.*vcorrect(i),'LineWidth',5);
+        p1 = plot(x,y,'LineWidth',5);
         rd = plot(qUData(i)-18574,MeanRateData(i).*CorrectionFactorPSR1,'rs','MarkerSize',20,'LineWidth',4);
         hold off;
         PrettyFigureFormat('FontSize',22);
@@ -190,7 +185,7 @@ CorrectionFactorPSR1 = MeanRateSim/MeanRateData(1);
     
     %% Calculate Rate Differences & Convert into Potential Shifts
     for i=1:4
-        RateDifferences(i) = (parRing(i,1).*(qUData(i)-18574) + parRing(i,2)).*vcorrect(i) - MeanRateData(i).*CorrectionFactorPSR1;
+        RateDifferences(i) = (parRing(i,1).*(qUData(i)-18574) + parRing(i,2)) - MeanRateData(i).*CorrectionFactorPSR1;
         mVDifferences(i)   = RateDifferences(i)./(parRing(i,1)/1e3);
     end
     

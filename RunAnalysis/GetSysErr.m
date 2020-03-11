@@ -75,7 +75,7 @@ elseif SysBudget ==22 % default Knm1
     SysErr.ISXsection_RelErr= 0; %use rhod sigma together as uncertainty
     SysErr.DataDriven = 'ON';
     SysErr.FPDeff_RelErr = 1e-4;
-elseif SysBudget == 31 % preliminary KNM2 systemaitcs (January 20)
+elseif SysBudget == 31 % preliminary KNM2 systematics (January 20)
     SysErr.WGTS_TASR_RelErr = 5e-4; % data driven
     SysErr.FSDNorm_RelErr=  0.01;
     SysErr.FSDShapeGS_RelErr= 0.04;

@@ -71,7 +71,11 @@ classdef CovarianceMatrix < handle
     
     % plasma uncertainties
     RW_SigmaErr;             % absolute uncertainty of plasma/rear wall potential over measurement time (eV)
-    RW_MultiPosErr; 
+    RW_MultiPosErr;
+    
+    % longitidinal
+    MACE_SigmaErr;
+    is_EOffsetErr;
     
     %debugging option
     SanityPlots;             % various ON/OFF
@@ -120,7 +124,9 @@ classdef CovarianceMatrix < handle
          p.addParameter('FPDeff_RelErr',0.001,@(x)isfloat(x) && x>=0);
          p.addParameter('RW_SigmaErr',0.1,@(x)isfloat(x) && x>=0);
          p.addParameter('RW_MultiPosErr',0.1,@(x)isfloat(x));
-        
+         p.addParameter('MACE_SigmaErr',0.02,@(x)isfloat(x));
+         p.addParameter('is_EOffsetErr',0.02,@(x)isfloat(x));
+         
          p.parse(varargin{:});          
          obj.nTrials                  = p.Results.nTrials;
          obj.nRuns                    = p.Results.nRuns;
@@ -154,6 +160,8 @@ classdef CovarianceMatrix < handle
          obj.ShapeCMnormIndex         = p.Results.ShapeCMnormIndex;
          obj.RW_SigmaErr              = p.Results.RW_SigmaErr;
          obj.RW_MultiPosErr           = p.Results.RW_MultiPosErr;
+         obj.MACE_SigmaErr            = p.Results.MACE_SigmaErr;
+         obj.is_EOffsetErr            = p.Results.is_EOffsetErr;
          
          if strcmp(obj.StudyObject.FPD_Segmentation,'RING')
              dim = obj.StudyObject.nqU*obj.StudyObject.nRings;
@@ -182,8 +190,8 @@ classdef CovarianceMatrix < handle
              'Stack',...      % Stacking all qU
              'BkgShape',...   % background shape (slope)
              'FPDeff',...     % detector efficiency from subrun to subrun
-              'RW',...        % rear wall /plasma potential over time
-              };  
+             'RW',...        % rear wall /plasma potential over time
+             'LongPlasma'};   % longitudinal plasma uncertainty (e-loss shift and variance)
           
          % Init  SysEffect structure: Default Option: all OFF  
          if isempty(obj.SysEffect)         
@@ -225,6 +233,7 @@ classdef CovarianceMatrix < handle
                   obj.SysEffect.TASR ='ON';
                   obj.SysEffect.FSD = 'ON';
                   obj.SysEffect.RW = 'ON';
+                  obj.SysEffect.LongPlasma = 'ON';
                   obj.SysEffect = rmfield(obj.SysEffect,'all');
               end
           end
@@ -1275,6 +1284,7 @@ classdef CovarianceMatrix < handle
 
             %save lookup table
             save(file_eloss,'fscatn','fscatnE','E','-mat');
+            
             end
         end
         function out   =  ComputeISProbLookupTable(obj,varargin)
@@ -1299,7 +1309,6 @@ classdef CovarianceMatrix < handle
             WGTS_CD_MolPerCm2_v = zeros(obj.nTrials,obj.nRuns);
             if strcmp(obj.SysEffect.RF_RX,'ON')
                 WGTS_CD_MolPerCm2_v(:,1) = obj.VaryParameter('Parameter',obj.StudyObject.WGTS_CD_MolPerCm2,'rel_Error', obj.WGTS_CD_MolPerCm2_RelErr);
-                ISXsection_v = obj.VaryParameter('Parameter',obj.StudyObject.ISXsection, 'rel_Error', obj.ISXsection_RelErr);
                 if strcmp(obj.RunFlag, 'ON')
                     for i=1:1:obj.nTrials
                         WGTS_CD_MolPerCm2_v(i,2:end) = obj.VaryParameter('Parameter',WGTS_CD_MolPerCm2_v(i,1),'rel_Error', 0.05,'Trials', obj.nRuns-1 );
@@ -1307,7 +1316,6 @@ classdef CovarianceMatrix < handle
                 end
             elseif strcmp(obj.SysEffect.RF_RX,'OFF')
                 WGTS_CD_MolPerCm2_v(:,1) = repmat(obj.StudyObject.WGTS_CD_MolPerCm2,obj.nTrials,1);
-                ISXsection_v = repmat(obj.StudyObject.ISXsection,obj.nTrials,1);
             end
             
             %% Compute Scattering Probabilities
@@ -1319,7 +1327,7 @@ classdef CovarianceMatrix < handle
                 Pis_m(:,i) = obj.StudyObject.ComputeISProb(...
                     'MACE_Bmax_T',Bmax_v(i),...
                     'WGTS_B_T',Bs_v(i),...
-                    'ISXsection',ISXsection_v(i),...
+                    'ISXsection',obj.StudyObject.ISXsection,...
                     'WGTS_CD_MolPerCm2',WGTS_CD_MolPerCm2_v(i,r),...
                     'saveFile','OFF');
             end
@@ -1387,80 +1395,15 @@ classdef CovarianceMatrix < handle
             ELossBinStep        = p.Results.ELossBinStep;
             maxE_el             = p.Results.maxE_el;
             % -----------------------parser end ------------------------------------------------------
+
+            nRings = numel(obj.StudyObject.MACE_Ba_T);
             
+            %% Load Lookup Table: Energy Loss Functions
             % energy loss bninning
             minE_el=-maxE_el;
             NbinE_el = (maxE_el-minE_el)/ELossBinStep;
             E_el = linspace(minE_el,maxE_el,NbinE_el);
-            Estep_el = E_el(2) - E_el(1);
             
-            % response function binning
-            maxE = (obj.StudyObject.qUmax-obj.StudyObject.qUmin)*1.5;
-            minE=-maxE;
-            NbinE = (maxE-minE)/RFBinStep;
-            E = linspace(minE,maxE,NbinE);
-            Estep = E(2) - E(1);
-            
-            % Initializations
-            is_P0v   = zeros(obj.nRuns,obj.nTrials); is_P1v   = zeros(obj.nRuns,obj.nTrials);
-            is_P2v   = zeros(obj.nRuns,obj.nTrials); is_P3v   = zeros(obj.nRuns,obj.nTrials);
-            is_P4v   = zeros(obj.nRuns,obj.nTrials); is_P5v   = zeros(obj.nRuns,obj.nTrials);
-            is_P6v   = zeros(obj.nRuns,obj.nTrials); is_P7v   = zeros(obj.nRuns,obj.nTrials);
-            
-            ISXsection_local         = zeros(1,obj.nTrials); %not used here: to keep track of varied parameters
-            WGTS_CD_MolPerCm2_local  = zeros(obj.nRuns,obj.nTrials); %not used here: to keep track of varied parameters
-            MACE_Bmax_T_local        = zeros(1,obj.nTrials);
-            WGTS_B_T_local           = zeros(1,obj.nTrials);
-            MACE_Ba_T_local          = zeros(1,obj.nTrials);
-            
-            %% Load Lookup Table: Scattering Probabilities
-            %  output of this section: ISProbFile (structure or array, containg information about scattering probabilites)
-            if strcmp(obj.SysEffect.RF_BF,'ON') && strcmp(obj.SysEffect.RF_RX,'ON')
-                isp_dir =   [getenv('SamakPath'),sprintf('inputs/CovMat/RF/LookupTables/ISProb/')];
-            else
-                isp_dir =   [getenv('SamakPath'),sprintf('inputs/CovMat/RF/LookupTables/PartVar/ISProbPartVar/')];
-            end
-            
-            isp_common = sprintf('ISProb-LookupTable_%u-Trials_%.0fNIS',obj.nTrials,obj.StudyObject.NIS+1);
-            str_cd = sprintf('_%.5g-molPercm2',obj.StudyObject.WGTS_CD_MolPerCm2);
-            str_is = sprintf('_IsX%.5gm2',obj.StudyObject.ISXsection);
-            if strcmp(obj.SysEffect.RF_RX,'ON')
-                str_cd = [str_cd,sprintf('-%.3gerr',obj.WGTS_CD_MolPerCm2_RelErr)];
-                str_is = [str_is,sprintf('-%.3gerr',obj.ISXsection_RelErr)];
-            end
-            str_rx = [str_cd,str_is];
-            
-            str_bs   = sprintf('_%.3gBs',obj.StudyObject.WGTS_B_T);
-            str_bmax = sprintf('_%.3gBmax',obj.StudyObject.MACE_Bmax_T);
-            if strcmp(obj.SysEffect.RF_BF,'ON')
-                str_bs    = [str_bs,sprintf('-%.3gerr',obj.WGTS_B_T_RelErr)];
-                str_bmax  = [str_bmax,sprintf('-%.3gerr',obj.MACE_Bmax_T_RelErr)];
-            end
-            str_bf = [str_bs,str_bmax];
-            
-            isp_filename = [isp_common,str_rx,str_bf,'.mat'];
-
-            if strcmp(obj.SysEffect.RF_BF,'OFF') && strcmp(obj.SysEffect.RF_RX,'OFF')
-                isp_dir = [getenv('SamakPath'),sprintf('inputs/WGTSMACE/WGTS_ISProb/')];
-                isp_filename = sprintf('IS_%.5g-molPercm2_%.5g-Xsection_%.0f-NIS_%.3g-Bmax_%.3g-Bs.mat',...
-                    obj.StudyObject.WGTS_CD_MolPerCm2,obj.StudyObject.ISXsection,(obj.StudyObject.NIS+1),obj.StudyObject.MACE_Bmax_T, obj.StudyObject.WGTS_B_T);
-            end
-            isp_file = [isp_dir,isp_filename];
-            
-            
-            if exist(isp_file,'file')==2 && strcmp(obj.RecomputeFlag,'OFF')
-                IsProbFile = importdata(isp_file);
-            else   % compute if not existing
-                if strcmp(obj.SysEffect.RF_BF,'ON') ||   strcmp(obj.SysEffect.RF_RX,'ON')
-                    obj.ComputeISProbLookupTable;
-                    IsProbFile = importdata(isp_file);
-                elseif strcmp(obj.SysEffect.RF_BF,'OFF') &&   strcmp(obj.SysEffect.RF_RX,'OFF')
-                    obj.StudyObject.ComputeISProb;
-                    IsProbFile = importdata(isp_file);
-                end
-            end
-            
-            %% Load Lookup Table: Energy Loss Functions
             if strcmp(obj.SysEffect.RF_EL, 'OFF')
                 % load or recompute default eloss
                 [~,ElossFunctions_default] = obj.StudyObject.ComputeELossFunction('E',E_el,'LoadOrSaveEloss',obj.RecomputeFlag);
@@ -1469,95 +1412,50 @@ classdef CovarianceMatrix < handle
                 % load or compute eloss samples (lookup table)
                 [~, ElossFunctions] = obj.ComputeELossLookupTable('E',E_el);
             end
-            %% If not everything is varied
-            if strcmp(obj.SysEffect.RF_BF,'OFF') &&   strcmp(obj.SysEffect.RF_RX,'OFF')
-                % scattering probabilities are fixed, not varied
-                % transmission function fixed, no varied
-                Pis_m = IsProbFile;
-                is_P0v  = repmat(Pis_m(1),1,obj.nTrials)./100;
-                is_P1v  = repmat(Pis_m(2),1,obj.nTrials)./100;
-                is_P2v  = repmat(Pis_m(3),1,obj.nTrials)./100;
-                is_P3v  = repmat(Pis_m(4),1,obj.nTrials)./100;
-                is_P4v  = repmat(Pis_m(5),1,obj.nTrials)./100;
-                if obj.StudyObject.NIS >4
-                    is_P5v  = repmat(Pis_m(6),1,obj.nTrials)./100;end
-                if obj.StudyObject.NIS >5
-                    is_P6v  = repmat(Pis_m(7),1,obj.nTrials)./100;end
-                if obj.StudyObject.NIS >6
-                    is_P7v  = repmat(Pis_m(8),1,obj.nTrials)./100;end
-                MACE_Bmax_T_local       = repmat(obj.StudyObject.MACE_Bmax_T,obj.nTrials,1);
-                WGTS_B_T_local          = repmat(obj.StudyObject.WGTS_B_T,obj.nTrials,1);
-                WGTS_CD_MolPerCm2_local = repmat(obj.StudyObject.WGTS_CD_MolPerCm2,obj.nTrials,1);
-                MACE_Ba_T_local = repmat(obj.StudyObject.MACE_Ba_T,obj.nTrials,1);
-            end
-            if  strcmp(obj.SysEffect.RF_BF,'ON') ||  strcmp(obj.SysEffect.RF_RX,'ON')
-                MACE_Bmax_T_local       = IsProbFile.Bmax_v; %use same B-field variations for TF as for ISProb
-                WGTS_B_T_local          = IsProbFile.Bs_v;
-                ISXsection_local        = IsProbFile.ISXsection_v;
-                if isfield(IsProbFile,'WGTS_CD_MolPerCm2_v')
-                    WGTS_CD_MolPerCm2_local = IsProbFile.WGTS_CD_MolPerCm2_v; %newlabl
-                else
-                    WGTS_CD_MolPerCm2_local = IsProbFile.Krhod_m.*1e-04; %  %old label for compatibility
-                end
-                is_P0v  = IsProbFile.Pis_m(1,:,:)/100;
-                is_P1v  = IsProbFile.Pis_m(2,:,:)/100;
-                is_P2v  = IsProbFile.Pis_m(3,:,:)/100;
-                is_P3v  = IsProbFile.Pis_m(4,:,:)/100;
-                is_P4v  = IsProbFile.Pis_m(5,:,:)/100;
-                if obj.StudyObject.NIS >4
-                    is_P5v  = IsProbFile.Pis_m(6,:,:)/100; end
-                if obj.StudyObject.NIS > 5
-                    is_P6v  = IsProbFile.Pis_m(7,:,:)/100; end
-                if obj.StudyObject.NIS >6
-                    is_P7v = IsProbFile.Pis_m(8,:,:)/100; end
-                if strcmp(obj.SysEffect.RF_BF,'ON')
-                    MACE_Ba_T_local            = obj.VaryParameter('Parameter',obj.StudyObject.MACE_Ba_T,'rel_Error',obj.MACE_Ba_T_RelErr);
-                elseif strcmp(obj.SysEffect.RF_BF,'OFF')
-                    MACE_Ba_T_local = repmat(obj.StudyObject.MACE_Ba_T,obj.nTrials,1);
-                end
-            end
-            %% Loop on trials
-            progressbar('ComputeRF Lookup Table');
-            nRings = numel(obj.StudyObject.MACE_Ba_T);
-            ResponseFunction = zeros(obj.StudyObject.nTe,obj.StudyObject.nqU,obj.nTrials,nRings);%
             
-            for i=1:1:obj.nTrials 
-                    progressbar(i/obj.nTrials);
-                    switch Debug
-                        case 'ON'
-                            cprintf('blue','CovarianceMatrix: ComputeRFCovMatrix: Trial %.0f/%.0f - Pi''s - %.5f %.5f %.5f %.5f %.5f %.5f \n',...
-                                i,obj.nTrials,is_P0v(i),is_P1v(i),is_P2v(i),is_P3v(i),is_P4v(i),is_P5v(i));
+            %% Variation of Parameters  
+             % B-fields
+            if strcmp(obj.SysEffect.RF_BF,'ON')
+                Bs_v   = obj.VaryParameter('Parameter',obj.StudyObject.WGTS_B_T, 'rel_Error', obj.WGTS_B_T_RelErr);
+                Bmax_v = obj.VaryParameter('Parameter',obj.StudyObject.MACE_Bmax_T,'rel_Error', obj.MACE_Bmax_T_RelErr);
+                Ba_v   = obj.VaryParameter('Parameter',obj.StudyObject.MACE_Ba_T,'rel_Error',obj.MACE_Ba_T_RelErr);
+            elseif strcmp(obj.SysEffect.RF_BF,'OFF')
+                Bs_v   = repmat(obj.StudyObject.WGTS_B_T,obj.nTrials,1);
+                Bmax_v = repmat(obj.StudyObject.MACE_Bmax_T,obj.nTrials,1);
+                Ba_v   = repmat(obj.StudyObject.MACE_Ba_T,obj.nTrials,1);
+            end
+            
+             % column density 
+            if strcmp(obj.SysEffect.RF_RX,'ON')
+                WGTS_CD_MolPerCm2_v = obj.VaryParameter('Parameter',obj.StudyObject.WGTS_CD_MolPerCm2,'rel_Error', obj.WGTS_CD_MolPerCm2_RelErr);
+            elseif strcmp(obj.SysEffect.RF_RX,'OFF')
+                WGTS_CD_MolPerCm2_v = repmat(obj.StudyObject.WGTS_CD_MolPerCm2,obj.nTrials,1);
+            end
+            
+            % calculate response functions with varied parameters
+            RFfun = @ComputeRF;
+            parqU = obj.StudyObject.qU;
+            parnqU = obj.StudyObject.nqU;
+            ResponseFunction = zeros(obj.StudyObject.nTe,obj.StudyObject.nqU,obj.nTrials,nRings);
+
+            progressbar('Compute RF lookup table');
+            for i = 1:obj.nTrials
+                progressbar(i/obj.nTrials);
+                for ri = 1:nRings
+                    parTe = obj.StudyObject.Te;
+                    for ii = 1:parnqU
+                        ResponseFunction(:,ii,i,ri) = RFfun(obj.StudyObject,parTe,parqU(ii,ri),'pixel',ri,...
+                            'ELossRange',maxE_el,'ELossBinStep',ELossBinStep,...
+                            'ElossFunctions',ElossFunctions(:,:,i),...
+                            'RFBinStep',RFBinStep,...
+                            'MACE_Bmax_T',Bmax_v(i),...
+                            'MACE_Ba_T',Ba_v(i),...
+                            'WGTS_B_T',Bs_v(i),...
+                            'WGTS_CD_MolPerCm2',WGTS_CD_MolPerCm2_v(i));
                     end
-                    
-                    scatterings  = is_P1v(i)*ElossFunctions(1,:,i) + ...
-                        is_P2v(i)*ElossFunctions(2,:,i).*Estep_el^1 + ...
-                        is_P3v(i)*ElossFunctions(3,:,i).*Estep_el^2 + ...
-                        is_P4v(i)*ElossFunctions(4,:,i).*Estep_el^3 + ...
-                        is_P5v(i)*ElossFunctions(5,:,i).*Estep_el^4 + ...
-                        is_P6v(i)*ElossFunctions(6,:,i).*Estep_el^5 + ...
-                        is_P7v(i)*ElossFunctions(7,:,i).*Estep_el^6;
-                    
-                    fscat_local       = @(e)interp1(E_el,scatterings,e); % change binning for transmission function
-                    
-                    for r=1:1:nRings
-                        %Transmission Function with B-Field configuration for nTrial = i and qU = qU(j)
-                        for j=1:1:obj.StudyObject.nqU
-                            switch Debug
-                                case 'ON'
-                                    cprintf('blue','CovarianceMatrix:ComputeTFCovMatrix: Trial %.0f/%.0f - WGTS - %.5f %.5f %.5f - qU=%g\n',...
-                                        i,obj.nTrials,MACE_Bmax_T_local(i),WGTS_B_T_local(i),MACE_Ba_T_local(i),obj.StudyObject.qU(j));
-                            end
-                            
-                            TF_local = obj.StudyObject.ComputeMaceTF(obj.StudyObject.qU(j,r)+E,obj.StudyObject.qU(j,r),...
-                                'MACE_Ba_T',MACE_Ba_T_local(i,r), 'MACE_Bmax_T', MACE_Bmax_T_local(i), 'WGTS_B_T', WGTS_B_T_local(i));
-                            
-                            % Put everything together into Response Function
-                            ResponseFunction_vector =  TF_local*is_P0v(i)+conv(TF_local,fscat_local(E),'same').*Estep;
-                            ResponseFunction(:,j,i,r) = interp1(E,ResponseFunction_vector, obj.StudyObject.Te-obj.StudyObject.qU(j,r));
-                        end
-                    end %end nRuns
-            end %end nTrials
-            
+                end
+            end
+        
             % do not save all samples, just some infos
             if strcmp(obj.SysEffect.RF_BF,'ON') && strcmp(obj.SysEffect.RF_RX,'ON') && strcmp(obj.SysEffect.RF_EL,'ON')
                 rf_path = [getenv('SamakPath'),sprintf('inputs/CovMat/RF/LookupTables/RF/')];
@@ -1578,7 +1476,7 @@ classdef CovarianceMatrix < handle
                     mean(floor(obj.StudyObject.MACE_Ba_T*1e4)),obj.MACE_Ba_T_RelErr,...
                     maxE_el,ELossBinStep,RFBinStep);
                 if strcmp(obj.SysEffect.RF_EL,'ON')
-                    rf_filename = strrep(rf_filename,'.mat',sprintf('_%s',obj.StudyObject.ELossFlag));
+                    rf_filename = strrep(rf_filename,'.mat',sprintf('_%s.mat',obj.StudyObject.ELossFlag));
                 end
                 rf_file = strcat(rf_path,rf_filename);
             end
@@ -1593,10 +1491,13 @@ classdef CovarianceMatrix < handle
             end
             qU = obj.StudyObject.qU;
             Te = obj.StudyObject.Te;
-            TD = obj.StudyObject.TD;
+            TD = obj.StudyObject.TD;    
+            ISXsection = obj.StudyObject.ISXsection;
+            
             save(rf_file,'RFmean','RFstd','qU','Te','TD',...
-                'MACE_Bmax_T_local','WGTS_B_T_local','ISXsection_local',...
-                'WGTS_CD_MolPerCm2_local','MACE_Ba_T_local','-mat');
+                'Bmax_v','Bs_v','ISXsection',...
+                'WGTS_CD_MolPerCm2_v','Ba_v',...
+                '-mat');
         end
         function ComputeCM_RF(obj,varargin)
             fprintf('--------------------------------------------------------------------------\n')
@@ -1644,7 +1545,11 @@ classdef CovarianceMatrix < handle
             obj.GetTDlabel;
             
             str_cd = sprintf('WGTSMACE_CovMat_%s_CD%gmolPercm2',obj.TDlabel, obj.StudyObject.WGTS_CD_MolPerCm2);
-            str_is = sprintf('_IsX%.5gm2',obj.StudyObject.ISXsection);
+            if strcmp(obj.StudyObject.ISCS,'Edep')
+                str_is = '_IsXEdep';
+            else
+                str_is = sprintf('_IsX%.5gm2',obj.StudyObject.ISXsection(18575));
+            end
             if strcmp(obj.SysEffect.RF_RX,'ON')
                 str_cd = [str_cd,sprintf('-%.2gerr',obj.WGTS_CD_MolPerCm2_RelErr)];
                 str_is = [str_is,sprintf('-%.3gerr',obj.ISXsection_RelErr)];
@@ -3121,10 +3026,99 @@ function ComputeCM_STAT(obj,varargin)
     obj.MultiCovMat.CM_STAT = diag(TBDIS);
     obj.MultiCovMatFrac.CM_STAT = (obj.MultiCovMat.CM_STAT./TBDIS)./TBDIS';
 end
+
+function ComputeCM_LongPlasma(obj,varargin)
+    % longitudinal plasma uncertainty
+    % effectively described by e-loss shift and variance
+    p=inputParser;
+    p.addParameter('CorrCoeff',0.4,@(x)isfloat(x));
+    p.parse(varargin{:});
+    CorrCoeff = p.Results.CorrCoeff;
+
+     % initial longi plasma parameters
+     is_EOffset_i = obj.StudyObject.is_EOffset;
+     MACE_Sigma_i = mean(obj.StudyObject.MACE_Sigma);
+     
+     obj.GetTDlabel;
+     covmat_path =[getenv('SamakPath'),sprintf('inputs/CovMat/LongPlasma/CM/')];
+     MakeDir(covmat_path);
+     covmat_filename = sprintf('LongPlasma_%s_%.0fTrials_%.0fmeVEloss_%.0fmeVElossErr_%.0fmeVSigma_%.0fmeVSigmaErr.mat',...
+         obj.TDlabel,obj.nTrials,...
+         is_EOffset_i*1e3,obj.is_EOffsetErr*1e3,...
+         MACE_Sigma_i*1e3,obj.MACE_SigmaErr*1e3);
+     
+     if strcmp(obj.StudyObject.FPD_Segmentation,'RING')
+         % add ring information for ringwise covariance matrices
+         covmat_filename = strrep(covmat_filename,'.mat',sprintf('_Ring%s.mat',obj.StudyObject.FPD_RingMerge));
+     end
+     obj.CovMatFile = strcat(covmat_path,covmat_filename);
+     
+    % load if already computed
+    if exist(obj.CovMatFile,'file')==2 && strcmp(obj.RecomputeFlag,'OFF')
+        fprintf(2,'CovarianceMatrix:ComputeCM_LongPlasma: Loading LongPlasma CM from File \n')
+        obj.ReadCMFile('filename',obj.CovMatFile,'SysEffect','LongPlasma');
+        obj.MultiCovMat.CM_LongPlasma = obj.CovMat; %in case normalization was changed
+        return
+    end
+ 
+    % longi plasma uncertainty
+    PlasmaErr =  [obj.MACE_SigmaErr,obj.is_EOffsetErr];
+    PlasmaCovMat      = PlasmaErr.*[1,CorrCoeff;CorrCoeff,1].*PlasmaErr';
+    
+    % randomize longi plasma parameters
+    PlasmaPar_expected = [MACE_Sigma_i,is_EOffset_i];
+    PlasmaPar =  mvnrnd(PlasmaPar_expected,PlasmaCovMat,obj.nTrials);
+    
+    MACE_Sigma_v   = abs(PlasmaPar(:,1)); % do not allow for negative broadenings
+    MACE_Sigma_v(MACE_Sigma_v<1e-3) = 0;  % too small to resolve anyway
+    is_EOffset_v  = PlasmaPar(:,2);
+   
+    if strcmp(obj.StudyObject.FPD_Segmentation,'RING')
+        TBDIS_V = zeros(obj.StudyObject.nqU,obj.StudyObject.nRings,obj.nTrials);
+    else
+        TBDIS_V = zeros(obj.StudyObject.nqU,obj.nTrials);
+    end
+    
+    for i=1:obj.nTrials
+        obj.StudyObject.is_EOffset = is_EOffset_v(i);
+        obj.StudyObject.MACE_Sigma = MACE_Sigma_v(i);
+        obj.StudyObject.InitializeRF;
+        obj.StudyObject.ComputeTBDIS;
+        TBDIS_V(:,:,i) = obj.StudyObject.TBDIS;
+    end
+    
+    % Reshape
+    if strcmp(obj.StudyObject.FPD_Segmentation,'RING')
+        % make sure nTrials is always last dimension before reshape!
+        TBDIS_V = reshape(TBDIS_V,[obj.StudyObject.nqU*obj.StudyObject.nRings,obj.nTrials]);
+    end
+    
+     % Compute Covariance Matrix
+    obj.CovMat = cov(TBDIS_V');
+    obj.MultiCovMat.CM_LongPlasma = obj.CovMat;
+    
+    TBDIS_av = mean(TBDIS_V);
+    % Save
+    save(obj.CovMatFile,'obj','TBDIS_av','TBDIS_V',...
+         'MACE_Sigma_v','is_EOffset_v','-mat');
+    
+    % Compute Fractional CM
+    obj.ComputeFracCM('Mode','CM2Frac');
+    obj.MultiCovMatFrac.CM_LongPlasma = obj.CovMatFrac;
+    
+    % Compute Decomposed CM
+    [~, obj.CovMatFracShape] = obj.DecomposeCM('CovMatFrac',obj.CovMatFrac,'exclDataStart',1);
+    obj.MultiCovMatFracShape.CM_LongPlasma = obj.CovMatFracShape;
+    obj.MultiCovMatFracNorm.CM_LongPlasma  = obj.CovMatFracNorm;
+    
+    % Save again
+    save(obj.CovMatFile, 'obj','-append');
+end
+
 function ComputeCM_RW(obj,varargin)
     % Goal:  Rear wall potential systematics
     %
-    % Method: 
+    % Method:
     % FSDs are replaced with superposition of gaussians or rectangles or 3 Gaussians
     % sigma       == Width of gaussians or width of rectangle
     % sigmaErr    == Absolute uncertainty on sigma
@@ -3133,11 +3127,11 @@ function ComputeCM_RW(obj,varargin)
     %
     % ---------------------------------parser start  ----------------------------------------------
     p=inputParser;
-    p.addParameter('Sigma',obj.StudyObject.FSD_Sigma,@(x)isfloat(x)); 
+    p.addParameter('Sigma',obj.StudyObject.FSD_Sigma,@(x)isfloat(x));
     p.addParameter('SanityPlot','OFF',@(x)ismember(x,{'ON','OFF'}));
     p.addParameter('MultiPos',obj.StudyObject.FSD_MultiPos,@(x) isfloat(x) || isempty(x));     %3 gaussians instead of using 1 gaussian per energy (for 3 RW settings)
     p.addParameter('MultiWeights',obj.StudyObject.FSD_MultiWeights,@(x) isfloat(x) || isempty(x)); %3 gaussians instead of using 1 gaussian per energy
-    p.addParameter('Dist',obj.StudyObject.FSD_Dist,@(x)ismember(x,{'Gauss','Rect'}));                   
+    p.addParameter('Dist',obj.StudyObject.FSD_Dist,@(x)ismember(x,{'Gauss','Rect'}));
     p.addParameter('BinningFactor','',@(x) isfloat(x) || isempty(x)); % multiplies number of bins in rebinning
     
     p.parse(varargin{:});
@@ -3179,46 +3173,46 @@ function ComputeCM_RW(obj,varargin)
         return
     end
     
-        % Common FSD argument for all samples
-        FSDarg = {'Dist',Dist,...
-            'MultiWeights',MultiWeights,...
-            'BinningFactor',BinningFactor,...
-            'SanityPlot',SanityPlot};
-        
-        % Vary parameter according to uncertainty: sigma
-        Sigma_V = Sigma + obj.RW_SigmaErr.*randn(obj.nTrials,1);
-        Sigma_V(Sigma_V<0.001) = 0.001; % no negative broadening possible
-        
-        if ~isempty(MultiPos) % add multi positions uncertainty
-             MultiPos_V = MultiPos+obj.RW_MultiPosErr.*randn(obj.nTrials,1);  
-             Sigma_V = 0.001.*ones(obj.nTrials,1); % small for multi-gauss
+    % Common FSD argument for all samples
+    FSDarg = {'Dist',Dist,...
+        'MultiWeights',MultiWeights,...
+        'BinningFactor',BinningFactor,...
+        'SanityPlot',SanityPlot};
+    
+    % Vary parameter according to uncertainty: sigma
+    Sigma_V = Sigma + obj.RW_SigmaErr.*randn(obj.nTrials,1);
+    Sigma_V(Sigma_V<0.001) = 0.001; % no negative broadening possible
+    
+    if ~isempty(MultiPos) % add multi positions uncertainty
+        MultiPos_V = MultiPos+obj.RW_MultiPosErr.*randn(obj.nTrials,1);
+        Sigma_V = 0.001.*ones(obj.nTrials,1); % small for multi-gauss
+    else
+        MultiPos_V = '';
+    end
+    
+    TBDIS_V = zeros(obj.StudyObject.nqU,obj.nTrials);
+    
+    % Calculate integral spectra with varied FSDs
+    progressbar('Compute CM RW');
+    for i=1:obj.nTrials
+        progressbar(i/obj.nTrials)
+        if ~isempty(MultiPos) % add multi positions
+            obj.StudyObject.LoadFSD(FSDarg{:},'MultiPos',MultiPos_V(i,:),'Sigma',Sigma_V(i));
         else
-            MultiPos_V = '';
+            obj.StudyObject.LoadFSD(FSDarg{:},'MultiPos',MultiPos,'Sigma',Sigma_V(i));
         end
         
-        TBDIS_V = zeros(obj.StudyObject.nqU,obj.nTrials);
-        
-        % Calculate integral spectra with varied FSDs
-        progressbar('Compute CM RW');
-        for i=1:obj.nTrials
-            progressbar(i/obj.nTrials)
-            if ~isempty(MultiPos) % add multi positions 
-                obj.StudyObject.LoadFSD(FSDarg{:},'MultiPos',MultiPos_V(i,:),'Sigma',Sigma_V(i));
-            else
-                obj.StudyObject.LoadFSD(FSDarg{:},'MultiPos',MultiPos,'Sigma',Sigma_V(i));
-            end
-            
-            obj.StudyObject.ComputeTBDDS;
-            obj.StudyObject.ComputeTBDIS;
-            TBDIS_V(:,i) = obj.StudyObject.TBDIS;
-        end
-        
-        % Reshape
-        
-        if strcmp(obj.StudyObject.FPD_Segmentation,'RING')
-            % make sure nTrials is always last dimension before reshape!
-            TBDIS_V = reshape(TBDIS_V,[obj.StudyObject.nqU*obj.StudyObject.nRings,obj.nTrials]);
-        end
+        obj.StudyObject.ComputeTBDDS;
+        obj.StudyObject.ComputeTBDIS;
+        TBDIS_V(:,i) = obj.StudyObject.TBDIS;
+    end
+    
+    % Reshape
+    
+    if strcmp(obj.StudyObject.FPD_Segmentation,'RING')
+        % make sure nTrials is always last dimension before reshape!
+        TBDIS_V = reshape(TBDIS_V,[obj.StudyObject.nqU*obj.StudyObject.nRings,obj.nTrials]);
+    end
     
     % Compute Covariance Matrix
     obj.CovMat = cov(TBDIS_V');
@@ -3238,7 +3232,7 @@ function ComputeCM_RW(obj,varargin)
     
     % Save again
     save(obj.CovMatFile, 'obj','-append');
-
+    
 end
     end
     
@@ -3325,8 +3319,7 @@ end
                     obj.PlotCM('PlotEffect',sprintf('Response Function %s %s %s',BF,EL,RX),'savePlot','ON','savename',SysBudget_Label);
                 end
             end
-            %% FSD
-            % obj.nTrials = 5000;%10000; %WARNING: Lisa
+            %% FSD   
             if strcmp(obj.SysEffect.FSD,'ON')
                 obj.ComputeCM_FSD;
                 CovMatFracCombi = CovMatFracCombi + obj.MultiCovMatFrac.CM_FSD;
@@ -3401,12 +3394,21 @@ end
             end
             
             %% Plasma time evolution
-             %% FPD efficiency
             if strcmp(obj.SysEffect.RW,'ON')
                 obj.ComputeCM_RW;
                 CovMatFracCombi = CovMatFracCombi + obj.MultiCovMatFrac.CM_RW;
                 if strcmp(PlotSaveCM,'ON')
                     obj.PlotCM('PlotEffect','RW','savePlot','ON','savename',SysBudget_Label,...
+                        'ConvergenceTest','OFF');
+                end
+            end
+            
+            %% Plasma longitudinal
+            if strcmp(obj.SysEffect.LongPlasma,'ON')
+                obj.ComputeCM_LongPlasma;
+                CovMatFracCombi = CovMatFracCombi + obj.MultiCovMatFrac.CM_LongPlasma;
+                if strcmp(PlotSaveCM,'ON')
+                    obj.PlotCM('PlotEffect','LongPlasma','savePlot','ON','savename',SysBudget_Label,...
                         'ConvergenceTest','OFF');
                 end
             end

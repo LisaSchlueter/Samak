@@ -4,10 +4,10 @@
 % Rate Correction
 % Conversion of rate in Potential Fluctuation
 %
-% Last Modified: 04/02/2020
+% Last Modified: 26/02/2020
 % T. Lasserre
 %
-
+QAplots = 'OFF';
 % Loop on Period
 for j=1:3
     
@@ -17,8 +17,10 @@ for j=1:3
     DataType  = 'Real';
     RunAnaArg = {'RunList',RunList,'DataType',DataType,...
         'FSDFlag','BlindingKNM2','ELossFlag','KatrinT2',...
-        'AnaFlag','StackPixel','RingMerge','Full'};
+        'AnaFlag','StackPixel','RingMerge','Full','NonPoissonScaleFactor',1};
     MR        = MultiRunAnalysis(RunAnaArg{:});
+    range = 40;               % fit range in eV below endpoint        
+    MR.exclDataStart = MR.GetexclDataStart(range); % find correct data, where to cut spectrum
     A         = RingAnalysis('RunAnaObj',MR,'RingList',1:4);
     R         = A.MultiObj(1);
     R.ROIFlag='14keV'; R.SetROI;
@@ -40,6 +42,7 @@ for j=1:3
     sstime    = zeros(A.nRings,numel(A.RunAnaObj.RunList));
     cf    = zeros(A.nRings,numel(A.RunAnaObj.RunList));
     for i=1:A.nRings
+%<<<<<<< HEAD
         R           = A.MultiObj(i);
         R.ROIFlag='14keV'; R.SetROI;
         count(i,:)  = R.SingleRunData.TBDIS_RM;
@@ -51,6 +54,15 @@ for j=1:3
        
         count_norm{j,i}     = rate(i,:) .* mean(sstime(i,:));
         corrcount_norm{j,i} = count_norm{j,i}  .* cf(i,:) ;
+% =======
+%          R           = A.MultiObj(i);
+%          R.RMCorrection('QAplots',QAplots);
+%          R.PlotFitRunListCorr('Parameterx','time','Parametery','rate300','Fit','ON','Detrend','ON');
+%          count(i,:)  = R.SingleRunData.TBDIS_RM;
+%          sstime(i,:) = mean(R.SingleRunData.qUfrac_RM,1).*R.SingleRunData.TimeSec;
+%          rate(i,:)   = count(i,:)./sstime(i,:);
+%          corrcount_norm{j,i} = rate(i,:) .* mean(sstime(i,:));
+% >>>>>>> 2627fa0e634b33dc06910b22642eafbeb209ddce
     end
     
     

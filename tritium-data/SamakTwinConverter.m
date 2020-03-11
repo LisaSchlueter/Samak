@@ -40,6 +40,12 @@ if contains(TwinLabel,'mNuSq')
 else
     extraStr = '';
 end
+if contains(TwinLabel,'WGTSMACE_NIS1')
+    extraStr = [extraStr,'WGTSMACE_NIS1_'];
+elseif contains(TwinLabel,'MACE')
+    extraStr = [extraStr,'MACE_'];
+end
+
 twinh5name = ['Twin_',extraStr,h5name];
 
 % Copy hdf5 (real) data file to Samak hdf5 twin folder

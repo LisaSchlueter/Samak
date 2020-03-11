@@ -23,7 +23,7 @@ CommonArg = {'RunNr',1,...% has no meaning
     'minuitOpt','min;migrad',...
     'NonPoissonScaleFactor',1};
 
-savedir = [getenv('SamakPath'),'knm2ana/knm2_MultiRingFit/plots/'];
+savedir = [getenv('SamakPath'),'knm2ana/knm2_MultiRingFit_FakeData/plots/'];
 
 %% Model 1: uniform fit: average (known!) qU-values
 R_Uniform   = RunAnalysis(CommonArg{:},'FakeInitFile',InitFile,'AnaFlag','StackPixel','fixPar','mNu E0 Bkg Norm','RingList',1:12);

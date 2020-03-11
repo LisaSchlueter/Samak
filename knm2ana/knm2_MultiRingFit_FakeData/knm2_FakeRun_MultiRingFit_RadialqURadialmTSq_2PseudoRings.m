@@ -24,7 +24,7 @@ CommonArg = {'RunNr',1,...% has no meaning
     'minuitOpt','min;migrad',...
     'NonPoissonScaleFactor',1};
 
-savedir = [getenv('SamakPath'),'knm2ana/knm2_MultiRingFit/plots/'];
+savedir = [getenv('SamakPath'),'knm2ana/knm2_MultiRingFit_FakeData/plots/'];
 
 %%  multi-ring fit, take qU-values from first ring
 M = RunAnalysis(CommonArg{:},'FakeInitFile',InitFile,'AnaFlag','Ring','fixPar','mNu E0 Bkg Norm qU mTSq',...

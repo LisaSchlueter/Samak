@@ -553,7 +553,7 @@ classdef FITC < handle
                     case 'minuit'
                         cprintf('blue','----------BEGIN FIT MINUIT-------------- \n');
                         
-                        tmparg = sprintf(['%s set pri 1; set STRATEGY 2; set tolerance 1e-06'...
+                        tmparg = sprintf(['%s set pri 1; set STRATEGY 2;'...
                             '%s'],obj.fixPar,obj.minuitOpt);
                         Args = {obj.parinit, obj, '-c',tmparg};
                         minuitOutputStr = [tempname(pwd),'.txt']; % random string 

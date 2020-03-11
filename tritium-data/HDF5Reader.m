@@ -52,7 +52,7 @@ EffCorr(EffCorr==0) = 1;
 TBDIS       = double(TBDISuncorr)./double(EffCorr).*TimeBias;
 TBDISE      = sqrt(TBDIS./EffCorr); % statstical uncertainty
 
-if strcmp(DataSet,'Knm2')
+if strcmp(DataSet,'Knm2') && strcmp(Fitter,'Samak')
     TBDIS14keV = h5read([h5path,h5name],'/RunSummary/CountsKNM1')'; % for compute TBDISE
 else
     TBDIS14keV = zeros(size(TBDIS));

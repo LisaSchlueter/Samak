@@ -487,8 +487,7 @@ classdef TBD < handle & WGTSMACE %!dont change superclass without modifying pars
             p.addParameter('Sigma',obj.FSD_Sigma,@(x)isfloat(x) || isempty(x));                % broadening of FSD
             p.addParameter('MultiPos',obj.FSD_MultiPos,@(x) isfloat(x) || isempty(x));         %3 gaussians instead of using 1 gaussian per energy (for 3 RW settings): relative position
             p.addParameter('MultiWeights',obj.FSD_MultiWeights,@(x) isfloat(x) || isempty(x)); %3 gaussians instead of using 1 gaussian per energy: relative weight
-            p.addParameter('MultiSigma',obj.FSD_MultiSigma,@(x) isfloat(x) || isempty(x));      %3 gaussians instead of using 1 gaussian per energy: broadening / drift
-            p.addParameter('BinningFactor',4,@(x) isfloat(x) || isempty(x));                   % enhance binning: twice, 3 times,... as much bins
+            p.addParameter('BinningFactor',2,@(x) isfloat(x) || isempty(x));                   % enhance binning: twice, 3 times,... as much bins
             p.addParameter('SanityPlot','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('ZoomPlot','OFF',@(x)ismember(x,{'ON','OFF'})); % save also zoom to 1 final state
             p.addParameter('Dist',obj.FSD_Dist,@(x)ismember(x,{'Gauss','Rect'}));
@@ -513,7 +512,7 @@ classdef TBD < handle & WGTSMACE %!dont change superclass without modifying pars
             if ~isempty(Sigma)
                 if numel(Sigma)==1
                     Sigma = squeeze(repmat(Sigma,[3,nPeaks,nPseudoRings])); % 3 isotopologues x nPeaks x nRings
-                elseif numel(Sigma)==nPeaks % 1 psuedo-ring
+                elseif numel(Sigma)==nPeaks % sigma is not ringwise
                     Sigma = squeeze(repmat(Sigma,[3,1])); 
                 elseif numel(Sigma)==nPeaks*nPseudoRings
                     Sigma = squeeze(repmat(Sigma,[1,1,3])); 
@@ -526,7 +525,7 @@ classdef TBD < handle & WGTSMACE %!dont change superclass without modifying pars
                  if isempty(Sigma)
                      Sigma = obj.DE_sigma.*squeeze(ones(3,nPeaks,nPseudoRings));
                  else
-                     Sigma = Sigma + obj.DE_sigma;
+                     Sigma = sqrt(Sigma.^2 + obj.DE_sigma.^2);
                  end
             end
             
@@ -534,45 +533,48 @@ classdef TBD < handle & WGTSMACE %!dont change superclass without modifying pars
                          'MultiWeights',MultiWeights,'MultiPos',MultiPos,...
                          }; %arguments for FSD convolution (optional)
             %% T-T FSD
+            FSDdir = [getenv('SamakPath'),'inputs/FSD/'];
             switch obj.TTFSD
                 case {'DOSS','DOSSNOEE'}
-                    ttfsdfile = importdata([getenv('SamakPath'),'/inputs/FSD/FSD_DOSS_T2_rebinned.dat']);
+                    ttfsdfilename = [FSDdir,'FSD_DOSS_T2_rebinned.dat'];
                 case {'SAENZ','SAENZNOEE'}
-                    ttfsdfile = importdata([getenv('SamakPath'),'/inputs/FSD/FSD_Saenz_T2mod.dat']); %./data/FSD/FSD_Saenz_T2mod_6.dat'
+                    ttfsdfilename = [FSDdir,'FSD_Saenz_T2mod.dat']; %./data/FSD/FSD_Saenz_T2mod_6.dat'
                     % ttfsdfile = importdata([getenv('SamakPath'),'/inputs/FSD/FSD_Saenz_T2_doppler.txt']); 
                 case 'ROLL'
-                    ttfsdfile = [getenv('SamakPath'),'/inputs/FSD/FSD_ROLL_',num2str(obj.WGTS_Temp),...
+                    ttfsdfilename = [FSDdir,'FSD_ROLL_',num2str(obj.WGTS_Temp),...
                         'K_TT',num2str(round(obj.WGTS_MolFrac_TT*100)),'DT',num2str(round(obj.WGTS_MolFrac_DT*100)),...
                         'HT',num2str(round(obj.WGTS_MolFrac_HT*100)),'.mat'];
-                    if ~(exist(ttfsdfile, 'file') == 2)
+                    if ~(exist(ttfsdfilename, 'file') == 2)
                         obj.weightedFSD();
                     end
-                    ttfsdfile = importdata(ttfsdfile);
                 case 'HT' %take fsd from HT instead
-                    ttfsdfile = importdata([getenv('SamakPath'),'/inputs/FSD/FSD_Saenz_HTmod.txt']);
+                    ttfsdfilename = [FSDdir,'FSD_Saenz_HTmod.txt'];
                 case {'BlindingKNM1'}
                     if ~strcmp(obj.DopplerEffectFlag,'FSD_Knm1')
-                        ttfsdfile = importdata([getenv('SamakPath'),'/inputs/FSD/FSD_Blinding_KNM1_T2.txt']);
+                        ttfsdfilename = [FSDdir,'FSD_Blinding_KNM1_T2.txt'];
                     elseif strcmp(obj.DopplerEffectFlag,'FSD_Knm1')
-                        ttfsdfile = importdata([getenv('SamakPath'),'/inputs/FSD/FSD_KNM1_DOPPLER_T2.txt']);
+                        ttfsdfilename = [FSDdir,'FSD_KNM1_DOPPLER_T2.txt'];
                     end
                 case {'BlindingKNM2'}
-                    ttfsdfile = importdata([getenv('SamakPath'),'/inputs/FSD/FSD_KNM2_T2_Blinding.txt']);
+                    ttfsdfilename = [FSDdir,'FSD_KNM2_T2_Blinding.txt'];
                 case {'WGTS100K'} % Test WGTS@100K
-                    ttfsdfile = importdata([getenv('SamakPath'),'/inputs/FSD/FSD_Saenz_100K_doppler1_T2.txt']);
+                    ttfsdfilename = [FSDdir,'FSD_Saenz_100K_doppler1_T2.txt'];
                 case {'Sibille'}
-                    ttfsdfile = importdata([getenv('SamakPath'),'/inputs/FSD/FSD_KNM1_T2_Doppler.txt']);  
+                    ttfsdfilename = [FSDdir,'FSD_KNM1_T2_Doppler.txt'];  
                 case {'SibilleFull'}
-                    ttfsdfile = importdata([getenv('SamakPath'),'/inputs/FSD/FSD_KNM1_T2_Doppler0p5eV_FullRange.txt']);    
+                    ttfsdfilename = [FSDdir,'FSD_KNM1_T2_Doppler0p5eV_FullRange.txt'];    
                 case {'Sibille0p5eV'}
-                    ttfsdfile = importdata([getenv('SamakPath'),'/inputs/FSD/FSD_KNM1_T2_Doppler0p5eV.txt']);   
+                    ttfsdfilename = [FSDdir,'FSD_KNM1_T2_Doppler0p5eV.txt'];   
             end
+            ttfsdfile = importdata(ttfsdfilename);
             [obj.TTexE, TTexE_index] = sort(ttfsdfile(:,1)); %sort from small to large excitation energies           
             obj.TTexE = obj.TTexE';
             obj.TTexP = (ttfsdfile(TTexE_index,2))';
             if ~isempty(Sigma)   %broaden FSDs
-                [obj.TTexE,obj.TTexP] = FSD_Convfun(obj.TTexE,obj.TTexP,squeeze(Sigma(1,:,:)),...
-                    FSDConvArg{:},'SanityPlot',SanityPlot,'ZoomPlot',ZoomPlot);
+                [obj.TTexE,obj.TTexP] = FSD_Convfun(obj.TTexE,obj.TTexP,...
+                    squeeze(Sigma(1,:,:)),...
+                    FSDConvArg{:},'SanityPlot',SanityPlot,'ZoomPlot',ZoomPlot,...
+                    'filename',ttfsdfilename);
             end
             obj.TTGSTh = obj.GetFSDTh(obj.TTexE);          % Limit ground / excited states
             obj.TTNormGS_i = sum(obj.TTexP(:,1:obj.TTGSTh),2);
@@ -581,34 +583,36 @@ classdef TBD < handle & WGTSMACE %!dont change superclass without modifying pars
             %% D-T FSD
             switch obj.DTFSD
                 case 'DOSS'
-                    dtfsdfile = importdata([getenv('SamakPath'),'/inputs/FSD/FSD_DOSS_DT_rebinned.txt']);
+                    dtfsdfilename = [FSDdir,'FSD_DOSS_DT_rebinned.txt'];
                 case 'HTFSD' % take HT FSD instead if DT (for testing)
-                    dtfsdfile = importdata([getenv('SamakPath'),'/inputs/FSD/FSD_Saenz_HTmod.txt']);
+                    dtfsdfilename = [FSDdir,'FSD_Saenz_HTmod.txt'];
                  %    dtfsdfile = importdata([getenv('SamakPath'),'/inputs/FSD/FSD_Saenz_T2_doppler.txt']);
                 case 'TTFSD' % take HT FSD instead if TT (for testing)
-                    dtfsdfile = importdata([getenv('SamakPath'),'/inputs/FSD/FSD_Saenz_T2mod.dat']);
+                    dtfsdfilename = [FSDdir,'FSD_Saenz_T2mod.dat'];
                 case 'BlindingKNM1' % Blinding Test KNM1
                     if ~strcmp(obj.DopplerEffectFlag,'FSD_Knm1')
-                        dtfsdfile = importdata([getenv('SamakPath'),'/inputs/FSD/FSD_Blinding_KNM1_DT.txt']);
+                        dtfsdfilename = [FSDdir,'FSD_Blinding_KNM1_DT.txt'];
                     elseif strcmp(obj.DopplerEffectFlag,'FSD_Knm1')
-                        dtfsdfile = importdata([getenv('SamakPath'),'/inputs/FSD/FSD_KNM1_DOPPLER_DT.txt']);
+                        dtfsdfilename = [FSDdir,'FSD_KNM1_DOPPLER_DT.txt'];
                     end
                 case {'BlindingKNM2'}
-                    dtfsdfile = importdata([getenv('SamakPath'),'/inputs/FSD/FSD_KNM2_DT_Blinding.txt']);
+                    dtfsdfilename = [FSDdir,'FSD_KNM2_DT_Blinding.txt'];
                 case 'WGTS100K' % Test WGTS@100K
-                    dtfsdfile = importdata([getenv('SamakPath'),'/inputs/FSD/FSD_Saenz_100K_doppler1_HT.txt']);
+                    dtfsdfilename = [FSDdir,'FSD_Saenz_100K_doppler1_HT.txt'];
                 case {'Sibille'}
-                    dtfsdfile = importdata([getenv('SamakPath'),'/inputs/FSD/FSD_KNM1_DT_Doppler.txt']);
+                    dtfsdfilename = [FSDdir,'FSD_KNM1_DT_Doppler.txt'];
                 case {'SibilleFull'}
-                    dtfsdfile = importdata([getenv('SamakPath'),'/inputs/FSD/FSD_KNM1_DT_Doppler0p5eV_FullRange.txt']);
+                    dtfsdfilename = [FSDdir,'FSD_KNM1_DT_Doppler0p5eV_FullRange.txt'];
                 case {'Sibille0p5eV'}
-                    dtfsdfile = importdata([getenv('SamakPath'),'/inputs/FSD/FSD_KNM1_DT_Doppler0p5eV.txt']);
+                    dtfsdfilename = [FSDdir,'FSD_KNM1_DT_Doppler0p5eV.txt'];
             end
+            dtfsdfile = importdata(dtfsdfilename);
             [obj.DTexE, DTexE_index] = sort(dtfsdfile(:,1));
             obj.DTexE = obj.DTexE';
             obj.DTexP = (dtfsdfile(DTexE_index,2))';
             if ~isempty(Sigma)  %broaden FSDs
-                [obj.DTexE,obj.DTexP] = FSD_Convfun(obj.DTexE,obj.DTexP,squeeze(Sigma(2,:,:)),FSDConvArg{:});
+                [obj.DTexE,obj.DTexP] = FSD_Convfun(obj.DTexE,obj.DTexP,squeeze(Sigma(2,:,:)),...
+                                                  FSDConvArg{:},'filename',dtfsdfilename);
             end
             obj.DTGSTh = obj.GetFSDTh(obj.DTexE); % Limit ground / excited states
             obj.DTNormGS_i = sum(obj.DTexP(:,1:obj.DTGSTh),2);
@@ -617,39 +621,41 @@ classdef TBD < handle & WGTSMACE %!dont change superclass without modifying pars
             %% H-T FSD
             switch obj.HTFSD
                 case 'SAENZ'
-                    htfsdfile = importdata([getenv('SamakPath'),'/inputs/FSD/FSD_Saenz_HTmod.txt']);
+                    htfsdfilename = [FSDdir,'FSD_Saenz_HTmod.txt'];
                    % htfsdfile = importdata([getenv('SamakPath'),'/inputs/FSD/FSD_Saenz_HT_doppler.txt']);
                 case 'BlindingKNM1'
                     if ~strcmp(obj.DopplerEffectFlag,'FSD_Knm1')
-                        htfsdfile = importdata([getenv('SamakPath'),'/inputs/FSD/FSD_Blinding_KNM1_HT.txt']);
+                        htfsdfilename = [FSDdir,'FSD_Blinding_KNM1_HT.txt'];
                     elseif strcmp(obj.DopplerEffectFlag,'FSD_Knm1')
-                        htfsdfile = importdata([getenv('SamakPath'),'/inputs/FSD/FSD_KNM1_DOPPLER_HT.txt']);
+                        htfsdfilename = [FSDdir,'FSD_KNM1_DOPPLER_HT.txt'];
                     end
                 case {'BlindingKNM2'}
-                    htfsdfile = importdata([getenv('SamakPath'),'/inputs/FSD/FSD_KNM2_HT_Blinding.txt']);
+                    htfsdfilename = [FSDdir,'FSD_KNM2_HT_Blinding.txt'];
                 case 'WGTS100K' % Test WGTS@100K
-                    htfsdfile = importdata([getenv('SamakPath'),'/inputs/FSD/FSD_Saenz_100K_doppler1_HT.txt']);
+                    htfsdfilename = [FSDdir,'FSD_Saenz_100K_doppler1_HT.txt'];
                 case {'Sibille'}
-                    htfsdfile = importdata([getenv('SamakPath'),'/inputs/FSD/FSD_KNM1_HT_Doppler.txt']);
+                    htfsdfilename = [FSDdir,'FSD_KNM1_HT_Doppler.txt'];
                 case {'SibilleFull'}
-                    htfsdfile = importdata([getenv('SamakPath'),'/inputs/FSD/FSD_KNM1_HT_Doppler0p5eV_FullRange.txt']);
+                    htfsdfilename = [FSDdir,'FSD_KNM1_HT_Doppler0p5eV_FullRange.txt'];
                 case {'Sibille0p5eV'}
-                    htfsdfile = importdata([getenv('SamakPath'),'/inputs/FSD/FSD_KNM1_HT_Doppler0p5eV.txt']);
+                    htfsdfilename = [FSDdir,'FSD_KNM1_HT_Doppler0p5eV.txt'];
             end
+            htfsdfile = importdata(htfsdfilename);
             [obj.HTexE, HTexE_index] = sort(htfsdfile(:,1));
             obj.HTexE = obj.HTexE';
             obj.HTexP = (htfsdfile(HTexE_index,2))';
             if ~isempty(Sigma)  %broaden FSDs
-                [obj.HTexE,obj.HTexP] = FSD_Convfun(obj.HTexE,obj.HTexP,squeeze(Sigma(3,:,:)),FSDConvArg{:});
+                [obj.HTexE,obj.HTexP] = FSD_Convfun(obj.HTexE,obj.HTexP,squeeze(Sigma(3,:,:)),...
+                                       FSDConvArg{:},'filename',htfsdfilename);
             end
-            obj.HTGSTh = obj.GetFSDTh(obj.HTexE); % Limit ground / excited states
+            obj.HTGSTh = obj.GetFSDTh(obj.HTexE);   % Limit ground / excited states
             obj.HTNormGS_i = sum(obj.HTexP(:,1:obj.HTGSTh),2);
             obj.HTNormES_i = sum(obj.HTexP(:,obj.HTGSTh:end),2);
            %% T minus ion
             switch obj.TmFSD
                 case 'OFF'
                 case 'SAENZ'
-                    tmfsdfile = importdata([getenv('SamakPath'),'/inputs/FSD/FSD_Tminus.mat']);
+                    tmfsdfile = importdata([FSDdir,'FSD_Tminus.mat']);
                     [obj.TmexE, TmexE_index] = sort(tmfsdfile(:,1));
                     obj.TmexE = obj.TmexE';
                     obj.TmexP = (tmfsdfile(TmexE_index,2))';
@@ -805,7 +811,7 @@ classdef TBD < handle & WGTSMACE %!dont change superclass without modifying pars
         function InitializeRF(obj,varargin)   
             p=inputParser;
             p.addParameter('saveRF','ON',@(x)ismember(x,{'ON','OFF'}));
-            p.addParameter('RebinMode','Fast',@(x)ismember(x,{'Fast','Integral'})); % for RF broadening
+            p.addParameter('RebinMode','Integral',@(x)ismember(x,{'Fast','Integral'})); % for RF broadening
             
             p.parse(varargin{:});
             saveRF    = p.Results.saveRF;
@@ -815,6 +821,17 @@ classdef TBD < handle & WGTSMACE %!dont change superclass without modifying pars
             %% load response function
             if strcmp(obj.recomputeRF,'OFF') %try loading
                 loadSuccess = LoadOrSaveRF(obj,'load'); % loadSuccess==1 when loading was successful
+                
+                % if there is broadening, and loading didnt work-> load unbroadened if possible
+                if any(obj.MACE_Sigma>0) && loadSuccess==0 
+                    MACE_Sigma_tmp = obj.MACE_Sigma;
+                    obj.MACE_Sigma = 0;
+                    loadSuccess = LoadOrSaveRF(obj,'load');
+                    obj.MACE_Sigma =  MACE_Sigma_tmp;
+                    if loadSuccess==1 % if this worked -> only broaden response function
+                        loadSuccess = 0.5;
+                    end    
+                end     
             elseif strcmp(obj.recomputeRF,'ON') %do not attempt loading
                 loadSuccess = 0;
             end
@@ -858,7 +875,7 @@ classdef TBD < handle & WGTSMACE %!dont change superclass without modifying pars
                                 parTe = obj.Te;
                                 parqU = obj.qU;
                                 parRF = zeros(obj.nTe,obj.nqU);
-                                 %                               parfor ii = 1:obj.nqU
+                                %                               parfor ii = 1:obj.nqU
                                 for ii = 1:obj.nqU
                                     parRF(:,ii) = tfloc(parTe,parqU(ii));
                                 end
@@ -886,20 +903,19 @@ classdef TBD < handle & WGTSMACE %!dont change superclass without modifying pars
                                     parTe = obj.Te;
                                     parfor ii = 1:parnqU
                                         parRF(:,ii,ri) = tfloc(parTe,parqU(ii,ri),'pixel',ri);
-                                    end
-                                    
+                                    end  
                                 end
                                 obj.RF = parRF;
                         end
                 end
                 
                 obj.RF(obj.RF<0)=0;
-                if strcmp(saveRF,'ON')
+                if strcmp(saveRF,'ON') &&  obj.MACE_Sigma==0
                     LoadOrSaveRF(obj,'save')
                 end
-            end % if loadSuccess
+            end % if loadSuccess==0
             
-            if obj.MACE_Sigma>0
+            if loadSuccess<1 && any(obj.MACE_Sigma>0)
                 
                 if numel(obj.MACE_Sigma)==1
                     obj.MACE_Sigma = repmat(obj.MACE_Sigma,[obj.nqU,1]); % subrunwise broadening
@@ -911,6 +927,11 @@ classdef TBD < handle & WGTSMACE %!dont change superclass without modifying pars
                     out(:,i) = TF_Convfun(obj.RF(:,i)',obj.qU(i),obj.Te,obj.MACE_Sigma(i),'RebinMode',RebinMode);
                 end
                 obj.RF = out;
+                
+                if strcmp(saveRF,'ON')
+                    LoadOrSaveRF(obj,'save')
+                end
+                
             end
             
         end

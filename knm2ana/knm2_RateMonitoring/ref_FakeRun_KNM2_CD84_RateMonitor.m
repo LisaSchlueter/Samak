@@ -1,7 +1,7 @@
 function TritiumObject = ref_FakeRun_KNM2_CD84_RateMonitor(varargin)
 TDMode = 'DataTBD';
 %% load MTD from a KNM2 run
-filename = [getenv('SamakPath'),'tritium-data/mat/Knm2/56196.mat']; %take MTD from 1 (randomly chosen) KNM1 run
+filename = [getenv('SamakPath'),'tritium-data/mat/Knm2/56590.mat']; %take MTD from 1 (randomly chosen) KNM1 run
 D = importdata(filename);
 
 %% rate at -300 eV
@@ -23,7 +23,6 @@ nqU   = numel(nqU);
 % 
 % qU   = [qU' D.qU(6:2:end,1)']';
 % nqU  = numel(nqU);
-
 
 % qUmin = mean(D.qU_RM)-1;
 % qUmax = mean(D.qU_RM)+1;

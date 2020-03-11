@@ -35,7 +35,7 @@ else
    extra_str = ''; 
 end
 
-savedir = [getenv('SamakPath'),'knm2ana/knm2_MultiRingFit/results/'];
+savedir = [getenv('SamakPath'),'knm2ana/knm2_MultiRingFit_FakeData/results/'];
 savefile = [savedir,...
     sprintf('FitResults_knm2_FakeRun_MultiRingFit_2PseudoRings_StatFluct%s_%.0fSamples.mat',extra_str,nSamples)];
 if exist(savefile,'file')
