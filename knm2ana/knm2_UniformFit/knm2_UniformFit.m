@@ -2,9 +2,9 @@
 % analyze 3 rear wall periods one after the other
 % January 2020, Lisa
 
-RunAnaArg = {'RunList','KNM2_RW3',...  % define run number -> see GetRunList
+RunAnaArg = {'RunList','KNM2_Prompt',...  % define run number -> see GetRunList
     'fixPar','mNu E0 Bkg Norm',...         % free Parameter !!
-    'DataType','Real',...              % Real, Twin or Fake
+    'DataType','Twin',...              % Real, Twin or Fake
     'FSDFlag','BlindingKNM2',...       % final state distribution (theoretical calculation)
     'ELossFlag','KatrinT2',...         % energy loss function     ( different parametrizations available)
     'AnaFlag','StackPixel',...         % FPD segmentations -> pixel combination

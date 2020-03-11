@@ -71,7 +71,11 @@ classdef CovarianceMatrix < handle
     
     % plasma uncertainties
     RW_SigmaErr;             % absolute uncertainty of plasma/rear wall potential over measurement time (eV)
-    RW_MultiPosErr; 
+    RW_MultiPosErr;
+    
+    % longitidinal
+    MACE_SigmaErr;
+    is_EOffsetErr;
     
     %debugging option
     SanityPlots;             % various ON/OFF
@@ -120,7 +124,9 @@ classdef CovarianceMatrix < handle
          p.addParameter('FPDeff_RelErr',0.001,@(x)isfloat(x) && x>=0);
          p.addParameter('RW_SigmaErr',0.1,@(x)isfloat(x) && x>=0);
          p.addParameter('RW_MultiPosErr',0.1,@(x)isfloat(x));
-        
+         p.addParameter('MACE_SigmaErr',0.02,@(x)isfloat(x));
+         p.addParameter('is_EOffsetErr',0.02,@(x)isfloat(x));
+         
          p.parse(varargin{:});          
          obj.nTrials                  = p.Results.nTrials;
          obj.nRuns                    = p.Results.nRuns;
@@ -154,6 +160,8 @@ classdef CovarianceMatrix < handle
          obj.ShapeCMnormIndex         = p.Results.ShapeCMnormIndex;
          obj.RW_SigmaErr              = p.Results.RW_SigmaErr;
          obj.RW_MultiPosErr           = p.Results.RW_MultiPosErr;
+         obj.MACE_SigmaErr            = p.Results.MACE_SigmaErr;
+         obj.is_EOffsetErr            = p.Results.is_EOffsetErr;
          
          if strcmp(obj.StudyObject.FPD_Segmentation,'RING')
              dim = obj.StudyObject.nqU*obj.StudyObject.nRings;
@@ -3177,10 +3185,49 @@ function ComputeCM_STAT(obj,varargin)
     obj.MultiCovMat.CM_STAT = diag(TBDIS);
     obj.MultiCovMatFrac.CM_STAT = (obj.MultiCovMat.CM_STAT./TBDIS)./TBDIS';
 end
+
+function ComputeCM_LongPlasma(obj,varargin)
+    % longitudinal plasma uncertainty
+    % effectively described by e-loss shift and variance 
+    is_EOffset_i = obj.StudyObject.is_EOffset;
+    MACE_Sigma_i = obj.StudyObject.MACE_Sigma;
+    
+    CorrCoeff = 0.4;
+    PlasmaCorrMat      = [obj.MACE_SigmaErr,obj.is_EOffsetErr].*[]
+    PlasmaPar_expected = [MACE_Sigma_i,is_EOffset_i];
+   
+    PlasmaPar =  mvnrnd(PlasmaPar_expected,PlasmaCorrMat,obj.nTrials);
+    
+  %  Plasma_Var        = obj.StudyObject.MACE_Sigma+obj.MACE_SigmaErr.*randn(obj.nTrials,1);
+     is_EOffset_v  = PlasmaPar(1,:);
+     MACE_Sigma_v   = PlasmaPar(2,:);
+   
+      if strcmp(obj.StudyObject.FPD_Segmentation,'RING')
+        TBDIS_V = zeros(obj.StudyObject.nqU,obj.StudyObject.nRings,obj.nTrials);
+    else
+        TBDIS_V = zeros(obj.StudyObject.nqU,obj.nTrials);
+      end
+    
+    for i=1:obj.nTrials
+        obj.StudyObject.is_EOffset = is_EOffset_v(i);
+        obj.StudyObject.MACE_Sigma = MACE_Sigma_v(i);
+        obj.StudyObject.InitialiteRF;
+        obj.StudyObject.ComputeTBDIS;
+        TBDIS_V(:,:,i) = obj.StudyObject.TBDIS;
+    end
+    
+        % Reshape
+    if strcmp(obj.StudyObject.FPD_Segmentation,'RING')
+        % make sure nTrials is always last dimension before reshape!
+        TBDIS_V = reshape(TBDIS_V,[obj.StudyObject.nqU*obj.StudyObject.nRings,obj.nTrials]);
+    end
+    
+end
+
 function ComputeCM_RW(obj,varargin)
     % Goal:  Rear wall potential systematics
     %
-    % Method: 
+    % Method:
     % FSDs are replaced with superposition of gaussians or rectangles or 3 Gaussians
     % sigma       == Width of gaussians or width of rectangle
     % sigmaErr    == Absolute uncertainty on sigma
@@ -3189,11 +3236,11 @@ function ComputeCM_RW(obj,varargin)
     %
     % ---------------------------------parser start  ----------------------------------------------
     p=inputParser;
-    p.addParameter('Sigma',obj.StudyObject.FSD_Sigma,@(x)isfloat(x)); 
+    p.addParameter('Sigma',obj.StudyObject.FSD_Sigma,@(x)isfloat(x));
     p.addParameter('SanityPlot','OFF',@(x)ismember(x,{'ON','OFF'}));
     p.addParameter('MultiPos',obj.StudyObject.FSD_MultiPos,@(x) isfloat(x) || isempty(x));     %3 gaussians instead of using 1 gaussian per energy (for 3 RW settings)
     p.addParameter('MultiWeights',obj.StudyObject.FSD_MultiWeights,@(x) isfloat(x) || isempty(x)); %3 gaussians instead of using 1 gaussian per energy
-    p.addParameter('Dist',obj.StudyObject.FSD_Dist,@(x)ismember(x,{'Gauss','Rect'}));                   
+    p.addParameter('Dist',obj.StudyObject.FSD_Dist,@(x)ismember(x,{'Gauss','Rect'}));
     p.addParameter('BinningFactor','',@(x) isfloat(x) || isempty(x)); % multiplies number of bins in rebinning
     
     p.parse(varargin{:});
@@ -3235,46 +3282,46 @@ function ComputeCM_RW(obj,varargin)
         return
     end
     
-        % Common FSD argument for all samples
-        FSDarg = {'Dist',Dist,...
-            'MultiWeights',MultiWeights,...
-            'BinningFactor',BinningFactor,...
-            'SanityPlot',SanityPlot};
-        
-        % Vary parameter according to uncertainty: sigma
-        Sigma_V = Sigma + obj.RW_SigmaErr.*randn(obj.nTrials,1);
-        Sigma_V(Sigma_V<0.001) = 0.001; % no negative broadening possible
-        
-        if ~isempty(MultiPos) % add multi positions uncertainty
-             MultiPos_V = MultiPos+obj.RW_MultiPosErr.*randn(obj.nTrials,1);  
-             Sigma_V = 0.001.*ones(obj.nTrials,1); % small for multi-gauss
+    % Common FSD argument for all samples
+    FSDarg = {'Dist',Dist,...
+        'MultiWeights',MultiWeights,...
+        'BinningFactor',BinningFactor,...
+        'SanityPlot',SanityPlot};
+    
+    % Vary parameter according to uncertainty: sigma
+    Sigma_V = Sigma + obj.RW_SigmaErr.*randn(obj.nTrials,1);
+    Sigma_V(Sigma_V<0.001) = 0.001; % no negative broadening possible
+    
+    if ~isempty(MultiPos) % add multi positions uncertainty
+        MultiPos_V = MultiPos+obj.RW_MultiPosErr.*randn(obj.nTrials,1);
+        Sigma_V = 0.001.*ones(obj.nTrials,1); % small for multi-gauss
+    else
+        MultiPos_V = '';
+    end
+    
+    TBDIS_V = zeros(obj.StudyObject.nqU,obj.nTrials);
+    
+    % Calculate integral spectra with varied FSDs
+    progressbar('Compute CM RW');
+    for i=1:obj.nTrials
+        progressbar(i/obj.nTrials)
+        if ~isempty(MultiPos) % add multi positions
+            obj.StudyObject.LoadFSD(FSDarg{:},'MultiPos',MultiPos_V(i,:),'Sigma',Sigma_V(i));
         else
-            MultiPos_V = '';
+            obj.StudyObject.LoadFSD(FSDarg{:},'MultiPos',MultiPos,'Sigma',Sigma_V(i));
         end
         
-        TBDIS_V = zeros(obj.StudyObject.nqU,obj.nTrials);
-        
-        % Calculate integral spectra with varied FSDs
-        progressbar('Compute CM RW');
-        for i=1:obj.nTrials
-            progressbar(i/obj.nTrials)
-            if ~isempty(MultiPos) % add multi positions 
-                obj.StudyObject.LoadFSD(FSDarg{:},'MultiPos',MultiPos_V(i,:),'Sigma',Sigma_V(i));
-            else
-                obj.StudyObject.LoadFSD(FSDarg{:},'MultiPos',MultiPos,'Sigma',Sigma_V(i));
-            end
-            
-            obj.StudyObject.ComputeTBDDS;
-            obj.StudyObject.ComputeTBDIS;
-            TBDIS_V(:,i) = obj.StudyObject.TBDIS;
-        end
-        
-        % Reshape
-        
-        if strcmp(obj.StudyObject.FPD_Segmentation,'RING')
-            % make sure nTrials is always last dimension before reshape!
-            TBDIS_V = reshape(TBDIS_V,[obj.StudyObject.nqU*obj.StudyObject.nRings,obj.nTrials]);
-        end
+        obj.StudyObject.ComputeTBDDS;
+        obj.StudyObject.ComputeTBDIS;
+        TBDIS_V(:,i) = obj.StudyObject.TBDIS;
+    end
+    
+    % Reshape
+    
+    if strcmp(obj.StudyObject.FPD_Segmentation,'RING')
+        % make sure nTrials is always last dimension before reshape!
+        TBDIS_V = reshape(TBDIS_V,[obj.StudyObject.nqU*obj.StudyObject.nRings,obj.nTrials]);
+    end
     
     % Compute Covariance Matrix
     obj.CovMat = cov(TBDIS_V');
@@ -3294,7 +3341,7 @@ function ComputeCM_RW(obj,varargin)
     
     % Save again
     save(obj.CovMatFile, 'obj','-append');
-
+    
 end
     end
     

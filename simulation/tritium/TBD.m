@@ -811,7 +811,7 @@ classdef TBD < handle & WGTSMACE %!dont change superclass without modifying pars
         function InitializeRF(obj,varargin)   
             p=inputParser;
             p.addParameter('saveRF','ON',@(x)ismember(x,{'ON','OFF'}));
-            p.addParameter('RebinMode','Fast',@(x)ismember(x,{'Fast','Integral'})); % for RF broadening
+            p.addParameter('RebinMode','Integral',@(x)ismember(x,{'Fast','Integral'})); % for RF broadening
             
             p.parse(varargin{:});
             saveRF    = p.Results.saveRF;
@@ -821,6 +821,17 @@ classdef TBD < handle & WGTSMACE %!dont change superclass without modifying pars
             %% load response function
             if strcmp(obj.recomputeRF,'OFF') %try loading
                 loadSuccess = LoadOrSaveRF(obj,'load'); % loadSuccess==1 when loading was successful
+                
+                % if there is broadening, and loading didnt work-> load unbroadened if possible
+                if any(obj.MACE_Sigma>0) && loadSuccess==0 
+                    MACE_Sigma_tmp = obj.MACE_Sigma;
+                    obj.MACE_Sigma = 0;
+                    loadSuccess = LoadOrSaveRF(obj,'load');
+                    obj.MACE_Sigma =  MACE_Sigma_tmp;
+                    if loadSuccess==1 % if this worked -> only broaden response function
+                        loadSuccess = 0.5;
+                    end    
+                end     
             elseif strcmp(obj.recomputeRF,'ON') %do not attempt loading
                 loadSuccess = 0;
             end
@@ -899,12 +910,12 @@ classdef TBD < handle & WGTSMACE %!dont change superclass without modifying pars
                 end
                 
                 obj.RF(obj.RF<0)=0;
-                if strcmp(saveRF,'ON')
+                if strcmp(saveRF,'ON') &&  obj.MACE_Sigma==0
                     LoadOrSaveRF(obj,'save')
                 end
-            end % if loadSuccess
+            end % if loadSuccess==0
             
-            if obj.MACE_Sigma>0
+            if loadSuccess<1 && any(obj.MACE_Sigma>0)
                 
                 if numel(obj.MACE_Sigma)==1
                     obj.MACE_Sigma = repmat(obj.MACE_Sigma,[obj.nqU,1]); % subrunwise broadening
@@ -916,6 +927,11 @@ classdef TBD < handle & WGTSMACE %!dont change superclass without modifying pars
                     out(:,i) = TF_Convfun(obj.RF(:,i)',obj.qU(i),obj.Te,obj.MACE_Sigma(i),'RebinMode',RebinMode);
                 end
                 obj.RF = out;
+                
+                if strcmp(saveRF,'ON')
+                    LoadOrSaveRF(obj,'save')
+                end
+                
             end
             
         end

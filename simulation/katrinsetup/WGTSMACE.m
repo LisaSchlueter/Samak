@@ -1237,16 +1237,17 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
                     RFfile = sprintf('_Ring_%s_%0.5gcm2_IsX%s_NIS%.0d_Bm%0.3gT_Bs%0.3gT_Ba%0.4gG_Temin%.3f_Temax%.3f_Bin%.0d_nring%.0d.mat',...
                         obj.FPD_RingMerge,obj.WGTS_CD_MolPerCm2,IsXStr,obj.NIS,obj.MACE_Bmax_T,obj.WGTS_B_T,...
                         mean(obj.MACE_Ba_T)*1e4,obj.TeMin,obj.TeMax,obj.nTeBinningFactor,obj.nRings);
-            end 
+            end
             if obj.is_EOffset ~=0
-               RFfile = strrep(RFfile,obj.ELossFlag,[obj.ELossFlag,sprintf('_%.3fELOffset',obj.is_EOffset)]); 
+                RFfile = strrep(RFfile,obj.ELossFlag,[obj.ELossFlag,sprintf('_%.3fELOffset',obj.is_EOffset)]);
             end
             
-%             if  obj.MACE_Sigma>0
-%                 RFfile = strrep(RFfile,'.mat',sprintf('_Sigma%.0fmeV.mat',obj.MACE_Sigma*1e3));
-%             end
-             MakeDir(RFpath);
-             RFName = [RFpath,RFfile];
+            if  obj.MACE_Sigma>0
+                RFfile = strrep(RFfile,'.mat',sprintf('_Sigma%.0fmeV.mat',mean(obj.MACE_Sigma*1e3)));
+            end
+            MakeDir(RFpath);
+            RFName = [RFpath,RFfile];
+            
             %% load
             switch mode
                 case 'load'

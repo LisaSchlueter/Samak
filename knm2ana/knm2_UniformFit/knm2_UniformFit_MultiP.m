@@ -11,6 +11,7 @@ DriftPerDay = [6*1e-03, 0, 6*1e-03]'; % per RW-perid (the same for all rings )
     'E0ref',18573.70,...
     'SanityPlot','OFF');
 
+%%
 RunAnaArg = {'RunList','KNM2_Prompt',...  % define run number -> see GetRunList
     'fixPar','mNu E0 Bkg Norm',...         % free Parameter !!
     'DataType','Twin',...              % Real, Twin or Fake
@@ -19,7 +20,6 @@ RunAnaArg = {'RunList','KNM2_Prompt',...  % define run number -> see GetRunList
     'AnaFlag','StackPixel',...         % FPD segmentations -> pixel combination
     'chi2','chi2Stat',...              % statistics only
     'NonPoissonScaleFactor',1,...
-    'MosCorrFlag','OFF',...
     'TwinBias_Q',18573.7,...
     'ROIFlag','Default'};
 
@@ -33,6 +33,8 @@ A.exclDataStart = A.GetexclDataStart(range); % find correct data, where to cut s
 %% reference fit
 A.Fit;
 FitResults_ref = A.FitResult;
+
+
 %% modiy FSDs
 if numel(A.TwinBias_Q)>1
     A.ModelObj.LoadFSD('MultiPos',E0OffseteV,...

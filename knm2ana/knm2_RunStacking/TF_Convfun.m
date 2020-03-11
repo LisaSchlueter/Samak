@@ -15,7 +15,7 @@ MaceTF = [MaceTF,MaceTF(end).*ones(1,numel(EsurAdd))];
 
 % define gaussians
 Gaussfun    = @(x,mu,sig) 1/(sig*sqrt(2*pi))*exp(-0.5*(x-mu).^2./sig.^2); % normalized gaussians
-SingleGauss = @(x) MaceTF.*Gaussfun(x,Esur,Sigma)';                        % single gauss
+SingleGauss = @(x) MaceTF.*Gaussfun(x,Esur,Sigma)';                       % single gauss
 
 % sum Gaussians and rebin
 switch RebinMode
@@ -23,7 +23,7 @@ switch RebinMode
         % just use rectangles -> fast
         % attention: doesn't work well for small Sigma < 0.1 eV
         SumGauss = @(x) sum(SingleGauss(x),2).*EStep;
-        MaceTF_broadened = SumGauss(Esur'); % superposition % note: no proper integration (yet)! check if necessary
+        MaceTF_broadened = SumGauss(Esur'); % superposition, this isn't a proper integration
     case 'Integral'
         % proper integration -> slow
         SumGauss = @(x) sum(SingleGauss(x),2);
