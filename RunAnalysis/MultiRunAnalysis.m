@@ -1193,7 +1193,8 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             %
             
             % Reference Rate KNM2
-            R200  = sum(obj.SingleRunData.TBDIS_RM,1)'./(obj.SingleRunData.TimeSec.*mean(obj.SingleRunData.qUfrac_RM,1))';
+%            R200  = sum(obj.SingleRunData.TBDIS_RM,1)'./(obj.SingleRunData.TimeSec.*mean(obj.SingleRunData.qUfrac_RM,1))';
+            R200  = sum(obj.SingleRunData.TBDIS_RM,1)'./(obj.SingleRunData.TimeSec.*obj.SingleRunData.qUfrac_RM)';
             qU200 = mean(obj.SingleRunData.qU_RM,1);
             
             
@@ -1201,7 +1202,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             p1=(obj.SingleRunData.WGTS_MolFrac_TT'+0.5*obj.SingleRunData.WGTS_MolFrac_HT'+0.5*obj.SingleRunData.WGTS_MolFrac_DT')./mean((obj.SingleRunData.WGTS_MolFrac_TT'+0.5*obj.SingleRunData.WGTS_MolFrac_HT'+0.5*obj.SingleRunData.WGTS_MolFrac_DT')).*obj.SingleRunData.WGTS_CD_MolPerCm2'./mean(obj.SingleRunData.WGTS_CD_MolPerCm2');
             p2=qU200'./mean(qU200);
             
-            TimeSec   = (obj.SingleRunData.TimeSec);
+            TimeSec   = (obj.SingleRunData.TimeSec.*obj.SingleRunData.qUfrac_RM);
             m1        = obj.StackWmean(p1',TimeSec)';
             m2        = obj.StackWmean(p2',TimeSec)';
             
@@ -3246,7 +3247,10 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             elseif strcmp(ListName,'KNM2_RW1')   % rear wall setting 1 (different names for back compatibility)
                 FirstRun = 56160;  LastRun = 56479;
             elseif strcmp(ListName,'KNM2_RW2')   % rear wall setting 2
-                FirstRun = 56560;  LastRun = 56713;
+                % FirstRun = 56560;  
+                % LastRun = 56713; Original
+FirstRun = 56561;  
+LastRun = 56683; % THIERRY - 27/2/2020 WARNING
             elseif strcmp(ListName,'KNM2_RW3')   % rear wall setting 3
                 FirstRun = 57015;  LastRun = 57137;
             elseif strcmp(ListName,'KNM2_RW12') % rear wall setting 1 + 2

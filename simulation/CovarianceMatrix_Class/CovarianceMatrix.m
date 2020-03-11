@@ -2227,40 +2227,6 @@ function ComputeCM_Background(obj,varargin)
         nCommonTrials = min(nGoodTrials);
         TBDIS_V = cell2mat(cellfun(@(x) x(:,1:nCommonTrials),TBDIS_V,'UniformOutput',0));
         
-<<<<<<< HEAD
-% <<<<<<< HEAD
-%         % Build Integral Spectrum Underlying Background Spectrum
-%         TBDIS_V{rl} = Bkg_Fit(:,:).*obj.StudyObject.TimeSec(:,rl).*obj.StudyObject.qUfrac(:,rl);
-%         BkgPlot_Data   = BkgPlot_Data(:,:);
-%     end
-%     
-%     % convert TBDIS_V back into matrix. for rings: use minimal number of good trials
-%     nCommonTrials = min(nGoodTrials);
-%     TBDIS_V = cell2mat(cellfun(@(x) x(:,1:nCommonTrials),TBDIS_V,'UniformOutput',0));
-%     
-%     % Compute Covariance Matrix
-%     obj.CovMat     = cov(TBDIS_V');
-%     
-%     % Compute Fractional Covariance Matrix
-%     BKGIS          = obj.StudyObject.BKG_RateSec.*obj.StudyObject.TimeSec.*obj.StudyObject.qUfrac;
-%     if strcmp(obj.StudyObject.FPD_Segmentation,'RING')
-%         % Reshape for Ring Case
-%         BKGIS = reshape(BKGIS,[obj.StudyObject.nqU*obj.StudyObject.nRings,1]);
-%     end
-%     obj.CovMatFrac = bsxfun(@rdivide,obj.CovMat,BKGIS);      %divides 1st row of CovMat by TBDIS(1), etc...
-%     obj.CovMatFrac = bsxfun(@rdivide,obj.CovMatFrac,BKGIS'); %divides columnwise
-%     obj.CovMatFrac(isinf(obj.CovMatFrac)) = 0; %for background region
-%     obj.CovMatFrac(isnan(obj.CovMatFrac)) = 0; %for background region
-%     
-%     % Compute Shape Only & Frac Shape Only Covariance Matrices
-%     [~, obj.CovMatFracShape] = obj.DecomposeCM('CovMatFrac',obj.CovMatFrac,'exclDataStart',1,'BkgCM','ON');
-%     obj.MultiCovMat.CM_BkgShape   = obj.CovMat;
-%     obj.MultiCovMatFrac.CM_BkgShape  = obj.CovMatFrac;
-%     obj.MultiCovMatFracShape.CM_BkgShape = obj.CovMatFracShape;
-%     save(obj.CovMatFile,'obj','TBDIS_V','BKG_Asimov','par','err','chi2min','Bkg_Fit');
-% =======
-=======
->>>>>>> 8ad23ed1da5ab2ce33165647db9a1b8eb3a0bbef
         % Compute Covariance Matrix
         obj.CovMat     = cov(TBDIS_V');
         
@@ -2283,11 +2249,7 @@ function ComputeCM_Background(obj,varargin)
         save(obj.CovMatFile,'obj','TBDIS_V','BKG_Asimov','par','err','chi2min',...
             'Bkg_Fit','BKG_i','BKGIndex','BkgPlot_Data','Data','BKGnqU','MaxSlopeCpsPereV');
     end
-<<<<<<< HEAD
-%>>>>>>> 2680d1afe0066666933d7782d14d252046b5598f
-=======
->>>>>>> 8ad23ed1da5ab2ce33165647db9a1b8eb3a0bbef
-    
+
     % Display
     switch Display
         case 'ON'

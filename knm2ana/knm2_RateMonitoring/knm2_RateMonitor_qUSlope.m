@@ -3,7 +3,8 @@
 % calculate rate - qU dependence with MC simulations
 % ------------------------------------------------------------
 
-vcorrect=[ 1.000000000000000   0.996586595279402   0.992150388075006   0.988038815639518]; 
+%vcorrect=[ 1.000000000000000   0.996586595279402   0.992150388075006   0.988038815639518]; 
+vcorrect=[ 1 1 1 1]; 
 
 % You need to have Run GetSamakPath in your Working Directory Before
 savedir = [getenv('SamakPath'),'knm2ana/knm2_RateMonitoring/results'];
@@ -39,7 +40,7 @@ else
     qUIndex = find((A.RunData.qU-18574)<-95); % all Data points around rate monitor point
     qU      = A.RunData.qU(qUIndex);
     Rate    = A.RunData.TBDIS(qUIndex)./(A.RunData.qUfrac().*A.RunData.TimeSec);
-    RateErr = sqrt(Rate);
+    RateErr = sqrt(A.RunData.TBDIS(qUIndex))./(A.RunData.qUfrac().*A.RunData.TimeSec);
      
     % linear fit of rate around E0-300V
     [par, err, chi2min,dof] = linFit((qU-qU(10)),Rate,RateErr);
@@ -59,12 +60,12 @@ end
         
 %% Sanity plot: Uniform - All Pixels
 f1 = figure('Units','normalized','Position',[0.1,0.1,0.5,0.5]);
-e1 = errorbar(qU-18574,Rate,RateErr,'-x','LineWidth',2);
+e1 = errorbar((qU-qU(10)),Rate,RateErr,'-x','LineWidth',2);
 hold on;
-x = linspace(min(qU),max(qU),100)-18574;
+x = (qU-qU(10));
 y = par(1).*x+par(2);
 p1 = plot(x,y,'LineWidth',2);
-ud=plot(qUDataUniform-18574,MeanRateDataUniform,'rs','MarkerSize',20);
+ud=plot(qUDataUniform-qU(10),MeanRateDataUniform,'rs','MarkerSize',20);
 hold off;
 PrettyFigureFormat('FontSize',22);
 xlabel('Retarding energy - 18574 (eV)');
@@ -73,6 +74,8 @@ leg = legend([e1,p1,ud],sprintf('MC simulation'),...
     sprintf('Linear fit slope = %.2f \\pm %.2f cps/mV',par(1)/1e3,err(1)/1e3),...
     'KNM2 RW2 Data');
 leg.EdgeColor = rgb('Silver');
+
+return;
 
 %% Sanity plot: Pseudo-Ring Wise
     clear par err;
