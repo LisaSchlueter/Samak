@@ -1394,33 +1394,15 @@ classdef CovarianceMatrix < handle
             ELossBinStep        = p.Results.ELossBinStep;
             maxE_el             = p.Results.maxE_el;
             % -----------------------parser end ------------------------------------------------------
+
+            nRings = numel(obj.StudyObject.MACE_Ba_T);
             
+            %% Load Lookup Table: Energy Loss Functions
             % energy loss bninning
             minE_el=-maxE_el;
             NbinE_el = (maxE_el-minE_el)/ELossBinStep;
             E_el = linspace(minE_el,maxE_el,NbinE_el);
-            Estep_el = E_el(2) - E_el(1);
             
-            % response function binning
-            maxE = (obj.StudyObject.qUmax-obj.StudyObject.qUmin)*1.5;
-            minE=-maxE;
-            NbinE = (maxE-minE)/RFBinStep;
-            E = linspace(minE,maxE,NbinE);
-            Estep = E(2) - E(1);
-            
-%             % Initializations
-%             is_P0v   = zeros(obj.nRuns,obj.nTrials); is_P1v   = zeros(obj.nRuns,obj.nTrials);
-%             is_P2v   = zeros(obj.nRuns,obj.nTrials); is_P3v   = zeros(obj.nRuns,obj.nTrials);
-%             is_P4v   = zeros(obj.nRuns,obj.nTrials); is_P5v   = zeros(obj.nRuns,obj.nTrials);
-%             is_P6v   = zeros(obj.nRuns,obj.nTrials); is_P7v   = zeros(obj.nRuns,obj.nTrials);
-       
-            ISXsection_local         = zeros(1,obj.nTrials); %not used here: to keep track of varied parameters
-            WGTS_CD_MolPerCm2_local  = zeros(obj.nRuns,obj.nTrials); %not used here: to keep track of varied parameters
-            MACE_Bmax_T_local        = zeros(1,obj.nTrials);
-            WGTS_B_T_local           = zeros(1,obj.nTrials);
-            MACE_Ba_T_local          = zeros(1,obj.nTrials);
-            
-            %% Load Lookup Table: Energy Loss Functions
             if strcmp(obj.SysEffect.RF_EL, 'OFF')
                 % load or recompute default eloss
                 [~,ElossFunctions_default] = obj.StudyObject.ComputeELossFunction('E',E_el,'LoadOrSaveEloss',obj.RecomputeFlag);
@@ -1430,49 +1412,8 @@ classdef CovarianceMatrix < handle
                 [~, ElossFunctions] = obj.ComputeELossLookupTable('E',E_el);
             end
             
-             %% Load Lookup Table: Scattering Probabilities
-%             %  output of this section: ISProbFile (structure or array, containg information about scattering probabilites)
-%             if strcmp(obj.SysEffect.RF_BF,'ON') && strcmp(obj.SysEffect.RF_RX,'ON')
-%                 isp_dir =   [getenv('SamakPath'),sprintf('inputs/CovMat/RF/LookupTables/ISProb/')];
-%             else
-%                 isp_dir =   [getenv('SamakPath'),sprintf('inputs/CovMat/RF/LookupTables/PartVar/ISProbPartVar/')];
-%             end
-%             
-%             isp_common = sprintf('ISProb-LookupTable_%u-Trials_%.0fNIS',obj.nTrials,obj.StudyObject.NIS+1);
-%             str_cd = sprintf('_%.5g-molPercm2',obj.StudyObject.WGTS_CD_MolPerCm2);
-%             if strcmp(obj.StudyObject.ISCS,'Edep')
-%                 str_is = '_IsXEdep';
-%             else
-%                 str_is = sprintf('_IsX%.5gm2',obj.StudyObject.ISXsection(18575));
-%             end
-%             if strcmp(obj.SysEffect.RF_RX,'ON')
-%                 str_cd = [str_cd,sprintf('-%.3gerr',obj.WGTS_CD_MolPerCm2_RelErr)];
-%                 str_is = [str_is,sprintf('-%.3gerr',obj.ISXsection_RelErr)];
-%             end
-%             str_rx = [str_cd,str_is];
-%             
-%             str_bs   = sprintf('_%.3gBs',obj.StudyObject.WGTS_B_T);
-%             str_bmax = sprintf('_%.3gBmax',obj.StudyObject.MACE_Bmax_T);
-%             if strcmp(obj.SysEffect.RF_BF,'ON')
-%                 str_bs    = [str_bs,sprintf('-%.3gerr',obj.WGTS_B_T_RelErr)];
-%                 str_bmax  = [str_bmax,sprintf('-%.3gerr',obj.MACE_Bmax_T_RelErr)];
-%             end
-%             str_bf = [str_bs,str_bmax];
-%             
-%             isp_filename = [isp_common,str_rx,str_bf,'.mat'];
-% 
-%             if strcmp(obj.SysEffect.RF_BF,'OFF') && strcmp(obj.SysEffect.RF_RX,'OFF')
-%                 isp_dir = [getenv('SamakPath'),sprintf('inputs/WGTSMACE/WGTS_ISProb/')];
-%                 isp_filename = sprintf('IS%s_%.0f-NIS_%.3g-Bmax_%.3g-Bs.mat',...
-%                     str_rx,(obj.StudyObject.NIS+1),obj.StudyObject.MACE_Bmax_T, obj.StudyObject.WGTS_B_T);
-%             end
-%             isp_file = [isp_dir,isp_filename];
-            
-            %% new start
-            nRings = numel(obj.StudyObject.MACE_Ba_T);
-            
-            % Variation of Parameters
-            % B-Fields
+            %% Variation of Parameters  
+             % B-fields
             if strcmp(obj.SysEffect.RF_BF,'ON')
                 Bs_v   = obj.VaryParameter('Parameter',obj.StudyObject.WGTS_B_T, 'rel_Error', obj.WGTS_B_T_RelErr);
                 Bmax_v = obj.VaryParameter('Parameter',obj.StudyObject.MACE_Bmax_T,'rel_Error', obj.MACE_Bmax_T_RelErr);
@@ -1480,22 +1421,21 @@ classdef CovarianceMatrix < handle
             elseif strcmp(obj.SysEffect.RF_BF,'OFF')
                 Bs_v   = repmat(obj.StudyObject.WGTS_B_T,obj.nTrials,1);
                 Bmax_v = repmat(obj.StudyObject.MACE_Bmax_T,obj.nTrials,1);
-                Ba_v = repmat(obj.StudyObject.MACE_Ba_T,obj.nTrials,1);
+                Ba_v   = repmat(obj.StudyObject.MACE_Ba_T,obj.nTrials,1);
             end
             
-            % column density 
-            WGTS_CD_MolPerCm2_v = zeros(obj.nTrials,obj.nRuns);
+             % column density 
             if strcmp(obj.SysEffect.RF_RX,'ON')
-                WGTS_CD_MolPerCm2_v(:,1) = obj.VaryParameter('Parameter',obj.StudyObject.WGTS_CD_MolPerCm2,'rel_Error', obj.WGTS_CD_MolPerCm2_RelErr);
+                WGTS_CD_MolPerCm2_v = obj.VaryParameter('Parameter',obj.StudyObject.WGTS_CD_MolPerCm2,'rel_Error', obj.WGTS_CD_MolPerCm2_RelErr);
             elseif strcmp(obj.SysEffect.RF_RX,'OFF')
-                WGTS_CD_MolPerCm2_v(:,1) = repmat(obj.StudyObject.WGTS_CD_MolPerCm2,obj.nTrials,1);
+                WGTS_CD_MolPerCm2_v = repmat(obj.StudyObject.WGTS_CD_MolPerCm2,obj.nTrials,1);
             end
             
-            
+            % calculate response functions with varied parameters
             RFfun = @ComputeRF;
             parqU = obj.StudyObject.qU;
             parnqU = obj.StudyObject.nqU;
-            ResponseFunction = zeros(obj.StudyObject.nTe,obj.StudyObject.nqU,obj.nTrials,nRings);%
+            ResponseFunction = zeros(obj.StudyObject.nTe,obj.StudyObject.nqU,obj.nTrials,nRings);
 
             progressbar('Compute RF lookup table');
             for i = 1:obj.nTrials
@@ -1506,6 +1446,7 @@ classdef CovarianceMatrix < handle
                         ResponseFunction(:,ii,i,ri) = RFfun(obj.StudyObject,parTe,parqU(ii,ri),'pixel',ri,...
                             'ELossRange',maxE_el,'ELossBinStep',ELossBinStep,...
                             'ElossFunctions',ElossFunctions(:,:,i),...
+                            'RFBinStep',RFBinStep,...
                             'MACE_Bmax_T',Bmax_v(i),...
                             'MACE_Ba_T',Ba_v(i),...
                             'WGTS_B_T',Bs_v(i),...
@@ -1514,109 +1455,6 @@ classdef CovarianceMatrix < handle
                 end
             end
         
- 
-            %% new end
-%             
-%             if exist(isp_file,'file')==2 && strcmp(obj.RecomputeFlag,'OFF')
-%                 IsProbFile = importdata(isp_file);
-%             else   % compute if not existing
-%                 if strcmp(obj.SysEffect.RF_BF,'ON') ||   strcmp(obj.SysEffect.RF_RX,'ON')
-%                     obj.ComputeISProbLookupTable;
-%                     IsProbFile = importdata(isp_file);
-%                 elseif strcmp(obj.SysEffect.RF_BF,'OFF') &&   strcmp(obj.SysEffect.RF_RX,'OFF')
-%                     obj.StudyObject.ComputeISProb;
-%                     IsProbFile = importdata(isp_file);
-%                 end
-%             end
-%             
-%             %% If not everything is varied
-%             if strcmp(obj.SysEffect.RF_BF,'OFF') &&   strcmp(obj.SysEffect.RF_RX,'OFF')
-%                 % scattering probabilities are fixed, not varied
-%                 % transmission function fixed, no varied
-%                 Pis_m = IsProbFile;
-%                 is_P0v  = repmat(Pis_m(1),1,obj.nTrials)./100;
-%                 is_P1v  = repmat(Pis_m(2),1,obj.nTrials)./100;
-%                 is_P2v  = repmat(Pis_m(3),1,obj.nTrials)./100;
-%                 is_P3v  = repmat(Pis_m(4),1,obj.nTrials)./100;
-%                 is_P4v  = repmat(Pis_m(5),1,obj.nTrials)./100;
-%                 if obj.StudyObject.NIS >4
-%                     is_P5v  = repmat(Pis_m(6),1,obj.nTrials)./100;end
-%                 if obj.StudyObject.NIS >5
-%                     is_P6v  = repmat(Pis_m(7),1,obj.nTrials)./100;end
-%                 if obj.StudyObject.NIS >6
-%                     is_P7v  = repmat(Pis_m(8),1,obj.nTrials)./100;end
-%                 MACE_Bmax_T_local       = repmat(obj.StudyObject.MACE_Bmax_T,obj.nTrials,1);
-%                 WGTS_B_T_local          = repmat(obj.StudyObject.WGTS_B_T,obj.nTrials,1);
-%                 WGTS_CD_MolPerCm2_local = repmat(obj.StudyObject.WGTS_CD_MolPerCm2,obj.nTrials,1);
-%                 MACE_Ba_T_local = repmat(obj.StudyObject.MACE_Ba_T,obj.nTrials,1);
-%             end
-%             if  strcmp(obj.SysEffect.RF_BF,'ON') ||  strcmp(obj.SysEffect.RF_RX,'ON')
-%                 MACE_Bmax_T_local       = IsProbFile.Bmax_v; %use same B-field variations for TF as for ISProb
-%                 WGTS_B_T_local          = IsProbFile.Bs_v;
-%                 ISXsection_local        = IsProbFile.ISXsection_v;
-%                 if isfield(IsProbFile,'WGTS_CD_MolPerCm2_v')
-%                     WGTS_CD_MolPerCm2_local = IsProbFile.WGTS_CD_MolPerCm2_v; %newlabl
-%                 else
-%                     WGTS_CD_MolPerCm2_local = IsProbFile.Krhod_m.*1e-04; %  %old label for compatibility
-%                 end
-%                 is_P0v  = IsProbFile.Pis_m(1,:,:)/100;
-%                 is_P1v  = IsProbFile.Pis_m(2,:,:)/100;
-%                 is_P2v  = IsProbFile.Pis_m(3,:,:)/100;
-%                 is_P3v  = IsProbFile.Pis_m(4,:,:)/100;
-%                 is_P4v  = IsProbFile.Pis_m(5,:,:)/100;
-%                 if obj.StudyObject.NIS >4
-%                     is_P5v  = IsProbFile.Pis_m(6,:,:)/100; end
-%                 if obj.StudyObject.NIS > 5
-%                     is_P6v  = IsProbFile.Pis_m(7,:,:)/100; end
-%                 if obj.StudyObject.NIS >6
-%                     is_P7v = IsProbFile.Pis_m(8,:,:)/100; end
-%                 if strcmp(obj.SysEffect.RF_BF,'ON')
-%                     MACE_Ba_T_local            = obj.VaryParameter('Parameter',obj.StudyObject.MACE_Ba_T,'rel_Error',obj.MACE_Ba_T_RelErr);
-%                 elseif strcmp(obj.SysEffect.RF_BF,'OFF')
-%                     MACE_Ba_T_local = repmat(obj.StudyObject.MACE_Ba_T,obj.nTrials,1);
-%                 end
-%             end
-%             %% Loop on trials
-%             progressbar('ComputeRF Lookup Table');
-%             nRings = numel(obj.StudyObject.MACE_Ba_T);
-%             ResponseFunction = zeros(obj.StudyObject.nTe,obj.StudyObject.nqU,obj.nTrials,nRings);%
-%             
-%             for i=1:1:obj.nTrials 
-%                     progressbar(i/obj.nTrials);
-%                     switch Debug
-%                         case 'ON'
-%                             cprintf('blue','CovarianceMatrix: ComputeRFCovMatrix: Trial %.0f/%.0f - Pi''s - %.5f %.5f %.5f %.5f %.5f %.5f \n',...
-%                                 i,obj.nTrials,is_P0v(i),is_P1v(i),is_P2v(i),is_P3v(i),is_P4v(i),is_P5v(i));
-%                     end
-%                     
-%                     scatterings  = is_P1v(i)*ElossFunctions(1,:,i) + ...
-%                         is_P2v(i)*ElossFunctions(2,:,i).*Estep_el^1 + ...
-%                         is_P3v(i)*ElossFunctions(3,:,i).*Estep_el^2 + ...
-%                         is_P4v(i)*ElossFunctions(4,:,i).*Estep_el^3 + ...
-%                         is_P5v(i)*ElossFunctions(5,:,i).*Estep_el^4 + ...
-%                         is_P6v(i)*ElossFunctions(6,:,i).*Estep_el^5 + ...
-%                         is_P7v(i)*ElossFunctions(7,:,i).*Estep_el^6;
-%                     
-%                     fscat_local       = @(e)interp1(E_el,scatterings,e); % change binning for transmission function
-%                     
-%                     for r=1:1:nRings
-%                         %Transmission Function with B-Field configuration for nTrial = i and qU = qU(j)
-%                         for j=1:1:obj.StudyObject.nqU
-%                             switch Debug
-%                                 case 'ON'
-%                                     cprintf('blue','CovarianceMatrix:ComputeTFCovMatrix: Trial %.0f/%.0f - WGTS - %.5f %.5f %.5f - qU=%g\n',...
-%                                         i,obj.nTrials,MACE_Bmax_T_local(i),WGTS_B_T_local(i),MACE_Ba_T_local(i),obj.StudyObject.qU(j));
-%                             end
-%                             
-%                             TF_local = obj.StudyObject.ComputeMaceTF(obj.StudyObject.qU(j,r)+E,obj.StudyObject.qU(j,r),...
-%                                 'MACE_Ba_T',MACE_Ba_T_local(i,r), 'MACE_Bmax_T', MACE_Bmax_T_local(i), 'WGTS_B_T', WGTS_B_T_local(i));
-%                             
-%                             % Put everything together into Response Function
-%                             ResponseFunction_vector =  TF_local*is_P0v(i)+conv(TF_local,fscat_local(E),'same').*Estep;
-%                             ResponseFunction(:,j,i,r) = interp1(E,ResponseFunction_vector, obj.StudyObject.Te-obj.StudyObject.qU(j,r));
-%                         end
-%                     end %end nRuns
-%             end %end nTrials
             
             % do not save all samples, just some infos
             if strcmp(obj.SysEffect.RF_BF,'ON') && strcmp(obj.SysEffect.RF_RX,'ON') && strcmp(obj.SysEffect.RF_EL,'ON')
@@ -1638,7 +1476,7 @@ classdef CovarianceMatrix < handle
                     mean(floor(obj.StudyObject.MACE_Ba_T*1e4)),obj.MACE_Ba_T_RelErr,...
                     maxE_el,ELossBinStep,RFBinStep);
                 if strcmp(obj.SysEffect.RF_EL,'ON')
-                    rf_filename = strrep(rf_filename,'.mat',sprintf('_%s',obj.StudyObject.ELossFlag));
+                    rf_filename = strrep(rf_filename,'.mat',sprintf('_%s.mat',obj.StudyObject.ELossFlag));
                 end
                 rf_file = strcat(rf_path,rf_filename);
             end
@@ -1653,10 +1491,13 @@ classdef CovarianceMatrix < handle
             end
             qU = obj.StudyObject.qU;
             Te = obj.StudyObject.Te;
-            TD = obj.StudyObject.TD;
+            TD = obj.StudyObject.TD;    
+            ISXsection = obj.StudyObject.ISXsection;
+            
             save(rf_file,'RFmean','RFstd','qU','Te','TD',...
-                'MACE_Bmax_T_local','WGTS_B_T_local','ISXsection_local',...
-                'WGTS_CD_MolPerCm2_local','MACE_Ba_T_local','-mat');
+                'Bmax_v','Bs_v','ISXsection',...
+                'WGTS_CD_MolPerCm2_v','Ba_v',...
+                '-mat');
         end
         function ComputeCM_RF(obj,varargin)
             fprintf('--------------------------------------------------------------------------\n')
