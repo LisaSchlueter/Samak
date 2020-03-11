@@ -21,6 +21,7 @@ mkdir -p ./inputs/WGTSMACE/
 mkdir -p ./fitting/fminuit/
 mkdir -p ./inputs/MonitorSpec/
 mkdir -p ./inputs/WGTSMACE/WGTS_ISProb/
+mkdir -p ./inputs/RunLists/KNM2/
 
 #---------------- start synchronization: 
 
@@ -56,6 +57,9 @@ rsync -i -a -v $1@pcltr-01.mpp.mpg.de:/remote/ceph/user/s/schluete/Samak/inputs/
 
 # energy-dependent inel. scattering cross section: pre-calculated mesh grid
 rsync -i -a -v $1@pcltr-01.mpp.mpg.de:/remote/ceph/user/s/schluete/Samak/inputs/WGTSMACE/WGTS_ISProb/InitISProbMeshGrid* ./inputs/WGTSMACE/WGTS_ISProb/
+
+# golden run list
+rsync -i -a -v $1@pcltr-01.mpp.mpg.de:/remote/ceph/user/s/schluete/Samak/inputs/RunLists/KNM2/ ./inputs/RunLists/KNM2/
 
 }
 GetBinaries $1

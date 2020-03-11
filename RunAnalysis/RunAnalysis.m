@@ -1318,8 +1318,15 @@ classdef RunAnalysis < handle
             savedir  = [getenv('SamakPath'),sprintf('tritium-data/fit/%s/InitFit/',obj.DataSet)];
             MakeDir(savedir);
             fixPar_init = 'E0 Norm Bkg';
-            savename = [savedir,sprintf('FitResult_InitModelObj_%s_%s_%s_%.0fpixels.mat',...
-                strrep(fixPar_init,' ',''),obj.RunData.RunName,obj.DataType,numel(obj.PixList))];
+            
+            if strcmp(obj.DataSet,'Knm2') && strcmp(obj.ROIFlag,'14keV')
+                RoiStr = '_14keV';
+            else
+                RoiStr = '';
+            end
+            
+            savename = [savedir,sprintf('FitResult_InitModelObj_%s_%s_%s_%.0fpixels%s.mat',...
+                strrep(fixPar_init,' ',''),obj.RunData.RunName,obj.DataType,numel(obj.PixList),RoiStr)];
             if strcmp(obj.AnaFlag,'Ring')
                 savename = strrep(savename,'.mat',sprintf('Ring%s.mat',obj.RingMerge));
             end
@@ -3549,7 +3556,7 @@ classdef RunAnalysis < handle
         function SetMosCorr(obj)
             % correct qU for long term drift -> input from monitor spectrometer
             % cannot be reset -> if you want to change back to no correction
-            % -> re-run data import before: ReadData or ReadSingleRunData
+            % -> re-run data import before: ReadData or Data
             
             if strcmp(obj.MosCorrFlag,'OFF')
                 % no correction

@@ -490,7 +490,7 @@ classdef TBD < handle & WGTSMACE %!dont change superclass without modifying pars
             p.addParameter('BinningFactor',2,@(x) isfloat(x) || isempty(x));                   % enhance binning: twice, 3 times,... as much bins
             p.addParameter('SanityPlot','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('ZoomPlot','OFF',@(x)ismember(x,{'ON','OFF'})); % save also zoom to 1 final state
-            p.addParameter('Dist',obj.FSD_Dist,@(x)ismember(x,{'Gauss','Rect'}));
+            p.addParameter('Dist','Gauss',@(x)ismember(x,{'Gauss','Rect'}));
             p.parse(varargin{:});
             
             Sigma              = p.Results.Sigma;

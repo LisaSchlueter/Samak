@@ -7,21 +7,13 @@ InitFile = @ref_FakeRun_KNM2_CD84_2hours; %84 column density, 2 hours
 
 % 3 different rear wall settings
 nRuns    = [121,95,92];
-<<<<<<< HEAD
 FakeE0   = 18573.7+[0.02,0.07,-0.1];
-=======
-%FakeE0   = 18573.7+[0.02,0.07,-0.1];
-FakeE0   = 18573.7+[0.2,0.7,-1];
->>>>>>> 2680d1afe0066666933d7782d14d252046b5598f
 %FakeE0   = 18573.7+[0.4,0.6,-1];
 %FakeE0   = 18573.7+[1,2,-3];
 meanE0  = wmean(FakeE0,nRuns);
 RecomputeFlag = 'OFF';
-<<<<<<< HEAD
-Plots = 'ON';
-=======
 Plots = 'OFF';
->>>>>>> 2680d1afe0066666933d7782d14d252046b5598f
+
 %% load or calculate
 savedir  = [getenv('SamakPath'),'knm2ana/knm2_RWcombi/results/'];
 savename = [savedir,sprintf('knm2_FakeRunRWcombi_3P_%.0fRuns_E0%.0fmeV_%.0fmeV_%.0fmeV.mat',...
@@ -59,7 +51,7 @@ else
     %% Stacked with correction:
     MultiPos  = FakeE0-meanE0;
     MultiWeights = [nRuns(1),nRuns(2),nRuns(3)]./sum(nRuns);
-    FSDArg = {'Sigma',0.001,'MultiPos',MultiPos,'MultiWeights',MultiWeights};
+    FSDArg = {'Sigma',0.001,'MultiPos',MultiPos,'MultiWeights',MultiWeights,'Dist','Gauss'};
     M.ModelObj.LoadFSD(FSDArg{:});
     M.ModelObj.ComputeTBDDS;
     M.ModelObj.ComputeTBDIS;
@@ -71,21 +63,11 @@ else
 end
 %% result: 
 fprintf('- Result without FSD correction------------------- \n');
-<<<<<<< HEAD
 fprintf('Delta mNuSq = %.2g eV2 \n',FitResult_uncorr.par(1));
 fprintf('Delta E0    = %.2g eV \n',FitResult_uncorr.par(2)+M.ModelObj.Q_i-meanE0);
 fprintf('------------------------------------------------- \n');
-
 fprintf('- Result with FSD correction--------------------- \n');
 fprintf('Delta mNuSq = %.2g eV2 \n',FitResult_corr.par(1));
-=======
-fprintf('Delta mNuSq = %.3f eV2 \n',FitResult_uncorr.par(1));
-fprintf('Delta E0    = %.2g eV \n',FitResult_uncorr.par(2)+M.ModelObj.Q_i-meanE0);
-fprintf('------------------------------------------------- \n');
-
-fprintf('- Result with FSD c1orrection--------------------- \n');
-fprintf('Delta mNuSq = %.3f eV2 \n',FitResult_corr.par(1));
->>>>>>> 2680d1afe0066666933d7782d14d252046b5598f
 fprintf('Delta E0    = %.2g eV \n',FitResult_corr.par(2)+M.ModelObj.Q_i-meanE0);
 fprintf('------------------------------------------------- \n');
 
