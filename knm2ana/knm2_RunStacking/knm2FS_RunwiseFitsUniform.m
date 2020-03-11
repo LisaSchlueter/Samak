@@ -19,3 +19,8 @@ D22.exclDataStart = D22.GetexclDataStart(40);
 %%
 FitResults14= D14.PlotFitRunList('Parameter','B','YLim',[160 280]);
 FitResults22= D22.PlotFitRunList('Parameter','B','YLim',[160 280]);
+
+%%
+fprintf('Mean Background 14keV ROI = %.1f mcps \n',1e3.*mean(FitResults14.B));
+fprintf('Mean Background 22keV ROI = %.1f mcps \n',1e3.*mean(FitResults22.B));
+

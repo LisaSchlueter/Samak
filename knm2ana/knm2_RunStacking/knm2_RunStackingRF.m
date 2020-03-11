@@ -16,16 +16,11 @@ RunAnaArg = {'RunList','KNM2_Prompt',... % all KNM2 golden runs
 A = MultiRunAnalysis(RunAnaArg{:});
 
 %%
+
+A.LoadSingleRunObj;
 % load runwise response functions
 RFpath = [getenv('SamakPath'),'inputs/ResponseFunction/samakRF'];
 RFrunwise = zeros(A.nRuns,A.ModelObj.nTe,A.ModelObj.nqU);
 
-for i=1:A.nRuns
-    RFfile =  sprintf('_Uniform_%.5gcm2_IsX%s_NIS%.0d_Bm%0.3gT_Bs%0.3gT_Ba%0.4gG_Temin%.3f_Temax%.3f_Bin%.0d_%s.mat',...
-        A.SingleRunData.WGTS_CD_MolPerCm2(i),'Edep',A.NIS,A.SingleRunData.MACE_Bmax_T(i),A.SingleRunData.WGTS_B_T(i),...
-        A.SingleRunData.MACE_Ba_T(i)*1e4,A.ModelObj.TeMin(i),A.ModelObj.TeMax,A.ModelObj.nTeBinningFactor,A.ModelObj.ELossFlag);
-    
-    RFrunwise(i,:,:) = load(RFfile,'RF');
-    
-end
+
 

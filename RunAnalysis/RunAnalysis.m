@@ -1021,6 +1021,8 @@ classdef RunAnalysis < handle
             p.addParameter('BkgRange',-5,@(x)isfloat(x));
             p.addParameter('RW_SigmaErr',0.1,@(x)isfloat(x) );
             p.addParameter('RW_MultiPosErr',0,@(x)isfloat(x));
+            p.addParameter('MACE_SigmaErr',SysErr.MACE_SigmaErr,@(x)isfloat(x));
+            p.addParameter('is_EOffsetErr',SysErr.is_EOffsetErr,@(x)isfloat(x));
             
             p.parse(varargin{:});
             
@@ -1048,6 +1050,8 @@ classdef RunAnalysis < handle
             BkgRange                 = p.Results.BkgRange;
             RW_SigmaErr              = p.Results.RW_SigmaErr;
             RW_MultiPosErr           = p.Results.RW_MultiPosErr;
+            MACE_SigmaErr            = p.Results.MACE_SigmaErr; %longitudinal plasma
+            is_EOffsetErr            = p.Results.is_EOffsetErr; %longitudinal plasma
             % --------------------- END PARSER ---------------------------------%
             
             % --------------------  Initialize Covariance Matrix----------------------------%
@@ -1063,6 +1067,12 @@ classdef RunAnalysis < handle
             obj.FitCMShape  = [];
             obj.FitCMNorm   = [];
             
+            %Initialize Normalization and Background with a stat. Fit
+            if strcmp(InitNormFit,'ON')
+                % 40 eV range, stat only, free parameters: E0, Bkg, Norm
+                obj.InitModelObj_Norm_BKG('RecomputeFlag','OFF');
+            end
+            
             obj.FitCM_Obj = CovarianceMatrix('StudyObject',obj.ModelObj, 'nTrials',nTrials,...
                 'SysEffect',SysEffects,'RecomputeFlag',RecomputeFlag,'SanityPlots','OFF',...
                 'WGTS_CD_MolPerCm2_RelErr',WGTS_CD_MolPerCm2_RelErr,...
@@ -1077,7 +1087,9 @@ classdef RunAnalysis < handle
                 'Stack_qUfracRelErr',Stack_qUfracRelErr,'Stack_qUErr',Stack_qUErr,...
                 'RW_SigmaErr',RW_SigmaErr,...
                 'RW_MultiPosErr',RW_MultiPosErr,...
-                'NonPoissonScaleFactor',obj.NonPoissonScaleFactor);
+                'NonPoissonScaleFactor',obj.NonPoissonScaleFactor,...
+                'MACE_SigmaErr',MACE_SigmaErr,...
+                'is_EOffsetErr',is_EOffsetErr);
             
             if strcmp(DataDriven,'ON')
                 obj.Get_DataDriven_RelErr_TASR; % replaces default values with Data Driven values
@@ -1279,7 +1291,7 @@ classdef RunAnalysis < handle
         end
         function  defaultEffects = GetDefaultEffects(obj)
             switch obj.DataSet
-                case {'Knm1','Knm2'}
+                case 'Knm1'
                     defaultEffects = struct(...
                         'RF_EL','ON',...   % Response Function(RF) EnergyLoss
                         'RF_BF','ON',...   % RF B-Fields
@@ -1291,6 +1303,19 @@ classdef RunAnalysis < handle
                         'DOPoff','OFF',...
                         'Stack','ON',...
                         'FPDeff','ON');
+                case 'Knm2'
+                     defaultEffects = struct(...
+                        'RF_EL','ON',...   % Response Function(RF) EnergyLoss
+                        'RF_BF','ON',...   % RF B-Fields
+                        'RF_RX','ON',...   % Column Density, inel cross ection
+                        'FSD','ON',...
+                        'TASR','ON',...
+                        'TCoff_RAD','OFF',...
+                        'TCoff_OTHER','ON',...
+                        'DOPoff','OFF',...
+                        'Stack','ON',...
+                        'FPDeff','ON',...
+                        'LongPlasma','ON');
                 case 'FirstTritium.katrin'
                     defaultEffects = struct(...
                         'RF_EL','ON',...   % Response Function(RF) EnergyLoss

@@ -2015,7 +2015,7 @@ classdef TBD < handle & WGTSMACE %!dont change superclass without modifying pars
             p.addParameter('fign',999,@(x)isfloat(x) && x>0);
             p.addParameter('type','lin',@(x)ismember(x,{'lin','log'}));
             p.addParameter('pub',0,@(x)isfloat(x) && x>=0);
-            p.addParameter('scalingErr',1,@(x)isfloat(x) && x>=0);
+            p.addParameter('scalingErr',50,@(x)isfloat(x) && x>=0);
             p.addParameter('cps','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('CovMat','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('qUrange',310,@(x)isfloat(x));
@@ -2028,8 +2028,8 @@ classdef TBD < handle & WGTSMACE %!dont change superclass without modifying pars
             CovMat       = p.Results.CovMat;
             qUrange      = p.Results.qUrange;
             
-            figure(fign)
-            e = obj.qU(obj.qU(:,1)>(obj.Q-qUrange),:)-obj.Q;
+            figure('Units','normalized','Position',[0.1,0.1,0.5,0.5])
+            e = obj.qU(obj.qU(:,1)>(obj.Q-qUrange),:)-18574;
             tmpis = obj.TBDIS(obj.qU(:,1)>(obj.Q-qUrange),:);
             tmpise = obj.TBDISE(obj.qU(:,1)>(obj.Q-qUrange),:)*scalingErr;
             switch CovMat
@@ -2053,7 +2053,7 @@ classdef TBD < handle & WGTSMACE %!dont change superclass without modifying pars
                     switch CovMat
                         case 'ON'
                             hold on
-                            h2 = errorbar(e,tmpis,tmpise_statsyst,'ks','MarkerSize',3,'MarkerFaceColor',.4*[1 1 1],'Color','Red','LineWidth',1);
+                            h2 = errorbar(e,tmpis,(tmpise_statsyst),'ks','MarkerSize',3,'MarkerFaceColor',.4*[1 1 1],'Color','Red','LineWidth',1);
                             %errorbar_tick(h2,200);
                             hold off
                     end
@@ -2061,7 +2061,8 @@ classdef TBD < handle & WGTSMACE %!dont change superclass without modifying pars
                     ylabel('Counts','FontSize',14);
                 case 'ON'
                     tmpis = tmpis./obj.qUfrac(obj.qU(:,1)>(obj.Q-qUrange),:)./obj.TimeSec;
-                    h1 = errorbar(e,tmpis,1e-99*tmpis,'-s','MarkerSize',3,'MarkerFaceColor',.8*[1 1 1],'LineWidth',1);
+                    h1 = errorbar(e,tmpis,1e-99*tmpis,'-o','MarkerSize',4,...
+                        'MarkerFaceColor',rgb('DodgerBlue'),'LineWidth',2,'Color',rgb('DodgerBlue'));
                     ylabel('Counts per second','FontSize',14);
             end
             switch type
@@ -2070,24 +2071,21 @@ classdef TBD < handle & WGTSMACE %!dont change superclass without modifying pars
                 case 'log'
                     set(gca, 'YScale', 'log')  ;
             end
-            axis([e(1) e(end) 0.9*min(min(tmpis)) 1.2*max(max(tmpis))]);
-            grid on
-            xlabel('E-E_0 (eV)','FontSize',14);
-            title('Tritium Beta Decay -  Integral Spectrum','FontSize',14)
-            set(gca,'FontSize',12);
+            %axis([e(1) e(end) 0.9*min(min(tmpis)) 1.2*max(max(tmpis))]);
+            xlabel('Retarding energy - 18574 (eV)','FontSize',14);
+            title('Tritium Beta Decay -  Integral Spectrum','FontSize',14,'FontWeight','normal')
             switch CovMat
                 case 'OFF'
-                    a = legend(sprintf('1\\sigma uncertainty \\times %.0f',scalingErr)); legend('boxoff');
+                    a = legend(sprintf('Model with 1\\sigma uncertainty \\times %.0f',scalingErr)); legend('boxoff');
                 case 'ON'
-                    a = legend(sprintf('1\\sigma uncertainty \\times %.0f',scalingErr),'Stat. + Syst. Uncertainties x 10'); legend('boxoff'); 
+                    a = legend(sprintf('Model with 1\\sigma uncertainty \\times %.0f',scalingErr),'Stat. + Syst. Uncertainties x 10'); legend('boxoff'); 
             end
-            if size(tmpis,2)>0 
+            if size(tmpis,2)>1 
                  a = legend(h1,arrayfun(@(x) sprintf('ring %.0f: 1\\sigma uncertainty \\times %.0f',x,scalingErr),...
                      1:size(tmpis,2),'UniformOutput',0)); 
                  legend('boxoff');
-             
             end
-            PrettyFigureFormat();
+            PrettyFigureFormat('FontSize',24);
             if pub>0
                 publish_figure(fign,'./figs/TBD_phasespace.eps')
             end

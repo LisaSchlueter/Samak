@@ -2083,7 +2083,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
            fig88 = figure('Renderer','painters');
             if strcmp(DispHist,'ON')
                 set(fig88,'units','normalized','pos',[0.1, 0.1,1.0,0.5]); 
-                subplot(1,6,1:5);
+               s1 =  subplot(1,6,1:5);
             else
                  set(fig88,'units','normalized','pos',[0.1, 0.1,1.0,0.5]);
             end
@@ -2202,7 +2202,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             if strcmp(DispHist,'ON')
                 myYlim = ylim;
                 
-               subplot(1,6,6);
+              s2 =  subplot(1,6,6);
                 
                 PlotStyle = { 'FaceColor',obj.PlotColor,...
                     'FaceAlpha',1};
@@ -2243,14 +2243,16 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                 ax2 = gca;
                 %ax.Position = [left-0.02 bottom+0.01 ax_width+0.128 ax_height-0.2];
                 ax.Position = [left-0.02 bottom+0.05 ax_width+0.1343 ax_height-0.3];
-                ax2.Position(1) = 0.80+0.09;
+                ax2.Position(1) = 0.80+0.094;
                 if strcmp(Parameter,'pVal')
                   ax2.Position(2)=0.158;
-                 ax2.Position(4)=0.75;
+                  ax2.Position(4)=0.75;
                 elseif strcmp(Parameter,'RhoD')
                      ax2.Position(2)=0.17;
                      ax2.Position(4) = 0.74;
                 end
+
+                linkaxes([s1,s2],'y');
             end
            
             % save plot

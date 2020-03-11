@@ -3031,10 +3031,12 @@ function ComputeCM_LongPlasma(obj,varargin)
     % longitudinal plasma uncertainty
     % effectively described by e-loss shift and variance
     p=inputParser;
-    p.addParameter('CorrCoeff',0.4,@(x)isfloat(x));
+    p.addParameter('CorrCoeff',0,@(x)isfloat(x));
     p.parse(varargin{:});
     CorrCoeff = p.Results.CorrCoeff;
 
+     nRings = numel(obj.StudyObject.MACE_Ba_T);
+     
      % initial longi plasma parameters
      is_EOffset_i = obj.StudyObject.is_EOffset;
      MACE_Sigma_i = mean(obj.StudyObject.MACE_Sigma);
@@ -3042,10 +3044,11 @@ function ComputeCM_LongPlasma(obj,varargin)
      obj.GetTDlabel;
      covmat_path =[getenv('SamakPath'),sprintf('inputs/CovMat/LongPlasma/CM/')];
      MakeDir(covmat_path);
-     covmat_filename = sprintf('LongPlasma_%s_%.0fTrials_%.0fmeVEloss_%.0fmeVElossErr_%.0fmeVSigma_%.0fmeVSigmaErr.mat',...
+     covmat_filename = sprintf('LongPlasma_%s_%.0fTrials_%.0fmeVEloss_%.0fmeVElossErr_%.0fmeVSigma_%.0fmeVSigmaErr_%.0fCorrCoeff.mat',...
          obj.TDlabel,obj.nTrials,...
          is_EOffset_i*1e3,obj.is_EOffsetErr*1e3,...
-         MACE_Sigma_i*1e3,obj.MACE_SigmaErr*1e3);
+         MACE_Sigma_i*1e3,obj.MACE_SigmaErr*1e3,...
+         CorrCoeff*100);
      
      if strcmp(obj.StudyObject.FPD_Segmentation,'RING')
          % add ring information for ringwise covariance matrices
@@ -3072,35 +3075,70 @@ function ComputeCM_LongPlasma(obj,varargin)
     MACE_Sigma_v   = abs(PlasmaPar(:,1)); % do not allow for negative broadenings
     MACE_Sigma_v(MACE_Sigma_v<1e-3) = 0;  % too small to resolve anyway
     is_EOffset_v  = PlasmaPar(:,2);
-   
+  
+    % e-loss shift:
+    ELossRange = 500; 
+    ELossBinStep =0.2;
+    maxE = ELossRange;
+    minE=-maxE; NbinE = (maxE-minE)/ELossBinStep;
+    E = linspace(minE,maxE,NbinE);
+    [ElossFunc,~] = obj.StudyObject.ComputeELossFunction('E',E); % load if already exists, otherwise compute
+ 
     if strcmp(obj.StudyObject.FPD_Segmentation,'RING')
-        TBDIS_V = zeros(obj.StudyObject.nqU,obj.StudyObject.nRings,obj.nTrials);
+        TBDIS_V = zeros(obj.StudyObject.nqU,obj.nTrials,obj.StudyObject.nRings);
     else
         TBDIS_V = zeros(obj.StudyObject.nqU,obj.nTrials);
     end
     
+    % calculate response functions with varied parameters
+    RFfun = @ComputeRF;
+    ResponseFunction = zeros(obj.StudyObject.nTe,obj.StudyObject.nqU,obj.nTrials,nRings);
+    ElossFunc_v       = zeros(obj.StudyObject.NIS,numel(E),obj.nTrials);
+    
     for i=1:obj.nTrials
-        obj.StudyObject.is_EOffset = is_EOffset_v(i);
-        obj.StudyObject.MACE_Sigma = MACE_Sigma_v(i);
-        obj.StudyObject.InitializeRF;
+        progressbar(i/obj.nTrials);
+        
+        % eloss shift
+        ElossFunc_v(:,:,i) =  cell2mat(cellfun(@(x) x(E-is_EOffset_v(i)), ElossFunc,'UniformOutput',0));
+        for ri = 1:nRings
+            for ii = 1:obj.StudyObject.nqU
+                ResponseFunction(:,ii,i,ri) = RFfun(obj.StudyObject,obj.StudyObject.Te,obj.StudyObject.qU(ii,ri),'pixel',ri,...
+                    'ELossRange',ELossRange,'ELossBinStep',ELossBinStep,...
+                    'ElossFunctions',ElossFunc_v(:,:,i) );
+            end
+        end
+        obj.StudyObject.RF = ResponseFunction(:,:,i,:);
+        
+        % variance 
+        obj.StudyObject.LoadFSD('Sigma',MACE_Sigma_v(i));
+        
+        obj.StudyObject.ComputeTBDDS;
         obj.StudyObject.ComputeTBDIS;
-        TBDIS_V(:,:,i) = obj.StudyObject.TBDIS;
+        TBDIS_V(:,i,:) = obj.StudyObject.TBDIS;
     end
     
     % Reshape
     if strcmp(obj.StudyObject.FPD_Segmentation,'RING')
         % make sure nTrials is always last dimension before reshape!
+        TBDIS_V = permute(TBDIS_V,[1 3 2]);
         TBDIS_V = reshape(TBDIS_V,[obj.StudyObject.nqU*obj.StudyObject.nRings,obj.nTrials]);
     end
     
-     % Compute Covariance Matrix
+    % Compute Covariance Matrix
     obj.CovMat = cov(TBDIS_V');
     obj.MultiCovMat.CM_LongPlasma = obj.CovMat;
     
     TBDIS_av = mean(TBDIS_V);
+    ResponseFunction_mean = mean(ResponseFunction,3);
+    ResponseFunction_std = std(ResponseFunction,0,3);
+    ElossFunc_mean       = mean(ElossFunc_v,3);
+    ElossFunc_std        = std(ElossFunc_v,0,3);
+    
     % Save
     save(obj.CovMatFile,'obj','TBDIS_av','TBDIS_V',...
-         'MACE_Sigma_v','is_EOffset_v','-mat');
+        'MACE_Sigma_v','is_EOffset_v',...
+        'ResponseFunction_mean','ResponseFunction_std',...
+        'ElossFunc_mean','ElossFunc_std','-mat');
     
     % Compute Fractional CM
     obj.ComputeFracCM('Mode','CM2Frac');
