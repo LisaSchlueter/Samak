@@ -8,10 +8,10 @@
 % ------------------------------------------------------------------------------
 
 MACE_Sigma = 1e-3.*[0,1,5,10,15,20:10:100,125,150,200,250]; % standard deviation of gaussian broadening
-
 % label
 savedir  = [getenv('SamakPath '),'knm2ana/knm2_RunStacking/results/'];
-savename = [savedir,sprintf('knm2_RFbroadeningmNuSq_MinSigma%.0fmeV_MaxSigma%.0fmeV.mat',1e3*min(MACE_Sigma),1e3*max(MACE_Sigma))];
+savename = [savedir,sprintf('knm2_RFbroadeningmNuSq_MinSigma%.0fmeV_MaxSigma%.0fmeV.mat',...
+               1e3*min(MACE_Sigma),1e3*max(MACE_Sigma))];
 
 if exist(savename,'file')
     load(savename);
@@ -45,7 +45,7 @@ else
     for i=1:nSigma
         progressbar(i/nSigma);
         A.ModelObj.MACE_Sigma = MACE_Sigma(i);
-        A.ModelObj.InitializeRF;
+        A.ModelObj.InitializeRF('RebinMode','Integral');
         RF(i,:,:) = A.ModelObj.RF;
         A.Fit;
         mNuSq(i) = A.FitResult.par(1);
@@ -65,9 +65,9 @@ p1 = plot(MACE_Sigma*1e3,mNuSq,'LineWidth',2.5,'Color',rgb('DodgerBlue'));
 hold on;
 p2 = plot(MACE_Sigma*1e3,(2*MACE_Sigma.^2),':','LineWidth',2.5,'Color',rgb('Orange'));
 xlabel(sprintf('\\sigma (meV)'));
-ylabel(sprintf('\\Delta {\\itm}_\\nu^2 (eV^2)'));
+ylabel(sprintf('\\Delta{\\itm}_\\nu^2 (eV^2)'));
 PrettyFigureFormat('FontSize',24);
-leg = legend([p1,p2],'Response function broadening',sprintf('\\Delta {\\itm}_\\nu^2 = 2 \\sigma^2'));
+leg = legend([p1,p2],'Response function broadening',sprintf('\\Delta{\\itm}_\\nu^2 = 2 \\sigma^2'));
 leg.Location = 'northwest';
 leg.EdgeColor = rgb('Silver');
 hold off;

@@ -190,8 +190,8 @@ classdef CovarianceMatrix < handle
              'Stack',...      % Stacking all qU
              'BkgShape',...   % background shape (slope)
              'FPDeff',...     % detector efficiency from subrun to subrun
-              'RW',...        % rear wall /plasma potential over time
-              };  
+             'RW',...        % rear wall /plasma potential over time
+             'LongPlasma'};   % longitudinal plasma uncertainty (e-loss shift and variance)
           
          % Init  SysEffect structure: Default Option: all OFF  
          if isempty(obj.SysEffect)         
@@ -233,6 +233,7 @@ classdef CovarianceMatrix < handle
                   obj.SysEffect.TASR ='ON';
                   obj.SysEffect.FSD = 'ON';
                   obj.SysEffect.RW = 'ON';
+                  obj.SysEffect.LongPlasma = 'ON';
                   obj.SysEffect = rmfield(obj.SysEffect,'all');
               end
           end
@@ -1455,7 +1456,6 @@ classdef CovarianceMatrix < handle
                 end
             end
         
-            
             % do not save all samples, just some infos
             if strcmp(obj.SysEffect.RF_BF,'ON') && strcmp(obj.SysEffect.RF_RX,'ON') && strcmp(obj.SysEffect.RF_EL,'ON')
                 rf_path = [getenv('SamakPath'),sprintf('inputs/CovMat/RF/LookupTables/RF/')];
@@ -3029,40 +3029,90 @@ end
 
 function ComputeCM_LongPlasma(obj,varargin)
     % longitudinal plasma uncertainty
-    % effectively described by e-loss shift and variance 
-    is_EOffset_i = obj.StudyObject.is_EOffset;
-    MACE_Sigma_i = obj.StudyObject.MACE_Sigma;
+    % effectively described by e-loss shift and variance
+    p=inputParser;
+    p.addParameter('CorrCoeff',0.4,@(x)isfloat(x));
+    p.parse(varargin{:});
+    CorrCoeff = p.Results.CorrCoeff;
+
+     % initial longi plasma parameters
+     is_EOffset_i = obj.StudyObject.is_EOffset;
+     MACE_Sigma_i = mean(obj.StudyObject.MACE_Sigma);
+     
+     obj.GetTDlabel;
+     covmat_path =[getenv('SamakPath'),sprintf('inputs/CovMat/LongPlasma/CM/')];
+     MakeDir(covmat_path);
+     covmat_filename = sprintf('LongPlasma_%s_%.0fTrials_%.0fmeVEloss_%.0fmeVElossErr_%.0fmeVSigma_%.0fmeVSigmaErr.mat',...
+         obj.TDlabel,obj.nTrials,...
+         is_EOffset_i*1e3,obj.is_EOffsetErr*1e3,...
+         MACE_Sigma_i*1e3,obj.MACE_SigmaErr*1e3);
+     
+     if strcmp(obj.StudyObject.FPD_Segmentation,'RING')
+         % add ring information for ringwise covariance matrices
+         covmat_filename = strrep(covmat_filename,'.mat',sprintf('_Ring%s.mat',obj.StudyObject.FPD_RingMerge));
+     end
+     obj.CovMatFile = strcat(covmat_path,covmat_filename);
+     
+    % load if already computed
+    if exist(obj.CovMatFile,'file')==2 && strcmp(obj.RecomputeFlag,'OFF')
+        fprintf(2,'CovarianceMatrix:ComputeCM_LongPlasma: Loading LongPlasma CM from File \n')
+        obj.ReadCMFile('filename',obj.CovMatFile,'SysEffect','LongPlasma');
+        obj.MultiCovMat.CM_LongPlasma = obj.CovMat; %in case normalization was changed
+        return
+    end
+ 
+    % longi plasma uncertainty
+    PlasmaErr =  [obj.MACE_SigmaErr,obj.is_EOffsetErr];
+    PlasmaCovMat      = PlasmaErr.*[1,CorrCoeff;CorrCoeff,1].*PlasmaErr';
     
-    CorrCoeff = 0.4;
-    PlasmaCorrMat      = [obj.MACE_SigmaErr,obj.is_EOffsetErr].*[]
+    % randomize longi plasma parameters
     PlasmaPar_expected = [MACE_Sigma_i,is_EOffset_i];
-   
-    PlasmaPar =  mvnrnd(PlasmaPar_expected,PlasmaCorrMat,obj.nTrials);
+    PlasmaPar =  mvnrnd(PlasmaPar_expected,PlasmaCovMat,obj.nTrials);
     
-  %  Plasma_Var        = obj.StudyObject.MACE_Sigma+obj.MACE_SigmaErr.*randn(obj.nTrials,1);
-     is_EOffset_v  = PlasmaPar(1,:);
-     MACE_Sigma_v   = PlasmaPar(2,:);
+    MACE_Sigma_v   = abs(PlasmaPar(:,1)); % do not allow for negative broadenings
+    MACE_Sigma_v(MACE_Sigma_v<1e-3) = 0;  % too small to resolve anyway
+    is_EOffset_v  = PlasmaPar(:,2);
    
-      if strcmp(obj.StudyObject.FPD_Segmentation,'RING')
+    if strcmp(obj.StudyObject.FPD_Segmentation,'RING')
         TBDIS_V = zeros(obj.StudyObject.nqU,obj.StudyObject.nRings,obj.nTrials);
     else
         TBDIS_V = zeros(obj.StudyObject.nqU,obj.nTrials);
-      end
+    end
     
     for i=1:obj.nTrials
         obj.StudyObject.is_EOffset = is_EOffset_v(i);
         obj.StudyObject.MACE_Sigma = MACE_Sigma_v(i);
-        obj.StudyObject.InitialiteRF;
+        obj.StudyObject.InitializeRF;
         obj.StudyObject.ComputeTBDIS;
         TBDIS_V(:,:,i) = obj.StudyObject.TBDIS;
     end
     
-        % Reshape
+    % Reshape
     if strcmp(obj.StudyObject.FPD_Segmentation,'RING')
         % make sure nTrials is always last dimension before reshape!
         TBDIS_V = reshape(TBDIS_V,[obj.StudyObject.nqU*obj.StudyObject.nRings,obj.nTrials]);
     end
     
+     % Compute Covariance Matrix
+    obj.CovMat = cov(TBDIS_V');
+    obj.MultiCovMat.CM_LongPlasma = obj.CovMat;
+    
+    TBDIS_av = mean(TBDIS_V);
+    % Save
+    save(obj.CovMatFile,'obj','TBDIS_av','TBDIS_V',...
+         'MACE_Sigma_v','is_EOffset_v','-mat');
+    
+    % Compute Fractional CM
+    obj.ComputeFracCM('Mode','CM2Frac');
+    obj.MultiCovMatFrac.CM_LongPlasma = obj.CovMatFrac;
+    
+    % Compute Decomposed CM
+    [~, obj.CovMatFracShape] = obj.DecomposeCM('CovMatFrac',obj.CovMatFrac,'exclDataStart',1);
+    obj.MultiCovMatFracShape.CM_LongPlasma = obj.CovMatFracShape;
+    obj.MultiCovMatFracNorm.CM_LongPlasma  = obj.CovMatFracNorm;
+    
+    % Save again
+    save(obj.CovMatFile, 'obj','-append');
 end
 
 function ComputeCM_RW(obj,varargin)
@@ -3269,8 +3319,7 @@ end
                     obj.PlotCM('PlotEffect',sprintf('Response Function %s %s %s',BF,EL,RX),'savePlot','ON','savename',SysBudget_Label);
                 end
             end
-            %% FSD
-            % obj.nTrials = 5000;%10000; %WARNING: Lisa
+            %% FSD   
             if strcmp(obj.SysEffect.FSD,'ON')
                 obj.ComputeCM_FSD;
                 CovMatFracCombi = CovMatFracCombi + obj.MultiCovMatFrac.CM_FSD;
@@ -3345,12 +3394,21 @@ end
             end
             
             %% Plasma time evolution
-             %% FPD efficiency
             if strcmp(obj.SysEffect.RW,'ON')
                 obj.ComputeCM_RW;
                 CovMatFracCombi = CovMatFracCombi + obj.MultiCovMatFrac.CM_RW;
                 if strcmp(PlotSaveCM,'ON')
                     obj.PlotCM('PlotEffect','RW','savePlot','ON','savename',SysBudget_Label,...
+                        'ConvergenceTest','OFF');
+                end
+            end
+            
+            %% Plasma longitudinal
+            if strcmp(obj.SysEffect.LongPlasma,'ON')
+                obj.ComputeCM_LongPlasma;
+                CovMatFracCombi = CovMatFracCombi + obj.MultiCovMatFrac.CM_LongPlasma;
+                if strcmp(PlotSaveCM,'ON')
+                    obj.PlotCM('PlotEffect','LongPlasma','savePlot','ON','savename',SysBudget_Label,...
                         'ConvergenceTest','OFF');
                 end
             end

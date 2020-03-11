@@ -280,9 +280,8 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
         
     end % methods
     
-    methods
-        
-        function          InitializeColumnDensity(obj)
+    methods       
+        function        InitializeColumnDensity(obj)
             % If there is information on the column density per pixel, it is
             % taken into account here. It should be given as a vector in
             % 'obj.WGTS_CDDist'
@@ -313,7 +312,7 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
                     end
             end
         end    
-        function          SetPixel_MACE_BaEa(obj)
+        function        SetPixel_MACE_BaEa(obj)
             
             % Set Analysis Plane Pixel-wise E/B fields
             %

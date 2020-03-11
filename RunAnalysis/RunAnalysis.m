@@ -125,7 +125,7 @@ classdef RunAnalysis < handle
             p.addParameter('ELossFlag','',@(x)ismember(x,{'Aseev','Abdurashitov','CW_GLT','CW_G2LT','KatrinD2','KatrinT2'}));%default given later
             p.addParameter('FSDFlag','Sibille0p5eV',@(x)ismember(x,{'SAENZ','BlindingKNM1','Sibille','Sibille0p5eV','OFF','SibilleFull','BlindingKNM2'}));
             p.addParameter('DopplerEffectFlag','',@(x)ismember(x,{'OFF','FSD','FSD_Knm1'}));%default given later
-            p.addParameter('ROIFlag','Default',@(x)ismember(x,{'Default','14keV'})); % default->default counts in RS, 14kev->[14,32]keV ROI
+            p.addParameter('ROIFlag','14keV',@(x)ismember(x,{'Default','14keV'})); % default->default counts in RS, 14kev->[14,32]keV ROI
             p.addParameter('MosCorrFlag','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('KTFFlag','WGTSMACE',@(x)ismember(x,{'WGTSMACE','MACE','WGTSMACE_NIS1'}));
             

@@ -2681,18 +2681,18 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                 x,...
                 obj.chi2,obj.ModelObj.Q_i-obj.ModelObj.qU(obj.exclDataStart),fixParstr,RoiStr,MosStr), ...
                 obj.RunList,'UniformOutput',0);
-           
+            
             % load fit results, which are already computed
             fprintf('Attempt to load fit results from file %s \n',savefile{1});
-           LoadFilesIndex             = cellfun(@(x) exist(x,'file')==2,savefile);            %logicals, indicate which runs are already fitted
-           fprintf('Retrieve %.0f Fit Results from file\n',sum( LoadFilesIndex));
-           LoadFiles                  = cellfun(@(x) importdata(x),savefile(LoadFilesIndex)); % import those runs
-           parAll(LoadFilesIndex,:)   = cell2mat(arrayfun(@(x) x.FitResult.par,LoadFiles,'UniformOutput',false)); %asign to variables
-           errAll(LoadFilesIndex,:)   = cell2mat(arrayfun(@(x) x.FitResult.err,LoadFiles,'UniformOutput',false)); 
-           chi2minAll(LoadFilesIndex) = cell2mat(arrayfun(@(x) x.FitResult.chi2min,LoadFiles,'UniformOutput',false));
-           dofAll(LoadFilesIndex)     = cell2mat(arrayfun(@(x) x.FitResult.dof,LoadFiles,'UniformOutput',false));
-                
-           % calculate missing fit results
+            LoadFilesIndex             = cellfun(@(x) exist(x,'file')==2,savefile);            %logicals, indicate which runs are already fitted
+            fprintf('Retrieve %.0f Fit Results from file\n',sum( LoadFilesIndex));
+            LoadFiles                  = cellfun(@(x) importdata(x),savefile(LoadFilesIndex)); % import those runs
+            parAll(LoadFilesIndex,:)   = cell2mat(arrayfun(@(x) x.FitResult.par',LoadFiles,'UniformOutput',false))'; %asign to variables
+            errAll(LoadFilesIndex,:)   = cell2mat(arrayfun(@(x) x.FitResult.err',LoadFiles,'UniformOutput',false))';
+            chi2minAll(LoadFilesIndex) = cell2mat(arrayfun(@(x) x.FitResult.chi2min,LoadFiles,'UniformOutput',false));
+            dofAll(LoadFilesIndex)     = cell2mat(arrayfun(@(x) x.FitResult.dof,LoadFiles,'UniformOutput',false));
+            
+            % calculate missing fit results
            if sum(LoadFilesIndex)==numel(obj.RunList) % all runs are already fitted
                fprintf('Fit results from all runs loaded from file \n');
            else
@@ -3251,29 +3251,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                 case 'FT_RD72'
                     RunList = [40926:40935];
             end
-            
-            % ------------------------------------------------------- %
-            % FT Remove Runs
-            %             RunList = RunList(RunList~=40531); % Large DT
-            %             RunList = RunList(RunList~=40976); % Large DT
-            %             RunList = RunList(RunList~=40977); % Large DT
-            %             RunList = RunList(RunList~=40979); % Large DT
-            %             RunList = RunList(RunList~=40980); % Large DT
-            %             RunList = RunList(RunList~=40982); % Large DT
-            %             RunList = RunList(RunList~=40983); % Large DT
-            %             RunList = RunList(RunList~=41032); % Low DT
-            %             RunList = RunList(RunList~=40995);  % Weird Time
-            %             RunList = RunList(RunList~=40670); % Large RhoD
-            %             RunList = RunList(RunList~=40671); % Large RhoD
-            %             RunList = RunList(RunList~=40692); % Large RhoD
-            %             RunList = RunList(RunList~=40693); % Large RhoD
-            %             RunList = RunList(RunList~=40540); % Low RhoD
-            %             RunList = RunList(RunList~=40541); % Low RhoD
-            %             RunList = RunList(RunList~=40604); % Low RhoD
-            %             RunList = RunList(RunList~=41019); % Low RhoD
-            %             RunList = RunList(RunList~=41026); % Low RhoD
-            % ------------------------------------------------------- %
-            
+             
         end
         function RunList = GetKNM1RunList(obj,ListName)
             Version = 'RunSummary-Durable3a-fpd00';
@@ -3369,58 +3347,37 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             
         end
         function RunList = GetKNM2RunList(obj,ListName)
-            % Run Summary version
-            Version = 'RunSummary-Prompt4b-fpd00';
+            % KNM2 run lists
+            RunListDir = [getenv('SamakPath'),'inputs/RunLists/KNM2/'];
+            runsRW1 = sort(importdata([RunListDir,'KNM2_RW1.dat']));
+            runsRW2 = sort(importdata([RunListDir,'KNM2_RW2.dat']));
+            runsRW3 = sort(importdata([RunListDir,'KNM2_RW3.dat']));
             
-            % Excluded Runs
-            RunExcListIE       = unique([56175,56185,56283,56318,56408,56410,56631, 56687, 56705, 57021, 57037]);      % Inner electrode power supply breakdown
-            RunExclListNaN     = [56331,56630];                                                                      % NaN value in K35
-            RunExclListT2      = [56348,56632:56638,56665:56668,56675:56683];    % No T2 value or LARA problem
-            RunExclListFPD     = [56280, 56304];             % detector slow control
-            RunExclListqU      = [56160:56277,56332];        % voltage spike or other HV problems
-            RunExclListE0      = 56343;                      % endpoint very low
-            RunExclListOther   = [56415, 56604];             % other BREW comments
-            RunExcList = [RunExcListIE,RunExclListNaN,RunExclListT2,RunExclListFPD,...
-                RunExclListqU,RunExclListE0,RunExclListOther];
-
-            if ismember(ListName,{'KNM2_Prompt','KNM2_RandHalf'})  % all runs 
-                FirstRun = 56160;  LastRun = 57137;
+            if ismember(ListName,{'KNM2_Prompt','KNM2_RandHalf'})  % all runs
+                h5list = sort([runsRW1,runsRW2,runsRW3]);
             elseif strcmp(ListName,'KNM2_RW1')   % rear wall setting 1 (different names for back compatibility)
-                FirstRun = 56160;  LastRun = 56479;
+                h5list = runsRW1;
             elseif strcmp(ListName,'KNM2_RW2')   % rear wall setting 2
-                FirstRun = 56560;  LastRun = 56713;
+                h5list = runsRW2;
             elseif strcmp(ListName,'KNM2_RW3')   % rear wall setting 3
-                FirstRun = 57015;  LastRun = 57137;
+                h5list = runsRW3;
             elseif strcmp(ListName,'KNM2_RW12') % rear wall setting 1 + 2
-                 FirstRun = 56160;  LastRun = 56713;
+                h5list = sort([runsRW1,runsRW2]);
             elseif strcmp(ListName,'KNM2_RW23') % rear wall setting 2 + 3
-                 FirstRun = 56560;  LastRun = 57137; 
+                h5list = sort([runsRW2,runsRW3]);
             elseif strcmp(ListName,'KNM2_RW13') % rear wall setting 1 + 3
-                 FirstRun = 56160;  LastRun = 57137; 
-                 RunExcList = [RunExcList,56560:56713];
+                h5list = sort([runsRW1,runsRW3]);
             else
-                fprintf('RunList Name unknown! \n'); 
+                fprintf('RunList Name unknown! \n');
             end
             
-            % Read All KNM2 HD5 File
-            tmp = dir([getenv('SamakPath'), '/tritium-data/hdf5/',GetDataSet(FirstRun), '/*.h5']);
-            h5list = arrayfun(@(x) x.name,tmp,'UniformOutput',0);
-            h5list =  extractBefore(h5list,'.h5');
-            h5list = str2double(extractAfter(h5list,Version));
-            h5list(isnan(h5list)) = []; % %delete everything that has a different version
-            
-            % Truncate to exclude Runs from RunExcList:
-            h5list(h5list<FirstRun)=[];
-            h5list(h5list>LastRun)=[];
-            h5list(ismember(h5list,RunExcList))=[];
-            HDF5readallruns('h5runlist',h5list,'reConvert','OFF','DataSet',GetDataSet(FirstRun)); %looks for unconverted runs and converts if needed
-            
+            HDF5readallruns('h5runlist',h5list,'reConvert','OFF','DataSet',GetDataSet(h5list(1))); %looks for unconverted runs and converts if needed
             RunList=sort(h5list);
             
-            if strcmp(ListName,'KNM2_RandHalf')              % random half
-               RandIndex = randperm(numel(RunList));         % randomly permute runlist indices
-               nRunsHalf = ceil(numel(RunList)/2);           % take only half of all runs
-               RunList   = RunList(RandIndex(1:nRunsHalf));
+            if strcmp(ListName,'KNM2_RandHalf')               % random half
+                RandIndex = randperm(numel(RunList));         % randomly permute runlist indices
+                nRunsHalf = ceil(numel(RunList)/2);           % take only half of all runs
+                RunList   = RunList(RandIndex(1:nRunsHalf));
             end
         end
         function RunList = GetFakeRunList(obj)
