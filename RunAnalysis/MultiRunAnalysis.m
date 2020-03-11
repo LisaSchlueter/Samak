@@ -1193,7 +1193,8 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             %
             
             % Reference Rate KNM2
-            R200  = sum(obj.SingleRunData.TBDIS_RM,1)'./(obj.SingleRunData.TimeSec.*mean(obj.SingleRunData.qUfrac_RM,1))';
+%            R200  = sum(obj.SingleRunData.TBDIS_RM,1)'./(obj.SingleRunData.TimeSec.*mean(obj.SingleRunData.qUfrac_RM,1))';
+            R200  = sum(obj.SingleRunData.TBDIS_RM,1)'./(obj.SingleRunData.TimeSec.*obj.SingleRunData.qUfrac_RM)';
             qU200 = mean(obj.SingleRunData.qU_RM,1);
             
             
@@ -1201,7 +1202,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             p1=(obj.SingleRunData.WGTS_MolFrac_TT'+0.5*obj.SingleRunData.WGTS_MolFrac_HT'+0.5*obj.SingleRunData.WGTS_MolFrac_DT')./mean((obj.SingleRunData.WGTS_MolFrac_TT'+0.5*obj.SingleRunData.WGTS_MolFrac_HT'+0.5*obj.SingleRunData.WGTS_MolFrac_DT')).*obj.SingleRunData.WGTS_CD_MolPerCm2'./mean(obj.SingleRunData.WGTS_CD_MolPerCm2');
             p2=qU200'./mean(qU200);
             
-            TimeSec   = (obj.SingleRunData.TimeSec);
+            TimeSec   = (obj.SingleRunData.TimeSec.*obj.SingleRunData.qUfrac_RM);
             m1        = obj.StackWmean(p1',TimeSec)';
             m2        = obj.StackWmean(p2',TimeSec)';
             
@@ -3310,6 +3311,8 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             elseif contains(ListName,'KNM1_Random')
                 FirstRun = 51410;  LastRun = 51937;
                 % exclude runs later
+            elseif contains(ListName,'KNM1rm') % Must be the last
+                FirstRun = 51489;  LastRun = 51937;
             elseif contains(ListName,'KNM1') % Must be the last
                 FirstRun = 51410;  LastRun = 51937;
             elseif contains(ListName,'KNM1_300mvRW')
