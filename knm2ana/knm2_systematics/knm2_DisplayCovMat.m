@@ -22,7 +22,7 @@ RunArg = {'FSDFlag','BlindingKNM2',...
     'TwinBias_Q',E0,...  % twin endpoint
     'SysBudget',SysBudget,...
     'RingMerge','Full',...
-    'NonPoissonScaleFactor',1.1062};
+    'NonPoissonScaleFactor',1.1121};
 
 CmArg = {'BkgCM','OFF',...%  'SysEffects',struct(myEffect,'ON'),...
     'RecomputeFlag',RecomputeFlag,...
@@ -35,9 +35,9 @@ M.chi2 = 'chi2CMShape';
 M.ComputeCM;
 
 %% calculate covariance matrix
-%M.ComputeCM(CmArg{:});
+M.ComputeCM(CmArg{:});
 %% display and save to plots
-%M.FitCM_Obj.PlotCM('qUWindowIndexMax',10,'saveplot','ON','Convergence','OFF');
+M.FitCM_Obj.PlotCM('qUWindowIndexMax',10,'saveplot','ON','Convergence','ON');
 
 
 

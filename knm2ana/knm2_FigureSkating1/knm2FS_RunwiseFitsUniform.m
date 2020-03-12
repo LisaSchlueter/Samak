@@ -14,8 +14,8 @@ RunAnaArg = {'RunList','KNM2_Prompt',... % all KNM2 golden runs
 D14 = MultiRunAnalysis(RunAnaArg{:},'ROIFlag','14keV');
 D22 = MultiRunAnalysis(RunAnaArg{:},'ROIFlag','Default');
 
-D14.exclDataStart = D14.GetexclDataStart(40);
-D22.exclDataStart = D22.GetexclDataStart(40);
+D14.exclDataStart = D14.GetexclDataStart(90);
+D22.exclDataStart = D22.GetexclDataStart(90);
 %%
 FitResults14= D14.PlotFitRunList('Parameter','B','YLim',[160 280]);
 FitResults22= D22.PlotFitRunList('Parameter','B','YLim',[160 280]);

@@ -1497,6 +1497,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             
                 if ~exist(filename,'file') && strcmp(obj.DataType,'Twin')                   
                     obj.ComputeTwinRun;
+                    obj.RunData.matFilePath = strrep(obj.RunData.matFilePath,'/Knm2/','/TwinKnm2/');
                 elseif ~exist(filename,'file') && ismember(obj.DataType,{'FitriumTwin','KafitTwin'})
                    fprintf('%s Runs not avaiable / not found! \n',obj.DataType)
                 elseif ~exist(filename,'file') && strcmp(obj.DataType,'Fake')  
