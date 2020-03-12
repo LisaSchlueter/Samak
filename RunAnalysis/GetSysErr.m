@@ -107,7 +107,7 @@ elseif SysBudget == 32 % preliminary KNM2 systematics (March 20)
     SysErr.MACE_Ba_T_RelErr= 0.0065;
     SysErr.MACE_Bmax_T_RelErr= 0.001;
     SysErr.WGTS_B_T_RelErr= 0.02;
-    SysErr.WGTS_CD_MolPerCm2_RelErr= 0.004;
+    SysErr.WGTS_CD_MolPerCm2_RelErr= 0.003;
     SysErr.ISXsection_RelErr= 0; %use rhod sigma together as uncertainty
     SysErr.DataDriven = 'ON';
     SysErr.FPDeff_RelErr = 1e-4;

@@ -2,7 +2,7 @@
 
 E0 = knm2FS_GetE0Twins('SanityPlot','OFF');
 
-RunAnaArg = {'RunList','KNM2_RW1',... % all KNM2 golden runs
+RunAnaArg = {'RunList','KNM2_Prompt',... % all KNM2 golden runs
     'fixPar','mNu E0 Bkg Norm',...           % free Parameter !!
     'DataType','Twin',...              
     'FSDFlag','BlindingKNM2',...       % final state distribution (theoretical calculation)

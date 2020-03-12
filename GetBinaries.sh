@@ -6,14 +6,6 @@ GetBinaries(){
 # create directories if necessary
 mkdir -p ./tritium-data/hdf5/Knm1/
 mkdir -p ./tritium-data/hdf5/Knm2/
-mkdir -p ./tritium-data/mat/TwinKnm1/
-mkdir -p ./tritium-data/mat/TwinKnm2/
-mkdir -p ./tritium-data/fit/Knm1/Uniform/
-mkdir -p ./tritium-data/fit/Knm2/Uniform/
-mkdir -p ./tritium-data/fit/Knm1/SingleRingFit/	
-mkdir -p ./tritium-data/fit/Knm2/SingleRingFit/	
-mkdir -p ./tritium-data/sensitivity/Knm1/
-mkdir -p ./tritium-data/sensitivity/Knm2/
 mkdir -p ./tritium-data/NPfactor/
 mkdir -p ./inputs/FSD/
 mkdir -p ./inputs/ELossFunction/
@@ -34,14 +26,8 @@ rsync -i -a -v $1@pcltr-01.mpp.mpg.de:/remote/ceph/user/s/schluete/Samak/inputs/
 rsync -i -a -v $1@pcltr-01.mpp.mpg.de:/remote/ceph/user/s/schluete/Samak/inputs/ELossFunction/ ./inputs/ELossFunction/  
 rsync -i -a -v $1@pcltr-01.mpp.mpg.de:/remote/ceph/user/s/schluete/Samak/inputs/WGTSMACE/wgts_density_profile_for_thierry.dat  ./inputs/WGTSMACE/wgts_density_profile_for_thierry.dat 
 
-# fit results, standard sensitivities, non-poiss factor
-rsync -i -a -v $1@pcltr-01.mpp.mpg.de:/remote/ceph/user/s/schluete/Samak/tritium-data/fit/ ./tritium-data/fit/
-rsync -i -a -v $1@pcltr-01.mpp.mpg.de:/remote/ceph/user/s/schluete/Samak/tritium-data/sensitivity/ ./tritium-data/sensitivity/
+# non-poiss factor
 rsync -i -a -v $1@pcltr-01.mpp.mpg.de:/remote/ceph/user/s/schluete/Samak/tritium-data/NPfactor/*.mat ./tritium-data/NPfactor/
-
-# twins
-rsync -i -a -v $1@pcltr-01.mpp.mpg.de:/remote/ceph/user/s/schluete/Samak/tritium-data/mat/TwinKnm1/*.mat ./tritium-data/mat/TwinKnm1/
-rsync -i -a -v $1@pcltr-01.mpp.mpg.de:/remote/ceph/user/s/schluete/Samak/tritium-data/mat/TwinKnm2/*.mat ./tritium-data/mat/TwinKnm2/
 
 # fminuit
 rsync -i -a -v $1@pcltr-01.mpp.mpg.de:/remote/ceph/user/s/schluete/Samak/fitting/fminuit/ ./fitting/fminuit/
