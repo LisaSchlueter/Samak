@@ -33,7 +33,6 @@ CmArg = {'BkgCM','OFF',...%  'SysEffects',struct(myEffect,'ON'),...
 M = MultiRunAnalysis(RunArg{:});
 M.chi2 = 'chi2CMShape';
 M.ComputeCM;
-
 %% calculate covariance matrix
 M.ComputeCM(CmArg{:});
 %% display and save to plots

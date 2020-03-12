@@ -1017,7 +1017,7 @@ classdef RunAnalysis < handle
             p.addParameter('ISXsection_RelErr',SysErr.ISXsection_RelErr,@(x)isfloat(x) && x>=0);
             p.addParameter('FPDeff_RelErr',SysErr.FPDeff_RelErr,@(x)isfloat(x) && x>=0); 
             p.addParameter('PlotSaveCM','OFF',@(x)ismember(x,{'ON','OFF'})); %plot individual covmats and saves plot
-            p.addParameter('MaxSlopeCpsPereV',15*1e-06,@(x)isfloat(x));
+            p.addParameter('MaxSlopeCpsPereV',SysErr.MaxSlopeCpsPereV,@(x)isfloat(x));
             p.addParameter('BkgRange',-5,@(x)isfloat(x));
             p.addParameter('RW_SigmaErr',0.1,@(x)isfloat(x) );
             p.addParameter('RW_MultiPosErr',0,@(x)isfloat(x));

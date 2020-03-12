@@ -17,6 +17,7 @@ if SysBudget==0 % default First Tritium
     SysErr.FPDeff_RelErr = 0.001;
     SysErr.is_EOffsetErr = 0;
     SysErr.MACE_SigmaErr = 0;
+    SysErr.MaxSlopeCpsPereV = 15*1e-06;
 elseif SysBudget==99 % old First Tritium
     SysErr.WGTS_TASR_RelErr = 0.005;
     SysErr.FSDNorm_RelErr=  0.01;
@@ -31,6 +32,7 @@ elseif SysBudget==99 % old First Tritium
     SysErr.FPDeff_RelErr = 0.001;
     SysErr.is_EOffsetErr = 0;
     SysErr.MACE_SigmaErr = 0;
+    SysErr.MaxSlopeCpsPereV = 15*1e-06;
 elseif SysBudget==1
     SysErr.WGTS_TASR_RelErr = 5e-4;
     SysErr.FSDNorm_RelErr=  0.01;
@@ -45,6 +47,7 @@ elseif SysBudget==1
     SysErr.FPDeff_RelErr = 0.001;
     SysErr.is_EOffsetErr = 0;
     SysErr.MACE_SigmaErr = 0;
+    SysErr.MaxSlopeCpsPereV = 15*1e-06;
 elseif SysBudget ==2
     SysErr.WGTS_TASR_RelErr = 5e-4;
     SysErr.FSDNorm_RelErr=  0.01;
@@ -59,6 +62,7 @@ elseif SysBudget ==2
     SysErr.FPDeff_RelErr = 0.001;
     SysErr.is_EOffsetErr = 0;
     SysErr.MACE_SigmaErr = 0;
+    SysErr.MaxSlopeCpsPereV = 15*1e-06;
 elseif SysBudget ==21
     SysErr.WGTS_TASR_RelErr = 5e-4;
     SysErr.FSDNorm_RelErr=  0.01;
@@ -73,6 +77,7 @@ elseif SysBudget ==21
     SysErr.FPDeff_RelErr = 0.001;
     SysErr.is_EOffsetErr = 0;
     SysErr.MACE_SigmaErr = 0;
+    SysErr.MaxSlopeCpsPereV = 15*1e-06;
 elseif SysBudget ==22 % default Knm1
     SysErr.WGTS_TASR_RelErr = 5e-4;
     SysErr.FSDNorm_RelErr=  0.01;
@@ -87,6 +92,7 @@ elseif SysBudget ==22 % default Knm1
     SysErr.FPDeff_RelErr = 1e-4;
     SysErr.is_EOffsetErr = 0;
     SysErr.MACE_SigmaErr = 0;
+    SysErr.MaxSlopeCpsPereV = 15*1e-06;
 elseif SysBudget == 31 % preliminary KNM2 systematics (January 20)
     SysErr.WGTS_TASR_RelErr = 5e-4; % data driven
     SysErr.FSDNorm_RelErr=  0.01;
@@ -99,6 +105,7 @@ elseif SysBudget == 31 % preliminary KNM2 systematics (January 20)
     SysErr.ISXsection_RelErr= 0; %use rhod sigma together as uncertainty
     SysErr.DataDriven = 'ON';
     SysErr.FPDeff_RelErr = 1e-4;
+    SysErr.MaxSlopeCpsPereV = 5.2*1e-06;
 elseif SysBudget == 32 % preliminary KNM2 systematics (March 20)
     SysErr.WGTS_TASR_RelErr = 5e-4; % data driven
     SysErr.FSDNorm_RelErr=  0.01;
@@ -113,6 +120,7 @@ elseif SysBudget == 32 % preliminary KNM2 systematics (March 20)
     SysErr.FPDeff_RelErr = 1e-4;
     SysErr.is_EOffsetErr = 0.68*0.15;
     SysErr.MACE_SigmaErr = 0.68*0.20;
+    SysErr.MaxSlopeCpsPereV = 5.2*1e-06;
 end
 
 CMArg = {'WGTS_CD_MolPerCm2_RelErr',SysErr.WGTS_CD_MolPerCm2_RelErr,...
