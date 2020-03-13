@@ -1,0 +1,155 @@
+
+*** These modified files were found in JOE when it aborted on Fri Mar 13 10:49:02 2020
+*** JOE was aborted because the terminal closed
+
+*** File '(Unnamed)'
+/home/iwsatlas1/guennic/Desktop/Samak3.0/.git/COMMIT_EDITMSG
+
+*** File '/home/iwsatlas1/guennic/Desktop/Samak3.0/.git/COMMIT_EDITMSG'
+Merge branch 'master' of https://nuserv.uni-muenster.de:8443/LSchlueter/Samak3.0
+
+# Conflicts:
+#	RunMatlabScript.sh
+#	fitting/FITC.m
+#	knm1ana/knm1_UniformFit/knm1_UniformFit.m
+#
+# It looks like you may be committing a merge.
+# If this is not correct, please remove the file
+#	.git/MERGE_HEAD
+# and try again.
+
+
+# Please enter the commit message for your changes. Lines starting
+# with '#' will be ignored, and an empty message aborts the commit.
+#
+# Committer: nathan <guennic@pcltr-01.mppmu.mpg.de>
+#
+# On branch master
+# Your branch and 'origin/master' have diverged,
+# and have 1 and 18 different commits each, respectively.
+#   (use "git pull" to merge the remote branch into yours)
+#
+# All conflicts fixed but you are still merging.
+#
+# Changes to be committed:
+#	modified:   CopyFile2Local.sh
+#	modified:   CopyFile2Server.sh
+#	modified:   GetBinaries.sh
+#	modified:   RunAnalysis/McRunGenerator.m
+#	modified:   RunAnalysis/MultiRunAnalysis.m
+#	modified:   RunAnalysis/RingAnalysis.m
+#	modified:   RunAnalysis/RunAnalysis.m
+#	modified:   RunAnalysis/ref_files/ref_RunAnalysis.m
+#	modified:   RunMatlabScript.sh
+#	new file:   inputs/Plasma/ConvertPlasmaDrift2Rect.m
+#	copied:     knm1ana/knm1_systematics/NuMassShift_FSD.m -> knm1ana/knm1_systematics/NuMassShift_DifferentFSD.m
+#	modified:   knm1ana/knm1_systematics/NuMassShift_FSD.m
+#	new file:   knm1ana/knm1_systematics/TwinKNM1_RemoveRMpoint.m
+#	new file:   knm1ana/knm1_systematics/knm1_ComputeCM.m
+#	modified:   knm1ana/knm1_systematics/knm1_FSD.m
+#	copied:     knm1ana/knm1_systematics/knm1_FSD.m -> knm1ana/knm1_systematics/knm1_FSDerrorBand.m
+#	modified:   knm2ana/knm2_DopplerEffect/FSD_Convfun.m
+#	modified:   knm2ana/knm2_MCcomparison/knm2_CompareELoss.m
+#	modified:   knm2ana/knm2_MCcomparison/knm2_CompareRF.m
+#	modified:   knm2ana/knm2_MCcomparison/knm2_CompareTF.m
+#	modified:   knm2ana/knm2_MCcomparison/knm2_ComputeMCrun.m
+#	modified:   knm2ana/knm2_MCcomparison/knm2_ComputeRF.m
+#	modified:   knm2ana/knm2_MCcomparison/knm2_FitForeignTwin.m
+#	new file:   knm2ana/knm2_MoS/GetMosDriftKNM2.m
+#	new file:   knm2ana/knm2_MoS/knm2_TestMoSCorr.m
+#	new file:   knm2ana/knm2_MultiRingFit/knm2_RingwiseEndpoint.m
+#	deleted:    knm2ana/knm2_RWcombi/FSDconv.m
+#	renamed:    knm2ana/knm2_RWcombi/knm2_FakeRunRW_bias.m -> knm2ana/knm2_RWcombi/RWcombi_FakeMC/knm2_FakeRunRW_bias.m
+#	renamed:    knm2ana/knm2_RWcombi/knm2_FakeRunRWcombi_3P.m -> knm2ana/knm2_RWcombi/RWcombi_FakeMC/knm2_FakeRunRWcombi_3P.m
+#	renamed:    knm2ana/knm2_RWcombi/knm2_FakeRunRWcombi_Drift.m -> knm2ana/knm2_RWcombi/RWcombi_FakeMC/knm2_FakeRunRWcombi_Drift.m
+#	renamed:    knm2ana/knm2_RWcombi/knm2_FakeRunRWcombi_Gauss.m -> knm2ana/knm2_RWcombi/RWcombi_FakeMC/knm2_FakeRunRWcombi_Gauss.m
+#	renamed:    knm2ana/knm2_RWcombi/knm2_FakeRunRWcombi_PlotSystemtics.m -> knm2ana/knm2_RWcombi/RWcombi_FakeMC/knm2_FakeRunRWcombi_PlotSystemtics.m
+#	renamed:    knm2ana/knm2_RWcombi/knm2_FakeRunRWcombi_Sensitivity.m -> knm2ana/knm2_RWcombi/RWcombi_FakeMC/knm2_FakeRunRWcombi_Sensitivity.m
+#	renamed:    knm2ana/knm2_RWcombi/knm2_FakeRunRWcombi_Systemtice.m -> knm2ana/knm2_RWcombi/RWcombi_FakeMC/knm2_FakeRunRWcombi_Systemtice.m
+#	renamed:    knm2ana/knm2_RWcombi/ref_FakeRun_KNM2_CD84_2hours.m -> knm2ana/knm2_RWcombi/RWcombi_FakeMC/ref_FakeRun_KNM2_CD84_2hours.m
+#	renamed:    knm2ana/knm2_RWcombi/ref_FakeRun_KNM2_CD84_308x2hours.m -> knm2ana/knm2_RWcombi/RWcombi_FakeMC/ref_FakeRun_KNM2_CD84_308x2hours.m
+#	renamed:    knm2ana/knm2_RWcombi/Plot_FSDbinning.m -> knm2ana/knm2_RWcombi/RWcombi_Real/Plot_FSDbinning.m
+#	new file:   knm2ana/knm2_RWcombi/RWcombi_Real/knm2_3P_FSDcorrMultiRing.m
+#	new file:   knm2ana/knm2_RWcombi/RWcombi_Real/knm2_3P_FSDcorrUniform.m
+#	renamed:    knm2ana/knm2_RWcombi/knm2_DataE0_NonPoissFactor.m -> knm2ana/knm2_RWcombi/RWcombi_Real/knm2_DataE0_NonPoissFactor.m
+#	renamed:    knm2ana/knm2_RWcombi/knm2_PlotE03RWsettings.m -> knm2ana/knm2_RWcombi/RWcombi_Real/knm2_PlotE03RWsettings.m
+#	renamed:    knm2ana/knm2_RWcombi/knm2_PlotqULargeRangeScan.m -> knm2ana/knm2_RWcombi/RWcombi_Real/knm2_PlotqULargeRangeScan.m
+#	new file:   knm2ana/knm2_RWcombi/RWcombi_Real/knm2_RWcombi_GetMultiPos_E0fit.m
+#	new file:   knm2ana/knm2_RWcombi/RWcombi_Real/knm2_RWcombi_GetMultiWeights.m
+#	renamed:    knm2ana/knm2_RWcombi/knm2_qULargeRangeScan.m -> knm2ana/knm2_RWcombi/RWcombi_Real/knm2_qULargeRangeScan.m
+#	renamed:    knm2ana/knm2_RWcombi/knm2_qULargeRangeScanRing.m -> knm2ana/knm2_RWcombi/RWcombi_Real/knm2_qULargeRangeScanRing.m
+#	renamed:    knm2ana/knm2_RWcombi/knm2_qULargeRangeScan_BkgRef.m -> knm2ana/knm2_RWcombi/RWcombi_Real/knm2_qULargeRangeScan_BkgRef.m
+#	renamed:    knm2ana/knm2_RWcombi/knm2_3PeriodTwins.m -> knm2ana/knm2_RWcombi/RWcombi_Twin/knm2_3PeriodTwins.m
+#	renamed:    knm2ana/knm2_RWcombi/knm2_ApplyRWshift.m -> knm2ana/knm2_RWcombi/RWcombi_Twin/knm2_ApplyRWshift.m
+#	renamed:    knm2ana/knm2_RWcombi/knm2_LinearRWShift.m -> knm2ana/knm2_RWcombi/RWcombi_Twin/knm2_LinearRWShift.m
+#	renamed:    knm2ana/knm2_RWcombi/test.m -> knm2ana/knm2_RWcombi/RWcombi_Twin/knm2_NuMassShift_FSDsigma.m
+#	renamed:    knm2ana/knm2_RWcombi/knm2_PlotTestFSDbinning.m -> knm2ana/knm2_RWcombi/RWcombi_Twin/knm2_PlotTestFSDbinning.m
+#	renamed:    knm2ana/knm2_RWcombi/knm2_RFconvolution.m -> knm2ana/knm2_RWcombi/RWcombi_Twin/knm2_RFconvolution.m
+#	renamed:    knm2ana/knm2_RWcombi/knm2_RWsystematics.m -> knm2ana/knm2_RWcombi/RWcombi_Twin/knm2_RWsystematics.m
+#	renamed:    knm2ana/knm2_RWcombi/knm2_RunStackingOtherEffects.m -> knm2ana/knm2_RWcombi/RWcombi_Twin/knm2_RunStackingOtherEffects.m
+#	renamed:    knm2ana/knm2_RWcombi/knm2_TestFSDbinning.m -> knm2ana/knm2_RWcombi/RWcombi_Twin/knm2_TestFSDbinning.m
+#	deleted:    knm2ana/knm2_RWcombi/knm2_Plo.m
+#	modified:   knm2ana/knm2_RateMonitoring/StackedPixelPseudoRings_RM_NP.m
+#	modified:   knm2ana/knm2_RateMonitoring/ref_FakeRun_KNM2_CD84_RateMonitor.m
+#	new file:   knm2ana/knm2_SingleRingFit/km2_PlotSingleRingFits_MultiP.m
+#	new file:   knm2ana/knm2_SingleRingFit/knm2_ComparePlasma_SingleRingFit_Rate300.m
+#	modified:   knm2ana/knm2_SingleRingFit/knm2_SingleRingFit.m
+#	modified:   knm2ana/knm2_SingleRingFit/knm2_SingleRingFit_all.m
+#	new file:   knm2ana/knm2_SingleRingFit/knm2_TestElossBinningIssue.m
+#	new file:   knm2ana/knm2_UniformFit/knm2_FitRunList.m
+#	new file:   knm2ana/knm2_UniformFit/knm2_FitRunList_all.m
+#	new file:   knm2ana/knm2_UniformFit/knm2_RingwiseFit.m
+#	modified:   knm2ana/knm2_UniformFit/knm2_SingleRunFit.m
+#	modified:   knm2ana/knm2_UniformFit/knm2_UniformFit.m
+#	modified:   ksn1ana/contour/fit_chi.m
+#	modified:   ksn1ana/contour/plotting.m
+#	modified:   ksn1ana/contour/sensitivity.m
+#	new file:   ksn1ana/contour/sensitivity.m.save
+#	new file:   ksn1ana/contour/sensitivity_1scan.m
+#	new file:   ksn1ana/contour/sensitivity_all_real.m
+#	modified:   ksn1ana/contour/sensitivity_test.m
+#	modified:   ksn1ana/ksm1_UniformFit_sterile.m
+#	modified:   ksn1ana/sterile_global.m
+#	new file:   simulation/GetElossPara.m
+#	modified:   simulation/katrinsetup/WGTSMACE.m
+#	modified:   simulation/tritium/TBD.m
+#	modified:   tritium-data/HDF5Reader.m
+#	modified:   tritium-data/SamakTwinConverter.m
+#
+
+*** File '* Startup Log *'
+Processing '/etc/joe/editorrc'...
+Processing '/etc/joe/ftyperc'...
+Finished processing /etc/joe/ftyperc
+Finished processing /etc/joe/editorrc
+
+*** These modified files were found in JOE when it aborted on Fri Mar 13 10:58:54 2020
+*** JOE was aborted because the terminal closed
+
+*** File '/home/iwsatlas1/guennic/Desktop/Samak3.0/.git/COMMIT_EDITMSG'
+
+# Please enter the commit message for your changes. Lines starting
+# with '#' will be ignored, and an empty message aborts the commit.
+#
+# Committer: nathan <guennic@pcltr-01.mppmu.mpg.de>
+#
+# On branch master
+# Your branch is ahead of 'origin/master' by 2 commits.
+#   (use "git push" to publish your local commits)
+#
+# Changes to be committed:
+#	new file:   DEADJOE
+#
+""
+*** File '(Unnamed)'
+:x
+
+*** File '(Unnamed)'
+/home/iwsatlas1/guennic/Desktop/Samak3.0/.git/COMMIT_EDITMSG
+/home/iwsatlas1/guennic/Desktop/Samak3.0/.git/COMMIT_EDITMSG
+
+*** File '* Startup Log *'
+Processing '/etc/joe/editorrc'...
+Processing '/etc/joe/ftyperc'...
+Finished processing /etc/joe/ftyperc
+Finished processing /etc/joe/editorrc
