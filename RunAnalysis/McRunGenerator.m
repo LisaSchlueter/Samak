@@ -140,7 +140,8 @@ classdef McRunGenerator < handle
                     'DTFSD',DTFSD,...
                     'HTFSD',HTFSD,...
                     'TTFSD',TTFSD,...
-                    'Q_i',TwinQ(i)};
+                    'Q_i',TwinQ(i),...
+                    'KTFFlag',obj.RunObj.KTFFlag};
 
                 switch obj.RunObj.AnaFlag
                     case 'StackPixel'
@@ -186,7 +187,8 @@ classdef McRunGenerator < handle
                
                 switch obj.RunObj.AnaFlag
                     case 'StackPixel'
-                        PixLogic              = repmat(ismember(1:148,obj.TwinObj{i}.FPD_PixList),[38,1]); % logical array, says whether pixel is active or non-active
+                        nqU =  numel(WGTS_MolFrac_HT_SubRun);
+                        PixLogic              = repmat(ismember(1:148,obj.TwinObj{i}.FPD_PixList),[nqU,1]); % logical array, says whether pixel is active or non-active
                         TBDIS_NoBkg           = PixLogic.*repmat(TBDIS_NoBkg,[1,148])./numel(obj.TwinObj{i}.FPD_PixList); % calculate spectrum per pixel
                         TBDIS                 = TBDIS_NoBkg+BkgPixSubRun;
                         TBDISE                = sqrt(TBDIS_NoBkg);
@@ -207,7 +209,7 @@ classdef McRunGenerator < handle
                     'WGTS_MolFrac_TT','WGTS_MolFrac_DT','WGTS_MolFrac_HT',...
                     'WGTS_MolFrac_DT_SubRun','WGTS_MolFrac_HT_SubRun','WGTS_MolFrac_TT_SubRun',...
                      'qU','qUfrac',...
-                    '-v7.3','-nocompression','-append');
+                     '-append'); % do not overwrite entire file, only these variables 
             end
 
             obj.RunObj.chi2 = chi2_prev;  
@@ -234,6 +236,9 @@ classdef McRunGenerator < handle
             tmpDataType      = obj.RunObj.DataType;
             tmpexclDataStart = obj.RunObj.exclDataStart;
             tmpfixPar        = obj.RunObj.fixPar;
+            tmpKTF = obj.RunObj.KTFFlag;
+            obj.RunObj.KTFFlag = 'WGTSMACE';
+            
             
             %set range and fixed parameter to something reliable
             if strcmp(obj.RunObj.DataSet,'FirstTritium.katrin')
@@ -266,6 +271,7 @@ classdef McRunGenerator < handle
             obj.RunObj.DataType      = tmpDataType;
             obj.RunObj.exclDataStart = tmpexclDataStart; 
             obj.RunObj.fixPar        = tmpfixPar;
+            obj.RunObj.KTFFlag       = tmpKTF;
         end
         function BkgRelPix = GetRingWiseBkg(obj)
             % Get (relative) Background for 12 rings
@@ -483,7 +489,7 @@ classdef McRunGenerator < handle
             end
             TBDISE                = sqrt(TBDIS);
             TimeperSubRunperPixel = qUfrac.*TimeSec(1);
-            
+            StartTimeStamp = datetime('today');
             
             if contains(func2str(obj.InitFile),'KNM1')
                 savepath = [getenv('SamakPath'),'tritium-data/mat/FakeKnm1/'];
@@ -505,6 +511,7 @@ classdef McRunGenerator < handle
                 'WGTS_MolFrac_DT_SubRun','WGTS_MolFrac_HT_SubRun','WGTS_MolFrac_TT_SubRun',...
                 'ISXsection','MACE_Bmax_T',...
                 'MACE_Ba_T','qU','qUfrac',...
+                'StartTimeStamp',...
                 '-v7.3','-nocompression');       
         end
         function CleanUpFakeRuns(obj)

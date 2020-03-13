@@ -1,88 +1,26 @@
-% fit  with different final state distributions
-% plot impact on neutrino mass
+% KNM1 neutrino mass bias from stacking
 
-% config
-DataType ='Twin';
-RunList = 'KNM1';
-exclDataStart = 14;
-chi2 = 'chi2Stat';
-ReFit = 'OFF';
+%% settings
+range = 40; % eV below the endpoint
+%% create MultiRunAnalysis object
+R = MultiRunAnalysis('RunList','KNM1',... % runlist defines which runs are analysed -> set MultiRunAnalysis.m -> function: GetRunList()
+    'chi2','chi2Stat',...                 % uncertainties: statistical or stat + systematic uncertainties
+    'DataType','Twin',...                 % can be 'Real' or 'Twin' -> Monte Carlo
+    'fixPar','mNu E0 Norm Bkg',...        % free Parameter!!
+    'RadiativeFlag','ON',...              % theoretical radiative corrections applied in model
+    'NonPoissonScaleFactor',1.064,...     % background uncertainty are enhanced
+    'minuitOpt','min ; minos',...         % technical fitting options (minuit)
+    'FSDFlag','Sibille0p5eV',...          % final state distribution
+    'ELossFlag','KatrinT2',...            % energy loss function
+    'SysBudget',22,...
+    'DopplerEffectFlag','FSD_Knm1');       % defines syst. uncertainties -> in GetSysErr.m;
 
-%label results and load if possible
-savedir = [getenv('SamakPath'),'knm1ana/knm1_systematics/results/'];
-MakeDir(savedir);
-savename = [savedir,sprintf('NuMassShift_FSD_%s_%s_%s_%.0f.mat',RunList,DataType,chi2,exclDataStart)];
+R.exclDataStart = R.GetexclDataStart(range); % set region of interest
 
-if exist(savename,'file') && strcmp(ReFit,'OFF')
-    load(savename)
-else
-CommongArg = {'RunList',RunList,'chi2','chi2Stat','DataType',DataType,...
-    'fixPar','5 6 7 8 9 10 11','exclDataStart',exclDataStart,'chi2',chi2,...
-    'minuitOpt','min;minos'};
+%% Fit
+R.Fit;
 
-M = MultiRunAnalysis(CommongArg{:});
+%% result
+fprintf('Stacking neutrino mass bias = %.4f eV^2 \n',R.FitResult.par(1));
+fprintf('Stacking fit endpoint  bias = %.4f eV \n',R.FitResult.par(2)+R.ModelObj.Q_i-R.TwinBias_Q);
 
-mNuSq = zeros(5,1); mNuSqErr = zeros(5,1);
-
-M.ModelObj.TTFSD = 'Sibille';
-M.ModelObj.LoadFSD;
-M.Fit;
-mNuSq(1)    = M.FitResult.par(1); 
-mNuSqErr(1) = M.FitResult.err(1);
-
-M.ModelObj.TTFSD = 'Sibille0p5eV';
-M.ModelObj.LoadFSD;
-M.Fit;
-mNuSq(2)    = M.FitResult.par(1); 
-mNuSqErr(2) = M.FitResult.err(1);
-
-M.ModelObj.TTFSD = 'SAENZ';
-M.ModelObj.LoadFSD;
-M.Fit;
-mNuSq(3)    = M.FitResult.par(1); 
-mNuSqErr(3) = M.FitResult.err(1);
-
-M.ModelObj.TTFSD = 'HT';
-M.ModelObj.LoadFSD;
-M.Fit;
-mNuSq(4)    = M.FitResult.par(1); 
-mNuSqErr(4) = M.FitResult.err(1);
-
-M.ModelObj.TTFSD = 'DOSS';
-M.ModelObj.LoadFSD;
-M.Fit;
-mNuSq(5)    = M.FitResult.par(1); 
-mNuSqErr(5) = M.FitResult.err(1);
-
-M.ModelObj.TTFSD = 'ROLL';
-M.ModelObj.LoadFSD;
-M.Fit;
-mNuSq(6)     = M.FitResult.par(1); 
-mNuSqErr(6) = M.FitResult.err(1);
-
-FSDname = {'Sibille','Sibille0p5','Saenz', 'Saenz HT','Doss','Roll'};
-save(savename,'mNuSq','mNuSqErr','FSDname');
-end
-
-%% plot neutrino mass shift as a function of FSD
-f44 = figure('Renderer','opengl');
-set(f44, 'Units', 'normalized', 'Position', [0.1, 0.1, 0.7, 0.5]);
-
-select = 1:6;
-y    = mNuSq(select);
-yErr = mNuSqErr(select);
-xstr = {'Sibille','Sibille rebinned','Saenz', 'Doss','Roll','Saenz HT'};
-ystr = sprintf('m_\\nu^2 - < m_\\nu^2 > (eV^2)');
-
-x = 1:numel(y);
-
-p =  plot(x,y-mean(y),'--o','LineWidth',3,'MarkerSize',8,'Color',M.PlotColor);
-ylabel(ystr);
-xticks(x);
-xticklabels(xstr);
-PrettyFigureFormat;
-xlabel('final state distribution')
-set(gca,'FontSize',24);
-grid on
-plotname = strrep(savename,'results','plots');
-print(f44,plotname,'-dpng','-r450');

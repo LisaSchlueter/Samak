@@ -2,17 +2,20 @@
 % Generate 1 MC run
 % Convert to HDF5-format for other fitters
 
-MCdata = 'Fitrium';%'Kafit';
+MCdata = 'Fitrium';
 
-mNuSq = 1; % 0== no neutrino mass, something else -> non-zero
+% convert to mat (has to be done only 1. time)
+HDF5Reader('RunNr',56341,'Fitter',MCdata,'Version','RunSummary-Prompt4b-fpd00','TimeBias',100,'ExtraLabel','mc_');
+
+mNuSq = 0; % 0== no neutrino mass, something else -> non-zero
 if mNuSq>0
     mNu_str = 'mNu';
 else
     mNu_str = 'NomNu';
 end
-range = 90;
-RecomputeFlag = 'OFF';
-PlotChi2Curve = 'ON';
+range = 40;
+RecomputeFlag = 'ON';
+PlotChi2Curve = 'OFF';
 
 % label
 savedir = [getenv('SamakPath'),'knm2ana/knm2_MCcomparison/results/'];
@@ -44,16 +47,16 @@ else
     R.Fit;
     FitResult = R.FitResult;
     R.fitter = 'matlab';
-    ScanResults = R.GetAsymFitError('Mode','Uniform',...% equidistant steps
-        'ParScanMax',R.FitResult.err(1)*1.4,...
-        'SanityPlot','OFF');
+    %ScanResults = R.GetAsymFitError('Mode','Uniform',...% equidistant steps
+    %    'ParScanMax',R.FitResult.err(1)*1.4,...
+    %    'SanityPlot','OFF');
     
-    save(savename,'FitResult','ScanResults','R');
+    save(savename,'FitResult','R');%'ScanResults','R');
 end
 
 %% results
 fprintf('---------------------------------------\n');
-fprintf('mNuSq    = %.3f (%.3f +%.3f)eV^2 \n',FitResult.par(1),ScanResults.AsymErr(2),ScanResults.AsymErr(1));
+fprintf('mNuSq    = %.3f (%.3f +%.3f)eV^2 \n',FitResult.par(1),FitResult.errNeg(1),FitResult.errPos(1));
 fprintf('Delta E0 = %.3f (+-%.3f)eV \n',FitResult.par(2)+R.ModelObj.Q_i-18573.70,FitResult.err(2));
 fprintf('N        = %.3f (+-%.4f) \n',FitResult.par(4)+1,FitResult.err(4));
 fprintf('B        = %.1f (+-%.1f) mcps \n',(FitResult.par(3)+R.ModelObj.BKG_RateSec_i)*1e3,1e3*FitResult.err(3));

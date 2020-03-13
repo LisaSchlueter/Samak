@@ -51,6 +51,12 @@ end
 EffCorr(EffCorr==0) = 1;
 TBDIS       = double(TBDISuncorr)./double(EffCorr).*TimeBias;
 TBDISE      = sqrt(TBDIS./EffCorr); % statstical uncertainty
+
+if strcmp(DataSet,'Knm2') && strcmp(Fitter,'Samak')
+    TBDIS14keV = h5read([h5path,h5name],'/RunSummary/CountsKNM1')'; % for compute TBDISE
+else
+    TBDIS14keV = zeros(size(TBDIS));
+end
 %% Import Retarding Potentials and Measurement Times
 if strcmp(DataSet,'FirstTritium.katrin') && str2double(Version(1))<4
         qU = h5read([h5path,h5name],'/RunSummary/RetardingEnergy');
@@ -168,8 +174,10 @@ end
 % subruns arrays are always arranged as upward scans
 if  (any(diff(qU(:,1)) < 0))
     [qU,SortedIndex] = sort(qU);
-    TBDIS = TBDIS(SortedIndex(:,1),:);
-    qUfrac = qUfrac(SortedIndex(:,1),:);
+    TBDIS      = TBDIS(SortedIndex(:,1),:);
+    qUfrac     = qUfrac(SortedIndex(:,1),:);
+    EffCorr    = EffCorr(SortedIndex(:,1),:);
+    TBDIS14keV = TBDIS14keV(SortedIndex(:,1),:);
     TimeperSubRunperPixel = TimeperSubRunperPixel(SortedIndex(:,1),:);
     if ~strcmp(Fitter,'Kafit')
         WGTS_CD_MolPerCm2_SubRun = WGTS_CD_MolPerCm2_SubRun(SortedIndex(:,1));
@@ -200,13 +208,15 @@ switch DataSet
         qU_RM                       = qU(1,:)';
         qUfrac_RM                   = qUfrac(1,:)';
         TBDIS_RM                    = TBDIS(1,:)';
-        EffCorr_RM                 =  EffCorr(1,:)';
+        EffCorr_RM                  =  EffCorr(1,:)';
+        TBDIS14keV_RM               = TBDIS14keV(1,:)';
         
         % delete rate monitor point: not used for nu-mass analysis
         qUstart = 2;
         qU                           = qU(qUstart:end,:);
         qUfrac                       = qUfrac(qUstart:end,:);
         TBDIS                        = TBDIS(qUstart:end,:);
+        TBDIS14keV                   = TBDIS14keV(qUstart:end,:);
         TimeperSubRunperPixel        = TimeperSubRunperPixel(qUstart:end,:);
         EffCorr                      = EffCorr(qUstart:end,:);
         WGTS_CD_MolPerCm2_SubRun     = WGTS_CD_MolPerCm2_SubRun(qUstart:end);
@@ -254,6 +264,7 @@ save(savename,'StartTimeStamp','TBDIS','TBDISE','qU','qUfrac','EffCorr',...
     'MACE_Bmax_T',...
     'matFileName',...
     'TimeBias',...
+    'TBDIS14keV','TBDIS14keV_RM',...
     '-v7.3','-nocompression');
 
 h5mat.mpix = struct('StartTimeStamp',StartTimeStamp,'TBDIS',TBDIS,'TBDISE',TBDISE,'qU',qU,'TimeperSubRunperPixel',TimeperSubRunperPixel,...
@@ -277,7 +288,9 @@ h5mat.mpix = struct('StartTimeStamp',StartTimeStamp,'TBDIS',TBDIS,'TBDISE',TBDIS
     'ISXsection',ISXsection,...
     'RW_BiasVoltage',RW_BiasVoltage,...
     'MACE_Bmax_T',MACE_Bmax_T,...
-    'TimeBias',TimeBias);
+    'TimeBias',TimeBias,....
+    'TBDIS14keV',TBDIS14keV,...
+    'TBDIS14keV_RM',TBDIS14keV_RM);
 
 % TD (optional)
 switch saveTD_DataBank

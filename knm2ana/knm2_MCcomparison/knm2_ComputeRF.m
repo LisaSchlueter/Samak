@@ -1,5 +1,5 @@
 % calculate response function for MC comparison
-SynchrotronFlag = 'OFF';
+SynchrotronFlag = 'ON';
 savename = [getenv('SamakPath'),'knm2ana/knm2_MCcomparison/results/Knm2_SamakRF.mat'];
 
 if strcmp( SynchrotronFlag,'OFF')

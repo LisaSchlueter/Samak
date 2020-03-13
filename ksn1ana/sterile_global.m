@@ -2,13 +2,13 @@
 
 %% Settings
 E0 = 18570;                                         % Endpoint in eV
-sterile_mass = 20;                                  % Sterile neutrino mass in eV
+sterile_mass = sqrt(2.3);                                  % Sterile neutrino mass in eV
 
-mixing_angle_1 = 0.1;                               % sin2(th4)
-mixing_angle_2 = 1-(1-2*mixing_angle_1)^2;          % sin2(2th4)
+% mixing_angle_1 = 0.1;                               % sin2(th4)
+% mixing_angle_2 = 1-(1-2*mixing_angle_1)^2;          % sin2(2th4)
 
-% mixing_angle_2 = 0.15;                              % sin2(2th4)
-% mixing_angle_1 = (1-sqrt(1-mixing_angle))/2;        % sin2(th4)
+mixing_angle_2 = 0.15;                              % sin2(2th4)
+mixing_angle_1 = (1-sqrt(1-mixing_angle_2))/2;        % sin2(th4)
 
 %% No sterile
 
@@ -89,8 +89,11 @@ qUc=qU(qU>-90);
 
 %% ===== PLOTTING =====
 
-figure;
+fig = figure('Renderer','painters');
+set(fig, 'Units', 'normalized', 'Position', [0.001, 0.001,0.45, 0.8]);
 
+plot_title = sprintf('\\Deltam^{2}_{14} = %.1f eV^2 sin^2(2\\theta_{ee}) = %.2f',sterile_mass^2,mixing_angle_2);
+% plot_title = sprintf('\\Deltam^{2}_{14} = %.1f eV^2',sterile_mass^2);
 %% Colors
 prlG = [81 126 102]/255;
 prlB = [50 148 216]/255;
@@ -98,40 +101,48 @@ FitStyleArg = {'o','Color','k','LineWidth',1.0,'MarkerFaceColor',rgb('Black'),'M
 
 %% Spectra  - First Subplot
 
-subplot(2,1,1);
+subplot(4,1,[1 2]);
 
 % Normalisation
-YI_N = YIs; bkg=YI_N(length(YI_N));
-YI_N = (YI_N-bkg).*1.3 + bkg;
+% YI_N = YIs; bkg=YI_N(length(YI_N));
+% YI_N = (YI_N-bkg).*1.3 + bkg;
 % 
 % % Sterile Branch somehow
 % YS = YI_N-YI+bkg;
+YI_N = YIs; bkg=YI_N(length(YI_N));
+YI_N = (YI_N-bkg).*(YI(1)/YI_N(1)) + bkg;
 
 % Plot
 plot(qUc,YI,'DisplayName','No Sterile','color',prlB,'LineWidth',3)
-hold on;
+hold on
 plot(qUc,YI_N,'--','DisplayName','With Sterile','color',prlG,'LineWidth',3)
+hold on
+errorbar(qUc,YIsd,err.*50,FitStyleArg{:},'CapSize',0)
+
 % hold on;
 % plot(qUc,YS,'DisplayName','Sterile branch')
 
 % Plot style
-xlabel('Retarding energy - 18574 (eV)');
+% xlabel('Retarding energy - 18574 (eV)');
 ylabel('Rate (cps)');
-legend({'Without sterile','With sterile'},'Location','southwest','box','off');
+legend({'KATRIN model with \Deltam^{2}_{14} = 0 eV^2',plot_title,'KATRIN MC data with errobars \times50'},'Location','northeast','box','off');
 lgd=legend;
 
+xlim([min(qUc-5) max(qUc+5)]);
 ylim([0.18 2*max(YI_N)]);
 PRLFormat;
 set(gca, 'YScale', 'log');
+yticks([1 10 100])
 
 %% Title
-plot_title = sprintf('Trtitum beta decay spectra comparison with and without sterile neutrino\nwith \\Deltam_{14} = %.1f eV, sin^2(\\theta_{ee}) = %.2f and sin^2(2\\theta_{ee}) = %.3f',sterile_mass,mixing_angle_1,mixing_angle_2);
-title(plot_title)
+% plot_title = sprintf('\\Deltam^{2}_{14} = %.1f eV^2 and sin^2(2\\theta_{ee}) = %.2f',sterile_mass^2,mixing_angle_2);
+% % ('Trtitum beta decay spectra comparison\nwith and without sterile neutrino\n\
+% title(plot_title)
 
 
 %% Ratio    - Second Subplot
 
-subplot(2,1,2);
+subplot(4,1,3);
 
 % Ratio
 RSP  = YIs./YI;
@@ -142,13 +153,29 @@ plot(qUc,RSP,'color',prlB,'LineWidth',3)
 hold on;
 errorbar(qUc,RSPd,err,FitStyleArg{:},'CapSize',0)
 hold on;
-plot(qUc,RSPd,'o','MarkerSize',4,'MarkerFaceColor',...
+plot(qUc,RSPd,'o','MarkerSize',2,'MarkerFaceColor',...
                 rgb('Black'),'MarkerEdgeColor',rgb('Black'),'LineWidth',3)
 
 % Plot style
-xlabel('Retarding energy - 18574 (eV)');
-ylabel('Spectra ratio sterile/no sterile');
-legend({'Model','Fake Data'},'Location','southwest','box','off');
+ylabel('Ratio \nu_4/\nu_{\beta}');
+legend({'Model','KATRIN MC Data'},'Location','southeast','box','off');
 
+xlim([min(qUc-5) max(qUc+5)]);
+% ylim([min([min(RSP) min(RSPd)])*0.99 max([max(RSP) max(RSPd)])*1.01])
+ylim([min(RSP)*0.99 1.01])
 PRLFormat;
-set(gca, 'YScale', 'log');
+% yticks([0.9 1])
+
+%% MTD      -  Third Subplot
+
+subplot(4,1,4)
+
+bar(qUc,times(qU>-90)./(60*60),0.5,...
+    'FaceColor',prlB,'EdgeColor',prlB);
+
+xlabel('Retarding energy - 18574 (eV)');
+ylh = ylabel('Time (h)');
+ylh.Position(1) = -105;
+ylim([0 50])
+yticks([0 25 50])
+PRLFormat;

@@ -1,25 +1,37 @@
 %% KATRIN Sterile Neutrino sensitivity - KSN1
-%  Sanity checks
+%  Sanity checks - Stat+1 and Syst-1 tests
 %  Nathan Le Guennic - 2020
 
 tic;
 %% Settings
 % Parameters
-savename     = 'coord_0to4_d400_90eV_syst.mat';
-CL           = 90;                  % Confidence level 90% - 95% - 99%
-datatype     = 'Real';
-uncertainty  = 'chi2CMShape'; % chi2Stat
+savename     = 'coord_stat+RF_EL.mat';
 
-d            = 200;                 % Number of dots per decade
+% Syst Flags
+SysEffects = struct(...
+    'RF_EL','ON',...        % Response Function(RF) EnergyLoss
+    'RF_BF','OFF',...       % RF B-Fields
+    'RF_RX','OFF',...       % Column Density, inel cross ection
+    'FSD','OFF',...         % final states
+    'TASR','OFF',...        % tritium activity fluctuations
+    'TCoff_RAD','OFF',...   % radiative thoretical corrections (this has to be OFF for KNM1, because included in model)
+    'TCoff_OTHER','OFF',... % other theo corr.
+    'DOPoff','OFF',...      % doppler effects --> OFF, because in model
+    'Stack','OFF',...       % stacking / HV fluctuations
+    'FPDeff','OFF');        % detector efficiency
+
+
+% Other parameters
+d            = 20;                 % Number of dots per decade
 eVrange      = 90;                  % eV below the endpoint
 
 
-start_decade = 0;
+start_decade = -1;
 stop_decade  = 4;
-min_sin2T4   = 0.0001;              % Lower bound for sin2(th4) for the plot
+min_sin2T4   = 0.00001;              % Lower bound for sin2(th4) for the plot
 
 
-p   = 0.0000001;                    % Newton gradient step
+p   = 0.00001;                    % Newton gradient step
 err = 0.01;                         % Newton convergence tolerance
 
 
@@ -40,68 +52,86 @@ m4 = [m4,logspace(stop_decade-1,stop_decade,d)];
 
 
 % Confidence level
-switch CL
-    case 90
-        chilvl = 4.61;
-    case 95
-        chilvl = 5.99;
-    case 99
-        chilvl = 9.21;
-end
-
+chilvl = 4.61+22.7;
 %% Constructor Initialisation
-switch datatype
-    case 'Real'
-        sibille = 'SibilleFull';
-    case 'Twin'
-        sibille = 'Sibille0p5eV';
-end
 
 R = MultiRunAnalysis('RunList','KNM1',...
-            'chi2',uncertainty,...
-            'DataType',datatype,...
+            'chi2','chi2CMShape',...
+            'DataType','Real',...
             'fixPar','E0 Norm Bkg',...
             'RadiativeFlag','ON',...
             'NonPoissonScaleFactor',1.064,...
             'minuitOpt','min ; migrad',...
-            'FSDFlag',sibille,...
+            'FSDFlag','SibilleFull',...
             'ELossFlag','KatrinT2',...
             'SysBudget',22);
-        
+
+%% Systematics flags
+
+R.ComputeCM('SysEffects',SysEffects,...
+           'BkgCM','OFF');  % background systematics (slope!) switched on/off here
+
 %% Loop
 % Initialisation
 %progressbar()
 %progressbar(0)
 c=0;
 
+diary 'progress.txt'
+fprintf('\n==== STARTING SCAN ====\n');
+diary off
+
 % Scanning
 for m = m4
     % Initializing Newton
-    m
     s=1;
-    X2_a = fit_chi(m,s,R,eVrange)
+    X2_a = fit_chi(m,s,R,eVrange);
+    
+    diary 'progress.txt'
+    fprintf('\nSterile mass : %.3f eV2',m)
+    diary off
     
     if (X2_a>chilvl+err)
-        % Gradient
-        s = s-p;
-        X2_b = fit_chi(m,s,R,eVrange)
+        diary 'progress.txt'
+        fprintf('\n\tReducing \\chi^2 ...\n')
+        diary off
         
-        if abs(X2_b-X2_a)/min(X2_a,X2_b)<1        % Preventing some computational errors
+        % Getting close enough to the value, otherwise minuit is chaotic
+        X2_a2=X2_a
+        while X2_a2>200
+            s=s/1.3;
+            X2_a2=fit_chi(m,s,R,eVrange);
+        end
+        
+        diary 'progress.txt'
+        fprintf('\tStarting Newton convergence\n')
+        diary off
+        
+        % Gradient
+        X2_a = X2_a2
+        s2   = s-p;
+        X2_b = fit_chi(m,s2,R,eVrange)
+        
+        if abs(X2_a-X2_b)/X2_b<0.1          % Prevent Chaos
             
             grad = (X2_a-X2_b)/p;
-            beta = X2_b-grad*s -chilvl;   % Tangeant parameters
+            beta = X2_a-grad*s -chilvl;     % Tangeant parameters
 
             while (X2_a-chilvl>err & X2_b-chilvl>err & s>min_sin2T4 & s<=1)  % Newton loop
                 % Gradient computation
-                s = -beta/grad;
+                s    = -beta/grad;
                 X2_a = fit_chi(m,s,R,eVrange)
-
-                s = s-p;
-                X2_b = fit_chi(m,s,R,eVrange)
+                
+                if X2_a>5*X2_b              % Security
+                    X2_a=0;
+                end
+                
+                s2   = s-p;
+                X2_b = fit_chi(m,s2,R,eVrange)
 
                 % Tangeant parameters
                 grad = (X2_a-X2_b)/p;
-                beta = X2_b-grad*s -chilvl;     
+                beta = X2_a-grad*s -chilvl;     
             end
 
             % Actualising plot variables
@@ -111,25 +141,42 @@ for m = m4
                 chi_Z   = [chi_Z,X2_a];
             end
         end
+    else
+        diary 'progress.txt'
+        fprintf('\n\tOut of bonds\n')
+        diary off
     end
     
-    % Progress
+    % Progress bar
     c=c+1;
-    progress=100*c/length(m4)
+    %progressbar(c/length(m4))
+    progress=100*c/length(m4);
+    %waitbar(progress,probar,string(progress*100))
+    
     diary 'progress.txt'
-    progress=100*c/length(m4)
+    Progress = 100*c/length(m4)
     diary off
 end
 
 t=toc;
-'SCANNING OVER'
-t/3600
+diary 'progress.txt'
+fprintf('SCANNING OVER\n\n')
+fprintf('Time spent : %.1f hours\n',t/3600)
+diary off
 
 %% Datasave
+diary 'progress.txt'
+fprintf('Saving file ...\n')
+diary off
+
 filepath   = [getenv('SamakPath'),'ksn1ana/contour/'];
 file       = [filepath,savename];
 MakeDir(filepath)
 %file_sith4 = '/home/iwsatlas1/guennic/Desktop/Samak2.0/ksn1ana/contour/coord_0to4_dV_90eV_Final';
 save(file,'sith4_X','m4_Y','chi_Z');
 
-'FINISHED'
+
+diary 'progress.txt'
+fprintf('==== FINISHED ====')
+diary off
+

@@ -39,6 +39,7 @@ p.addParameter('ISXsection',D.ISXsection,@(x)isfloat(x));
 %MACE
 p.addParameter('MACE_Bmax_T',D.MACE_Bmax_T,@(x)isfloat(x) & x>0);
 p.addParameter('MACE_Ba_T',D.MACE_Ba_T,@(x)isfloat(x) & x>0);
+p.addParameter('MACE_Sigma',0,@(x)all(isfloat(x)));                                                  % response function broadening
 p.addParameter('KTFFlag','WGTSMACE',@(x)ismember(x,{'OFF','MACE','WGTSMACE'}));                      % WGTSMACE== normal response function
 p.addParameter('recomputeRF','OFF',@(x)ismember(x,{'ON','OFF'}));                                    % if ON: complete RF calculated from scratch
 p.addParameter('UseParallelRF','ON',@(x)ismember(x,{'OFF','ON'}));                                   % calculate response function in parallel
@@ -119,7 +120,7 @@ recomputeRF              = p.Results.recomputeRF;
 UseParallelRF            = p.Results.UseParallelRF;
 MACE_Bmax_T              = p.Results.MACE_Bmax_T;
 MACE_Ba_T                = p.Results.MACE_Ba_T; 
-
+MACE_Sigma               = p.Results.MACE_Sigma;
 % ---------------------------------------------------------------------- %
 % Create Tritium spectrum object 
 opt_calc = {...
@@ -160,7 +161,8 @@ opt_wgts = {...
 opt_mace = {...
     'MACE_Bmax_T',MACE_Bmax_T,...
     'MACE_Ba_T',MACE_Ba_T,...
-    'MACE_Ba_Setting','Data'}; %do not use pixelmap correction from txt file, use values from runsummary
+    'MACE_Ba_Setting','Data',... %do not use pixelmap correction from txt file, use values from runsummary
+    'MACE_Sigma',MACE_Sigma};
 
 opt_wgtsmace = {...
     'KTFFlag',KTFFlag};

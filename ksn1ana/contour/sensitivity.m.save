@@ -1,19 +1,19 @@
 %% KATRIN Sterile Neutrino sensitivity - KSN1
 %  Nathan Le Guennic - 2020
 
-tic;
+% tic;
 %% Settings
 % Parameters
 
 CL           = 90;                  % Confidence level 90% - 95% - 99%
 datatype     = 'Real';  % Real
-uncertainty  = 'syst';  % syst
+uncertainty  = 'stat';  % syst
 
-d            = 20;                  % Number of dots per decade
-eVrange      = 90;                  % eV below the endpoint
+d            = 50;                  % Number of dots per decade
+eVrange      = 40;                  % eV below the endpoint
 
 % Name for the datafile
-savename     = sprintf('coord_%1$deV_%2$s_%3$s_99.mat',eVrange,datatype,uncertainty);
+savename     = sprintf('coord_%1$deV_%2$s_%3$s_d%4$d.mat',eVrange,datatype,uncertainty,d);
 
 % Scan settings
 start_decade = -1;
@@ -62,7 +62,7 @@ end
 switch datatype
     case 'Real'
         sibille = 'SibilleFull';
-        chilvl  = chilvl;
+        chilvl  = chilvl+22.7;      % Delta chi2
     case 'Twin'
         sibille = 'Sibille0p5eV';
 end
@@ -78,11 +78,7 @@ R = MultiRunAnalysis('RunList','KNM1',...
             'FSDFlag',sibille,...
             'ELossFlag','KatrinT2',...
             'SysBudget',22);
-
-%% Delta-X2
-X0     = fit_chi(0,0,R,eVrange);
-chilvl = chilvl + X0;
-
+        
 %% Loop
 % Initialisation
 %progressbar()
@@ -95,12 +91,13 @@ diary off
 
 % Scanning
 for m = m4
+    a=tic;
     % Initializing Newton
     s=1;
     X2_a = fit_chi(m,s,R,eVrange);
     
     diary 'progress.txt'
-    fprintf('\nSterile mass : %.3f eV2',m)
+    fprintf('\nSterile mass : %.3f',m)
     diary off
     
     if (X2_a>chilvl+err)
@@ -133,11 +130,7 @@ for m = m4
                 % Gradient computation
                 s    = -beta/grad;
                 X2_a = fit_chi(m,s,R,eVrange)
-                
-                if X2_a>5*X2_b              % Security
-                    X2_a=0;
-                end
-                
+
                 s2   = s-p;
                 X2_b = fit_chi(m,s2,R,eVrange)
 
@@ -167,10 +160,11 @@ for m = m4
     
     diary 'progress.txt'
     Progress = 100*c/length(m4)
+    b=toc
     diary off
 end
 
-t=toc;
+% t=toc;
 diary 'progress.txt'
 fprintf('SCANNING OVER\n\n')
 fprintf('Time spent : %.1f hours\n',t/3600)
