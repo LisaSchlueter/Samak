@@ -72,6 +72,7 @@ classdef RunAnalysis < handle
 
         % Plot Option
         PlotColor;      % Color of Plots, different for Twins & Data
+        PlotColorLight; % Color of Plots, different for Twins & Data
         ErrorBarScaling;% Scaling of Error Bars for Plots only 
         
         % rhoD scan
@@ -124,9 +125,9 @@ classdef RunAnalysis < handle
             p.addParameter('ELossFlag','',@(x)ismember(x,{'Aseev','Abdurashitov','CW_GLT','CW_G2LT','KatrinD2','KatrinT2'}));%default given later
             p.addParameter('FSDFlag','Sibille0p5eV',@(x)ismember(x,{'SAENZ','BlindingKNM1','Sibille','Sibille0p5eV','OFF','SibilleFull','BlindingKNM2'}));
             p.addParameter('DopplerEffectFlag','',@(x)ismember(x,{'OFF','FSD','FSD_Knm1'}));%default given later
-            p.addParameter('ROIFlag','Default',@(x)ismember(x,{'Default','14keV'})); % default->default counts in RS, 14kev->[14,32]keV ROI
+            p.addParameter('ROIFlag','14keV',@(x)ismember(x,{'Default','14keV'})); % default->default counts in RS, 14kev->[14,32]keV ROI
             p.addParameter('MosCorrFlag','OFF',@(x)ismember(x,{'ON','OFF'}));
-            p.addParameter('KTFFlag','WGTSMACE',@(x)ismember(x,{'WGTSMACE','MACE'}));
+            p.addParameter('KTFFlag','WGTSMACE',@(x)ismember(x,{'WGTSMACE','MACE','WGTSMACE_NIS1'}));
             
             % Fit Options
             p.addParameter('chi2','chi2Stat',@(x)ismember(x,{'chi2Stat', 'chi2CM', 'chi2CMFrac','chi2CMShape', 'chi2P','chi2Nfix'}));
@@ -378,8 +379,12 @@ classdef RunAnalysis < handle
                 obj.RunData.TBDIS_RM_Default = obj.RunData.TBDIS_RM;
             end
             obj.RunData.RunName          = num2str(obj.RunNr);
-           
-            obj.RunData.StartTimeStamp = datetime(obj.RunData.StartTimeStamp, 'ConvertFrom', 'posixtime' );
+
+            try 
+                obj.RunData.StartTimeStamp = datetime(obj.RunData.StartTimeStamp, 'ConvertFrom', 'posixtime' );
+            catch
+            end
+
             obj.SetMosCorr;
             fprintf(2,'RunAnalysis:ReadData: Reading Tritium Data from File:\n')
             disp(obj.RunData);
@@ -673,8 +678,15 @@ classdef RunAnalysis < handle
             
             [TTFSD,DTFSD,HTFSD] = obj.SetDefaultFSD;
             
+            if strcmp(obj.KTFFlag,'WGTSMACE_NIS1')
+                obj.KTFFlag = 'WGTSMACE';
+                NIS = 1;
+            else
+                NIS = 7;
+            end
+            
             TBDarg  = {obj.RunData,...
-                'ISCS','Theory',...
+                'ISCS','Edep',...
                 'recomputeRF','OFF',...
                 'ELossFlag',obj.ELossFlag,...
                 'PixList',obj.PixList,...
@@ -685,7 +697,8 @@ classdef RunAnalysis < handle
                 'DopplerEffectFlag',obj.DopplerEffectFlag,...
                 'RadiativeFlag','ON',...
                 'RingMerge',obj.RingMerge...
-                'KTFFlag',obj.KTFFlag};
+                'KTFFlag',obj.KTFFlag,...
+                'NIS',NIS};
             
             if ~isempty(qU)
                 TBDarg = {TBDarg{:},'qU',qU};
@@ -1004,10 +1017,12 @@ classdef RunAnalysis < handle
             p.addParameter('ISXsection_RelErr',SysErr.ISXsection_RelErr,@(x)isfloat(x) && x>=0);
             p.addParameter('FPDeff_RelErr',SysErr.FPDeff_RelErr,@(x)isfloat(x) && x>=0); 
             p.addParameter('PlotSaveCM','OFF',@(x)ismember(x,{'ON','OFF'})); %plot individual covmats and saves plot
-            p.addParameter('MaxSlopeCpsPereV',15*1e-06,@(x)isfloat(x));
+            p.addParameter('MaxSlopeCpsPereV',SysErr.MaxSlopeCpsPereV,@(x)isfloat(x));
             p.addParameter('BkgRange',-5,@(x)isfloat(x));
             p.addParameter('RW_SigmaErr',0.1,@(x)isfloat(x) );
             p.addParameter('RW_MultiPosErr',0,@(x)isfloat(x));
+            p.addParameter('MACE_SigmaErr',SysErr.MACE_SigmaErr,@(x)isfloat(x));
+            p.addParameter('is_EOffsetErr',SysErr.is_EOffsetErr,@(x)isfloat(x));
             
             p.parse(varargin{:});
             
@@ -1035,6 +1050,8 @@ classdef RunAnalysis < handle
             BkgRange                 = p.Results.BkgRange;
             RW_SigmaErr              = p.Results.RW_SigmaErr;
             RW_MultiPosErr           = p.Results.RW_MultiPosErr;
+            MACE_SigmaErr            = p.Results.MACE_SigmaErr; %longitudinal plasma
+            is_EOffsetErr            = p.Results.is_EOffsetErr; %longitudinal plasma
             % --------------------- END PARSER ---------------------------------%
             
             % --------------------  Initialize Covariance Matrix----------------------------%
@@ -1050,6 +1067,12 @@ classdef RunAnalysis < handle
             obj.FitCMShape  = [];
             obj.FitCMNorm   = [];
             
+            %Initialize Normalization and Background with a stat. Fit
+            if strcmp(InitNormFit,'ON')
+                % 40 eV range, stat only, free parameters: E0, Bkg, Norm
+                obj.InitModelObj_Norm_BKG('RecomputeFlag','OFF');
+            end
+            
             obj.FitCM_Obj = CovarianceMatrix('StudyObject',obj.ModelObj, 'nTrials',nTrials,...
                 'SysEffect',SysEffects,'RecomputeFlag',RecomputeFlag,'SanityPlots','OFF',...
                 'WGTS_CD_MolPerCm2_RelErr',WGTS_CD_MolPerCm2_RelErr,...
@@ -1064,7 +1087,9 @@ classdef RunAnalysis < handle
                 'Stack_qUfracRelErr',Stack_qUfracRelErr,'Stack_qUErr',Stack_qUErr,...
                 'RW_SigmaErr',RW_SigmaErr,...
                 'RW_MultiPosErr',RW_MultiPosErr,...
-                'NonPoissonScaleFactor',obj.NonPoissonScaleFactor);
+                'NonPoissonScaleFactor',obj.NonPoissonScaleFactor,...
+                'MACE_SigmaErr',MACE_SigmaErr,...
+                'is_EOffsetErr',is_EOffsetErr);
             
             if strcmp(DataDriven,'ON')
                 obj.Get_DataDriven_RelErr_TASR; % replaces default values with Data Driven values
@@ -1161,7 +1186,7 @@ classdef RunAnalysis < handle
                             0.5 * obj.SingleRunData.WGTS_MolFrac_HT_SubRun(:,obj.SingleRunData.Select_all)   + ...
                             0.5 * obj.SingleRunData.WGTS_MolFrac_DT_SubRun(:,obj.SingleRunData.Select_all)) .* ...
                             obj.SingleRunData.WGTS_CD_MolPerCm2_SubRun(:,obj.SingleRunData.Select_all)      .* ...
-                            obj.ModelObj.ISXsection*1e4;
+                            obj.ModelObj.ISXsection(obj.ModelObj.Q_i)*1e4;
                         SubRunActivity(SubRunActivity==0) = NaN;
                         
                         % renormalize to mean activity: relative error!
@@ -1266,7 +1291,7 @@ classdef RunAnalysis < handle
         end
         function  defaultEffects = GetDefaultEffects(obj)
             switch obj.DataSet
-                case {'Knm1','Knm2'}
+                case 'Knm1'
                     defaultEffects = struct(...
                         'RF_EL','ON',...   % Response Function(RF) EnergyLoss
                         'RF_BF','ON',...   % RF B-Fields
@@ -1278,6 +1303,19 @@ classdef RunAnalysis < handle
                         'DOPoff','OFF',...
                         'Stack','ON',...
                         'FPDeff','ON');
+                case 'Knm2'
+                     defaultEffects = struct(...
+                        'RF_EL','ON',...   % Response Function(RF) EnergyLoss
+                        'RF_BF','ON',...   % RF B-Fields
+                        'RF_RX','ON',...   % Column Density, inel cross ection
+                        'FSD','ON',...
+                        'TASR','ON',...
+                        'TCoff_RAD','OFF',...
+                        'TCoff_OTHER','ON',...
+                        'DOPoff','OFF',...
+                        'Stack','ON',...
+                        'FPDeff','ON',...
+                        'LongPlasma','ON');
                 case 'FirstTritium.katrin'
                     defaultEffects = struct(...
                         'RF_EL','ON',...   % Response Function(RF) EnergyLoss
@@ -1305,8 +1343,15 @@ classdef RunAnalysis < handle
             savedir  = [getenv('SamakPath'),sprintf('tritium-data/fit/%s/InitFit/',obj.DataSet)];
             MakeDir(savedir);
             fixPar_init = 'E0 Norm Bkg';
-            savename = [savedir,sprintf('FitResult_InitModelObj_%s_%s_%s_%.0fpixels.mat',...
-                strrep(fixPar_init,' ',''),obj.RunData.RunName,obj.DataType,numel(obj.PixList))];
+            
+            if strcmp(obj.DataSet,'Knm2') && strcmp(obj.ROIFlag,'14keV')
+                RoiStr = '_14keV';
+            else
+                RoiStr = '';
+            end
+            
+            savename = [savedir,sprintf('FitResult_InitModelObj_%s_%s_%s_%.0fpixels%s.mat',...
+                strrep(fixPar_init,' ',''),obj.RunData.RunName,obj.DataType,numel(obj.PixList),RoiStr)];
             if strcmp(obj.AnaFlag,'Ring')
                 savename = strrep(savename,'.mat',sprintf('Ring%s.mat',obj.RingMerge));
             end
@@ -1476,7 +1521,7 @@ classdef RunAnalysis < handle
                 switch obj.AnaFlag
                     case 'StackPixel'
                         savedir = [getenv('SamakPath'),'tritium-data/fit/',obj.DataSet,'/Uniform/'];
-                    case 'RING'
+                    case 'Ring'
                         savedir = [getenv('SamakPath'),'tritium-data/fit/',obj.DataSet,'/MultiRing/'];
                 end
                 MakeDir(savedir);
@@ -1768,13 +1813,16 @@ classdef RunAnalysis < handle
             % Real / Twin Color Flag
             if strcmp(obj.DataSet,'FirstTritium.katrin')
                 obj.PlotColor = rgb('CadetBlue');
+                obj.PlotColorLight = rgb('PowderBlue');
             else
                 switch obj.DataType
                     case 'Real'
                         % obj.PlotColor = rgb('SteelBlue');
                         obj.PlotColor = rgb('DodgerBlue');
+                        obj.PlotColorLight = rgb('PowderBlue');
                     case {'Twin','FitriumTwin','KafitTwin'}
-                        obj.PlotColor = rgb('FireBrick');
+                        obj.PlotColor = [0.8,0,0];%rgb('Crimson');
+                        obj.PlotColorLight =  rgb('LightCoral');
                     case 'Fake'
                         obj.PlotColor = rgb('ForestGreen');
                 end
@@ -2009,7 +2057,7 @@ classdef RunAnalysis < handle
                      if strcmp(obj.chi2,'chi2Stat')
                          [lstat , pstat]  = boundedline(DataStat(:,1),DataStat(:,2),DataStat(:,3));
                          lstat.LineStyle= '--'; lstat.Color = rgb('DarkSlateGray'); lstat.LineWidth=LocalLineWidth;
-                         pstat.FaceColor = obj.PlotColor;
+                         pstat.FaceColor = obj.PlotColorLight;
                          
                      elseif ~strcmp(obj.chi2,'chi2Stat') && numel(hdata)==1
                          DataSys = [qU,zeros(numel(qU),1), ones(numel(qU),1)];
@@ -2018,11 +2066,6 @@ classdef RunAnalysis < handle
                          lsys = l(1);  lstat = l(2);
                          psys = p(1);  pstat = p(2);
                          if strcmp(Colors,'RGB')
-                             if strcmp(obj.DataType,'Real')
-                                 pstat.FaceColor = rgb('PowderBlue');%obj.PlotColor;%pstat.FaceAlpha=0.6;
-                             else
-                                 pstat.FaceColor = rgb('LightSalmon');
-                             end
                              psys.FaceColor =obj.PlotColor; %psys.FaceAlpha=0.3;
                              lstat.Color = rgb('Silver');
                          else
@@ -3417,7 +3460,7 @@ classdef RunAnalysis < handle
                     case 'Knm1'
                         obj.DopplerEffectFlag = 'OFF'; %always included by 'FSD_Doppler'
                     case 'Knm2'
-                        obj.DopplerEffectFlag = 'OFF';%'FSD'
+                        obj.DopplerEffectFlag = 'FSD';
                     case 'FirstTritium.katrin'
                         obj.DopplerEffectFlag = 'OFF';
                 end
@@ -3538,7 +3581,7 @@ classdef RunAnalysis < handle
         function SetMosCorr(obj)
             % correct qU for long term drift -> input from monitor spectrometer
             % cannot be reset -> if you want to change back to no correction
-            % -> re-run data import before: ReadData or ReadSingleRunData
+            % -> re-run data import before: ReadData or Data
             
             if strcmp(obj.MosCorrFlag,'OFF')
                 % no correction
@@ -3692,32 +3735,34 @@ classdef RunAnalysis < handle
                     linFit(obj.RingList',y',yErr');
                 hold on;
                 plot(obj.RingList,linFitpar(1).*obj.RingList+linFitpar(2),'-','Color',e1.Color,'LineWidth',e1.LineWidth);
-                title(sprintf('Linear fit slope: %.1f \\pm %.1f meV/ring @ \\chi2 = %.1f (%.0f dof)',...
+                t = title(sprintf('Linear fit slope: %.1f \\pm %.1f meV/ring @ \\chi2 = %.1g (%.0f dof)',...
                     linFitpar(1)*1e3,linFiterr(1)*1e3,linFitchi2min,linFitdof));
+                t.FontWeight = 'normal';
             end
             
             %legend
-          
                 d=obj.GetPlotDescription('data');
                   if strcmp(Blind,'OFF')
                       resultsleg = d.fitleg;
                   else
                       resultsleg = '';  
                   end
-                leg = legend(e1,[sprintf('  \\chi^2 = %.1f (%.0f dof) \n',...
+                leg = legend(e1,[sprintf(' \\chi^2 = %.1g (%.0f dof) \n',...
                     obj.FitResult.chi2min,obj.FitResult.dof),resultsleg]);
                 leg.Title.String = sprintf('%s Multi-ring fit (%s)',upper(obj.DataSet),d.chi2);
                 leg.Location = legPos;
                 leg.FontSize = get(gca,'FontSize');
-                legend boxoff;
-          
+                leg.Title.FontWeight = 'normal';
+                leg.EdgeColor = rgb('Silver');
+                leg.Location = 'northwest';
             
             if strcmp(savePlot,'ON')
                 %grid on
                 plotdir = [getenv('SamakPath'),sprintf('tritium-data/plots/%s/MultiRingFit/',obj.DataSet)];
                 MakeDir(plotdir);
-                plotname = [plotdir,sprintf('MultiRing%s_%s_%s_fixPar%s_%s.pdf',...
-                    obj.RingMerge,obj.RunData.RunName,obj.chi2,strrep(strrep(obj.fixPar,'fix ',''),' ;',''),PlotPar)];
+                 freePar = ConvertFixPar('freePar',obj.fixPar,'nPar',obj.nPar,'nPixels',numel(obj.RunData.MACE_Ba_T),'Mode','Reverse');
+                plotname = [plotdir,sprintf('MultiRing%s_%s_%s_freePar%s_%s.pdf',...
+                    obj.RingMerge,obj.RunData.RunName,obj.chi2,freePar,PlotPar)];
                 export_fig(fig1,plotname,'-painters');
                 fprintf('Plot saved to %s \n',plotname)
             end

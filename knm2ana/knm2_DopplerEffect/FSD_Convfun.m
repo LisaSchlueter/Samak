@@ -21,6 +21,8 @@ p.addParameter('MultiWeights','',@(x) isfloat(x) || isempty(x)); %3 gaussians in
 p.addParameter('Dist','Gauss',@(x)ismember(x,{'Gauss','Rect'}));
 p.addParameter('BinningFactor',1,@(x) isfloat(x) || isempty(x)); % multiplies number of bins in rebinning
 p.addParameter('RebinMode','Integral',@(x)ismember(x,{'Fast','Integral'})); % rebinning method. warning: 'fast' does not work welll for small sigma
+p.addParameter('RecomputeFlag','OFF',@(x)ismember(x,{'ON','OFF'}));
+p.addParameter('filename','',@(x)ischar(x));
 
 p.parse(varargin{:});
 
@@ -31,6 +33,28 @@ MultiWeights       = p.Results.MultiWeights;
 BinningFactor      = p.Results.BinningFactor;
 Dist               = p.Results.Dist;
 RebinMode          = p.Results.RebinMode;
+RecomputeFlag      = p.Results.RecomputeFlag;
+filename           = p.Results.filename;
+
+savedir = [getenv('SamakPath'),'inputs/FSD/FSDconv/'];
+savefile = strrep(strrep(extractAfter(filename,'inputs/FSD/'),'.txt',''),'.dat','');
+
+if numel(sigma)==1
+    savename = sprintf('%s%s_%s_Sigma%.0fmeV_Binning%.0f.mat',...
+        savedir,savefile,Dist,sigma*1e3,BinningFactor);
+elseif numel(sigma)==3
+    savename = sprintf('%s%s_%s_MultiSigma%.0fmeV_%.0fmeV_%.0fmeV_Binning%.0f.mat',...
+        savedir,savefile,Dist,sigma(1)*1e3,sigma(2)*1e3,sigma(3)*1e3,BinningFactor);
+else
+     savename = sprintf('%s%s_%s_MultiSigmaMean%.0fmeV_Binning%.0f.mat',...
+                    savedir,savefile,Dist,mean(sigma)*1e3,BinningFactor);
+end
+
+if exist(savename,'file') && strcmp(RecomputeFlag,'OFF')
+    load(savename);
+else
+
+sigma(sigma<1e-2) = 1e-2; % otherwise num. integration problems 
 
 % replacement distribution
 if strcmp(Dist,'Gauss')
@@ -38,8 +62,9 @@ if strcmp(Dist,'Gauss')
     distfun = @(x,mu,sigma) 1/(sigma*sqrt(2*pi))*exp(-0.5*(x-mu).^2./sigma.^2);
 elseif strcmp(Dist,'Rect')
     % rectangle function: replace every final state with a linear distribution with a
-    distfun = @(x,mu,sigma)  0+...%((x <  mu-sigma/2)  & (x >  mu+sigma/2)).*0 + ...   % zero for this condition
-        ((x >= mu-sigma/2)  & (x <= mu+sigma/2)).*1/sigma;
+    distfun = @(x,mu,sigma)  0+ ...
+        1./sigma*((x >= mu-sigma/2) & (x <= mu+sigma/2));
+        
 end
 
 nRings = ceil(numel(sigma)/3);% number of pseudo rings
@@ -54,9 +79,9 @@ for r=1:nRings
             MultiWeights(2).*exP'.*distfun(x,exE'-MultiPos(2),sigma(2))+...
             MultiWeights(3).*exP'.*distfun(x,exE'-MultiPos(3),sigma(3)));
     elseif size(MultiPos,1)==3
-        exP_SinglePeak = @(x) ( MultiWeights(1,r).*exP'.*distfun(x,exE'-MultiPos(1,r),sigma(1,r))+...
-            MultiWeights(2,r).*exP'.*distfun(x,exE'-MultiPos(2,r),sigma(2,r))+...
-            MultiWeights(3,r).*exP'.*distfun(x,exE'-MultiPos(3,r),sigma(3,r)));
+        exP_SinglePeak = @(x) ( MultiWeights(1).*exP'.*distfun(x,exE'-MultiPos(1,r),sigma(1,r))+...
+            MultiWeights(2).*exP'.*distfun(x,exE'-MultiPos(2,r),sigma(2,r))+...
+            MultiWeights(3).*exP'.*distfun(x,exE'-MultiPos(3,r),sigma(3,r)));
     else
         fprintf('MultiGauss only available for 3 gaussians \n');
     end
@@ -86,11 +111,16 @@ for r=1:nRings
                 end
             end
             %% rebinning step 2.1 probabilities: integrate gaussians
-            exP_rebin{r} = arrayfun(@(a,b) integral(exP_SumPeak,a,b),Elow,Eup);
-            
+            %WayPoints = min(Elow):min(sigma):max(Emax);
+            WayPoints = min(Elow(~isinf(Elow))):min(sigma):max(Eup(~isinf(Eup)));
+            if strcmp(Dist,'Rect')
+                exP_rebin{r} = arrayfun(@(a,b) integral(exP_SumPeak,a,b,'AbsTol',1e-9,'WayPoints',WayPoints),Elow,Eup);
+            else
+                exP_rebin{r} = arrayfun(@(a,b) integral(exP_SumPeak,a,b,'AbsTol',1e-9),Elow,Eup);
+            end
             %% rebinning step 2.2 energies: weighted mean of integration boundaries
             Weightfun = @(x) exP_SumPeak(x).*x;                                                       % weighted integral
-            exE_rebin{r} = arrayfun(@(a,b) integral(Weightfun,a,b)./integral(exP_SumPeak,a,b),Elow,Eup); % weighted average
+            exE_rebin{r} = arrayfun(@(a,b) integral(Weightfun,a,b)./integral(exP_SumPeak,a,b,'AbsTol',1e-9),Elow,Eup); % weighted average
             %exE_rebin = mean([Elow';Eup'])'; % unweighted average -> replaced by weighted average
             %exE_rebin(end) = exE_rebin(end-1)+10;
                                                                    % exclude entries with zero probability
@@ -110,19 +140,31 @@ end
 % keep only entries with non-zero probability (common number of bins)
 exP_rebin = cell2mat(exP_rebin');
 exE_rebin = cell2mat(exE_rebin');
-RmIndex   = exP_rebin==0;  
+RmIndex   = exP_rebin==0;
 keepIndex = ~prod(RmIndex,2);
 exP_broadened = exP_rebin(keepIndex,:)';
 exE_broadened = exE_rebin(keepIndex,:)';
 exE_broadened(isnan(exE_broadened(:,end)),end) = mean(exE_broadened(~isnan(exE_broadened(:,end)),end));
+
+MakeDir(savedir);
+save(savename,'exE_broadened','exP_broadened','exE','exP_SinglePeak','MultiPos','MultiWeights','BinningFactor','Dist','nRings');
+end
 %% plot
 if strcmp(SanityPlot,'ON')
+    if nRings>1
+        plotRing = 1; % plot for pseudo-ring number 1
+        exE_broadened_plot = exE_broadened(plotRing,:);
+        exP_broadened_plot = exP_broadened(plotRing,:);
+    else
+       exE_broadened_plot = exE_broadened;
+        exP_broadened_plot = exP_broadened; 
+    end
     f1 = figure('Units','normalized','Position',[0.1,0.1,0.5,0.5]);
     exE_plot = linspace(min(exE),max(exE),5000);
     pSingleGaus = plot(exE_plot,exP_SinglePeak(exE_plot),'-.','LineWidth',1.5,'Color',rgb('Silver'));
     hold on;
     pFSD = plot(exE,exP,'-','LineWidth',2,'Color',rgb('DodgerBlue'));
-    pGaus_rebin = plot(exE_broadened,exP_broadened,'-','LineWidth',pFSD.LineWidth,'Color',rgb('Orange'));
+    pGaus_rebin = plot(exE_broadened_plot,exP_broadened_plot,'-','LineWidth',pFSD.LineWidth,'Color',rgb('Orange'));
     hold off;
     switch Dist
         case 'Gauss'
@@ -141,10 +183,10 @@ if strcmp(SanityPlot,'ON')
     MakeDir(savedir);
  
     if ~isempty(MultiPos)
-        savename = sprintf('%sFSD_%.3gSigma_Multi%s.pdf',savedir,sigma,Dist);
+        savename = sprintf('%sFSD_%.3gMeanSigma_Multi%s.pdf',savedir,mean(sigma),Dist);
         export_fig(f1,savename);
     else
-        savename = sprintf('%sFSD_%.3gSigma_Single%s.pdf',savedir,igma,Dist);
+        savename = sprintf('%sFSD_%.3gSigma_Single%s.pdf',savedir,sigma,Dist);
         export_fig(f1,savename);
     end
     

@@ -7,7 +7,7 @@
 % Last Modified: 26/02/2020
 % T. Lasserre
 %
-
+QAplots = 'OFF';
 % Loop on Period
 for j=1:3
     
@@ -23,11 +23,18 @@ for j=1:3
     MR.exclDataStart = MR.GetexclDataStart(range); % find correct data, where to cut spectrum
     A         = RingAnalysis('RunAnaObj',MR,'RingList',1:4);
     R         = A.MultiObj(1);
-    
+    R.ROIFlag='14keV'; R.SetROI;
+
     % Slow Control Data
     p1 = (R.SingleRunData.WGTS_MolFrac_TT'+0.5*R.SingleRunData.WGTS_MolFrac_HT'+0.5*R.SingleRunData.WGTS_MolFrac_DT')./mean((R.SingleRunData.WGTS_MolFrac_TT'+0.5*R.SingleRunData.WGTS_MolFrac_HT'+0.5*R.SingleRunData.WGTS_MolFrac_DT')).*R.SingleRunData.WGTS_CD_MolPerCm2'./mean(R.SingleRunData.WGTS_CD_MolPerCm2');
     p2 = mean(R.SingleRunData.qU_RM,1); p2=p2-mean(p2);
+    
+    %% HV Drift Correction
+    FirstDayPeriod1 = datetime('02-Oct-2019 14:52:19');
+    TimeLineDaysFirstDayPeriod1 = days(MR.SingleRunData.StartTimeStamp-FirstDayPeriod1);
+    HVdriftPerPixel = 1.5*(TimeLineDaysFirstDayPeriod1) * 6.3e-3;
 
+    
     %% Stacked Pixel Data for each patch
     count = zeros(A.nRings,numel(A.RunAnaObj.RunList));
     rate  = zeros(A.nRings,numel(A.RunAnaObj.RunList));
@@ -35,13 +42,27 @@ for j=1:3
     sstime    = zeros(A.nRings,numel(A.RunAnaObj.RunList));
     cf    = zeros(A.nRings,numel(A.RunAnaObj.RunList));
     for i=1:A.nRings
-         R           = A.MultiObj(i);
-         R.RMCorrection;
-         R.PlotFitRunListCorr('Parameterx','time','Parametery','rate300','Fit','ON','Detrend','ON');
-         count(i,:)  = R.SingleRunData.TBDIS_RM;
-         sstime(i,:) = mean(R.SingleRunData.qUfrac_RM,1).*R.SingleRunData.TimeSec;
-         rate(i,:)   = count(i,:)./sstime(i,:);
-         corrcount_norm{j,i} = rate(i,:) .* mean(sstime(i,:));
+%<<<<<<< HEAD
+        R           = A.MultiObj(i);
+        R.ROIFlag='14keV'; R.SetROI;
+        count(i,:)  = R.SingleRunData.TBDIS_RM;
+        sstime(i,:) = mean(R.SingleRunData.qUfrac_RM,1).*R.SingleRunData.TimeSec;
+        rate(i,:)   = count(i,:)./sstime(i,:) + HVdriftPerPixel.*numel(R.PixList);
+        rateE(i,:)  = sqrt(count(i,:))./sstime(i,:);
+        cf(i,:)     = R.RMRateErosCorrectionqUActivity;
+        rateEquivalentmV_E{j,i}   =  (rateE(i,:) ./737.8 *1e3 * 117 / numel(R.PixList));
+       
+        count_norm{j,i}     = rate(i,:) .* mean(sstime(i,:));
+        corrcount_norm{j,i} = count_norm{j,i}  .* cf(i,:) ;
+% =======
+%          R           = A.MultiObj(i);
+%          R.RMCorrection('QAplots',QAplots);
+%          R.PlotFitRunListCorr('Parameterx','time','Parametery','rate300','Fit','ON','Detrend','ON');
+%          count(i,:)  = R.SingleRunData.TBDIS_RM;
+%          sstime(i,:) = mean(R.SingleRunData.qUfrac_RM,1).*R.SingleRunData.TimeSec;
+%          rate(i,:)   = count(i,:)./sstime(i,:);
+%          corrcount_norm{j,i} = rate(i,:) .* mean(sstime(i,:));
+% >>>>>>> 2627fa0e634b33dc06910b22642eafbeb209ddce
     end
     
     

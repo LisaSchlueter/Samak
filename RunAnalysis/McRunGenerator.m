@@ -78,7 +78,7 @@ classdef McRunGenerator < handle
                 TwinQ = FitE0;
             elseif numel(obj.RunObj.TwinBias_Q)==1
                 TwinQ = repmat(obj.RunObj.TwinBias_Q,[numel(RunListAll),1]);
-            elseif numel(obj.RunObj.TwinBias_Q)==numel(RunListAll)
+            elseif numel(obj.RunObj.TwinBias_Q)==numel(RunListAll) 
                 TwinQ = obj.RunObj.TwinBias_Q;
             else
                 fprintf('Invalid TwinBias_Q \n')
@@ -115,7 +115,15 @@ classdef McRunGenerator < handle
                RunData_real.matFilePath = obj.RealData.matFilePath;
                RunData_real.RunName      = num2str(RunListAll(i));
                
-               TBDarg = {'ISCS','Theory',...
+               if strcmp(obj.RunObj.KTFFlag,'WGTSMACE_NIS1')
+                   KTFFlag = 'WGTSMACE';
+                   NIS = 1;
+               else
+                   KTFFlag =obj.RunObj.KTFFlag;
+                   NIS = 7;
+               end
+            
+               TBDarg = {'ISCS',obj.RunObj.ModelObj.ISCS,...
                     'recomputeRF','OFF',...
                     'RadiativeFlag','ON',...
                     'ELossFlag',obj.RunObj.ELossFlag,...
@@ -141,7 +149,8 @@ classdef McRunGenerator < handle
                     'HTFSD',HTFSD,...
                     'TTFSD',TTFSD,...
                     'Q_i',TwinQ(i),...
-                    'KTFFlag',obj.RunObj.KTFFlag};
+                    'KTFFlag',KTFFlag,...
+                    'NIS',NIS};
 
                 switch obj.RunObj.AnaFlag
                     case 'StackPixel'

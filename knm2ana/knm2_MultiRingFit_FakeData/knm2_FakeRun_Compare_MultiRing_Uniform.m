@@ -14,7 +14,7 @@ elseif ismember(Effect,{'RadialmTSq','OFF'})
 end
 
 % labeling
-savedir= [getenv('SamakPath'),'knm2ana/knm2_MultiRingFit/results/'];
+savedir= [getenv('SamakPath'),'knm2ana/knm2_MultiRingFit_FakeData/results/'];
 MakeDir(savedir);
 savename = [savedir,sprintf('knm2_FakeRun_Compare_MultiRing_Uniform_%s.mat',Effect)];
 

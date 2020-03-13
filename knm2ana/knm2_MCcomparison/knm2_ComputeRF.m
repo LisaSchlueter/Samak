@@ -6,7 +6,7 @@ if strcmp( SynchrotronFlag,'OFF')
     savename = strrep(savename,'.mat','NoSynchrotron.mat');
 end
 
-T = ref_FakeRun_KNM2_RFcomparison('reComputeRF','ON','SynchrotronFlag',SynchrotronFlag);
+T = ref_FakeRun_KNM2_RFcomparison('reComputeRF','ON','SynchrotronFlag',SynchrotronFlag,'ISCS','Edep');
 
 Te           = T.Te;
 RF           = T.RF;

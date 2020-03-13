@@ -6,9 +6,9 @@ function A= knm2_FitRunList(varargin)
 p = inputParser;
 p.addParameter('RunList','KNM2_Prompt',@(x)ischar(x));
 p.addParameter('freePar','E0 Bkg Norm',@(x)ischar(x));
-p.addParameter('Range',90,@(x)isfloat(x));              % fit range in eV below E0
+p.addParameter('Range',40,@(x)isfloat(x));              % fit range in eV below E0
 p.addParameter('ROIFlag','14keV',@(x)ismember(x,{'Default','14keV'})); 
-p.addParameter('MosCorrFlag','ON',@(x)ismember(x,{'ON','OFF'}));  
+p.addParameter('MosCorrFlag','OFF',@(x)ismember(x,{'ON','OFF'}));  
 p.parse(varargin{:});
 RunList = p.Results.RunList;
 freePar = p.Results.freePar;

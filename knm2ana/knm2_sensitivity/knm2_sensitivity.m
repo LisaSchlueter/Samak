@@ -1,4 +1,4 @@
-% Calculte and/or plot systematics breakdown for KNM1
+% Calculte and/or plot systematics breakdown for KNM2
 
 range = 40;
 % go into directory, where results are stored
@@ -20,7 +20,7 @@ MC = MultiRunAnalysis(RunAnaArg{:},TwinOpt{:});
 MC.exclDataStart = MC.GetexclDataStart(range);
 %%
 S = RunSensitivity('RunAnaObj',MC);
-S.RecomputeFlag='OFF';
+S.RecomputeFlag='ON';
 S.LimitFlag = 'Central';
 S.ConfLevel=0; % 0 == 1 sigma
 
