@@ -8,6 +8,7 @@ system(['cd ',mypath]);
 startup;
 
 E0 = knm2FS_GetE0Twins('SanityPlot','OFF');
+
 RunAnaArg = {'RunList','KNM2_Prompt',... % all KNM2 golden runs
     'fixPar','mNu E0 Bkg Norm',...           % free Parameter !!
     'DataType','Twin',...              
@@ -19,13 +20,13 @@ RunAnaArg = {'RunList','KNM2_Prompt',... % all KNM2 golden runs
     'TwinBias_Q',E0,...
     'ROIFlag','14keV',...
     'SysBudget',32,...
-    'chi2','chi2CMShape'}; 
+    'chi2','chi2Stat'}; 
 
 MC = MultiRunAnalysis(RunAnaArg{:});
 MC.exclDataStart = MC.GetexclDataStart(range);
 %%
 S = RunSensitivity('RunAnaObj',MC);
-S.RecomputeFlag='ON';
+S.RecomputeFlag='OFF';
 S.LimitFlag = 'Central';
 S.ConfLevel=0; % 0 == 1 sigma
 

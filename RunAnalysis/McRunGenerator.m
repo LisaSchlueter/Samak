@@ -28,7 +28,6 @@ classdef McRunGenerator < handle
             p.addParameter('MCFlag','Twin',@(x)ismember(x,{'Twin','Fake'})); %later more features
             p.addParameter('RunObj','',@(x)isa(x,'RunAnalysis'));
             p.addParameter('InitFile','',@(x)isa(x,'function_handle'));
-            
             p.parse(varargin{:});
             
             obj.MCFlag    = p.Results.MCFlag;
@@ -122,7 +121,7 @@ classdef McRunGenerator < handle
                    KTFFlag =obj.RunObj.KTFFlag;
                    NIS = 7;
                end
-            
+
                TBDarg = {'ISCS',obj.RunObj.ModelObj.ISCS,...
                     'recomputeRF','OFF',...
                     'RadiativeFlag','ON',...
@@ -204,7 +203,7 @@ classdef McRunGenerator < handle
                         qU                    = repmat(obj.qU(:,i),[1,148]);
                         qUfrac                = repmat(obj.qUfrac(:,i),[1,148]);
                         TimeSec               = repmat(obj.TimeSec(i),[148,1]);%obj.RunData.TimeSec.*(obj.TwinBias_Time/obj.RunData.TimeSec);
-                       TimeperSubRunperPixel = qUfrac.*obj.TimeSec(i); 
+                        TimeperSubRunperPixel = qUfrac.*obj.TimeSec(i); 
                 end
                 
                 % copy real data file to twin
@@ -217,8 +216,8 @@ classdef McRunGenerator < handle
                     'WGTS_CD_MolPerCm2','WGTS_CD_MolPerCm2_SubRun',...
                     'WGTS_MolFrac_TT','WGTS_MolFrac_DT','WGTS_MolFrac_HT',...
                     'WGTS_MolFrac_DT_SubRun','WGTS_MolFrac_HT_SubRun','WGTS_MolFrac_TT_SubRun',...
-                     'qU','qUfrac',...
-                     '-append'); % do not overwrite entire file, only these variables 
+                    'qU','qUfrac',...
+                    '-append'); % do not overwrite entire file, only these variables 
             end
 
             obj.RunObj.chi2 = chi2_prev;  
@@ -395,7 +394,7 @@ classdef McRunGenerator < handle
             obj.WGTS_MolFrac_HT_SubRun   = obj.RealData.WGTS_MolFrac_HT_SubRun  .*obj.RunObj.TwinBias_WGTS_MolFrac_HT;
             obj.qU                       = obj.RealData.qU+obj.RunObj.TwinBias_qU;
             obj.qUfrac                   = obj.RealData.qUfrac+obj.RunObj.TwinBias_qUfrac;
-
+                                                        
             % bias time
             if ~isa(obj.RunObj,'MultiRunAnalysis') || strcmp(obj.RunObj.Twin_SameqUfracFlag,'OFF')
                 
@@ -409,7 +408,7 @@ classdef McRunGenerator < handle
                 
             elseif strcmp(obj.RunObj.Twin_SameqUfracFlag,'ON')
                 if isempty(obj.RunObj.TwinBias_Time)
-                    obj.TimeSec = repmat(mean(obj.RealData.TimeSec),size(obj.RealData.TimeSec));
+                    obj.TimeSec = repmat(mean(obj.RealData.TimeSec),size(obj.RealData.TimeSec)); % set to average time
                 elseif numel(obj.RunObj.TwinBias_Time)==1
                     obj.TimeSec =  repmat(obj.RunObj.TwinBias_Time,size(obj.RealData.TimeSec));
                 else
@@ -417,111 +416,161 @@ classdef McRunGenerator < handle
                     return
                 end
             end
-        end
+        end    
     end
 
     methods % fake methods
-%         function SetFakeBias(obj,varargin)
-%             % create first TwinRunObj to access the default parameters
-%             obj.TwinObj = cell(obj.nRuns,1);
-%             obj.TwinObj{1} = obj.InitFile();
-%             
-%             % vary input parameters according to relative error (RelErr) and distribution (VarDist)
-%             obj.qU                = obj.VaryParameter(obj.TwinObj{1}.qU,obj.qU_RelErr);
-%             obj.qUfrac            = obj.VaryParameter(obj.TwinObj{1}.qUfrac,obj.qUfrac_RelErr);
-%             obj.qUfrac            = obj.qUfrac./sum(obj.qUfrac); %renormalize to 1
+        function SetFakeBias(obj,varargin)
+            p=inputParser;
+            p.addParameter('qU_Err',obj.RunObj.TwinBias_qU,@(x)isfloat(x));
+            p.addParameter('qUfrac_RelErr',obj.RunObj.TwinBias_qUfrac,@(x)isfloat(x));
+            p.parse(varargin{:});
+            qU_Err     = p.Results.qU_Err;
+            qUfrac_RelErr = p.Results.qUfrac_RelErr;
+            
+            % create first TwinRunObj to access the default parameters
+            TmpObj = obj.InitFile();
+            
+            if ~isa(obj.RunObj,'MultiRunAnalysis')
+                nRuns = 1;
+            else
+                nRuns = obj.RunObj.nRuns;
+            end
+            
+            if isempty(obj.RunObj.TwinBias_qUfrac)
+               qUfrac_RelErr = 0;
+            end
+            % vary input parameters according to relative error (RelErr) and distribution (VarDist)
+            obj.qU                = TmpObj.qU+qU_Err.*randn(TmpObj.nqU,nRuns);
+            obj.qUfrac            = TmpObj.qUfrac.*(1+qUfrac_RelErr.*randn(TmpObj.nqU,nRuns));
+            
+            obj.qUfrac            = obj.VaryParameter(TmpObj.qUfrac,qUfrac_RelErr,'Rel');
+            NormFactor            =  sum(TmpObj.qUfrac)./sum(obj.qUfrac);
+            obj.qUfrac            = obj.qUfrac.*NormFactor; %renormalize
+            
 %             obj.TimeSec           = obj.VaryParameter(obj.TwinObj{1}.TimeSec,obj.TimeSec_RelErr);
 %             obj.WGTS_CD_MolPerCm2 = obj.VaryParameter(obj.TwinObj{1}.WGTS_CD_MolPerCm2,obj.WGTS_CD_MolPerCm2_RelErr);
 %             obj.WGTS_MolFrac_TT   = obj.VaryParameter(obj.TwinObj{1}.WGTS_MolFrac_TT,obj.WGTS_MolFrac_TT_RelErr);
 %             obj.WGTS_MolFrac_DT   = obj.VaryParameter(obj.TwinObj{1}.WGTS_MolFrac_DT,obj.WGTS_MolFrac_DT_RelErr);
 %             obj.WGTS_MolFrac_HT   = obj.VaryParameter(obj.TwinObj{1}.WGTS_MolFrac_HT,obj.WGTS_MolFrac_HT_RelErr);
-%         end
+        end
         function ComputeFakeRun(obj,varargin)
-            % obj.SetFakeBias; %draw random parameters according to their RelErr
+             obj.SetFakeBias; %draw random parameters according to their TwinBias (for qU + qUfrac)
             
             % calculate fake runs
-            fprintf('calculate fake run %s \n',func2str(obj.InitFile)) 
+            fprintf('calculate fake run %s \n',func2str(obj.InitFile))
             
-            if ~isempty(obj.RunObj.TwinBias_Time)
-                 obj.TwinObj = obj.InitFile('PixList',obj.RunObj.PixList,...
-                     'Q_i',obj.RunObj.TwinBias_Q,'TimeSec',obj.RunObj.TwinBias_Time);
+            if ~isa(obj.RunObj,'MultiRunAnalysis')
+                RunListAll = obj.RunObj.RunNr;
             else
-            obj.TwinObj = obj.InitFile('PixList',obj.RunObj.PixList,'Q_i',obj.RunObj.TwinBias_Q);
+                RunListAll = obj.RunObj.RunList;
             end
-            %% Calculate Asimov pixel-wise spectra
-            obj.TwinObj.ComputeTBDDS;
-            obj.TwinObj.ComputeTBDIS;
             
-            % save into file
-            TBDIS                    = obj.TwinObj.TBDIS;
-            EffCorr                  = ones(obj.TwinObj.nqU,148);
-            WGTS_CD_MolPerCm2        = obj.TwinObj.WGTS_CD_MolPerCm2;
-            WGTS_CD_MolPerCm2_SubRun = obj.TwinObj.WGTS_CD_MolPerCm2_SubRun;
-            WGTS_MolFrac_TT          = obj.TwinObj.WGTS_MolFrac_TT;
-            WGTS_MolFrac_DT          = obj.TwinObj.WGTS_MolFrac_DT;
-            WGTS_MolFrac_HT          = obj.TwinObj.WGTS_MolFrac_HT;
-            WGTS_MolFrac_TT_SubRun   = obj.TwinObj.WGTS_MolFrac_TT_SubRun;
-            WGTS_MolFrac_DT_SubRun   = obj.TwinObj.WGTS_MolFrac_DT_SubRun;
-            WGTS_MolFrac_HT_SubRun   = obj.TwinObj.WGTS_MolFrac_HT_SubRun;
-            ISXsection               = obj.TwinObj.ISXsection;
-            
-            if strcmp(obj.TwinObj.FPD_Segmentation,'OFF')
-                TBDIS                 = repmat(TBDIS,[1,148])./numel(obj.TwinObj.FPD_PixList);
-                qU                    = repmat(obj.TwinObj.qU,[1,148]);
-                qUfrac                = repmat(obj.TwinObj.qUfrac,[1,148]);
-                TimeSec               = repmat(obj.TwinObj.TimeSec,[148,1]);%obj.RunData.TimeSec.*(obj.TwinBias_Time/obj.RunData.TimeSec);
-                MACE_Ba_T             = repmat(obj.TwinObj.MACE_Ba_T,[148,1]);
-                MACE_Bmax_T           = repmat(obj.TwinObj.MACE_Bmax_T,[148,1]);
+            if numel(obj.RunObj.TwinBias_Q)==1
+                TwinQ = repmat(obj.RunObj.TwinBias_Q,[numel(RunListAll),1]);
+            elseif numel(obj.RunObj.TwinBias_Q)==numel(RunListAll)
+                TwinQ = obj.RunObj.TwinBias_Q;
             else
-                TBDIS    = zeros(obj.TwinObj.nqU,148);
-                qU        = zeros(obj.TwinObj.nqU,148);
-                qUfrac    = zeros(obj.TwinObj.nqU,148);
-                TimeSec   = zeros(148,1);
-                MACE_Ba_T = zeros(148,1);
-                MACE_Bmax_T = zeros(148,1);
-                nPixRing = cell2mat(cellfun(@(x) numel(x),obj.RunObj.RingPixList,'UniformOutput',0));
-                switch obj.RunObj.RingMerge
-                    case 'Full'
-                        [~,AllRingPixList] = Ring2PixelCombi(1:4,1:148);
-                    case 'Half'
-                        [~,AllRingPixList] = Ring2PixelHalfCombi(1:2,1:148);
+                fprintf(2,'Twin bias Q invalied \n');
+                return
+            end
+            
+            progressbar('Compute Fake MC runs')
+            for i=1:numel(RunListAll)
+                progressbar(i/numel(RunListAll));
+                TBDArg = {'PixList',obj.RunObj.PixList,...
+                        'Q_i',TwinQ(i),...
+                        'qU',obj.qU(:,i),...
+                        'qUfrac',obj.qUfrac(:,i)};
+                    
+                if ~isempty(obj.RunObj.TwinBias_Time)
+                    obj.TwinObj = obj.InitFile(TBDArg{:},'TimeSec',obj.RunObj.TwinBias_Time);
+                else
+                    obj.TwinObj = obj.InitFile(TBDArg{:});
                 end
-                AllnPixRing = cell2mat(cellfun(@(x) numel(x),AllRingPixList,'UniformOutput',0));
-                for i=1:obj.RunObj.nRings
-                    TBDIS(:,AllRingPixList{i})   = repmat(obj.TwinObj.TBDIS(:,i)./nPixRing(i),[1,AllnPixRing(i)]);
-                    qU(:,AllRingPixList{i})      = repmat(obj.TwinObj.qU(:,i),[1,AllnPixRing(i)]);
-                    qUfrac(:,AllRingPixList{i})  = repmat(obj.TwinObj.qUfrac(:,i),[1,AllnPixRing(i)]);
-                    TimeSec(AllRingPixList{i})   = repmat(obj.TwinObj.TimeSec(i),[AllnPixRing(i),1]);
-                    MACE_Ba_T(AllRingPixList{i}) = repmat(obj.TwinObj.MACE_Ba_T(i),[AllnPixRing(i),1]);
-                    MACE_Bmax_T(AllRingPixList{i}) = repmat(obj.TwinObj.MACE_Bmax_T(i),[AllnPixRing(i),1]);
+                %% Calculate Asimov pixel-wise spectra
+                obj.TwinObj.ComputeTBDDS;
+                obj.TwinObj.ComputeTBDIS;
+                
+                % save into file
+                TBDIS                    = obj.TwinObj.TBDIS;
+                EffCorr                  = ones(obj.TwinObj.nqU,148);
+                WGTS_CD_MolPerCm2        = obj.TwinObj.WGTS_CD_MolPerCm2;
+                WGTS_CD_MolPerCm2_SubRun = obj.TwinObj.WGTS_CD_MolPerCm2_SubRun;
+                WGTS_MolFrac_TT          = obj.TwinObj.WGTS_MolFrac_TT;
+                WGTS_MolFrac_DT          = obj.TwinObj.WGTS_MolFrac_DT;
+                WGTS_MolFrac_HT          = obj.TwinObj.WGTS_MolFrac_HT;
+                WGTS_MolFrac_TT_SubRun   = obj.TwinObj.WGTS_MolFrac_TT_SubRun;
+                WGTS_MolFrac_DT_SubRun   = obj.TwinObj.WGTS_MolFrac_DT_SubRun;
+                WGTS_MolFrac_HT_SubRun   = obj.TwinObj.WGTS_MolFrac_HT_SubRun;
+                ISXsection               = obj.TwinObj.ISXsection;
+                
+                if strcmp(obj.TwinObj.FPD_Segmentation,'OFF')
+                    TBDIS                 = repmat(TBDIS,[1,148])./numel(obj.TwinObj.FPD_PixList);
+                    qU                    = repmat(obj.TwinObj.qU,[1,148]);
+                    qUfrac                = repmat(obj.TwinObj.qUfrac,[1,148]);
+                    TimeSec               = repmat(obj.TwinObj.TimeSec,[148,1]);%obj.RunData.TimeSec.*(obj.TwinBias_Time/obj.RunData.TimeSec);
+                    MACE_Ba_T             = repmat(obj.TwinObj.MACE_Ba_T,[148,1]);
+                    MACE_Bmax_T           = repmat(obj.TwinObj.MACE_Bmax_T,[148,1]);
+                else
+                    TBDIS    = zeros(obj.TwinObj.nqU,148);
+                    qU        = zeros(obj.TwinObj.nqU,148);
+                    qUfrac    = zeros(obj.TwinObj.nqU,148);
+                    TimeSec   = zeros(148,1);
+                    MACE_Ba_T = zeros(148,1);
+                    MACE_Bmax_T = zeros(148,1);
+                    nPixRing = cell2mat(cellfun(@(x) numel(x),obj.RunObj.RingPixList,'UniformOutput',0));
+                    switch obj.RunObj.RingMerge
+                        case 'Full'
+                            [~,AllRingPixList] = Ring2PixelCombi(1:4,1:148);
+                        case 'Half'
+                            [~,AllRingPixList] = Ring2PixelHalfCombi(1:2,1:148);
+                    end
+                    AllnPixRing = cell2mat(cellfun(@(x) numel(x),AllRingPixList,'UniformOutput',0));
+                    for i=1:obj.RunObj.nRings
+                        TBDIS(:,AllRingPixList{i})   = repmat(obj.TwinObj.TBDIS(:,i)./nPixRing(i),[1,AllnPixRing(i)]);
+                        qU(:,AllRingPixList{i})      = repmat(obj.TwinObj.qU(:,i),[1,AllnPixRing(i)]);
+                        qUfrac(:,AllRingPixList{i})  = repmat(obj.TwinObj.qUfrac(:,i),[1,AllnPixRing(i)]);
+                        TimeSec(AllRingPixList{i})   = repmat(obj.TwinObj.TimeSec(i),[AllnPixRing(i),1]);
+                        MACE_Ba_T(AllRingPixList{i}) = repmat(obj.TwinObj.MACE_Ba_T(i),[AllnPixRing(i),1]);
+                        MACE_Bmax_T(AllRingPixList{i}) = repmat(obj.TwinObj.MACE_Bmax_T(i),[AllnPixRing(i),1]);
+                    end
                 end
+                TBDISE                = sqrt(TBDIS);
+                TimeperSubRunperPixel = qUfrac.*TimeSec(1);
+                StartTimeStamp = datetime('today');
+                
+                if contains(func2str(obj.InitFile),'KNM1')
+                    savepath = [getenv('SamakPath'),'tritium-data/mat/FakeKnm1/'];
+                elseif contains(func2str(obj.InitFile),'KNM2')
+                    savepath = [getenv('SamakPath'),'tritium-data/mat/FakeKnm2/'];
+                else
+                    savepath = [getenv('SamakPath'),'tritium-data/mat/Fake/'];
+                end
+                MakeDir(savepath);
+                
+                savename = [extractAfter(func2str(obj.InitFile),'ref_'),obj.RunObj.SetTwinOrFakeFileName,...
+                    sprintf('_Run%.0f',RunListAll(i)),'.mat'];
+                fprintf('saving fake run %s \n',[savepath,savename]);
+                
+                if isa(ISXsection,'function_handle')
+                    ISXsection = ISXsection(18575);
+                end
+                
+                RW_BiasVoltage = 0;
+
+                save([savepath,savename],...
+                    'TBDIS','TBDISE','EffCorr','TimeSec',...
+                    'TimeperSubRunperPixel',...%'TimeperPixel',...
+                    'WGTS_CD_MolPerCm2','WGTS_CD_MolPerCm2_SubRun',...
+                    'WGTS_MolFrac_TT','WGTS_MolFrac_DT','WGTS_MolFrac_HT',...
+                    'WGTS_MolFrac_DT_SubRun','WGTS_MolFrac_HT_SubRun','WGTS_MolFrac_TT_SubRun',...
+                    'ISXsection','MACE_Bmax_T',...
+                    'MACE_Ba_T','qU','qUfrac',...
+                    'StartTimeStamp',...
+                    'RW_BiasVoltage',...
+                    '-v7.3','-nocompression');
             end
-            TBDISE                = sqrt(TBDIS);
-            TimeperSubRunperPixel = qUfrac.*TimeSec(1);
-            StartTimeStamp = datetime('today');
-            
-            if contains(func2str(obj.InitFile),'KNM1')
-                savepath = [getenv('SamakPath'),'tritium-data/mat/FakeKnm1/'];
-            elseif contains(func2str(obj.InitFile),'KNM2')
-                savepath = [getenv('SamakPath'),'tritium-data/mat/FakeKnm2/'];
-            else
-                savepath = [getenv('SamakPath'),'tritium-data/mat/Fake/'];
-            end
-            MakeDir(savepath);
-            
-            savename = [extractAfter(func2str(obj.InitFile),'ref_'),obj.RunObj.SetTwinOrFakeFileName,'.mat'];
-            fprintf('saving fake run %s \n',[savepath,savename]);
-            
-            save([savepath,savename],...
-                'TBDIS','TBDISE','EffCorr','TimeSec',...
-                'TimeperSubRunperPixel',...%'TimeperPixel',...
-                'WGTS_CD_MolPerCm2','WGTS_CD_MolPerCm2_SubRun',...
-                'WGTS_MolFrac_TT','WGTS_MolFrac_DT','WGTS_MolFrac_HT',...
-                'WGTS_MolFrac_DT_SubRun','WGTS_MolFrac_HT_SubRun','WGTS_MolFrac_TT_SubRun',...
-                'ISXsection','MACE_Bmax_T',...
-                'MACE_Ba_T','qU','qUfrac',...
-                'StartTimeStamp',...
-                '-v7.3','-nocompression');       
         end
         function CleanUpFakeRuns(obj)
             % deletes all fake MC runs, created with this InitFile
@@ -529,13 +578,25 @@ classdef McRunGenerator < handle
             system(['rm ',savedir,'/*']);
             fprintf(2,'Deleting all fake MC runs in directory: tritium-data/mat/%s ! \n',extractAfter(func2str(obj.InitFile),'ref_'))
         end
-        function out = VaryParameter(obj,Parameter,RelErr)
-            switch obj.VarDist
-                case 'Gaussian'
-                    out = Parameter.*(1+randn(numel(Parameter),obj.nRuns).*RelErr);
-                case 'Uniform'
-                    out = Parameter.*(1+(2.*rand(numel(Parameter),obj.nRuns)-1).*RelErr);
+        function out = VaryParameter(obj,Parameter,Err,Mode)
+            if ~isa(obj.RunObj,'MultiRunAnalysis')
+                nRuns = 1;
+            else
+                nRuns = obj.RunObj.nRuns;
             end
+            
+            if strcmp(Mode,'Rel')
+                out = Parameter.*(1+randn(numel(Parameter),nRuns).*Err);
+            elseif strcmp(Mode,'Abs')
+                out = Parameter+randn(numel(Parameter),nRuns).*Err;
+            end
+            %                 case 'Uniform'
+            %                     if strcmp(Mode,'Rel')
+            %                         out = Parameter.*(1+(2.*rand(numel(Parameter),obj.nRuns)-1).*RelErr);
+            %                     elseif strcmp(Mode,'Abs')
+%                         out = Parameter+(2.*rand(numel(Parameter),obj.nRuns)-1).*RelErr;
+%                     end
+%             end         
         end
     end
 

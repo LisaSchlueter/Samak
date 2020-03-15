@@ -69,7 +69,6 @@ else
 end
 
 qU = qU';
-
 TimeperSubRunperPixel = h5read([h5path,h5name],'/RunSummary/LiveTime')';
 qUfrac = TimeperSubRunperPixel./sum(TimeperSubRunperPixel,1);
 TimeSec = sum(TimeperSubRunperPixel,1)'.*TimeBias;
@@ -192,6 +191,7 @@ end
 
 %% Special Treatment for some Data Points
 % First Tritium (FT): Erase two first points from the two first runs
+
 switch DataSet
     case 'FirstTritium.katrin'
         if (RunNr == 40257) || (RunNr == 40258)
@@ -204,12 +204,14 @@ switch DataSet
         qU_RM                       = 0;
         qUfrac_RM                   = 0;
         TBDIS_RM                    = 0;
+        TimeperSubRunperPixel_RM    = 0;
     case {'Knm2','Knm1'}%{'Knm1','Twin_Fitrium_Knm1','Twin_Kafit_Knm1','Knm2'}
         qU_RM                       = qU(1,:)';
         qUfrac_RM                   = qUfrac(1,:)';
         TBDIS_RM                    = TBDIS(1,:)';
         EffCorr_RM                  =  EffCorr(1,:)';
         TBDIS14keV_RM               = TBDIS14keV(1,:)';
+        TimeperSubRunperPixel_RM    = TimeperSubRunperPixel(1,:)';
         
         % delete rate monitor point: not used for nu-mass analysis
         qUstart = 2;
@@ -228,6 +230,8 @@ switch DataSet
         WGTS_MolFrac_HT_SubRun_error = WGTS_MolFrac_HT_SubRun_error(qUstart:end);
         
 end
+
+
 %% Save slow control data and counts PIXELWISE
 save_path = strrep(h5path,'hdf5','mat');
 

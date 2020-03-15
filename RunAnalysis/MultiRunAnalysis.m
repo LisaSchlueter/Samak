@@ -52,7 +52,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             %--------------------------------- Parser Start----------------------------------------%
             p = inputParser;
             p.addParameter('DataType','Real',@(x)ismember(x,{'Real','Fake','Twin','FitriumTwin','KafitTwin'}));
-            p.addParameter('StackTolerance',0.2,@(x)isfloat(x) && all(x)>0);%0.2
+            p.addParameter('StackTolerance',1,@(x)isfloat(x) && all(x)>0);%0.2
             p.addParameter('StackqUCorrFlag','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('RunList',[],@(x)(isfloat(x) && all(x)>0 || ischar(x)));
             p.addParameter('StackTaylorFlag','OFF',@(x)ismember(x,{'ON','OFF'}));
@@ -203,7 +203,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                 case 'Twin'
                     obj.RunData.matFilePath = [getenv('SamakPath'),'tritium-data/mat/','Twin',obj.DataSet,'/'];
                 case 'Fake'
-                    obj.RunData.matFilePath = [getenv('SamakPath'),'tritium-data/mat/',obj.FakeStudyName,'/'];   
+                    obj.RunData.matFilePath = [getenv('SamakPath'),'tritium-data/mat/','Fake',obj.DataSet,'/'];   
                 case 'FitriumTwin'
                     obj.RunData.matFilePath = [getenv('SamakPath'),'tritium-data/mat/Twin_Fitrium_',obj.DataSet,'/'];
                 case 'KafitTwin'
@@ -218,14 +218,14 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             % Stacking Cuts: Choose which runs are stacked
            obj.ApplyStackingCuts('CutOnSC',CutOnSC,'sigmaSC',SCsigma,...
                'CutOnFitSingleRuns',CutOnFitSingleRuns,'sigmaFitSingleRuns',Fitsigma); % Apply Cuts -> obj.SingleRunData.Select
-           obj.StackedRuns    = obj.SingleRunData.Runs(obj.SingleRunData.Select_all); 
+           obj.StackedRuns    = obj.SingleRunData.Runs(obj.SingleRunData.Select_all);
            obj.NotStackedRuns = obj.SingleRunData.Runs(~obj.SingleRunData.Select_all);
-
-            %stack time
-            TimeSec                  = sum(obj.SingleRunData.TimeSec(:,obj.SingleRunData.Select_all),2);     
-            TimeperSubRunperPixel    = squeeze(sum(obj.SingleRunData.TimeperSubRunperPixel(:,obj.SingleRunData.Select_all,:),2));
-            qUfrac                   = TimeperSubRunperPixel./sum(TimeperSubRunperPixel,1);
-            
+           
+           %stack time
+           TimeSec                  = sum(obj.SingleRunData.TimeSec(:,obj.SingleRunData.Select_all),2);
+           TimeperSubRunperPixel    = squeeze(sum(obj.SingleRunData.TimeperSubRunperPixel(:,obj.SingleRunData.Select_all,:),2)); %only time spend without RM
+           qUfrac                   = TimeperSubRunperPixel./TimeSec;
+           
             % not pixel and not subrun dependent variables
             WGTS_CD_MolPerCm2        = obj.StackWmean(obj.SingleRunData.WGTS_CD_MolPerCm2,obj.SingleRunData.TimeSec);
             WGTS_MolFrac_TT          = obj.StackWmean(obj.SingleRunData.WGTS_MolFrac_TT,obj.SingleRunData.TimeSec);
@@ -261,8 +261,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             EffCorr                  = obj.StackWmean(obj.SingleRunData.EffCorr,obj.SingleRunData.TimeperSubRunperPixel);
             TBDIS                    = squeeze(sum(obj.SingleRunData.TBDIS(:,obj.SingleRunData.Select_all,:),2));
             TBDISE                   = sqrt(TBDIS./EffCorr);            
-            qU                       = obj.StackWmean(obj.SingleRunData.qU,obj.SingleRunData.TimeperSubRunperPixel);
-            
+            qU                       = obj.StackWmean(obj.SingleRunData.qU,obj.SingleRunData.TimeperSubRunperPixel); 
             matFilePath       = obj.RunData.matFilePath;
             
             if isfield(obj.SingleRunData,'TBDIS14keV')
@@ -688,6 +687,9 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             out = squeeze(wmean(...
                 par(:,obj.SingleRunData.Select_all,:),...
                 time(:,obj.SingleRunData.Select_all,:),2));%weight_m(:,obj.SingleRunData.Select_all,:)
+            
+ %         out =  squeeze(mean(par(:,obj.SingleRunData.Select_all,:),2));
+
         end
         function [SingleRunRate,SingleRunqU] = ComputeStackqU(obj,varargin) 
             %% ----------------------------------------------------------------------------------------------------
@@ -1484,8 +1486,10 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             for i = 1:obj.nRuns
                 if strcmp(obj.DataType,'Twin')
                     filename = [obj.RunData.matFilePath,'Twin',num2str(obj.RunList(i)),obj.SetTwinOrFakeFileName,'.mat'];
-                elseif strcmp(obj.DataType,'Fake')
-                    filename = [obj.RunData.matFilePath,obj.FakeStudyName,'_',num2str(obj.RunList(i)),'.mat'];
+                elseif strcmp(obj.DataType,'Fake')  
+                     filename = [obj.RunData.matFilePath,...
+                         extractAfter(func2str(obj.FakeInitFile),'ref_'),...
+                         obj.SetTwinOrFakeFileName,sprintf('_Run%.0f',obj.RunList(i)),'.mat'];
                 elseif  strcmp(obj.DataType,'Real')
                     filename = [obj.RunData.matFilePath,num2str(obj.RunList(i)),'.mat'];
                 elseif strcmp(obj.DataType,'FitriumTwin')
@@ -1497,11 +1501,13 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             
                 if ~exist(filename,'file') && strcmp(obj.DataType,'Twin')                   
                     obj.ComputeTwinRun;
-                    obj.RunData.matFilePath = strrep(obj.RunData.matFilePath,'/Knm2/','/TwinKnm2/');
+                    obj.RunData.matFilePath = strrep(obj.RunData.matFilePath,...
+                        sprintf('/%s/',obj.DataSet),sprintf('/Twin%s/',obj.DataSet));
                 elseif ~exist(filename,'file') && ismember(obj.DataType,{'FitriumTwin','KafitTwin'})
                    fprintf('%s Runs not avaiable / not found! \n',obj.DataType)
                 elseif ~exist(filename,'file') && strcmp(obj.DataType,'Fake')  
-                    fprintf('Fake Runs not avaiable / not found! \n')
+                     obj.ComputeTwinRun;
+                  %  fprintf('Fake Runs not avaiable / not found! \n')
                 end
                 
                 DataFiles{i}   = load(filename);
@@ -1537,8 +1543,8 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                 else % if variable is not pixel dependent
                     if ismember(RSvariables{i},{'matFileName','TBDarg'})
                          obj.SingleRunData.(RSvariables{i}) = ...
-                            cellfun(@(x) x.(RSvariables{i}),DataFiles,'UniFormOutput',0);   
-                    elseif ~contains(RSvariables{i},'RunTimeStart')
+                            cellfun(@(x) x.(RSvariables{i}),DataFiles,'UniFormOutput',0);  
+                    elseif ~contains(RSvariables{i},{'RunTimeStart','StartTimeStamp'})
                         obj.SingleRunData.(RSvariables{i}) = ...
                             cell2mat(cellfun(@(x) x.(RSvariables{i})',DataFiles,'UniFormOutput',0))';
                     end
@@ -1638,17 +1644,20 @@ classdef MultiRunAnalysis < RunAnalysis & handle
 
             tmpRunNr = obj.RunNr;       % temporary store
             tmpRunData = obj.RunData;
-
+            
             [TTFSD,DTFSD,HTFSD] = obj.SetDefaultFSD;
+            progressbar('Load single run objects')
             for r=1:length(obj.RunList)
+                progressbar(i/obj.nRuns);
                 obj.RunNr = obj.RunList(r);
                 obj.ReadData;
                 obj.SingleRunObj{r} = ref_RunAnalysis(obj.RunData,...
-                  'PixList',obj.PixList,'RingList',obj.RingList,...
-                   'ISCS','Theory','recomputeRF','OFF','ELossFlag',obj.ELossFlag,'FPD_Segmentation','OFF',...
-                   'DTFSD',DTFSD,'HTFSD',HTFSD,'TTFSD',TTFSD,'DopplerEffectFlag',obj.DopplerEffectFlag,'RadiativeFlag',obj.RadiativeFlag,'RingMerge',obj.RingMerge);
-
-                obj.SingleRunObj{r}.ComputeTBDDS; obj.SingleRunObj{r}.ComputeTBDIS;    
+                    'PixList',obj.PixList,'RingList',obj.RingList,...
+                    'ISCS','Edep','recomputeRF','OFF','ELossFlag',obj.ELossFlag,'FPD_Segmentation','OFF',...
+                    'DTFSD',DTFSD,'HTFSD',HTFSD,'TTFSD',TTFSD,'DopplerEffectFlag',...
+                    obj.DopplerEffectFlag,'RadiativeFlag',obj.RadiativeFlag,'RingMerge',obj.RingMerge);
+                
+                obj.SingleRunObj{r}.ComputeTBDDS; obj.SingleRunObj{r}.ComputeTBDIS;
             end
             
             obj.RunNr   = tmpRunNr;    % set back to initial value
@@ -2700,7 +2709,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
            if sum(LoadFilesIndex)==numel(obj.RunList) % all runs are already fitted
                fprintf('Fit results from all runs loaded from file \n');
            else
-               parfor i=1:numel(obj.RunList)
+               for i=1:numel(obj.RunList)
                    if ismember(i,find(LoadFilesIndex==0)) % if not already calculated
                        RunObj{i} = RunAnalysis('RunNr',FitList(i),FitListArg{:});
                        
@@ -3155,23 +3164,25 @@ classdef MultiRunAnalysis < RunAnalysis & handle
     
     methods % Methods for Labeling and RunList
         function StackFileName = GetStackFileName(obj) %Labeling Files with stacked runs
-            switch obj.DataType
-                case {'Real','Twin','FitriumTwin','KafitTwin'}
-                    if  ischar(obj.RunList)
-                        StackFileName = obj.RunList; 
-                    elseif isfloat(obj.RunList)
-                        RunString           = strrep(num2str(obj.RunList),'  ','_');
-                        StackFileName   = [strtok(obj.DataSet,'.'),'Stack',RunString];
-                    end
-                case 'Fake'
-                 StackFileName = ['Stack_',obj.FakeStudyName,'_',num2str(numel(obj.RunList)),'Runs'];
+            % switch obj.DataType
+            %     case {'Real','Twin','FitriumTwin','KafitTwin'}
+            if  ischar(obj.RunList)
+                StackFileName = obj.RunList;
+            elseif isfloat(obj.RunList)
+                RunString           = strrep(num2str(obj.RunList),'  ','_');
+                StackFileName   = [strtok(obj.DataSet,'.'),'Stack',RunString];
             end
+            %     case 'Fake'
+            %      StackFileName = ['Stack_',obj.FakeStudyName,'_',num2str(numel(obj.RunList)),'Runs'];
+            % end
             if strcmp(obj.DataType,'Twin')
                 StackFileName = ['Twin',StackFileName,obj.SetTwinOrFakeFileName];
             elseif strcmp(obj.DataType,'FitriumTwin')
                 StackFileName = ['FitriumTwin',StackFileName,obj.SetTwinOrFakeFileName];
             elseif  strcmp(obj.DataType,'KafitTwin')
                 StackFileName = ['KafitTwin',StackFileName,obj.SetTwinOrFakeFileName];
+            elseif  strcmp(obj.DataType,'Fake')
+                StackFileName = ['Fake',StackFileName,obj.SetTwinOrFakeFileName];
             end
         end
         function RunList = GetRunList(obj)

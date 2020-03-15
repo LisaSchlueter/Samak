@@ -165,7 +165,7 @@ classdef RunAnalysis < handle
             p.addParameter('TwinBias_WGTS_MolFrac_DT',1,@(x)isfloat(x));       % relative (%)
             p.addParameter('TwinBias_qU','',@(x)isfloat(x));                   % absolute shift (eV)
             p.addParameter('TwinBias_qUfrac','',@(x)isfloat(x));               % absolute (eV)
-            p.addParameter('TwinBias_Time','',@(x)isfloat(x));                 % absolute (eV)
+            p.addParameter('TwinBias_Time','',@(x)all(isfloat(x)));           % absolute 
             p.addParameter('TwinBias_Bkg',1,@(x)isfloat(x));                   % absolute (eV)
             p.addParameter('TwinBias_mnuSq',0,@(x)isfloat(x));                 % absolute (eV^2)
             p.addParameter('TwinBias_Q',18573.73,@(x)isfloat(x) || ismember(x,{'Fit'}));  % absolute (eV)
@@ -361,7 +361,8 @@ classdef RunAnalysis < handle
                     else
                         matFilePath = [getenv('SamakPath'),'tritium-data/mat/Fake/'];
                     end
-                    matFileName = [extractAfter(func2str(obj.FakeInitFile),'ref_'),obj.SetTwinOrFakeFileName,'.mat'];
+                    matFileName = [extractAfter(func2str(obj.FakeInitFile),'ref_'),obj.SetTwinOrFakeFileName,...
+                          sprintf('_Run%.0f',obj.RunNr),'.mat'];
                     filename = [matFilePath,matFileName];
                     
                     if ~exist(filename,'file')
@@ -467,7 +468,7 @@ classdef RunAnalysis < handle
                             obj.RunData.TimeperSubRun(:,~ismember(1:13,obj.RingList)) = []; %truncate
                         end
                         obj.RunData.TimeSec       = sum(obj.RunData.TimeperSubRun);
-                        obj.RunData.qUfrac        = obj.RunData.TimeperSubRun./obj.RunData.TimeSec;
+                        obj.RunData.qUfrac        = obj.RunData.TimeperSubRun./obj.RunData.TimeSec;% warning -> should not be 1, because of RM point
                         
                         % average or sum rest ringwise
                         obj.RunData.qU      = cell2mat(cellfun(@(x) mean(obj.RunData.qU(:,x),2),obj.RingPixList,'UniformOutput',false)');

@@ -8,7 +8,11 @@ elseif all(~isletter(RunNr)) % Single Run
         RunNr = str2double(RunNr);
     end
     
-    if all(RunNr <= 41033)
+    if all(RunNr <= 1000)
+        DataSet = 'Knm1';
+    elseif all(RunNr <= 10000)
+        DataSet = 'Knm2';
+    elseif all(RunNr <= 41033)
         DataSet = 'FirstTritium.katrin';
     elseif all(RunNr <= 51936)
         DataSet = 'Knm1';
@@ -16,7 +20,7 @@ elseif all(~isletter(RunNr)) % Single Run
         DataSet = 'Knm2';
     end
     
-   %MultiRuns
+    %MultiRuns
 elseif contains(RunNr,'FirstTritium') || ismember(RunNr,{'StackCD100all','StackCD100_3hours','FTpaper'})
     DataSet = 'FirstTritium.katrin';
 elseif contains(RunNr,'KNM1')

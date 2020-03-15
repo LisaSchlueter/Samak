@@ -1696,6 +1696,7 @@ classdef TBD < handle & WGTSMACE %!dont change superclass without modifying pars
                         TBDISwithoutBCK = squeeze(simpsons(obj.Te,TBDDSandRF));
                         if isrow(TBDISwithoutBCK); TBDISwithoutBCK = TBDISwithoutBCK'; end
                         BKG =  (obj.BKG_Slope.*(obj.qU-18574))+repmat(abs(obj.BKG_RateSec),obj.nqU,1);
+                        
                         obj.TBDIS = (TBDISwithoutBCK + BKG).*obj.TimeSec.*obj.qUfrac;
                         
                         % CAUTION: Absolute background above! Beware!

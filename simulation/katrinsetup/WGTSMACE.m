@@ -1095,8 +1095,9 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
                 case 'ON'
                     obj.is_Pv = w.Pis_m /100 .* ratioMasterSamak;
             end
-            
+              
             %% Retrieve/Compute Energy Loss Functions
+            obj.recomputeRF='OFF';
             if isempty(ElossFunctions)
                 [~,ElossFunctions] = obj.ComputeELossFunction('E',E); % load if already exists, otherwise compute
             end
@@ -1110,6 +1111,10 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
              EindexStart = find(E>=minE_rf,1)-5;
              EindexStop  = find(E>=maxE_rf,1)+5;
              Eel = E(EindexStart:EindexStop);
+             
+             if ~strcmp(obj.ISCS,'Edep')
+                 obj.is_Pv = repmat(obj.is_Pv,[1,numel(Eiscs)]);
+             end
              
              ISProb = interp1(Eiscs',obj.is_Pv',qu+Eel)';
              
@@ -1242,7 +1247,11 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             end
             
             if  obj.MACE_Sigma>0
-                RFfile = strrep(RFfile,'.mat',sprintf('_Sigma%.0fmeV.mat',mean(obj.MACE_Sigma*1e3)));
+                if all(diff(obj.MACE_Sigma))==0 || numel(obj.MACE_Sigma)==1
+                    RFfile = strrep(RFfile,'.mat',sprintf('_Sigma%.0fmeV.mat',obj.MACE_Sigma(1)*1e3));
+                else
+                    RFfile = strrep(RFfile,'.mat',sprintf('_MeanSigma%.0fmeV.mat',mean(obj.MACE_Sigma*1e3)));
+                end
             end
             MakeDir(RFpath);
             RFName = [RFpath,RFfile];

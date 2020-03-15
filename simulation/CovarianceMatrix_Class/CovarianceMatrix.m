@@ -1581,7 +1581,7 @@ classdef CovarianceMatrix < handle
             end
             obj.CovMatFile = [covmat_path,covmat_filename];
             %% Try reading Covariance Matrix from file
-            if exist(obj.CovMatFile,'file')==2 && strcmp(obj.RecomputeFlag,'OFF')
+            if exist(obj.CovMatFile,'file') && strcmp(obj.RecomputeFlag,'OFF')
                 fprintf('CovarianceMatrix:ComputeCM_RF: Loading WGTS CM from File \n')
                 if strcmp(obj.SysEffect.RF_BF,'ON') && strcmp(obj.SysEffect.RF_RX,'ON') && strcmp(obj.SysEffect.RF_EL,'ON')
                     obj.ReadCMFile('filename',obj.CovMatFile,'SysEffect','RF');

@@ -2,9 +2,9 @@
 % analyze 3 rear wall periods one after the other
 % January 2020, Lisa
 
-RunAnaArg = {'RunList','KNM2_RW1',...  % define run number -> see GetRunList
-    'fixPar','E0 Bkg Norm',...         % free Parameter !!
-    'DataType','Real',...              % Real, Twin or Fake
+RunAnaArg = {'RunList','KNM2_RW3',...  % define run number -> see GetRunList
+    'fixPar','mNu E0 Bkg Norm',...         % free Parameter !!
+    'DataType','Twin',...              % Real, Twin or Fake
     'FSDFlag','BlindingKNM2',...       % final state distribution (theoretical calculation)
     'ELossFlag','KatrinT2',...         % energy loss function     ( different parametrizations available)
     'AnaFlag','StackPixel',...         % FPD segmentations -> pixel combination
@@ -15,15 +15,15 @@ RunAnaArg = {'RunList','KNM2_RW1',...  % define run number -> see GetRunList
     'ROIFlag','Default'};
 
 %% build object of MultiRunAnalysis class
-A = MultiRunAnalysis(RunAnaArg{:});
+D = MultiRunAnalysis(RunAnaArg{:});
 
 %% modify some parameters in your analysis
 range = 40;               % fit range in eV below endpoint        
-A.exclDataStart = A.GetexclDataStart(range); % find correct data, where to cut spectrum
+D.exclDataStart = D.GetexclDataStart(range); % find correct data, where to cut spectrum
 
 %% Fit -> fit results are in property: A.FitResult
-A.Fit;
+D.Fit;
 
 %% Display result
-A.PlotFit('saveplot','pdf','FitResultsFlag','OFF');
+D.PlotFit('saveplot','OFF','FitResultsFlag','OFF');
 

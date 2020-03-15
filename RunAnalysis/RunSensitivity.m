@@ -28,44 +28,45 @@ classdef RunSensitivity < handle
         CovMatFracStack;   % struct with covariance matrices from MultiLparStack
         CovMatShape;
         CovMatShapeStack;
-        chi2sys;           %CM or CMShape          
+        chi2sys;           %CM or CMShape
         
-        RunAnaObj;         % RunAnalysis Object 
-        RecomputeFlag;     % compute or load sensitivites   
+        RunAnaObj;         % RunAnalysis Object
+        RecomputeFlag;     % compute or load sensitivites
         
         % plot
         PlotColor;
         
-       % neutrino mass scan
-       ScanResults;
-       ScanSide; %Pos or Neg
-       
-       %upper limit: Neyman  confidence interval construction
-       NFitResults %Neyman fit results (normal fit with free neutrino mass to samples)
-       %N_LimitUp;
-       %N_LimitLow;
-       N_LimitUp;
-       N_mNuSq; 
-       
-       FC_mNuSqFit  % fit neutrino masses
-       FC_mNuSqTrue      
-       FC_DeltaChi2
-       FC_DeltaChi2C; % critical delta chi2
-       FC_Chi2True;
-       FC_x1;
-       FC_x2;
-       FC_savename;
-       FC_PDF;
-       FC_CumProb; 
+        % neutrino mass scan
+        ScanResults;
+        ScanSide; %Pos or Neg
+        
+        %upper limit: Neyman  confidence interval construction
+        NFitResults %Neyman fit results (normal fit with free neutrino mass to samples)
+        %N_LimitUp;
+        %N_LimitLow;
+        N_LimitUp;
+        N_mNuSq;
+        
+        FC_mNuSqFit  % fit neutrino masses
+        FC_mNuSqTrue
+        FC_DeltaChi2
+        FC_DeltaChi2C; % critical delta chi2
+        FC_Chi2True;
+        FC_x1;
+        FC_x2;
+        FC_savename;
+        FC_PDF;
+        FC_CumProb;
     end
     methods
         function obj = RunSensitivity(varargin) % constructor
             fprintf('-----------------Start RunSensitivity contructor ----------------------\n');
             
-            DefaultSysAll    = {'TC','FSD','TASR','RF_EL','RF_BF','RF_RX','Stack','FPDeff','NP','Bkg'}; %Bkg has to be last
+            DefaultSysAll    = {'TC','FSD','TASR','RF_EL','RF_BF','RF_RX','Stack','LongPlasma','FPDeff','NP','Bkg'}; %Bkg has to be last
             DefaultSysLeg    = {'Theoretical corrections';'Final-state distribution';...
                                 'Tritium activity fluctuations';'Energy-loss function';...
                                 'Magnetic fields';'Source scattering';'HV fluctuations';...
+                                'Long. source potential';...
                                 'Detector efficiency';'Non-Poisson background';'Background slope'};
 
             p = inputParser;
@@ -101,7 +102,7 @@ classdef RunSensitivity < handle
             %define colors for plot (preliminary)
             obj.PlotColor = {rgb('White'),rgb('Navy'),rgb('GoldenRod'),rgb('PowderBlue'),...
                 rgb('CadetBlue'),rgb('DarkOrange'),rgb('FireBrick'),rgb('YellowGreen'),rgb('DarkSlateGray'),rgb('DodgerBlue'),...
-                rgb('SeaGreen')};
+                rgb('SeaGreen'),rgb('Magenta')};
             
             if strcmp(obj.RunAnaObj.fitter,'matlab')
                 % do 1 init fit
@@ -703,8 +704,8 @@ classdef RunSensitivity < handle
                 %                     obj.RunAnaObj.ComputeCM;
                 %                 end
                 %                 obj.RunAnaObj.Fit;
-                obj.RunAnaObj.fixPar = '1 5 6 7 8 9 10 11'; % fix neutrino mass for all other fits
-                
+                obj.RunAnaObj.fixPar = 'E0 Norm Bkg'; % fix neutrino mass for all other fits
+                obj.RunAnaObj.InitFitPar;
                 % set up samples mNuSq: true nu-mass +- 15 sigma
                 % stepsize increasing the closer to mNuSq_t
                 %                mNuSqSigma = obj.RunAnaObj.FitResult.err(1);
@@ -1388,14 +1389,14 @@ classdef RunSensitivity < handle
             
             Ranges     = p.Results.Ranges;
             Parameter  = p.Results.Parameter;
-            SingleSys  = p.Results.SingleSys;
-            SysInfoBox = p.Results.SysInfoBox;
+            %SingleSys  = p.Results.SingleSys;
+            %SysInfoBox = p.Results.SysInfoBox;
             SavePlot   = p.Results.SavePlot;
-            DispTitle  = p.Results.DispTitle;
+            %DispTitle  = p.Results.DispTitle;
             xLimits    = p.Results.xLimits;
             HoldOn     = p.Results.HoldOn;
-            NP         = p.Results.NP;
-            StackSys   = p.Results.StackSys;
+            %NP         = p.Results.NP;
+            %StackSys   = p.Results.StackSys;
             
             LocalFontSize = 28;
             
@@ -1405,11 +1406,11 @@ classdef RunSensitivity < handle
             end
             
             Nranges = numel(Ranges);
-            RangeLabel = cell(Nranges,1);
+            %RangeLabel = cell(Nranges,1);
             
             % load sensitivities: prepare variables for barh plot
             SingleBarY = zeros(Nranges,obj.nSys+1);
-            StackBarX  = 20+linspace(0,10,Nranges);
+            %StackBarX  = 20+linspace(0,10,Nranges);
             SingleBarStat = zeros(Nranges,1);
             
             for i = 1:Nranges
@@ -1451,19 +1452,19 @@ classdef RunSensitivity < handle
                      bsingle{i}.FaceColor = rgb('LightGray');
                 end
                 
-                if SingleBarY(i)<0.01
+                if SingleBarY(i)<0.001
+                    tstr = sprintf('<10^{-3}') ;
+                elseif round(SingleBarY(i),2)<0.01
                     tstr = sprintf('<10^{-2}') ;
-                elseif SingleBarY(i)<0.01
-                    tstr = sprintf('%.0f\\cdot10^{-3}',round(SingleBarY(i)*1e3,0)) ;
                 else
-                    tstr = sprintf('%.0f\\cdot10^{-2}',round(SingleBarY(i)*1e2,0)) ;
+                    tstr = sprintf('%.0f\\cdot10^{-2}',SingleBarY(i)*1e2) ;
                 end
                 t{i}= text(1.4,SingleBarX(i),tstr,...%max(SingleBarY)*1.4
                     'HorizontalAlignment','right','FontSize',LocalFontSize-4,...
                     'Interpreter','tex');
             end
             
-             % axis options
+            % axis options
             if obj.ConfLevel==0
                 cl = 0.683;
             else
@@ -1486,7 +1487,7 @@ classdef RunSensitivity < handle
                 xmax = xLimits(2);
             else
                 xmin = 0;
-                xmax = 1.5;%max(SingleBarY)*2;
+                xmax = 1.5;% max(SingleBarY)*2;
             end
             xlim([xmin, xmax]);
           
@@ -2343,6 +2344,8 @@ classdef RunSensitivity < handle
         function nTrials = GetnTrials(obj,SysEffect)
             if strcmp(obj.RunAnaObj.DataSet,'FirstTritium.katrin')
                 nTrials = 1000;
+            elseif strcmp(obj.RunAnaObj.DataSet,'Knm2')
+                nTrials = 1000; % just for testing!!
             else
                 if ischar(SysEffect)
                     if contains(SysEffect,'RF')

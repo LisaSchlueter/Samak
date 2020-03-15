@@ -1,4 +1,4 @@
-function TritiumObject = ref_FakeRun_KNM2_CD84_2hours(varargin)
+function TritiumObject = ref_FakeRun_KNM2_CD84_8hours(varargin)
 TDMode = 'DataTBD';
 
 % use MTD from a KNM2 run
@@ -39,7 +39,7 @@ p.addParameter('recomputeRF','OFF',@(x)ismember(x,{'ON','OFF'}));
 p.addParameter('UseParallelRF','ON',@(x)ismember(x,{'OFF','ON'}));
 
 % General
-p.addParameter('TimeSec',2*60*60,@(x)isfloat(x));
+p.addParameter('TimeSec',8*60*60,@(x)isfloat(x));
 p.addParameter('mnuSq_i',0,@(x)isfloat(x));
 p.addParameter('Q_i',18573.7,@(x)isfloat(x));
 
