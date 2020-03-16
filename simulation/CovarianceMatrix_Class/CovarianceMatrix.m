@@ -1173,7 +1173,7 @@ classdef CovarianceMatrix < handle
             E       = p.Results.E;
             
             if isempty(E) % default binning if non specified
-                maxE = 9288;
+                maxE = 500;% 9288;
                 minE=-maxE; NbinE = (maxE-minE)/0.2;
                 E = linspace(minE,maxE,NbinE);
             end
@@ -1386,7 +1386,7 @@ classdef CovarianceMatrix < handle
             % Parser
             p = inputParser;
             p.addParameter('Debug','OFF',@(x)ismember(x,{'ON','OFF'}));
-            p.addParameter('RFBinStep',0.04,@(x)isfloat(x)); % eV 0.04
+            p.addParameter('RFBinStep',0.1,@(x)isfloat(x)); % eV 0.04
             p.addParameter('ELossBinStep',0.2,@(x)isfloat(x)); % for ELoss Convolution
             p.addParameter('maxE_el',500,@(x)isfloat(x)); % maximal energy of ELoss Convolution %9288;
             p.parse(varargin{:});

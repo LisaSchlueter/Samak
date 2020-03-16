@@ -1,5 +1,6 @@
 % compute and fit twins with a constant ISX
-
+% result: same nu-mass bias as twins with energy dependent cross section
+% March 2020, Lisa
 RunAnaArg = {'RunList','KNM2_Prompt',...  % define run number -> see GetRunList
     'fixPar','mNu E0 Bkg Norm',...         % free Parameter !!
     'DataType','Twin',...              % Real, Twin or Fake

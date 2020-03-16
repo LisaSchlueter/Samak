@@ -106,7 +106,7 @@ elseif SysBudget == 31 % preliminary KNM2 systematics (January 20)
     SysErr.DataDriven = 'ON';
     SysErr.FPDeff_RelErr = 1e-4;
     SysErr.MaxSlopeCpsPereV = 5.2*1e-06;
-elseif SysBudget == 32 % preliminary KNM2 systematics (March 20)
+elseif SysBudget == 32 % old KNM2 systematics (March 20)
     SysErr.WGTS_TASR_RelErr = 5e-4; % data driven
     SysErr.FSDNorm_RelErr=  0.01;
     SysErr.FSDShapeGS_RelErr= 0.04;
@@ -115,6 +115,21 @@ elseif SysBudget == 32 % preliminary KNM2 systematics (March 20)
     SysErr.MACE_Bmax_T_RelErr= 0.001;
     SysErr.WGTS_B_T_RelErr= 0.02;
     SysErr.WGTS_CD_MolPerCm2_RelErr= 0.003;
+    SysErr.ISXsection_RelErr= 0; %use rhod sigma together as uncertainty
+    SysErr.DataDriven = 'ON';
+    SysErr.FPDeff_RelErr = 1e-4;
+    SysErr.is_EOffsetErr = 0.68*0.15;
+    SysErr.MACE_SigmaErr = 0.68*0.20;
+    SysErr.MaxSlopeCpsPereV = 5.2*1e-06;
+elseif SysBudget == 33 % preliminary KNM2 systematics (March 20)
+    SysErr.WGTS_TASR_RelErr = 5e-4; % data driven
+    SysErr.FSDNorm_RelErr=  0.01;
+    SysErr.FSDShapeGS_RelErr= 0.04;
+    SysErr.FSDShapeES_RelErr= 0.18;
+    SysErr.MACE_Ba_T_RelErr= 0.0065;
+    SysErr.MACE_Bmax_T_RelErr= 0.001;
+    SysErr.WGTS_B_T_RelErr= 0.017;
+    SysErr.WGTS_CD_MolPerCm2_RelErr= 0.0025;
     SysErr.ISXsection_RelErr= 0; %use rhod sigma together as uncertainty
     SysErr.DataDriven = 'ON';
     SysErr.FPDeff_RelErr = 1e-4;

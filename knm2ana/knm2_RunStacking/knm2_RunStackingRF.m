@@ -2,7 +2,7 @@
 % - single run response function vs. stacked run response function
 %TwinOpt = {'Default','Twin_SameqUFlag','Twin_SameqUfracFlag','Twin_SameTime',...
 %           'Twin_SameMTD','Twin_SameCDFlag','Twin_SameIsotopFlag','Sameall'};
-TwinOpt = 'Twin_SameqUFlag';
+TwinOpt = 'Twin_SameqUFlag';%'Twin_SameCDFlag';%'Twin_SameqUFlag';
 if isempty(TwinOpt)
     TwinStr = '';
 else
@@ -72,10 +72,8 @@ else
     
     nRuns = A.nRuns;
     RunList = A.RunList;
-    save(savename,'Te','qU','RF','RFmodel','RFmodelImp','RFmodelImp10',...
-                  'RFsigma','qUModel','TeModel','nRuns','RunList','A');
-    
-    % interpola1 RF, so that they all have same Te-qU
+  
+ %% interpolate RF, so that they all have same Te-qU
     RFinter= zeros(nRuns,numel(TeModel),numel(qUModel));
     for i=1:nRuns
         progressbar(i/nRuns);
@@ -86,8 +84,27 @@ else
     
     RFinterMean = squeeze(mean(RFinter));
     RFinterStd = squeeze(std(RFinter));
-    save(savename,'RFinter','RFinterMean','RFinterStd','-append')
+   
+    %% fit with with interpolated RF
+    A.exclDataStart=A.GetexclDataStart(40);
+    A.ModelObj.InitializeRF;
+    A.fixPar = 'mNu E0 Bkg Norm';
+    A.InitFitPar;
+    A.Fit;
+    FitResult_RFref = A.FitResult;
     
+    A.ModelObj.RF = RFinterMean;
+    A.Fit;
+    FitResult_RFmean = A.FitResult;
+    
+    ISProb = cell2mat(cellfun(@(x) x.ComputeISProb,A.SingleRunObj,'UniformOutput',false)');
+    %% save
+    save(savename,'Te','qU','RF','RFmodel','RFmodelImp','RFmodelImp10',...
+                  'RFsigma','qUModel','TeModel','nRuns','RunList',...
+                  'FitResult_RFmean','FitResult_RFref',...
+                  'RFinter','RFinterMean','RFinterStd',...
+                  'ISProb');
+             
 end
 %% correct for extrap mistakes
 for i=1:numel(qUModel)
@@ -131,19 +148,6 @@ fprintf('Save plot to %s \n',saveplot1);
 
 
 %% fit with averaged (interpolated) response function
-if ~exist('FitResult_RFmean','var')
-A.exclDataStart=A.GetexclDataStart(40);
-A.ModelObj.InitializeRF;
-A.fixPar = 'mNu E0 Bkg Norm';
-A.InitFitPar;
-A.Fit;
-FitResult_RFref = A.FitResult;
-
-A.ModelObj.RF = RFinterMean;
-A.Fit;
-FitResult_RFmean = A.FitResult;
-save(savename,'FitResult_RFmean','FitResult_RFref','-append')
-end
 % result
 fprintf('----------------------------------------\n')
 fprintf('mNuSq = %.3f eV^2  (regular average RF) \n',FitResult_RFref.par(1))
@@ -151,10 +155,6 @@ fprintf('mNuSq =  %.3f eV^2  (averaged interp RF) \n',FitResult_RFmean.par(1))
 fprintf('----------------------------------------\n')
 
 %% plot2 : response function Oth scattering probabilities region
-if ~exist('ISProb','var')
-    ISProb = cell2mat(cellfun(@(x) x.ComputeISProb,A.SingleRunObj,'UniformOutput',false)');
-    save(savename,'ISProb','-append');
-end
 f2 = figure('Units','normalized','Position',[0.1,0.1,0.5,0.5]);
 pRF = plot(TeModel-qUModel(qUi),squeeze(RFinter(:,:,qUi)),':','LineWidth',1.5,'Color',...
              rgb('PowderBlue'));
@@ -213,7 +213,7 @@ leg = legend(p1,sprintf('Average single runs \\langleRF(x)\\rangle - Stacked run
 leg.EdgeColor = rgb('Silver');
 leg.Location = 'north';
 xlim([-1,40])
-ylim([-6 7]*1e-4);
+%ylim([-6 7]*1e-4);
 %ylim([min(y) max(y)]);
 grid off
 

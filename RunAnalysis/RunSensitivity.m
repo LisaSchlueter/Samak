@@ -62,7 +62,7 @@ classdef RunSensitivity < handle
         function obj = RunSensitivity(varargin) % constructor
             fprintf('-----------------Start RunSensitivity contructor ----------------------\n');
             
-            DefaultSysAll    = {'TC','FSD','TASR','RF_EL','RF_BF','RF_RX','Stack','LongPlasma','FPDeff','NP','Bkg'}; %Bkg has to be last
+            DefaultSysAll    = {'TCoff_OTHER','FSD','TASR','RF_EL','RF_BF','RF_RX','Stack','LongPlasma','FPDeff','NP','Bkg'}; %Bkg has to be last
             DefaultSysLeg    = {'Theoretical corrections';'Final-state distribution';...
                                 'Tritium activity fluctuations';'Energy-loss function';...
                                 'Magnetic fields';'Source scattering';'HV fluctuations';...
@@ -2360,7 +2360,7 @@ classdef RunSensitivity < handle
             if strcmp(obj.RunAnaObj.DataSet,'FirstTritium.katrin')
                 nTrials = 1000;
             elseif strcmp(obj.RunAnaObj.DataSet,'Knm2')
-                nTrials = 1000; % just for testing!!
+                nTrials = 5000; 
             else
                 if ischar(SysEffect)
                     if contains(SysEffect,'RF')
