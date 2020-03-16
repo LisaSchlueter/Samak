@@ -1392,7 +1392,7 @@ classdef RunAnalysis < handle
                 obj.FitCMShape     = diag(TBDIS_Data);
                 obj.FitCMFracShape = diag(1./TBDIS_Data);
                 obj.Fit('InitNB','ON');
-                obj.Fit('InitNB','ON');
+                %obj.Fit('InitNB','ON');
                
                 FitResults = obj.FitResult;
                 BKG_i = obj.ModelObj.BKG_RateSec_i;
