@@ -64,3 +64,6 @@ xticks(1:numel(TestOpt));
 xticklabels({'all same','rand qUfrac',sprintf('rand qU \\sigma = 10 meV')});
 ylabel(sprintf('{\\Delta\\itm^2}'));
 xlim([0.8 3.2]);
+
+saveplot = strrep(strrep(savename,'results','plots'),'.mat','.pdf');
+export_fig(saveplot);

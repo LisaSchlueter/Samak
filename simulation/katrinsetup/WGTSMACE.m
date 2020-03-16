@@ -699,7 +699,7 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             LoadOrSaveEloss   = p.Results.LoadOrSaveEloss;
             
             if isempty(E) % default binning if non specified
-                maxE = 9288;
+                maxE = 500;%9288;
                 minE=-maxE; NbinE = (maxE-minE)/0.2;
                 E = linspace(minE,maxE,NbinE);
             end
@@ -997,7 +997,7 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             p = inputParser;
             p.addParameter('Debug','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('ELossBinStep',0.04,@(x)isfloat(x)); % for ELoss Convolution
-            p.addParameter('ELossRange',9288,@(x)isfloat(x));   %  ELoss range
+            p.addParameter('ELossRange',500,@(x)isfloat(x));   %  ELoss range: old default 9288
             p.addParameter('RFBinStep',0.04,@(x)isfloat(x));    % for Final RF Convolution 0.04
             p.addParameter('AdjustISProba','OFF',@(x)ismember(x,{'ON','OFF'}));    % for Final RF Convolution
             p.addParameter('ElossFunctions','',@(x)isfloat(x)); % for covariance matrix only
@@ -1101,7 +1101,7 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             if isempty(ElossFunctions)
                 [~,ElossFunctions] = obj.ComputeELossFunction('E',E); % load if already exists, otherwise compute
             end
-            
+             obj.recomputeRF='ON';
             if numel(obj.is_Pv)<8 && obj.NIS<7
                 obj.is_Pv(obj.NIS+2:end) = 0;
                 obj.is_Pv =  [obj.is_Pv;zeros(8,1)]; %add some zeros

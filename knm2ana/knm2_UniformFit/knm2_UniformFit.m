@@ -2,7 +2,7 @@
 % analyze 3 rear wall periods one after the other
 % January 2020, Lisa
 
-RunAnaArg = {'RunList','KNM2_RW3',...  % define run number -> see GetRunList
+RunAnaArg = {'RunList','KNM2_Prompt',...  % define run number -> see GetRunList
     'fixPar','mNu E0 Bkg Norm',...         % free Parameter !!
     'DataType','Twin',...              % Real, Twin or Fake
     'FSDFlag','BlindingKNM2',...       % final state distribution (theoretical calculation)
@@ -12,7 +12,9 @@ RunAnaArg = {'RunList','KNM2_RW3',...  % define run number -> see GetRunList
     'NonPoissonScaleFactor',1,...
     'MosCorrFlag','OFF',...
     'TwinBias_Q',18573.7,...
-    'ROIFlag','Default'};
+    'ROIFlag','14keV',...
+    'DopplerEffectFlag','FSD'};%,...
+    %'Twin_SameqUFlag','ON'};
 
 %% build object of MultiRunAnalysis class
 D = MultiRunAnalysis(RunAnaArg{:});

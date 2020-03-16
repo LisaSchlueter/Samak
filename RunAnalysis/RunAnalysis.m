@@ -2864,34 +2864,37 @@ classdef RunAnalysis < handle
             p=inputParser;
             p.addParameter('saveplot','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('RecomputeFlag','OFF',@(x)ismember(x,{'ON','OFF'}));
-            p.addParameter('firstPoint',8,@(x)isfloat(x) & x>0);
-            p.addParameter('lastPoint',25,@(x)isfloat(x) & x>0);
+            p.addParameter('qURange',[90,12],@(x)all(isfloat(x)));
             p.addParameter('CorrMean','OFF',@(x)ismember(x,{'ON','OFF'})); % doesnt work atm
             p.addParameter('HoldOn','OFF',@(x)ismember(x,{'ON','OFF'})); % plotting multiple FSDs...
             p.addParameter('RelFlag','OFF',@(x)ismember(x,{'ON','OFF'})); % show results to mean
+            p.addParameter('ErrorBarScaling',1,@(x)isfloat(x)); % scale error bars in fit results
             p.parse(varargin{:});
             saveplot      = p.Results.saveplot;
-            firstPoint    = p.Results.firstPoint;
-            lastPoint     = p.Results.lastPoint;
+            qURange        = p.Results.qURange;
             RecomputeFlag = p.Results.RecomputeFlag;
             CorrMean      = p.Results.CorrMean;
             HoldOn        = p.Results.HoldOn;
             RelFlag       = p.Results.RelFlag;
-            
+            ErrorBarScaling = p.Results.ErrorBarScaling;
+                       
             if strcmp(obj.DataSet,'Knm1')
                 savedir = [getenv('SamakPath'),'knm1ana/knm1_qUScan/results/'];
             elseif contains(obj.DataSet,'FirstTritium')
                 savedir = [getenv('SamakPath'),'first-tritium-studies/ft_qUScan/results/'];
                 MakeDir(savedir);
+            elseif strcmp(obj.DataSet,'Knm2')
+                savedir = [getenv('SamakPath'),'knm2ana/knm2_qUScan/results/'];
             else
                 savedir = './plots/';
             end
-            fixPar_str = strrep(strrep(strrep(obj.fixPar,' ',''),'fix',''),';','');
-            if isempty(fixPar_str)
-                fixPar_str = 'AllFitParFree';
-            end
-            savename = [savedir,sprintf('qUScan_%s_%s_%s_%s_%.0f-%.0f_%s.mat',...
-                obj.RunData.RunName,obj.DataType,obj.chi2,fixPar_str,firstPoint,lastPoint,obj.FSDFlag)];
+            MakeDir(savedir);
+            exclDataStart_v = obj.GetexclDataStart(qURange(1)):obj.GetexclDataStart(qURange(2));
+              
+            freeParStr = ConvertFixPar('Mode','Reverse','freePar',obj.fixPar);
+            savename = [savedir,sprintf('qUScan_%s_%s_%s_FitPar%s_%.0feV-%.0feV_%s.mat',...
+                obj.RunData.RunName,obj.DataType,obj.chi2,freeParStr,...
+                qURange(1),qURange(2),obj.FSDFlag)];
             if exist(savename,'file') && strcmp(RecomputeFlag,'OFF')
                 load(savename,'parqU', 'errqU', 'chi2qU', 'dofqU');
             else
@@ -2900,53 +2903,51 @@ classdef RunAnalysis < handle
                 errqU                   = zeros(obj.nPar,lastPoint-firstPoint+1);
                 chi2qU                  = zeros(lastPoint-firstPoint+1,1);
                 dofqU                   = zeros(lastPoint-firstPoint+1,1);
-                
-                counter=0;
-                progressbar('qU Scan')
-                for i=firstPoint:1:lastPoint
+
+                 progressbar('qU Scan')
+                for i=1:numel(exclDataStart_v)
                     progressbar(i/numel(firstPoint:1:lastPoint));
-                    counter=counter+1;
-                    obj.exclDataStart = i;
+                   
+                    obj.exclDataStart = exclDataStart_v(i);
                     %                 if ~strcmp(obj.chi2,'chi2Stat')
                     %                     obj.ComputeCM;
                     %                 end
                     obj.Fit;
-                    parqU(:,counter) = obj.FitResult.par;
-                    errqU(:,counter) = obj.FitResult.err;
-                    chi2qU(counter)  = obj.FitResult.chi2min;
-                    dofqU(counter)   = obj.FitResult.dof;
+                    parqU(:,i) = obj.FitResult.par;
+                    errqU(:,i) = obj.FitResult.err;
+                    chi2qU(i)  = obj.FitResult.chi2min;
+                    dofqU(i)   = obj.FitResult.dof;
                 end
-                save(savename,'parqU', 'errqU', 'chi2qU', 'dofqU');
-                
+                save(savename,'parqU', 'errqU', 'chi2qU', 'dofqU');   
             end
             
             
             %% Plot qU Scan
-            qUmin = min(obj.RunData.qU(firstPoint:lastPoint,1)-obj.ModelObj.Q_i);
-            qUmax = max(obj.RunData.qU(firstPoint:lastPoint,1)-obj.ModelObj.Q_i);
-            if ~isempty(obj.RunNr) %RunAnalysis
-                Runtitle      = sprintf('Run%u',obj.RunNr);
-                Runtitle_save = sprintf('Run%u',obj.RunNr);
-            else
-                Runtitle      = sprintf('%uRuns %.0f - %.0f',numel(obj.StackedRuns),obj.RunList(1),obj.RunList(end));
-                Runtitle_save = sprintf('%uRuns_%.0f_%.0f',numel(obj.StackedRuns),obj.RunList(1),obj.RunList(end));
-            end
+           % qUmin = min(obj.RunData.qU(firstPoint:lastPoint,1)-obj.ModelObj.Q_i);
+           % qUmax = max(obj.RunData.qU(firstPoint:lastPoint,1)-obj.ModelObj.Q_i);
+%             if ~isempty(obj.RunNr) %RunAnalysis
+%                 Runtitle      = sprintf('Run%u',obj.RunNr);
+%                 Runtitle_save = sprintf('Run%u',obj.RunNr);
+%             else
+%                 Runtitle      = sprintf('%uRuns %.0f - %.0f',numel(obj.StackedRuns),obj.RunList(1),obj.RunList(end));
+%                 Runtitle_save = sprintf('%uRuns_%.0f_%.0f',numel(obj.StackedRuns),obj.RunList(1),obj.RunList(end));
+%             end
             
             if strcmp(HoldOn,'ON')
-                range = 1;
+                fitPar = 1;
             else
-                range = 1:5;
+                fitPar = 1:5;
             end
             
-            for i=range
+            for i=fitPar
                 yErr = flip(errqU(i,:));
                 if i==1
                     y = flip(parqU(i,:));
                     if strcmp(RelFlag,'ON')
                         y = y-wmean(y,1./yErr.^2);
-                        ystr = sprintf('m^2(\\nu_e) - \\langlem^2(\\nu_e)\\rangle (eV^{ 2})');
+                        ystr = sprintf('{\\itm}^2 - \\langle{\\itm}^2\\rangle (eV^{ 2})');
                     else
-                        ystr = sprintf('m^2(\\nu_e) (eV^{ 2})');
+                        ystr = sprintf('{\\itm}^2 (eV^{ 2})');
                     end
                 elseif i==2
                     y = flip(parqU(i,:))+obj.ModelObj.Q_i-18574;
@@ -2999,29 +3000,31 @@ classdef RunAnalysis < handle
                     Mean = wmean(y,1./yErr.^2);
                 end
                 
+                yErr = yErr.*ErrorBarScaling;
                 if all(y==0) || all(isnan(y))
                     
                 else
                     
-                    x =flip(obj.RunData.qU(firstPoint:lastPoint,1))-18575;%obj.ModelObj.Q_i;
+                    x =flip(obj.RunData.qU(exclDataStart_v(1):exclDataStart_v(end),1))-18575;%obj.ModelObj.Q_i;
                     if strcmp(HoldOn,'OFF') && ~contains(obj.DataSet,'FirstTritium')
                         fig12345 = figure('Renderer','painters');
                         set(fig12345, 'Units', 'normalized', 'Position', [0.1, 0.1, 0.7, 0.6]);
-                        ColorArg = {'MarkerFaceColor',rgb('SkyBlue'),'Color',obj.PlotColor};
+                        ColorArg = {'MarkerFaceColor',obj.PlotColor,'Color',obj.PlotColor};
                     elseif contains(obj.DataSet,'FirstTritium')
                         fig12345 = figure('Renderer','painters');
                         set(fig12345, 'Units', 'centimeters', 'Position', [0.1, 0.1, 8.4, 4.5]);
                         ColorArg = {'MarkerFaceColor',rgb('CadetBlue'),'Color',rgb('DarkCyan')};
                     else
                         hold on;
-                        ColorArg = {'MarkerFaceColor',rgb('IndianRed'),'Color',rgb('FireBrick')};
+                        ColorArg = {'MarkerFaceColor',obj.PlotColor,'Color',obj.PlotColor};
                         %ColorArg = {'MarkerFaceColor',rgb('GoldenRod'),'Color',rgb('DarkGoldenRod')};
                         x = x+0.5;
                     end
                     
                     
                     if i~=5 && strcmp(CorrMean,'ON')
-                        p1 = plot(linspace(min(x)-3,max(x)+3,numel(x)),Mean.*ones(numel(x),1),'--','Color',rgb('Silver'),'LineWidth',3);
+                        p1 = plot(linspace(min(x)-3,max(x)+3,numel(x)),...
+                            Mean.*ones(numel(x),1),'--','Color',rgb('Silver'),'LineWidth',3);
                         hold on
                     end
                     if contains(obj.DataSet,'FirstTritium') && i==2
@@ -3037,7 +3040,7 @@ classdef RunAnalysis < handle
                     if i==3 %background
                         ylim([min(y-yErr).*0.999,max(y+yErr)*1.001])
                     elseif i==1
-                        ylim([min(y-yErr).*1.1,max(y+yErr)*3])
+                        %ylim([min(y-yErr),max(y+yErr)])
                     end
                     if contains(obj.DataSet,'FirstTritium')
                         FTpaperFormat;
@@ -3068,7 +3071,8 @@ classdef RunAnalysis < handle
                     else
                         leg = legend(e1,legstr);
                     end
-                    legend boxoff;
+                    leg.EdgeColor = rgb('Silver');
+                    
                     if i==1 && strcmp(CorrMean,'ON')
                         leg.Location = 'southwest';
                     else
@@ -3085,8 +3089,15 @@ classdef RunAnalysis < handle
                     
                     leg.delete;
                     %% save
+                    if ErrorBarScaling~=1
+                        errStr = sprintf('_%.0fErrScaling',ErrorBarScaling);
+                    else
+                        errStr = '';
+                    end
+                    plotdir = strrep(savedir,'results','plots');
                     savename_plot = strrep(strrep(strrep(savename,'results','plots'),'.mat','.png'),...
-                        obj.RunData.RunName,[obj.RunData.RunName,'_',num2str(i)]);
+                        obj.RunData.RunName,[obj.RunData.RunName,'_',num2str(i),errStr]);
+                    MakeDir(plotdir);
                     %print(gcf,savename_plot,'-dpng','-r100');
                     %publish_figurePDF(gcf,strrep(savename_plot,'.png','.pdf'));
                     export_fig(gcf,strrep(savename_plot,'.png','.pdf'));
@@ -3451,7 +3462,7 @@ classdef RunAnalysis < handle
                     case 'FirstTritium.katrin'
                         obj.SysBudget = 0;
                     case 'Knm2'
-                        obj.SysBudget = 22;
+                        obj.SysBudget = 32;
                 end
             end
             

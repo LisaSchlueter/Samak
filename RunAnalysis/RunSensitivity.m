@@ -622,7 +622,7 @@ classdef RunSensitivity < handle
         function DeltaChi2 = FC_GetDeltaChi2(obj,varargin)
             
             savedir = [getenv('SamakPath'),'tritium-data/FC/DeltaChi2LookupTable/'];
-            
+            MakeDir(savedir)
             %   savename = sprintf('DeltaChi2LookupTables_TwinMC%.3geV2mNuSq_%s_%s_%.0fbE0_fixPar%s',mNuSq_t,obj.RunAnaObj.RunData.RunName,obj.RunAnaObj.chi2,...
             %      obj.GetRange,strrep(strrep(strrep(obj.RunAnaObj.fixPar,'fix ',''),' ;',' '),' ',''));
             DeltaChi2 = zeros(size(obj.FC_mNuSqFit));
@@ -1692,7 +1692,7 @@ classdef RunSensitivity < handle
             Sensitivity = p.Results.Sensitivity;
             XLim = p.Results.XLim;
             
-            LocalFontSize = 38;
+            LocalFontSize = 30;
             
             if isempty(obj.FC_x1)
                 fprintf('No FC belt computed \n');
@@ -1881,7 +1881,7 @@ classdef RunSensitivity < handle
             SavePlot = p.Results.SavePlot;
             PDF      = p.Results.PDF;
             
-            LabelFontSize = 34; %
+            LabelFontSize = 30; %
             
             f111 = figure('Renderer','painters');
             set(f111, 'Units', 'normalized', 'Position', [0.1, 0.1, 0.7, 0.7]);
@@ -1949,9 +1949,15 @@ classdef RunSensitivity < handle
                     '-','LineWidth',4,'Color',rgb('Orange'));
                 xlim([mNuSq_t-3,mNuSq_t+3]);
             else
-                xlim([mNuSq_t-5,mNuSq_t+5]);
+                if strcmp(obj.RunAnaObj.DataSet,'Knm1')
+                    xlim([mNuSq_t-5,mNuSq_t+5]);
+                    xticks((-4:4))
+                else
+                    xlim([mNuSq_t-1.5,mNuSq_t+1.5]);
+                    xticks((-1:0.5:1))
+                end
             end
-             xticks([-4:4])
+            
             xlabel(xstr);
             ylabel(ystr);
             
@@ -1985,7 +1991,7 @@ classdef RunSensitivity < handle
                 ylim([0,max(y)*1.05])
                 mNuSq_bestfit = -0.98;
                 savestr = 'PDF_Central';
-                xlim([-4,4])
+              %  xlim([-4,4])
                 ax = gca;
                 mNuSqFrac =100.*interp1(x,CumSum,mNuSq_bestfit,'spline');
                 t = text(mNuSq_bestfit-1.1,interp1(x,y,mNuSq_bestfit-1.0)/2,sprintf('%.1f %s',mNuSqFrac,'%'),...
@@ -1994,18 +2000,27 @@ classdef RunSensitivity < handle
                  CumSum = GetCDF(obj.FC_mNuSqFit(Index,:),y);%cumsum(y);
                 %CumSum = CumSum./max(CumSum);
                 ylim([0,max(y)*1.05])
-                mNuSq_bestfit = -0.98;
+                if strcmp(obj.RunAnaObj.DataSet,'Knm1')
+                    mNuSq_bestfit = -0.98;
+                    y = interp1(x,y,mNuSq_bestfit-1.0)/2;
+                    textx = [-0.15,-1.6,1.3];
+                else
+                    mNuSq_bestfit = 0;
+                    y = 0.1;
+                    textx = [0,-0.55,0.45];
+                end
                 savestr = 'PDF_1sigma';
-                xlim([-4,4])
+               %xlim([-4,4])
                 ax = gca;
                 mNuSqFrac =100.*interp1(x,CumSum,mNuSq_bestfit,'spline');
-                t = text(-0.15,interp1(x,y,mNuSq_bestfit-1.0)/2,sprintf('%.1f %s',68.27,'%'),...
+               
+                t1 = text(textx(1),y,sprintf('%.1f %s',68.27,'%'),...
                     'FontSize',ax.FontSize,'FontWeight',ax.FontWeight,'Color',rgb('White'),...
                     'HorizontalAlignment','center');
-                t = text(-1.6,interp1(x,y,mNuSq_bestfit-1.0)/2,sprintf('%.1f %s',100*(1-0.6827)/2,'%'),...
+                t2 = text(textx(2),y,sprintf('%.1f %s',100*(1-0.6827)/2,'%'),...
                     'FontSize',ax.FontSize,'FontWeight',ax.FontWeight,'Color',rgb('White'),...
                     'HorizontalAlignment','center');
-                t = text(1.3,interp1(x,y,mNuSq_bestfit-1.0)/2,sprintf('%.1f %s',100*(1-0.6827)/2,'%'),...
+                t3 = text(textx(3),y,sprintf('%.1f %s',100*(1-0.6827)/2,'%'),...
                     'FontSize',ax.FontSize,'FontWeight',ax.FontWeight,'Color',rgb('White'),...
                     'HorizontalAlignment','center');
             else

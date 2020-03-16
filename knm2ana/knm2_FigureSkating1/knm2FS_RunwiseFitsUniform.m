@@ -1,5 +1,7 @@
 % KNM2 Figure skating twins
 
+range = 40;
+
 RunAnaArg = {'RunList','KNM2_Prompt',... % all KNM2 golden runs
     'fixPar','E0 Bkg Norm',...           % free Parameter !!
     'DataType','Real',...              
@@ -8,20 +10,14 @@ RunAnaArg = {'RunList','KNM2_Prompt',... % all KNM2 golden runs
     'AnaFlag','StackPixel',...         % FPD segmentations -> pixel combination
     'chi2','chi2Stat',...              % statistics only
     'NonPoissonScaleFactor',1,...
-    }; 
+    'ROIFlag','14keV'}; 
 
 %% build object of MultiRunAnalysis class
-D14 = MultiRunAnalysis(RunAnaArg{:},'ROIFlag','14keV');
-D22 = MultiRunAnalysis(RunAnaArg{:},'ROIFlag','Default');
-
-D14.exclDataStart = D14.GetexclDataStart(90);
-D22.exclDataStart = D22.GetexclDataStart(90);
-%%
-FitResults14= D14.PlotFitRunList('Parameter','B','YLim',[160 280]);
-FitResults22= D22.PlotFitRunList('Parameter','B','YLim',[160 280]);
+D = MultiRunAnalysis(RunAnaArg{:});
+D.exclDataStart = D.GetexclDataStart(range);
 
 %%
-fprintf('Mean Background 14keV ROI = %.1f mcps \n',1e3.*mean(FitResults14.B));
-fprintf('Mean Background 22keV ROI = %.1f mcps \n',1e3.*mean(FitResults22.B));
-
-stairs(FitResults14.B-FitResults22.B);
+FitResults= D.PlotFitRunList('Parameter','B','YLim',[170 280],'saveplot','pdf');
+ D.PlotFitRunList('Parameter','E0','YLim',[-0.7,1],'DisplayStyle','Rel','saveplot','pdf');
+D.PlotFitRunList('Parameter','N','YLim',[0.9,1.1],'saveplot','pdf');
+D.PlotFitRunList('Parameter','pVal','YLim',[-0.2,1.2],'saveplot','pdf');

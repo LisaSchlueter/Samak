@@ -262,7 +262,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             TBDIS                    = squeeze(sum(obj.SingleRunData.TBDIS(:,obj.SingleRunData.Select_all,:),2));
             TBDISE                   = sqrt(TBDIS./EffCorr);            
             qU                       = obj.StackWmean(obj.SingleRunData.qU,obj.SingleRunData.TimeperSubRunperPixel); 
-            matFilePath       = obj.RunData.matFilePath;
+            matFilePath              = obj.RunData.matFilePath;
             
             if isfield(obj.SingleRunData,'TBDIS14keV')
                 TBDIS14keV      = squeeze(sum(obj.SingleRunData.TBDIS14keV(:,obj.SingleRunData.Select_all,:),2));
@@ -688,7 +688,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                 par(:,obj.SingleRunData.Select_all,:),...
                 time(:,obj.SingleRunData.Select_all,:),2));%weight_m(:,obj.SingleRunData.Select_all,:)
             
- %         out =  squeeze(mean(par(:,obj.SingleRunData.Select_all,:),2));
+           % out =  squeeze(mean(par(:,obj.SingleRunData.Select_all,:),2));
 
         end
         function [SingleRunRate,SingleRunqU] = ComputeStackqU(obj,varargin) 
@@ -1169,9 +1169,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             
             RunWiseErosFactor = ((R200  - S(1) * (p1-m1) - S(2) * (p2-m2))./R200)';
             
-        end
-
-        
+        end      
         function RunWiseErosFactor =  RMRateErosCorrectionqUActivity(obj)
             % Compute a Run Wise Correction Factor
             % R200 is the reference rate at -200 eV below E_0
@@ -1544,7 +1542,9 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                     if ismember(RSvariables{i},{'matFileName','TBDarg'})
                          obj.SingleRunData.(RSvariables{i}) = ...
                             cellfun(@(x) x.(RSvariables{i}),DataFiles,'UniFormOutput',0);  
-                    elseif ~contains(RSvariables{i},{'RunTimeStart','StartTimeStamp'})
+                    elseif contains(RSvariables{i},{'StartTimeStamp'}) && ~strcmp(obj.DataType,'Real')
+                        
+                    elseif ~contains(RSvariables{i},{'RunTimeStart'})
                         obj.SingleRunData.(RSvariables{i}) = ...
                             cell2mat(cellfun(@(x) x.(RSvariables{i})',DataFiles,'UniFormOutput',0))';
                     end
@@ -2042,7 +2042,8 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                     elseif strcmp(DisplayStyle,'Rel')
                         y = y-wmean(y,1./yErr.^2);
                         ystr = sprintf('{\\itE}_0^{fit} - \\langle{\\itE}_0^{fit}\\rangle (eV)');
-                    end   
+                    end 
+                    yUnit = sprintf('eV');
                 case 'mNuSq'
                     y = FitResults.mnuSq;
                     yErr = FitResults.mnuSqErr;
@@ -2052,6 +2053,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                         y = y-wmean(y,1./yErr.^2);
                         ystr = sprintf('{\\itm}_{\\beta}^2 - < m_{\\beta}^2 >  (eV^2)');
                     end
+                    yUnit = sprintf('eV^2');
                 case 'B'
                     y = FitResults.B.*1e3;
                     yErr = FitResults.BErr.*1e3;
@@ -2061,6 +2063,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                         y = y-wmean(y,1./yErr.^2);
                         ystr = sprintf('{\\itB} - \\langle{\\itB}\\rangle  (mcps)');
                     end
+                    yUnit = sprintf('mcps');
                 case 'N'
                     y = FitResults.N+1;
                     yErr = FitResults.NErr;
@@ -2070,10 +2073,12 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                         y = y-wmean(y,1./yErr.^2);
                         ystr = sprintf('{\\itN} - \\langle{\\itN}\\rangle');
                     end
+                    yUnit = sprintf('');
                 case 'pVal'
                     y = FitResults.pValue;
                     yErr = zeros(numel(y),1);
                     ystr = sprintf('p-value (%.0f dof)',FitResults.dof(1));
+                    yUnit = sprintf('');
                 case 'RhoD'
                     y = obj.SingleRunData.WGTS_CD_MolPerCm2;
                     yErr = std(obj.SingleRunData.WGTS_CD_MolPerCm2_SubRun);
@@ -2083,10 +2088,12 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                         y = y-wmean(y,obj.SingleRunData.TimeSec);
                         ystr = sprintf('\\rhod - \\langle\\rhod\\rangle (mol \\cdot cm^{-2})');
                     end
+                    yUnit = sprintf('mol \\cdot cm^{-2}');
                 case 'T2'
                     y    = obj.SingleRunData.WGTS_MolFrac_TT;
                     yErr = zeros(numel(y),1);%std(obj.SingleRunData.WGTS_MolFrac_TT_SubRun);
                     ystr = sprintf('T_2 fraction');
+                    yUnit =''; 
             end
             
             %% plot
@@ -2185,19 +2192,20 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             elseif ismember(Parameter,{'T2'})
                 leg = legend([e1,l1],'Scanwise',sprintf('Time weighted mean = %.3f',wmean(y(y>0),obj.SingleRunData.TimeSec(y>0))));
             else
-                leg = legend([e1,l1],sprintf('Scanwise fits (%s)',chi2leg),sprintf('Weighted mean, p-value = %.2f',pval));
+                leg = legend([e1,l1],sprintf('Scanwise fits (%s) , \\sigma = %.2f %s',chi2leg,std(y),yUnit),...
+                    sprintf('Weighted mean, p-value = %.2f',pval));
             end
-            legend boxoff;
+           
             if ismember(Parameter,{'RhoD','T2'})
                 leg.Location = 'northwest';
             else
-                leg.Location = 'north';
+                leg.Location = 'northwest';
                 legpos = leg.Position;
                 leg.Position = [legpos(1)-0.03,legpos(2)-0.02,legpos(3:4)];
                 
             end
-            leg.FontSize = get(gca,'FontSize');
-            
+            leg.FontSize = get(gca,'FontSize')-2;
+            leg.EdgeColor= rgb('Silver');
             % remove white space around figure
             ax = gca;
             outerpos = ax.OuterPosition;
@@ -2239,8 +2247,8 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                             x=linspace(min(y)*0.8,max(y)*1.2,100);
                         end
                         yhist = gaussian(x,wmean(y,1./yErr.^2),std(y))./simpsons(x,gaussian(x,wmean(y,1./yErr.^2),std(y)));
-                        p1 = plot(yhist.*h1.BinWidth.*numel(obj.RunList),x,...
-                            '-','LineWidth',4,'Color',rgb('GoldenRod'));
+                        % plot(yhist.*h1.BinWidth.*numel(obj.RunList),x,...
+                        %    '-','LineWidth',4,'Color',rgb('GoldenRod'));
                     end
                 end
                 PrettyFigureFormat;
@@ -2268,7 +2276,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             % save plot
             if ~strcmp(saveplot,'OFF')
   
-                savedir = [getenv('SamakPath'),sprintf('tritium-data/plots/%s/',obj.DataSet)];
+                savedir = [getenv('SamakPath'),sprintf('tritium-data/plots/%s/RunwiseFits/',obj.DataSet)];
                 if ~exist(savedir,'dir')
                     system(['mkdir -p ',savedir]);
                 end
@@ -2319,6 +2327,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                 
                 p1 = plot(x,yhist.*h1.BinWidth.*numel(obj.RunList),...
                     '-','LineWidth',4,'Color',rgb('GoldenRod'));
+               
                 xlim([min(x),max(x)]);
                 
  
@@ -2329,7 +2338,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                 else
                     leg = legend([h1,p1],sprintf('Runwise fits (%s)',chi2leg),'Gaussian');
                 end
-                legend boxoff;
+                leg.EdgeColor= rgb('Silver');
                 leg.Location = 'northwest';
                 
             end

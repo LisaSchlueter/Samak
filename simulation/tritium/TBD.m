@@ -910,7 +910,7 @@ classdef TBD < handle & WGTSMACE %!dont change superclass without modifying pars
                 end
                 
                 obj.RF(obj.RF<0)=0;
-                if strcmp(saveRF,'ON') &&  obj.MACE_Sigma==0
+                if strcmp(saveRF,'ON') &&  all(obj.MACE_Sigma==0)
                     LoadOrSaveRF(obj,'save')
                 end
             end % if loadSuccess==0

@@ -11,7 +11,7 @@
 % March 2020
 % --------------------------------------------------------------------------------
 %%  common settings
-SavePlot = 'OFF';
+SavePlot = 'ON';
 RecomputeFlag = 'OFF';
 range = 40; % in eV below E0
 RunList = 'KNM2_Prompt';
@@ -124,6 +124,7 @@ xlim([x(1)-0.2 x(end)+0.2])
 %ylim([-14 6]*1e-3);
 
 if strcmp(SavePlot,'ON')
+    grid on
 savedirplot = strrep(savedir,'results','plots');
 MakeDir(savedirplot);
 savename = sprintf('%sknm2_StackingBreakdown_%.0feV%s.pdf',savedirplot,range,fitStr);

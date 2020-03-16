@@ -64,3 +64,6 @@ PrettyFigureFormat('FontSize',24);
 xlabel(sprintf('\\sigma (qU)'));
 ylabel(sprintf('{\\Delta\\itm^2}'));
 xlim([-0.005,0.205])
+
+saveplot = strrep(strrep(savename,'results','plots'),'.mat','.pdf');
+export_fig(saveplot);
