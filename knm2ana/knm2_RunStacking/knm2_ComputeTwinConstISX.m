@@ -1,8 +1,6 @@
-% Uniform fit on KNM2 data
-% analyze 3 rear wall periods one after the other
-% January 2020, Lisa
+% compute and fit twins with a constant ISX
 
-RunAnaArg = {'RunList','KNM2_RW3',...  % define run number -> see GetRunList
+RunAnaArg = {'RunList','KNM2_Prompt',...  % define run number -> see GetRunList
     'fixPar','mNu E0 Bkg Norm',...         % free Parameter !!
     'DataType','Twin',...              % Real, Twin or Fake
     'FSDFlag','BlindingKNM2',...       % final state distribution (theoretical calculation)
@@ -11,10 +9,11 @@ RunAnaArg = {'RunList','KNM2_RW3',...  % define run number -> see GetRunList
     'chi2','chi2Stat',...              % statistics only
     'NonPoissonScaleFactor',1,...
     'MosCorrFlag','OFF',...
-    'TwinBias_Q',18573.7,...
+    'TwinBias_Q',18574,...% different E0 to keep track that this is with const. ISX
     'ROIFlag','14keV',...
-    'DopplerEffectFlag','FSD'};%,...
-    %'Twin_SameqUFlag','ON'};
+    'DopplerEffectFlag','FSD',...
+    'ISCS','Theory'};
+   
 
 %% build object of MultiRunAnalysis class
 D = MultiRunAnalysis(RunAnaArg{:});

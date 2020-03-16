@@ -30,7 +30,8 @@ classdef RunAnalysis < handle
         FSDFlag         % final state distributions: Sibille, Sibille0p5eV, BlindingKNM1, OFF ...
         ROIFlag;        % region of interest
         MosCorrFlag;    % correct data qU by monitor spectrometer drift 
-       
+        ISCSFlag;       % inel. scattering cross section flag
+        
         %Covariance Matrices
         FitCM_Obj;      % Fit Covariance Matrix Object
         FitCM;          % Current (Combined Systematics) Fit Covariance Matrices
@@ -128,7 +129,7 @@ classdef RunAnalysis < handle
             p.addParameter('ROIFlag','14keV',@(x)ismember(x,{'Default','14keV'})); % default->default counts in RS, 14kev->[14,32]keV ROI
             p.addParameter('MosCorrFlag','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('KTFFlag','WGTSMACE',@(x)ismember(x,{'WGTSMACE','MACE','WGTSMACE_NIS1'}));
-            
+             p.addParameter('ISCSFlag','Edep',@(x)ismember(x,{'Aseev','Theory','Edep'}));
             % Fit Options
             p.addParameter('chi2','chi2Stat',@(x)ismember(x,{'chi2Stat', 'chi2CM', 'chi2CMFrac','chi2CMShape', 'chi2P','chi2Nfix'}));
             p.addParameter('fitter','minuit',@(x)ismember(x,{'minuit','matlab'}));
@@ -191,6 +192,7 @@ classdef RunAnalysis < handle
             obj.ROIFlag           = p.Results.ROIFlag;
             obj.MosCorrFlag       = p.Results.MosCorrFlag;
             obj.KTFFlag           = p.Results.KTFFlag;
+            obj.ISCSFlag          = p.Results.ISCSFlag;
             obj.fitter            = p.Results.fitter;
             obj.minuitOpt         = p.Results.minuitOpt;
             obj.exclDataStart     = p.Results.exclDataStart;
@@ -687,7 +689,7 @@ classdef RunAnalysis < handle
             end
             
             TBDarg  = {obj.RunData,...
-                'ISCS','Edep',...
+                'ISCS',obj.ISCSFlag,...
                 'recomputeRF','OFF',...
                 'ELossFlag',obj.ELossFlag,...
                 'PixList',obj.PixList,...

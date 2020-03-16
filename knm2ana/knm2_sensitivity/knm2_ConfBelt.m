@@ -22,7 +22,7 @@ D = MultiRunAnalysis(RunAnaArg{:});
 D.exclDataStart = D.GetexclDataStart(range);
 S = RunSensitivity('RunAnaObj',D);
 %% Define Test values
-mNuSq_1 = [0,0.15,0.2:0.1:0.7,0.8];%,0.9,1.2,1.35,1.5];
+mNuSq_1 = [0,0.15,0.2:0.1:0.7,0.8,0.9,1.2,1.35,1.5];
 mNuSq_2 = [0.11,0.13,0.17,0.25:0.1:0.95];
 mNuSq_3 = [1,1.1,1.3,1.6,1.4];%,1.7,1.8];
 

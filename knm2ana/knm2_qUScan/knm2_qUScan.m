@@ -1,5 +1,4 @@
-% Uniform fit on KNM2 data
-% analyze 3 rear wall periods one after the other
+% Uniform fit on KNM2 data/twins
 % January 2020, Lisa
 
 RunAnaArg = {'RunList','KNM2_RW3',...  % define run number -> see GetRunList

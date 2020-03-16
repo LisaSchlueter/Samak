@@ -171,7 +171,7 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             p.addParameter('WGTS_B_T',3.6,@(x)isfloat(x) && x>0); % Source
             p.addParameter('WGTS_Temp',30,@(x)isfloat(x) && x>0);
             p.addParameter('NIS',7,@(x)isfloat(x) && x>0); %Numer inel. Scatterings
-            p.addParameter('ISCS','Aseev',@(x)ismember(x,{'Aseev','Theory','Edep'})); %inel. scattering cross section
+            p.addParameter('ISCS','Edep',@(x)ismember(x,{'Aseev','Theory','Edep'})); %inel. scattering cross section
             p.addParameter('ISXsection',0,@(x)isfloat(x) || isa(x,'function_handle'));
             p.addParameter('is_EOffset',0,@(x)isfloat(x)); %energy loss offset
             
@@ -400,7 +400,8 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
                 end
                 
                 if ~isa(obj.ISXsection,'function_handle')
-                    obj.ISXsection = @(E) obj.ISXsection;
+                    ISXsection_const = obj.ISXsection;
+                    obj.ISXsection = @(E) ISXsection_const;
                 end
             end
         end

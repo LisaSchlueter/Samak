@@ -13,6 +13,7 @@ TwinBias_Q = 18573.70;
 savedir = [getenv('SamakPath'),'knm2ana/knm2_RunStacking/results/'];
 MakeDir(savedir);
 savename = sprintf('%sknm2_RunStackingRF_%s_E0%.2feV%s.mat',savedir,RunList,TwinBias_Q,TwinStr);
+%savename = sprintf('%stest.mat',savedir);
 
 if exist(savename,'file')
     load(savename);
