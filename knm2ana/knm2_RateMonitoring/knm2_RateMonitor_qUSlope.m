@@ -4,7 +4,7 @@
 % ------------------------------------------------------------
 
 % You need to have Run GetSamakPath in your Working Directory Before
-function [Slope_RateqU,Err_Slope_RateqU,OffsetFactor,Err_OffsetFactor] = knm2_RateMonitor_qUSlope
+function [Slope_RateqU,Err_Slope_RateqU] = knm2_RateMonitor_qUSlope
     savedir = [getenv('SamakPath'),'knm2ana/knm2_RateMonitoring/results'];
     MakeDir(savedir);
 
@@ -61,8 +61,6 @@ function [Slope_RateqU,Err_Slope_RateqU,OffsetFactor,Err_OffsetFactor] = knm2_Ra
     leg = legend([e1,p1],sprintf('MC simulation'),...
         sprintf('Linear fit slope = %.2f \\pm %.2f cps/mV \n = %.2f \\pm %.2f kV^{-1}',par(1)/1e3,err(1)/1e3,par(1)/MeanRate*1e3,err(1)/MeanRate*1e3));
     leg.EdgeColor = rgb('Silver');
-    OffsetFactor = par(1)/1e3;
-    Err_OffsetFactor = err(1)/1e3;
     Slope_RateqU = par(1)/MeanRate*1e3;
     Err_Slope_RateqU = err(1)/MeanRate*1e3;
 end
