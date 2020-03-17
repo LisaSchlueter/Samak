@@ -42,8 +42,8 @@ switch DataSet
         %%% WARNING : TECHNICAL PATH - TEMPORARY - STOP
     case 'Knm2'
         % FPD efficiency
-         PixExclFPD = [97, 98, 110, 111, 121, 122]+1; % (FPD)
-         PixList=PixList(~ismember(PixList,PixExclFPD));
+        PixExclFPD = [97, 98, 110, 111, 121, 122]+1; % (FPD)
+        PixList=PixList(~ismember(PixList,PixExclFPD));
          % FBM shaddow
         PixExclFBM = [100]+1;% (FBM)
         PixList=PixList(~ismember(PixList,PixExclFBM)); 

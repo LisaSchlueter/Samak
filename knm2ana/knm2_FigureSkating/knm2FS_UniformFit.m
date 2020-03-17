@@ -1,10 +1,10 @@
 % KNM2 Figure skating twins
 range = 40;
 E0 = knm2FS_GetE0Twins('SanityPlot','OFF');
-RecomputeFlag = 'OFF';
+RecomputeFlag = 'ON';
 
 %% load or calc
-savedir = [getenv('SamakPath'),'knm2ana/knm2_FigureSkating/results'];
+savedir = [getenv('SamakPath'),'knm2ana/knm2_FigureSkating/results/'];
 savename = sprintf('%sknm2FS_UniformFit_%.0feV.mat',savedir,range);
 
 if exist(savename,'file') && strcmp(RecomputeFlag,'OFF')

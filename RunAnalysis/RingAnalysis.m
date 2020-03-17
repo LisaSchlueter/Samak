@@ -122,11 +122,17 @@ classdef RingAnalysis < handle
                     end
                 end
                 
-                obj.FitResult = struct('par',par,'err',err,'chi2min',chi2min,'dof',dof,...
-                    'ScanResults',ScanResults,'errNeg',errNeg,'errPos',errPos);
+                FitResult.par = par;
+                FitResult.err = err;
+                FitResult.chi2min = chi2min;
+                FitResult.dof = dof;
+                FitResult.ScanResults = ScanResults;
+                FitResult.errNeg = errNeg;
+                FitResult.errPos = errPos;
+                
+                obj.FitResult = FitResult;
             end
             if strcmp(SaveResult,'ON') 
-                FitResult = obj.FitResult;
                 save(savename,'FitResult');
             end
         end

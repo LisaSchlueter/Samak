@@ -13,19 +13,18 @@ RunAnaArg = {'RunList','KNM2_Prompt',...  % define run number -> see GetRunList
     'TwinBias_Q',18574,...% different E0 to keep track that this is with const. ISX
     'ROIFlag','14keV',...
     'DopplerEffectFlag','FSD',...
-    'ISCS','Theory'};
-   
+    'ISCS','Theory'};  
 
 %% build object of MultiRunAnalysis class
-D = MultiRunAnalysis(RunAnaArg{:});
+Dc = MultiRunAnalysis(RunAnaArg{:});
 
 %% modify some parameters in your analysis
 range = 40;               % fit range in eV below endpoint        
-D.exclDataStart = D.GetexclDataStart(range); % find correct data, where to cut spectrum
+Dc.exclDataStart = Dc.GetexclDataStart(range); % find correct data, where to cut spectrum
 
 %% Fit -> fit results are in property: A.FitResult
-D.Fit;
+Dc.Fit;
 
 %% Display result
-D.PlotFit('saveplot','OFF','FitResultsFlag','OFF');
+Dc.PlotFit('saveplot','OFF','FitResultsFlag','OFF');
 

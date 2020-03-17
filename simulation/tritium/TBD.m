@@ -785,6 +785,10 @@ classdef TBD < handle & WGTSMACE %!dont change superclass without modifying pars
                 obj.Te = ((18573.70-90):0.1:(18573.70+135))';
             elseif strcmp(obj.TD,'RFcomparison')
                 obj.Te = (18540:0.01:18635)'; 
+            elseif contains(obj.TD,'KNM2') % new Lisa (test)
+               Temin = 18574-91;
+               Temax = 18574+135;
+               obj.Te = (Temin:TeStep_local:Temax)';
             else
                 % HARDCODED - 14/05/2018 - Thierry
                 nPoints = ceil((qUtmp(end)-qUtmp(1))/TeStep_local); % 0.1eV Binning necessary for doppler effect
