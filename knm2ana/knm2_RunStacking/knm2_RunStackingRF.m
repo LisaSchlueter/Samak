@@ -9,7 +9,7 @@ else
     TwinStr = ['_',TwinOpt];
 end
 RunListName = 'KNM2_Prompt';
-TwinBias_Q = 18573.70;
+TwinBias_Q = 18575;%3.70;
 savedir = [getenv('SamakPath'),'knm2ana/knm2_RunStacking/results/'];
 MakeDir(savedir);
 savename = sprintf('%sknm2_RunStackingRF_%s_E0%.2feV%s.mat',savedir,RunListName,TwinBias_Q,TwinStr);
@@ -78,7 +78,7 @@ else
     for i=1:nRuns
         progressbar(i/nRuns);
         for q=1:numel(qUModel)
-            RFinter(i,:,q) = squeeze(interp1(Te(i,:)-qU(i,q),RF(i,:,q),TeModel-qUModel(q),'linear','extrap'));
+            RFinter(i,:,q) = squeeze(interp1(Te(i,:),RF(i,:,q),TeModel,'linear','extrap'));
         end
     end
     
@@ -103,7 +103,7 @@ else
     save(savename,'Te','qU','RF','RFmodel','RFmodelImp','RFmodelImp10',...
                   'RFsigma','qUModel','TeModel','nRuns','RunList',...
                   'FitResult_RFmean','FitResult_RFref',...
-                  'RFinter','RFinterMean','RFinterStd',...
+                  'RFinter','RFinterMean','RFinterStd','RunListName',...
                   'ISProb','RunAnaArg','ISProbmodel');
              
 end

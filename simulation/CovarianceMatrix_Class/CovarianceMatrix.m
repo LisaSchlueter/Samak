@@ -3032,30 +3032,38 @@ function ComputeCM_LongPlasma(obj,varargin)
     % effectively described by e-loss shift and variance
     p=inputParser;
     p.addParameter('CorrCoeff',0,@(x)isfloat(x));
+    p.addParameter('NegSigma','Troitsk',@(x)ismember(x,{'Abs','Troitsk'}));
     p.parse(varargin{:});
     CorrCoeff = p.Results.CorrCoeff;
-
-     nRings = numel(obj.StudyObject.MACE_Ba_T);
-     
-     % initial longi plasma parameters
-     is_EOffset_i = obj.StudyObject.is_EOffset;
-     MACE_Sigma_i = mean(obj.StudyObject.MACE_Sigma);
-     
-     obj.GetTDlabel;
-     covmat_path =[getenv('SamakPath'),sprintf('inputs/CovMat/LongPlasma/CM/')];
-     MakeDir(covmat_path);
-     covmat_filename = sprintf('LongPlasma_%s_%.0fTrials_%.0fmeVEloss_%.0fmeVElossErr_%.0fmeVSigma_%.0fmeVSigmaErr_%.0fCorrCoeff.mat',...
-         obj.TDlabel,obj.nTrials,...
-         is_EOffset_i*1e3,obj.is_EOffsetErr*1e3,...
-         MACE_Sigma_i*1e3,obj.MACE_SigmaErr*1e3,...
-         CorrCoeff*100);
-     
-     if strcmp(obj.StudyObject.FPD_Segmentation,'RING')
-         % add ring information for ringwise covariance matrices
-         covmat_filename = strrep(covmat_filename,'.mat',sprintf('_Ring%s.mat',obj.StudyObject.FPD_RingMerge));
-     end
-     obj.CovMatFile = strcat(covmat_path,covmat_filename);
-     
+    NegSigma = p.Results.NegSigma;    % how to deal with negative sigmas
+    
+    switch NegSigma
+        case 'Troitsk'
+            NegSigmaStr = '_Troitsk'; % troitsk formula
+        case 'Abs'
+            NegSigmaStr = '';         % absolute value of sigma
+    end
+    nRings = numel(obj.StudyObject.MACE_Ba_T);
+    
+    % initial longi plasma parameters
+    is_EOffset_i = obj.StudyObject.is_EOffset;
+    MACE_Sigma_i = mean(obj.StudyObject.MACE_Sigma);
+    
+    obj.GetTDlabel;
+    covmat_path =[getenv('SamakPath'),sprintf('inputs/CovMat/LongPlasma/CM/')];
+    MakeDir(covmat_path);
+    covmat_filename = sprintf('LongPlasma_%s_%.0fTrials_%.0fmeVEloss_%.0fmeVElossErr_%.0fmeVSigma_%.0fmeVSigmaErr_%.0fCorrCoeff%s.mat',...
+        obj.TDlabel,obj.nTrials,...
+        is_EOffset_i*1e3,obj.is_EOffsetErr*1e3,...
+        MACE_Sigma_i*1e3,obj.MACE_SigmaErr*1e3,...
+        CorrCoeff*100,NegSigmaStr);
+    
+    if strcmp(obj.StudyObject.FPD_Segmentation,'RING')
+        % add ring information for ringwise covariance matrices
+        covmat_filename = strrep(covmat_filename,'.mat',sprintf('_Ring%s.mat',obj.StudyObject.FPD_RingMerge));
+    end
+    obj.CovMatFile = strcat(covmat_path,covmat_filename);
+    
     % load if already computed
     if exist(obj.CovMatFile,'file')==2 && strcmp(obj.RecomputeFlag,'OFF')
         fprintf(2,'CovarianceMatrix:ComputeCM_LongPlasma: Loading LongPlasma CM from File \n')
@@ -3063,7 +3071,7 @@ function ComputeCM_LongPlasma(obj,varargin)
         obj.MultiCovMat.CM_LongPlasma = obj.CovMat; %in case normalization was changed
         return
     end
- 
+    
     % longi plasma uncertainty
     PlasmaErr =  [obj.MACE_SigmaErr,obj.is_EOffsetErr];
     PlasmaCovMat      = PlasmaErr.*[1,CorrCoeff;CorrCoeff,1].*PlasmaErr';
@@ -3072,12 +3080,12 @@ function ComputeCM_LongPlasma(obj,varargin)
     PlasmaPar_expected = [MACE_Sigma_i,is_EOffset_i];
     PlasmaPar =  mvnrnd(PlasmaPar_expected,PlasmaCovMat,obj.nTrials);
     
-    MACE_Sigma_v   = abs(PlasmaPar(:,1)); % do not allow for negative broadenings
-    MACE_Sigma_v(MACE_Sigma_v<1e-3) = 0;  % too small to resolve anyway
+    MACE_Sigma_v = PlasmaPar(:,1);             % negative broadenings dealt with later
+    MACE_Sigma_v(abs(MACE_Sigma_v)<1e-3) = 0;  % too small to resolve anyway
     is_EOffset_v  = PlasmaPar(:,2);
-  
+    
     % e-loss shift:
-    ELossRange = 500; 
+    ELossRange = 500;
     ELossBinStep =0.2;
     maxE = ELossRange;
     minE=-maxE; NbinE = (maxE-minE)/ELossBinStep;
@@ -3093,7 +3101,7 @@ function ComputeCM_LongPlasma(obj,varargin)
     % calculate response functions with varied parameters
     RFfun = @ComputeRF;
     ResponseFunction = zeros(obj.StudyObject.nTe,obj.StudyObject.nqU,obj.nTrials,nRings);
-    ElossFunc_v       = zeros(obj.StudyObject.NIS,numel(E),obj.nTrials);
+    ElossFunc_v       = zeros(obj.StudyObject.NIS,numel(E),obj.nTrials);  
     
     for i=1:obj.nTrials
         progressbar(i/obj.nTrials);
@@ -3109,12 +3117,22 @@ function ComputeCM_LongPlasma(obj,varargin)
         end
         obj.StudyObject.RF = ResponseFunction(:,:,i,:);
         
-        % variance 
-        obj.StudyObject.LoadFSD('Sigma',MACE_Sigma_v(i));
-        
+        % variance
+        obj.StudyObject.LoadFSD('Sigma',abs(MACE_Sigma_v(i))); % take absolute sigma
         obj.StudyObject.ComputeTBDDS;
         obj.StudyObject.ComputeTBDIS;
         TBDIS_V(:,i,:) = obj.StudyObject.TBDIS;
+        
+        if strcmp(NegSigma,'Troitsk') % Use Troitsk formula
+            % TBDIS(sigma<0) = 2*(sigma=0)-(abs(sigma))
+            if MACE_Sigma_v(i)<0
+                obj.StudyObject.LoadFSD; % sigma = 0
+                obj.StudyObject.ComputeTBDDS;
+                obj.StudyObject.ComputeTBDIS;
+                TBDIS_V(:,i,:) = 2.*obj.StudyObject.TBDIS - TBDIS_V(:,i,:);
+            end
+        end
+        
     end
     
     % Reshape
@@ -3151,6 +3169,16 @@ function ComputeCM_LongPlasma(obj,varargin)
     
     % Save again
     save(obj.CovMatFile, 'obj','-append');
+    
+    % Also compute response function covariance matrix
+    if ~strcmp(obj.StudyObject.FPD_Segmentation,'RING')
+        CovMatRF = cell(obj.StudyObject.nqU,1);
+        RFtmp = permute(ResponseFunction,[3,1,2]); % old size RF: nTe, nqU, nTrials, (nRings)
+        for i=1:obj.StudyObject.nqU
+            CovMatRF{i} = cov(RFtmp(:,:,i));
+        end
+        save(obj.CovMatFile,'CovMatRF','-append');
+    end
 end
 
 function ComputeCM_RW(obj,varargin)

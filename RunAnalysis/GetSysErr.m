@@ -133,8 +133,8 @@ elseif SysBudget == 33 % preliminary KNM2 systematics (March 20)
     SysErr.ISXsection_RelErr= 0; %use rhod sigma together as uncertainty
     SysErr.DataDriven = 'ON';
     SysErr.FPDeff_RelErr = 1e-4;
-    SysErr.is_EOffsetErr = 0.68*0.15;
-    SysErr.MACE_SigmaErr = 0.68*0.20;
+    SysErr.is_EOffsetErr = 0.05;
+    SysErr.MACE_SigmaErr = sqrt(0.2^2/3);
     SysErr.MaxSlopeCpsPereV = 5.2*1e-06;
 end
 

@@ -26,7 +26,7 @@ MC = MultiRunAnalysis(RunAnaArg{:});
 MC.exclDataStart = MC.GetexclDataStart(range);
 %%
 S = RunSensitivity('RunAnaObj',MC);
-S.RecomputeFlag='OFF';
+S.RecomputeFlag='ON';
 S.LimitFlag = 'Central';
 S.ConfLevel=0; % 0 == 1 sigma
 

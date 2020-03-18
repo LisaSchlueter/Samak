@@ -2,13 +2,13 @@
 % based on KNM2 runs
 % October 2019, Lisa
 
-RunList = 'KNM2_Prompt';%'KNM2_afterFix';%'KNM2_RW3';%
+RunList = 'KNM2_Prompt';
 
 %exclDataStart= 11;
 range = 40;
 chi2 = 'chi2Stat';%CMShape';
 pullFlag = 4;
-fixPar = 'E0 Norm Bkg qU';
+fixPar = 'E0 Norm Bkg';
 
 % read data and set up model
 RunArg = {'RunList',RunList,...
@@ -26,7 +26,8 @@ RunArg = {'RunList',RunList,...
     'pullFlag',pullFlag,...
     'TwinBias_Q',18573.70,...
     'ROIFlag','Default',...
-    'MosCorrFlag','OFF'};
+    'MosCorrFlag','OFF',...
+    'NonPoissonScaleFactor',1};
 
 MR = MultiRunAnalysis(RunArg{:});
 MR.exclDataStart = MR.GetexclDataStart(range);

@@ -26,6 +26,14 @@ D.exclDataStart = D.GetexclDataStart(range); % find correct data, where to cut s
 %% Fit -> fit results are in property: A.FitResult
 D.Fit;
 
+% fit again with averaged response function
+%D.LoadSingleRunObj;
+%%
+%     RF = zeros(D.nRuns,D.ModelObj.nTe,D.ModelObj.nqU);
+%     for i=1:A.nRuns
+%         RF(i,:,:) = D.SingleRunObj{i}.RF(1:D.ModelObj.nTe,:);
+%     end
+% %RFmean = D.SingleRunObj.
 %% Display result
 D.PlotFit('saveplot','OFF','FitResultsFlag','OFF');
 

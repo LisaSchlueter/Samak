@@ -1536,7 +1536,7 @@ classdef RunAnalysis < handle
                 end
                 freePar = ConvertFixPar('freePar',obj.fixPar,'nPar',obj.nPar,'nPixels',numel(obj.RunData.MACE_Ba_T),'Mode','Reverse');
                 savename = [savedir,sprintf('Fit%s_%s_%s_%.0fpix%s.mat',...
-                    obj.RunData.RunName.obj.DataType,freePar,numel(obj.PixList),RoiStr)];
+                    obj.RunData.RunName,obj.DataType,freePar,numel(obj.PixList),RoiStr)];
                 FitResult = obj.FitResult;
                 save(savename,'FitResult');
             end

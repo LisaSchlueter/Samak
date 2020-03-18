@@ -36,18 +36,32 @@ RebinMode          = p.Results.RebinMode;
 RecomputeFlag      = p.Results.RecomputeFlag;
 filename           = p.Results.filename;
 
+if ~isempty(MultiPos)
+    nRings = ceil(numel(sigma)/3);% number of pseudo rings
+else
+    nRings = numel(sigma);
+end
+
 savedir = [getenv('SamakPath'),'inputs/FSD/FSDconv/'];
 savefile = strrep(strrep(extractAfter(filename,'inputs/FSD/'),'.txt',''),'.dat','');
 
 if numel(sigma)==1
     savename = sprintf('%s%s_%s_Sigma%.0fmeV_Binning%.0f.mat',...
         savedir,savefile,Dist,sigma*1e3,BinningFactor);
-elseif numel(sigma)==3
+elseif numel(sigma)==3 % 3 peaks
     savename = sprintf('%s%s_%s_MultiSigma%.0fmeV_%.0fmeV_%.0fmeV_Binning%.0f.mat',...
         savedir,savefile,Dist,sigma(1)*1e3,sigma(2)*1e3,sigma(3)*1e3,BinningFactor);
+elseif numel(sigma)==nRings % n rings
+    savename = sprintf('%s%s_%s_%.0fRingSigmaMean%.0fmeV_Binning%.0f.mat',...
+        savedir,savefile,Dist,nRings,mean(sigma)*1e3,BinningFactor);
+elseif numel(sigma)==nRings*3
+    meanSigmas = mean(sigma,2); % mean over rings: 1 mean sigma per RW
+    savename = sprintf('%s%s_%s_%.0fRingMulti_SigmaMeanRing%.0fmeV_%.0fmeV_%.0fmeV_Binning%.0f.mat',...
+        savedir,savefile,Dist,nRings,meanSigmas(1)*1e3,...
+        meanSigmas(2)*1e3,meanSigmas(3)*1e3,BinningFactor);
 else
-     savename = sprintf('%s%s_%s_MultiSigmaMean%.0fmeV_Binning%.0f.mat',...
-                    savedir,savefile,Dist,mean(sigma)*1e3,BinningFactor);
+    savename = sprintf('%s%s_%s_MultiSigmaMean%.0fmeV_Binning%.0f.mat',...
+        savedir,savefile,Dist,mean(sigma)*1e3,BinningFactor);
 end
 
 if exist(savename,'file') && strcmp(RecomputeFlag,'OFF')
@@ -67,7 +81,6 @@ elseif strcmp(Dist,'Rect')
         
 end
 
-nRings = ceil(numel(sigma)/3);% number of pseudo rings
 exP_rebin = cell(nRings,1);
 exE_rebin = cell(nRings,1);
 
