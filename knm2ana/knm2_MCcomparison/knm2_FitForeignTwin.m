@@ -18,7 +18,7 @@ if mNuSq>0
 else
     mNu_str = 'NomNu';
 end
-range = 40;
+range = 90;
 RecomputeFlag = 'ON';
 PlotChi2Curve = 'OFF';
 

@@ -1,11 +1,12 @@
 % KNM2 Figure skating twins
 range = 40;
 E0 = knm2FS_GetE0Twins('SanityPlot','OFF');
-RecomputeFlag = 'ON';
+RecomputeFlag = 'OFF';
 
+chi2 = 'chi2CMShape';
 %% load or calc
 savedir = [getenv('SamakPath'),'knm2ana/knm2_FigureSkating/results/'];
-savename = sprintf('%sknm2FS_UniformFit_%.0feV.mat',savedir,range);
+savename = sprintf('%sknm2FS_UniformFit_%.0feV_%s.mat',savedir,range,chi2);
 
 if exist(savename,'file') && strcmp(RecomputeFlag,'OFF')
     load(savename)
@@ -16,10 +17,11 @@ else
         'FSDFlag','BlindingKNM2',...       % final state distribution (theoretical calculation)
         'ELossFlag','KatrinT2',...         % energy loss function     ( different parametrizations available)
         'AnaFlag','StackPixel',...         % FPD segmentations -> pixel combination
-        'chi2','chi2Stat',...              % statistics only
+        'chi2',chi2,...              % statistics only
         'NonPoissonScaleFactor',1,...
         'TwinBias_Q',E0,...
-        'ROIFlag','14keV'};
+        'ROIFlag','14keV',...
+        'SysBudget',33};
     
     %% build object of MultiRunAnalysis class
     A = MultiRunAnalysis(RunAnaArg{:});
@@ -50,12 +52,16 @@ else
     A.ModelObj.InitializeRF;
     A.Fit;
     FitResult_imp  = A.FitResult;
-    save(savename,'FitResult_imp','FitResult_ref','E0','MACE_Sigma');
+   
+    save(savename,'FitResult_imp','FitResult_ref','E0','MACE_Sigma','A');
 end
 %% result
 fprintf('---------------------------\n')
 fprintf('mNuSq = %.3f eV^2  (ref) \n',FitResult_ref.par(1))
-fprintf('mNuSq = %.3f eV^2  (imp) \n',FitResult_imp.par(1))
+fprintf('mNuSq = %.3f eV^2   (imp) \n',FitResult_imp.par(1))
+fprintf('---------------------------\n')
+fprintf('E0    = %.0e eV    (ref) \n',FitResult_ref.par(2)+A.ModelObj.Q_i-mean(E0))
+fprintf('E0    = %.0e eV    (imp) \n',FitResult_imp.par(2)+A.ModelObj.Q_i-mean(E0))
 fprintf('---------------------------\n')
 
 

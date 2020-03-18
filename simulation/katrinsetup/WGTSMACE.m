@@ -998,8 +998,8 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             p = inputParser;
             p.addParameter('Debug','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('ELossBinStep',0.04,@(x)isfloat(x)); % for ELoss Convolution
-            p.addParameter('ELossRange',500,@(x)isfloat(x));   %  ELoss range: old default 9288
-            p.addParameter('RFBinStep',0.04,@(x)isfloat(x));    % for Final RF Convolution 0.04
+            p.addParameter('ELossRange',9288,@(x)isfloat(x));   %  ELoss range: old default 9288
+            p.addParameter('RFBinStep',0.02,@(x)isfloat(x));    % for Final RF Convolution 0.04
             p.addParameter('AdjustISProba','OFF',@(x)ismember(x,{'ON','OFF'}));    % for Final RF Convolution
             p.addParameter('ElossFunctions','',@(x)isfloat(x)); % for covariance matrix only
             p.addParameter('MACE_Bmax_T',obj.MACE_Bmax_T,@(x)isfloat(x)); 
@@ -1026,8 +1026,8 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             
             % binning for response function
             if strcmp(obj.TD,'RFcomparison')
-                RFBinStep = 0.01;
-                maxE_rf = 90;
+                RFBinStep = 0.001;
+                maxE_rf = 400;
                 minE_rf = -maxE_rf;
                 Estep_rf = RFBinStep;
                 E_rf = minE_rf:Estep_rf:maxE_rf;
@@ -1050,11 +1050,19 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
                     E_add1 = Edef_rf-obj.TeStep/3;
                     E_add2 = Edef_rf+obj.TeStep/3;
                     E_add = [E_add1;E_add2];
-                elseif BinFactor>=3
-                    E_add1 = Edef_rf-obj.TeStep/4;
-                    E_add2 = Edef_rf+obj.TeStep/4;
-                    E_add3 = Edef_rf-obj.TeStep/2;
-                    E_add = [E_add1;E_add2;E_add3];
+                elseif BinFactor>=4
+                    E_add = zeros(BinFactor-1,numel(Edef_rf));
+                    for i=1:BinFactor-1
+                        E_add(i,:) = Edef_rf+obj.TeStep.*i/BinFactor;
+                    end
+                    E_add = sort(reshape(E_add,(BinFactor-1)*numel(Edef_rf),1));
+%                     E_add1 = Edef_rf-obj.TeStep/4;
+%                     E_add2 = Edef_rf+obj.TeStep/4;
+%                     E_add3 = Edef_rf-obj.TeStep/2;
+                   
+                   % end
+                     %E_add = [E_add1;E_add2;E_add3];
+               % elseif 
                 end
                 E_rf = unique([Edef_rf;E_add]); % sorts and delete repetitions
                 Estep_rf = E_rf(2) - E_rf(1);
@@ -1080,7 +1088,7 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
 
             % binning for isProb E==te-qu
             IsProbBinStep = 2;
-            maxEis = 500;
+            maxEis = 1000;
             Eiscs = 18575+(-maxEis:IsProbBinStep:maxEis);
             
             % IS Probabilities: labeling

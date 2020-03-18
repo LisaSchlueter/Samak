@@ -19,7 +19,7 @@ E0(numel(runsRW2)+numel(runsRW1)+1:end) = 18573.71;
 
 
 if strcmp(SanityPlot,'ON')
-    figure('Units','normalized','Position',[0.1,0.1,0.65,0.55]);
+    fE0 = figure('Units','normalized','Position',[0.1,0.1,0.65,0.55]);
     s1 = subplot(1,8,1:6);
     plot(1:numel(E0),E0-mean(E0),'s','MarkerSize',3,'MarkerFaceColor',rgb('DodgerBlue'),'Color',rgb('DodgerBlue'));
     PrettyFigureFormat('FontSize',24);
@@ -48,5 +48,9 @@ if strcmp(SanityPlot,'ON')
     set(get(gca,'YAxis'),'Visible','off')
     
     linkaxes([s1,s2],'y');
+    
+    savedir  = [getenv('SamakPath'),'knm2ana/knm2_FigureSkating/plots/'];
+    savename = sprintf('%sKnm2TwinsE0.pdf',savedir);
+    export_fig(fE0,savename);
 end
 end
