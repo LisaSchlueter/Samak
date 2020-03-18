@@ -11,8 +11,8 @@ RunAnaArg = {'RunList','KNM2_Prompt',...  % define run number -> see GetRunList
     'chi2','chi2Stat',...              % statistics only
     'NonPoissonScaleFactor',1,...
     'MosCorrFlag','OFF',...
-    'TwinBias_Q',18575,...
-    'ROIFlag','14keV',...
+    'TwinBias_Q',18573.7,...% 18573.7 = default settings, 18574= const ISX, 18575= same Te for all runs
+    'ROIFlag','14keV',...    % 18573.73 == new RF binning without interp
     'DopplerEffectFlag','FSD'};%,...
     %'Twin_SameqUFlag','ON'};
 
@@ -35,5 +35,5 @@ D.Fit;
 %     end
 % %RFmean = D.SingleRunObj.
 %% Display result
-D.PlotFit('saveplot','OFF','FitResultsFlag','OFF');
+%D.PlotFit('saveplot','OFF','FitResultsFlag','OFF');
 

@@ -786,10 +786,11 @@ classdef TBD < handle & WGTSMACE %!dont change superclass without modifying pars
                 obj.Te = ((18573.70-90):0.1:(18573.70+135))';
             elseif strcmp(obj.TD,'RFcomparison')
                 obj.Te = (18540:0.01:18635)'; 
-%             else % new Lisa (test)
+%             else % new Lisa (test 1)
 %                Temin = 18574-95;
 %                Temax = 18574+135;
 %                obj.Te = (Temin:TeStep_local:Temax)';
+                
             else
                 % HARDCODED - 14/05/2018 - Thierry
                 nPoints = ceil((qUtmp(end)-qUtmp(1))/TeStep_local); % 0.1eV Binning necessary for doppler effect
@@ -807,7 +808,7 @@ classdef TBD < handle & WGTSMACE %!dont change superclass without modifying pars
             obj.TeStep            = obj.Te(2,1)-obj.Te(1,1);
         end
         
-        function          FillTableqUpixel(obj)
+        function FillTableqUpixel(obj)
             % Build qU vector for all pixel
             for p=1:1:obj.nPixels
                 obj.qUpixel(p,:) =    [];

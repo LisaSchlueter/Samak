@@ -1032,11 +1032,45 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
                 Estep_rf = RFBinStep;
                 E_rf = minE_rf:Estep_rf:maxE_rf;
             else
-                maxE_rf = (obj.qUmax-obj.qUmin)*1.5;
-                minE_rf=-maxE_rf;
-                NbinE_rf = (maxE_rf-minE_rf)/RFBinStep;
-                E_rf = linspace(minE_rf,maxE_rf,NbinE_rf);
+%                                 maxE_rf = (obj.qUmax-obj.qUmin)*1.5;
+%                                 minE_rf=-maxE_rf;
+%                                 NbinE_rf = (maxE_rf-minE_rf)/RFBinStep;
+%                                 E_rf2 = linspace(minE_rf,maxE_rf,NbinE_rf);
+%                                 %Estep_rf = E_r(2) - E_rf(1);
+%                 
+               % Edef_rfNeg = -(te-qu); 
+               % Edef_rfNeg(Edef_rfNeg>=min(te-qu)) = [];
+                Edef_rf    = te-qu;
+                BinFactor = ceil(obj.TeStep/RFBinStep); 
+                if BinFactor<=1
+                    E_add = [];
+                elseif  BinFactor==2
+                    E_add = Edef_rf-obj.TeStep/2;
+                elseif BinFactor==3
+                    E_add1 = Edef_rf-obj.TeStep/3;
+                    E_add2 = Edef_rf+obj.TeStep/3;
+                    E_add = [E_add1;E_add2];
+                elseif BinFactor>=3
+                    E_add1 = Edef_rf-obj.TeStep/4;
+                    E_add2 = Edef_rf+obj.TeStep/4;
+                    E_add3 = Edef_rf-obj.TeStep/2;
+                    E_add = [E_add1;E_add2;E_add3];
+                end
+                E_rf = unique([Edef_rf;E_add]); % sorts and delete repetitions
                 Estep_rf = E_rf(2) - E_rf(1);
+                
+                % enlarge range
+                maxE = (obj.qUmax-obj.qUmin)*1.5;
+                minE = -maxE;
+                nBinsUp  = ceil(abs(maxE - max(E_rf))./Estep_rf);
+                nBinsLow = ceil(abs(minE - min(E_rf))./Estep_rf);
+                E_addLow = (min(E_rf)-Estep_rf):-Estep_rf:(min(E_rf)-nBinsLow*Estep_rf);
+                E_addUp  = (max(E_rf)+Estep_rf):Estep_rf:(max(E_rf)+nBinsUp*Estep_rf);
+                
+                % sort and delete repetitions
+                E_rf = unique([E_rf;E_addLow';E_addUp']);
+                maxE_rf = max(E_rf);
+                minE_rf = min(E_rf);
             end
             
             % binning for ELoss function -> very wide for convolution  

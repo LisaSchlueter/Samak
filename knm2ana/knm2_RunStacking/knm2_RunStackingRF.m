@@ -9,7 +9,7 @@ else
     TwinStr = ['_',TwinOpt];
 end
 RunListName = 'KNM2_Prompt';
-TwinBias_Q = 18575;%3.70;
+TwinBias_Q = 18575;%3.70;    % 18573.7 = default settings, 18574= const ISX, 18575= same Te for all runs
 savedir = [getenv('SamakPath'),'knm2ana/knm2_RunStacking/results/'];
 MakeDir(savedir);
 savename = sprintf('%sknm2_RunStackingRF_%s_E0%.2feV%s.mat',savedir,RunListName,TwinBias_Q,TwinStr);
@@ -109,24 +109,12 @@ else
 end
 
 %% test start
-A = MultiRunAnalysis(RunAnaArg{:});
-A.exclDataStart=A.GetexclDataStart(40);
-%new rf inter test
-RFinter= zeros(nRuns,numel(TeModel),numel(qUModel));
-for i=1:nRuns
-    progressbar(i/nRuns);
-    for q=1:numel(qUModel)
-        RFinter(i,:,q) = squeeze(interp1(Te(i,:),RF(i,:,q),TeModel,'linear','extrap'));
-    end
-end
-RFinterMean = squeeze(mean(RFinter));
-RFinterStd = squeeze(std(RFinter));
-
-A.Fit;
-mNuSqref = A.FitResult.par(1);
-A.ModelObj.RF = RFinterMean;
-A.Fit;
-mNuSqinter = A.FitResult.par(1);
+% 
+% A.Fit;
+% mNuSqref = A.FitResult.par(1);
+% A.ModelObj.RF = RFinterMean;
+% A.Fit;
+% mNuSqinter = A.FitResult.par(1);
 
 % test end
 %% correct for extrap mistakes
