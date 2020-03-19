@@ -9,10 +9,12 @@
 
 filepath   = [getenv('SamakPath'),'ksn1ana/contour/'];
 file_A     = 'coord_90eV_Real_syst.mat';
-file_B     = 'coord_90eV_Real_syst_99.mat';
+file_B     = 'coord_90eV_Real_syst_95.mat';
+file_C     = 'coord_90eV_Real_syst_99.mat';
 
 da  = importdata([filepath,file_A]);   % Data A
 db  = importdata([filepath,file_B]);   % Data B
+dc  = importdata([filepath,file_C]);   % Data c
 
 % Constant data
 d_giunti   = importdata([filepath,'coord_Giunti.mat']);         % KATRIN Data from Giunti
@@ -25,11 +27,12 @@ d_raa_95_b = importdata([filepath,'coord_RAA_95_B.mat']);
 
 da2  = 1-(1-2*da.sith4_X).^2;
 db2  = 1-(1-2*db.sith4_X).^2;
+dc2  = 1-(1-2*dc.sith4_X).^2;
 
 %% Plot tunings
 % Cutting the tails
-na   = length(da2); nb   = length(db2);
-cuta = (5:na);  cutb = (6:nb);
+na   = length(da2); nb   = length(db2); nc   = length(dc2);
+cuta = (5:na);  cutb = (5:nb);  cutc = (5:nc);
 
 % Continuation of the RAA curves
 raa90x = d_raa_90.sith4_X;   raa90y = d_raa_90.m4_Y;   n90 = length(raa90x);
@@ -62,14 +65,17 @@ hold on
 %   Giunti
 p_g     =       plot (d_giunti.sith4_X, d_giunti.m4_Y,...
                     'color',[0.9290 0.6940 0.1250],'LineWidth',1);
-
+hold on
                 
 % === Our Data ===
-pA      =       plot (da2(cuta),da.m4_Y(cuta),...
+pA      =       plot ([da2(cuta),1],[da.m4_Y(cuta),da.m4_Y(na)],...
                     'color',prlB,'LineWidth',3);
 hold on
-pB      =       plot (db2(cutb),db.m4_Y(cutb),...
+pB      =       plot ([db2(cutb),1],[db.m4_Y(cutb),db.m4_Y(nb)],...
                     '--','color',prlB,'LineWidth',3);
+hold on
+pC      =       plot ([dc2(cutc),1],[dc.m4_Y(cutc),dc.m4_Y(nc)],...
+                    ':','color',prlB,'LineWidth',3);
 
 %% Plot Parameters
 
@@ -78,14 +84,15 @@ xlabel('sin^2(2\theta_{ee})');
 ylabel('\Deltam_{41}^2  (eV^2)');
 
 % Labels
-katrinA  = 'KATRIN KSN1 data - syst - 90%CL - [E_0-90;E_0+50] eV';
-katrinB  = 'KATRIN KSN1 data - syst - 99%CL - [E_0-90;E_0+50] eV';
+katrinA  = 'KATRIN KSN1 data - stat+sys - 90%CL - [E_0-90;E_0+50] eV';
+katrinB  = 'KATRIN KSN1 data - stat+sys - 95%CL - [E_0-90;E_0+50] eV';
+katrinC  = 'KATRIN KSN1 data - stat+sys - 99%CL - [E_0-90;E_0+50] eV';
 giunti   = 'arXiv:1912.12956 - - 90%CL - [E_0-40;E_0+50] eV';
 raa90    = 'Phys. Rev. D 83, 073006 (2011) - 90%CL';
 raa95    = 'Phys. Rev. D 83, 073006 (2011) - 95%CL';
 
-legend([pA pB p_g p_raa95 p_raa90],...          % Label order
-        {katrinA,katrinB,...                  % KATRIN
+legend([pA pB pC p_g p_raa95 p_raa90],...          % Label order
+        {katrinA,katrinB,katrinC,...                    % KATRIN
         giunti,...                              % Giunti
         raa95,raa90},...                        % RAA
         'Location','southwest',...              % Legend settings
@@ -102,4 +109,4 @@ set(gca, 'YScale', 'log');
 axis([0.01 1 0.1 10000])
 axis square
 
-title('KATRIN Sterile Neutrino Analysis (KSN1) - 90% CL Sensitivity') % Exclusion Limit (Data)
+title('KATRIN Sterile Neutrino Analysis (KSN1) - Exclusion Limit') % Exclusion Limit (Data)

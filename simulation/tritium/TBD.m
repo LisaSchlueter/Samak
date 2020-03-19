@@ -567,7 +567,7 @@ classdef TBD < handle & WGTSMACE %!dont change superclass without modifying pars
                     ttfsdfilename = [FSDdir,'FSD_KNM1_T2_Doppler0p5eV.txt'];   
             end
             %Rebinning
-            ttfsdfile_temp=ttfsdfile;
+            ttfsdfile_temp=importdata(ttfsdfilename);
             ttfsdfile = ttfsdfile_temp(ttfsdfile_temp(:,2)>(10^-8),[1 2]);
             %
             [obj.TTexE, TTexE_index] = sort(ttfsdfile(:,1)); %sort from small to large excitation energies           
@@ -610,7 +610,7 @@ classdef TBD < handle & WGTSMACE %!dont change superclass without modifying pars
                     dtfsdfilename = [FSDdir,'FSD_KNM1_DT_Doppler0p5eV.txt'];
             end
             %Rebinning
-            dtfsdfile_temp=dtfsdfile;
+            dtfsdfile_temp=importdata(dtfsdfilename);
             dtfsdfile = dtfsdfile_temp(dtfsdfile_temp(:,2)>(10^-8),[1 2]);
             %
             [obj.DTexE, DTexE_index] = sort(dtfsdfile(:,1));
@@ -647,7 +647,7 @@ classdef TBD < handle & WGTSMACE %!dont change superclass without modifying pars
                     htfsdfilename = [FSDdir,'FSD_KNM1_HT_Doppler0p5eV.txt'];
             end
             %Rebinning
-            htfsdfile_temp=htfsdfile;
+            htfsdfile_temp=importdata(htfsdfilename);
             htfsdfile= htfsdfile_temp(htfsdfile_temp(:,2)>(10^-8),[1 2]);
             %
             [obj.HTexE, HTexE_index] = sort(htfsdfile(:,1));

@@ -17,7 +17,7 @@ R = MultiRunAnalysis('RunList','KNM1',...        % runlist defines which runs ar
 %R.ModelObj.mnuSq_i=-0.956847;
 R.ModelObj.mnu4Sq_i=0;
 R.ModelObj.sin2T4_i=0;
-R.exclDataStart = R.GetexclDataStart(40); % set region of interest
+R.exclDataStart = R.GetexclDataStart(90); % set region of interest
 
 %% look at some properties
 R.RunData  % this is the stacked trititum data
