@@ -132,6 +132,7 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
         MACE_R_eV          ;    % Mac-E Energy resolution, eV
         ErrMACE_R_eV       ;    % Uncertainty on Mac-E Energy resolution, eV
         MACE_Sigma         ;    % Broadening transmission function in eV            
+        RFBinStep;
         
         % HV Ripples
         HVRipples          ;    % Flag HV Ripples
@@ -203,6 +204,8 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             p.addParameter('HVRipples','ON',@(x)ismember(x,{'OFF','ON'}));
             p.addParameter('HVRipplesP2PV',0.52,@(x)isfloat(x) && x>0); % V or eV
             p.addParameter('ELossFlag','Abdurashitov',@(x)ismember(x,{'KatrinT2','KatrinD2','Aseev','Abdurashitov','CW_GLT','CW_G2LT'}));
+            p.addParameter('RFBinStep',0.02,@(x)isfloat(x));
+            
             % Both WGTS & MACE
             p.addParameter('KTFFlag','MACE',@(x)ismember(x,{'OFF','SSC',...
                 'SSC2','SSCMW','MACE','MACER','Kle','SSCW_DCOfficial','SSC_BC','WGTSMACE'}));
@@ -262,6 +265,8 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             obj.HVRipples          = p.Results.HVRipples;
             obj.HVRipplesP2PV      = p.Results.HVRipplesP2PV;
             obj.ELossFlag          = p.Results.ELossFlag;
+            obj.RFBinStep          = p.Results.RFBinStep;
+            
             % Both WGTS & MACE
             obj.KTFFlag            = p.Results.KTFFlag;
             obj.recomputeRF        = p.Results.recomputeRF;
@@ -999,7 +1004,7 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             p.addParameter('Debug','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('ELossBinStep',0.04,@(x)isfloat(x)); % for ELoss Convolution
             p.addParameter('ELossRange',500,@(x)isfloat(x));   %  ELoss range: old default 9288
-            p.addParameter('RFBinStep',0.02,@(x)isfloat(x));    % for Final RF Convolution 0.04
+            p.addParameter('RFBinStep',obj.RFBinStep,@(x)isfloat(x));    % for Final RF Convolution 0.04
             p.addParameter('AdjustISProba','OFF',@(x)ismember(x,{'ON','OFF'}));    % for Final RF Convolution
             p.addParameter('ElossFunctions','',@(x)isfloat(x)); % for covariance matrix only
             p.addParameter('MACE_Bmax_T',obj.MACE_Bmax_T,@(x)isfloat(x)); 
@@ -1014,7 +1019,7 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             Debug               = p.Results.Debug;
             ELossBinStep        = p.Results.ELossBinStep;
             ELossRange          = p.Results.ELossRange;
-            RFBinStep           = p.Results.RFBinStep;
+            RFBinStep_local     = p.Results.RFBinStep;
             AdjustISProba       = p.Results.AdjustISProba;
             pixel               = p.Results.pixel;
             ElossFunctions      = p.Results.ElossFunctions;
@@ -1026,11 +1031,11 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             
             % binning for response function
             if strcmp(obj.TD,'RFcomparison')
-                RFBinStep = 0.001;
-                maxE_rf = 400;
-                minE_rf = -maxE_rf;
-                Estep_rf = RFBinStep;
-                E_rf = minE_rf:Estep_rf:maxE_rf;
+                RFBinStep_local = 0.001;
+                maxE_rf         = 400;
+                minE_rf         = -maxE_rf;
+                Estep_rf        = RFBinStep_local;
+                E_rf            = minE_rf:Estep_rf:maxE_rf;
             else
 %                                 maxE_rf = (obj.qUmax-obj.qUmin)*1.5;
 %                                 minE_rf=-maxE_rf;
@@ -1041,7 +1046,7 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
                % Edef_rfNeg = -(te-qu); 
                % Edef_rfNeg(Edef_rfNeg>=min(te-qu)) = [];
                 Edef_rf    = te-qu;
-                BinFactor = ceil(obj.TeStep/RFBinStep); 
+                BinFactor = ceil(obj.TeStep/RFBinStep_local); 
                 if BinFactor<=1
                     E_add = [];
                 elseif  BinFactor==2
@@ -1274,17 +1279,19 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             
             switch obj.FPD_Segmentation
                 case 'OFF'
-                    RFfile = sprintf('_Uniform_%.5gcm2_IsX%s_NIS%.0d_Bm%0.3gT_Bs%0.3gT_Ba%0.4gG_Temin%.3f_Temax%.3f_Bin%.0f_%s.mat',...
+                    RFfile = sprintf('_Uniform_%.5gcm2_IsX%s_NIS%.0d_Bm%0.3gT_Bs%0.3gT_Ba%0.4gG_Temin%.3f_Temax%.3f_RFBinStep%.3feV_%s.mat',...
                         obj.WGTS_CD_MolPerCm2,IsXStr,obj.NIS,obj.MACE_Bmax_T,obj.WGTS_B_T,...
-                        obj.MACE_Ba_T*1e4,obj.TeMin,obj.TeMax,obj.nTeBinningFactor,obj.ELossFlag);
+                        obj.MACE_Ba_T*1e4,obj.TeMin,obj.TeMax,...
+                        obj.RFBinStep,obj.ELossFlag);
                 case {'MULTIPIXEL','SINGLEPIXEL'}
-                    RFfile = sprintf('_MultiPix_%0.5gcm2_IsX%s_NIS%.0d_Bm%0.3gT_Bs%0.3gT_Ba%0.4gG_Temin%3.f_Temax%3.f_Bin%.0d_%s.mat',...
+                    RFfile = sprintf('_MultiPix_%0.5gcm2_IsX%s_NIS%.0d_Bm%0.3gT_Bs%0.3gT_Ba%0.4gG_Temin%3.f_Temax%3.f_RFBinStep%.3feV_%s.mat',...
                         obj.WGTS_CD_MolPerCm2,IsXStr,obj.NIS,obj.MACE_Bmax_T,obj.WGTS_B_T,...
-                        mean(obj.MACE_Ba_T(obj.FPD_PixList))*1e4,obj.TeMin,obj.TeMax,obj.nTeBinningFactor,obj.ELossFlag);
+                        mean(obj.MACE_Ba_T(obj.FPD_PixList))*1e4,obj.TeMin,obj.TeMax,...
+                        obj.RFBinStep,obj.ELossFlag);
                 case 'RING'
-                    RFfile = sprintf('_Ring_%s_%0.5gcm2_IsX%s_NIS%.0d_Bm%0.3gT_Bs%0.3gT_Ba%0.4gG_Temin%.3f_Temax%.3f_Bin%.0d_nring%.0d.mat',...
+                    RFfile = sprintf('_Ring_%s_%0.5gcm2_IsX%s_NIS%.0d_Bm%0.3gT_Bs%0.3gT_Ba%0.4gG_Temin%.3f_Temax%.3f_RFBinStep%.3feV_nring%.0d.mat',...
                         obj.FPD_RingMerge,obj.WGTS_CD_MolPerCm2,IsXStr,obj.NIS,obj.MACE_Bmax_T,obj.WGTS_B_T,...
-                        mean(obj.MACE_Ba_T)*1e4,obj.TeMin,obj.TeMax,obj.nTeBinningFactor,obj.nRings);
+                        mean(obj.MACE_Ba_T)*1e4,obj.TeMin,obj.TeMax,obj.RFBinStep,obj.nRings);
             end
             if obj.is_EOffset ~=0
                 RFfile = strrep(RFfile,obj.ELossFlag,[obj.ELossFlag,sprintf('_%.3fELOffset',obj.is_EOffset)]);

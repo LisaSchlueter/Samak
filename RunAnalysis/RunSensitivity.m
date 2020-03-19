@@ -1841,7 +1841,7 @@ classdef RunSensitivity < handle
             
             if strcmp(Sensitivity,'ON')
                 leg = legend([p2,plimit],[sprintf(' %.4g%% C.L. ',obj.ConfLevel*100),chi2str],...
-                    sprintf(' Sensitivity: {\\itm}^2_\\nu \\leq %.1f eV^2 \n               \\rightarrow {\\itm}_\\nu  \\leq %.1f eV',mNuLimit,sqrt(mNuLimit)),'Location','northwest');
+                    sprintf(' Sensitivity: {\\itm}^2_\\nu \\leq %.2f eV^2 \n               \\rightarrow {\\itm}_\\nu  \\leq %.2f eV',mNuLimit,sqrt(mNuLimit)),'Location','northwest');
             else
                 leg = legend([p2,plimit],[sprintf(' %.4g%% C.L. ',obj.ConfLevel*100),chi2str],...
                     sprintf('     {\\itm}^2_\\nu \\leq %.1f eV^{ 2} \n\\rightarrow {\\itm}_\\nu  \\leq %.1f eV',mNuLimit,sqrt(mNuLimit)),'Location','northwest');

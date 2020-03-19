@@ -1,4 +1,7 @@
 % KNM2 Figure skating twins
+% Uniform fit
+% chi2 profile
+% stat and stat + syst
 range = 40;
 E0 = knm2FS_GetE0Twins('SanityPlot','OFF');
 RecomputeFlag = 'OFF';
