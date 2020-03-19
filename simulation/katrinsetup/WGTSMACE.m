@@ -998,7 +998,7 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             p = inputParser;
             p.addParameter('Debug','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('ELossBinStep',0.04,@(x)isfloat(x)); % for ELoss Convolution
-            p.addParameter('ELossRange',9288,@(x)isfloat(x));   %  ELoss range: old default 9288
+            p.addParameter('ELossRange',500,@(x)isfloat(x));   %  ELoss range: old default 9288
             p.addParameter('RFBinStep',0.02,@(x)isfloat(x));    % for Final RF Convolution 0.04
             p.addParameter('AdjustISProba','OFF',@(x)ismember(x,{'ON','OFF'}));    % for Final RF Convolution
             p.addParameter('ElossFunctions','',@(x)isfloat(x)); % for covariance matrix only
@@ -1180,10 +1180,6 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
                'MACE_Bmax_T',MACE_Bmax_T_local,'WGTS_B_T',WGTS_B_T_local,'MACE_Ba_T',MACE_Ba_T_local),...
                obj.fscat(E_rf),'same').*Estep_rf;
             
-%            RF =  simpsons(E_rf',TF(qu+E_rf,qu,'pixel',pixel).*ISProb0 + ...
-%                 conv(TF(qu+E_rf,qu,'pixel',pixel,...
-%                 'MACE_Bmax_T',MACE_Bmax_T_local,'WGTS_B_T',WGTS_B_T_local,'MACE_Ba_T',MACE_Ba_T_local),...
-%                 obj.fscat(E_rf),'same'));
             
             switch obj.FPD_Segmentation
                 case {'SINGLEPIXEL','MULTIPIXEL'}

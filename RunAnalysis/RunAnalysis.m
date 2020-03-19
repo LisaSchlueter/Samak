@@ -1003,7 +1003,7 @@ classdef RunAnalysis < handle
             % CovMat settings
             p.addParameter('SysEffects',defaultEffects,@(x)isstruct(x));
             p.addParameter('RecomputeFlag','OFF',@(x)ismember(x,{'ON','OFF'}));
-            p.addParameter('nTrials',1000,@(x)isfloat(x));
+            p.addParameter('nTrials',5000,@(x)isfloat(x));
             p.addParameter('DataDriven',SysErr.DataDriven,@(x)ismember(x,{'ON','OFF'}));
 %           % default systematic uncertainties
             p.addParameter('WGTS_TASR_RelErr',SysErr.WGTS_TASR_RelErr,@(x)all(isfloat(x)));
@@ -1752,15 +1752,17 @@ classdef RunAnalysis < handle
                 obj.PlotChi2Curve;
             end 
         end
-        function PlotChi2Curve(obj,varargin)
+        function out = PlotChi2Curve(obj,varargin)
             p=inputParser;
             p.addParameter('Parameter','mNu',@(x)ismember(x,{'mNu','E0'}));
             p.addParameter('ScanResult','',@(x)isstruct(x));
             p.addParameter('FitResult','',@(x)isstruct(x));
+            p.addParameter('HoldOn','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.parse(varargin{:});
             Parameter   = p.Results.Parameter;
             ScanResult  = p.Results.ScanResult;
             FitResult   = p.Results.FitResult;
+            HoldOn      = p.Results.HoldOn;
             
             if isempty(ScanResult)
                 fprintf('ScanResults are missing \n');
@@ -1778,22 +1780,27 @@ classdef RunAnalysis < handle
                     ParIndex = 2;
             end
             nFitMax = size(ScanResult.chi2min,1);
-            f4 = figure('Units','normalized','Position',[0.1,0.1,0.5,0.5]);
+            if strcmp(HoldOn,'OFF')
+                f4 = figure('Units','normalized','Position',[0.1,0.1,0.5,0.5]);
+            end
             mypar  = reshape(ScanResult.ParScan,[nFitMax*2,1]);
             mypar = mypar(~isnan(mypar));
             [mypar,sortI] = sort(mypar);
             mychi2min = reshape(ScanResult.chi2min,[nFitMax*2,1]);
             mychi2min = mychi2min(~isnan(mychi2min));
             mychi2min = mychi2min(sortI);
-            PlotStyle = {'-','LineWidth',3,'Color',rgb('DodgerBlue')};
-            
-            plot(mypar,mychi2min,PlotStyle{:});
+            if ~strcmp(obj.chi2,'chi2Stat')
+                PlotStyle = {'-','LineWidth',3,'Color',rgb('DodgerBlue')};
+            else
+                PlotStyle = {'-.','LineWidth',3,'Color',rgb('SkyBlue')};
+            end
+            pchi2 = plot(mypar,mychi2min,PlotStyle{:});
             hold on;
-            plot(FitResult.par(ParIndex)+ScanResult.AsymErr(1).*ones(100,1),linspace(0,1,100),...
+            p1 =plot(FitResult.par(ParIndex)+ScanResult.AsymErr(1).*ones(100,1),linspace(0,1,100),...
                 ':','LineWidth',3,'Color',rgb('GoldenRod'));
-            plot(FitResult.par(ParIndex)+ScanResult.AsymErr(2).*ones(100,1),linspace(0,1,100),...
+            p2 =plot(FitResult.par(ParIndex)+ScanResult.AsymErr(2).*ones(100,1),linspace(0,1,100),...
                 ':','LineWidth',3,'Color',rgb('GoldenRod'));
-            plot(linspace(ScanResult.AsymErr(2)+FitResult.par(ParIndex),...
+            p3 = plot(linspace(ScanResult.AsymErr(2)+FitResult.par(ParIndex),...
                 ScanResult.AsymErr(1)+FitResult.par(ParIndex),100),ones(1,100),...
                 ':','LineWidth',3,'Color',rgb('GoldenRod'));
             PrettyFigureFormat('FontSize',24);
@@ -1803,7 +1810,7 @@ classdef RunAnalysis < handle
            if abs(FitResult.par(ParIndex))>0.05
                parStr = sprintf('%.3f',FitResult.par(ParIndex));
            else
-               parStr = sprintf('%.1e',FitResult.par(ParIndex));
+               parStr = sprintf('%.3f',FitResult.par(ParIndex));
            end
             leg = legend(sprintf('%s = %s (%.3f +%.3f) %s',...
                 xstr,parStr,...
@@ -1811,6 +1818,8 @@ classdef RunAnalysis < handle
             leg.EdgeColor = rgb('Silver');
             leg.Location = 'northwest';
             xlim([min(ScanResult.ParScan(:,2)),max(ScanResult.ParScan(:,1))]);
+            
+            out = {pchi2,p1,p2,p3};
         end
         function GetPlotColor(obj)
             % Real / Twin Color Flag

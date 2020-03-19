@@ -2,11 +2,11 @@
 range = 40;
 E0 = knm2FS_GetE0Twins('SanityPlot','OFF');
 RecomputeFlag = 'OFF';
-
-chi2 = 'chi2CMShape';%chi2CMShape';
+chi2 = 'chi2Stat';%CMShape';
 %% load or calc
+
 savedir = [getenv('SamakPath'),'knm2ana/knm2_FigureSkating/results/'];
-savename = sprintf('%sknm2FS_UniformFit_%.0feV_%s.mat',savedir,range,chi2);
+savename = sprintf('%sknm2FS_UniformFitChi2profile_%.0feV_%s.mat',savedir,range,chi2);
 
 if exist(savename,'file') && strcmp(RecomputeFlag,'OFF')
     load(savename)
@@ -26,13 +26,11 @@ else
     %% build object of MultiRunAnalysis class
     A = MultiRunAnalysis(RunAnaArg{:});
     A.exclDataStart = A.GetexclDataStart(range);
-    
-    A.ModelObj.recomputeRF = 'ON';
-    A.ModelObj.InitializeRF
-    %% fit without corrections
-    A.Fit;
-    FitResult_ref  = A.FitResult;
-    %% fit with broadening of RF + broadening/shift of FSD
+
+    if ~strcmp(chi2,'chi2Stat')
+        A.NonPoissonScaleFactor = 1.112;
+    end
+    %% broaden RF +  broadening/shift of FSD
     TimeSec = zeros(3,1);
     TimeSec(1) = sum(A.SingleRunData.TimeSec(1:171));
     TimeSec(2) = sum(A.SingleRunData.TimeSec(172:268));
@@ -40,28 +38,42 @@ else
     MultiWeights = TimeSec./sum(TimeSec);
     MultiPos = [E0(1),E0(end-120),E0(end)]';
     MultiPosRel = MultiPos-wmean(MultiPos,MultiWeights);
-    %%
-    Sigma = std(E0);
-    FSDArg = {'MultiPos',MultiPosRel,'MultiWeight',MultiWeights,...
-        'SanityPlot','ON','Sigma',Sigma};
-    A.ModelObj.LoadFSD(FSDArg{:});
+    Sigma = std(E0).^2;
+    A.ModelObj.LoadFSD('MultiPos',MultiPosRel,'MultiWeight',MultiWeights,...
+        'SanityPlot','ON','Sigma',Sigma);
     A.ModelObj.ComputeTBDDS; A.ModelObj.ComputeTBDIS;
     MACE_Sigma = std(A.SingleRunData.qU,0,2);
     A.ModelObj.MACE_Sigma = MACE_Sigma;
-    A.ModelObj.recomputeRF='ON';
     A.ModelObj.InitializeRF;
+    %%
     A.Fit;
     FitResult_imp  = A.FitResult;
    
-    save(savename,'FitResult_imp','FitResult_ref','E0','MACE_Sigma','A','FSDArg');
+    ScanResults = A.GetAsymFitError('Parameter','mNu',...
+                                     'Mode','Uniform',...
+                                     'ParScanMax',0.6,...
+                                     'nFitMax',20);
+    save(savename,'FitResult_imp','E0','MACE_Sigma','A','ScanResults');
 end
-%% result
-fprintf('--------------------------------------\n')
-fprintf('mNuSq = %.3f (%.2f +%.2f) eV^2  (ref) \n',FitResult_ref.par(1),FitResult_ref.errNeg(1),FitResult_ref.errPos(1))
-fprintf('mNuSq =  %.3f (%.2f +%.2f) eV^2  (imp) \n',FitResult_imp.par(1),FitResult_imp.errNeg(1),FitResult_imp.errPos(1))
-fprintf('--------------------------------------\n')
-fprintf('E0    = %.0e (+-%.2f) eV (ref) \n',FitResult_ref.par(2)+A.ModelObj.Q_i-mean(E0),FitResult_ref.err(2))
-fprintf('E0    = %.0e (+-%.2f) eV (imp) \n',FitResult_imp.par(2)+A.ModelObj.Q_i-mean(E0),FitResult_imp.err(2))
-fprintf('--------------------------------------\n')
+%%
+close all
+outCM = A.PlotChi2Curve('FitResult',FitResult_imp,'ScanResult',ScanResults,...
+    'Parameter','mNu','HoldOn','OFF');
 
-
+plotname = strrep(strrep(savename,'results','plots'),'.mat','.pdf');
+export_fig(gcf,plotname);
+%% if both stat and stat + syst run this (execute upper part twice: 1. chi2CMShape. 2. chi2Stat)
+out = A.PlotChi2Curve('FitResult',FitResult_imp,'ScanResult',ScanResults,...
+    'Parameter','mNu','HoldOn','ON');
+out{2}.delete
+out{3}.delete
+out{4}.delete
+outCM{2}.delete
+outCM{3}.delete
+outCM{4}.delete
+leg = legend([out{1},outCM{1}],'Stat. only','Stat. and Syst');
+leg.EdgeColor = rgb('Silver');
+xlim([-0.4 0.4])
+ylim([0 2])
+ plotname = strrep(strrep(strrep(savename,'results','plots'),'.mat','.pdf'),chi2,'StatSyst');
+ export_fig(gcf,plotname);
