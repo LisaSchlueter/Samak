@@ -663,6 +663,10 @@ classdef RunSensitivity < handle
             savedir = [getenv('SamakPath'),'tritium-data/FC/DeltaChi2LookupTable/'];
             save_str = sprintf('AsimovDeltaChi2_mNuSq%.3geV2_%s_%s_%.0fbE0_fixPar%s_%.0fsamples.mat',...
                 mNuSq_t,obj.RunAnaObj.RunData.RunName,obj.RunAnaObj.chi2,obj.GetRange,fix_str,nSamples);
+            
+            if strcmp(obj.RunAnaObj.AnaFlag,'Ring')
+                save_str = strrep(save_str,'.mat',sprintf('_Ring%s.mat',obj.RunAnaObj.RingMerge));
+            end
             savefile = [savedir,save_str];
             
             % look for file with same or more samples than required
@@ -1509,6 +1513,9 @@ classdef RunSensitivity < handle
                 ranges_str = strrep(num2str(Ranges),' ','');
                 savefile = [savedir,sprintf('SensitivitySys_%s_%.0feV_%s_Par%.0f_%s%s_ranges%s_SysOnly.png',obj.RunAnaObj.RunData.RunName,...
                     obj.GetRange,[obj.SysEffectsAll{:}],Parameter,obj.chi2sys,obj.GetFitLabel,ranges_str)];
+                if strcmp(obj.RunAnaObj.AnaFlag,'Ring')
+                    savefile = strrep(savefile,'.png',sprintf('_Ring%s.png',obj.RunAnaObj.RingMerge));
+                end
                 if strcmp(SavePlot,'ON')
                     obj.PlotWhiteSpace;
                     print(f55,savefile,'-dpng','-r100');
@@ -2188,12 +2195,16 @@ classdef RunSensitivity < handle
                 savefile = sprintf('%s_%s.mat',StrCommon,SysEffect_save);
             end
             
+            if strcmp(obj.RunAnaObj.AnaFlag,'Ring')
+                savefile = strrep(savefile,'.mat',sprintf('_Ring%s.mat',obj.RunAnaObj.RingMerge));
+            end
             % load or save file
             out = 1;
             switch SaveMode
                 case 'load'
                     if ~exist(savefile,'file') || strcmp(obj.RecomputeFlag,'ON')
-                        out = 0; % loading faile
+                        out = 0; % loading failed
+                        %fprintf('NOT loading file %s \n',savefile);
                         return
                     end
                     d = importdata(savefile);
