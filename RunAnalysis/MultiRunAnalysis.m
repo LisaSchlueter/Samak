@@ -3383,6 +3383,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                 h5list = sort([runsRW1,runsRW2,runsRW3]);
             elseif strcmp(ListName,'KNM2_RW1')   % rear wall setting 1 (different names for back compatibility)
                 h5list = runsRW1;
+%                h5list = runsRW1(runsRW1>56281);
             elseif strcmp(ListName,'KNM2_RW2')   % rear wall setting 2
                 h5list = runsRW2;
             elseif strcmp(ListName,'KNM2_RW3')   % rear wall setting 3
@@ -4091,14 +4092,14 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                 0.5 * obj.SingleRunData.WGTS_MolFrac_HT(obj.SingleRunData.Select_all) + ...
                 0.5 * obj.SingleRunData.WGTS_MolFrac_DT(obj.SingleRunData.Select_all);
             XX_StackedRuns    = XX_StackedRuns .* obj.SingleRunData.WGTS_CD_MolPerCm2(obj.SingleRunData.Select_all);
-            XX_StackedRuns    = XX_StackedRuns .* obj.ModelObj.ISXsection * 1e4;        
+            XX_StackedRuns    = XX_StackedRuns .* obj.ModelObj.ISXsection(obj.RunData.qU_RM) * 1e4;        
             XX_StackedRuns    = XX_StackedRuns/mean(XX_StackedRuns);
             
             XX_NotStackedRuns = obj.SingleRunData.WGTS_MolFrac_TT(:,obj.SingleRunData.Select_all==0) + ...
                 0.5 * obj.SingleRunData.WGTS_MolFrac_HT(:,obj.SingleRunData.Select_all==0) + ...
                 0.5 * obj.SingleRunData.WGTS_MolFrac_DT(:,obj.SingleRunData.Select_all==0);
             XX_NotStackedRuns    = XX_NotStackedRuns .* obj.SingleRunData.WGTS_CD_MolPerCm2(:,obj.SingleRunData.Select_all==0);
-            XX_NotStackedRuns    = XX_NotStackedRuns .* obj.ModelObj.ISXsection * 1e4;
+            XX_NotStackedRuns    = XX_NotStackedRuns .* obj.ModelObj.ISXsection(obj.RunData.qU_RM) * 1e4;
             XX_NotStackedRuns    = XX_NotStackedRuns/mean(XX_NotStackedRuns);
             
             % Plot Data
