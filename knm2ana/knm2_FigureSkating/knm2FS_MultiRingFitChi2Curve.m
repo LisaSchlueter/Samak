@@ -43,12 +43,16 @@ else
     MR.ModelObj.RFBinStep = 0.002;
     MR.ModelObj.InitializeRF;
     
+    MR.Fit('SaveFit','OFF');
+    FitResults_imp2 = MR.FitResult;
+    
     if ~strcmp(chi2,'chi2Stat')
         MR.NonPoissonScaleFactor = 1.112;
+        MR.SetNPfactor; % set correct dimensions
         MR.chi2 = chi2;
         MR.ComputeCM;
     end
-     
+    
     %% broaden of RF + broadening/shift of FSD
     TimeSec = zeros(3,1);
     TimeSec(1) = sum(MR.SingleRunData.TimeSec(1:171));
@@ -62,13 +66,17 @@ else
         'SanityPlot','ON','Sigma',Sigma};
     MR.ModelObj.LoadFSD(FSDArg{:});
     
-%% fit and scan chi2 profile
+    %% fit and scan chi2 profile
     MR.Fit('SaveFit','OFF');
     FitResults_imp = MR.FitResult;
     
     ScanResults = MR.GetAsymFitError('Parameter','mNu',...
-                                     'Mode','Uniform',...
-                                     'ParScanMax',0.6,...
-                                     'nFitMax',20);
-    save(savename,'FitResult_imp','E0','MACE_Sigma','MR','ScanResults','FSDArg');
+        'Mode','Uniform',...
+        'ParScanMax',0.6,...
+        'nFitMax',20);
+    save(savename,'FitResults_imp','E0','MR','ScanResults','FSDArg');
 end
+
+%%
+out = MR.PlotChi2Curve('FitResult',FitResults_imp,'ScanResult',ScanResults,...
+    'Parameter','mNu','HoldOn','OFF');

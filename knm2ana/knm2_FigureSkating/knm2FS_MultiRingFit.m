@@ -4,7 +4,7 @@
 RunList = 'KNM2_Prompt';
 E0 = knm2FS_GetE0Twins('SanityPlot','OFF');
 range = 40;
-chi2 = 'chi2Stat';
+chi2 = 'chi2CMShape';
 pullFlag = 4;
 freePar = 'mNu E0 Norm Bkg';
 DataType = 'Twin';
@@ -42,6 +42,7 @@ else
     MR.exclDataStart = MR.GetexclDataStart(range);
     if ~strcmp(chi2,'chi2Stat')
         MR.NonPoissonScaleFactor = 1.112;
+        MR.SetNPfactor; % convert to right dimension (if multiring)
         MR.chi2 = chi2;
         MR.ComputeCM;
     end

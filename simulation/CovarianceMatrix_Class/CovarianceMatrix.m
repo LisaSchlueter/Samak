@@ -2889,14 +2889,14 @@ function ComputeCM_Stacking(obj,varargin)
     obj.GetTDlabel;
     covmat_path =[getenv('SamakPath'),sprintf('inputs/CovMat/Stacking/CM/')];
     covmat_name = sprintf('CMStack_%s_%.0fRuns_%.0fmV-qUErr_%.3f-qUfracRelErr_%.0fTrials',...
-        obj.TDlabel,obj.nStack,mean(obj.Stack_qUErr)*1e3,mean(obj.Stack_qUfracRelErr),obj.nTrials);
+        obj.TDlabel,obj.nStack,mean(mean(obj.Stack_qUErr))*1e3,mean(mean(obj.Stack_qUfracRelErr)),obj.nTrials);
     
     if contains(covmat_name,' ')
         covmat_name=strrep(covmat_name,'  ','_');
     end
     if strcmp(obj.StudyObject.FPD_Segmentation,'RING')
         % add ring information for ringwise covariance matrices
-        covmat_name = strrep(covmat_name,'.mat',sprintf('_Ring%s.mat',obj.StudyObject.FPD_RingMerge));
+        covmat_name = [covmat_name,sprintf('_Ring%s',obj.StudyObject.FPD_RingMerge)];
     end
     obj.CovMatFile = [covmat_path,covmat_name,'.mat'];
     
@@ -3128,7 +3128,7 @@ function ComputeCM_LongPlasma(obj,varargin)
                     'RFBinStep',0.04);
             end
         end
-        obj.StudyObject.RF = ResponseFunction(:,:,i,:);
+        obj.StudyObject.RF = squeeze(ResponseFunction(:,:,i,:));
         
         % variance
         obj.StudyObject.LoadFSD('Sigma',abs(MACE_Sigma_v(i))); % take absolute sigma
@@ -3142,10 +3142,9 @@ function ComputeCM_LongPlasma(obj,varargin)
                 obj.StudyObject.LoadFSD; % sigma = 0
                 obj.StudyObject.ComputeTBDDS;
                 obj.StudyObject.ComputeTBDIS;
-                TBDIS_V(:,i,:) = 2.*obj.StudyObject.TBDIS - TBDIS_V(:,i,:);
+                TBDIS_V(:,i,:) = 2.*obj.StudyObject.TBDIS - squeeze(TBDIS_V(:,i,:));
             end
-        end
-        
+        end 
     end
     
     % Reshape
@@ -3399,7 +3398,12 @@ end
                     obj.PlotCM('PlotEffect',sprintf('Response Function %s %s %s',BF,EL,RX),'savePlot','ON','savename',SysBudget_Label);
                 end
             end
-              obj.nTrials = 5000;
+            
+            if strcmp(obj.StudyObject.FPD_Segmentation,'RING')
+                obj.nTrials = 1000;
+            else
+                obj.nTrials = 5000;
+            end
             %% FSD   
             if strcmp(obj.SysEffect.FSD,'ON')
                 obj.ComputeCM_FSD;

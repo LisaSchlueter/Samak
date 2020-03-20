@@ -2,7 +2,7 @@
 range = 40;
 E0 = knm2FS_GetE0Twins('SanityPlot','OFF');
 RecomputeFlag = 'OFF';
-chi2 = 'chi2CMShape';
+chi2 = 'chi2Stat';
 %% load or calc
 savedir = [getenv('SamakPath'),'knm2ana/knm2_FigureSkating/results/'];
 savename = sprintf('%sknm2FS_UniformFit_%.0feV_%s.mat',savedir,range,chi2);
@@ -60,8 +60,8 @@ else
 end
 %% result
 fprintf('--------------------------------------\n')
-fprintf('mNuSq = %.3f (%.2f +%.2f) eV^2  (ref) \n',FitResult_ref.par(1),FitResult_ref.errNeg(1),FitResult_ref.errPos(1))
-fprintf('mNuSq =  %.3f (%.2f +%.2f) eV^2  (imp) \n',FitResult_imp.par(1),FitResult_imp.errNeg(1),FitResult_imp.errPos(1))
+fprintf('mNuSq = %.3f (%.3f +%.3f) eV^2  (ref) \n',FitResult_ref.par(1),FitResult_ref.errNeg(1),FitResult_ref.errPos(1))
+fprintf('mNuSq =  %.3f (%.3f +%.3f) eV^2  (imp) \n',FitResult_imp.par(1),FitResult_imp.errNeg(1),FitResult_imp.errPos(1))
 fprintf('--------------------------------------\n')
 fprintf('E0    = %.0e (+-%.2f) eV (ref) \n',FitResult_ref.par(2)+A.ModelObj.Q_i-mean(E0),FitResult_ref.err(2))
 fprintf('E0    = %.0e (+-%.2f) eV (imp) \n',FitResult_imp.par(2)+A.ModelObj.Q_i-mean(E0),FitResult_imp.err(2))

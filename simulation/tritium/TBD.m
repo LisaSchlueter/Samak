@@ -1125,6 +1125,7 @@ classdef TBD < handle & WGTSMACE %!dont change superclass without modifying pars
                 end
             end
             
+            obj.TmFSD = 'OFF';
             switch obj.TmFSD
                 case 'OFF'
                     % no contribution
