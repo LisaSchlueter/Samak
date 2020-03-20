@@ -1980,13 +1980,15 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             p.addParameter('DisplayStyle','Abs',@(x)ismember(x,{'Rel','Abs'}));
             p.addParameter('YLim','',@(x)isfloat(x) || isempty(x));
             p.addParameter('DispHist','ON',@(x)ismember(x,{'OFF','ON','Separate'}));
+            p.addParameter('HideGaps','ON',@(x)ismember(x,{'OFF','ON'}));
+            
             p.parse(varargin{:});
             saveplot      = p.Results.saveplot;
             Parameter     = p.Results.Parameter;
             DisplayStyle  = p.Results.DisplayStyle;
             YLim          = p.Results.YLim; % force ylimits
             DispHist      = p.Results.DispHist;
-            
+            HideGaps      = p.Results.HideGaps; % reduce time gaps
             LocalFontSize = 28;
             
             % Get Fit Results
@@ -2007,31 +2009,34 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             
             % prepare x-axis: time
             LiveTime = hours(obj.SingleRunData.StartTimeStamp-obj.SingleRunData.StartTimeStamp(1));
-             % get rid of large jumps
-             TimeBreakIndex = find(diff(LiveTime)>5*mean(diff(LiveTime)));
-             x = zeros(numel(LiveTime),1);
-             if isempty(TimeBreakIndex)
-                 NxParts=1; TimeBreakIndex = numel(obj.RunList);
-             else
-                 NxParts = numel(TimeBreakIndex)+1;
-             end
-             for i=1:NxParts
-                if i==1 %start
-                    startI=1;
-                    stopI = TimeBreakIndex(i);
-                    t = 0;
-                elseif i==NxParts %stop
-                    startI= TimeBreakIndex(i-1)+1;
-                    stopI = numel(LiveTime);
-                    t = t+ abs(LiveTime(TimeBreakIndex(i-1))-LiveTime(TimeBreakIndex(i-1)+1));
+            if strcmp(HideGaps,'ON')
+                % get rid of large jumps
+                TimeBreakIndex = find(diff(LiveTime)>5*mean(diff(LiveTime)));
+                x = zeros(numel(LiveTime),1);
+                if isempty(TimeBreakIndex)
+                    NxParts=1; TimeBreakIndex = numel(obj.RunList);
                 else
-                    startI= TimeBreakIndex(i-1)+1;
-                    stopI = TimeBreakIndex(i);
-                  t = t + abs(LiveTime(TimeBreakIndex(i-1))-LiveTime(TimeBreakIndex(i-1)+1));
-                end       
-                x(startI:stopI) = LiveTime(startI:stopI)-0.75*t;
+                    NxParts = numel(TimeBreakIndex)+1;
+                end
+                for i=1:NxParts
+                    if i==1 %start
+                        startI=1;
+                        stopI = TimeBreakIndex(i);
+                        t = 0;
+                    elseif i==NxParts %stop
+                        startI= TimeBreakIndex(i-1)+1;
+                        stopI = numel(LiveTime);
+                        t = t+ abs(LiveTime(TimeBreakIndex(i-1))-LiveTime(TimeBreakIndex(i-1)+1));
+                    else
+                        startI= TimeBreakIndex(i-1)+1;
+                        stopI = TimeBreakIndex(i);
+                        t = t + abs(LiveTime(TimeBreakIndex(i-1))-LiveTime(TimeBreakIndex(i-1)+1));
+                    end
+                    x(startI:stopI) = LiveTime(startI:stopI)-0.75*t;
+                end
+            elseif strcmp(HideGaps,'OFF')
+                x = LiveTime;
             end
-            
             %% prepare y axis: depending on defined Parameter  
             switch Parameter
                 case 'E0'
@@ -2164,16 +2169,17 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                 factor = 0.08;
             end
             yOffset = abs(ax.YTick(1)-ax.YTick(2))*factor;
-            for i=1:numel(TimeBreakIndex)
-                if TimeBreakIndex(i)==numel(x) % do not plot for last run
-                else
-                    ht = text(x(TimeBreakIndex(i))+2,myylim(1)+yOffset,sprintf('\\mid\\mid'));
-                    set(ht,'Rotation',-25)
-                    set(ht,'FontSize',22)
-                    set(ht,'FontWeight','bold');
+            if strcmp(HideGaps,'ON')
+                for i=1:numel(TimeBreakIndex)
+                    if TimeBreakIndex(i)==numel(x) % do not plot for last run
+                    else
+                        ht = text(x(TimeBreakIndex(i))+2,myylim(1)+yOffset,sprintf('\\mid\\mid'));
+                        set(ht,'Rotation',-25)
+                        set(ht,'FontSize',22)
+                        set(ht,'FontWeight','bold');
+                    end
                 end
             end
-            
             % title
             if ismember(Parameter,{'mNuSq','E0','N','B'})
                 % calculate p-value with respect to straight line
@@ -2261,7 +2267,11 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                 ax2 = gca;
                 %ax.Position = [left-0.02 bottom+0.01 ax_width+0.128 ax_height-0.2];
                 ax.Position = [left-0.02 bottom+0.05 ax_width+0.1343 ax_height-0.3];
-                ax2.Position(1) = 0.80+0.094;
+                if strcmp(HideGaps,'ON')
+                    ax2.Position(1) = 0.80+0.094;
+                else
+                    ax2.Position(1) = 0.80+0.09;
+                end
                 if strcmp(Parameter,'pVal')
                   ax2.Position(2)=0.158;
                   ax2.Position(4)=0.75;

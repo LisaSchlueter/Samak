@@ -1449,7 +1449,7 @@ classdef CovarianceMatrix < handle
                             'ElossFunctions',ElossFunctions(:,:,i),...
                             'RFBinStep',RFBinStep,...
                             'MACE_Bmax_T',Bmax_v(i),...
-                            'MACE_Ba_T',Ba_v(i),...
+                            'MACE_Ba_T',Ba_v(i,:),...
                             'WGTS_B_T',Bs_v(i),...
                             'WGTS_CD_MolPerCm2',WGTS_CD_MolPerCm2_v(i));
                     end
@@ -2630,20 +2630,22 @@ function ComputeCM_FSD(obj,varargin)
     
     % FSD from Theory (Reference)
     obj.StudyObject.ComputeTBDDS;
-    DT_P_theory = [obj.StudyObject.DTexP_G*obj.StudyObject.DTNormGS_i,obj.StudyObject.DTexP_E*obj.StudyObject.DTNormES_i]';
+    DT_P_theory = [obj.StudyObject.DTexP_G.*obj.StudyObject.DTNormGS_i,...
+        obj.StudyObject.DTexP_E.*obj.StudyObject.DTNormES_i]';
     
+    nRings = numel(obj.StudyObject.MACE_Ba_T);
     % Init Variation
-    NormGS = zeros(obj.nTrials,1); %Normalization Factors Ground + Excited State
-    NormES = zeros(obj.nTrials,1);
-    NormBiasDT = zeros(obj.nTrials,1);
-    NormBiasHT = zeros(obj.nTrials,1);
-    NormBiasTT = zeros(obj.nTrials,1);
-    DT_P_norm = zeros(numel(obj.StudyObject.DTexP),obj.nTrials);%Final State Probabilities after norm
-    TT_P_norm = zeros(numel(obj.StudyObject.TTexP),obj.nTrials);
-    HT_P_norm = zeros(numel(obj.StudyObject.HTexP),obj.nTrials);
-    DT_P = repmat(obj.StudyObject.DTexP,obj.nTrials,1)';  %Final State Probabilities before norm
-    TT_P = repmat(obj.StudyObject.TTexP,obj.nTrials,1)';
-    HT_P = repmat(obj.StudyObject.HTexP,obj.nTrials,1)';
+    NormGS = zeros(obj.nTrials,nRings); %Normalization Factors Ground + Excited State
+    NormES = zeros(obj.nTrials,nRings);
+    NormBiasDT = zeros(obj.nTrials,nRings);
+    NormBiasHT = zeros(obj.nTrials,nRings);
+    NormBiasTT = zeros(obj.nTrials,nRings);
+    DT_P_norm = zeros(nRings,size(obj.StudyObject.DTexP,2),obj.nTrials);%Final State Probabilities after norm
+    TT_P_norm = zeros(nRings,size(obj.StudyObject.TTexP,2),obj.nTrials);
+    HT_P_norm = zeros(nRings,size(obj.StudyObject.HTexP,2),obj.nTrials);
+    DT_P = squeeze(repmat(obj.StudyObject.DTexP,1,1,obj.nTrials));  %Final State Probabilities before norm
+    TT_P = squeeze(repmat(obj.StudyObject.TTexP,1,1,obj.nTrials));
+    HT_P = squeeze(repmat(obj.StudyObject.HTexP,1,1,obj.nTrials));
     if strcmp(obj.StudyObject.FPD_Segmentation,'RING')
         TBDIS_V = zeros(obj.StudyObject.nqU,obj.StudyObject.nRings,obj.nTrials);
     else
@@ -2653,33 +2655,43 @@ function ComputeCM_FSD(obj,varargin)
     % Variation
     if strcmp(obj.DTFlag,'ON')
         % Vary Norm
-        NormBiasDT(:,1) = randn(obj.nTrials,1).*obj.StudyObject.DTNormGS_i*obj.FSDNorm_RelErr;
+        NormBiasDT = randn(obj.nTrials,1).*obj.StudyObject.DTNormGS_i'.*obj.FSDNorm_RelErr;
         % Bin-to-Bin uncorrelated variation
-        DT_P(1:obj.StudyObject.DTGSTh,:,1)     = obj.StudyObject.DTexP(1:obj.StudyObject.DTGSTh)'.*(1+randn(numel(obj.StudyObject.DTexP(1:obj.StudyObject.DTGSTh)),obj.nTrials).*obj.FSDShapeGS_RelErr);
-        DT_P(obj.StudyObject.DTGSTh+1:end,:,1) = obj.StudyObject.DTexP(obj.StudyObject.DTGSTh+1:end)'.*(1+randn(numel(obj.StudyObject.DTexP(obj.StudyObject.DTGSTh+1:end)),obj.nTrials).*obj.FSDShapeES_RelErr);
+        DT_P_rand = squeeze(permute(repmat(1+randn(size(obj.StudyObject.DTexP,2),obj.nTrials),1,1,nRings),[3,1,2]));
+        DT_P(:,1:obj.StudyObject.DTGSTh,:)  = DT_P(:,1:obj.StudyObject.DTGSTh,:).* (DT_P_rand(:,1:obj.StudyObject.DTGSTh,:).*obj.FSDShapeGS_RelErr);
+        DT_P(:,obj.StudyObject.DTGSTh+1:end,:) = DT_P(:,obj.StudyObject.DTGSTh+1:end,:).*(DT_P_rand(:,obj.StudyObject.DTGSTh+1:end,:).*obj.FSDShapeES_RelErr); 
+        DT_P(DT_P<0)=0;
     end
     if strcmp(obj.HTFlag,'ON')
-        NormBiasHT(:,1) = randn(obj.nTrials,1).*obj.StudyObject.HTNormGS_i*obj.FSDNorm_RelErr;
-        HT_P(1:obj.StudyObject.HTGSTh,:,1)     = obj.StudyObject.HTexP(1:obj.StudyObject.HTGSTh)'.*(1+randn(numel(obj.StudyObject.HTexP(1:obj.StudyObject.HTGSTh)),obj.nTrials).*obj.FSDShapeGS_RelErr);
-        HT_P(obj.StudyObject.HTGSTh+1:end,:,1) = obj.StudyObject.HTexP(obj.StudyObject.HTGSTh+1:end)'.*(1+randn(numel(obj.StudyObject.HTexP(obj.StudyObject.HTGSTh+1:end)),obj.nTrials).*obj.FSDShapeES_RelErr);
+        NormBiasHT = randn(obj.nTrials,1).*obj.StudyObject.HTNormGS_i'*obj.FSDNorm_RelErr;
+        HT_P_rand = squeeze(permute(repmat(1+randn(size(obj.StudyObject.HTexP,2),obj.nTrials),1,1,nRings),[3,1,2]));
+        HT_P(:,1:obj.StudyObject.HTGSTh,:)  = HT_P(:,1:obj.StudyObject.HTGSTh,:).* (HT_P_rand(:,1:obj.StudyObject.HTGSTh,:).*obj.FSDShapeGS_RelErr);
+        HT_P(:,obj.StudyObject.HTGSTh+1:end,:) = HT_P(:,obj.StudyObject.HTGSTh+1:end,:).*(HT_P_rand(:,obj.StudyObject.HTGSTh+1:end,:).*obj.FSDShapeES_RelErr); 
+        HT_P(HT_P<0)=0;
+        %HT_P(1:obj.StudyObject.HTGSTh,:,1)     = obj.StudyObject.HTexP(1:obj.StudyObject.HTGSTh)'.*(1+randn(numel(obj.StudyObject.HTexP(1:obj.StudyObject.HTGSTh)),obj.nTrials).*obj.FSDShapeGS_RelErr);
+        %HT_P(obj.StudyObject.HTGSTh+1:end,:,1) = obj.StudyObject.HTexP(obj.StudyObject.HTGSTh+1:end)'.*(1+randn(numel(obj.StudyObject.HTexP(obj.StudyObject.HTGSTh+1:end)),obj.nTrials).*obj.FSDShapeES_RelErr);
     end
     if strcmp(obj.TTFlag,'ON')
-        NormBiasTT(:,1) = randn(obj.nTrials,1).*obj.StudyObject.TTNormGS_i*obj.FSDNorm_RelErr;
-        TT_P(1:obj.StudyObject.TTGSTh,:,1)     = obj.StudyObject.TTexP(1:obj.StudyObject.TTGSTh)'.*(1+randn(numel(obj.StudyObject.TTexP(1:obj.StudyObject.TTGSTh)),obj.nTrials).*obj.FSDShapeGS_RelErr);
-        TT_P(obj.StudyObject.TTGSTh+1:end,:,1) = obj.StudyObject.TTexP(obj.StudyObject.TTGSTh+1:end)'.*(1+randn(numel(obj.StudyObject.TTexP(obj.StudyObject.TTGSTh+1:end)),obj.nTrials).*obj.FSDShapeES_RelErr);
+        NormBiasTT = randn(obj.nTrials,1).*obj.StudyObject.TTNormGS_i'*obj.FSDNorm_RelErr;
+        TT_P_rand = squeeze(permute(repmat(1+randn(size(obj.StudyObject.TTexP,2),obj.nTrials),1,1,nRings),[3,1,2]));
+        TT_P(:,1:obj.StudyObject.TTGSTh,:)  = TT_P(:,1:obj.StudyObject.TTGSTh,:).* (TT_P_rand(:,1:obj.StudyObject.TTGSTh,:).*obj.FSDShapeGS_RelErr);
+        TT_P(:,obj.StudyObject.TTGSTh+1:end,:) = TT_P(:,obj.StudyObject.TTGSTh+1:end,:).*(TT_P_rand(:,obj.StudyObject.TTGSTh+1:end,:).*obj.FSDShapeES_RelErr); 
+        TT_P(TT_P<0)=0;
+        %TT_P(1:obj.StudyObject.TTGSTh,:,1)     = obj.StudyObject.TTexP(1:obj.StudyObject.TTGSTh)'.*(1+randn(numel(obj.StudyObject.TTexP(1:obj.StudyObject.TTGSTh)),obj.nTrials).*obj.FSDShapeGS_RelErr);
+        %TT_P(obj.StudyObject.TTGSTh+1:end,:,1) = obj.StudyObject.TTexP(obj.StudyObject.TTGSTh+1:end)'.*(1+randn(numel(obj.StudyObject.TTexP(obj.StudyObject.TTGSTh+1:end)),obj.nTrials).*obj.FSDShapeES_RelErr);
     end
     
     %Start trials
     progressbar('Computing FSD CovMat')
     for i=1:1:obj.nTrials
         progressbar(i/obj.nTrials)
-        obj.StudyObject.DTexP = DT_P(:,i)'; %bin-to-bin uncorrelated variation
-        obj.StudyObject.TTexP = TT_P(:,i)';
-        obj.StudyObject.HTexP = HT_P(:,i)';
+        obj.StudyObject.DTexP = DT_P(:,:,i); %bin-to-bin uncorrelated variation
+        obj.StudyObject.TTexP = TT_P(:,:,i);
+        obj.StudyObject.HTexP = HT_P(:,:,i);
         obj.StudyObject.ComputeTBDDS(...      %Inside ComputeTBDDS: SetFitBias
-            'DTGS_bias',NormBiasDT(i),'DTES_bias', -NormBiasDT(i),...
-            'TTGS_bias',NormBiasTT(i),'TTES_bias', -NormBiasTT(i),...
-            'HTGS_bias',NormBiasHT(i),'HTES_bias', -NormBiasHT(i));
+            'DTGS_bias',NormBiasDT(i,:)','DTES_bias', -NormBiasDT(i,:)',...
+            'TTGS_bias',NormBiasTT(i,:)','TTES_bias', -NormBiasTT(i,:)',...
+            'HTGS_bias',NormBiasHT(i,:)','HTES_bias', -NormBiasHT(i,:)');
         obj.StudyObject.ComputeTBDIS;
         switch StatFluct
             case 'ON'
@@ -2691,11 +2703,11 @@ function ComputeCM_FSD(obj,varargin)
         else
             TBDIS_V(:,i) = obj.StudyObject.TBDIS;
         end
-        NormGS(i) = obj.StudyObject.DTNormGS;
-        NormES(i) = obj.StudyObject.DTNormES;
-        DT_P_norm(:,i) = [obj.StudyObject.DTexP_G*NormGS(i),obj.StudyObject.DTexP_E*NormES(i)]';
-        TT_P_norm(:,i) = [obj.StudyObject.TTexP_G*NormGS(i),obj.StudyObject.TTexP_E*NormES(i)]';
-        HT_P_norm(:,i) = [obj.StudyObject.HTexP_G*NormGS(i),obj.StudyObject.HTexP_E*NormES(i)]';
+        NormGS(i,:) = obj.StudyObject.DTNormGS;
+        NormES(i,:) = obj.StudyObject.DTNormES;
+        DT_P_norm(:,:,i) = [obj.StudyObject.DTexP_G.*NormGS(i,:)',obj.StudyObject.DTexP_E.*NormES(i,:)'];
+        TT_P_norm(:,:,i) = [obj.StudyObject.TTexP_G.*NormGS(i,:)',obj.StudyObject.TTexP_E.*NormES(i,:)'];
+        HT_P_norm(:,:,i) = [obj.StudyObject.HTexP_G.*NormGS(i,:)',obj.StudyObject.HTexP_E.*NormES(i,:)'];
     end %end Trials
     
     if strcmp(obj.StudyObject.FPD_Segmentation,'RING')
@@ -2877,14 +2889,14 @@ function ComputeCM_Stacking(obj,varargin)
     obj.GetTDlabel;
     covmat_path =[getenv('SamakPath'),sprintf('inputs/CovMat/Stacking/CM/')];
     covmat_name = sprintf('CMStack_%s_%.0fRuns_%.0fmV-qUErr_%.3f-qUfracRelErr_%.0fTrials',...
-        obj.TDlabel,obj.nStack,mean(obj.Stack_qUErr)*1e3,mean(obj.Stack_qUfracRelErr),obj.nTrials);
+        obj.TDlabel,obj.nStack,mean(mean(obj.Stack_qUErr))*1e3,mean(mean(obj.Stack_qUfracRelErr)),obj.nTrials);
     
     if contains(covmat_name,' ')
         covmat_name=strrep(covmat_name,'  ','_');
     end
     if strcmp(obj.StudyObject.FPD_Segmentation,'RING')
         % add ring information for ringwise covariance matrices
-        covmat_name = strrep(covmat_name,'.mat',sprintf('_Ring%s.mat',obj.StudyObject.FPD_RingMerge));
+        covmat_name = [covmat_name,sprintf('_Ring%s',obj.StudyObject.FPD_RingMerge)];
     end
     obj.CovMatFile = [covmat_path,covmat_name,'.mat'];
     
@@ -3103,19 +3115,20 @@ function ComputeCM_LongPlasma(obj,varargin)
     ResponseFunction = zeros(obj.StudyObject.nTe,obj.StudyObject.nqU,obj.nTrials,nRings);
     ElossFunc_v       = zeros(obj.StudyObject.NIS,numel(E),obj.nTrials);  
     
+    progressbar('Compute longitudinal plasma cov mat')
     for i=1:obj.nTrials
         progressbar(i/obj.nTrials);
-        
         % eloss shift
         ElossFunc_v(:,:,i) =  cell2mat(cellfun(@(x) x(E-is_EOffset_v(i)), ElossFunc,'UniformOutput',0));
         for ri = 1:nRings
             for ii = 1:obj.StudyObject.nqU
                 ResponseFunction(:,ii,i,ri) = RFfun(obj.StudyObject,obj.StudyObject.Te,obj.StudyObject.qU(ii,ri),'pixel',ri,...
                     'ELossRange',ELossRange,'ELossBinStep',ELossBinStep,...
-                    'ElossFunctions',ElossFunc_v(:,:,i) );
+                    'ElossFunctions',ElossFunc_v(:,:,i),...
+                    'RFBinStep',0.04);
             end
         end
-        obj.StudyObject.RF = ResponseFunction(:,:,i,:);
+        obj.StudyObject.RF = squeeze(ResponseFunction(:,:,i,:));
         
         % variance
         obj.StudyObject.LoadFSD('Sigma',abs(MACE_Sigma_v(i))); % take absolute sigma
@@ -3129,10 +3142,9 @@ function ComputeCM_LongPlasma(obj,varargin)
                 obj.StudyObject.LoadFSD; % sigma = 0
                 obj.StudyObject.ComputeTBDDS;
                 obj.StudyObject.ComputeTBDIS;
-                TBDIS_V(:,i,:) = 2.*obj.StudyObject.TBDIS - TBDIS_V(:,i,:);
+                TBDIS_V(:,i,:) = 2.*obj.StudyObject.TBDIS - squeeze(TBDIS_V(:,i,:));
             end
-        end
-        
+        end 
     end
     
     % Reshape
@@ -3170,15 +3182,15 @@ function ComputeCM_LongPlasma(obj,varargin)
     % Save again
     save(obj.CovMatFile, 'obj','-append');
     
-    % Also compute response function covariance matrix
-    if ~strcmp(obj.StudyObject.FPD_Segmentation,'RING')
-        CovMatRF = cell(obj.StudyObject.nqU,1);
-        RFtmp = permute(ResponseFunction,[3,1,2]); % old size RF: nTe, nqU, nTrials, (nRings)
-        for i=1:obj.StudyObject.nqU
-            CovMatRF{i} = cov(RFtmp(:,:,i));
-        end
-        save(obj.CovMatFile,'CovMatRF','-append');
-    end
+%     % Also compute response function covariance matrix
+%     if ~strcmp(obj.StudyObject.FPD_Segmentation,'RING')
+%         CovMatRF = cell(obj.StudyObject.nqU,1);
+%         RFtmp = permute(ResponseFunction,[3,1,2]); % old size RF: nTe, nqU, nTrials, (nRings)
+%         for i=1:obj.StudyObject.nqU
+%             CovMatRF{i} = cov(RFtmp(:,:,i));
+%         end
+%         save(obj.CovMatFile,'CovMatRF','-append');
+%     end
 end
 
 function ComputeCM_RW(obj,varargin)
@@ -3357,6 +3369,7 @@ end
             
             %Load / Compute CM of SysEffects
             %% Response Function
+            obj.nTrials = 1000;
             if strcmp(obj.SysEffect.RF_EL,'ON') && strcmp(obj.SysEffect.RF_BF,'ON') && strcmp(obj.SysEffect.RF_RX,'ON') % all RF Effects ON
                 %all 'ON'
                 obj.ComputeCM_RF;
@@ -3384,6 +3397,12 @@ end
                     if strcmp(obj.SysEffect.RF_RX,'ON') RX='CD x-section'; end
                     obj.PlotCM('PlotEffect',sprintf('Response Function %s %s %s',BF,EL,RX),'savePlot','ON','savename',SysBudget_Label);
                 end
+            end
+            
+            if strcmp(obj.StudyObject.FPD_Segmentation,'RING')
+                obj.nTrials = 1000;
+            else
+                obj.nTrials = 5000;
             end
             %% FSD   
             if strcmp(obj.SysEffect.FSD,'ON')

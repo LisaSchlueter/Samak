@@ -818,7 +818,6 @@ classdef TBD < handle & WGTSMACE %!dont change superclass without modifying pars
             p=inputParser;
             p.addParameter('saveRF','ON',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('RebinMode','Integral',@(x)ismember(x,{'Fast','Integral'})); % for RF broadening
-            
             p.parse(varargin{:});
             saveRF    = p.Results.saveRF;
             RebinMode = p.Results.RebinMode;
@@ -1126,6 +1125,7 @@ classdef TBD < handle & WGTSMACE %!dont change superclass without modifying pars
                 end
             end
             
+            obj.TmFSD = 'OFF';
             switch obj.TmFSD
                 case 'OFF'
                     % no contribution
