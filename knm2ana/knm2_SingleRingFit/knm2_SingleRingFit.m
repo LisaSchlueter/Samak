@@ -9,8 +9,8 @@ p.addParameter('Range',90,@(x)isfloat(x));              % fit range in eV below 
 p.addParameter('ROIFlag','14keV',@(x)ismember(x,{'Default','14keV'}));  
 p.addParameter('chi2','chi2Stat',@(x)ismember(x,{'chi2Stat','chi2CMShape'}));  
 p.addParameter('RingMerge','Full',@(x)ismember(x,{'Default','None','Full','Half','Azi'}));
-p.addParameter('RecomputeFlag','ON',@(x)ismember(x,{'ON','OFF'}));
-p.addParameter('MosCorrFlag','ON',@(x)ismember(x,{'ON','OFF'}));
+p.addParameter('RecomputeFlag','OFF',@(x)ismember(x,{'ON','OFF'}));
+p.addParameter('MosCorrFlag','OFF',@(x)ismember(x,{'ON','OFF'}));
 
 p.parse(varargin{:});
 

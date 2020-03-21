@@ -72,8 +72,8 @@ else
 end
 %% result
 fprintf('--------------------------------------\n')
-fprintf('mNuSq = %.4f (%.2f +%.2f) eV^2  (ref) \n',FitResults.par(1),FitResults.errNeg(1),FitResults.errPos(1))
-fprintf('mNuSq = %.4f (%.2f +%.2f) eV^2  (imp) \n',FitResults_imp.par(1),FitResults_imp.errNeg(1),FitResults_imp.errPos(1))
+fprintf('mNuSq = %.4f (%.3f +%.3f) eV^2  (ref) \n',FitResults.par(1),FitResults.errNeg(1),FitResults.errPos(1))
+fprintf('mNuSq = %.4f (%.3f +%.3f) eV^2  (imp) \n',FitResults_imp.par(1),FitResults_imp.errNeg(1),FitResults_imp.errPos(1))
 fprintf('--------------------------------------\n')
 fprintf('E0    = %.0e (+-%.2f) eV (ref) \n',FitResults.par(2)+MR.ModelObj.Q_i-mean(E0),FitResults.err(2))
 fprintf('E0    = %.0e (+-%.2f) eV (imp) \n',FitResults_imp.par(2)+MR.ModelObj.Q_i-mean(E0),FitResults_imp.err(2))

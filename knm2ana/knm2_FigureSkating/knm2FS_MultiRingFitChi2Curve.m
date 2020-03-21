@@ -78,5 +78,21 @@ else
 end
 
 %%
-out = MR.PlotChi2Curve('FitResult',FitResults_imp,'ScanResult',ScanResults,...
+outCM = MR.PlotChi2Curve('FitResult',FitResults_imp,'ScanResult',ScanResults,...
     'Parameter','mNu','HoldOn','OFF');
+%% if both stat and stat + syst run this (execute upper part twice: 1. chi2CMShape. 2. chi2Stat)
+out = MR.PlotChi2Curve('FitResult',FitResults_imp,'ScanResult',ScanResults,...
+    'Parameter','mNu','HoldOn','ON');
+out{2}.delete
+out{3}.delete
+out{4}.delete
+outCM{2}.delete
+outCM{3}.delete
+outCM{4}.delete
+leg = legend([out{1},outCM{1}],'Stat. only','Stat. and Syst');
+leg.EdgeColor = rgb('Silver');
+xlim([-0.4 0.4])
+ylim([0 2])
+plotname = strrep(strrep(strrep(savename,'results','plots'),'.mat','.pdf'),chi2,'StatSyst');
+export_fig(gcf,plotname);
+fprintf('save plot to %s \n',plotname)

@@ -66,7 +66,7 @@ p.addParameter('BKG_RateRingSec','');
 p.addParameter('FPD_Segmentation','OFF',@(x) ismember(x,{'OFF','SINGLEPIXEL','MULTIPIXEL','RING'}));
 p.addParameter('PixList',1:148,@(x)isfloat(x));
 p.addParameter('RingList',1:12,@(x)isfloat(x));
-p.addParameter('RingMerge','Default',@(x)ismember(x,{'Default','None','Full','Half','Azi'}));
+p.addParameter('RingMerge','Default',@(x)ismember(x,{'Default','None','Full','Half','Azi','AziHalf'}));
 p.parse(varargin{:});
 
 %KATRIN General
@@ -186,7 +186,8 @@ switch RingMerge
         
     case 'Azi'
         [PixList,RingPixList] = AziPatch2PixelCombi(RingList,PixList);
-
+    case 'AziHalf'
+       [PixList,RingPixList] = AziHalfPatch2PixelCombi(RingList,PixList);
 end
 
 

@@ -188,7 +188,7 @@ if strcmp(SanityPlot,'ON')
     %legend boxoff;
     leg.EdgeColor = rgb('LightGray');
     PrettyFigureFormat('FontSize',24);
-    xlim([-1 60])
+    xlim([-1 40])
     xlabel('Excitation energy (eV)')
     ylabel('Probability')
     ylim([0,max(exP)*1.1])

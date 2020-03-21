@@ -2,7 +2,7 @@
 range = 40;
 E0 = knm2FS_GetE0Twins('SanityPlot','OFF');
 RecomputeFlag = 'OFF';
-chi2 = 'chi2Stat';
+chi2 = 'chi2CMShape';
 %% load or calc
 savedir = [getenv('SamakPath'),'knm2ana/knm2_FigureSkating/results/'];
 savename = sprintf('%sknm2FS_UniformFit_%.0feV_%s.mat',savedir,range,chi2);
@@ -34,28 +34,25 @@ else
     %% fit without corrections
     A.Fit;
     FitResult_ref  = A.FitResult;
-    %% fit with broadening of RF + broadening/shift of FSD
-    A.ModelObj.RFBinStep = 0.002;
-    MACE_Sigma = std(A.SingleRunData.qU,0,2);
-    A.ModelObj.MACE_Sigma = MACE_Sigma;
-    A.ModelObj.InitializeRF;
-    TimeSec = zeros(3,1);
-    TimeSec(1) = sum(A.SingleRunData.TimeSec(1:171));
-    TimeSec(2) = sum(A.SingleRunData.TimeSec(172:268));
-    TimeSec(3) = sum(A.SingleRunData.TimeSec(269:361));
-    MultiWeights = TimeSec./sum(TimeSec);
-    MultiPos = [E0(1),E0(end-120),E0(end)]';
-    MultiPosRel = MultiPos-wmean(MultiPos,MultiWeights);
+%     %% fit with broadening of RF + broadening/shift of FSD
+% %     MACE_Sigma = std(A.SingleRunData.qU,0,2);
+% %     A.ModelObj.MACE_Sigma = MACE_Sigma;
+% %     A.ModelObj.InitializeRF;
+%     TimeSec = zeros(3,1);
+%     TimeSec(1) = sum(A.SingleRunData.TimeSec(1:171));
+%     TimeSec(2) = sum(A.SingleRunData.TimeSec(172:268));
+%     TimeSec(3) = sum(A.SingleRunData.TimeSec(269:361));
+%     MultiWeights = TimeSec./sum(TimeSec);
+%     MultiPos = '';% [E0(1),E0(end-120),E0(end)]';
+%     MultiPosRel = '';%MultiPos-wmean(MultiPos,MultiWeights);
     %%
     Sigma = std(E0);
-    FSDArg = {'MultiPos',MultiPosRel,'MultiWeight',MultiWeights,...
-        'SanityPlot','ON','Sigma',Sigma};
+    FSDArg = {'SanityPlot','ON','Sigma',Sigma};
     A.ModelObj.LoadFSD(FSDArg{:});
     A.ModelObj.ComputeTBDDS; A.ModelObj.ComputeTBDIS;
 
     A.Fit;
     FitResult_imp  = A.FitResult;
-   
     save(savename,'FitResult_imp','FitResult_ref','E0','MACE_Sigma','A','FSDArg');
 end
 %% result
@@ -67,4 +64,6 @@ fprintf('E0    = %.0e (+-%.2f) eV (ref) \n',FitResult_ref.par(2)+A.ModelObj.Q_i-
 fprintf('E0    = %.0e (+-%.2f) eV (imp) \n',FitResult_imp.par(2)+A.ModelObj.Q_i-mean(E0),FitResult_imp.err(2))
 fprintf('--------------------------------------\n')
 
-
+%%
+% A.ModelObj.LoadFSD(FSDArg{:},'ZoomPlot','ON')
+%A.Fit('CATS','ON')
