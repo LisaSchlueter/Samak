@@ -2234,7 +2234,8 @@ classdef RunSensitivity < handle
                     FitCMFrac  = obj.RunAnaObj.FitCMFrac;
                     FitCMShape = obj.RunAnaObj.FitCMShape;
                     nTrials    = obj.GetnTrials(SysEffect_save);
-                    save(savefile,'Lpar','FitCMFrac','FitCMShape','nTrials','LparMinos');
+                    FitResult  = obj.RunAnaObj.FitResult;
+                    save(savefile,'Lpar','FitCMFrac','FitCMShape','nTrials','LparMinos','FitResult');
                     
                     obj.MultiLpar.(SysEffect_save)   = Lpar;
                     obj.CovMatFrac.(SysEffect_save)  = FitCMFrac;

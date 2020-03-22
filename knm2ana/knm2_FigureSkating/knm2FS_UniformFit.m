@@ -1,7 +1,7 @@
 % KNM2 Figure skating twins
 range = 40;
 E0 = knm2FS_GetE0Twins('SanityPlot','OFF');
-RecomputeFlag = 'ON';
+RecomputeFlag = 'OFF';
 chi2 = 'chi2CMShape';
 %% load or calc
 savedir = [getenv('SamakPath'),'knm2ana/knm2_FigureSkating/results/'];

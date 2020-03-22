@@ -3479,6 +3479,7 @@ end
             else
                 obj.nTrials = 5000;
             end
+            
             if strcmp(obj.SysEffect.RF_EL,'ON') && strcmp(obj.SysEffect.RF_BF,'ON') && strcmp(obj.SysEffect.RF_RX,'ON') % all RF Effects ON
                 %all 'ON'
                 obj.ComputeCM_RF;

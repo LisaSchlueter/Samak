@@ -55,7 +55,7 @@ MR.ModelObj.InitializeRF;
 
 %%
 S = RunSensitivity('RunAnaObj',MR);
-S.RecomputeFlag='OFF';
+S.RecomputeFlag='ON';
 S.LimitFlag = 'Central';
 S.ConfLevel=0; % 0 == 1 sigma
 %%

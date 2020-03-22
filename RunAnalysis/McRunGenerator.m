@@ -424,10 +424,11 @@ classdef McRunGenerator < handle
             p=inputParser;
             p.addParameter('qU_Err',obj.RunObj.TwinBias_qU,@(x)isfloat(x));
             p.addParameter('qUfrac_RelErr',obj.RunObj.TwinBias_qUfrac,@(x)isfloat(x));
+            p.addParameter('CD_RelErr',obj.RunObj.TwinBias_WGTS_CD_MolPerCm2,@(x)isfloat(x));
             p.parse(varargin{:});
-            qU_Err     = p.Results.qU_Err;
+            qU_Err         = p.Results.qU_Err;
             qUfrac_RelErr = p.Results.qUfrac_RelErr;
-            
+            CD_RelErr     = p.Results.CD_RelErr;
             % create first TwinRunObj to access the default parameters
             TmpObj = obj.InitFile();
             
@@ -447,9 +448,10 @@ classdef McRunGenerator < handle
             obj.qUfrac            = obj.VaryParameter(TmpObj.qUfrac,qUfrac_RelErr,'Rel');
             NormFactor            =  sum(TmpObj.qUfrac)./sum(obj.qUfrac);
             obj.qUfrac            = obj.qUfrac.*NormFactor; %renormalize
-            
+
+           obj.WGTS_CD_MolPerCm2 = obj.VaryParameter(TmpObj.WGTS_CD_MolPerCm2,CD_RelErr,'Rel');
+%          
 %             obj.TimeSec           = obj.VaryParameter(obj.TwinObj{1}.TimeSec,obj.TimeSec_RelErr);
-%             obj.WGTS_CD_MolPerCm2 = obj.VaryParameter(obj.TwinObj{1}.WGTS_CD_MolPerCm2,obj.WGTS_CD_MolPerCm2_RelErr);
 %             obj.WGTS_MolFrac_TT   = obj.VaryParameter(obj.TwinObj{1}.WGTS_MolFrac_TT,obj.WGTS_MolFrac_TT_RelErr);
 %             obj.WGTS_MolFrac_DT   = obj.VaryParameter(obj.TwinObj{1}.WGTS_MolFrac_DT,obj.WGTS_MolFrac_DT_RelErr);
 %             obj.WGTS_MolFrac_HT   = obj.VaryParameter(obj.TwinObj{1}.WGTS_MolFrac_HT,obj.WGTS_MolFrac_HT_RelErr);
@@ -481,7 +483,8 @@ classdef McRunGenerator < handle
                 TBDArg = {'PixList',obj.RunObj.PixList,...
                         'Q_i',TwinQ(i),...
                         'qU',obj.qU(:,i),...
-                        'qUfrac',obj.qUfrac(:,i)};
+                        'qUfrac',obj.qUfrac(:,i),...
+                        'WGTS_CD_MolPerCm2',obj.WGTS_CD_MolPerCm2(i)};
                     
                 if ~isempty(obj.RunObj.TwinBias_Time)
                     obj.TwinObj = obj.InitFile(TBDArg{:},'TimeSec',obj.RunObj.TwinBias_Time);
