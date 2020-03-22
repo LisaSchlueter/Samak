@@ -4,8 +4,8 @@ freePar = 'E0 Bkg Norm';
 DataType = 'Real';
 RunList = 'KNM2_Prompt';
 range = 40;                % fit range in eV below endpoint
-AltPixList = 'AziHalf';       % defines alternative pixel list
-RecomputeFlag = 'ON';
+AltPixList = 'AziHalfNS';%'AziHalfEW';  % defines alternative pixel list
+RecomputeFlag = 'OFF';
 
 % label
 savedir = [getenv('SamakPath'),'knm2ana/knm2_AltRunPixLists/results/'];

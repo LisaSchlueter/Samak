@@ -5,7 +5,7 @@ DataType = 'Real';
 Parameter = 'E0';
 RunList = 'KNM2_Prompt';
 range = 40;                % fit range in eV below endpoint
-AltPixLists = {'Half','AziHalf'};
+AltPixLists = {'Half','AziHalfEW','AziHalfNS'};
 savedir = [getenv('SamakPath'),'knm2ana/knm2_AltRunPixLists/results/'];
 
 %% load random half
@@ -53,7 +53,7 @@ end
 %% plot random half
 f1 = figure('Units','normalized','Position',[0.1,0.1,0.5,0.5]);
 meanY =wmean(y,1./yErr.^2);
-h1 =histogram(y-meanY,'FaceColor',rgb('SkyBlue'),'FaceAlpha',1);
+h1 =histogram(y-meanY,'FaceColor',rgb('LightGray'),'FaceAlpha',1);
 xlabel(sprintf('%s - \\langle%s\\rangle (%s)',xStr,xStr,Unit));
 ylabel('Occurrence');
 PrettyFigureFormat('FontSize',22)
@@ -71,21 +71,26 @@ Sigma = cell(numel(AltPixLists),1);
 for i=1:numel(AltPixLists)
     
     if strcmp(AltPixLists{i},'Half')
-        legStr = [legStr,'Inner half','Outer half'];
+        legStr = [legStr,'Inner','Outer'];
         PlotArg = {'LineWidth',3,'Color',rgb('Orange')};
-        LineStyle = {'-','-.'};
+        LineStyle = {'-',':'};
     elseif strcmp(AltPixLists{i},'Azi')
         legStr = [legStr,'Azi 1','Azi 2','Azi 3','Azi 4'];
-        PlotArg = {'LineWidth',3,'Color',rgb('ForstGreen')};
+        PlotArg = {'LineWidth',3,'Color',rgb('MediumSeaGreen')};
         LineStyle = {'-','-.','--',':'};
-    elseif strcmp(AltPixLists{i},'AziHalf')
+    elseif strcmp(AltPixLists{i},'AziHalfEW')
         strcmp(AltPixLists{i},'Half')
-        legStr = [legStr,'East half','West half'];
-        PlotArg = {'LineWidth',3,'Color',rgb('Crimson')};
-        LineStyle = {':','--'};
+        legStr = [legStr,'East','West'];
+        PlotArg = {'LineWidth',3,'Color',rgb('MediumSeaGreen')};
+        LineStyle = {'-',':'};
+    elseif strcmp(AltPixLists{i},'AziHalfNS')
+        strcmp(AltPixLists{i},'Half')
+        legStr = [legStr,'North','South'];
+        PlotArg = {'LineWidth',3,'Color',rgb('DodgerBlue')};
+        LineStyle = {'-',':'};
     end
     
-     AltY = ParAlt{i};
+    AltY = ParAlt{i};
     for n=1:nSeg(i)
         plot(AltY(n).*ones(20,1)-meanY,yplot,LineStyle{n},PlotArg{:})
     end
@@ -103,6 +108,6 @@ xlim(1.5.*[xmin,xmax])
 
 plotname = strrep(strrep(savenameRand,'results','plots'),'.mat','_PlotRandAlt.pdf');
 export_fig(f1,plotname);
-
+fprintf('save plot to %s \n',plotname)
 %% standard deviations from mean
 Sigma_v = cell2mat(Sigma);

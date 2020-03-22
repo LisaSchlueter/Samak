@@ -2024,7 +2024,7 @@ function ComputeCM_Background(obj,varargin)
     cprintf('blue','CovarianceMatrix:ComputeCM_Background: Compute Background Covariance Matrix  \n');
     
     % Number of Trials - Hardcoded
-    TrialSave  = obj.nTrials; obj.nTrials = 1000;%5000; % BASELINE
+    TrialSave  = obj.nTrials; obj.nTrials = 10000; % BASELINE
     
     % Covariance Matrix File
     cm_path        = [getenv('SamakPath'),sprintf('inputs/CovMat/Background/CM/')];
@@ -3474,7 +3474,11 @@ end
             
             %Load / Compute CM of SysEffects
             %% Response Function
-            obj.nTrials = 1000;
+            if strcmp(obj.StudyObject.FPD_Segmentation,'RING')
+                obj.nTrials = 1000;
+            else
+                obj.nTrials = 5000;
+            end
             if strcmp(obj.SysEffect.RF_EL,'ON') && strcmp(obj.SysEffect.RF_BF,'ON') && strcmp(obj.SysEffect.RF_RX,'ON') % all RF Effects ON
                 %all 'ON'
                 obj.ComputeCM_RF;

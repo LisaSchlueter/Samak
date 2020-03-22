@@ -141,7 +141,7 @@ classdef RunAnalysis < handle
             p.addParameter('fixPar','',@(x)ischar(x)); %default given in constructor: FSD and qUOffset fixed
             p.addParameter('pulls',[],@(x)isfloat(x) && all(x>0));
             p.addParameter('pullFlag',3);%@(x)ismember(x,{1,2,3}) 
-            p.addParameter('RingMerge','None',@(x)ismember(x,{'Default','None','Full','Half','Azi','AziHalf'}));
+            p.addParameter('RingMerge','None',@(x)ismember(x,{'Default','None','Full','Half','Azi','AziHalfNS','AziHalfEW'}));
             p.addParameter('NonPoissonScaleFactor',[],@(x)isfloat(x) && all(x>0)); 
             p.addParameter('SysBudget','',@(x)isfloat(x)); %if none given-> defined according to data set
 
@@ -279,8 +279,8 @@ classdef RunAnalysis < handle
                 case 'Azi'
                     [obj.PixList,obj.RingPixList] = AziPatch2PixelCombi(obj.RingList,obj.PixList);
                     obj.RingList = 1:5;
-                case 'AziHalf'
-                    [obj.PixList,obj.RingPixList] = AziHalfPatch2PixelCombi(obj.RingList,obj.PixList);
+                case {'AziHalfNS','AziHalfEW'}
+                    [obj.PixList,obj.RingPixList] = AziHalfPatch2PixelCombi(obj.RingList,obj.PixList,obj.RingMerge);
                     obj.RingList = 1:2;
             end
             
@@ -3756,8 +3756,10 @@ classdef RunAnalysis < handle
                 xticklabels({'1,2,3,4,5,6','7,8,9,10,11,12'})
             elseif strcmp(obj.RingMerge,'Azi')
                 xticklabels({'Pole','NE','SE','SW','NW'})
-            elseif strcmp(obj.RingMerge,'AziHalf')
+            elseif strcmp(obj.RingMerge,'AziHalfEW')
                 xticklabels({'East','West'})
+            elseif strcmp(obj.RingMerge,'AziHalfNS')
+                xticklabels({'North','South'})
             end
             % set nice limits
             xlim([min(obj.RingList)-0.2,max(obj.RingList)+0.2]);

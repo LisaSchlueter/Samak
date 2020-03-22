@@ -1,7 +1,7 @@
 % KNM2 Figure skating twins
 range = 40;
 E0 = knm2FS_GetE0Twins('SanityPlot','OFF');
-RecomputeFlag = 'OFF';
+RecomputeFlag = 'ON';
 chi2 = 'chi2CMShape';
 %% load or calc
 savedir = [getenv('SamakPath'),'knm2ana/knm2_FigureSkating/results/'];
@@ -43,8 +43,8 @@ else
 %     TimeSec(2) = sum(A.SingleRunData.TimeSec(172:268));
 %     TimeSec(3) = sum(A.SingleRunData.TimeSec(269:361));
 %     MultiWeights = TimeSec./sum(TimeSec);
-%     MultiPos = '';% [E0(1),E0(end-120),E0(end)]';
-%     MultiPosRel = '';%MultiPos-wmean(MultiPos,MultiWeights);
+%     MultiPos =[E0(1),E0(end-120),E0(end)]';
+%     MultiPosRel = MultiPos-wmean(MultiPos,MultiWeights);
     %%
     Sigma = std(E0);
     FSDArg = {'SanityPlot','ON','Sigma',Sigma};
@@ -59,11 +59,13 @@ end
 fprintf('--------------------------------------\n')
 fprintf('mNuSq = %.3f (%.3f +%.3f) eV^2  (ref) \n',FitResult_ref.par(1),FitResult_ref.errNeg(1),FitResult_ref.errPos(1))
 fprintf('mNuSq =  %.3f (%.3f +%.3f) eV^2  (imp) \n',FitResult_imp.par(1),FitResult_imp.errNeg(1),FitResult_imp.errPos(1))
+fprintf('Average mNuSq sensitivity = %.3f eV^2 \n',0.5*(-FitResult_imp.errNeg(1)+FitResult_imp.errPos(1)))
 fprintf('--------------------------------------\n')
 fprintf('E0    = %.0e (+-%.2f) eV (ref) \n',FitResult_ref.par(2)+A.ModelObj.Q_i-mean(E0),FitResult_ref.err(2))
 fprintf('E0    = %.0e (+-%.2f) eV (imp) \n',FitResult_imp.par(2)+A.ModelObj.Q_i-mean(E0),FitResult_imp.err(2))
 fprintf('--------------------------------------\n')
 
 %%
+
 % A.ModelObj.LoadFSD(FSDArg{:},'ZoomPlot','ON')
 %A.Fit('CATS','ON')

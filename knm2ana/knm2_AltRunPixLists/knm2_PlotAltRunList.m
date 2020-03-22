@@ -45,7 +45,7 @@ end
 
 %% plot random half
 f1 = figure('Units','normalized','Position',[0.1,0.1,0.5,0.5]);
-h1 =histogram(ParRand-meanParRand,'FaceColor',rgb('SkyBlue'),'FaceAlpha',1);
+h1 =histogram(ParRand-meanParRand,'FaceColor',rgb('LightGray'),'FaceAlpha',1);
 xlabel(sprintf('%s - \\langle%s\\rangle (%s)',xStr,xStr,Unit));
 ylabel('Occurrence');
 PrettyFigureFormat('FontSize',22)
@@ -71,7 +71,7 @@ for i=1:numel(AltRunLists)
     elseif strcmp(AltRunLists{i},'KNM2_Down')
         legStr = [legStr,sprintf('Down scans (%.0f runs)',nRunsAlt(i))];
         PlotArg = {'LineWidth',3,'Color',rgb('Crimson')};
-        LineStyle = {'--'};
+        LineStyle = {':'};
     end
     
      plot(ParAlt(i).*ones(20,1)-meanParRand,yplot,LineStyle{:},PlotArg{:})
