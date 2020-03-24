@@ -3392,8 +3392,8 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             if ismember(ListName,{'KNM2_Prompt','KNM2_RandHalf'})  % all runs
                 h5list = sort([runsRW1,runsRW2,runsRW3]);
             elseif strcmp(ListName,'KNM2_RW1')   % rear wall setting 1 (different names for back compatibility)
-                h5list = runsRW1;
-%                h5list = runsRW1(runsRW1>56281);
+%                h5list = runsRW1;
+                h5list = runsRW1(runsRW1>56281);
             elseif strcmp(ListName,'KNM2_RW2')   % rear wall setting 2
                 h5list = runsRW2;
             elseif strcmp(ListName,'KNM2_RW3')   % rear wall setting 3
@@ -4485,7 +4485,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             
             switch obj.StackFileName
                 case 'KNM1'
-            MyqU1 = 2;
+            MyqU1 = 1;
             MyqU2 = 14;
             MyqU3 = 35;
                 case {'KNM2','Others','KNM2_after2ndFix'}
@@ -4512,15 +4512,15 @@ t.addRow('$\beta$-scan Time',sprintf('%.1f \\rm{ \\, hours} - (%.1f \\%%)',hours
 t.addRow('Signal+Background','');
 locaTime=hours(seconds(sum(obj.RunData.TimeperSubRunperPixel(MyqU1:end,1),1)));
 t.addRow(sprintf('At qU$>$%.1f eV',obj.ModelObj.qU(MyqU1)),...
-         sprintf('%.1f \\rm{ \\, hours} - (%.1f \\%%) - %.2g \\rm{ \\, electrons}',locaTime, locaTime/localTimetotal*100,sum(obj.RunData.TBDIS(MyqU1:end))));
+         sprintf('%.2f \\rm{ \\, hours} - (%.2f \\%%) - %.3g \\rm{ \\, electrons}',locaTime, locaTime/localTimetotal*100,sum(obj.RunData.TBDIS(MyqU1:end))));
 locaTime=hours(seconds(sum(obj.RunData.TimeperSubRunperPixel(MyqU2:end,1),1)));
 t.addRow(sprintf('At qU$>$%.1f eV',obj.ModelObj.qU(MyqU2)),...
-         sprintf('%.1f \\rm{ \\, hours} - (%.1f \\%%) - %.2g \\rm{ \\, electrons}',locaTime, locaTime/localTimetotal*100,sum(obj.RunData.TBDIS(MyqU2:end))));
+         sprintf('%.2f \\rm{ \\, hours} - (%.2f \\%%) - %.3g \\rm{ \\, electrons}',locaTime, locaTime/localTimetotal*100,sum(obj.RunData.TBDIS(MyqU2:end))));
 
      t.addRow('Only Background','');
 locaTime=hours(seconds(sum(obj.RunData.TimeperSubRunperPixel(MyqU3:end,1),1)));
 t.addRow(sprintf('At qU$>$%.1f eV',obj.ModelObj.qU(MyqU3)),...
-         sprintf('%.1f \\rm{ \\, hours} - (%.1f \\%%) - %.2g \\rm{ \\, electrons}',locaTime, locaTime/localTimetotal*100,sum(obj.RunData.TBDIS(MyqU3:end))));
+         sprintf('%.2f \\rm{ \\, hours} - (%.2f \\%%) - %.3g \\rm{ \\, electrons}',locaTime, locaTime/localTimetotal*100,sum(obj.RunData.TBDIS(MyqU3:end))));
 
 t.display;
 t.HasHeader = true;

@@ -964,6 +964,104 @@ classdef RunAnalysis < handle
             end
            
           end
+        function PlotDataModel_KSN1(obj,varargin)
+            % Plot overlaying Data and Model - Dedicated to KSN1
+            % Includes Error Band depending on the Fit option
+            % Model = TBDIS
+            % (not a Fit)
+            p=inputParser;
+            p.addParameter('saveplot','ON',@(x)ismember(x,{'ON','OFF','png','pdf','eps'}));
+            p.addParameter('scale','log',@(x)ismember(x,{'lin','log'}));
+            p.addParameter('RunLabel',numel(obj.RunList));
+            p.addParameter('ErrorBarScaling',50,@(x)isfloat(x)); % limits for norm. residuals            
+            
+            p.parse(varargin{:});
+            saveplot = p.Results.saveplot;
+            scale = p.Results.scale;
+            RunLabel = p.Results.RunLabel;
+            obj.ErrorBarScaling= p.Results.ErrorBarScaling;
+
+            switch obj.chi2
+                case {'chi2Stat','chi2P'}
+                    PlotCM = diag(obj.RunData.TBDISE(:).^2);
+                case {'chi2CM','chi2CMFrac'}
+                    PlotCM = obj.FitCM;
+                case 'chi2CMShape'
+                    PlotCM = obj.FitCMShape;
+            end
+            
+            % Model / Data overlay
+            fig6 = figure(6);
+            set(fig6, 'Units', 'normalized', 'Position', [0., 0.1, 0.9 , 0.8]);
+            
+            h1=errorbar(obj.RunData.qU-obj.ModelObj.Q_i,...
+                obj.RunData.TBDIS./obj.ModelObj.qUfrac./obj.ModelObj.TimeSec,...
+                obj.RunData.TBDISE./obj.ModelObj.qUfrac./obj.ModelObj.TimeSec*0,...
+                'o','MarkerSize',10,'MarkerEdgeColor' , rgb('DarkSlateGray'),'MarkerFaceColor' , rgb('DarkSlateGray'));
+             h1.Color =rgb('DarkSlateGray') ; h1.MarkerSize = 6; h1.CapSize = 0;h1.LineStyle= 'none';h1.LineWidth= 3;legend hide
+            hold on
+            hfit1 = boundedline(obj.ModelObj.qU-obj.ModelObj.Q_i,...
+                obj.ModelObj.TBDIS./obj.ModelObj.qUfrac./obj.ModelObj.TimeSec,...
+                diag(sqrt(PlotCM))./obj.ModelObj.qUfrac./obj.ModelObj.TimeSec,...
+                'alpha','cmap',rgb('IndianRed'));
+            [ll la]= boundedline(obj.ModelObj.qU-obj.ModelObj.Q_i,...
+                obj.ModelObj.TBDIS./obj.ModelObj.qUfrac./obj.ModelObj.TimeSec,...
+                sqrt(diag(PlotCM))./obj.ModelObj.qUfrac./obj.ModelObj.TimeSec,...
+                'alpha','cmap',rgb('IndianRed'));
+            ll.LineWidth= 3
+            ll.LineStyle='--'; legend hide
+            
+            % Background Line
+            [lll lla]= boundedline(obj.ModelObj.qU-obj.ModelObj.Q_i,...
+                obj.ModelObj.BKG_RateSec./obj.ModelObj.qUfrac.*obj.ModelObj.qUfrac,...
+                obj.FitResult.err(3)./obj.ModelObj.qUfrac.*obj.ModelObj.qUfrac,...
+                'alpha','cmap',rgb('SeaGreen')); lll.LineWidth= 3;
+            lll.LineStyle='--'; legend hide
+            % Tritium
+            [llll llla]= boundedline(obj.ModelObj.qU-obj.ModelObj.Q_i,...
+                obj.ModelObj.TBDIS./obj.ModelObj.qUfrac./obj.ModelObj.TimeSec-obj.ModelObj.BKG_RateSec./obj.ModelObj.qUfrac.*obj.ModelObj.qUfrac,...
+                0./obj.ModelObj.qUfrac.*obj.ModelObj.qUfrac,...
+                'alpha','cmap',rgb('RoyalBlue')); llll.LineWidth= 3;
+            llll.LineStyle='--'; legend hide
+            
+           % data again, for superimposition 
+           h1=errorbar(obj.RunData.qU-obj.ModelObj.Q_i,...
+                obj.RunData.TBDIS./obj.ModelObj.qUfrac./obj.ModelObj.TimeSec,...
+                obj.RunData.TBDISE./obj.ModelObj.qUfrac./obj.ModelObj.TimeSec*0,...
+                'o','MarkerSize',10,'MarkerEdgeColor' , rgb('DarkSlateGray'),'MarkerFaceColor' , rgb('DarkSlateGray'));
+            h1.Color =rgb('DarkSlateGray') ;  h1.MarkerSize = 6; h1.CapSize = 0;h1.LineStyle= 'none';h1.LineWidth= 3;legend hide
+            
+            hold off
+            axis([1.1*min(obj.ModelObj.qU-obj.ModelObj.Q) 1.1*max(obj.ModelObj.qU-obj.ModelObj.Q)  obj.ModelObj.BKG_RateSec/2 max(obj.RunData.TBDIS./obj.ModelObj.qUfrac./obj.ModelObj.TimeSec)*1.1 ]);
+            set(gca, 'YScale', scale);
+            xlabel(sprintf('retarding energy - %.1f (eV)',obj.ModelObj.Q_i),'FontSize',16);
+            ylabel('rate (cps)','FontSize',16);
+            set(gca,'FontSize',24);
+            if obj.RunNr
+            title(sprintf('KATRIN First eV-Sterile Neutrino Run Run (KSN1) - run %s, %.0f hours, %.0f e^-',num2str(obj.RunNr),obj.ModelObj.TimeSec/3600,sum(obj.ModelObj.TBDIS(obj.exclDataStart:end))));
+            else
+            %title(sprintf('KATRIN - m_{\\beta} Test Scan - March 2019 - %0.f run stacked, %.0f hours, %.0f e^-',RunLabel,obj.ModelObj.TimeSec/3600,sum(obj.ModelObj.TBDIS(obj.exclDataStart))));
+            title(sprintf('KATRIN First eV-Sterile Neutrino Run (KSN1) - %.0f hours, %.0g e^- in [E_0-%.0f ; E_0+%.0f] eV',obj.ModelObj.TimeSec/3600,sum(obj.ModelObj.TBDIS(obj.exclDataStart:end)),...
+                obj.ModelObj.Q_i-obj.ModelObj.qU(obj.exclDataStart),obj.ModelObj.qU(end)-obj.ModelObj.Q_i));
+            end
+            l1 = 'data    ';
+            l2 = sprintf('model + uncertainty    ');
+            PrettyFigureFormat
+            set(gca,'FontSize',22);
+            %xlim([-100,+51]); ylim([0.1,1000]);
+            a = legend([h1 la lll llll],l1,l2,'background','tritium','Location','NorthEast','Box','off'); %a.String=a.String(1:2);
+            set(a,'Color',rgb('White'),'Box', 'on');
+            xlim([-90 50]);
+            ylim([0.2 400]);
+            grid on;
+            
+ 
+            if strcmp(saveplot,'ON') 
+                save_name = sprintf('./plots/KSN1s_DataModel%s_%s-excl%u.png',num2str(obj.RunNr),obj.chi2,obj.exclDataStart);
+                export_fig(fig6,save_name,'-q101','-m3');
+            end
+           
+          end
           
           
 
