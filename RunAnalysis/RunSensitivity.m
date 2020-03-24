@@ -11,7 +11,9 @@ classdef RunSensitivity < handle
         % Sensitivity properties
         ConfLevel;         % confidence level: e.g. 0.9
         Lpar;              % current sensitivity (all parameters)
+        LparMinos;         % current mNuSw sensitivity with MINOS errors (averaged)
         MultiLpar;         % sensitivity of single effects: stat + TC, stat + FSD,....
+        MultiLparMinos;
         MultiLparStack;    % sensitivities N+1: stat, stat+SysEffectAll{1}, stat + +SysEffectAll{1} ++SysEffectAll{2}, .....
         NPcomponent;       % non poissonian component
         
@@ -171,7 +173,14 @@ classdef RunSensitivity < handle
             
             % compute sensitvity by fitting asimov dataset
             obj.RunAnaObj.Fit;
-            obj.Lpar = obj.RunAnaObj.FitResult.err.*factor;  %sensitivity all parameter at given confidence level
+            obj.Lpar      = obj.RunAnaObj.FitResult.err.*factor;  %sensitivity all parameter at given confidence level
+            if isfield(obj.RunAnaObj.FitResult,'errNeg')
+                MeanErr =  0.5*(abs(obj.RunAnaObj.FitResult.errNeg(1))+obj.RunAnaObj.FitResult.errPos(1));
+                obj.LparMinos = zeros(size(obj.Lpar));
+                obj.LparMinos(1) = MeanErr*factor;  %use asymmetric MINOS errors (only for mNu)
+            else
+                obj.LparMinos = zeros(size(obj.Lpar));
+            end
         end
         function ComputeSensitivity_Scan(obj,varargin)
             fprintf('Neutrino Mass Scan - %s Side \n',obj.ScanSide)
@@ -964,14 +973,7 @@ classdef RunSensitivity < handle
             
             obj.RunAnaObj.NonPoissonScaleFactor=NP_prev;
             obj.RunAnaObj.chi2     = obj.chi2sys;
-            
-%                 %save to file
-%                 MultiLpar     = obj.MultiLpar;
-%                 SysEffectsAll = obj.SysEffectsAll;
-%                 CovMatFrac    = obj.CovMatFrac;
-%                 CovMatShape   = obj.CovMatShape;
-%                 save(savefile,'MultiLpar','SysEffectsAll','CovMatFrac','CovMatShape'); %save as 1 sigma
-%                 
+               
                 switch obj.Mode
                     case 'Asimov'
                         factor          = obj.ConvertCl2Std;            %convert to confidence level
@@ -2215,22 +2217,36 @@ classdef RunSensitivity < handle
 %                        return
 %                     end
                     
-                    obj.Lpar                    = d.Lpar;
+                    obj.Lpar                         = d.Lpar;
                     obj.MultiLpar.(SysEffect_save)   = d.Lpar;
                     obj.CovMatFrac.(SysEffect_save)  = d.FitCMFrac;
                     obj.CovMatShape.(SysEffect_save) = d.FitCMShape;
+                    if strcmp(obj.RunAnaObj.fitter,'minuit') && contains(obj.RunAnaObj.minuitOpt,'minos')
+                        if isfield(d,'LparMinos')  % average asymmetric uncertainties
+                            obj.Lpar                       = d.LparMinos;
+                            obj.MultiLpar.(SysEffect_save) = d.LparMinos;                
+                        end
+                    end
                     fprintf('Load file %s \n',savefile);
                 case 'save'
                     Lpar       = obj.Lpar;
+                    LparMinos  = obj.LparMinos;
                     FitCMFrac  = obj.RunAnaObj.FitCMFrac;
                     FitCMShape = obj.RunAnaObj.FitCMShape;
                     nTrials    = obj.GetnTrials(SysEffect_save);
-                    save(savefile,'Lpar','FitCMFrac','FitCMShape','nTrials');
+                    FitResult  = obj.RunAnaObj.FitResult;
+                    save(savefile,'Lpar','FitCMFrac','FitCMShape','nTrials','LparMinos','FitResult');
                     
                     obj.MultiLpar.(SysEffect_save)   = Lpar;
                     obj.CovMatFrac.(SysEffect_save)  = FitCMFrac;
                     obj.CovMatShape.(SysEffect_save) = FitCMShape;
                     
+                    if strcmp(obj.RunAnaObj.fitter,'minuit') && contains(obj.RunAnaObj.minuitOpt,'minos')
+                        if isfield(obj,'LparMinos') && sum(obj.LparMinos)~=0 % average asymmetric uncertainties
+                            obj.Lpar                       = LparMinos;
+                            obj.MultiLpar.(SysEffect_save) = LparMinos;
+                        end
+                    end
                     fprintf('Save file %s \n',savefile)
             end
         end

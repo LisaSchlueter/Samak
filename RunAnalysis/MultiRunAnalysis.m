@@ -138,6 +138,9 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                     [obj.PixList,obj.RingPixList] = AziPatch2PixelCombi(obj.RingList,obj.PixList);
                     obj.nRings = 5;
                     obj.RingList = 1:5;
+                case {'AziHalfNS','AziHalfEW'}
+                    [obj.PixList,obj.RingPixList] = AziHalfPatch2PixelCombi(obj.RingList,obj.PixList,obj.RingMerge);
+                    obj.RingList = 1:2;
             end
 
             % Init Analysis: Stack Data, Create Stack Model, Covariance Matrix
@@ -158,6 +161,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             obj.SimulateStackRuns();
             obj.InitFitPar;
             obj.SetNPfactor
+            obj.GetPlotColor;
             
             if ~strcmp(obj.chi2,'chi2Stat') && ~strcmp(obj.chi2,'chi2P')
                 switch obj.Debug
@@ -3404,6 +3408,14 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                 h5list = sort([runsRW2,runsRW3]);
             elseif strcmp(ListName,'KNM2_RW13') % rear wall setting 1 + 3
                 h5list = sort([runsRW1,runsRW3]);
+            elseif ismember(ListName,{'KNM2_Up','KNM2_Down'})
+                h5listAll = sort([runsRW1,runsRW2,runsRW3]);
+                ScanDir = GetKNM2ScanDirection('RunNr',h5listAll);
+                if strcmp(ListName,'KNM2_Up')
+                    h5list = h5listAll(ScanDir==1);
+                elseif strcmp(ListName,'KNM2_Down')
+                    h5list = h5listAll(ScanDir==0);
+                end
             else
                 fprintf('RunList Name unknown! \n');
             end

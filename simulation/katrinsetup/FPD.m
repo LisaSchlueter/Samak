@@ -75,7 +75,7 @@ classdef FPD < KATRIN & handle %!dont change superclass without modifying parsin
             p.addParameter('FPD_ROIEff','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('FPD_PileUpEff','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('FPD_ROIlow','',@(x)isfloat(x) && x>0); %if empty: do nothing, if not: compute coverage 
-            p.addParameter('FPD_RingMerge','Default',@(x)ismember(x,{'Default','None','Full','Half','Azi'}));
+            p.addParameter('FPD_RingMerge','Default',@(x)ismember(x,{'Default','None','Full','Half','Azi','AziHalfNS','AziHalfEW'}));
     
             % Background Parameters
             p.addParameter('BKG_Flag','ON',@(x)ismember(x,{'ON','OFF','XmasData'}));

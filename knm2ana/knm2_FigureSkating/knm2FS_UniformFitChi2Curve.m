@@ -5,7 +5,7 @@
 range = 40;
 E0 = knm2FS_GetE0Twins('SanityPlot','OFF');
 RecomputeFlag = 'OFF';
-chi2 = 'chi2Stat';%CMShape';
+chi2 = 'chi2CMShape';
 %% load or calc
 
 savedir = [getenv('SamakPath'),'knm2ana/knm2_FigureSkating/results/'];

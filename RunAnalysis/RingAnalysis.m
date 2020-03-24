@@ -131,9 +131,10 @@ classdef RingAnalysis < handle
                 FitResult.errPos = errPos;
                 
                 obj.FitResult = FitResult;
-            end
-            if strcmp(SaveResult,'ON') 
-                save(savename,'FitResult');
+                
+                if strcmp(SaveResult,'ON')
+                    save(savename,'FitResult');
+                end
             end
         end
         function PlotFits(obj,varargin)
@@ -157,6 +158,22 @@ classdef RingAnalysis < handle
             yErr   = obj.FitResult.err;%(:,PlotPar);
             yErr   = yErr(:,PlotPar);
 
+            if isfield(obj.FitResult,'errNeg') && PlotPar==1
+                yErr = 0.5*(abs(obj.FitResult.errNeg(:,PlotPar))+obj.FitResult.errPos(:,PlotPar));
+                if any(yErr<1e-2)
+                    Index = yErr<1e-2;
+                    meanYerr = mean(yErr(~Index));
+                     yErr(Index) = meanYerr;
+                end
+            end
+            
+            if any(yErr<1e-3) && PlotPar==2
+                % temporary solution for plot:
+                % scale weird error up to average error (for lin fit)
+                Index = yErr<1e-3;
+                meanYerr = mean(yErr(~Index));
+                yErr(Index) = meanYerr;
+            end
             %% linear fit
             if strcmp(linFitFlag,'ON')
                 [linFitpar, linFiterr, linFitchi2min,linFitdof] =...
@@ -166,7 +183,7 @@ classdef RingAnalysis < handle
             range = round(abs(obj.RunAnaObj.ModelObj.qU(obj.RunAnaObj.exclDataStart)-obj.RunAnaObj.ModelObj.Q_i),0);
             %% plot fit result
             fig2 = figure('Renderer','painters');
-            set(fig2,'units','normalized','pos',[0.1, 0.1,0.6,0.5]);  
+            set(fig2,'units','normalized','pos',[0.1, 0.1,0.5,0.5]);  
             plot(linspace(0.5,12.5,obj.nRings),zeros(obj.nRings,1),'-','Color',rgb('SlateGrey'),'LineWidth',2);
             hold on;
             %hold on;
@@ -227,9 +244,9 @@ classdef RingAnalysis < handle
                         linFitleg =  sprintf('Linear fit %.2f \\pm %.2f eV/ring , p-value = %.2f',linFitpar(1),linFiterr(1),1-chi2cdf(linFitchi2min,linFitdof));
                     end
                 end
-                leg = legend([e,l(1)],sprintf('%s , %.0f eV range',runname,range),linFitleg);
+                leg = legend([e,l(1)],sprintf('%s',runname),linFitleg);
             else
-                leg = legend(e,sprintf('%s: %.0f eV range',strrep(obj.RunAnaObj.RunData.RunName,'_',' '),range));
+                leg = legend(e,sprintf('%s',strrep(obj.RunAnaObj.RunData.RunName,'_',' ')));
             end
             hold off;
             leg.FontSize= get(gca,'FontSize');
@@ -251,25 +268,30 @@ classdef RingAnalysis < handle
             meanPar =wmean(y,1./yErr.^2);
             if PlotPar==1
                 AnaType = 'm2';
-                t =title(sprintf('%.0f stacked runs (%.0f - %.0f) - %.0f pixels - \\langle{\\itm}^2\\rangle = %.3f eV^2',numel(obj.RunAnaObj.StackedRuns),obj.RunAnaObj.RunList(1),obj.RunAnaObj.RunList(end),numel(obj.RunAnaObj.PixList), meanPar));
+                t =title(sprintf('%.0f stacked runs (%.0f - %.0f) - %.0f pixels - %.0f eV range - \\langle{\\itm}^2\\rangle = %.3f eV^2 ',...
+                    numel(obj.RunAnaObj.StackedRuns),obj.RunAnaObj.RunList(1),obj.RunAnaObj.RunList(end),numel(obj.RunAnaObj.PixList),range, meanPar));
             elseif PlotPar==2
-               t = title(sprintf('%.0f stacked runs (%.0f - %.0f) - %.0f pixels - \\langle{\\itE}_0^{fit}\\rangle = %.2f eV',numel(obj.RunAnaObj.StackedRuns),obj.RunAnaObj.RunList(1),obj.RunAnaObj.RunList(end),numel(obj.RunAnaObj.PixList), meanPar + obj.RunAnaObj.ModelObj.Q_i));
+               t = title(sprintf('%.0f stacked runs (%.0f - %.0f) - %.0f pixels - %.0f eV range - \\langle{\\itE}_0^{fit}\\rangle = %.2f eV',...
+                   numel(obj.RunAnaObj.StackedRuns),obj.RunAnaObj.RunList(1),obj.RunAnaObj.RunList(end),numel(obj.RunAnaObj.PixList),range, meanPar + obj.RunAnaObj.ModelObj.Q_i));
                 AnaType = 'E0';
             elseif PlotPar==3
-               t= title(sprintf('%.0f stacked runs (%.0f - %.0f) - %.0f pixels - B_{Tot} = %.1f mcps',numel(obj.RunAnaObj.StackedRuns),obj.RunAnaObj.RunList(1),obj.RunAnaObj.RunList(end),numel(obj.RunAnaObj.PixList), 1e3*BKG_Tot));
+               t= title(sprintf('%.0f stacked runs (%.0f - %.0f) - %.0f pixels - %.0f eV range - B_{Tot} = %.1f mcps',...
+                   numel(obj.RunAnaObj.StackedRuns),obj.RunAnaObj.RunList(1),obj.RunAnaObj.RunList(end),numel(obj.RunAnaObj.PixList),range, 1e3*BKG_Tot));
                 AnaType = 'BKG';
             elseif PlotPar==4
                 AnaType = 'Normalization';
-                t =title(sprintf('%.0f stacked runs (%.0f - %.0f) - %.0f pixels - <N> = %.3f',numel(obj.RunAnaObj.StackedRuns),obj.RunAnaObj.RunList(1),obj.RunAnaObj.RunList(end),numel(obj.RunAnaObj.PixList), meanPar));
+                t =title(sprintf('%.0f stacked runs (%.0f - %.0f) - %.0f pixels - %.0f eV range - <N> = %.3f',...
+                    numel(obj.RunAnaObj.StackedRuns),obj.RunAnaObj.RunList(1),obj.RunAnaObj.RunList(end),numel(obj.RunAnaObj.PixList), range, meanPar));
             elseif PlotPar==11
                 AnaType = 'qUoffset';
-                t =title(sprintf('%.0f stacked runs (%.0f - %.0f) - %.0f pixels - <qU_{offset}> = %.3f',numel(obj.RunAnaObj.StackedRuns),obj.RunAnaObj.RunList(1),obj.RunAnaObj.RunList(end),numel(obj.RunAnaObj.PixList), meanPar));
+                t =title(sprintf('%.0f stacked runs (%.0f - %.0f) - %.0f pixels - %.0f eV range - <qU_{offset}> = %.3f',...
+                    numel(obj.RunAnaObj.StackedRuns),obj.RunAnaObj.RunList(1),obj.RunAnaObj.RunList(end),numel(obj.RunAnaObj.PixList),range, meanPar));
                 
             end
             
             if strcmp(Blind,'ON')
-                t = title(sprintf('%.0f stacked runs (%.0f - %.0f) - %.0f pixels ',...
-                    numel(obj.RunAnaObj.StackedRuns),obj.RunAnaObj.RunList(1),obj.RunAnaObj.RunList(end),numel(obj.RunAnaObj.PixList)));
+                t = title(sprintf('%.0f stacked runs (%.0f - %.0f) - %.0f pixels - %.0f eV range',...
+                    numel(obj.RunAnaObj.StackedRuns),obj.RunAnaObj.RunList(1),obj.RunAnaObj.RunList(end),numel(obj.RunAnaObj.PixList),range));
             end
              t.FontWeight = 'normal';
              t.FontSize = get(gca,'FontSize');

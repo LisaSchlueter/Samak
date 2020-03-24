@@ -19,9 +19,9 @@ p.addParameter('ZoomPlot','OFF',@(x)ismember(x,{'ON','OFF'}));   % zoom into plo
 p.addParameter('MultiPos','',@(x) isfloat(x) || isempty(x));     %3 gaussians instead of using 1 gaussian per energy (for 3 RW settings)
 p.addParameter('MultiWeights','',@(x) isfloat(x) || isempty(x)); %3 gaussians instead of using 1 gaussian per energy
 p.addParameter('Dist','Gauss',@(x)ismember(x,{'Gauss','Rect'}));
-p.addParameter('BinningFactor',1,@(x) isfloat(x) || isempty(x)); % multiplies number of bins in rebinning
+p.addParameter('BinningFactor',2,@(x) isfloat(x) || isempty(x)); % multiplies number of bins in rebinning
 p.addParameter('RebinMode','Integral',@(x)ismember(x,{'Fast','Integral'})); % rebinning method. warning: 'fast' does not work welll for small sigma
-p.addParameter('RecomputeFlag','OFF',@(x)ismember(x,{'ON','OFF'}));
+p.addParameter('RecomputeFlag','ON',@(x)ismember(x,{'ON','OFF'}));
 p.addParameter('filename','',@(x)ischar(x));
 
 p.parse(varargin{:});
@@ -188,7 +188,7 @@ if strcmp(SanityPlot,'ON')
     %legend boxoff;
     leg.EdgeColor = rgb('LightGray');
     PrettyFigureFormat('FontSize',24);
-    xlim([-1 60])
+    xlim([-1 40])
     xlabel('Excitation energy (eV)')
     ylabel('Probability')
     ylim([0,max(exP)*1.1])
@@ -212,11 +212,14 @@ if strcmp(SanityPlot,'ON')
         pGaus_rebin.Marker = 'o';
         pGaus_rebin.MarkerSize = 8;
         pGaus_rebin.MarkerFaceColor = pGaus_rebin.Color;
-        xlim([1 2.9])
+        xlim([23.1 24.1]);
+        ylim([0 0.008]);
         
         savenameZoom = strrep(savename,'.pdf','_Zoom.pdf');
         fprintf('Save zoomed plot to %s\n',savenameZoom);
         export_fig(f1,savenameZoom);
+        
+       
     end
 end
 end

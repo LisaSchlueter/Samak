@@ -73,6 +73,10 @@ classdef CovarianceMatrix < handle
     RW_SigmaErr;             % absolute uncertainty of plasma/rear wall potential over measurement time (eV)
     RW_MultiPosErr;
     
+    % Plasma shifts
+    E0Offsets;
+    E0OffsetsErr;
+    
     % longitidinal
     MACE_SigmaErr;
     is_EOffsetErr;
@@ -191,7 +195,8 @@ classdef CovarianceMatrix < handle
              'BkgShape',...   % background shape (slope)
              'FPDeff',...     % detector efficiency from subrun to subrun
              'RW',...        % rear wall /plasma potential over time
-             'LongPlasma'};   % longitudinal plasma uncertainty (e-loss shift and variance)
+             'LongPlasma',...  % longitudinal plasma uncertainty (e-loss shift and variance)
+             'PlasmaOffsets'};  % uncertainty on rel. endpoints for rear wall period combi
           
          % Init  SysEffect structure: Default Option: all OFF  
          if isempty(obj.SysEffect)         
@@ -2019,7 +2024,7 @@ function ComputeCM_Background(obj,varargin)
     cprintf('blue','CovarianceMatrix:ComputeCM_Background: Compute Background Covariance Matrix  \n');
     
     % Number of Trials - Hardcoded
-    TrialSave  = obj.nTrials; obj.nTrials = 1000;%5000; % BASELINE
+    TrialSave  = obj.nTrials; obj.nTrials = 10000; % BASELINE
     
     % Covariance Matrix File
     cm_path        = [getenv('SamakPath'),sprintf('inputs/CovMat/Background/CM/')];
@@ -3192,7 +3197,107 @@ function ComputeCM_LongPlasma(obj,varargin)
 %         save(obj.CovMatFile,'CovMatRF','-append');
 %     end
 end
+function ComputeCM_PlasmaOffsets(obj,varargin)
+    % longitudinal plasma uncertainty
+    % effectively described by e-loss shift and variance
+    p=inputParser;
+    p.addParameter('NegSigma','Troitsk',@(x)ismember(x,{'Abs','Troitsk'}));
+    p.parse(varargin{:});
+    NegSigma = p.Results.NegSigma;    % how to deal with negative sigmas
+    
+    switch NegSigma
+        case 'Troitsk'
+            NegSigmaStr = '_Troitsk'; % troitsk formula
+        case 'Abs'
+            NegSigmaStr = '';         % absolute value of sigma
+    end
+    
+    nRings = numel(obj.StudyObject.MACE_Ba_T);
+   
+    obj.GetTDlabel;
+    covmat_path =[getenv('SamakPath'),sprintf('inputs/CovMat/LongPlasma/CM/')];
+    MakeDir(covmat_path);
+    covmat_filename = sprintf('PlasmaOffsets_%s_%.0fTrials_%.2feVmeanE0_%.0fmeVmeanE0Err%s.mat',...
+        obj.TDlabel,obj.nTrials,...
+        mean(obj.E0Offsets),...   % average endpoint
+        mean(obj.E0OffsetsErr)*1e3,...
+        NegSigmaStr); % average endpoint uncertainty
+    
+    if strcmp(obj.StudyObject.FPD_Segmentation,'RING')
+        % add ring information for ringwise covariance matrices
+        covmat_filename = strrep(covmat_filename,'.mat',sprintf('_Ring%s.mat',obj.StudyObject.FPD_RingMerge));
+    end
+    obj.CovMatFile = strcat(covmat_path,covmat_filename);
+    
+    % load if already computed
+    if exist(obj.CovMatFile,'file')==2 && strcmp(obj.RecomputeFlag,'OFF')
+        fprintf(2,'CovarianceMatrix:ComputeCM_PlasmaOffsets: Loading PlasmaOffsets CM from File \n')
+        obj.ReadCMFile('filename',obj.CovMatFile,'SysEffect','PlasmaOffsets');
+        obj.MultiCovMat.CM_PlasmaOffsets = obj.CovMat; %in case normalization was changed
+        return
+    end
+    
+    % randomize endpoints 
+    E0Offset_v = (obj.E0Offsets+obj.E0OffsetsErr.*randn(obj.nTrials,1))';
+    FSDSigma_v = std(E0Offset_v);           
+    FSDSigma_v(abs(FSDSigma_v)<1e-3) = 0;  % too small to resolve anyway
+    
+    if strcmp(obj.StudyObject.FPD_Segmentation,'RING')
+        TBDIS_V = zeros(obj.StudyObject.nqU,obj.nTrials,obj.StudyObject.nRings);
+    else
+        TBDIS_V = zeros(obj.StudyObject.nqU,obj.nTrials);
+    end
+    
+    progressbar('Compute Plasma Offsets cov mat')
+    for i=1:obj.nTrials
+        progressbar(i/obj.nTrials);
 
+        % variance
+        obj.StudyObject.LoadFSD('Sigma',abs(FSDSigma_v(i))); % take absolute sigma
+        obj.StudyObject.ComputeTBDDS;
+        obj.StudyObject.ComputeTBDIS;
+        TBDIS_V(:,i,:) = obj.StudyObject.TBDIS;
+        
+        if strcmp(NegSigma,'Troitsk') % Use Troitsk formula
+            % TBDIS(sigma<0) = 2*(sigma=0)-(abs(sigma))
+            if FSDSigma_v(i)<0
+                obj.StudyObject.LoadFSD; % sigma = 0
+                obj.StudyObject.ComputeTBDDS;
+                obj.StudyObject.ComputeTBDIS;
+                TBDIS_V(:,i,:) = 2.*obj.StudyObject.TBDIS - squeeze(TBDIS_V(:,i,:));
+            end
+        end 
+    end
+    
+    % Reshape
+    if strcmp(obj.StudyObject.FPD_Segmentation,'RING')
+        % make sure nTrials is always last dimension before reshape!
+        TBDIS_V = permute(TBDIS_V,[1 3 2]);
+        TBDIS_V = reshape(TBDIS_V,[obj.StudyObject.nqU*obj.StudyObject.nRings,obj.nTrials]);
+    end
+    
+    % Compute Covariance Matrix
+    obj.CovMat = cov(TBDIS_V');
+    obj.MultiCovMat.CM_PlasmaOffsets = obj.CovMat;
+    
+    TBDIS_av = mean(TBDIS_V);
+
+    % Save
+    save(obj.CovMatFile,'obj','TBDIS_av','TBDIS_V','FSDSigma_v','-mat');
+    
+    % Compute Fractional CM
+    obj.ComputeFracCM('Mode','CM2Frac');
+    obj.MultiCovMatFrac.CM_PlasmaOffsets = obj.CovMatFrac;
+    
+    % Compute Decomposed CM
+    [~, obj.CovMatFracShape] = obj.DecomposeCM('CovMatFrac',obj.CovMatFrac,'exclDataStart',1);
+    obj.MultiCovMatFracShape.CM_PlasmaOffsets = obj.CovMatFracShape;
+    obj.MultiCovMatFracNorm.CM_PlasmaOffsets  = obj.CovMatFracNorm;
+    
+    % Save again
+    save(obj.CovMatFile, 'obj','-append');
+
+end
 function ComputeCM_RW(obj,varargin)
     % Goal:  Rear wall potential systematics
     %
@@ -3369,7 +3474,12 @@ end
             
             %Load / Compute CM of SysEffects
             %% Response Function
-            obj.nTrials = 1000;
+            if strcmp(obj.StudyObject.FPD_Segmentation,'RING')
+                obj.nTrials = 1000;
+            else
+                obj.nTrials = 5000;
+            end
+            
             if strcmp(obj.SysEffect.RF_EL,'ON') && strcmp(obj.SysEffect.RF_BF,'ON') && strcmp(obj.SysEffect.RF_RX,'ON') % all RF Effects ON
                 %all 'ON'
                 obj.ComputeCM_RF;

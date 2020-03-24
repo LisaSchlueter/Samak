@@ -6,7 +6,7 @@ nFits = 500;
 freePar = 'E0 Bkg Norm';
 DataType = 'Real';
 range = 40;               % fit range in eV below endpoint
-savedir = [getenv('SamakPath'),'knm2ana/knm2_AlternativeRunLists/results/'];
+savedir = [getenv('SamakPath'),'knm2ana/knm2_AltRunPixLists/results/'];
 savename = sprintf('%sknm2_RunListRandHalf_%s_%s_%.0feV_%.0ffits.mat',...
             savedir,DataType,strrep(freePar,' ',''),range,nFits);
 

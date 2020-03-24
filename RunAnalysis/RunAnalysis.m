@@ -141,7 +141,7 @@ classdef RunAnalysis < handle
             p.addParameter('fixPar','',@(x)ischar(x)); %default given in constructor: FSD and qUOffset fixed
             p.addParameter('pulls',[],@(x)isfloat(x) && all(x>0));
             p.addParameter('pullFlag',3);%@(x)ismember(x,{1,2,3}) 
-            p.addParameter('RingMerge','None',@(x)ismember(x,{'Default','None','Full','Half','Azi'}));
+            p.addParameter('RingMerge','None',@(x)ismember(x,{'Default','None','Full','Half','Azi','AziHalfNS','AziHalfEW'}));
             p.addParameter('NonPoissonScaleFactor',[],@(x)isfloat(x) && all(x>0)); 
             p.addParameter('SysBudget','',@(x)isfloat(x)); %if none given-> defined according to data set
 
@@ -279,6 +279,9 @@ classdef RunAnalysis < handle
                 case 'Azi'
                     [obj.PixList,obj.RingPixList] = AziPatch2PixelCombi(obj.RingList,obj.PixList);
                     obj.RingList = 1:5;
+                case {'AziHalfNS','AziHalfEW'}
+                    [obj.PixList,obj.RingPixList] = AziHalfPatch2PixelCombi(obj.RingList,obj.PixList,obj.RingMerge);
+                    obj.RingList = 1:2;
             end
             
             obj.nRings = numel(obj.RingPixList);
@@ -303,11 +306,10 @@ classdef RunAnalysis < handle
                         obj.FitCM = StatCM;            obj.FitCMShape = StatCM;
                         obj.FitCMFrac = StatCMFrac;    obj.FitCMFracShape = StatCMFrac;
                     end
+                    obj.GetPlotColor;
                 case 'OFF'
                     % Don't do it
             end
-            
-            obj.GetPlotColor;
             
             cprintf('blue','---------------------End RunAnalysis Constructor------------------- \n');
         end
@@ -1471,16 +1473,19 @@ classdef RunAnalysis < handle
                 cprintf('blue','RunAnalysis: Initialize Model with fit %s \n',fixPar_init)
                 chi2_prev     = obj.chi2;
                 fixPar_prev   = obj.fixPar;
-                exclData_prev = obj.exclDataStart;
+                exclDataStart_prev = obj.exclDataStart;
+                exclDataStop_prev  = obj.exclDataStop;
                 obj.chi2='chi2Stat';
                 
                 obj.fixPar = ConvertFixPar('freePar',fixPar_init,'nPar',obj.nPar,'nPixels',numel(obj.RunData.MACE_Ba_T));
                 
                 if strcmp(obj.DataSet,'FirstTritium.katrin')
                     obj.exclDataStart=12;
+                    obj.exclDataStop = obj.ModelObj.nqU;
                 else
                     % 40 eV range
                     obj.exclDataStart = find((obj.ModelObj.qU)>=18574-40,1);
+                    obj.exclDataStop = obj.ModelObj.nqU;
                 end
                 
                % stat only: Model is not initialized to data statistics yet -> use stat. uncertainty from data 
@@ -1496,8 +1501,8 @@ classdef RunAnalysis < handle
                 BKG_i = obj.ModelObj.BKG_RateSec_i;
                 obj.chi2=chi2_prev;
                 obj.fixPar = fixPar_prev;
-                obj.exclDataStart = exclData_prev;
-                
+                obj.exclDataStart = exclDataStart_prev;
+                obj.exclDataStop  = exclDataStop_prev;
                 % save
                 MakeDir(savedir);
                 save(savename,'FitResults','BKG_i');
@@ -1951,6 +1956,7 @@ classdef RunAnalysis < handle
             p.addParameter('DisplayStyle','Default',@(x)ismember(x,{'Default','PRL'}));
             p.addParameter('DisplayMTD','ON',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('YLimRes','',@(x)isfloat(x)); % limits for norm. residuals
+            p.addParameter('XLims','',@(x)isfloat(x));  % x-axis limits
             p.addParameter('ErrorBarScaling',50,@(x)isfloat(x)); % scale error bars in fit
             p.addParameter('Colors','RGB',@(x)ismember(x,{'RGB','BW'})); % color or back and white
             p.addParameter('qUDisp','Rel',@(x)ismember(x,{'Rel','Abs'}));
@@ -1964,6 +1970,7 @@ classdef RunAnalysis < handle
             FitResultsFlag = p.Results.FitResultsFlag;
             LabelFlag      = p.Results.LabelFlag;
             YLimRes        = p.Results.YLimRes;
+            XLims          = p.Results.XLims;
             Colors         = p.Results.Colors;
             DisplayStyle   = p.Results.DisplayStyle;
             qUDisp         = p.Results.qUDisp;
@@ -2121,6 +2128,7 @@ classdef RunAnalysis < handle
              elseif strcmp(qUDisp,'Abs')
                  xlim([min(min(qU))*0.9999 max(max(qU))*1.0001]);
              end
+
                  ax = gca;
                  mypos = ax.Position;
                  ax.Position = [mypos(1)+0.05 mypos(2) mypos(3:4)];
@@ -2318,6 +2326,9 @@ classdef RunAnalysis < handle
              mypos = ax.Position;
              ax.Position = [mypos(1)+0.05 mypos(2)+0.01 mypos(3:4)];
              linkaxes([s1,s2],'x');
+               if ~isempty(XLims)
+                    xlim([min(XLims),max(XLims)])
+                end
              if strcmp(DisplayStyle,'PRL')  || strcmp(DisplayMTD,'ON')
                  mylim = ylim;
                  %  text(-57,mean(mylim),'b)','FontSize',get(gca,'FontSize')+4,'FontName',get(gca,'FontName'));
@@ -2351,6 +2362,9 @@ classdef RunAnalysis < handle
                 mypos = ax.Position;
                 ax.Position = [mypos(1)+0.05 mypos(2)+0.01 mypos(3:4)];
 
+                if ~isempty(XLims)
+                    xlim([min(XLims),max(XLims)])
+                end
                % linkaxes([s1,s2,s3],'x'); 
                 mylim = ylim; 
               %  text(-57,mean(mylim),'c)','FontSize',get(gca,'FontSize')+4,'FontName',get(gca,'FontName'));
@@ -2386,7 +2400,7 @@ classdef RunAnalysis < handle
                      % end
                  else
                      %save_name = sprintf('./plots/FitRun%u_%s-excl%u.%s',obj.RunNr,obj.chi2, obj.exclDataStart,saveplot);
-                     export_fig(fig5,[savename,'.pdf'],'-painters');
+                     export_fig(fig5,[savename,'.pdf']);
                      %publish_figurePDF(fig5,[savename,'.pdf']);
                  end
              end
@@ -2978,15 +2992,17 @@ classdef RunAnalysis < handle
             p.addParameter('HoldOn','OFF',@(x)ismember(x,{'ON','OFF'})); % plotting multiple FSDs...
             p.addParameter('RelFlag','OFF',@(x)ismember(x,{'ON','OFF'})); % show results to mean
             p.addParameter('ErrorBarScaling',1,@(x)isfloat(x)); % scale error bars in fit results
+            p.addParameter('saveStr','',@(x)ischar(x) || isempty(x));
             p.parse(varargin{:});
-            saveplot      = p.Results.saveplot;
-            qURange        = p.Results.qURange;
-            RecomputeFlag = p.Results.RecomputeFlag;
-            CorrMean      = p.Results.CorrMean;
-            HoldOn        = p.Results.HoldOn;
-            RelFlag       = p.Results.RelFlag;
+            saveplot        = p.Results.saveplot;
+            qURange         = p.Results.qURange;
+            RecomputeFlag   = p.Results.RecomputeFlag;
+            CorrMean        = p.Results.CorrMean;
+            HoldOn          = p.Results.HoldOn;
+            RelFlag         = p.Results.RelFlag;
             ErrorBarScaling = p.Results.ErrorBarScaling;
-                       
+            saveStr         = p.Results.saveStr; % additional label for result and plots
+            
             if strcmp(obj.DataSet,'Knm1')
                 savedir = [getenv('SamakPath'),'knm1ana/knm1_qUScan/results/'];
             elseif contains(obj.DataSet,'FirstTritium')
@@ -2999,23 +3015,24 @@ classdef RunAnalysis < handle
             end
             MakeDir(savedir);
             exclDataStart_v = obj.GetexclDataStart(qURange(1)):obj.GetexclDataStart(qURange(2));
-              
+            nFits = numel(exclDataStart_v);
+            
             freeParStr = ConvertFixPar('Mode','Reverse','freePar',obj.fixPar);
-            savename = [savedir,sprintf('qUScan_%s_%s_%s_FitPar%s_%.0feV-%.0feV_%s.mat',...
+            savename = [savedir,sprintf('qUScan_%s_%s_%s_FitPar%s_%.0feV-%.0feV_%s%s.mat',...
                 obj.RunData.RunName,obj.DataType,obj.chi2,freeParStr,...
-                qURange(1),qURange(2),obj.FSDFlag)];
+                qURange(1),qURange(2),obj.FSDFlag,saveStr)];
             if exist(savename,'file') && strcmp(RecomputeFlag,'OFF')
                 load(savename,'parqU', 'errqU', 'chi2qU', 'dofqU');
             else
                 
-                parqU                   = zeros(obj.nPar,lastPoint-firstPoint+1);
-                errqU                   = zeros(obj.nPar,lastPoint-firstPoint+1);
-                chi2qU                  = zeros(lastPoint-firstPoint+1,1);
-                dofqU                   = zeros(lastPoint-firstPoint+1,1);
+                parqU                   = zeros(obj.nPar,nFits);
+                errqU                   = zeros(obj.nPar,nFits);
+                chi2qU                  = zeros(nFits,1);
+                dofqU                   = zeros(nFits,1);
 
                  progressbar('qU Scan')
-                for i=1:numel(exclDataStart_v)
-                    progressbar(i/numel(firstPoint:1:lastPoint));
+                for i=1:nFits
+                    progressbar(i/nFits);
                    
                     obj.exclDataStart = exclDataStart_v(i);
                     %                 if ~strcmp(obj.chi2,'chi2Stat')
@@ -3059,12 +3076,12 @@ classdef RunAnalysis < handle
                         ystr = sprintf('{\\itm}^2 (eV^{ 2})');
                     end
                 elseif i==2
-                    y = flip(parqU(i,:))+obj.ModelObj.Q_i-18574;
+                    y = flip(parqU(i,:));%obj.ModelObj.Q_i-18574;
                     if strcmp(RelFlag,'ON')
                         y = y-wmean(y,1./yErr.^2);
                         ystr = sprintf('{\\itE}_0^{fit} - \\langleE_0^{fit}\\rangle  (eV)');
                     else
-                        ystr = sprintf('{\\itE}_0^{fit} -18574 (eV)');
+                        ystr = sprintf('{\\itE}_0^{fit} - %.1f (eV)',obj.ModelObj.Q_i);
                     end
                 elseif i==3
                     ystr = 'Background (mcps)';
@@ -3198,19 +3215,20 @@ classdef RunAnalysis < handle
                     
                     leg.delete;
                     %% save
-                    if ErrorBarScaling~=1
-                        errStr = sprintf('_%.0fErrScaling',ErrorBarScaling);
-                    else
-                        errStr = '';
+                    if strcmp(saveplot,'ON')
+                        if ErrorBarScaling~=1
+                            errStr = sprintf('_%.0fErrScaling',ErrorBarScaling);
+                        else
+                            errStr = '';
+                        end
+                        plotdir = strrep(savedir,'results','plots');
+                        savename_plot = strrep(strrep(strrep(savename,'results','plots'),'.mat','.png'),...
+                            obj.RunData.RunName,[obj.RunData.RunName,'_',num2str(i),errStr]);
+                        MakeDir(plotdir);
+                        %print(gcf,savename_plot,'-dpng','-r100');
+                        %publish_figurePDF(gcf,strrep(savename_plot,'.png','.pdf'));
+                        export_fig(gcf,strrep(savename_plot,'.png','.pdf'));
                     end
-                    plotdir = strrep(savedir,'results','plots');
-                    savename_plot = strrep(strrep(strrep(savename,'results','plots'),'.mat','.png'),...
-                        obj.RunData.RunName,[obj.RunData.RunName,'_',num2str(i),errStr]);
-                    MakeDir(plotdir);
-                    %print(gcf,savename_plot,'-dpng','-r100');
-                    %publish_figurePDF(gcf,strrep(savename_plot,'.png','.pdf'));
-                    export_fig(gcf,strrep(savename_plot,'.png','.pdf'));
-                    
                     if strcmp(HoldOn,'OFF')
                         close
                     end
@@ -3836,6 +3854,10 @@ classdef RunAnalysis < handle
                 xticklabels({'1,2,3,4,5,6','7,8,9,10,11,12'})
             elseif strcmp(obj.RingMerge,'Azi')
                 xticklabels({'Pole','NE','SE','SW','NW'})
+            elseif strcmp(obj.RingMerge,'AziHalfEW')
+                xticklabels({'East','West'})
+            elseif strcmp(obj.RingMerge,'AziHalfNS')
+                xticklabels({'North','South'})
             end
             % set nice limits
             xlim([min(obj.RingList)-0.2,max(obj.RingList)+0.2]);
@@ -3882,8 +3904,8 @@ classdef RunAnalysis < handle
                 plotdir = [getenv('SamakPath'),sprintf('tritium-data/plots/%s/MultiRingFit/',obj.DataSet)];
                 MakeDir(plotdir);
                  freePar = ConvertFixPar('freePar',obj.fixPar,'nPar',obj.nPar,'nPixels',numel(obj.RunData.MACE_Ba_T),'Mode','Reverse');
-                plotname = [plotdir,sprintf('MultiRing%s_%s_%s_freePar%s_%s.pdf',...
-                    obj.RingMerge,obj.RunData.RunName,obj.chi2,freePar,PlotPar)];
+                plotname = [plotdir,sprintf('MultiRing%s_%s_%s_freePar%s_%s%s.pdf',...
+                    obj.RingMerge,obj.RunData.RunName,obj.chi2,freePar,PlotPar,saveStr)];
                 export_fig(fig1,plotname,'-painters');
                 fprintf('Plot saved to %s \n',plotname)
             end
