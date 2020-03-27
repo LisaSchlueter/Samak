@@ -12,7 +12,7 @@
 % --------------------------------------------------------------------------------
 %%  common settings
 SavePlot = 'ON';
-RecomputeFlag = 'OFF';
+RecomputeFlag = 'ON';
 range = 40; % in eV below E0
 RunList = 'KNM2_Prompt';
 fitter = 'minuit';

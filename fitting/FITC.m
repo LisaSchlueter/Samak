@@ -310,7 +310,7 @@ classdef FITC < handle
         function PullTerm = ComputePulls(obj,par)
             % PULLS TOLERANCE:
             FSDtol=1e-03;         % final state distribution PGS-PES
-            Normtol=0.001;        % normalization tolerance from ring to ring
+            Normtol=0.0017;        % normalization tolerance from ring to ring
             qUOffsettol = 10;     % qUOffset absolute tolerance (eV)
             qUmeanOffsettol = 0.5;  % qUOffset tolerance from ring to ring (eV)
             BkgSlopetol = 5*1e-6; % background slope constrain (cps/eV)

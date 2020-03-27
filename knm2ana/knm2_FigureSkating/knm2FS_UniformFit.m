@@ -53,7 +53,7 @@ else
 
     A.Fit;
     FitResult_imp  = A.FitResult;
-    save(savename,'FitResult_imp','FitResult_ref','E0','MACE_Sigma','A','FSDArg');
+    save(savename,'FitResult_imp','FitResult_ref','E0','A','FSDArg');
 end
 %% result
 fprintf('--------------------------------------\n')

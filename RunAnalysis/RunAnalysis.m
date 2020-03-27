@@ -1026,7 +1026,7 @@ classdef RunAnalysis < handle
             p.addParameter('BkgRange',-5,@(x)isfloat(x));
             p.addParameter('RW_SigmaErr',0.1,@(x)isfloat(x) );
             p.addParameter('RW_MultiPosErr',0,@(x)isfloat(x));
-            p.addParameter('MACE_SigmaErr',SysErr.MACE_SigmaErr,@(x)isfloat(x));
+            p.addParameter('MACE_VarErr',SysErr.MACE_VarErr,@(x)isfloat(x));
             p.addParameter('is_EOffsetErr',SysErr.is_EOffsetErr,@(x)isfloat(x));
             
             p.parse(varargin{:});
@@ -1055,7 +1055,7 @@ classdef RunAnalysis < handle
             BkgRange                 = p.Results.BkgRange;
             RW_SigmaErr              = p.Results.RW_SigmaErr;
             RW_MultiPosErr           = p.Results.RW_MultiPosErr;
-            MACE_SigmaErr            = p.Results.MACE_SigmaErr; %longitudinal plasma
+            MACE_VarErr              = p.Results.MACE_VarErr; %longitudinal plasma
             is_EOffsetErr            = p.Results.is_EOffsetErr; %longitudinal plasma
             % --------------------- END PARSER ---------------------------------%
             
@@ -1093,7 +1093,7 @@ classdef RunAnalysis < handle
                 'RW_SigmaErr',RW_SigmaErr,...
                 'RW_MultiPosErr',RW_MultiPosErr,...
                 'NonPoissonScaleFactor',obj.NonPoissonScaleFactor,...
-                'MACE_SigmaErr',MACE_SigmaErr,...
+                'MACE_VarErr',MACE_VarErr,...
                 'is_EOffsetErr',is_EOffsetErr);
             
             if strcmp(DataDriven,'ON')
@@ -1127,7 +1127,7 @@ classdef RunAnalysis < handle
             
             % Background Covariance Matrix: Compute and Add to Signal Covariance Matrix
             if strcmp(BkgCM,'ON')
-                obj.FitCM_Obj.ComputeCM_Background('Display','OFF',...
+                obj.FitCM_Obj.ComputeCM_Background('Display',PlotSaveCM,...
                     'MaxSlopeCpsPereV',MaxSlopeCpsPereV,'BkgRange',BkgRange);
                 
                 obj.FitCM           = obj.FitCM          + obj.FitCM_Obj.CovMat;     % regular covmat:    add background covmat to signal covmat 

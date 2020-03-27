@@ -48,14 +48,14 @@ MultiPos = [E0(1),E0(end-120),E0(end)]';
 MultiPosRel = repmat(MultiPos-wmean(MultiPos,MultiWeights),1,MR.nRings);
 Sigma = repmat(std(E0),3,MR.nRings);
 FSDArg = {'MultiPos',MultiPosRel,'MultiWeight',MultiWeights,...
-    'SanityPlot','ON','Sigma',Sigma};
+    'SanityPlot','OFF','Sigma',Sigma};
 MR.ModelObj.LoadFSD(FSDArg{:});
 MR.ModelObj.RFBinStep = 0.002; % finer binning to resolve effect
 MR.ModelObj.InitializeRF;
 
 %%
 S = RunSensitivity('RunAnaObj',MR);
-S.RecomputeFlag='ON';
+S.RecomputeFlag='OFF';
 S.LimitFlag = 'Central';
 S.ConfLevel=0; % 0 == 1 sigma
 %%

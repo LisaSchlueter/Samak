@@ -7,11 +7,16 @@
 %% Allow for KNM1 Calibration
 %% Allow to Change ROI
 %%
-RunList    = 'KNM2_RW2';
-%RunList    = 'KNM1rm';
+%RunList    = 'KNM2_RW2';
+RunList    = 'KNM1rm';
 KNM1CorFlag    = 'OFF';
 HVdriftCorFlag = 'OFF';
 SlopeCPSMeV = 6.3032;
+
+savedir = [getenv('SamakPath'),'knm2ana/knm2_RateMonitoring/results/'];
+savename = sprintf('PixelWise_RM_%s_KNM1CorFlag%s_HVdriftCorFlag%s.mat',RunList,KNM1CorFlag,HVdriftCorFlag);
+
+
 switch RunList
     case 'KNM1rm'
         SlopeCPSMeV = 0.85;
@@ -95,7 +100,6 @@ xlabel('day');
 ylabel('cps per pixel');
 title(sprintf('qU-mean(qU) mV - %s - std = %.g',RunList,std(qUCorr)));
 PrettyFigureFormat
-
 
 %% Plot Image of Pixel-wise Rate Verus Scan
 mapPixelScan = (DataUni_RW2.SingleRunData.TBDIS_RM(DataUni_RW2.PixList,:)...
@@ -231,4 +235,9 @@ table(MeanRatePerPixelPSR)
 % xlabel('pixel')
 % ylabel('qU(pixel) - qU(pixel0)');
 % PrettyFigureFormat
-
+qU_RM = DataUni_RW2.RunData.qU_RM;
+PixList =  DataUni_RW2.PixList;
+PixelMap = cell2mat(PixelScanMapPSR');
+RingPixList = DataUni_RW2.RingPixList;
+save([savedir,savename],'PixelScanMapPSR','qUCorrMapPSR',...
+    'PixelMap','qU_RM','PixList','RingPixList');

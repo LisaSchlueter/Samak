@@ -2092,12 +2092,12 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                     y = obj.SingleRunData.WGTS_CD_MolPerCm2;
                     yErr = std(obj.SingleRunData.WGTS_CD_MolPerCm2_SubRun);
                     if strcmp(DisplayStyle,'Abs')
-                        ystr = sprintf('Column density (mol \\cdot cm^{-2})');
+                        ystr = sprintf('\\rho{\\itd} (molecules \\cdot cm^{-2})');
                     elseif strcmp(DisplayStyle,'Rel')
                         y = y-wmean(y,obj.SingleRunData.TimeSec);
                         ystr = sprintf('\\rhod - \\langle\\rhod\\rangle (mol \\cdot cm^{-2})');
                     end
-                    yUnit = sprintf('mol \\cdot cm^{-2}');
+                    yUnit = sprintf('molecules \\cdot cm^{-2}');
                 case 'T2'
                     y    = obj.SingleRunData.WGTS_MolFrac_TT;
                     yErr = zeros(numel(y),1);%std(obj.SingleRunData.WGTS_MolFrac_TT_SubRun);
@@ -2197,8 +2197,11 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             if strcmp(Parameter,'pVal')
                 leg = legend([e1],sprintf('Scanwise fits (%s)',chi2leg));%,'p-value = 0.05'); %l1
             elseif ismember(Parameter,{'RhoD'})
-                ytmp = obj.SingleRunData.WGTS_CD_MolPerCm2;
-                leg = legend([e1,l1],'Scanwise',sprintf('Time weighted mean = %.2g mol\\cdotcm^{-2}',wmean(ytmp,obj.SingleRunData.TimeSec)));
+                 ytmp = obj.SingleRunData.WGTS_CD_MolPerCm2;
+                meanRhoD = wmean(ytmp,obj.SingleRunData.TimeSec);  
+                leg = legend([e1,l1],'Scanwise',...
+                    sprintf('\\langle\\rho{\\itd}\\rangle = %.4g molecules \\cdotcm^{-2} , \\sigma = %.1f %%',...
+                    meanRhoD,100*std(ytmp)./meanRhoD));
             elseif ismember(Parameter,{'T2'})
                 leg = legend([e1,l1],'Scanwise',sprintf('Time weighted mean = %.3f',wmean(y(y>0),obj.SingleRunData.TimeSec(y>0))));
             else
@@ -2698,11 +2701,10 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             end          
             fixParstr = ConvertFixPar('freePar',obj.fixPar,'Mode','Reverse');
             
-            switch obj.ROIFlag
-                case 'Default'
-                    RoiStr = '';
-                case '14keV'
-                    RoiStr = '_14keVROI';
+            if strcmp(obj.ROIFlag,'Default') || ~strcmp(obj.DataSet,'Knm2')
+                RoiStr = '';
+            elseif strcmp(obj.ROIFlag,'14keV')
+                RoiStr = '_14keVROI';
             end
             
             if strcmp(obj.MosCorrFlag,'ON')
@@ -2723,8 +2725,13 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             LoadFilesIndex             = cellfun(@(x) exist(x,'file')==2,savefile);            %logicals, indicate which runs are already fitted
             fprintf('Retrieve %.0f Fit Results from file\n',sum( LoadFilesIndex));
             LoadFiles                  = cellfun(@(x) importdata(x),savefile(LoadFilesIndex)); % import those runs
-            parAll(LoadFilesIndex,:)   = cell2mat(arrayfun(@(x) x.FitResult.par',LoadFiles,'UniformOutput',false))'; %asign to variables
-            errAll(LoadFilesIndex,:)   = cell2mat(arrayfun(@(x) x.FitResult.err',LoadFiles,'UniformOutput',false))';
+            if strcmp(obj.DataSet,'Knm1')
+                parAll(LoadFilesIndex,:)   = cell2mat(arrayfun(@(x) x.FitResult.par,LoadFiles,'UniformOutput',false)); %asign to variables
+                errAll(LoadFilesIndex,:)   = cell2mat(arrayfun(@(x) x.FitResult.err,LoadFiles,'UniformOutput',false));
+            else
+                parAll(LoadFilesIndex,:)   = cell2mat(arrayfun(@(x) x.FitResult.par',LoadFiles,'UniformOutput',false))'; %asign to variables
+                errAll(LoadFilesIndex,:)   = cell2mat(arrayfun(@(x) x.FitResult.err',LoadFiles,'UniformOutput',false))';
+            end
             chi2minAll(LoadFilesIndex) = cell2mat(arrayfun(@(x) x.FitResult.chi2min,LoadFiles,'UniformOutput',false));
             dofAll(LoadFilesIndex)     = cell2mat(arrayfun(@(x) x.FitResult.dof,LoadFiles,'UniformOutput',false));
             
@@ -3393,6 +3400,9 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             runsRW2 = sort(importdata([RunListDir,'KNM2_RW2.dat']));
             runsRW3 = sort(importdata([RunListDir,'KNM2_RW3.dat']));
             
+            if ~isempty(obj.TwinFakeLabel)
+                ListName = strrep(ListName,obj.TwinFakeLabel,'');
+            end
             if ismember(ListName,{'KNM2_Prompt','KNM2_RandHalf'})  % all runs
                 h5list = sort([runsRW1,runsRW2,runsRW3]);
             elseif strcmp(ListName,'KNM2_RW1')   % rear wall setting 1 (different names for back compatibility)
@@ -3475,12 +3485,13 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             %qUmean      =  obj.StackWmean(obj.SingleRunData.qU,obj.SingleRunData.TimeperSubRunperPixel);%(:,obj.SingleRunData.Select_all,:),2);
             
             for rr = 1:obj.nRuns
-                c = colormap(jet(obj.nRuns));
+                %c = colormap(jet(obj.nRuns));
                 % Plot
                 if(obj.SingleRunData.Select_all(rr))
                     p = scatter(obj.RunData.qU(obj.exclDataStart:end)-18574,...
                         obj.SingleRunData.qU(obj.exclDataStart:end,rr)-qUmean(obj.exclDataStart:end),...
-                        80,c(rr,:),'o','filled','MarkerEdgeColor',rgb('DimGray'));
+                        80,'o','MarkerFaceColor',rgb('DodgerBlue'),...
+                        'MarkerFaceAlpha',0.2,'MarkerEdgeColor','none');
                 else
                     p = scatter(obj.RunData.qU(obj.exclDataStart:end)-18574,...
                         obj.SingleRunData.qU(obj.exclDataStart:end,rr)-qUmean(obj.exclDataStart:end),...
@@ -3502,7 +3513,8 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                 myleg.Title.String = sprintf('%.0f runs',obj.nRuns);
             else
                 myleg = legend(p,sprintf('%.0f runs (%.0f - %.0f) \n\\langle\\sigma\\rangle = %.0f meV',...
-                       obj.nRuns,obj.RunList(1),obj.RunList(end),1e3*mean(std(obj.SingleRunData.qU,0,2))),'Location','northeast');
+                    obj.nRuns,obj.RunList(1),obj.RunList(end),1e3*mean(std(obj.SingleRunData.qU(obj.exclDataStart:end,:),0,2))),'Location','northeast');
+                myleg.Location = 'northwest';
             end
             myleg.EdgeColor = rgb('Silver');
             myleg.FontSize = 22;
@@ -3605,62 +3617,79 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             % 1. Data Stacked Count Rate & Single Run Count Rates
             % 2. Residuals
             %------------------------------------------------------------------
-
+            BkgStop = 5; % eV above E0
+           Residuals = 'OFF';
             % Plot
-            fig123 = figure(123);
-            set(fig123, 'Units', 'normalized', 'Position', [0.9, 0.9, 0.8, 1.2]);
-            s1 = subplot(2,1,1);
+            fig123 = figure(123);    
+            set(fig123, 'Units', 'normalized', 'Position', [0.1, 0.1, 0.5, 0.5]);
+            if strcmp(Residuals,'ON')
+            set(fig123, 'Units', 'normalized', 'Position', [0.1, 0.1, 0.5, 0.8]);
+            s1 = subplot(6,1,1:4);
+            end
             for rr = 1:obj.nRuns
                 %SingleRunData{rr}   = load([obj.RunData.matFilePath,num2str(obj.RunList(rr)),obj.mpix,obj.ringCutFlag,'.mat']);
                 if ismember(obj.RunList(rr),obj.StackedRuns)
-                    pruns = errorbar(obj.SingleRunData.qU(:,rr,1)-obj.ModelObj.Q_i,obj.SingleRunData.TBDIS(:,rr,1)./(obj.SingleRunData.TimeSec(rr)*obj.SingleRunData.qUfrac(:,rr,1)),...
+                    pruns = errorbar(obj.SingleRunData.qU(:,rr,1)-18574,obj.SingleRunData.TBDIS(:,rr,1)./(obj.SingleRunData.TimeSec(rr)*obj.SingleRunData.qUfrac(:,rr,1)),...
                         sqrt(obj.SingleRunData.TBDIS(:,rr,1))./(obj.SingleRunData.TimeSec(rr)*obj.SingleRunData.qUfrac(:,rr,1)),...
-                        'ko','MarkerSize',3,'MarkerEdgeColor' , [0 0 0]);
+                        'o','MarkerSize',3,'MarkerFaceColor' ,rgb('SkyBlue'),'Color',rgb('PowderBlue'),...
+                        'CapSize',0,'LineWidth',1);
                     hold on
                 elseif ismember(obj.RunList(rr),obj.NotStackedRuns)
                     fprintf(2,'MultiRunAnalysis:PlotStackingData: %g not stacked \n',obj.RunList(rr));
                 end
             end
-            pstack = errorbar(obj.RunData.qU-obj.ModelObj.Q_i, obj.RunData.TBDIS./(obj.RunData.TimeSec*obj.RunData.qUfrac),obj.RunData.TBDISE./(obj.RunData.TimeSec*obj.RunData.qUfrac),...
-                'o','MarkerSize',4,'MarkerEdgeColor', rgb('Red'),'MarkerFaceColor', rgb('Red'),'Color',rgb('Red'));
+            pstack = errorbar(obj.RunData.qU-18574, obj.RunData.TBDIS./(obj.RunData.TimeSec*obj.RunData.qUfrac),obj.RunData.TBDISE./(obj.RunData.TimeSec*obj.RunData.qUfrac),...
+                'o','MarkerSize',6,'MarkerEdgeColor', rgb('Orange'),...
+                'MarkerFaceColor', rgb('Orange'),'Color',rgb('Orange'),...
+                'CapSize',0,'LineWidth',2);
             hold off;
-            legSingleRuns = sprintf('%u Runs: %u - %u',numel(obj.StackedRuns),min(obj.StackedRuns),max(obj.StackedRuns));
-            legStackRuns = sprintf('Stacked Runs');
-            legend([pruns,pstack],legSingleRuns,legStackRuns);
-            legend('boxoff');
-            xlabel(sprintf('retarding potential - %.1f (eV)',obj.ModelObj.Q_i));
-            ylabel('Count Rate (cps)');
+            legSingleRuns = sprintf('%u runs (%u - %u)',numel(obj.StackedRuns),min(obj.StackedRuns),max(obj.StackedRuns));
+            legStackRuns = sprintf('Stacked run');
+            leg = legend([pruns,pstack],legSingleRuns,legStackRuns);
+            leg.EdgeColor = rgb('Silver');
+            xlabel(sprintf('Retarding potential - 18574 (eV)'));
+            ylabel('Rate (cps)');
             PrettyFigureFormat;
-            title('Data Comparison: Stack - No Stack');
+            title('Run stacking (data)','FontWeight','normal');
             set(gca,'FontSize',20);
-            xlim([obj.RunData.qU(obj.exclDataStart)-obj.ModelObj.Q_i, obj.RunData.qU(end)-obj.ModelObj.Q_i]);
+            xlim([obj.RunData.qU(obj.exclDataStart)-obj.ModelObj.Q_i, BkgStop]);
             
             %Residuals
-            s2 = subplot(2,1,2);
-            for r = 1:obj.nRuns
-                if ismember(obj.RunList(r),obj.StackedRuns)
-                    edata = errorbar(obj.SingleRunData.qU(:,r,1)-obj.ModelObj.Q_i,...
-                        (obj.SingleRunData.TBDIS(:,r,1)./(obj.SingleRunData.TimeSec(r)*obj.SingleRunData.qUfrac(:,r,1))-obj.RunData.TBDIS./(obj.RunData.TimeSec*obj.RunData.qUfrac)),...
-                        0*sqrt(obj.SingleRunData.TBDIS(:,r,1)./(obj.SingleRunData.TimeSec(r)*obj.SingleRunData.qUfrac(:,r,1))),...
-                        'o','MarkerSize',3,'MarkerEdgeColor', [0 0 0]);
-                    edata = boundedline(obj.SingleRunData.qU(:,r,1)-obj.ModelObj.Q_i,...
-                        0.*obj.RunData.TBDISE./obj.RunData.TBDISE,...
-                        obj.RunData.TBDISE./(obj.RunData.TimeSec*obj.RunData.qUfrac),'alpha','cmap','transparency', 0.2,rgb('CadetBlue'));
-                    hold on;
-                elseif ismember(obj.RunList(r),obj.NotStackedRuns)
+            if strcmp(Residuals ,'ON')
+                s2 = subplot(6,1,5:6);
+                for r = 1:obj.nRuns
+                    if ismember(obj.RunList(r),obj.StackedRuns)
+                        edata = errorbar(obj.SingleRunData.qU(:,r,1)-18574,...
+                            (obj.SingleRunData.TBDIS(:,r,1)./(obj.SingleRunData.TimeSec(r)*obj.SingleRunData.qUfrac(:,r,1))-obj.RunData.TBDIS./(obj.RunData.TimeSec*obj.RunData.qUfrac)),...
+                            0*sqrt(obj.SingleRunData.TBDIS(:,r,1)./(obj.SingleRunData.TimeSec(r)*obj.SingleRunData.qUfrac(:,r,1))),...
+                            'o','MarkerSize',3,'MarkerFaceColor', rgb('PowderBlue'),...
+                            'Color',rgb('PowderBlue'),'CapSize',0);
+                        edata = boundedline(obj.SingleRunData.qU(:,r,1)-18574,...
+                            0.*obj.RunData.TBDISE./obj.RunData.TBDISE,...
+                            obj.RunData.TBDISE./(obj.RunData.TimeSec*obj.RunData.qUfrac),...
+                            'alpha','cmap','transparency', 0.2,rgb('Silver'));
+                        hold on;
+                    elseif ismember(obj.RunList(r),obj.NotStackedRuns)
+                    end
                 end
+                %  plot(obj.ModelObj.qU-18574,zeros(obj.ModelObj.nqU,1),'--k');
+                hold off;
+                xlabel(sprintf('Retarding potential - 18574 (eV)'));
+                ylabel('Residuals (cps)');
+                % legend(sprintf('%u Runs',numel(obj.StackedRuns)));
+                PrettyFigureFormat;
+                set(gca,'FontSize',20);
+                xlim([-obj.GetRange-2, BkgStop]);
+                linkaxes([s1,s2],'x');
             end
-            plot(obj.ModelObj.qU-obj.ModelObj.Q_i,zeros(obj.ModelObj.nqU,1),'--k');
-            hold off;
-            xlabel(sprintf('retarding potential - %.3f (eV)',obj.ModelObj.Q_i));
-            ylabel('Residuals (cps)');
-            legend(sprintf('%u Runs',numel(obj.StackedRuns)));
-            PrettyFigureFormat;
-            set(gca,'FontSize',20);
-            xlim([obj.RunData.qU(obj.exclDataStart)-obj.ModelObj.Q_i, obj.RunData.qU(end)-obj.ModelObj.Q_i]);
-            linkaxes([s1,s2],'x');
             publish_figurePDF(fig123,sprintf('./plots/StackingSpectrum_%s.pdf',obj.StackFileName));
-                    
+                
+            if strcmp(obj.DataSet,'Knm2')
+                leg.Location='northwest';
+                xlim([-35.93 -35.88])
+                ylim([32 38])
+                publish_figurePDF(fig123,sprintf('./plots/StackingSpectrumZoom_%s.pdf',obj.StackFileName));
+            end
         end       
         function GetStackingData(obj,varargin)
             % Get Stacking Data - For test Only

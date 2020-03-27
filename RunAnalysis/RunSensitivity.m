@@ -163,7 +163,8 @@ classdef RunSensitivity < handle
             nTrials = obj.GetnTrials(obj.SysEffect);
             if ~strcmp(obj.RunAnaObj.chi2,'chi2Stat') && strcmp(GetCM,'ON')
                 if strcmp(obj.SysEffect,'Bkg')
-                    obj.RunAnaObj.ComputeCM('SysEffect',struct('FSD','OFF'),'BkgCM','ON','nTrials',nTrials);
+                    obj.RunAnaObj.ComputeCM('SysEffect',struct('FSD','OFF'),...
+                        'BkgCM','ON','nTrials',nTrials);
                 else
                     [~,CmArg] = GetSysErr(obj.RunAnaObj.SysBudget);
                     obj.RunAnaObj.ComputeCM('SysEffects',obj.SysEffect,CmArg{:},...
@@ -942,7 +943,8 @@ classdef RunSensitivity < handle
                 if loadSuccess==0  % calculate sensitivity
                     obj.RunAnaObj.chi2     = obj.chi2sys;
                     obj.RunAnaObj.NonPoissonScaleFactor=1;
-                    
+                    obj.RunAnaObj.SetNPfactor;
+                     
                     % get covariance matrix
                     if ~ismember(obj.SysEffectsAll{i},{'Bkg','NP'})
                         obj.RunAnaObj.ComputeCM('SysEffect',struct(obj.SysEffectsAll{i},'ON'),...
@@ -950,12 +952,16 @@ classdef RunSensitivity < handle
                     elseif strcmp(obj.SysEffectsAll{i},'Bkg')
                         % exception for background shape cov mat
                         obj.RunAnaObj.NonPoissonScaleFactor=NP_prev;
+                        obj.RunAnaObj.SetNPfactor;
                         obj.RunAnaObj.ComputeCM('SysEffect',struct('FSD','OFF'),...
                             'BkgCM','ON','nTrials',nTrials);
+                         obj.RunAnaObj.NonPoissonScaleFactor=1;
+                         obj.RunAnaObj.SetNPfactor;
                     elseif strcmp(obj.SysEffectsAll{i},'NP')
                         % exception for background rate (Non-Poiss)
                         obj.RunAnaObj.chi2          = 'chi2Stat';
                         obj.RunAnaObj.NonPoissonScaleFactor=NP_prev;
+                        obj.RunAnaObj.SetNPfactor;
                     end
                     
                     %compute sensitivity
