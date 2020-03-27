@@ -17,7 +17,6 @@ savename = [savedir,sprintf('knm2_MultiRingFit_BkgSys_Constrain%.3gCpsPerEv_%s_%
     MaxSlopeCpsPereV,DataType, RunList,strrep(freePar,' ',''),pullFlag,range,RingMerge)];
 if exist(savename,'file')
     load(savename)
-    MR.FitResult = FitResults;
 else
     % read data and set up model
     RunArg = {'RunList',RunList,...
@@ -60,3 +59,16 @@ else
     FitResultBkgCM = MR.FitResult;
     save(savename,'FitResultBkgCM','FitResultStat','RunArg','MR','FSDArg','E0');
 end
+
+%% 
+mNuStat = 0.5*(-FitResultStat.errNeg(1)+FitResultStat.errPos(1));
+mNuCM   = 0.5*(-FitResultBkgCM.errNeg(1)+FitResultBkgCM.errPos(1));
+mNuSys =  sqrt(mNuCM^2-mNuStat^2);
+fprintf('mnuSq sensitivity stat only        = %.3f eV^2 \n',mNuStat);
+fprintf('mnuSq sensitivity stat + syst only = %.3f eV^2 \n',mNuCM);
+fprintf('mnuSq sensitivity syst only = %.3f eV^2 \n',mNuSys);
+
+
+
+
+

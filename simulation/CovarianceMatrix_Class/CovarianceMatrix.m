@@ -3127,7 +3127,7 @@ function ComputeCM_LongPlasma(obj,varargin)
     CorrCoeff  = p.Results.CorrCoeff;
     NegSigma   = p.Results.NegSigma;    % how to deal with negative sigmas
     SanityPlot = p.Results.SanityPlot;
-    
+
     switch NegSigma
         case 'Troitsk'
             NegSigmaStr = '_Troitsk'; % troitsk formula
@@ -3268,12 +3268,28 @@ function ComputeCM_LongPlasma(obj,varargin)
     end
     
     if strcmp(SanityPlot,'ON')
-        fLP = figure('Units','normalized','Position',[0.1,0.1,0.5,0.7]);
-        subplot(2,1,1);
+        fLP = figure('Units','normalized','Position',[0.1,0.1,0.75,0.5]);
+        subplot(1,2,1);
         h1 = histogram(MACE_Var_v);
+        PrettyFigureFormat('FontSize',24);
+        xlabel(sprintf('Broadening \\sigma^2 (eV^2)'));
+        ylabel('Occurrence');
+        h1.FaceAlpha = 1;
+        h1.FaceColor = rgb('PowderBlue');
         
-        subplot(2,1,2);
+        subplot(1,2,2);
         h2 = histogram(is_EOffset_v);
+        PrettyFigureFormat('FontSize',24);
+        xlabel(sprintf('Energy-loss shift \\Delta\\epsilon (eV)'));
+        ylabel('Occurrence');
+        h2.FaceAlpha = 1;
+        h2.FaceColor = rgb('PowderBlue');
+        
+        plotdir = './plots/';
+        MakeDir(plotdir);
+        plotname = [plotdir,strrep(covmat_filename,'.mat','.pdf')];
+        export_fig(plotname);
+        fprintf('save plot to %s \n',plotname)
     end
 end
 function ComputeCM_PlasmaOffsets(obj,varargin)
@@ -3553,11 +3569,6 @@ end
             
             %Load / Compute CM of SysEffects
             %% Response Function
-            if strcmp(obj.StudyObject.FPD_Segmentation,'RING')
-                obj.nTrials = 1000;
-            else
-                obj.nTrials = 5000;
-            end
             
             if strcmp(obj.SysEffect.RF_EL,'ON') && strcmp(obj.SysEffect.RF_BF,'ON') && strcmp(obj.SysEffect.RF_RX,'ON') % all RF Effects ON
                 %all 'ON'
@@ -3588,11 +3599,6 @@ end
                 end
             end
             
-            if strcmp(obj.StudyObject.FPD_Segmentation,'RING')
-                obj.nTrials = 5000;
-            else
-                obj.nTrials = 5000;
-            end
             %% FSD   
             if strcmp(obj.SysEffect.FSD,'ON')
                 obj.ComputeCM_FSD;
@@ -3678,11 +3684,6 @@ end
             end
             
             %% Plasma longitudinal
-              if strcmp(obj.StudyObject.FPD_Segmentation,'RING')
-                obj.nTrials = 1000;
-            else
-                obj.nTrials = 5000;
-            end
             if strcmp(obj.SysEffect.LongPlasma,'ON')
                 obj.ComputeCM_LongPlasma;
                 CovMatFracCombi = CovMatFracCombi + obj.MultiCovMatFrac.CM_LongPlasma;
