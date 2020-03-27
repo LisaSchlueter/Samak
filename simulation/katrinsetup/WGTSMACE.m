@@ -1031,7 +1031,7 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             
             % binning for response function
             if strcmp(obj.TD,'RFcomparison')
-                RFBinStep_local = 0.001;
+                RFBinStep_local = 0.04;
                 maxE_rf         = 400;
                 minE_rf         = -maxE_rf;
                 Estep_rf        = RFBinStep_local;
@@ -1180,10 +1180,19 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             TF  = @obj.ComputeMaceTF;
             ISProb0 = interp1(Eiscs',obj.is_Pv(1,:)',qu+E_rf);
             
-           RF = TF(qu+E_rf,qu,'pixel',pixel).*ISProb0 + ...
-               conv(TF(qu+E_rf,qu,'pixel',pixel,...
-               'MACE_Bmax_T',MACE_Bmax_T_local,'WGTS_B_T',WGTS_B_T_local,'MACE_Ba_T',MACE_Ba_T_local),...
-               obj.fscat(E_rf),'same').*Estep_rf;
+%             RF1 =  TF(qu+E_rf,qu,'pixel',pixel).*ISProb0;
+%             RFintegrand = TF(qu+E_rf,qu,'pixel',pixel,...
+%                 'MACE_Bmax_T',MACE_Bmax_T_local,'WGTS_B_T',WGTS_B_T_local,'MACE_Ba_T',MACE_Ba_T_local)...
+%                 .*obj.fscat(E_rf);
+% 
+%             RFfun = @(e) interp1(E_rf,RFintegrand,e);
+%             RFintegral =  arrayfun(@(a) integral(RFfun,E_rf(1),a),E_rf(2:end));
+%             RF = RF1+ [0,RFintegral];
+%             
+            RF = TF(qu+E_rf,qu,'pixel',pixel).*ISProb0 + ...
+                conv(TF(qu+E_rf,qu,'pixel',pixel,...
+                'MACE_Bmax_T',MACE_Bmax_T_local,'WGTS_B_T',WGTS_B_T_local,'MACE_Ba_T',MACE_Ba_T_local),...
+                obj.fscat(E_rf),'same').*Estep_rf;
             
             
             switch obj.FPD_Segmentation

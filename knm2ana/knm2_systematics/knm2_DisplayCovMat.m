@@ -3,7 +3,7 @@
 
 myEffect      = 'LongPlasma';
 RecomputeFlag = 'OFF';
-nTrials       =  5000;
+nTrials       =  1000;
 SysBudget     = 34; % 34= knm2 preliminary input
 
 % model setting

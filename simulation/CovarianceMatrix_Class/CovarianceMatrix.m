@@ -3122,7 +3122,7 @@ function ComputeCM_LongPlasma(obj,varargin)
     p=inputParser;
     p.addParameter('CorrCoeff',0,@(x)isfloat(x));
     p.addParameter('NegSigma','Troitsk',@(x)ismember(x,{'Abs','Troitsk'}));
-    p.addParameter('SanityPlot','OFF');
+    p.addParameter('SanityPlot','ON');
     p.parse(varargin{:});
     CorrCoeff  = p.Results.CorrCoeff;
     NegSigma   = p.Results.NegSigma;    % how to deal with negative sigmas
@@ -3176,8 +3176,8 @@ function ComputeCM_LongPlasma(obj,varargin)
         PlasmaPar_expected = [MACE_Sigma_i.^2,is_EOffset_i];
         PlasmaPar =  mvnrnd(PlasmaPar_expected,PlasmaCovMat,obj.nTrials);
         
-        MACE_Var_v = PlasmaPar(:,1);           % negative broadenings dealt with later
-        MACE_Var_v(abs(MACE_Var_v)<1e-3) = 0;  % too small to resolve anyway
+        MACE_Var_v = PlasmaPar(:,1);                 % negative broadenings dealt with later
+        MACE_Var_v(sqrt(abs(MACE_Var_v))<1e-3) = 0;  % too small to resolve anyway -> saves from time
         is_EOffset_v  = PlasmaPar(:,2);
         
         % e-loss shift:
@@ -3268,6 +3268,12 @@ function ComputeCM_LongPlasma(obj,varargin)
     end
     
     if strcmp(SanityPlot,'ON')
+        
+        if loadSuccess==1
+            d = importdata(obj.CovMatFile);
+            MACE_Var_v = d.MACE_Var_v;
+            is_EOffset_v = d.is_EOffset_v;
+        end
         fLP = figure('Units','normalized','Position',[0.1,0.1,0.75,0.5]);
         subplot(1,2,1);
         h1 = histogram(MACE_Var_v);

@@ -59,7 +59,7 @@ leg = legend([pK,pF,pFK],'Samak - KaFit','Samak - Fitrium','KaFit - Fitrium');%,
 leg.EdgeColor = rgb('Silver');
 leg.Location = 'northwest';
 xlim([min(TeS),max(TeS)]);
-ylim([-3 5]*1e-04);
+%ylim([-3 5]*1e-04);
 savename = sprintf('%sRF_Diff',plotdir);
 export_fig(f1,[savename,'.pdf']);
 print(f1,[savename,'.png'],'-dpng','-r300');
