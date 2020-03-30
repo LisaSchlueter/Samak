@@ -56,7 +56,7 @@ if strcmp(Mode,'Normal')
     % qU Offset
     if contains(freePar,'qU') %ringwise
         % fix qU of the first ring to zero -> anchor point
-        findIndex = ismember(fixPar_v,2*nPixels+10:3*nPixels+8); %2*nPixels+9
+        findIndex = ismember(fixPar_v,2*nPixels+10:3*nPixels+8); %2*nPixels+9: first qU is fixed
         fixPar_v(findIndex)=[];
     end
     

@@ -2,11 +2,12 @@
 % systematics setting
 RecomputeFlag = 'OFF';
 nTrials       = 100; 
-SysBudget     = 31; % 31= knm2 preliminary input
+SysBudget     = 34; % 31= knm2 preliminary input
 
 % model setting
-RunList   = 'KNM2_RW1';
+RunList   = 'KNM2_Prompt';
 AnaFlag   = 'StackPixel'; % FPD segmentation
+E0 = knm2FS_GetE0Twins('SanityPlot','OFF');
 
 RunArg = {'FSDFlag','BlindingKNM2',...
     'ELossFlag','KatrinT2',...
@@ -15,9 +16,10 @@ RunArg = {'FSDFlag','BlindingKNM2',...
     'RunList',RunList,...      
     'fixPar','E0 Norm Bkg',... % free parameter
     'DataType','Twin',...      % MC twins
-    'TwinBias_Q',18573.70,...  % twin endpoint
+    'TwinBias_Q',E0,...  % twin endpoint
     'SysBudget',SysBudget,...
-    'RingMerge','Full'};        
+    'RingMerge','Full',...
+    'NonPoissonScaleFactor',1};        
 
 CmArg = {'BkgCM','ON',...
     'SysEffects',struct('BkgShape','ON'),...
@@ -26,17 +28,23 @@ CmArg = {'BkgCM','ON',...
     };
 %% init model
 M = MultiRunAnalysis(RunArg{:});
+Sigma = std(E0);
+FSDArg = {'SanityPlot','ON','Sigma',Sigma};
+M.ModelObj.LoadFSD(FSDArg{:});
+M.ModelObj.ComputeTBDDS; M.ModelObj.ComputeTBDIS;
 
+M.Fit;
+FitResultsStat = M.FitResult;
 %% calculate covariance matrix
 M.chi2 = 'chi2CMShape';
 M.ComputeCM(CmArg{:});
 
 %% display and save to plots
-M.FitCM_Obj.PlotCM('qUWindowIndexMax',10,'saveplot','ON');
-
+%M.FitCM_Obj.PlotCM('qUWindowIndexMax',10,'saveplot','ON');
 %% 
+SysErrdef = GetSysErr(SysBudget);
 M.InitModelObj_Norm_BKG;
-M.FitCM_Obj.ComputeCM_Background('Display','ON');
+M.FitCM_Obj.ComputeCM_Background('Display','ON','MaxSlopeCpsPereV',99);
 
 
 

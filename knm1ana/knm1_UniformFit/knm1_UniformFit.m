@@ -2,7 +2,7 @@
 % FPD - uniform
 
 %% settings
-range = 40; % eV below the endpoint
+range = 90; % eV below the endpoint
 %% create MultiRunAnalysis object
 R = MultiRunAnalysis('RunList','KNM1',... % runlist defines which runs are analysed -> set MultiRunAnalysis.m -> function: GetRunList()
     'chi2','chi2CMShape',...                 % uncertainties: statistical or stat + systematic uncertainties

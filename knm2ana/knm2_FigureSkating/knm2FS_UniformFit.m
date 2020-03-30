@@ -54,9 +54,8 @@ else
 
     A.Fit;
     FitResult_imp  = A.FitResult;
-    %save(savename,'FitResult_imp','FitResult_ref','E0','MACE_Sigma','A','FSDArg');
-    save(savename,'FitResult_imp','FitResult_ref','E0','A','FSDArg');
-end
+    save(savename,'FitResult_imp','FitResult_ref','E0','MACE_Sigma','A','FSDArg');
+    %save(savename,'FitResult_imp','FitResult_ref','E0','A','FSDArg');
 %% result
 fprintf('--------------------------------------\n')
 fprintf('mNuSq = %.3f (%.3f +%.3f) eV^2  (ref) \n',FitResult_ref.par(1),FitResult_ref.errNeg(1),FitResult_ref.errPos(1))

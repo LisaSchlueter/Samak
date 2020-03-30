@@ -1,10 +1,10 @@
 % Fit KNM2 alternative runlist
 
-freePar = 'E0 Bkg Norm';
-DataType = 'Real';
+freePar = 'mNu E0 Bkg Norm';
+DataType = 'Twin';
 RunList = 'KNM2_Prompt';
 range = 40;                % fit range in eV below endpoint
-AltPixList = 'AziHalfNS';%'AziHalfEW';  % defines alternative pixel list
+AltPixList = 'Half';%'AziHalfEW';  % defines alternative pixel list
 RecomputeFlag = 'OFF';
 
 % label
@@ -15,24 +15,32 @@ savename = sprintf('%sknm2_PixListAlt_%s_%s_%s_%.0feV.mat',...
 if exist(savename,'file') && strcmp(RecomputeFlag,'OFF')
     load(savename);
 else
-RunAnaArg = {'RunList',RunList,...     % define run number -> see GetRunList
-    'fixPar',freePar,...               % free Parameter !!
-    'DataType',DataType,...            % Real, Twin or Fake
-    'FSDFlag','BlindingKNM2',...       % final state distribution (theoretical calculation)
-    'ELossFlag','KatrinT2',...         % energy loss function     ( different parametrizations available)
-    'AnaFlag','StackPixel',...         % FPD segmentations -> pixel combination
-    'chi2','chi2Stat',...              % statistics only
-    'NonPoissonScaleFactor',1,...
-    'MosCorrFlag','OFF',...
-    'TwinBias_Q',18573.7,...
-    'ROIFlag','14keV',...
-    'DopplerEffectFlag','FSD',...
-    'RingMerge',AltPixList};
+    E0 = knm2FS_GetE0Twins('SanityPlot','OFF');
+    RunAnaArg = {'RunList',RunList,...     % define run number -> see GetRunList
+        'fixPar',freePar,...               % free Parameter !!
+        'DataType',DataType,...            % Real, Twin or Fake
+        'FSDFlag','BlindingKNM2',...       % final state distribution (theoretical calculation)
+        'ELossFlag','KatrinT2',...         % energy loss function     ( different parametrizations available)
+        'AnaFlag','StackPixel',...         % FPD segmentations -> pixel combination
+        'chi2','chi2Stat',...              % statistics only
+        'NonPoissonScaleFactor',1,...
+        'MosCorrFlag','OFF',...
+        'TwinBias_Q',E0,...
+        'ROIFlag','14keV',...
+        'DopplerEffectFlag','FSD',...
+        'RingMerge',AltPixList};
+    
+    M = MultiRunAnalysis(RunAnaArg{:});          % init model, read data
+    M.exclDataStart = M.GetexclDataStart(range); % set fit range
 
-M = MultiRunAnalysis(RunAnaArg{:});          % init model, read data
-M.exclDataStart = M.GetexclDataStart(range); % set fit range
 
 R = RingAnalysis('RunAnaObj',M,'RingList',M.RingList);
+
+if strcmp(DataType,'Twin')
+    Sigma = std(E0);
+    FSDArg = {'SanityPlot','OFF','Sigma',Sigma};
+    arrayfun(@(x) x.ModelObj.LoadFSD(FSDArg{:}),R.MultiObj);
+end
 R.FitRings;
 
 FitResult = R.FitResult(1);

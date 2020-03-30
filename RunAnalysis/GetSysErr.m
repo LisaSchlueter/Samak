@@ -16,7 +16,7 @@ if SysBudget==0 % default First Tritium
     SysErr.DataDriven = 'ON';
     SysErr.FPDeff_RelErr = 0.001;
     SysErr.is_EOffsetErr = 0;
-    SysErr.MACE_SigmaErr = 0;
+    SysErr.MACE_VarErr = 0;
     SysErr.MaxSlopeCpsPereV = 15*1e-06;
 elseif SysBudget==99 % old First Tritium
     SysErr.WGTS_TASR_RelErr = 0.005;
@@ -31,7 +31,7 @@ elseif SysBudget==99 % old First Tritium
     SysErr.DataDriven = 'OFF';
     SysErr.FPDeff_RelErr = 0.001;
     SysErr.is_EOffsetErr = 0;
-    SysErr.MACE_SigmaErr = 0;
+    SysErr.MACE_VarErr = 0;
     SysErr.MaxSlopeCpsPereV = 15*1e-06;
 elseif SysBudget==1
     SysErr.WGTS_TASR_RelErr = 5e-4;
@@ -46,7 +46,7 @@ elseif SysBudget==1
     SysErr.DataDriven = 'ON';
     SysErr.FPDeff_RelErr = 0.001;
     SysErr.is_EOffsetErr = 0;
-    SysErr.MACE_SigmaErr = 0;
+    SysErr.MACE_VarErr = 0;
     SysErr.MaxSlopeCpsPereV = 15*1e-06;
 elseif SysBudget ==2
     SysErr.WGTS_TASR_RelErr = 5e-4;
@@ -61,7 +61,7 @@ elseif SysBudget ==2
     SysErr.DataDriven = 'ON';
     SysErr.FPDeff_RelErr = 0.001;
     SysErr.is_EOffsetErr = 0;
-    SysErr.MACE_SigmaErr = 0;
+    SysErr.MACE_VarErr = 0;
     SysErr.MaxSlopeCpsPereV = 15*1e-06;
 elseif SysBudget ==21
     SysErr.WGTS_TASR_RelErr = 5e-4;
@@ -76,7 +76,7 @@ elseif SysBudget ==21
     SysErr.DataDriven = 'ON';
     SysErr.FPDeff_RelErr = 0.001;
     SysErr.is_EOffsetErr = 0;
-    SysErr.MACE_SigmaErr = 0;
+    SysErr.MACE_VarErr = 0;
     SysErr.MaxSlopeCpsPereV = 15*1e-06;
 elseif SysBudget ==22 % default Knm1
     SysErr.WGTS_TASR_RelErr = 5e-4;
@@ -91,7 +91,7 @@ elseif SysBudget ==22 % default Knm1
     SysErr.DataDriven = 'ON';
     SysErr.FPDeff_RelErr = 1e-4;
     SysErr.is_EOffsetErr = 0;
-    SysErr.MACE_SigmaErr = 0;
+    SysErr.MACE_VarErr = 0;
     SysErr.MaxSlopeCpsPereV = 15*1e-06;
 elseif SysBudget == 31 % preliminary KNM2 systematics (January 20)
     SysErr.WGTS_TASR_RelErr = 5e-4; % data driven
@@ -100,6 +100,7 @@ elseif SysBudget == 31 % preliminary KNM2 systematics (January 20)
     SysErr.FSDShapeES_RelErr= 0.18;
     SysErr.MACE_Ba_T_RelErr= 0.004;
     SysErr.MACE_Bmax_T_RelErr= 0.002;
+    SysErr.MACE_VarErr = 0;
     SysErr.WGTS_B_T_RelErr= 0.025;
     SysErr.WGTS_CD_MolPerCm2_RelErr= 0.003;
     SysErr.ISXsection_RelErr= 0; %use rhod sigma together as uncertainty
@@ -119,7 +120,7 @@ elseif SysBudget == 32 % old KNM2 systematics (March 20)
     SysErr.DataDriven = 'ON';
     SysErr.FPDeff_RelErr = 1e-4;
     SysErr.is_EOffsetErr = 0.68*0.15;
-    SysErr.MACE_SigmaErr = 0.68*0.20;
+    SysErr.MACE_VarErr = 0.68*0.20;
     SysErr.MaxSlopeCpsPereV = 5.2*1e-06;
 elseif SysBudget == 33 % preliminary KNM2 systematics (March 20)
     SysErr.WGTS_TASR_RelErr = 5e-4; % data driven
@@ -134,7 +135,22 @@ elseif SysBudget == 33 % preliminary KNM2 systematics (March 20)
     SysErr.DataDriven = 'ON';
     SysErr.FPDeff_RelErr = 1e-4;
     SysErr.is_EOffsetErr = 0.05;
-    SysErr.MACE_SigmaErr = sqrt(0.2^2/3);
+    SysErr.MACE_VarErr = sqrt(0.2^2/3);
+    SysErr.MaxSlopeCpsPereV = 5.2*1e-06;
+elseif SysBudget == 34 % preliminary KNM2 systematics (March 27), update: long. plasma uncertainty
+    SysErr.WGTS_TASR_RelErr = 5e-4; % data driven
+    SysErr.FSDNorm_RelErr=  0.01;
+    SysErr.FSDShapeGS_RelErr= 0.04;
+    SysErr.FSDShapeES_RelErr= 0.18;
+    SysErr.MACE_Ba_T_RelErr= 0.0065;
+    SysErr.MACE_Bmax_T_RelErr= 0.001;
+    SysErr.WGTS_B_T_RelErr= 0.017;
+    SysErr.WGTS_CD_MolPerCm2_RelErr= 0.0025;
+    SysErr.ISXsection_RelErr= 0; %use rhod sigma together as uncertainty
+    SysErr.DataDriven = 'ON';
+    SysErr.FPDeff_RelErr = 1e-4;
+    SysErr.is_EOffsetErr = 0.05;
+    SysErr.MACE_VarErr = 0.2^2/3;
     SysErr.MaxSlopeCpsPereV = 5.2*1e-06;
 end
 
@@ -150,5 +166,5 @@ CMArg = {'WGTS_CD_MolPerCm2_RelErr',SysErr.WGTS_CD_MolPerCm2_RelErr,...
     'FPDeff_RelErr',SysErr.FPDeff_RelErr,...
     'DataDriven',SysErr.DataDriven,...
     'is_EOffsetErr',SysErr.is_EOffsetErr,...
-    'MACE_SigmaErr',SysErr.MACE_SigmaErr};
+    'MACE_VarErr',SysErr.MACE_VarErr};
 end

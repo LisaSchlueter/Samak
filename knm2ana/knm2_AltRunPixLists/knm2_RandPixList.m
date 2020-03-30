@@ -3,8 +3,8 @@
 % March 2020, Lisa
 
 nFits = 500;
-freePar = 'E0 Bkg Norm';
-DataType = 'Real';
+freePar = 'mNu E0 Bkg Norm';
+DataType = 'Twin';
 RunList = 'KNM2_Prompt';
 range = 40;               % fit range in eV below endpoint
 savedir = [getenv('SamakPath'),'knm2ana/knm2_AltRunPixLists/results/'];
@@ -20,6 +20,7 @@ else
  
     PixList = cell(nFits,1);
     FitResult = cell(nFits,1);
+    E0 = knm2FS_GetE0Twins('SanityPlot','OFF');
     RunAnaArg = {'RunList',RunList,...  % define run number -> see GetRunList
         'fixPar',freePar,...         % free Parameter !!
         'DataType',DataType,...              % Real, Twin or Fake
@@ -29,11 +30,10 @@ else
         'chi2','chi2Stat',...              % statistics only
         'NonPoissonScaleFactor',1,...
         'MosCorrFlag','OFF',...
-        'TwinBias_Q',18573.7,...
+        'TwinBias_Q',E0,...
         'ROIFlag','14keV',...
-        'DopplerEffectFlag','FSD'};%,...
-    %'Twin_SameqUFlag','ON'};
-    
+        'DopplerEffectFlag','FSD'};
+   
     for i=1:nFits
         RandIndex    = randperm(nPix);         % randomly permute runlist indices
         nPixHalf     = ceil(nPix/2);           % take only half of all runs
@@ -42,9 +42,13 @@ else
         %% build object of MultiRunAnalysis class
         D = MultiRunAnalysis(RunAnaArg{:},'PixList',PixList{i});
         
-        % modify some parameters in your analysis
-        D.exclDataStart = D.GetexclDataStart(range); % find correct data, where to cut spectrum
-        
+        if strcmp(DataType,'Twin')
+            Sigma = std(E0);
+            FSDArg = {'SanityPlot','OFF','Sigma',Sigma};
+            D.ModelObj.LoadFSD(FSDArg{:});
+            D.ModelObj.ComputeTBDDS; D.ModelObj.ComputeTBDIS;
+        end   
+        D.exclDataStart = D.GetexclDataStart(range); % find correct data, where to cut spectrum     
         %% Fit -> fit results are in property: A.FitResult
         D.InitModelObj_Norm_BKG('RecomputeFlag','ON');
         D.Fit;

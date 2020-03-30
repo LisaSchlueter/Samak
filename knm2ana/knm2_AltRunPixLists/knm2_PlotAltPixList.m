@@ -1,7 +1,7 @@
 % plot alternative pixel list results
 nFits = 500;
-freePar = 'E0 Bkg Norm';
-DataType = 'Real';
+freePar = 'mNu E0 Bkg Norm';
+DataType = 'Twin';%'Real';
 Parameter = 'E0';
 RunList = 'KNM2_Prompt';
 range = 40;                % fit range in eV below endpoint
@@ -14,7 +14,8 @@ savenameRand = sprintf('%sknm2_PixListRandHalf_%s_%s_%.0feV_%.0ffits.mat',...
 if exist(savenameRand,'file')
     load(savenameRand);
 else
-    fprintf('random half pix list not computed yet \n')
+    fprintf(2,'Random half pix list not computed yet \n')
+    return
 end
 %% load Alt run lists
 ParAlt = cell(numel(AltPixLists),1);

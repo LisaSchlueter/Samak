@@ -21,7 +21,7 @@ p.addParameter('MultiWeights','',@(x) isfloat(x) || isempty(x)); %3 gaussians in
 p.addParameter('Dist','Gauss',@(x)ismember(x,{'Gauss','Rect'}));
 p.addParameter('BinningFactor',2,@(x) isfloat(x) || isempty(x)); % multiplies number of bins in rebinning
 p.addParameter('RebinMode','Integral',@(x)ismember(x,{'Fast','Integral'})); % rebinning method. warning: 'fast' does not work welll for small sigma
-p.addParameter('RecomputeFlag','ON',@(x)ismember(x,{'ON','OFF'}));
+p.addParameter('RecomputeFlag','OFF',@(x)ismember(x,{'ON','OFF'}));
 p.addParameter('filename','',@(x)ischar(x));
 
 p.parse(varargin{:});

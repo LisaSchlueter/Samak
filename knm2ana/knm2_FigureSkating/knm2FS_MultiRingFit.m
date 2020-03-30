@@ -4,9 +4,9 @@
 RunList = 'KNM2_Prompt';
 E0 = knm2FS_GetE0Twins('SanityPlot','OFF');
 range = 40;
-chi2 = 'chi2CMShape';
+chi2 = 'chi2Stat';
 pullFlag = 4;
-freePar = 'mNu E0 Norm Bkg';
+freePar = 'mNu E0 Norm Bkg qU';
 DataType = 'Twin';
 RingMerge = 'Full';
 
@@ -74,6 +74,7 @@ end
 fprintf('--------------------------------------\n')
 fprintf('mNuSq = %.4f (%.3f +%.3f) eV^2  (ref) \n',FitResults.par(1),FitResults.errNeg(1),FitResults.errPos(1))
 fprintf('mNuSq = %.4f (%.3f +%.3f) eV^2  (imp) \n',FitResults_imp.par(1),FitResults_imp.errNeg(1),FitResults_imp.errPos(1))
+fprintf('Average mNuSq sensitivity = %.3f eV^2 \n',0.5*(-FitResults_imp.errNeg(1)+FitResults_imp.errPos(1)))
 fprintf('--------------------------------------\n')
 fprintf('E0    = %.0e (+-%.2f) eV (ref) \n',FitResults.par(2)+MR.ModelObj.Q_i-mean(E0),FitResults.err(2))
 fprintf('E0    = %.0e (+-%.2f) eV (imp) \n',FitResults_imp.par(2)+MR.ModelObj.Q_i-mean(E0),FitResults_imp.err(2))
@@ -85,4 +86,11 @@ fprintf('--------------------------------------\n')
 % plotname = [plotdir,sprintf('FPDViewer_MultiRing%s_%s_%s_freePar%s_%s.pdf',...
 %     MR.RingMerge,MR.RunData.RunName,MR.chi2,freePar,'qU')];
 % PlotRingWiseFitPar(MR,'SaveAs',plotname); %FPD viewer
-%
+% %
+% %%
+MR.FitCM_Obj.PlotCM('qUWindowIndexMax',10,'saveplot','ON','PlotEffect','total',...
+        'Convergence','OFF','CovMatInput',MR.FitCMFracShape,...
+       'savedir',[getenv('SamakPath'),'knm2ana/knm2_systematics/plots/'],'savename','FS_MultiRing');
+%   
+%   
+  

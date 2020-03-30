@@ -3,8 +3,8 @@
 
 myEffect      = 'LongPlasma';
 RecomputeFlag = 'OFF';
-nTrials       =  1000; 
-SysBudget     = 33; % 33= knm2 preliminary input
+nTrials       =  1000;
+SysBudget     = 34; % 34= knm2 preliminary input
 
 % model setting
 RunList   = 'KNM2_Prompt';
@@ -23,22 +23,45 @@ RunArg = {'FSDFlag','BlindingKNM2',...
     'SysBudget',SysBudget,...
     'RingMerge','Full',...
     'NonPoissonScaleFactor',1.1121};
-
-CmArg = {'BkgCM','OFF',...%  'SysEffects',struct(myEffect,'ON'),...
-    'RecomputeFlag',RecomputeFlag,...
-    'nTrials',nTrials,...
-    'SysEffects',struct(myEffect,'ON'),...
-    };
+if strcmp(myEffect,'Bkg')
+    CmArg = {'BkgCM','ON',...%  'SysEffects',struct(myEffect,'ON'),...
+        'RecomputeFlag',RecomputeFlag,...
+        'nTrials',nTrials,...
+        'SysEffects',struct('FSD','OFF'),...
+        'PlotSaveCM','ON'};
+else
+    CmArg = {'BkgCM','OFF',...%  'SysEffects',struct(myEffect,'ON'),...
+        'RecomputeFlag',RecomputeFlag,...
+        'nTrials',nTrials,...
+        'SysEffects',struct(myEffect,'ON'),...
+        };
+end
 %% init model
 M = MultiRunAnalysis(RunArg{:});
 M.chi2 = 'chi2CMShape';
-M.ComputeCM;
-%% calculate covariance matrix
-M.ComputeCM(CmArg{:});
-%% display and save to plots
-M.FitCM_Obj.PlotCM('qUWindowIndexMax',10,'saveplot','ON','Convergence','ON');
 
+%% label
+plotdir = [getenv('SamakPath'),'knm2ana/knm2_systematics/plots/'];
 
-
-
-
+if ~strcmp(myEffect,'all')
+    %% calculate and plot specific covariance matrix
+    M.ComputeCM(CmArg{:});
+    % display and save to plots
+    M.FitCM_Obj.PlotCM('qUWindowIndexMax',10,'saveplot','ON','Convergence',...
+        'ON','Mode','Shape','PlotEffect',myEffect,'savedir',plotdir);
+    M.FitCM_Obj.PlotCorr('qUWindowIndexMax',10,'saveplot','ON',...
+        'savedir',plotdir,'savename',myEffect);
+    
+elseif strcmp(myEffect,'all')
+    %% plot total stat + syst CM
+    M.ComputeCM;
+    
+    % cov mat frac shape
+    M.FitCM_Obj.PlotCM('qUWindowIndexMax',10,'saveplot',...
+        'ON','Convergence','OFF','CovMatInput',M.FitCMFracShape,'PlotEffect','total',...
+        'savedir',plotdir,'savename','FS_Uniform');
+    % correlation
+    M.FitCM_Obj.PlotCorr('qUWindowIndexMax',10,'saveplot',...
+        'ON','CovMatInput',M.FitCMFracShape,...
+        'savedir',plotdir,'savename','KNM1_FS_Uniform');
+end

@@ -26,7 +26,6 @@ for i=1:nCD
     else
         R = MultiRunAnalysis('RunList',1000+(i*nRuns:(i*nRuns+nRuns-1)),CommonArg{:},...
             'TwinBias_WGTS_CD_MolPerCm2',WGTS_CD_RelStd(i)); % in fake mode: rel. std
-
         R.exclDataStart = R.GetexclDataStart(range);
         R.RunData.RunName = sprintf('Stack%s_%.4fRelCDstd_%.0f_%.0f','TestCD',WGTS_CD_RelStd(i),R.RunList(1),R.RunList(end));
         R.Fit;
@@ -43,22 +42,24 @@ for i=1:nCD
     end
 end
 
+mNuSq = mNuSq-mNuSq(1);
 %% plot
 figure('Units','normalized','Position',[0.1,0.1,0.5,0.5]);
-p1 =plot(qUStd,mNuSq,'o','LineWidth',2,'MarkerFaceColor',rgb('DodgerBlue'));
-hold on;
-x = linspace(min(qUStd),max(qUStd),100);
-pref  =plot(x,-2*x.^2,'-','LineWidth',2);
-pref2  =plot(x,-2*x.^2+mNuSq(2),'-.','LineWidth',2);
-leg = legend([p1,pref,pref2],'361 MC runs stacked - qU randomized',...
-    sprintf('{\\Delta\\itm^2} = -2\\sigma^2'),...
-sprintf('{\\Delta\\itm^2} = -2\\sigma^2 + %.2f eV^2',mNuSq(2)));
-leg.EdgeColor = rgb('Silver');
-leg.Location='southwest';
-PrettyFigureFormat('FontSize',24);
-xlabel(sprintf('\\sigma (qU)'));
-ylabel(sprintf('{\\Delta\\itm^2}'));
-xlim([-0.005,0.205])
 
-saveplot = strrep(strrep(savename,'results','plots'),'.mat','.pdf');
-export_fig(saveplot);
+p1 =plot(WGTS_CD_RelStd,mNuSq,'-o','LineWidth',2,'MarkerFaceColor',rgb('DodgerBlue'));
+% hold on;
+%x = linspace(min(qUStd),max(qUStd),100);
+% pref  =plot(x,-2*x.^2,'-','LineWidth',2);
+% pref2  =plot(x,-2*x.^2+mNuSq(2),'-.','LineWidth',2);
+% leg = legend([p1,pref,pref2],'361 MC runs stacked - qU randomized',...
+%     sprintf('{\\Delta\\itm^2} = -2\\sigma^2'),...
+% sprintf('{\\Delta\\itm^2} = -2\\sigma^2 + %.2f eV^2',mNuSq(2)));
+% leg.EdgeColor = rgb('Silver');
+% leg.Location='southwest';
+PrettyFigureFormat('FontSize',24);
+xlabel(sprintf('\\sigma (\\rhod\\sigma)'));
+ylabel(sprintf('{\\Delta\\itm^2}'));
+%xlim([-0.005,0.205])
+
+% saveplot = strrep(strrep(savename,'results','plots'),'.mat','.pdf');
+% export_fig(saveplot);
