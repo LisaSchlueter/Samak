@@ -1,13 +1,14 @@
 % Script to develop and test multi ring + multi period fit
 % based on KNM2 runs
 % March 2020, Lisa
+tic;
 
 %% settings
-RunList = 'KNM2_Prompt'; % all data -> multi-period
-range = 40;
-chi2 = 'chi2Stat';%CMShape';
+RunList  = 'KNM2_Prompt'; % all data -> multi-period
+range    = 40;
+chi2     = 'chi2Stat';%CMShape';
 pullFlag = 4;
-fixPar = 'E0 Norm Bkg';
+fixPar   = 'E0 Norm Bkg';
 
 %% twins with plasma drift
 E0OffseteV  = [0,0.1,-0.1]';          % per RW-perid (the same for all rings )
@@ -18,7 +19,7 @@ DriftPerDay = [6*1e-03, 0, 6*1e-03]'; % per RW-perid (the same for all rings )
     'E0ref',18573.70,...
     'SanityPlot','OFF');
 
-MultiPos   =  repmat(E0Offset,[1,4]); % size: nPeriod x nPseudo-Rings --> here eg. 3x4
+MultiPos   =  repmat(E0OffseteV,[1,4]); % size: nPeriod x nPseudo-Rings --> here eg. 3x4
 MultiSigma =  repmat(RectWidth,[1,4]);
 MultiWeights = [1/3 1/3 1/3];
 %% read data and set up model: twins with plasma drift and steps
@@ -50,6 +51,7 @@ MR.ModelObj.LoadFSD('MultiPos',MultiPos,...
                 
 MR.ModelObj.ComputeTBDDS;
 MR.ModelObj.ComputeTBDIS;
+
 %% label 
 savedir = [getenv('SamakPath'),'knm2ana/knm2_MultiRingFit/results/'];
 MakeDir(savedir);
@@ -72,4 +74,4 @@ freePar = ConvertFixPar('freePar',MR.fixPar,'nPar',MR.nPar,'nPixels',numel(MR.Ru
 plotname = [plotdir,sprintf('FPDViewer_MultiRing%s_%s_%s_freePar%s_%s.pdf',...
     MR.RingMerge,MR.RunData.RunName,MR.chi2,freePar,'qU')];
 PlotRingWiseFitPar(MR,'SaveAs',plotname); %FPD viewer
-
+toc;

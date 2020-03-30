@@ -10,10 +10,11 @@ savename = sprintf('%sknm2FS_UniformFit_%.0feV_%s.mat',savedir,range,chi2);
 if exist(savename,'file') && strcmp(RecomputeFlag,'OFF')
     load(savename)
 else
+    fprintf('start fit\n');
     RunAnaArg = {'RunList','KNM2_Prompt',... % all KNM2 golden runs
         'fixPar','mNu E0 Bkg Norm',...           % free Parameter !!
         'DataType','Twin',...
-        'FSDFlag','BlindingKNM2',...       % final state distribution (theoretical calculation)
+        'FSDFlag','BlindingKNM2',...       % final state distribution (theoretical calculation) 
         'ELossFlag','KatrinT2',...         % energy loss function     ( different parametrizations available)
         'AnaFlag','StackPixel',...         % FPD segmentations -> pixel combination
         'chi2',chi2,...              % statistics only
@@ -32,7 +33,7 @@ else
     A.ModelObj.RFBinStep = 0.02;
     A.ModelObj.InitializeRF;
     %% fit without corrections
-    A.Fit;
+    A.Fit('CATS','ON'); A.PlotFit('FitResultsFlag','OFF');return;
     FitResult_ref  = A.FitResult;
 %     %% fit with broadening of RF + broadening/shift of FSD
 % %     MACE_Sigma = std(A.SingleRunData.qU,0,2);
@@ -53,7 +54,8 @@ else
 
     A.Fit;
     FitResult_imp  = A.FitResult;
-    save(savename,'FitResult_imp','FitResult_ref','E0','MACE_Sigma','A','FSDArg');
+    %save(savename,'FitResult_imp','FitResult_ref','E0','MACE_Sigma','A','FSDArg');
+    save(savename,'FitResult_imp','FitResult_ref','E0','A','FSDArg');
 end
 %% result
 fprintf('--------------------------------------\n')

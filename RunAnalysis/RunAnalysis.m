@@ -611,8 +611,10 @@ classdef RunAnalysis < handle
             %      FitTrueMPar, FitTrueMErr, FitTrueMChi2min, dofTrueM]
             p = inputParser;
             p.addParameter('nSamples',10,@(x)isfloat(x) & x>0);
+            p.addParameter('CATS','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.parse(varargin{:});
             nSamples = p.Results.nSamples;
+            CATS     = p.Results.CATS;
         
            if strcmp(obj.DataType,'Real')
                fprintf('Data Type real - must be Twin \n')
@@ -629,7 +631,10 @@ classdef RunAnalysis < handle
               if isempty(obj.FitCMShape)
                   obj.ComputeCM;
               end
-               TBDIS = mvnrnd(obj.RunData.TBDIS',obj.FitCMShape,nSamples)';
+               % Modif Thierry - 30/3/2020
+               % TBDIS = mvnrnd(obj.RunData.TBDIS',obj.FitCMShape,nSamples)';
+               TBDIS = mvnrnd(obj.RunData.TBDIS(:)',obj.FitCMShape,nSamples)';
+               % End Modif Thierry - 30/3/2020
            end
            
             % init
@@ -647,7 +652,12 @@ classdef RunAnalysis < handle
                 obj.RunData.TBDIS = TBDIS(:,i); 
                 obj.RunData.TBDISE = sqrt(TBDIS(:,i));   
                 
+                if nSamples<2
+                obj.Fit('CATS',CATS);
+                obj.PlotFit();
+                else
                 obj.Fit;
+                end                    
                 FitPar(:,i)   = obj.FitResult.par;
                 FitErr(:,i)   = obj.FitResult.err;
                 FitChi2min(i) = obj.FitResult.chi2min;
@@ -1539,7 +1549,7 @@ classdef RunAnalysis < handle
             
             p.parse(varargin{:});
             
-            CATS = p.Results.CATS;
+            CATS       = p.Results.CATS;
             InitNB     = p.Results.InitNB;
             SaveFit    = p.Results.SaveFit;
             

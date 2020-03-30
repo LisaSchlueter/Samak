@@ -7,8 +7,8 @@
 %% Allow for KNM1 Calibration
 %% Allow to Change ROI
 %%
-RunList    = 'KNM2_RW2';
-%RunList    = 'KNM1rm';
+%RunList    = 'KNM2_RW2';
+RunList    = 'KNM1rm';
 KNM1CorFlag    = 'OFF';
 HVdriftCorFlag = 'OFF';
 SlopeCPSMeV = 6.3032;
@@ -99,7 +99,7 @@ PrettyFigureFormat
 
 %% Plot Image of Pixel-wise Rate Verus Scan
 mapPixelScan = (DataUni_RW2.SingleRunData.TBDIS_RM(DataUni_RW2.PixList,:)...
-    ./SStime(DataUni_RW2.PixList,:)+HVdrift+qUCorrMap)...
+    ./SStime(DataUni_RW2.PixList,:)+HVdrift+chi)...
     ./ScanActTable(DataUni_RW2.PixList,:);
 
 figure(1)

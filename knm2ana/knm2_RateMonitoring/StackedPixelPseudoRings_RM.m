@@ -139,11 +139,15 @@ for j=1:3
     rateE  = zeros(A.nRings,numel(A.RunAnaObj.RunList));
     cf     = zeros(A.nRings,numel(A.RunAnaObj.RunList));
     sstime = zeros(A.nRings,numel(A.RunAnaObj.RunList));
+    fpdCal = ones(A.nRings,numel(A.RunAnaObj.RunList));
     
     for i=1:A.nRings
         R           = A.MultiObj(i);
         R.ROIFlag   = ROI;
         R.SetROI;
+        
+        % FPD Calibration Correction
+        fpdCal(i,:)   = fpdCal(i,:) + (MR.SingleRunData.StartTimeStamp<datetime('02-Oct-2019 14:52:19'))*0.0006566;
         
         % Endpoint Fit
         R.Fit
@@ -151,13 +155,14 @@ for j=1:3
         E0RWPSRE(i,j) = R.FitResult.err(2);
         
         % HV setting
-        qUCorrRW        = (R.SingleRunData.qU_RM(1,:));
-        qUmeanRW{j,i}   = mean(R.SingleRunData.qU_RM(1,:));
+        qUCorrRW      = (R.SingleRunData.qU_RM(1,:));
+        qUmeanRW{j,i} = mean(R.SingleRunData.qU_RM(1,:));
     
         % Include HV Drift
-        count(i,:)  = R.SingleRunData.TBDIS_RM + ...
+        count(i,:)    = R.SingleRunData.TBDIS_RM.*fpdCal(i,:) + ...
                       HVdriftPerPixel.*numel(R.PixList).*R.SingleRunData.qUfrac_RM.*R.SingleRunData.TimeSec;
         
+                  
         % Correct for KNM1 Radial Effect
         count(i,:)  = count(i,:)./KNM1correction(i);
         sstime(i,:) = R.SingleRunData.qUfrac_RM.*R.SingleRunData.TimeSec;

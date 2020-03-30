@@ -1538,7 +1538,7 @@ classdef TBD < handle & WGTSMACE %!dont change superclass without modifying pars
             obj.sin2T4_Bias      = p.Results.sin2T4_Bias;
             obj.qUOffset_bias    = p.Results.qUOffset_bias;
             obj.FracTm_bias      = p.Results.FracTm_bias;
-            obj.mTSq_bias = p.Results.mTSq_bias;
+            obj.mTSq_bias        = p.Results.mTSq_bias;
             NormFlag             = p.Results.NormFlag;
                         
             % Save previous values of parameters

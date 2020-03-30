@@ -3396,8 +3396,8 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             if ismember(ListName,{'KNM2_Prompt','KNM2_RandHalf'})  % all runs
                 h5list = sort([runsRW1,runsRW2,runsRW3]);
             elseif strcmp(ListName,'KNM2_RW1')   % rear wall setting 1 (different names for back compatibility)
-%                h5list = runsRW1;
-                h5list = runsRW1(runsRW1>56281);
+                h5list = runsRW1;
+%                h5list = runsRW1(runsRW1>56281);
             elseif strcmp(ListName,'KNM2_RW2')   % rear wall setting 2
                 h5list = runsRW2;
             elseif strcmp(ListName,'KNM2_RW3')   % rear wall setting 3
