@@ -7,11 +7,13 @@ function [PlasmaDrifts, Err_PlasmaDrifts, Offsets, Err_Offsets] = knm2_RingwiseF
     saveplot = p.Results.saveplot;
     QAplots  = p.Results.QAplots;
     ROI      = p.Results.ROI;
-    [zerolevel,Err_zerolevel] = ZeroLevel(ROI);
-    [Slope_RateqU,Err_Slope_RateqU] = knm2_RateMonitor_qUSlope;
-    Slope_RateqU = Slope_RateqU*1e-6;
-    Err_Slope_RateqU = Err_Slope_RateqU*1e-6;
-    OffsetMSCorr=[0, 29.1, 60, 91.6];
+    [ReferenceRate,~,ActivityRW2,qURW2] = ZeroLevel(ROI);
+    %[Slope_RateqU,Err_Slope_RateqU] = knm2_RateMonitor_qUSlope %broken atm
+    Slope_RateqU = -11.16*1e-6;        %cps/(eV*1 pixel)
+    Err_Slope_RateqU = 1.43*1e-6;
+    %Slope_RateqU = Slope_RateqU*1e-6;
+    %Err_Slope_RateqU = Err_Slope_RateqU*1e-6;
+    
     for j = 1:3
         RunList   = ['KNM2_RW' num2str(j)];
         Knm2AnaArg = {'RunList',RunList,'DataType','Real',...
@@ -24,20 +26,34 @@ function [PlasmaDrifts, Err_PlasmaDrifts, Offsets, Err_Offsets] = knm2_RingwiseF
         range = 40;               % fit range in eV below endpoint        
         DataUni_RWn.exclDataStart = DataUni_RWn.GetexclDataStart(range); % find correct data, where to cut spectrum
         DataPSR_RWn   = RingAnalysis('RunAnaObj',DataUni_RWn,'RingList',1:4);
+        
+        Activity{j} =  (DataPSR_RWn.MultiObj(1).SingleRunData.WGTS_MolFrac_TT+0.5*DataPSR_RWn.MultiObj(1).SingleRunData.WGTS_MolFrac_HT+0.5*DataPSR_RWn.MultiObj(1).SingleRunData.WGTS_MolFrac_DT)...
+        .*(DataPSR_RWn.MultiObj(1).SingleRunData.WGTS_CD_MolPerCm2);
 
         for i = 1:DataUni_RWn.nRings
+            
             DataPSR_RWn.MultiObj(i).RMCorrection('saveplot',saveplot,'pixlist',sprintf('ring%i',i),'QAplots',QAplots);
-            [~,par,err,~,~] = DataPSR_RWn.MultiObj(i).PlotFitRunListCorr('Parameterx','time','Parametery','rate300','Fit','ON','saveplot',saveplot,'pixlist',sprintf('ring%i',i));
-            MeanRate = mean(DataPSR_RWn.MultiObj(i).SingleRunData.TBDIS_RM./(DataPSR_RWn.MultiObj(i).SingleRunData.qUfrac_RM.*DataPSR_RWn.MultiObj(i).SingleRunData.TimeSec))*numel(DataPSR_RWn.MultiObj(i).PixList)/numel(DataPSR_RWn.MultiObj(1).PixList);
+            Rate = DataPSR_RWn.MultiObj(i).SingleRunData.TBDIS_RM./(DataPSR_RWn.MultiObj(i).SingleRunData.qUfrac_RM.*DataPSR_RWn.MultiObj(i).SingleRunData.TimeSec);
+            RateCorrected = Rate./mean(Activity{j}).*ActivityRW2  + (mean(DataPSR_RWn.MultiObj(i).SingleRunData.qU_RM(1,:)) - qURW2(i)) * 6.3032 * numel(DataPSR_RWn.MultiObj(i).PixList);  % - ReferenceRate./numel(DataPSR_RWn.MultiObj(1).PixList).*numel(DataPSR_RWn.MultiObj(i).PixList);
+            DataPSR_RWn.MultiObj(i).SingleRunData.TBDIS_RM = RateCorrected.*(DataPSR_RWn.MultiObj(i).SingleRunData.qUfrac_RM.*DataPSR_RWn.MultiObj(i).SingleRunData.TimeSec);
+            
+            %[~,par,err,~,~] = DataPSR_RWn.MultiObj(i).PlotFitRunListCorr('Parameterx','time','Parametery','rate300','Fit','ON','saveplot',saveplot,'pixlist',sprintf('ring%i',i));
+            Rate = DataPSR_RWn.MultiObj(i).SingleRunData.TBDIS_RM./(DataPSR_RWn.MultiObj(i).SingleRunData.qUfrac_RM.*DataPSR_RWn.MultiObj(i).SingleRunData.TimeSec);
+            Err_Rate = sqrt(DataPSR_RWn.MultiObj(i).SingleRunData.TBDIS_RM)./(DataPSR_RWn.MultiObj(i).SingleRunData.qUfrac_RM.*DataPSR_RWn.MultiObj(i).SingleRunData.TimeSec);
+            MeanRate = mean(DataPSR_RWn.MultiObj(i).SingleRunData.TBDIS_RM./(DataPSR_RWn.MultiObj(i).SingleRunData.qUfrac_RM.*DataPSR_RWn.MultiObj(i).SingleRunData.TimeSec));
             Err_MeanRate = std(DataPSR_RWn.MultiObj(i).SingleRunData.TBDIS_RM./(DataPSR_RWn.MultiObj(i).SingleRunData.qUfrac_RM.*DataPSR_RWn.MultiObj(i).SingleRunData.TimeSec));
-            Slope_RateTime = par(1)/MeanRate;
-            Err_Slope_RateTime = err(1)/MeanRate;
-            Offsets(i,j) = (MeanRate - zerolevel)/(Slope_RateqU*zerolevel)-OffsetMSCorr(i);
-            RateOffsetError = sqrt(Err_MeanRate^2+Err_zerolevel^2);
-            SlopeOffsetError = sqrt(Err_Slope_RateqU^2*zerolevel^2+Err_zerolevel^2*Slope_RateqU^2);
-            Err_Offsets(i,j) = sqrt(RateOffsetError^2*(1/(Slope_RateqU*zerolevel))^2+SlopeOffsetError^2*((MeanRate - zerolevel)/((Slope_RateqU*zerolevel)^2))^2);
-            PlasmaDrifts(i,j) = Slope_RateTime/Slope_RateqU*24;
-            Err_PlasmaDrifts(i,j) = sqrt((Err_Slope_RateTime)^2*Slope_RateqU^-2+Err_Slope_RateqU^2*((Slope_RateTime)^2/(Slope_RateqU)^4))*24;
+            %Slope_RateTime = par(1)/MeanRate;
+            %Err_Slope_RateTime = err(1)/MeanRate;
+            DataPSR_RWn.MultiObj(i).SingleRunData.TBDIS_RM = -((Rate - ReferenceRate./numel(DataPSR_RWn.MultiObj(1).PixList).*numel(DataPSR_RWn.MultiObj(i).PixList))./737.8 * 1e3 * 117 / numel(DataPSR_RWn.MultiObj(i).PixList))...
+                .*(DataPSR_RWn.MultiObj(i).SingleRunData.qUfrac_RM.*DataPSR_RWn.MultiObj(i).SingleRunData.TimeSec);
+            [~,par,err,~,~] = DataPSR_RWn.MultiObj(i).PlotFitRunListCorr('Parameterx','time','Parametery','rate300','Fit','ON','saveplot',saveplot,'pixlist',sprintf('ring%i',i));
+            
+            Offsets(i,j) = mean((Rate - ReferenceRate./numel(DataPSR_RWn.MultiObj(1).PixList).*numel(DataPSR_RWn.MultiObj(i).PixList))./737.8 * 1e3 * 117 / numel(DataPSR_RWn.MultiObj(i).PixList));
+            Err_Offsets(i,j) = mean(Err_Rate)./737.8 * 1e3 * 117 / numel(DataPSR_RWn.MultiObj(i).PixList);
+            PlasmaDrifts(i,j) = par(1)*24;
+            Err_PlasmaDrifts(i,j) = err(1)*24;
+            %PlasmaDrifts(i,j) = Slope_RateTime/Slope_RateqU*numel(DataPSR_RWn.MultiObj(i).PixList)/117*24;
+            %Err_PlasmaDrifts(i,j) = sqrt((Err_Slope_RateTime)^2*Slope_RateqU^-2+Err_Slope_RateqU^2*((Slope_RateTime)^2/(Slope_RateqU)^4))*numel(DataPSR_RWn.MultiObj(i).PixList)/117*24;
         end
     end
     fig88 = figure('Renderer','painters');
@@ -74,18 +90,27 @@ function [PlasmaDrifts, Err_PlasmaDrifts, Offsets, Err_Offsets] = knm2_RingwiseF
     end
 end
 
-function [zerolevel,Err_zerolevel] = ZeroLevel(ROI)
-    Knm2AnaArg = {'RunList','KNM2_RW1','DataType','Real',...
+function [ReferenceRate,Err_ReferenceRate,ActivityRW2,qURW2] = ZeroLevel(ROI)
+    Knm2AnaArg = {'RunList','KNM2_RW2','DataType','Real',...
             'FSDFlag','BlindingKNM2','ELossFlag','KatrinT2',...
             'AnaFlag','StackPixel','RingMerge','Full','NonPoissonScaleFactor',1,...
             'MosCorrFlag','OFF',...
             'TwinBias_Q',18573.7,...
             'ROIFlag',ROI};
-        DataUni_RW1   = MultiRunAnalysis(Knm2AnaArg{:});
+        DataUni_RW2   = MultiRunAnalysis(Knm2AnaArg{:});
         range = 40;               % fit range in eV below endpoint        
-        DataUni_RW1.exclDataStart = DataUni_RW1.GetexclDataStart(range); % find correct data, where to cut spectrum
-        DataPSR_RW   = RingAnalysis('RunAnaObj',DataUni_RW1,'RingList',1);
+        DataUni_RW2.exclDataStart = DataUni_RW2.GetexclDataStart(range); % find correct data, where to cut spectrum
+        DataPSR_RW   = RingAnalysis('RunAnaObj',DataUni_RW2,'RingList',1);
         DataPSR_RW.MultiObj(1).RMCorrection('QAplots','OFF');
-        zerolevel = mean(DataPSR_RW.MultiObj(1).SingleRunData.TBDIS_RM./(DataPSR_RW.MultiObj(1).SingleRunData.qUfrac_RM.*DataPSR_RW.MultiObj(1).SingleRunData.TimeSec));
-        Err_zerolevel = std((DataPSR_RW.MultiObj(1).SingleRunData.TBDIS_RM./(DataPSR_RW.MultiObj(1).SingleRunData.qUfrac_RM.*DataPSR_RW.MultiObj(1).SingleRunData.TimeSec)));
+        qURW2 = zeros(DataUni_RW2.nRings,1);
+        
+        ReferenceRate = mean(DataPSR_RW.MultiObj(1).SingleRunData.TBDIS_RM./(DataPSR_RW.MultiObj(1).SingleRunData.qUfrac_RM.*DataPSR_RW.MultiObj(1).SingleRunData.TimeSec));
+        Err_ReferenceRate = std((DataPSR_RW.MultiObj(1).SingleRunData.TBDIS_RM)./(DataPSR_RW.MultiObj(1).SingleRunData.qUfrac_RM.*DataPSR_RW.MultiObj(1).SingleRunData.TimeSec));
+        ActivityRW2  =  mean(DataPSR_RW.MultiObj(1).SingleRunData.WGTS_MolFrac_TT'+0.5*DataPSR_RW.MultiObj(1).SingleRunData.WGTS_MolFrac_HT'...
+            +0.5*DataPSR_RW.MultiObj(1).SingleRunData.WGTS_MolFrac_DT').*mean(DataPSR_RW.MultiObj(1).SingleRunData.WGTS_CD_MolPerCm2);
+        
+        for i = 1:DataUni_RW2.nRings
+            qURW2(i) = mean(DataPSR_RW.MultiObj(i).SingleRunData.qU_RM(1,:));
+        end
+        
 end

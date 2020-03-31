@@ -1,13 +1,3 @@
-% KNM2 - -300V Rate Monitor FPD
-% Stakced-pixel Per Pseudo-Ring
-% Evolution of Rate
-% Rate Correction
-% Conversion of rate in Potential Fluctuation
-%
-% Last Modified: 04/02/2020
-% T. Lasserre
-%
-
 KNM1CorFlag    = 'ON';
 HVdriftCorFlag = 'OFF';
 ROI            = '14keV';
@@ -53,7 +43,6 @@ end
     count  = zeros(A.nRings,numel(A.RunAnaObj.RunList));
     rate   = zeros(A.nRings,numel(A.RunAnaObj.RunList));
     rateE  = zeros(A.nRings,numel(A.RunAnaObj.RunList));
-    cf     = zeros(A.nRings,numel(A.RunAnaObj.RunList));
     sstime = zeros(A.nRings,numel(A.RunAnaObj.RunList));
     RefPeriodRW2CPS = zeros(A.nRings,1);
     qUmeanRW2       = zeros(A.nRings,1);
@@ -65,6 +54,9 @@ end
         % Slow Control Data: HV setting
         qUCorrRW2       = (R.SingleRunData.qU_RM(1,:));
         qUmeanRW2(i)    = mean(qUCorrRW2);
+        
+        % Correct for activity and qU
+        R.RMCorrection('saveplot','OFF','pixlist',sprintf('ring%i',i),'QAplots','OFF');
     
         % Include HV Drift if any
         count(i,:)  = R.SingleRunData.TBDIS_RM + HVdriftPerPixel.*numel(R.PixList).*R.SingleRunData.qUfrac_RM.*R.SingleRunData.TimeSec;
@@ -75,8 +67,7 @@ end
         sstime(i,:) = R.SingleRunData.qUfrac_RM.*R.SingleRunData.TimeSec;
         rate(i,:)   = count(i,:)./sstime(i,:);
         rateE(i,:)  = sqrt(count(i,:))./sstime(i,:);
-        cf(i,:)     = R.RMRateErosCorrectionqUActivity; %qU/Activity Per Ring --> No Need for qU additional
-        RefPeriodRW2CPS(i) = mean(rate(i,:).*cf(i,:));
+        RefPeriodRW2CPS(i) = mean(rate(i,:));
     end
     ActivityRW2  =  mean(R.SingleRunData.WGTS_MolFrac_TT'+0.5*R.SingleRunData.WGTS_MolFrac_HT'+0.5*R.SingleRunData.WGTS_MolFrac_DT')...
         .*mean(R.SingleRunData.WGTS_CD_MolPerCm2);
@@ -93,7 +84,7 @@ end
 for j=1:3
     
     RunList   = ['KNM2_RW' num2str(j)];
-    
+
     % Read Data
     DataType  = 'Real';
     RunAnaArg = {'RunList',RunList,'DataType',DataType,...
@@ -118,11 +109,12 @@ for j=1:3
         .*(R.SingleRunData.WGTS_CD_MolPerCm2);
     
     % Stacked Pixel Data for each patch
-    count  = zeros(A.nRings,numel(A.RunAnaObj.RunList));
-    rate   = zeros(A.nRings,numel(A.RunAnaObj.RunList));
-    rateE  = zeros(A.nRings,numel(A.RunAnaObj.RunList));
-    cf     = zeros(A.nRings,numel(A.RunAnaObj.RunList));
-    sstime = zeros(A.nRings,numel(A.RunAnaObj.RunList));
+    count   = zeros(A.nRings,numel(A.RunAnaObj.RunList));
+    rateRaw = zeros(A.nRings,numel(A.RunAnaObj.RunList));
+    rate    = zeros(A.nRings,numel(A.RunAnaObj.RunList));
+    rateE   = zeros(A.nRings,numel(A.RunAnaObj.RunList));
+    cf      = zeros(A.nRings,numel(A.RunAnaObj.RunList));
+    sstime  = zeros(A.nRings,numel(A.RunAnaObj.RunList));
     
     for i=1:A.nRings
         R           = A.MultiObj(i);
@@ -132,6 +124,8 @@ for j=1:3
         % HV setting
         qUCorrRW        = (R.SingleRunData.qU_RM(1,:));
         qUmeanRW{j,i}   = mean(R.SingleRunData.qU_RM(1,:));
+        
+        sstime(i,:) = R.SingleRunData.qUfrac_RM.*R.SingleRunData.TimeSec;
     
         % Include HV Drift
         count(i,:)  = R.SingleRunData.TBDIS_RM + HVdriftPerPixel.*numel(R.PixList).*R.SingleRunData.qUfrac_RM.*R.SingleRunData.TimeSec;
@@ -139,26 +133,31 @@ for j=1:3
         % Correct for KNM1 Radial Effect
         count(i,:)  = count(i,:)./KNM1correction(i);
         
-        sstime(i,:) = R.SingleRunData.qUfrac_RM.*R.SingleRunData.TimeSec;
-        rate(i,:)   = count(i,:)./sstime(i,:);
-        rateE(i,:)  = sqrt(count(i,:))./sstime(i,:);
-        cf(i,:)     = R.RMRateErosCorrectionqUActivity;
-        
+        % Rate uncorrected for activity and qU
+        rateRaw(i,:) = count(i,:)./sstime(i,:);
         
         % Ref = Period2 - Average qU correction  
         HVcorrCPSperPixel{j,i} = (qUmeanRW{j,i} - qUmeanRW2(i)) * 6.3032 * numel(R.PixList);
         
-        % Ref = Period 2
-        %Crate{j,i}                =  (rate(i,:).*cf(i,:)./Activity{j}.*ActivityRW2 + HVcorrCPSperPixel{j,i} - RefPeriodRW2CPS(i));
-        %CrateEquivalentmV{j,i}    =  -(rate(i,:).*cf(i,:)./mean(Activity{j}).*ActivityRW2 + HVcorrCPSperPixel{j,i} - RefPeriodRW2CPS(i)) ./737.8 * 1e3 * 117 / numel(R.PixList);
-        %rateEquivalentmV_E{j,i}   =  (rateE(i,:) ./737.8 *1e3 * 117 / numel(R.PixList));
-
+        % Correct for activity and qU 1
+        cf(i,:)     = R.RMRateErosCorrectionqUActivity;
+        Crate1{j,i} = (rateRaw(i,:).*cf(i,:)./mean(Activity{j}).*ActivityRW2 + HVcorrCPSperPixel{j,i} - RefPeriodRW2CPS(1)./numel(A.MultiObj(1).PixList).*numel(R.PixList));
+        
+        % Correct for activity and qU
+        R.RMCorrection('saveplot','OFF','pixlist',sprintf('ring%i',i),'QAplots','OFF');
+        count(i,:)  = R.SingleRunData.TBDIS_RM + HVdriftPerPixel.*numel(R.PixList).*R.SingleRunData.qUfrac_RM.*R.SingleRunData.TimeSec;
+        
+        rate(i,:)   = count(i,:)./sstime(i,:);
+        rateE(i,:)  = sqrt(count(i,:))./sstime(i,:);
+        
+        
+        
         % Ref = Period2 PSR1
         % j = RW Period
         % i = PSR
-        Crate{j,i}                =  (rate(i,:).*cf(i,:)./Activity{j}.*ActivityRW2 + HVcorrCPSperPixel{j,i} - RefPeriodRW2CPS(1)./numel(A.MultiObj(1).PixList).*numel(R.PixList));
+        Crate2{j,i}                =  (rate(i,:)./mean(Activity{j}).*ActivityRW2 + HVcorrCPSperPixel{j,i} - RefPeriodRW2CPS(1)./numel(A.MultiObj(1).PixList).*numel(R.PixList));
         
-        CrateEquivalentmV{j,i}    =  -(rate(i,:).*cf(i,:)./mean(Activity{j}).*ActivityRW2 + HVcorrCPSperPixel{j,i} - RefPeriodRW2CPS(1)./numel(A.MultiObj(1).PixList).*numel(R.PixList)) ./737.8 * 1e3 * 117 / numel(R.PixList);
+        CrateEquivalentmV{j,i}    =  -(rate(i,:)./mean(Activity{j}).*ActivityRW2 + HVcorrCPSperPixel{j,i} - RefPeriodRW2CPS(1)./numel(A.MultiObj(1).PixList).*numel(R.PixList)) ./737.8 * 1e3 * 117 / numel(R.PixList);
         
         rateEquivalentmV_E{j,i}   =  (rateE(i,:) ./737.8 *1e3 * 117 / numel(R.PixList));
         
@@ -202,7 +201,7 @@ for j=1:3
         hl = plot(StartTimeStampDays,fLin.a*StartTimeStampDays+fLin.b,'-','Color',rgb('DarkBlue'),'LineWidth',2);
         hold off
         
-        % SAVE SLOPES
+        % SAVE SLOPES & FITS
         SlopeRW123PSR1234_mV{j,i} = fLin.a;
         SlopeErrorRW123PSR1234_mV{j,i} = uncertaintyLin;
         FitsRW123PSR1234{j,i} = fLin.a*StartTimeStampDays+fLin.b;
@@ -244,9 +243,9 @@ for j=1:3
     for i=1:A.nRings
         
         subplot(A.nRings,1,i)
-        hnc=plot(R.SingleRunData.StartTimeStamp,rate(i,:),'s--','Color',rgb('Green'),'LineWidth',1,'MarkerSize',8,'markerfacecolor',rgb('DarkGreen'));
+        hnc=plot(R.SingleRunData.StartTimeStamp,rateRaw(i,:),'s--','Color',rgb('Green'),'LineWidth',1,'MarkerSize',8,'markerfacecolor',rgb('DarkGreen'));
         hold on
-        hc=plot(R.SingleRunData.StartTimeStamp,rate(i,:).*cf(i,:),'s--','Color',rgb('Red'),'LineWidth',1,'MarkerSize',12,'markerfacecolor',rgb('IndianRed'));
+        hc=plot(R.SingleRunData.StartTimeStamp,rate(i,:),'s--','Color',rgb('Red'),'LineWidth',1,'MarkerSize',12,'markerfacecolor',rgb('IndianRed'));
         hold off
         ylabel('cps');
         xlabel('Scan Start Time');
@@ -316,6 +315,41 @@ end
 
 save('SamakKNM2_DriftInRW123PSR1234_mVperDay.mat','SlopeRW123PSR1234_mV','SlopeErrorRW123PSR1234_mV');
 
+%% Correction Difference between methods
+% OverallStartTimeStamp
+% CrateEquivalentmV
+% rateEquivalentmV_E
+
+  myMainTitle = sprintf('KATRIN KNM2 - Correction Difference');
+    maintitle   = myMainTitle;
+    savefile3    = sprintf('plots/KNM2_RM300_CorrectionDiff_RW%.0f_PseudoRings_3.png',123);
+    fig4      = figure('Name',sprintf('KATRIN - %s Correction Diff',RunList),...
+        'NumberTitle','off','rend','painters','pos',[10 10 1400 1000]);
+    a=annotation('textbox', [0 0.9 1 0.1], 'String', maintitle,'EdgeColor', 'none','HorizontalAlignment', 'center');
+    a.FontSize=24;a.FontWeight='bold';
+    
+    
+    % ABSOLUTE SHIFTS CORRECTION
+    
+for i=1:A.nRings
+    TimeRW123        = [OverallStartTimeStamp{1} OverallStartTimeStamp{2} OverallStartTimeStamp{3}];
+    Rate1RW123       = [Crate1{1,i} Crate1{2,i} Crate1{3,i}];
+    Rate2RW123       = [Crate2{1,i} Crate2{2,i} Crate2{3,i}];
+    percentages      = std(Rate2RW123-Rate1RW123)./mean(rateRaw(:,i));
+        
+    subplot(A.nRings,1,i)
+    H1=plot(TimeRW123,(Rate2RW123-Rate1RW123),'s--','Color',rgb('Green'),'LineWidth',1,'MarkerSize',8,'markerfacecolor',rgb('IndianRed'));
+    
+    ylabel('(\Delta r)/r (%)');
+    ylim([-inf inf]);
+        xlabel('Days');
+        leg=legend([H1],...
+            sprintf('Pseudo-Ring %0.f',i),'location','southeast','FontSize',12);
+            
+        leg.Color = 'none'; legend boxoff;
+        PrettyFigureFormat
+end
+
 %% Overall Diagram
 % OverallStartTimeStamp
 % CrateEquivalentmV
@@ -324,7 +358,7 @@ save('SamakKNM2_DriftInRW123PSR1234_mVperDay.mat','SlopeRW123PSR1234_mV','SlopeE
   myMainTitle = sprintf('KATRIN KNM2 - FPD Rate E_0-300eV -  WGTS Potential Drift Versus Cumulative Throughput');
     maintitle   = myMainTitle;
     savefile3    = sprintf('plots/KNM2_RM300_EffectivePotentialFluctuation_RW%.0f_PseudoRings_3.png',123);
-    fig3      = figure('Name',sprintf('KATRIN - %s Scanwise Background',RunList),...
+    fig5      = figure('Name',sprintf('KATRIN - %s Scanwise Background',RunList),...
         'NumberTitle','off','rend','painters','pos',[10 10 1400 1000]);
     a=annotation('textbox', [0 0.9 1 0.1], 'String', maintitle,'EdgeColor', 'none','HorizontalAlignment', 'center');
     a.FontSize=24;a.FontWeight='bold';
@@ -410,6 +444,6 @@ hh(1).MarkerSize = 20;hh(2).MarkerSize = 20;hh(3).MarkerSize = 20;hh(4).MarkerSi
 ht=title(sprintf('Slope Per Period Per Pseudo-ring \n ROI %s - MOS %s - KNM1 Calibration %s',ROI,HVdriftCorFlag,KNM1CorFlag));
 ylabel('RW Period'); ylim([0.5 3.5]) ; yticks([1 2 3]); %ylabel({'RW1';'RW2';'RW3'});
 xlabel('Pseudo-Ring'); xlim([0.5 4.5]); xticks([1 2 3 4]);%xlabel({'PSR1','PSR2','PSR3','PSR4'});
-zlabel('mV-equivalent / day'); zlim([0 10]);
+zlabel('mV-equivalent / day'); %zlim([0 10]);
 PrettyFigureFormat
 ht.FontSize=16;

@@ -1304,12 +1304,14 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             p = inputParser;
             p.addParameter('ActivityCorrection','ON',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('qUCorrection','ON',@(x)ismember(x,{'ON','OFF'}));
+            p.addParameter('KNM1correction','ON',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('saveplot','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('pixlist','uniform',@(x)ismember(x,{'uniform','ring1','ring2','ring3','ring4'}));
             p.addParameter('QAplots','ON',@(x)ismember(x,{'ON','OFF'}));
             p.parse(varargin{:});
             ActivityCorrection = p.Results.ActivityCorrection;
             qUCorrection       = p.Results.ActivityCorrection;
+            KNM1correction     = p.Results.KNM1correction;
             saveplot           = p.Results.saveplot;
             pixlist            = p.Results.pixlist;
             QAplots            = p.Results.QAplots;
@@ -1321,6 +1323,11 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             Activity = rhoD.*(T2+0.5*DT+0.5*HT);
             meanActivity = mean(Activity);
             qU = obj.SingleRunData.qU_RM-mean(obj.SingleRunData.qU_RM);
+            KNM1Correction = [1.0000 0.9992 0.9975 0.9961];
+            
+            if strcmp(pixlist,'uniform')
+                KNM1correction = 'OFF';
+            end
             
             rate = obj.SingleRunData.TBDIS_RM./(obj.SingleRunData.qUfrac_RM.*obj.SingleRunData.TimeSec);
             correlation = corr(Activity(:),rate(:));
@@ -1464,6 +1471,17 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                             export_fig(fig88,[SaveDir,SaveName]);
                         end
                     end
+                end
+            end
+            if strcmp(KNM1correction,'ON')
+                if strcmp(pixlist,'ring1')
+                    obj.SingleRunData.TBDIS_RM = obj.SingleRunData.TBDIS_RM./KNM1Correction(1);
+                elseif strcmp(pixlist,'ring2')
+                    obj.SingleRunData.TBDIS_RM = obj.SingleRunData.TBDIS_RM./KNM1Correction(2);
+                elseif strcmp(pixlist,'ring3')
+                    obj.SingleRunData.TBDIS_RM = obj.SingleRunData.TBDIS_RM./KNM1Correction(3);
+                elseif strcmp(pixlist,'ring4')
+                    obj.SingleRunData.TBDIS_RM = obj.SingleRunData.TBDIS_RM./KNM1Correction(4);
                 end
             end
         end

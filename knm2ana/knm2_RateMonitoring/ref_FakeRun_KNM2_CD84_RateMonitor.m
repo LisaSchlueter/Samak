@@ -67,7 +67,7 @@ p.addParameter('qUfrac',qUfrac,@(x)isfloat(x));
 p.addParameter('MACE_Bmax_T',4.23,@(x)isfloat(x) && x>0);
 p.addParameter('MACE_Ba_T',6.3*1e-04,@(x)isfloat(x) && x>0);
 p.addParameter('KTFFlag','WGTSMACE',@(x)ismember(x,{'OFF','MACE','WGTSMACE'}));
-p.addParameter('recomputeRF','OFF',@(x)ismember(x,{'ON','OFF'}));
+p.addParameter('recomputeRF','ON',@(x)ismember(x,{'ON','OFF'}));
 p.addParameter('UseParallelRF','ON',@(x)ismember(x,{'OFF','ON'}));
 
 % General
