@@ -1,6 +1,6 @@
 function  [plotHandle, cbHandle]  = PlotRingWiseFitPar(obj,varargin)
 p=inputParser;
-p.addParameter('PlotPar','qU',@(x)ismember(x,{'qU','mTSq','Norm','Bkg'}));
+p.addParameter('PlotPar','Norm',@(x)ismember(x,{'qU','mTSq','Norm','Bkg'}));
 p.addParameter('PlotParRef','',@(x)isfloat(x)); % plot parameter with respect to reference value (optional)
 p.addParameter('SaveAs','',@(x)ischar(x) || isempty(x));
 p.parse(varargin{:});

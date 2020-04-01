@@ -7,7 +7,7 @@ range = 40;
 chi2 = 'chi2Stat';
 pullFlag = 4;
 freePar = 'mNu E0 Norm Bkg';
-DataType = 'Twin';
+DataType = 'Real';
 RingMerge = 'Full';
 
 savedir = [getenv('SamakPath'),'knm2ana/knm2_MultiRingFit/results/'];

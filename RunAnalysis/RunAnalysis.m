@@ -483,6 +483,9 @@ classdef RunAnalysis < handle
                         obj.RunData.MACE_Ba_T = cell2mat(cellfun(@(x) mean(obj.RunData.MACE_Ba_T(x)),obj.RingPixList,'UniformOutput',false)');
                         obj.RunData.MACE_Bmax_T =  mean(obj.RunData.MACE_Bmax_T(obj.PixList));%cell2mat(cellfun(@(x) mean(obj.RunData.MACE_Bmax_T(x)),obj.RingPixList,'UniformOutput',false)');
                        
+                        % Correction Thierry 1/4/2020
+                        obj.RunData.TBDIS14keV      = cell2mat(cellfun(@(x) sum(obj.RunData.TBDIS14keV(:,x),2),obj.RingPixList,'UniformOutput',false)');
+                            
                         % delete not used rings (otherwise problems with NaN)
                         if strcmp(obj.RingMerge,'None')
                             obj.RunData.qU(:,~ismember(1:13,obj.RingList)) = [];
@@ -501,6 +504,8 @@ classdef RunAnalysis < handle
                             obj.RunData.qU_RM      = cell2mat(cellfun(@(x) mean(obj.RunData.qU_RM(x)),obj.RingPixList,'UniformOutput',false)');
                             obj.RunData.qUfrac_RM  = cell2mat(cellfun(@(x) mean(obj.RunData.qUfrac_RM(x)),obj.RingPixList,'UniformOutput',false)');
                             obj.RunData.TBDIS_RM   = cell2mat(cellfun(@(x) mean(obj.RunData.TBDIS_RM(x)),obj.RingPixList,'UniformOutput',false)');
+                            % Correction Thierry 1/4/2020
+                            obj.RunData.TBDIS14keV_RM   = cell2mat(cellfun(@(x) mean(obj.RunData.TBDIS14keV_RM(x)),obj.RingPixList,'UniformOutput',false)');
                         end
                 end
         end
@@ -2473,10 +2478,10 @@ classdef RunAnalysis < handle
             for r=1:4
                 [StatCM, ~] = obj.ComputeCM_StatPNP;
                 CMdim = ((r-1)*obj.ModelObj.nqU+1):(r*obj.ModelObj.nqU); %ring dimension in covariance matrix
-                StatErr = diag(StatCM(CMdim,CMdim));
+                StatErr(r,:) = diag(StatCM(CMdim,CMdim));
                 switch obj.chi2
                     case {'chi2Stat','chi2P'}
-                        PlotErr(r,:) = StatErr;
+                        PlotErr(r,:) = StatErr(r,:);
                     case {'chi2CM','chi2CMFrac'}
                         PlotErr(r,:) = diag(obj.FitCM(CMdim,CMdim));
                     case 'chi2CMShape'
@@ -2526,7 +2531,7 @@ classdef RunAnalysis < handle
                 s(r)= subplot(4,1,r);
             end
             
-            DataStat = [qU,zeros(size(qU)),sqrt(StatErr(obj.exclDataStart:BkgEnd)./PlotErr(r,obj.exclDataStart:BkgEnd))];
+            DataStat = [qU,zeros(size(qU)),(sqrt(StatErr(r,obj.exclDataStart:BkgEnd)./PlotErr(r,obj.exclDataStart:BkgEnd)))'];
             
             if strcmp(obj.chi2,'chi2Stat')
                 [lstat , pstat]  = boundedline(DataStat(:,1),DataStat(:,2),DataStat(:,3));
