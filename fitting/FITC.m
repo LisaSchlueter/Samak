@@ -248,9 +248,12 @@ classdef FITC < handle
                 obj.counts = counts_tmp;
                 obj.c_error = c_error_tmp;
             else
-                obj.qUdata = qU_tmp(:,obj.SO.FPD_Pixel);
-                obj.counts = counts_tmp(:,obj.SO.FPD_Pixel);
-                obj.c_error = c_error_tmp(:,obj.SO.FPD_Pixel);
+               obj.qUdata = qU_tmp(:,obj.SO.FPD_Pixel);
+               obj.counts = counts_tmp(:,obj.SO.FPD_Pixel);
+               obj.c_error = c_error_tmp(:,obj.SO.FPD_Pixel);
+%                 obj.qUdata = qU_tmp(:,obj.SO.nPixels);
+%                 obj.counts = counts_tmp(:,obj.SO.nPixels);
+%                 obj.c_error = c_error_tmp(:,obj.SO.nPixels);
             end
             
             obj.readdatadone = true;
