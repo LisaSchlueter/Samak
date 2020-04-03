@@ -48,7 +48,7 @@ else
     end
     MR.ModelObj.RFBinStep = 0.02;
     MR.ModelObj.InitializeRF;
-    MR.Fit('SaveFit','ON');
+    MR.Fit('SaveFit','ON','CATS','ON');
     FitResults = MR.FitResult;
     save(savename,'FitResults','RunArg','MR');
     
