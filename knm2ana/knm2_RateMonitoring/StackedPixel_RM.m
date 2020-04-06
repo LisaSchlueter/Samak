@@ -23,7 +23,7 @@ p1 =(A.SingleRunData.WGTS_MolFrac_TT'+0.5*A.SingleRunData.WGTS_MolFrac_HT'+0.5*A
 p2 = mean(A.SingleRunData.qU_RM,1); p2=p2-mean(p2);           
 
 %% Stacked Pixel Data
-count  = sum(A.SingleRunData.TBDIS_RM(A.PixList,:),1);
+count  = sum(A.SingleRunData.TBDIS_RM,1);
 sstime = mean(A.SingleRunData.qUfrac_RM,1).*A.SingleRunData.TimeSec;
 rate   = count./sstime;
 cf     = A.RMRateErosCorrectionqUActivity;

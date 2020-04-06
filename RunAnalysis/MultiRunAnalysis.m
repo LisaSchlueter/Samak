@@ -1308,12 +1308,14 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             p = inputParser;
             p.addParameter('ActivityCorrection','ON',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('qUCorrection','ON',@(x)ismember(x,{'ON','OFF'}));
+            p.addParameter('KNM1correction','ON',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('saveplot','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('pixlist','uniform',@(x)ismember(x,{'uniform','ring1','ring2','ring3','ring4'}));
             p.addParameter('QAplots','ON',@(x)ismember(x,{'ON','OFF'}));
             p.parse(varargin{:});
             ActivityCorrection = p.Results.ActivityCorrection;
             qUCorrection       = p.Results.ActivityCorrection;
+            KNM1correction     = p.Results.KNM1correction;
             saveplot           = p.Results.saveplot;
             pixlist            = p.Results.pixlist;
             QAplots            = p.Results.QAplots;
@@ -1325,6 +1327,11 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             Activity = rhoD.*(T2+0.5*DT+0.5*HT);
             meanActivity = mean(Activity);
             qU = obj.SingleRunData.qU_RM-mean(obj.SingleRunData.qU_RM);
+            KNM1Correction = [1.0000 0.9992 0.9975 0.9961];
+            
+            if strcmp(pixlist,'uniform')
+                KNM1correction = 'OFF';
+            end
             
             rate = obj.SingleRunData.TBDIS_RM./(obj.SingleRunData.qUfrac_RM.*obj.SingleRunData.TimeSec);
             correlation = corr(Activity(:),rate(:));
@@ -1468,6 +1475,17 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                             export_fig(fig88,[SaveDir,SaveName]);
                         end
                     end
+                end
+            end
+            if strcmp(KNM1correction,'ON')
+                if strcmp(pixlist,'ring1')
+                    obj.SingleRunData.TBDIS_RM = obj.SingleRunData.TBDIS_RM./KNM1Correction(1);
+                elseif strcmp(pixlist,'ring2')
+                    obj.SingleRunData.TBDIS_RM = obj.SingleRunData.TBDIS_RM./KNM1Correction(2);
+                elseif strcmp(pixlist,'ring3')
+                    obj.SingleRunData.TBDIS_RM = obj.SingleRunData.TBDIS_RM./KNM1Correction(3);
+                elseif strcmp(pixlist,'ring4')
+                    obj.SingleRunData.TBDIS_RM = obj.SingleRunData.TBDIS_RM./KNM1Correction(4);
                 end
             end
         end
@@ -3407,6 +3425,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                 h5list = sort([runsRW1,runsRW2,runsRW3]);
             elseif strcmp(ListName,'KNM2_RW1')   % rear wall setting 1 (different names for back compatibility)
                 h5list = runsRW1;
+%                h5list = runsRW1(runsRW1>56281);
             elseif strcmp(ListName,'KNM2_RW2')   % rear wall setting 2
                 h5list = runsRW2;
             elseif strcmp(ListName,'KNM2_RW3')   % rear wall setting 3
@@ -4142,14 +4161,14 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                 0.5 * obj.SingleRunData.WGTS_MolFrac_HT(obj.SingleRunData.Select_all) + ...
                 0.5 * obj.SingleRunData.WGTS_MolFrac_DT(obj.SingleRunData.Select_all);
             XX_StackedRuns    = XX_StackedRuns .* obj.SingleRunData.WGTS_CD_MolPerCm2(obj.SingleRunData.Select_all);
-            XX_StackedRuns    = XX_StackedRuns .* obj.ModelObj.ISXsection * 1e4;        
+            XX_StackedRuns    = XX_StackedRuns .* obj.ModelObj.ISXsection(obj.RunData.qU_RM) * 1e4;        
             XX_StackedRuns    = XX_StackedRuns/mean(XX_StackedRuns);
             
             XX_NotStackedRuns = obj.SingleRunData.WGTS_MolFrac_TT(:,obj.SingleRunData.Select_all==0) + ...
                 0.5 * obj.SingleRunData.WGTS_MolFrac_HT(:,obj.SingleRunData.Select_all==0) + ...
                 0.5 * obj.SingleRunData.WGTS_MolFrac_DT(:,obj.SingleRunData.Select_all==0);
             XX_NotStackedRuns    = XX_NotStackedRuns .* obj.SingleRunData.WGTS_CD_MolPerCm2(:,obj.SingleRunData.Select_all==0);
-            XX_NotStackedRuns    = XX_NotStackedRuns .* obj.ModelObj.ISXsection * 1e4;
+            XX_NotStackedRuns    = XX_NotStackedRuns .* obj.ModelObj.ISXsection(obj.RunData.qU_RM) * 1e4;
             XX_NotStackedRuns    = XX_NotStackedRuns/mean(XX_NotStackedRuns);
             
             % Plot Data
@@ -4525,7 +4544,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             
             switch obj.StackFileName
                 case 'KNM1'
-            MyqU1 = 2;
+            MyqU1 = 1;
             MyqU2 = 14;
             MyqU3 = 35;
                 case {'KNM2','Others','KNM2_after2ndFix'}
@@ -4552,15 +4571,15 @@ t.addRow('$\beta$-scan Time',sprintf('%.1f \\rm{ \\, hours} - (%.1f \\%%)',hours
 t.addRow('Signal+Background','');
 locaTime=hours(seconds(sum(obj.RunData.TimeperSubRunperPixel(MyqU1:end,1),1)));
 t.addRow(sprintf('At qU$>$%.1f eV',obj.ModelObj.qU(MyqU1)),...
-         sprintf('%.1f \\rm{ \\, hours} - (%.1f \\%%) - %.2g \\rm{ \\, electrons}',locaTime, locaTime/localTimetotal*100,sum(obj.RunData.TBDIS(MyqU1:end))));
+         sprintf('%.2f \\rm{ \\, hours} - (%.2f \\%%) - %.3g \\rm{ \\, electrons}',locaTime, locaTime/localTimetotal*100,sum(obj.RunData.TBDIS(MyqU1:end))));
 locaTime=hours(seconds(sum(obj.RunData.TimeperSubRunperPixel(MyqU2:end,1),1)));
 t.addRow(sprintf('At qU$>$%.1f eV',obj.ModelObj.qU(MyqU2)),...
-         sprintf('%.1f \\rm{ \\, hours} - (%.1f \\%%) - %.2g \\rm{ \\, electrons}',locaTime, locaTime/localTimetotal*100,sum(obj.RunData.TBDIS(MyqU2:end))));
+         sprintf('%.2f \\rm{ \\, hours} - (%.2f \\%%) - %.3g \\rm{ \\, electrons}',locaTime, locaTime/localTimetotal*100,sum(obj.RunData.TBDIS(MyqU2:end))));
 
      t.addRow('Only Background','');
 locaTime=hours(seconds(sum(obj.RunData.TimeperSubRunperPixel(MyqU3:end,1),1)));
 t.addRow(sprintf('At qU$>$%.1f eV',obj.ModelObj.qU(MyqU3)),...
-         sprintf('%.1f \\rm{ \\, hours} - (%.1f \\%%) - %.2g \\rm{ \\, electrons}',locaTime, locaTime/localTimetotal*100,sum(obj.RunData.TBDIS(MyqU3:end))));
+         sprintf('%.2f \\rm{ \\, hours} - (%.2f \\%%) - %.3g \\rm{ \\, electrons}',locaTime, locaTime/localTimetotal*100,sum(obj.RunData.TBDIS(MyqU3:end))));
 
 t.display;
 t.HasHeader = true;

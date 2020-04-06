@@ -483,6 +483,9 @@ classdef RunAnalysis < handle
                         obj.RunData.MACE_Ba_T = cell2mat(cellfun(@(x) mean(obj.RunData.MACE_Ba_T(x)),obj.RingPixList,'UniformOutput',false)');
                         obj.RunData.MACE_Bmax_T =  mean(obj.RunData.MACE_Bmax_T(obj.PixList));%cell2mat(cellfun(@(x) mean(obj.RunData.MACE_Bmax_T(x)),obj.RingPixList,'UniformOutput',false)');
                        
+                        % Correction Thierry 1/4/2020
+                        obj.RunData.TBDIS14keV      = cell2mat(cellfun(@(x) sum(obj.RunData.TBDIS14keV(:,x),2),obj.RingPixList,'UniformOutput',false)');
+                            
                         % delete not used rings (otherwise problems with NaN)
                         if strcmp(obj.RingMerge,'None')
                             obj.RunData.qU(:,~ismember(1:13,obj.RingList)) = [];
@@ -501,6 +504,8 @@ classdef RunAnalysis < handle
                             obj.RunData.qU_RM      = cell2mat(cellfun(@(x) mean(obj.RunData.qU_RM(x)),obj.RingPixList,'UniformOutput',false)');
                             obj.RunData.qUfrac_RM  = cell2mat(cellfun(@(x) mean(obj.RunData.qUfrac_RM(x)),obj.RingPixList,'UniformOutput',false)');
                             obj.RunData.TBDIS_RM   = cell2mat(cellfun(@(x) mean(obj.RunData.TBDIS_RM(x)),obj.RingPixList,'UniformOutput',false)');
+                            % Correction Thierry 1/4/2020
+                            obj.RunData.TBDIS14keV_RM   = cell2mat(cellfun(@(x) mean(obj.RunData.TBDIS14keV_RM(x)),obj.RingPixList,'UniformOutput',false)');
                         end
                 end
         end
@@ -611,8 +616,10 @@ classdef RunAnalysis < handle
             %      FitTrueMPar, FitTrueMErr, FitTrueMChi2min, dofTrueM]
             p = inputParser;
             p.addParameter('nSamples',10,@(x)isfloat(x) & x>0);
+            p.addParameter('CATS','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.parse(varargin{:});
             nSamples = p.Results.nSamples;
+            CATS     = p.Results.CATS;
         
            if strcmp(obj.DataType,'Real')
                fprintf('Data Type real - must be Twin \n')
@@ -629,7 +636,10 @@ classdef RunAnalysis < handle
               if isempty(obj.FitCMShape)
                   obj.ComputeCM;
               end
-               TBDIS = mvnrnd(obj.RunData.TBDIS',obj.FitCMShape,nSamples)';
+               % Modif Thierry - 30/3/2020
+               % TBDIS = mvnrnd(obj.RunData.TBDIS',obj.FitCMShape,nSamples)';
+               TBDIS = mvnrnd(obj.RunData.TBDIS(:)',obj.FitCMShape,nSamples)';
+               % End Modif Thierry - 30/3/2020
            end
            
             % init
@@ -647,7 +657,12 @@ classdef RunAnalysis < handle
                 obj.RunData.TBDIS = TBDIS(:,i); 
                 obj.RunData.TBDISE = sqrt(TBDIS(:,i));   
                 
+                if nSamples<2
+                obj.Fit('CATS',CATS);
+                obj.PlotFit();
+                else
                 obj.Fit;
+                end                    
                 FitPar(:,i)   = obj.FitResult.par;
                 FitErr(:,i)   = obj.FitResult.err;
                 FitChi2min(i) = obj.FitResult.chi2min;
@@ -962,6 +977,104 @@ classdef RunAnalysis < handle
  
             if strcmp(saveplot,'ON') 
                 save_name = sprintf('./plots/KNM1_DataModel%s_%s-excl%u.png',num2str(obj.RunNr),obj.chi2,obj.exclDataStart);
+                export_fig(fig6,save_name,'-q101','-m3');
+            end
+           
+          end
+        function PlotDataModel_KSN1(obj,varargin)
+            % Plot overlaying Data and Model - Dedicated to KSN1
+            % Includes Error Band depending on the Fit option
+            % Model = TBDIS
+            % (not a Fit)
+            p=inputParser;
+            p.addParameter('saveplot','ON',@(x)ismember(x,{'ON','OFF','png','pdf','eps'}));
+            p.addParameter('scale','log',@(x)ismember(x,{'lin','log'}));
+            p.addParameter('RunLabel',numel(obj.RunList));
+            p.addParameter('ErrorBarScaling',50,@(x)isfloat(x)); % limits for norm. residuals            
+            
+            p.parse(varargin{:});
+            saveplot = p.Results.saveplot;
+            scale = p.Results.scale;
+            RunLabel = p.Results.RunLabel;
+            obj.ErrorBarScaling= p.Results.ErrorBarScaling;
+
+            switch obj.chi2
+                case {'chi2Stat','chi2P'}
+                    PlotCM = diag(obj.RunData.TBDISE(:).^2);
+                case {'chi2CM','chi2CMFrac'}
+                    PlotCM = obj.FitCM;
+                case 'chi2CMShape'
+                    PlotCM = obj.FitCMShape;
+            end
+            
+            % Model / Data overlay
+            fig6 = figure(6);
+            set(fig6, 'Units', 'normalized', 'Position', [0., 0.1, 0.9 , 0.8]);
+            
+            h1=errorbar(obj.RunData.qU-obj.ModelObj.Q_i,...
+                obj.RunData.TBDIS./obj.ModelObj.qUfrac./obj.ModelObj.TimeSec,...
+                obj.RunData.TBDISE./obj.ModelObj.qUfrac./obj.ModelObj.TimeSec*0,...
+                'o','MarkerSize',10,'MarkerEdgeColor' , rgb('DarkSlateGray'),'MarkerFaceColor' , rgb('DarkSlateGray'));
+             h1.Color =rgb('DarkSlateGray') ; h1.MarkerSize = 6; h1.CapSize = 0;h1.LineStyle= 'none';h1.LineWidth= 3;legend hide
+            hold on
+            hfit1 = boundedline(obj.ModelObj.qU-obj.ModelObj.Q_i,...
+                obj.ModelObj.TBDIS./obj.ModelObj.qUfrac./obj.ModelObj.TimeSec,...
+                diag(sqrt(PlotCM))./obj.ModelObj.qUfrac./obj.ModelObj.TimeSec,...
+                'alpha','cmap',rgb('IndianRed'));
+            [ll la]= boundedline(obj.ModelObj.qU-obj.ModelObj.Q_i,...
+                obj.ModelObj.TBDIS./obj.ModelObj.qUfrac./obj.ModelObj.TimeSec,...
+                sqrt(diag(PlotCM))./obj.ModelObj.qUfrac./obj.ModelObj.TimeSec,...
+                'alpha','cmap',rgb('IndianRed'));
+            ll.LineWidth= 3
+            ll.LineStyle='--'; legend hide
+            
+            % Background Line
+            [lll lla]= boundedline(obj.ModelObj.qU-obj.ModelObj.Q_i,...
+                obj.ModelObj.BKG_RateSec./obj.ModelObj.qUfrac.*obj.ModelObj.qUfrac,...
+                obj.FitResult.err(3)./obj.ModelObj.qUfrac.*obj.ModelObj.qUfrac,...
+                'alpha','cmap',rgb('SeaGreen')); lll.LineWidth= 3;
+            lll.LineStyle='--'; legend hide
+            % Tritium
+            [llll llla]= boundedline(obj.ModelObj.qU-obj.ModelObj.Q_i,...
+                obj.ModelObj.TBDIS./obj.ModelObj.qUfrac./obj.ModelObj.TimeSec-obj.ModelObj.BKG_RateSec./obj.ModelObj.qUfrac.*obj.ModelObj.qUfrac,...
+                0./obj.ModelObj.qUfrac.*obj.ModelObj.qUfrac,...
+                'alpha','cmap',rgb('RoyalBlue')); llll.LineWidth= 3;
+            llll.LineStyle='--'; legend hide
+            
+           % data again, for superimposition 
+           h1=errorbar(obj.RunData.qU-obj.ModelObj.Q_i,...
+                obj.RunData.TBDIS./obj.ModelObj.qUfrac./obj.ModelObj.TimeSec,...
+                obj.RunData.TBDISE./obj.ModelObj.qUfrac./obj.ModelObj.TimeSec*0,...
+                'o','MarkerSize',10,'MarkerEdgeColor' , rgb('DarkSlateGray'),'MarkerFaceColor' , rgb('DarkSlateGray'));
+            h1.Color =rgb('DarkSlateGray') ;  h1.MarkerSize = 6; h1.CapSize = 0;h1.LineStyle= 'none';h1.LineWidth= 3;legend hide
+            
+            hold off
+            axis([1.1*min(obj.ModelObj.qU-obj.ModelObj.Q) 1.1*max(obj.ModelObj.qU-obj.ModelObj.Q)  obj.ModelObj.BKG_RateSec/2 max(obj.RunData.TBDIS./obj.ModelObj.qUfrac./obj.ModelObj.TimeSec)*1.1 ]);
+            set(gca, 'YScale', scale);
+            xlabel(sprintf('retarding energy - %.1f (eV)',obj.ModelObj.Q_i),'FontSize',16);
+            ylabel('rate (cps)','FontSize',16);
+            set(gca,'FontSize',24);
+            if obj.RunNr
+            title(sprintf('KATRIN First eV-Sterile Neutrino Run Run (KSN1) - run %s, %.0f hours, %.0f e^-',num2str(obj.RunNr),obj.ModelObj.TimeSec/3600,sum(obj.ModelObj.TBDIS(obj.exclDataStart:end))));
+            else
+            %title(sprintf('KATRIN - m_{\\beta} Test Scan - March 2019 - %0.f run stacked, %.0f hours, %.0f e^-',RunLabel,obj.ModelObj.TimeSec/3600,sum(obj.ModelObj.TBDIS(obj.exclDataStart))));
+            title(sprintf('KATRIN First eV-Sterile Neutrino Run (KSN1) - %.0f hours, %.0g e^- in [E_0-%.0f ; E_0+%.0f] eV',obj.ModelObj.TimeSec/3600,sum(obj.ModelObj.TBDIS(obj.exclDataStart:end)),...
+                obj.ModelObj.Q_i-obj.ModelObj.qU(obj.exclDataStart),obj.ModelObj.qU(end)-obj.ModelObj.Q_i));
+            end
+            l1 = 'data    ';
+            l2 = sprintf('model + uncertainty    ');
+            PrettyFigureFormat
+            set(gca,'FontSize',22);
+            %xlim([-100,+51]); ylim([0.1,1000]);
+            a = legend([h1 la lll llll],l1,l2,'background','tritium','Location','NorthEast','Box','off'); %a.String=a.String(1:2);
+            set(a,'Color',rgb('White'),'Box', 'on');
+            xlim([-90 50]);
+            ylim([0.2 400]);
+            grid on;
+            
+ 
+            if strcmp(saveplot,'ON') 
+                save_name = sprintf('./plots/KSN1s_DataModel%s_%s-excl%u.png',num2str(obj.RunNr),obj.chi2,obj.exclDataStart);
                 export_fig(fig6,save_name,'-q101','-m3');
             end
            
@@ -1447,7 +1560,7 @@ classdef RunAnalysis < handle
                 end
                 
                % stat only: Model is not initialized to data statistics yet -> use stat. uncertainty from data 
-                TBDIS_Data = reshape(obj.RunData.TBDIS,[obj.ModelObj.nqU.*numel(obj.ModelObj.MACE_Ba_T),1]);
+                TBDIS_Data         = reshape(obj.RunData.TBDIS,[obj.ModelObj.nqU.*numel(obj.ModelObj.MACE_Ba_T),1]);
                 obj.FitCM          = diag(TBDIS_Data);
                 obj.FitCMFrac      = diag(1./TBDIS_Data);
                 obj.FitCMShape     = diag(TBDIS_Data);
@@ -1497,7 +1610,7 @@ classdef RunAnalysis < handle
             
             p.parse(varargin{:});
             
-            CATS = p.Results.CATS;
+            CATS       = p.Results.CATS;
             InitNB     = p.Results.InitNB;
             SaveFit    = p.Results.SaveFit;
             
@@ -1919,7 +2032,7 @@ classdef RunAnalysis < handle
             p.addParameter('Colors','RGB',@(x)ismember(x,{'RGB','BW'})); % color or back and white
             p.addParameter('qUDisp','Rel',@(x)ismember(x,{'Rel','Abs'}));
             p.addParameter('ring',1,@(x)isfloat(x));
-            p.addParameter('MaxBkgRange',40,@(x)isfloat(x)); %(eV) maximum range of bkg points shown
+            p.addParameter('MaxBkgRange',100,@(x)isfloat(x)); %(eV) maximum range of bkg points shown
             
             p.parse(varargin{:});
             saveplot       = p.Results.saveplot;
@@ -2363,7 +2476,301 @@ classdef RunAnalysis < handle
                  end
              end
         end
-        function PlotFitResultRings(obj,varargin) 
+        
+        function PlotResidualsMultiRing(obj,varargin)
+            % Plot Fit Results for MultiRing Fit
+            % Residuals as function of qU for each Ring + MTD
+            % Designed for 4 Pseudo-Rings
+            % Call After Fit, otherwise crash...
+            % -------------------------------------------------------------%
+            p=inputParser;
+            p.addParameter('saveplot','OFF',@(x)ismember(x,{'ON','OFF','pdf','png','eps'}));
+            p.addParameter('LabelFlag','data',@(x)ismember(x,{'data','simulation','FinalKNM1'})); % not used
+            p.addParameter('DisplayStyle','Default',@(x)ismember(x,{'Default','PRL'})); % tested
+            p.addParameter('DisplayMTD','ON',@(x)ismember(x,{'ON','OFF'})); % tested
+            p.addParameter('YLimRes','',@(x)isfloat(x)); % limits for norm. residuals - not tested
+            p.addParameter('XLims','',@(x)isfloat(x));   % x-axis limits - not tested
+            p.addParameter('Colors','RGB',@(x)ismember(x,{'RGB','BW'})); % color or back and white - no effect here...
+            p.addParameter('qUDisp','Rel',@(x)ismember(x,{'Rel','Abs'}));
+            p.addParameter('MaxBkgRange',100,@(x)isfloat(x)); %(eV) maximum range of bkg points shown
+            
+            p.parse(varargin{:});
+            saveplot       = p.Results.saveplot;
+            LabelFlag      = p.Results.LabelFlag;
+            YLimRes        = p.Results.YLimRes;
+            XLims          = p.Results.XLims;
+            Colors         = p.Results.Colors;
+            DisplayStyle   = p.Results.DisplayStyle;
+            qUDisp         = p.Results.qUDisp;
+            DisplayMTD     = p.Results.DisplayMTD;
+            MaxBkgRange    = p.Results.MaxBkgRange;
+            
+            BkgEnd = find(obj.RunData.qU(:,1)>=obj.ModelObj.Q+MaxBkgRange,1);
+            
+            % PlotStyle
+            if strcmp(Colors,'RGB')
+                obj.GetPlotColor;
+            else
+                obj.PlotColor = rgb('Silver');
+            end
+            
+            MarkerSize     = 4;
+            LocalFontSize  = 17;
+            LocalLineWidth = 3;
+            
+            if ~strcmp(obj.AnaFlag,'Ring') 
+                fprintf(2,'PlotResidualsMultiRing: not available for Uniform Fits');
+                return;
+            end
+            
+            if contains(obj.DataSet,'FirstTritium')
+                fprintf(2,'PlotResidualsMultiRing: not available for First Tritium Analysis');
+                return;
+            end
+            
+            ResStyleArg = {'o','Color','k','LineWidth',1.0,'MarkerFaceColor',rgb('Black'),'MarkerSize',MarkerSize,'Color',rgb('Black')};
+            
+            % Chi2 Flag
+            for r=1:4
+                [StatCM, ~] = obj.ComputeCM_StatPNP;
+                CMdim = ((r-1)*obj.ModelObj.nqU+1):(r*obj.ModelObj.nqU); %ring dimension in covariance matrix
+                StatErr(r,:) = diag(StatCM(CMdim,CMdim));
+                switch obj.chi2
+                    case {'chi2Stat','chi2P'}
+                        PlotErr(r,:) = StatErr(r,:);
+                    case {'chi2CM','chi2CMFrac'}
+                        PlotErr(r,:) = diag(obj.FitCM(CMdim,CMdim));
+                    case 'chi2CMShape'
+                        PlotErr(r,:) = diag(obj.FitCMShape(CMdim,CMdim));
+                end
+            end
+                        
+            % Spectrum + Fit with Residuals
+            fig5 = figure('Renderer','painters');
+                set(fig5, 'Units', 'normalized', 'Position', [0.001, 0.001,0.45, 0.7]);
+            
+            if strcmp(qUDisp,'Rel')
+                qU = obj.ModelObj.qU(obj.exclDataStart:BkgEnd,:)-obj.ModelObj.Q_i;
+                xstr = sprintf('Retarding energy - %.0f (eV)',obj.ModelObj.Q_i);
+                textx = -38;
+            elseif strcmp(qUDisp,'Abs')
+                qU = obj.ModelObj.qU(obj.exclDataStart:BkgEnd,:);
+                xstr = sprintf('Retarding energy (eV)');
+                myxticks = (round(min(qU),0):20:max(qU));
+                textx =min(qU)+0.5;
+            end
+            
+            if strcmp(obj.AnaFlag,'Ring') % show only 1 ring
+                ring=1;
+                qU = qU(:,ring);
+            end
+            
+            if strcmp(qUDisp,'Rel')
+                xlim([min(qU)*1.04 max(max(qU))*1.04]);
+            elseif strcmp(qUDisp,'Abs')
+                xlim([min(min(qU))*0.9999 max(max(qU))*1.0001]);
+            end
+            
+            if strcmp(qUDisp,'Abs')
+                xticks(myxticks);
+                ax = gca;
+                ax.XAxis.Exponent = 0;
+            end
+            
+            % %            ax1 = gca;
+            
+            for r=1:4
+                
+            if strcmp(DisplayStyle,'PRL') || strcmp(DisplayMTD,'ON')
+                s(r)= subplot(5,1,r);
+            else
+                s(r)= subplot(4,1,r);
+            end
+            
+            DataStat = [qU,zeros(size(qU)),(sqrt(StatErr(r,obj.exclDataStart:BkgEnd)./PlotErr(r,obj.exclDataStart:BkgEnd)))'];
+            
+            if strcmp(obj.chi2,'chi2Stat')
+                [lstat , pstat]  = boundedline(DataStat(:,1),DataStat(:,2),DataStat(:,3));
+                lstat.LineStyle= '--'; lstat.Color = rgb('DarkSlateGray'); lstat.LineWidth=LocalLineWidth;
+                pstat.FaceColor = obj.PlotColorLight;
+                
+            elseif ~strcmp(obj.chi2,'chi2Stat') && numel(hdata)==1
+                DataSys = [qU,zeros(numel(qU),1), ones(numel(qU),1)];
+                [l,p] = boundedline(DataSys(:,1),DataSys(:,2),DataSys(:,3),...
+                    '-b*',DataStat(:,1),DataStat(:,2),DataStat(:,3),'--ro');
+                lsys = l(1);  lstat = l(2);
+                psys = p(1);  pstat = p(2);
+                if strcmp(Colors,'RGB')
+                    psys.FaceColor =obj.PlotColor; %psys.FaceAlpha=0.3;
+                    lstat.Color = rgb('Silver');
+                else
+                    pstat.FaceColor = rgb('Black')';%obj.PlotColor;
+                    psys.FaceColor = rgb('Black'); psys.FaceAlpha=0.4;
+                    lstat.Color = rgb('Black');
+                end
+                lsys.LineStyle= 'none';
+                lstat.LineStyle= '--';  lstat.LineWidth=LocalLineWidth;
+                lstat.Marker = 'none'; lsys.Marker = 'none';
+            end
+            
+            yres = (obj.RunData.TBDIS(obj.exclDataStart:BkgEnd,r)-obj.ModelObj.TBDIS(obj.exclDataStart:BkgEnd,r))...
+                ./sqrt(PlotErr(r,obj.exclDataStart:BkgEnd)');
+            
+            hold on;
+            pRes = errorbar(qU,yres,...
+                zeros(numel(qU),1),...
+                ResStyleArg{:});
+            pRes.CapSize = 0;
+            if ~strcmp(obj.chi2,'chi2Stat')
+                leg = legend([pstat psys],sprintf('ring %0.f Stat.',r),sprintf('ring %0.f Stat. and syst.',r),'Location','Northeast'); %hsyst
+            elseif strcmp(obj.chi2,'chi2Stat')
+                leg = legend(pstat,sprintf('ring %0.f Stat.',r),'Location','Northeast'); %hsyst
+            end
+            legend('boxoff');
+            
+            leg.NumColumns = 2;
+            hold off;
+            % xlabel(sprintf('retarding energy - %.1f (eV)',obj.ModelObj.Q_i),'FontSize',LocalFontSize);
+            if strcmp(DisplayStyle,'PRL') || strcmp(DisplayMTD,'ON')
+                % xlabel(sprintf('retarding energy - %.0f (eV)',obj.ModelObj.Q_i));
+                if ismember(DisplayStyle,'PRL')
+                    PRLFormat;
+                else
+                    PrettyFigureFormat
+                end
+                leg.FontSize = get(gca,'FontSize')+4;
+                %pstat.delete; psys.delete;
+                lstat.Color = rgb('DarkGray');
+            else
+                if r==4
+                xlabel(xstr,'FontSize',LocalFontSize);
+                leg.FontSize = get(gca,'FontSize')+4;
+                end
+            end
+            
+            ylabel(sprintf('Res. (\\sigma)'));
+            if strcmp(qUDisp,'Rel')
+                xlim([floor(min(qU)) max(qU)*1.04]);
+            elseif strcmp(qUDisp,'Abs')
+                xlim([min(qU)*0.9999 max(qU)*1.0001]);
+            end
+            ymin = 1.1*min(yres);
+            ymax = 1.1*max(yres);
+            if ymin<=-1 || ymax<=1
+                ylim([ymin,ymax]);%ylim([-2 2])
+            else
+                ylim([ymin,ymax]);
+            end
+            
+            if ismember(DisplayStyle,'PRL')
+                PRLFormat;
+                xlim([-40 max(qU)+1]);
+            else
+                PrettyFigureFormat; set(gca,'FontSize',LocalFontSize);
+                set(gca,'YMinorTick','off');
+                set(gca,'XMinorTick','off');
+                set(gca,'TickLength',[0.01 0.01]);
+                set(get(gca,'YLabel'),'FontSize',LocalFontSize+4);
+                set(get(gca,'XLabel'),'FontSize',LocalFontSize+4);
+            end
+
+            if ~isempty(YLimRes)
+                ylim([min(YLimRes) max(YLimRes)]);
+            end
+            
+            if strcmp(qUDisp,'Abs')
+                xticks(myxticks);
+                ax = gca;
+                ax.XAxis.Exponent = 0;
+            end
+            
+            if strcmp(qUDisp,'Rel')
+                xlim([min(qU)*1.04 max(qU)*1.04]);
+            elseif strcmp(qUDisp,'Abs')
+                xticks(myxticks);
+                ax = gca;
+                ax.XAxis.Exponent = 0;
+                xlim([min(qU)*0.9999 max(qU)*1.0001]);
+            end
+            ax1 = gca;
+            tmp = get(ax1,'YLabel');
+            tmp2 = get(gca,'YLabel');
+            set(get(gca,'YLabel'),'Position',[tmp.Position(1),tmp2.Position(2),tmp2.Position(3)]);
+            ax = gca; 
+            mypos = ax.Position;
+            ax.Position = [mypos(1)+0.05 mypos(2)+0.01 mypos(3:4)];
+            if ~isempty(XLims)
+                xlim([min(XLims),max(XLims)])
+            end
+            
+            % MTD - optional
+            if strcmp(DisplayStyle,'PRL')  || strcmp(DisplayMTD,'ON')
+                mylim = ylim;
+                %  text(-57,mean(mylim),'b)','FontSize',get(gca,'FontSize')+4,'FontName',get(gca,'FontName'));
+                %text(textx,max(mylim)*0.65,'b)','FontSize',get(gca,'FontSize')+4,'FontName',get(gca,'FontName'));
+                
+                s(5)= subplot(5,1,5);
+                ring=1;
+                b1 = bar(qU,obj.RunData.qUfrac(obj.exclDataStart:BkgEnd,ring).*obj.RunData.TimeSec(ring)./(60*60));
+                b1.FaceColor = obj.PlotColor;
+                b1.EdgeColor = obj.PlotColor;
+                xlabel(xstr);
+                ylabel('Time (h)')
+                ylim([0,max(obj.RunData.qUfrac(obj.exclDataStart:obj.exclDataStop,ring).*obj.RunData.TimeSec(ring))/(60*60)*1.05]);
+                if strcmp(DisplayStyle,'PRL')
+                    PRLFormat;
+                else
+                    PrettyFigureFormat;
+                end
+                tmp = get(ax1,'YLabel');
+                tmp2 = get(gca,'YLabel');
+                set(get(gca,'YLabel'),'Position',[tmp.Position(1),tmp2.Position(2),tmp2.Position(3)]);
+                b1.BarWidth=0.6;
+                
+                if strcmp(qUDisp,'Abs')
+                    xticks(myxticks);
+                    ax = gca;
+                    ax.XAxis.Exponent = 0;
+                end
+                
+                ax = gca;
+                mypos = ax.Position;
+                ax.Position = [mypos(1)+0.05 mypos(2)+0.01 mypos(3:4)];
+                
+                if ~isempty(XLims)
+                    xlim([min(XLims),max(XLims)])
+                end
+            else
+                if r==4
+                    xlabel(xstr);
+                end
+            end
+            end
+            
+            if numel(s)==4
+            linkaxes([s(1),s(2),s(3),s(4)],'x');
+            end
+            if numel(s)==5
+            linkaxes([s(1),s(2),s(3),s(4),s(5)],'x');
+            end
+            
+            if ~strcmp(saveplot,'OFF')
+                if strcmp(Colors,'BW')
+                    savename = [d.savename,'_PSRresiduals_BW'];
+                else
+                    savename = [d.savename,'_PSRresiduals'];
+                end
+                if strcmp(saveplot,'ON') || strcmp(saveplot,'png')
+                    export_fig(fig5,[savename,'.',saveplot],'-q101','-m3');
+                    % end
+                else
+                    export_fig(fig5,[savename,'.pdf']);
+                end
+            end
+        end
+        
+        
+        function PlotFitResultRings(obj,varargin)
             p=inputParser;
             p.addParameter('PlotPar','qUOffset',@(x)ischar(x));
             p.addParameter('SavePlot','OFF',@(x)ismember(x,{'ON','OFF'}));
@@ -2945,7 +3352,7 @@ classdef RunAnalysis < handle
             p=inputParser;
             p.addParameter('saveplot','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('RecomputeFlag','OFF',@(x)ismember(x,{'ON','OFF'}));
-            p.addParameter('qURange',[90,12],@(x)all(isfloat(x)));
+            p.addParameter('qURange',[90,20],@(x)all(isfloat(x)));
             p.addParameter('CorrMean','OFF',@(x)ismember(x,{'ON','OFF'})); % doesnt work atm
             p.addParameter('HoldOn','OFF',@(x)ismember(x,{'ON','OFF'})); % plotting multiple FSDs...
             p.addParameter('RelFlag','OFF',@(x)ismember(x,{'ON','OFF'})); % show results to mean
@@ -3751,7 +4158,8 @@ classdef RunAnalysis < handle
                         fprintf(2,'Multi-Ring fit result not avaiable in data bank \n');
                     end
             end
-        end
+            end
+        
         function PlotFitMultiRing(obj,varargin)
             p=inputParser;
             p.addParameter('PlotPar','qU',@(x)ismember(x,{'qU','Norm','Bkg','mTSq'})); %display parameter

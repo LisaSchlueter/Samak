@@ -11,7 +11,7 @@ R = MultiRunAnalysis('RunList','KNM1',... % runlist defines which runs are analy
     'RadiativeFlag','ON',...              % theoretical radiative corrections applied in model
     'NonPoissonScaleFactor',1.064,...     % background uncertainty are enhanced
     'minuitOpt','min ; minos',...         % technical fitting options (minuit)
-    'FSDFlag','Sibille0p5eV',...               % final state distribution
+    'FSDFlag','SibilleFull',...               % final state distribution
     'ELossFlag','KatrinT2',...            % energy loss function
     'SysBudget',22,...
     'DopplerEffectFlag','FSD_Knm1',...
@@ -24,8 +24,8 @@ R.exclDataStart = R.GetexclDataStart(range); % set region of interest
 %R.RunData  % this is the stacked trititum data
 %R.InitModelObj_Norm_BKG('Recompute','ON');
 %R.ModelObj % this is the TBD object   --> model
-% R.ModelObj.ComputeTBDDS; % the differential spectrum is calculated
-% R.ModelObj.ComputeTBDIS; % the integral spectrum is calculated
+%R.ModelObj.ComputeTBDDS; % the differential spectrum is calculated
+%R.ModelObj.ComputeTBDIS; % the integral spectrum is calculated
 
 %% Fit
 R.Fit;

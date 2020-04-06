@@ -248,9 +248,12 @@ classdef FITC < handle
                 obj.counts = counts_tmp;
                 obj.c_error = c_error_tmp;
             else
-                obj.qUdata = qU_tmp(:,obj.SO.FPD_Pixel);
-                obj.counts = counts_tmp(:,obj.SO.FPD_Pixel);
-                obj.c_error = c_error_tmp(:,obj.SO.FPD_Pixel);
+               obj.qUdata = qU_tmp(:,obj.SO.FPD_Pixel);
+               obj.counts = counts_tmp(:,obj.SO.FPD_Pixel);
+               obj.c_error = c_error_tmp(:,obj.SO.FPD_Pixel);
+%                 obj.qUdata = qU_tmp(:,obj.SO.nPixels);
+%                 obj.counts = counts_tmp(:,obj.SO.nPixels);
+%                 obj.c_error = c_error_tmp(:,obj.SO.nPixels);
             end
             
             obj.readdatadone = true;
@@ -805,28 +808,75 @@ classdef FITC < handle
             % T. Lasserre, June 2018
             
             if numel(p)<5
-                p(5)=0; p(6)=0;
+                p(5)=0; p(6)=0;p(7)=0; p(8)=0;p(9)=0; p(10)=0;
             end
-            obj.SO.ComputeTBDDS(...
-                'mSq_bias',p(1),...
-                'E0_bias',p(2),...
-                'B_bias',p(3),...
-                'N_bias',p(4),...
-                'DTGS_bias',p(5),...
-                'DTES_bias',p(6),...
-                'HTGS_bias',p(7),...
-                'HTES_bias',p(8),...
-                'TTGS_bias',p(9),...
-                'TTES_bias',p(10));
-%        end
-%             obj.SO.ComputeTBDDS(...
-%                 'mSq_bias',p(1),...
-%                 'E0_bias',p(2),...
-%                 'B_bias',p(3:6),...
-%                 'N_bias',p(7:10),...
-%                 'DTGS_bias',p(11),...
-%                 'DTES_bias',p(12));
-             obj.SO.ComputeTBDIS();
+            %             obj.SO.ComputeTBDDS(...
+            %                 'mSq_bias',p(1),...
+            %                 'E0_bias',p(2),...
+            %                 'B_bias',p(3),...
+            %                 'N_bias',p(4),...
+            %                 'DTGS_bias',p(5),...
+            %                 'DTES_bias',p(6),...
+            %                 'HTGS_bias',p(7),...
+            %                 'HTES_bias',p(8),...
+            %                 'TTGS_bias',p(9),...
+            %                 'TTES_bias',p(10));
+            %        end
+            % %             obj.SO.ComputeTBDDS(...
+            % %                 'mSq_bias',p(1),...
+            % %                 'E0_bias',p(2),...
+            % %                 'B_bias',p(3:6),...
+            % %                 'N_bias',p(7:10),...
+            % %                 'DTGS_bias',p(11),...
+            % %                 'DTES_bias',p(12));
+            
+            % Distribute the fitting parameters
+            mnu_fit   = p(1);
+            Q_fit     = p(2);
+            backs_fit = p(3:obj.SO.nPixels+2);
+            norms_fit = p((obj.SO.nPixels+3):(2*obj.SO.nPixels+2));
+            DTGS_fit  = p(2*obj.SO.nPixels+3);
+            DTES_fit  = p(2*obj.SO.nPixels+4);
+            HTGS_fit  = p(2*obj.SO.nPixels+5);%p(4*obj.SO.nPixels+3);
+            HTES_fit  = p(2*obj.SO.nPixels+6);%p(4*obj.SO.nPixels+4);
+            TTGS_fit  = p(2*obj.SO.nPixels+7);%p(6*obj.SO.nPixels+3);
+            TTES_fit  = p(2*obj.SO.nPixels+8);%p(6*obj.SO.nPixels+4);
+            qUOffset_fit = p((2*obj.SO.nPixels+9):(3*obj.SO.nPixels+8));
+            BSlope_fit  = p(3*obj.SO.nPixels+9);
+            mTSq_fit    =p(3*obj.SO.nPixels+10:4*obj.SO.nPixels+9);
+            FracTm_fit = p(4*obj.SO.nPixels+10);
+            
+            if obj.SO.nPixels <2
+                obj.SO.ComputeTBDDS(...
+                    'mSq_bias',mnu_fit,...
+                    'E0_bias',Q_fit,...
+                    'B_bias',backs_fit,...
+                    'N_bias',norms_fit,...
+                    'DTGS_bias',DTGS_fit,...
+                    'DTES_bias',DTES_fit,...
+                    'HTGS_bias',HTGS_fit,...
+                    'HTES_bias',HTES_fit,...
+                    'TTGS_bias',TTGS_fit,...
+                    'TTES_bias',TTES_fit);
+            else
+                obj.SO.ComputeTBDDS(...
+                    'mSq_bias',mnu_fit,...
+                    'E0_bias',Q_fit,...
+                    'B_bias',backs_fit,...
+                    'N_bias',norms_fit,...
+                    'DTGS_bias',DTGS_fit,...
+                    'DTES_bias',DTES_fit,...
+                    'HTGS_bias',HTGS_fit,...
+                    'HTES_bias',HTES_fit,...
+                    'TTGS_bias',TTGS_fit,...
+                    'TTES_bias',TTES_fit,...
+                    'qUOffset_bias',qUOffset_fit,...
+                    'BSlope_bias',BSlope_fit,...
+                    'mTSq_bias',mTSq_fit,...
+                    'FracTm_bias',FracTm_fit);
+            end
+            
+            obj.SO.ComputeTBDIS();
             ftemp = obj.SO.TBDIS(obj.exclDataStart:obj.exclDataStop,:);
             f = ftemp(:);
         end
@@ -862,8 +912,11 @@ classdef FITC < handle
             % Compute Design Matrix
             for i=FitParList
                 Variation = [zeros(i-1,1); epsilon; zeros(nFitPar-i,1)];
+                if i<11
                 obj.DesignMatrix(:,i) = ( feval(@obj.model2designmatrix,obj.RESULTS{1}+Variation') ...
                     - feval(@obj.model2designmatrix,obj.RESULTS{1}-Variation')) / (2*epsilon);
+                end
+                
             end
             obj.DesignMatrix = obj.DesignMatrix(:,(obj.MaskFreeFitPar));
             feval(@obj.model2designmatrix,obj.RESULTS{1});
@@ -878,10 +931,18 @@ classdef FITC < handle
             % T. Lasserre, June 2018
             %
             
-            AllParameters=1:11;
-            AllLabels={'m^2 (eV^2)' 'E_0 (eV)' 'B (cps)' 'N','Pgs_{DT}','Pes_{DT}','Pgs_{HT}','Pes_{HT}','Pgs_{TT}','Pes_{TT}','qUoffset'};
-            %obj.nfixPar = numel(str2num(strrep(strrep(obj.fixPar,'fix ',''),' ;',' ')));
-            %obj.fixPar_v = str2num(strrep(strrep(obj.fixPar,'fix ',''),' ;',' '));
+            nFitPar       = length(obj.RESULTS{1});
+            AllParameters = 1:nFitPar;
+            if nFitPar    == 14  % Uniform - m2,E0,N,B
+            AllLabels     = {'m^2 (eV^2)' ,'E_0 (eV)' ,'B (cps)' ,'N','Pgs_{DT}','Pes_{DT}','Pgs_{HT}','Pes_{HT}','Pgs_{TT}','Pes_{TT}','qUoffset','12','13','14'};
+            elseif nFitPar== 18  % MultiRing 4 - m2,E0,N,B
+            AllLabels     = {'m^2 (eV^2)' ,'E_0 (eV)', 'B1 (cps)', 'B2 (cps)' , 'N1', 'N2', 'Pgs_{DT}','Pes_{DT}','Pgs_{HT}','Pes_{HT}','Pgs_{TT}','Pes_{TT}','qUoffset1','qUoffset2','Bslope','mTSq1','mTSq2','T-'};
+            elseif nFitPar== 26  % MultiRing 4 - m2,E0,N,B
+            AllLabels     = {'m^2 (eV^2)' ,'E_0 (eV)', 'B1 (cps)', 'B2 (cps)' ,'B3 (cps)' ,'B4 (cps)' , 'N1', 'N2', 'N3', 'N4','Pgs_{DT}','Pes_{DT}','Pgs_{HT}','Pes_{HT}','Pgs_{TT}','Pes_{TT}','qUoffset1','qUoffset2','qUoffset3','qUoffset4','Bslope','mTSq1','mTSq2','mTSq3','mTSq4','T-'};
+            end
+                
+            % obj.nfixPar = numel(str2num(strrep(strrep(obj.fixPar,'fix ',''),' ;',' ')));
+            % obj.fixPar_v = str2num(strrep(strrep(obj.fixPar,'fix ',''),' ;',' '));
             [obj.MaskFreeFitPar , ilabels] = setdiff(AllParameters,obj.fixPar_v);
             obj.MaskFreeFitLabel           = AllLabels(ilabels);
             
@@ -903,11 +964,18 @@ classdef FITC < handle
 %                     obj.MaskFreeFitPar     = [2:10];
 %             end
             
-            % Data
-             D=obj.DATA(obj.exclDataStart:obj.exclDataStop,2);
-            %D=obj.DATA(obj.exclDataStart:obj.exclDataStop,obj.SO.nPixels+[1:4]);
-            D = D(:);
-            
+            % Data - before 27/3/20
+            % D=obj.DATA(obj.exclDataStart:obj.exclDataStop,2);
+            % % D=obj.DATA(obj.exclDataStart:obj.exclDataStop,obj.SO.nPixels+[1:4]);
+            % D = D(:);
+
+            % Data - 27/3/20
+            m         = obj.SO.TBDIS(obj.exclDataStart:obj.exclDataStop,:); %model
+            nrings    = numel(obj.SO.MACE_Ba_T); % always gives correct number of pseudo rings
+            nqU_used  = size(m,1);             % number of subruns, which are NOT excluded
+            exclIndex = sort(reshape(repmat(obj.exclDataStart:obj.exclDataStop,[nrings,1])+[0:nrings-1]'.*obj.SO.nqU,[nqU_used*nrings,1]));            
+            D         = obj.counts(exclIndex);
+                            
             % Model at best fit
             Mbf=obj.model2designmatrix(obj.RESULTS{1});
             
@@ -919,11 +987,14 @@ classdef FITC < handle
                 case 'chi2Stat'
                     CovMat = diag(D);
                 case 'chi2CM'
-                    CovMat = obj.COVMAT(obj.exclDataStart:obj.exclDataStop,obj.exclDataStart:obj.exclDataStop);
+                    %CovMat = obj.COVMAT(obj.exclDataStart:obj.exclDataStop,obj.exclDataStart:obj.exclDataStop);
+                    CovMat = obj.COVMAT(exclIndex,exclIndex);
                 case 'chi2CMFrac'
-                    CovMat = obj.COVMATFrac(obj.exclDataStart:obj.exclDataStop,obj.exclDataStart:obj.exclDataStop).*m.*m';
+                    %CovMat = obj.COVMATFrac(obj.exclDataStart:obj.exclDataStop,obj.exclDataStart:obj.exclDataStop).*m.*m';
+                    CovMat = obj.COVMATFrac(exclIndex,exclIndex).*m.*m';
                 case 'chi2CMShape'
-                    CovMat = obj.COVMATShape(obj.exclDataStart:obj.exclDataStop,obj.exclDataStart:obj.exclDataStop);
+                    %CovMat = obj.COVMATShape(obj.exclDataStart:obj.exclDataStop,obj.exclDataStart:obj.exclDataStop);
+                    CovMat = obj.COVMATShape(exclIndex,exclIndex);
             end
             
             % CATS call (in tools)
@@ -934,7 +1005,8 @@ classdef FITC < handle
             feval(@obj.model2designmatrix,obj.RESULTS{1});
             
              % Label
-            obj.CATSstat.names = [round(obj.DATA(obj.exclDataStart:end,1)-obj.SO.Q_i,1) ; obj.CATSstat.nsys];
+            %obj.CATSstat.names = [round(obj.DATA(obj.exclDataStart:end,1)-obj.SO.Q_i,1) ; obj.CATSstat.nsys];
+            obj.CATSstat.names = [round(obj.qUdata(exclIndex)-obj.SO.Q_i,1) ; obj.CATSstat.nsys];
 
         end
         
@@ -952,7 +1024,7 @@ classdef FITC < handle
             % Residual Plot
             figure(10001)
             resplot(obj.CATSstat);
-            PrettyFigureFormat;
+            PrettyFigureFormat;%XXX
             
             % Leverage Plot
             figure(10002)
@@ -1056,6 +1128,10 @@ classdef FITC < handle
             end
             xlabel('Standardized Residuals');
             ylabel(sprintf('retarding potential - %.1f (eV)',obj.SO.Q_i));
+            if nobs>40
+                 a = get(gca,'YTickLabel');
+                set(gca,'YTickLabel',a,'fontsize',8);
+            end
             
             subplot(1,2,2)
             barh(obj.CATSstat.leverage(1:nobs),...
@@ -1089,6 +1165,10 @@ classdef FITC < handle
                 PrettyFigureFormat;
             end
             xlabel('Leverages');
+            if nobs>40
+                a = get(gca,'YTickLabel');
+                set(gca,'YTickLabel',a,'fontsize',8);
+            end
             line(2*(nsys+npar)/(nobs+nsys)*[1 1],[1-1 length(obj.CATSstat.leverage)+1],...
                 'LineWidth',2,'LineStyle','--','Color',.5*ones(3,1));
             line((nsys+npar)/(nobs+nsys)*[1 1],[1-1 length(obj.CATSstat.leverage)+1],...
@@ -1136,7 +1216,16 @@ classdef FITC < handle
             
             obj.CATSstat.names = [];
             stdrlevplot(obj.CATSstat);
-            obj.CATSstat.names = [round(obj.DATA(obj.exclDataStart:end,1)-obj.SO.Q_i,1) ; obj.CATSstat.nsys];
+            %            obj.CATSstat.names = [round(obj.DATA(obj.exclDataStart:end,1)-obj.SO.Q_i,1) ; obj.CATSstat.nsys];
+            
+            % Build uniform / multi-ring indexes
+            m         = obj.SO.TBDIS(obj.exclDataStart:obj.exclDataStop,:); %model
+            nrings    = numel(obj.SO.MACE_Ba_T); % always gives correct number of pseudo rings
+            nqU_used  = size(m,1);             % number of subruns, which are NOT excluded
+            exclIndex = sort(reshape(repmat(obj.exclDataStart:obj.exclDataStop,[nrings,1])+[0:nrings-1]'.*obj.SO.nqU,[nqU_used*nrings,1]));
+           
+            obj.CATSstat.names = [round(obj.qUdata(exclIndex)-obj.SO.Q_i,1) ; obj.CATSstat.nsys];
+
 
             if strcmp(savePlot,'ON')
                 if exist('./plots','dir')~=7
@@ -1236,7 +1325,8 @@ classdef FITC < handle
             diffxi = obj.CATSstat.x_i-repmat(obj.CATSstat.xhat,[1 size(obj.CATSstat.x_i,2)]);
             imagesc(XD,YD,diffxi./repmat(max(abs(diffxi),[],2),[1 size(obj.CATSstat.x_i,2)]));
             set(gca,'Xtick',round(linspace(1,length(XD),max(8,obj.CATSstat.nobs+obj.CATSstat.nsys))));
-            set(gca,'YTick',round(linspace(1,length(YD),min(8,obj.CATSstat.nsys+obj.CATSstat.npar))));
+%           set(gca,'YTick',round(linspace(1,length(YD),max(8,obj.CATSstat.nsys+obj.CATSstat.npar))));
+            set(gca,'YTick',round(linspace(1,length(YD),obj.CATSstat.nsys+obj.CATSstat.npar)));
             caxis([-1 1]);
             cm=0:1/9:1;
             my_cm_blue=[1-cm;1-cm;ones(size(cm))]';
@@ -1248,7 +1338,11 @@ classdef FITC < handle
             set(gca,'XAxisLocation','bottom');
             grid on;
             set(gca,'YTickLabel',obj.MaskFreeFitLabel)
-            PrettyFigureFormat;
+            %PrettyFigureFormat;
+            xtickangle(90);
+            if obj.CATSstat.nobs>40
+            a = get(gca,'XTickLabel');set(gca,'XTickLabel',a,'fontsize',8);
+            end
             
             if strcmp(savePlot,'ON')
                 if exist('./plots','dir')~=7
@@ -1290,20 +1384,29 @@ classdef FITC < handle
             
             diffxi = obj.CATSstat.x_i-repmat(obj.CATSstat.xhat,[1 size(obj.CATSstat.x_i,2)]);
             labelYaxis = obj.MaskFreeFitLabel;
-            BestFitCoeff = [obj.SO.mnuSq , obj.SO.Q ...
-                obj.SO.BKG_RateSec  , 1 + obj.SO.normFit ...
-                obj.SO.DTNormGS*100  , obj.SO.DTNormES*100 ...
-                obj.SO.HTNormGS*100  , obj.SO.HTNormES*100 ...
-                obj.SO.TTNormGS*100  , obj.SO.TTNormES*100];
+            BestFitCoeff = [obj.SO.mnuSq  obj.SO.Q ...
+                obj.SO.BKG_RateSec   (1+obj.SO.normFit) ...
+                obj.SO.DTNormGS(1)*100   obj.SO.DTNormES(1)*100 ...
+                obj.SO.HTNormGS(1)*100   obj.SO.HTNormES(1)*100 ...
+                obj.SO.TTNormGS(1)*100   obj.SO.TTNormES(1)*100];
+            
+            m         = obj.SO.TBDIS(obj.exclDataStart:obj.exclDataStop,:); % model
+            nrings    = numel(obj.SO.MACE_Ba_T); % always gives correct number of pseudo rings
+            nqU_used  = size(m,1);               % number of subruns, which are NOT excluded
+            exclIndex = sort(reshape(repmat(obj.exclDataStart:obj.exclDataStop,[nrings,1])+[0:nrings-1]'.*obj.SO.nqU,[nqU_used*nrings,1]));
             
             sv=[];counter=0;
             for k=obj.MaskFreeFitPar
                 counter=counter+1;
                 s(counter)=subplot(numel(obj.MaskFreeFitPar),1,counter);
-                p=plot([round(obj.DATA(obj.exclDataStart:end,1)-obj.SO.Q_i,1)],diffxi(counter,:)+BestFitCoeff(k),...
-                    's:','MarkerSize',10,'LineWidth',2,'MarkerFaceColor',rgb('Amethyst'));
+                %                p=plot([round(obj.DATA(obj.exclDataStart:end,1)-obj.SO.Q_i,1)],diffxi(counter,:)+BestFitCoeff(k),...
+                %                    's:','MarkerSize',10,'LineWidth',2,'MarkerFaceColor',rgb('Amethyst'));
+                p=plot(round(obj.qUdata(exclIndex)-obj.SO.Q_i,1),diffxi(counter,:)+BestFitCoeff(k),'s:','MarkerSize',10,'LineWidth',2,'MarkerFaceColor',rgb('Amethyst'));
                 hold on
-                l=line([ min(round(obj.DATA(obj.exclDataStart:end,1)-obj.SO.Q_i,1)) max(round(obj.DATA(obj.exclDataStart:end,1)-obj.SO.Q_i,1))],...
+%                 l=line([ min(round(obj.DATA(obj.exclDataStart:end,1)-obj.SO.Q_i,1)) max(round(obj.DATA(obj.exclDataStart:end,1)-obj.SO.Q_i,1))],...
+%                     [BestFitCoeff(k),BestFitCoeff(k)],...
+%                     'LineStyle','--','LineWidth',2,'Color',rgb('CadetBlue'));
+                l=line([ min(round(obj.qUdata(exclIndex)-obj.SO.Q_i,1)) max(round(obj.qUdata(exclIndex)-obj.SO.Q_i,1))],...
                     [BestFitCoeff(k),BestFitCoeff(k)],...
                     'LineStyle','--','LineWidth',2,'Color',rgb('CadetBlue'));
                 hold off
