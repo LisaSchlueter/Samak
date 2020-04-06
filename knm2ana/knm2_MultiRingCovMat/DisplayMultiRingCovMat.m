@@ -5,7 +5,7 @@
 
 %% Set up multi ring model
 RunList = 'KNM2_Prompt';
-chi2 = 'chi2CMShape';
+chi2 = 'chi2Stat';
 RingMerge = 'Full'; % 'Full == 4 rings
 range =40;
 E0 = knm2FS_GetE0Twins('SanityPlot','OFF');
@@ -26,13 +26,13 @@ CommonArg = {'RunList',RunList,...
 R = MultiRunAnalysis(CommonArg{:});
 R.exclDataStart = R.GetexclDataStart(range);
 %% Compute multi ring covariance matrix
-SysEffect = 'Bkg';
+SysEffect = 'LongPlasma';
 if strcmp(SysEffect,'all')
     R.ComputeCM;
 elseif strcmp(SysEffect,'Bkg')
     R.ComputeCM('SysEffect',struct('FSD','OFF'))
 else
-    R.ComputeCM('SysEffect',struct(SysEffect,'ON'),'BkgCM','OFF')
+    R.ComputeCM('SysEffect',struct(SysEffect,'ON'),'BkgCM','OFF','nTrials',1000)
 end
 %('SysEffects',struct('TASR','ON','TCoff_OTHER','OFF','FSD','ON','RF_EL','ON','RF_BF','ON','RF_RX','ON','Stack','ON'),...
 %   'BkgCM','ON','nTrials',1000,'DataDriven','ON','RecomputeFlag','OFF')

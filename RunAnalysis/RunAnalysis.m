@@ -1141,7 +1141,8 @@ classdef RunAnalysis < handle
             p.addParameter('RW_MultiPosErr',0,@(x)isfloat(x));
             p.addParameter('MACE_VarErr',SysErr.MACE_VarErr,@(x)isfloat(x));
             p.addParameter('is_EOffsetErr',SysErr.is_EOffsetErr,@(x)isfloat(x));
-            
+            p.addParameter('BkgRingCorrCoeff',0,@(x)isfloat(x));
+            p.addParameter('BkgScalingOpt',1,@(x)isfloat(x));
             p.parse(varargin{:});
             
             InitNormFit              = p.Results.InitNormFit;
@@ -1170,6 +1171,8 @@ classdef RunAnalysis < handle
             RW_MultiPosErr           = p.Results.RW_MultiPosErr;
             MACE_VarErr              = p.Results.MACE_VarErr; %longitudinal plasma
             is_EOffsetErr            = p.Results.is_EOffsetErr; %longitudinal plasma
+            BkgRingCorrCoeff         = p.Results.BkgRingCorrCoeff; % ring to ring correlation coefficient
+            BkgScalingOpt            = p.Results.BkgScalingOpt;
             % --------------------- END PARSER ---------------------------------%
             
             % --------------------  Initialize Covariance Matrix----------------------------%
@@ -1234,20 +1237,30 @@ classdef RunAnalysis < handle
                 TBDIS_NoBKG = reshape(TBDIS_NoBKG,[obj.ModelObj.nqU*obj.ModelObj.nRings,1]);
             end
             obj.FitCM     = TBDIS_NoBKG.*obj.FitCMFrac.*TBDIS_NoBKG';
-           
-            % Compute Shape only covariance matrix for desired fit range
-            [obj.FitCMShape,obj.FitCMFracShape] = obj.FitCM_Obj.DecomposeCM('CovMatFrac',obj.FitCMFrac,'exclDataStart',obj.exclDataStart);
             
+            % Compute Shape only covariance matrix for desired fit range
+            
+            try
+                [obj.FitCMShape,obj.FitCMFracShape] = obj.FitCM_Obj.DecomposeCM('CovMatFrac',obj.FitCMFrac,'exclDataStart',obj.exclDataStart);
+            catch
+                fprintf('Decomposition doesnt work - TASR covariance matrix probably too small (Knm2) \n')
+                fprintf('Temporary fix: take regular covariance matrix instead - no shape only \n')
+                obj.FitCMShape = obj.FitCM;
+                obj.FitCMFracShape = obj.FitCMFrac;
+            end
+          
             % Background Covariance Matrix: Compute and Add to Signal Covariance Matrix
             if strcmp(BkgCM,'ON')
                 obj.FitCM_Obj.ComputeCM_Background('Display',PlotSaveCM,...
-                    'MaxSlopeCpsPereV',MaxSlopeCpsPereV,'BkgRange',BkgRange);
+                    'MaxSlopeCpsPereV',MaxSlopeCpsPereV,'BkgRange',BkgRange,...
+                    'RingCorrCoeff',BkgRingCorrCoeff,'ScalingOpt',BkgScalingOpt);
                 
                 obj.FitCM           = obj.FitCM          + obj.FitCM_Obj.CovMat;     % regular covmat:    add background covmat to signal covmat 
                 obj.FitCMFrac       = obj.FitCMFrac      + obj.FitCM_Obj.CovMatFrac; % fractional covmat: add background covmat to signal covmat 
                 
                 % shape only:
-                [BkgCMShape,BkgCMFracShape] = obj.FitCM_Obj.DecomposeCM('CovMatFrac',obj.FitCM_Obj.CovMatFrac,'exclDataStart',obj.exclDataStart); 
+                [BkgCMShape,BkgCMFracShape] = obj.FitCM_Obj.DecomposeCM('CovMatFrac',obj.FitCM_Obj.CovMatFrac,...
+                    'exclDataStart',obj.exclDataStart,'BkgCM','ON'); 
                 obj.FitCMShape      = obj.FitCMShape     + BkgCMShape;     % shape only covmat:            add background covmat to signal covmat 
                 obj.FitCMFracShape  = obj.FitCMFracShape + BkgCMFracShape; % fractional shape only covmat: add background covmat to signal covmat 
             else
@@ -1276,6 +1289,11 @@ classdef RunAnalysis < handle
         end    
         
         function [WGTS_TASR_RelErr,SubRunActivity,TASR_CorrMat] = Get_DataDriven_RelErr_TASR(obj,varargin)
+            p = inputParser;
+            p.addParameter('SanityPlot','OFF',@(x)ismember(x,{'ON','OFF'}));
+            p.parse(varargin{:});
+            SanityPlot = p.Results.SanityPlot;
+            
             % Tritium Activity Relative Fluctuations
             % Read tritium activity from RunSummaries
             % Calculate relative error
@@ -1307,10 +1325,18 @@ classdef RunAnalysis < handle
                             obj.ModelObj.ISXsection(obj.ModelObj.Q_i)*1e4;
                         SubRunActivity(SubRunActivity==0) = NaN;
                         
-                        % renormalize to mean activity: relative error!
-                        SubRunActivity=SubRunActivity./repmat(nanmean(SubRunActivity,2),1,numel(obj.StackedRuns));
+                        % renormalize to mean activity
+                        MeanActivityStackedRun = mean(nanmean(SubRunActivity,2));
+                        MeanActivitySingleRuns = nanmean(SubRunActivity,1);
+                        ActiCorrFactor = repmat(MeanActivityStackedRun./MeanActivitySingleRuns,size(SubRunActivity,1),1);
+                        SubRunActivity(~isnan(SubRunActivity))=SubRunActivity(~isnan(SubRunActivity)).*ActiCorrFactor(~isnan(SubRunActivity));
+                         
                         %take standard error of the mean
-                        WGTS_TASR_RelErr = nanstd(SubRunActivity,0,2)./sqrt(numel(obj.StackedRuns));
+                        WGTS_TASR_AbsErr = nanstd(SubRunActivity,0,2);%./sqrt(numel(obj.StackedRuns));
+                        
+                        % relative uncertainty -> fractional covariance
+                        WGTS_TASR_RelErr = WGTS_TASR_AbsErr./nanmean(SubRunActivity,2);
+                        
                         % Set Fluctuations to ZERO above enpoint
                         WGTS_TASR_RelErr = WGTS_TASR_RelErr .* TritiumqUIndexes;
                       
@@ -1321,22 +1347,54 @@ classdef RunAnalysis < handle
                             % calculate correlation matrix
                             SubRunActivity(isnan(SubRunActivity))=1;
                             TASR_CorrMat = corrcoef(SubRunActivity','Rows','pairwise');
-                            TASR_CorrMat(isnan(TASR_CorrMat)) = (nanmean(TASR_CorrMat(TASR_CorrMat>0)));
-                            % Lisa
+                            %TASR_CorrMat(isnan(TASR_CorrMat)) = (nanmean(TASR_CorrMat(TASR_CorrMat>0)));
                             obj.FitCM_Obj.WGTS_TASR_RelErr = TASR_CorrMat.*WGTS_TASR_RelErr.*WGTS_TASR_RelErr';
                             WGTS_TASR_RelErr = obj.FitCM_Obj.WGTS_TASR_RelErr;
-                            % Thierry
-%                             for ii=1:1:obj.ModelObj.nqU
-%                                 for jj=1:1:obj.ModelObj.nqU
-%                                     if ii==jj
-%                                         obj.FitCM_Obj.WGTS_TASR_RelErr(ii,jj) = WGTS_TASR_RelErr(ii).^2;
-%                                     else
-%                                         obj.FitCM_Obj.WGTS_TASR_RelErr(ii,jj) = TASR_CorrMat(ii,jj)*WGTS_TASR_RelErr(ii)*WGTS_TASR_RelErr(jj);
-%                                     end
-%                                 end
-%                             end
+                            
                         end
                 end
+                
+                if strcmp(SanityPlot,'ON') && strcmp(obj.DataSet,'Knm2')
+                    x  = repmat(obj.RunData.qU-18574,obj.nRuns,1);
+                    y = reshape(SubRunActivity,size(obj.RunData.qU,1).*obj.nRuns,1);
+                    
+                    f1 = figure('Units','normalized','Position',[0.1,0.1,0.9,0.5]);
+                    s1 = subplot(1,2,1);
+                    pref = plot(linspace(min(x)-5,max(x),10),MeanActivityStackedRun.*ones(10,1),'k-','LineWidth',2);
+                    hold on;
+                    p1 = scatter(x,y,'o','filled',...
+                        'MarkerFaceColor',rgb('DodgerBlue'),'MarkerFaceAlpha',0.2);
+                    xlabel('Retarding potential - 18574 (eV)');
+                    ylabel(sprintf('Activity (molecules)'));
+                    PrettyFigureFormat('FontSize',24)
+                    xlim([min(x)-5,5]);
+                    leg = legend([pref,p1],sprintf('Mean activity = %.2f molecules',MeanActivityStackedRun),...
+                        sprintf('Subrun activity %.0f runs',obj.nRuns));
+                    leg.EdgeColor = rgb('Silver');
+                    leg.Location='northwest';
+                    title('Single run activity normalized to mean activity','FontWeight','normal');
+                     
+                     %% subplot 2
+                    s2 = subplot(1,2,2);
+                    y2 = reshape(SubRunActivity./ActiCorrFactor,size(obj.RunData.qU,1).*obj.nRuns,1);
+                    
+                    pref = plot(linspace(min(x)-5,max(x),10),MeanActivityStackedRun.*ones(10,1),'k-','LineWidth',2);
+                    hold on;
+                    p1 = scatter(x,y2,'o','filled',...
+                        'MarkerFaceColor',rgb('Orange'),'MarkerFaceAlpha',0.2);
+                    xlabel('Retarding potential - 18574 (eV)');
+                    ylabel(sprintf('Activity (molecules)'));
+                    PrettyFigureFormat('FontSize',24)
+                    xlim([min(x)-5,5]);
+                    leg = legend([pref,p1],sprintf('Mean activity = %.2f molecules',MeanActivityStackedRun),...
+                        sprintf('Subrun activity %.0f runs',obj.nRuns));
+                    leg.EdgeColor = rgb('Silver');
+                    leg.Location='northwest';
+                    ylim([min(0.995*[y;y2]),1.005*max([y;y2])]);
+                    linkaxes([s1,s2],'y')
+                    title(sprintf('Single activity not normalized to mean activity'),'FontWeight','normal');
+                end
+                
             else % single run: RunAnalysis
                 switch obj.DataSet
                     case 'FirstTritium.katrin'

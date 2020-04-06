@@ -818,9 +818,11 @@ classdef TBD < handle & WGTSMACE %!dont change superclass without modifying pars
             p=inputParser;
             p.addParameter('saveRF','ON',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('RebinMode','Integral',@(x)ismember(x,{'Fast','Integral'})); % for RF broadening
+            p.addParameter('IntMode','Conv',@(x)ismember(x,{'Integral','Conv'})); % integration of RF
             p.parse(varargin{:});
             saveRF    = p.Results.saveRF;
             RebinMode = p.Results.RebinMode;
+            IntMode   = p.Results.IntMode;
             
             % load or calculate response function according to settings
             %% load response function
@@ -874,7 +876,7 @@ classdef TBD < handle & WGTSMACE %!dont change superclass without modifying pars
                         switch obj.UseParallelRF
                             case 'OFF'
                                 for ii = 1:obj.nqU
-                                    obj.RF(:,ii) = tfloc(obj.Te,obj.qU(ii));
+                                    obj.RF(:,ii) = tfloc(obj.Te,obj.qU(ii),'IntMode',IntMode);
                                 end
                             case 'ON'
                                 parTe = obj.Te;
@@ -882,7 +884,7 @@ classdef TBD < handle & WGTSMACE %!dont change superclass without modifying pars
                                 parRF = zeros(obj.nTe,obj.nqU);
                                 %                               parfor ii = 1:obj.nqU
                                 for ii = 1:obj.nqU
-                                    parRF(:,ii) = tfloc(parTe,parqU(ii));
+                                    parRF(:,ii) = tfloc(parTe,parqU(ii),'IntMode',IntMode);
                                 end
                                 obj.RF = parRF;
                         end
