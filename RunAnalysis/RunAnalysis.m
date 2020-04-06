@@ -1259,7 +1259,8 @@ classdef RunAnalysis < handle
                 obj.FitCMFrac       = obj.FitCMFrac      + obj.FitCM_Obj.CovMatFrac; % fractional covmat: add background covmat to signal covmat 
                 
                 % shape only:
-                [BkgCMShape,BkgCMFracShape] = obj.FitCM_Obj.DecomposeCM('CovMatFrac',obj.FitCM_Obj.CovMatFrac,'exclDataStart',obj.exclDataStart); 
+                [BkgCMShape,BkgCMFracShape] = obj.FitCM_Obj.DecomposeCM('CovMatFrac',obj.FitCM_Obj.CovMatFrac,...
+                    'exclDataStart',obj.exclDataStart,'BkgCM','ON'); 
                 obj.FitCMShape      = obj.FitCMShape     + BkgCMShape;     % shape only covmat:            add background covmat to signal covmat 
                 obj.FitCMFracShape  = obj.FitCMFracShape + BkgCMFracShape; % fractional shape only covmat: add background covmat to signal covmat 
             else
