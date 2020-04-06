@@ -1070,7 +1070,7 @@ classdef RunAnalysis < handle
             %Initialize Normalization and Background with a stat. Fit
             if strcmp(InitNormFit,'ON')
                 % 40 eV range, stat only, free parameters: E0, Bkg, Norm
-                obj.InitModelObj_Norm_BKG('RecomputeFlag','OFF');
+                obj.InitModelObj_Norm_BKG('RecomputeFlag','ON');
             end
             
             obj.FitCM_Obj = CovarianceMatrix('StudyObject',obj.ModelObj, 'nTrials',nTrials,...
@@ -1106,7 +1106,7 @@ classdef RunAnalysis < handle
             %Initialize Normalization and Background with a stat. Fit
             if strcmp(InitNormFit,'ON')
                 % 40 eV range, stat only, free parameters: E0, Bkg, Norm
-                obj.InitModelObj_Norm_BKG('RecomputeFlag','OFF');
+                obj.InitModelObj_Norm_BKG('RecomputeFlag','ON');
             end
             
             % Move to Fit CM and do renormalization with current statistics
@@ -1378,8 +1378,8 @@ classdef RunAnalysis < handle
                 if strcmp(obj.DataSet,'FirstTritium.katrin')
                     obj.exclDataStart=12;
                 else
-                    % 40 eV range
-                    obj.exclDataStart = find((obj.ModelObj.qU)>=18574-40,1);
+                    % 90 eV range
+                    obj.exclDataStart = find((obj.ModelObj.qU)>=18574-90,1);
                 end
                 
                % stat only: Model is not initialized to data statistics yet -> use stat. uncertainty from data 
@@ -1454,7 +1454,7 @@ classdef RunAnalysis < handle
                 %                     obj.InitModelObj_Norm_BKG('RecomputeFlag','ON');
                 %                 else
                 if ~contains(obj.fixPar,'fix 3 ;')
-                    obj.InitModelObj_Norm_BKG('RecomputeFlag','OFF');
+                    obj.InitModelObj_Norm_BKG('RecomputeFlag','ON');
                 end
                 
                 [StatCM, StatCMFrac] = obj.ComputeCM_StatPNP(varargin);

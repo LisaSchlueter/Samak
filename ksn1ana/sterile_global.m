@@ -35,6 +35,7 @@ YD=R.ModelObj.TBDDS;
 R.ModelObj.ComputeTBDIS();
 
 YI = R.ModelObj.TBDIS;
+sum(YI)
 YI = YI./times;
 
 %% Sterile theoretical
@@ -49,7 +50,7 @@ Rs = MultiRunAnalysis('RunList','KNM1',...
             'FSDFlag','Sibille0p5eV',...
             'ELossFlag','KatrinT2',...
             'SysBudget',22);
-        
+
 Rs.ModelObj.mnu4Sq_i = sterile_mass^2;
 Rs.ModelObj.sin2T4_i = mixing_angle_1;
 
@@ -82,6 +83,7 @@ err  = err./YI;
 YIsd=YIsd(qU>-90);
 YIs=YIs(qU>-90);
 YI=YI(qU>-90);
+sum(YI)
 err=err(qU>-90);
 qUc=qU(qU>-90);
 

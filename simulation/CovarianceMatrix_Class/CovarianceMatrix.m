@@ -392,7 +392,7 @@ classdef CovarianceMatrix < handle
             p.addParameter('saveplot','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('savename','',@(x)ischar(x)); % additional label
             p.addParameter('savedir','',@(x)ischar(x));  % save directory
-            p.addParameter('ConvergenceTest','ON',@(x)ismember(x,{'ON','OFF'}));
+            p.addParameter('ConvergenceTest','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('PlotEffect','',@(x)ischar(x));     % only in title
             p.addParameter('Mode','Frac',@(x)ismember(x,{'CM','Frac','Shape'}));
             p.addParameter('qUWindowIndexMin',90,@(x)isfloat(x)); % start display cm below endpoint (eV)

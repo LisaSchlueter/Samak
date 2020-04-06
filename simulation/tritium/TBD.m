@@ -2260,7 +2260,7 @@ classdef TBD < handle & WGTSMACE %!dont change superclass without modifying pars
                     PrettyFigureFormat('FontSize',20);
                     if pub>0
                         figname = sprintf('./plots/TBD_FSD_TT_%s.pdf',obj.TTFSD);
-                        publish_figurePDF(fign,figname)
+%                         publish_figurePDF(fign,figname)
                     end
             end
             

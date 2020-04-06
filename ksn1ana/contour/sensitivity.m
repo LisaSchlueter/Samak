@@ -5,15 +5,15 @@ tic;
 %% Settings
 % Parameters
 
-CL           = 90;                  % Confidence level 90% - 95% - 99%
+CL           = 95;                  % Confidence level 90% - 95% - 99%
 datatype     = 'Twin';  % Real
 uncertainty  = 'stat';  % syst
-
-d            = 20;                  % Number of dots per decade
+NPfactor     = 1;
+d            = 10;                  % Number of dots per decade
 eVrange      = 90;                  % eV below the endpoint
 
 % Name for the datafile
-savename     = sprintf('coord_%1$deV_%2$s_%3$s_V2.mat',eVrange,datatype,uncertainty);
+savename     = sprintf('coord_%1$deV_%2$s_%3$s_95_newN2.mat',eVrange,datatype,uncertainty);
 
 % Scan settings
 start_decade = -1;
@@ -67,17 +67,70 @@ switch datatype
         sibille = 'Sibille0p5eV';
 end
 
+SysEffects = struct(...
+    'RF_EL','OFF',...       % Response Function(RF) EnergyLoss
+    'RF_BF','OFF',...       % RF B-Fields
+    'RF_RX','OFF',...       % Column Density, inel cross ection
+    'FSD','OFF',...         % final states
+    'TASR','OFF',...        % tritium activity fluctuations
+    'TCoff_RAD','OFF',...   % radiative thoretical corrections (this has to be OFF for KNM1, because included in model)
+    'TCoff_OTHER','OFF',... % other theo corr.
+    'DOPoff','OFF',...      % doppler effects --> OFF, because in model
+    'Stack','OFF',...       % stacking / HV fluctuations
+    'FPDeff','OFF');        % detector efficiency
+
 %% Constructor Initialisation
 R = MultiRunAnalysis('RunList','KNM1',...
             'chi2',chi2_type,...
             'DataType',datatype,...
             'fixPar','E0 Norm Bkg',...
             'RadiativeFlag','ON',...
-            'NonPoissonScaleFactor',1.064,...
+            'NonPoissonScaleFactor',NPfactor,...
             'minuitOpt','min ; migrad',...
             'FSDFlag',sibille,...
             'ELossFlag','KatrinT2',...
             'SysBudget',22);
+
+% R.ComputeCM('SysEffects',SysEffects,...
+%     'BkgCM','ON');
+
+% %% Check systematics errorbars
+% times = (R.ModelObj.qUfrac*R.ModelObj.TimeSec);
+% 
+% CM  = R.FitCM_Obj.CovMatFrac;
+% 
+% IS = R.ModelObj.TBDIS;
+% stat  = sqrt(IS);
+% stat  = stat./times;
+% 
+% err = zeros(1,length(CM));
+% for k = (1:length(CM))
+%     err(k) = sqrt(CM(k,k));
+% end
+% 
+% prlB = [50 148 216]/255;
+% 
+% plot(R.ModelObj.qU-18574,err,'color',prlB,'LineWidth',3)
+% hold on
+% plot(R.ModelObj.qU-18574,stat,'--','color',prlB,'LineWidth',3)
+% 
+% % Plot style
+% xlabel('Retarding energy - 18574 (eV)');
+% ylabel('Errorbar');
+% legend({'Stat','Syst'},'Location','southwest','box','off');
+% 
+% % xlim([-90 max(qUc+5)]);
+% PRLFormat;
+% set(gca, 'YScale', 'log');
+% axis square
+
+% R.ModelObj.ComputeTBDDS();
+% YD=R.ModelObj.TBDDS;
+% R.ModelObj.ComputeTBDIS();
+% YI = R.ModelObj.TBDIS;
+% R.InitModelObj_Norm_BKG
+% R.RunData.TBDIS
+% sum(YI)
 
 %% Delta-X2
 X0     = fit_chi(0,0,R,eVrange);
@@ -189,7 +242,7 @@ save(file,'sith4_X','m4_Y','chi_Z');
 
 
 diary 'progress.txt'
-fprintf('==== FINISHED ====')
+fprintf('==== FINISHED ====\n')
 diary off
 
 

@@ -6,7 +6,7 @@ function X = fit_chi(m,s,R,eVr)
     R.i_B=[];
     R.i_N=[];
     
-    % R.ModelObj.mnuSq_i=-0.956847;                 % Neutrino mass
+%     R.ModelObj.mnuSq_i=-0.956847;                   % Neutrino mass
     R.ModelObj.mnu4Sq_i=m;                          % Sterile mass
     R.ModelObj.sin2T4_i=s;                          % Mixing angle
     
