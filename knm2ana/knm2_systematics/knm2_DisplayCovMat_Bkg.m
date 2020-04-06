@@ -1,7 +1,7 @@
 % Plot Covariance Matrix for background (qU) sloep systematic effect
 % systematics setting
 RecomputeFlag = 'OFF';
-nTrials       = 100; 
+nTrials       = 1000; 
 SysBudget     = 34; % 31= knm2 preliminary input
 
 % model setting
@@ -29,7 +29,7 @@ CmArg = {'BkgCM','ON',...
 %% init model
 M = MultiRunAnalysis(RunArg{:});
 Sigma = std(E0);
-FSDArg = {'SanityPlot','ON','Sigma',Sigma};
+FSDArg = {'SanityPlot','OFF','Sigma',Sigma};
 M.ModelObj.LoadFSD(FSDArg{:});
 M.ModelObj.ComputeTBDDS; M.ModelObj.ComputeTBDIS;
 
@@ -39,12 +39,12 @@ FitResultsStat = M.FitResult;
 M.chi2 = 'chi2CMShape';
 M.ComputeCM(CmArg{:});
 
-%% display and save to plots
-%M.FitCM_Obj.PlotCM('qUWindowIndexMax',10,'saveplot','ON');
-%% 
 SysErrdef = GetSysErr(SysBudget);
 M.InitModelObj_Norm_BKG;
-M.FitCM_Obj.ComputeCM_Background('Display','ON','MaxSlopeCpsPereV',99);
+M.FitCM_Obj.ComputeCM_Background('Display','ON','MaxSlopeCpsPereV',5.2*1e-06);
+
+%% display and save to plots
+M.FitCM_Obj.PlotCM('qUWindowIndexMax',-20,'saveplot','ON');
 
 
 

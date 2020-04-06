@@ -20,16 +20,19 @@ RunAnaArg = {'RunList','KNM2_Prompt',... % all KNM2 golden runs
     'TwinBias_Q',E0,...
     'ROIFlag','14keV',...
     'SysBudget',34,...
-    'chi2','chi2Stat'}; 
+    'chi2','chi2Stat'};
 
 MC = MultiRunAnalysis(RunAnaArg{:});
 MC.exclDataStart = MC.GetexclDataStart(range);
+
+FSDArg = {'SanityPlot','OFF','Sigma',std(E0)};
+MC.ModelObj.LoadFSD(FSDArg{:});
 %%
 S = RunSensitivity('RunAnaObj',MC);
 S.RecomputeFlag='OFF';
 S.LimitFlag = 'Central';
 S.ConfLevel=0; % 0 == 1 sigma
 %%
-S.AsymErr = 'ON';
+S.AsymErr = 'OFF';
 S.PlotSysBreakdownBars2('Ranges',MC.exclDataStart,'SavePlot','pdf','HoldOn','OFF','SysInfoBox','OFF');
 
