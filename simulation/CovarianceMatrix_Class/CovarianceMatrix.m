@@ -438,8 +438,7 @@ classdef CovarianceMatrix < handle
                     CovMatSpec = CovMatDisp; % for sigma sys/ sigma stat plot
                     strTitle   = 'Covariance';
                 case 'Frac'
-                    CovMatDisp = obj.CovMatFrac;
-                 
+                    CovMatDisp = obj.CovMatFrac; 
                     CovMatSpec = TBDIS_NoBKG.*obj.CovMatFrac.*TBDIS_NoBKG';
                     strTitle   = 'Fractional covariance';
                 case 'Shape'
@@ -2054,7 +2053,7 @@ function ComputeCM_Background(obj,varargin)
     cprintf('blue','CovarianceMatrix:ComputeCM_Background: Compute Background Covariance Matrix  \n');
     
     % Number of Trials - Hardcoded
-    TrialSave  = obj.nTrials; obj.nTrials = 10000; % BASELINE
+    TrialSave  = obj.nTrials; obj.nTrials = 50000; % BASELINE, termine after obj.nTrials
     
     % Covariance Matrix File
     cm_path        = [getenv('SamakPath'),sprintf('inputs/CovMat/Background/CM/')];
@@ -2075,6 +2074,9 @@ function ComputeCM_Background(obj,varargin)
             obj.CovMat          = tmpCov.obj.CovMat;
             obj.CovMatFrac      = tmpCov.obj.CovMatFrac;
             obj.CovMatFracShape = tmpCov.obj.CovMatFracShape;
+            obj.MultiCovMat.CM_BkgShape          = tmpCov.obj.CovMat;
+            obj.MultiCovMatFrac.CM_BkgShape      = tmpCov.obj.CovMatFrac;
+            obj.MultiCovMatFracShape.CM_BkgShape = tmpCov.obj.CovMatFracShape;
             if strcmp(Display,'OFF')
                 return;
             end
@@ -2096,8 +2098,8 @@ function ComputeCM_Background(obj,varargin)
             nRingLoop = 1;
         end
         
-        TBDIS_V = cell(nRingLoop,1);      % will be later converted into matrix
-        nGoodTrials = zeros(nRingLoop,1); % number of successfull trials
+        TBDIS_V           = cell(nRingLoop,1);      % will be later converted into matrix
+        nGoodTrials       = zeros(nRingLoop,1); % number of successfull trials
         BKG_Asimov        = obj.StudyObject.BKG_RateSec;
         
         if nRingLoop>1 % for more than 1 ring
@@ -2128,7 +2130,7 @@ function ComputeCM_Background(obj,varargin)
            
             BKG         = mvnrnd(BKG_AsimovqU,BKGCovMat,obj.nTrials); % ranomize with multivariate distribution
            % BKG        = BKG_Asimov + BKG_RateErr.*randn(BKGnqU,1);    
-            BKG         = permute(reshape(BKG,obj.nTrials,BKGnqU,nRingLoop),[2,3,1]); % shape back to nqU x nRing x nTrials
+            BKG         = permute(reshape(BKG,obj.nTrials,BKGnqU,nRingLoop),[2,1,3]); % shape back to nqU x nTrials x nRing 
             BKG_RateErr = reshape(BKG_RateErr,BKGnqU,nRingLoop);   % shape back to nqU x nRing
         else
             BKG           = BKG_Asimov + BKG_RateErr.*randn(BKGnqU,obj.nTrials);
@@ -2149,10 +2151,10 @@ function ComputeCM_Background(obj,varargin)
             progressbar(sprintf('Compute Bkg CM ring %.0f out of %.0f',rl,nRingLoop));
             for i=1:obj.nTrials
                 progressbar(i/obj.nTrials);
-                %Data(:,:,i)    = [obj.StudyObject.qU(BKGIndex:end,rl),BKG(:,rl,i), BKG_RateErr(:,rl)];
-                Data(:,:,i)    = [obj.StudyObject.qU(BKGIndex:end,rl),BKG(:,i), BKG_RateErr(:,rl)];
-                %BKG_i         = wmean(BKG(:,rl,i),1./BKG(:,rl,i));
-                BKG_i         = wmean(BKG(:,i),1./BKG(:,i));
+                Data(:,:,i)    = [obj.StudyObject.qU(BKGIndex:end,rl),BKG(:,rl,i), BKG_RateErr(:,rl)];
+                %Data(:,:,i)    = [obj.StudyObject.qU(BKGIndex:end,rl),BKG(:,i), BKG_RateErr(:,rl)];
+                BKG_i         = wmean(BKG(:,rl,i),1./BKG(:,rl,i));
+                %BKG_i         = wmean(BKG(:,i),1./BKG(:,i));
                 Slope_i       = 0;
                 parInit       = [BKG_i+1e-2*rand(1), Slope_i+1e-4*rand(1)];
                 % Call Minuit
@@ -2213,6 +2215,10 @@ function ComputeCM_Background(obj,varargin)
         save(obj.CovMatFile,'obj','TBDIS_V','BKG_Asimov','par','err','chi2min',...
             'Bkg_Fit','BKG_i','BKGIndex','BkgPlot_Data','Data','BKGnqU','MaxSlopeCpsPereV',...
             'SlopesExcl','Slopes');
+        
+        if nRingLoop>1
+           save(obj.CovMatFile,'BKGCorrMat','BKGCovMat','-append')
+        end
     end
 
     % Display
@@ -2283,12 +2289,12 @@ function ComputeCM_Background(obj,varargin)
                    SlopeOK = Slopes(i,logical(SlopesExcl(i,:)));
                    h2 = histogram(SlopeOK.*1e06,'FaceColor',rgb('DodgerBlue'),...
                        'FaceAlpha',1,'BinWidth',h1.BinWidth);
-                   xlabel('Background slope (mcps / KeV)');
+                   xlabel('Background slope (mcps / keV)');
                    PrettyFigureFormat('FontSize',18)
                    leg = legend('MC fit slopes',sprintf('MC fit slopes < %.1f mcps / keV',MaxSlopeCpsPereV(i)*1e6));
                    leg.Location='northwest';
                    leg.EdgeColor = rgb('Silver');
-                   leg.Title.String = sprintf('Ring %.0f',i);
+                   leg.Title.String = sprintf('Pseudo-Ring %.0f',i);
                    hold off;
                    ylim([0 3200])
                    xlim([-20 20])    
@@ -2734,6 +2740,7 @@ function ComputeCM_FSD(obj,varargin)
     end
     
     % FSD from Theory (Reference)
+    obj.StudyObject.LoadFSD;
     obj.StudyObject.ComputeTBDDS;
     DT_P_theory = [obj.StudyObject.DTexP_G.*obj.StudyObject.DTNormGS_i,...
         obj.StudyObject.DTexP_E.*obj.StudyObject.DTNormES_i]';
@@ -2748,9 +2755,9 @@ function ComputeCM_FSD(obj,varargin)
     DT_P_norm = zeros(nRings,size(obj.StudyObject.DTexP,2),obj.nTrials);%Final State Probabilities after norm
     TT_P_norm = zeros(nRings,size(obj.StudyObject.TTexP,2),obj.nTrials);
     HT_P_norm = zeros(nRings,size(obj.StudyObject.HTexP,2),obj.nTrials);
-    DT_P = squeeze(repmat(obj.StudyObject.DTexP,1,1,obj.nTrials));  %Final State Probabilities before norm
-    TT_P = squeeze(repmat(obj.StudyObject.TTexP,1,1,obj.nTrials));
-    HT_P = squeeze(repmat(obj.StudyObject.HTexP,1,1,obj.nTrials));
+    DT_P = repmat(obj.StudyObject.DTexP,1,1,obj.nTrials);  %Final State Probabilities before norm
+    TT_P = repmat(obj.StudyObject.TTexP,1,1,obj.nTrials);
+    HT_P = repmat(obj.StudyObject.HTexP,1,1,obj.nTrials);
     if strcmp(obj.StudyObject.FPD_Segmentation,'RING')
         TBDIS_V = zeros(obj.StudyObject.nqU,obj.StudyObject.nRings,obj.nTrials);
     else
@@ -2762,14 +2769,14 @@ function ComputeCM_FSD(obj,varargin)
         % Vary Norm
         NormBiasDT = randn(obj.nTrials,1).*obj.StudyObject.DTNormGS_i'.*obj.FSDNorm_RelErr;
         % Bin-to-Bin uncorrelated variation
-        DT_P_rand = squeeze(permute(repmat(1+randn(size(obj.StudyObject.DTexP,2),obj.nTrials),1,1,nRings),[3,1,2]));
+        DT_P_rand =permute(repmat(1+randn(size(obj.StudyObject.DTexP,2),obj.nTrials),1,1,nRings),[3,1,2]);
         DT_P(:,1:obj.StudyObject.DTGSTh,:)  = DT_P(:,1:obj.StudyObject.DTGSTh,:).* (DT_P_rand(:,1:obj.StudyObject.DTGSTh,:).*obj.FSDShapeGS_RelErr);
         DT_P(:,obj.StudyObject.DTGSTh+1:end,:) = DT_P(:,obj.StudyObject.DTGSTh+1:end,:).*(DT_P_rand(:,obj.StudyObject.DTGSTh+1:end,:).*obj.FSDShapeES_RelErr); 
         DT_P(DT_P<0)=0;
     end
     if strcmp(obj.HTFlag,'ON')
         NormBiasHT = randn(obj.nTrials,1).*obj.StudyObject.HTNormGS_i'*obj.FSDNorm_RelErr;
-        HT_P_rand = squeeze(permute(repmat(1+randn(size(obj.StudyObject.HTexP,2),obj.nTrials),1,1,nRings),[3,1,2]));
+        HT_P_rand = permute(repmat(1+randn(size(obj.StudyObject.HTexP,2),obj.nTrials),1,1,nRings),[3,1,2]);
         HT_P(:,1:obj.StudyObject.HTGSTh,:)  = HT_P(:,1:obj.StudyObject.HTGSTh,:).* (HT_P_rand(:,1:obj.StudyObject.HTGSTh,:).*obj.FSDShapeGS_RelErr);
         HT_P(:,obj.StudyObject.HTGSTh+1:end,:) = HT_P(:,obj.StudyObject.HTGSTh+1:end,:).*(HT_P_rand(:,obj.StudyObject.HTGSTh+1:end,:).*obj.FSDShapeES_RelErr); 
         HT_P(HT_P<0)=0;
@@ -2778,7 +2785,7 @@ function ComputeCM_FSD(obj,varargin)
     end
     if strcmp(obj.TTFlag,'ON')
         NormBiasTT = randn(obj.nTrials,1).*obj.StudyObject.TTNormGS_i'*obj.FSDNorm_RelErr;
-        TT_P_rand = squeeze(permute(repmat(1+randn(size(obj.StudyObject.TTexP,2),obj.nTrials),1,1,nRings),[3,1,2]));
+        TT_P_rand = permute(repmat(1+randn(size(obj.StudyObject.TTexP,2),obj.nTrials),1,1,nRings),[3,1,2]);
         TT_P(:,1:obj.StudyObject.TTGSTh,:)  = TT_P(:,1:obj.StudyObject.TTGSTh,:).* (TT_P_rand(:,1:obj.StudyObject.TTGSTh,:).*obj.FSDShapeGS_RelErr);
         TT_P(:,obj.StudyObject.TTGSTh+1:end,:) = TT_P(:,obj.StudyObject.TTGSTh+1:end,:).*(TT_P_rand(:,obj.StudyObject.TTGSTh+1:end,:).*obj.FSDShapeES_RelErr); 
         TT_P(TT_P<0)=0;

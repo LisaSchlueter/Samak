@@ -445,7 +445,7 @@ classdef FITC < handle
             CovMatFit = obj.COVMAT(exclIndex,exclIndex);
             CovMatFracFit = obj.COVMATFrac(exclIndex,exclIndex);
             CovMatShapeFit = obj.COVMATShape(exclIndex,exclIndex);
-            CovMatFracShapeFit = obj.COVMATFracShape(exclIndex,exclIndex);
+           % CovMatFracShapeFit = obj.COVMATFracShape(exclIndex,exclIndex);
             
             %reshape for multiring
             if strcmp(obj.SO.FPD_Segmentation,'RING')
