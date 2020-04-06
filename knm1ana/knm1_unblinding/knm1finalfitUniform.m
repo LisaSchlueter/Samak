@@ -9,7 +9,7 @@
 
 %% settings
 RunList               = 'KNM1';
-exclDataStart         = 14; % 27 subruns
+exclDataStart         = 13; % 27 subruns
 RecomputeFlag         = 'OFF';
 BkgCM                 = 'ON';
 
@@ -22,12 +22,12 @@ Real = MultiRunAnalysis('RunList',RunList,...
     'NonPoissonScaleFactor',1.064,...
     'minuitOpt','min ; minos',...
     'FSDFlag','Sibille0p5eV',...%'SAENZ',...%Sibille0p5eV',...%'Sibille',...
-    'ELossFlag','KatrinT2_A20',...
+    'ELossFlag','KatrinT2',...
     'SysBudget',22);
 % Modification - 24/10/2019
 %    'fixPar','5 6 7 8 9 10 11',...
 %% CM Shape
-%Real.chi2='chi2CMShape'; Real.ComputeCM('BkgCM',BkgCM);
+Real.chi2='chi2CMShape'; Real.ComputeCM('BkgCM',BkgCM);
 
 %Real.PlotFitCovCorMatrices('Mode','Shape');
 Real.Fit('CATS','OFF');

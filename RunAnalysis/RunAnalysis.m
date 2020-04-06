@@ -1118,7 +1118,7 @@ classdef RunAnalysis < handle
             % CovMat settings
             p.addParameter('SysEffects',defaultEffects,@(x)isstruct(x));
             p.addParameter('RecomputeFlag','OFF',@(x)ismember(x,{'ON','OFF'}));
-            p.addParameter('nTrials',5000,@(x)isfloat(x));
+            p.addParameter('nTrials',1000,@(x)isfloat(x));
             p.addParameter('DataDriven',SysErr.DataDriven,@(x)ismember(x,{'ON','OFF'}));
 %           % default systematic uncertainties
             p.addParameter('WGTS_TASR_RelErr',SysErr.WGTS_TASR_RelErr,@(x)all(isfloat(x)));

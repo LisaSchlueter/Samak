@@ -1230,7 +1230,7 @@ classdef CovarianceMatrix < handle
                 case 'KatrinD2'
                     ELossPar_expected = obj.StudyObject.parKatrinD2;
                     ELossErr_expected = obj.StudyObject.errKatrinD2;
-                case 'KatrinT2'
+                case {'KatrinT2','KatrinT2A20'}
                     ELossPar_expected = obj.StudyObject.parKatrinT2;
                     ELossErr_expected = obj.StudyObject.errKatrinT2;
             end
@@ -1250,11 +1250,11 @@ classdef CovarianceMatrix < handle
                       % ELossCorrMat = d.ELoss_CorrMat; % old
                       d = importdata([getenv('SamakPath'),'/inputs/ELossFunction/KATRIND2_ELossFunction_CorrMat_May19.mat']);  % new: May 19
                       ELossCorrMat = ELossErr_expected.*d.ELoss_CorrMat.*ELossErr_expected';
-                case 'KatrinT2'
+                case {'KatrinT2','KatrinT2A20'}
                        % correlation taken from V.Hannen (internal communication): May 19
                       %d=importdata([getenv('SamakPath'),'/inputs/ELossFunction/KATRIND2_ELossFunction_CorrMat_old.mat']);     % old
                       % ELossCorrMat = d.ELoss_CorrMat; % old
-                      ElossFit = 'A20'; % 'M19';
+                      ElossFit = 'M19'; % 'M19';
                       switch ElossFit
                           case 'M19'
                               d = importdata([getenv('SamakPath'),'/inputs/ELossFunction/KATRINT2_ELossFunction_CorrMat.mat']);  % new: May 19
@@ -1270,7 +1270,7 @@ classdef CovarianceMatrix < handle
             catch
                 % WARNING: temporary solution
                 fprintf(2,'warning: eloss correlation matrix not positive semi-definite \n');
-                 ELossPar = mvnrnd(ELossPar_expected,nearestSPD(ELossCorrMat),obj.nTrials);
+                ELossPar = mvnrnd(ELossPar_expected,nearestSPD(ELossCorrMat),obj.nTrials);
             end
             fscatn  = cell(obj.StudyObject.NIS, obj.nTrials); % cell of function handles
             fscatnE = zeros(obj.StudyObject.NIS,numel(E),obj.nTrials);
@@ -1308,7 +1308,7 @@ classdef CovarianceMatrix < handle
                             'is_epsc',is_epsc(i),'LoadOrSaveEloss','OFF','E',E);
                     case 'KatrinD2'
                         [fscatn(:,i),fscatnE(:,:,i)] =  obj.StudyObject.ComputeELossFunction('parKatrinD2',ELossPar(i,:),'LoadOrSaveEloss','OFF','E',E);
-                    case 'KatrinT2'
+                    case {'KatrinT2','KatrinT2A20'}
                         [fscatn(:,i),fscatnE(:,:,i)] =  obj.StudyObject.ComputeELossFunction('parKatrinT2',ELossPar(i,:),'LoadOrSaveEloss','OFF','E',E);
                 end
             end
@@ -2054,7 +2054,7 @@ function ComputeCM_Background(obj,varargin)
     cprintf('blue','CovarianceMatrix:ComputeCM_Background: Compute Background Covariance Matrix  \n');
     
     % Number of Trials - Hardcoded
-    TrialSave  = obj.nTrials; obj.nTrials = 50000; % BASELINE
+    TrialSave  = obj.nTrials; obj.nTrials = 10000; % BASELINE
     
     % Covariance Matrix File
     cm_path        = [getenv('SamakPath'),sprintf('inputs/CovMat/Background/CM/')];
@@ -2149,8 +2149,10 @@ function ComputeCM_Background(obj,varargin)
             progressbar(sprintf('Compute Bkg CM ring %.0f out of %.0f',rl,nRingLoop));
             for i=1:obj.nTrials
                 progressbar(i/obj.nTrials);
-                Data(:,:,i)    = [obj.StudyObject.qU(BKGIndex:end,rl),BKG(:,rl,i), BKG_RateErr(:,rl)];
-                BKG_i         = wmean(BKG(:,rl,i),1./BKG(:,rl,i));
+                %Data(:,:,i)    = [obj.StudyObject.qU(BKGIndex:end,rl),BKG(:,rl,i), BKG_RateErr(:,rl)];
+                Data(:,:,i)    = [obj.StudyObject.qU(BKGIndex:end,rl),BKG(:,i), BKG_RateErr(:,rl)];
+                %BKG_i         = wmean(BKG(:,rl,i),1./BKG(:,rl,i));
+                BKG_i         = wmean(BKG(:,i),1./BKG(:,i));
                 Slope_i       = 0;
                 parInit       = [BKG_i+1e-2*rand(1), Slope_i+1e-4*rand(1)];
                 % Call Minuit
