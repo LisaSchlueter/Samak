@@ -16,6 +16,7 @@ classdef RunSensitivity < handle
         MultiLparMinos;
         MultiLparStack;    % sensitivities N+1: stat, stat+SysEffectAll{1}, stat + +SysEffectAll{1} ++SysEffectAll{2}, .....
         NPcomponent;       % non poissonian component
+        AsymErr;           % use asymmetric uncertainties (only minos) or symmetrized 
         
         % method
         Mode % Asimov, Scan, MC, ..
@@ -26,7 +27,7 @@ classdef RunSensitivity < handle
         SysEffect;         % struct with effects (used when only 1 sensitivity is calculated)
         SysEffectLeg;     % legend (has to match SysEffectsAll)
         nSys;              % number of systematic effects
-        CovMatFrac;  % struct with covariance matrices from MultiLpar
+        CovMatFrac;       % struct with covariance matrices from MultiLpar
         CovMatFracStack;   % struct with covariance matrices from MultiLparStack
         CovMatShape;
         CovMatShapeStack;
@@ -48,7 +49,7 @@ classdef RunSensitivity < handle
         %N_LimitLow;
         N_LimitUp;
         N_mNuSq;
-        
+       
         FC_mNuSqFit  % fit neutrino masses
         FC_mNuSqTrue
         FC_DeltaChi2
@@ -72,6 +73,7 @@ classdef RunSensitivity < handle
                                 'Detector efficiency';'Non-Poisson background';'Background slope'};
 
             p = inputParser;
+            p.addParameter('AsymErr','ON',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('ConfLevel',0.9, @(x)isfloat(x));
             p.addParameter('RunAnaObj','', @(x) isa(x,'RunAnalysis') || isa(x,'MultiRunAnalysis'));
             p.addParameter('SysEffectsAll',DefaultSysAll,@(x)iscell(x));
@@ -95,6 +97,7 @@ classdef RunSensitivity < handle
             obj.ScanSide       = p.Results.ScanSide;
             obj.nSys           = numel(obj.SysEffectsAll);
             obj.LimitFlag      = p.Results.LimitFlag;
+            obj.AsymErr        = p.Results.AsymErr;
             
             if isempty(obj.RunAnaObj)
                 fprintf(2,'Error: RunAnalysis Object is necessary input! \n');
@@ -1467,8 +1470,8 @@ classdef RunSensitivity < handle
                 
                 if SingleBarY(i)<0.001
                     tstr = sprintf('<10^{-3}') ;
-                elseif round(SingleBarY(i),2)<0.01
-                    tstr = sprintf('<10^{-2}') ;
+                elseif SingleBarY(i)<0.01 && SingleBarY(i)>0.001
+                    tstr = sprintf('%.0f\\cdot10^{-3}',SingleBarY(i)*1e3) ;
                 else
                     tstr = sprintf('%.0f\\cdot10^{-2}',SingleBarY(i)*1e2) ;
                 end
@@ -2228,7 +2231,7 @@ classdef RunSensitivity < handle
                     obj.CovMatFrac.(SysEffect_save)  = d.FitCMFrac;
                     obj.CovMatShape.(SysEffect_save) = d.FitCMShape;
                     if strcmp(obj.RunAnaObj.fitter,'minuit') && contains(obj.RunAnaObj.minuitOpt,'minos')
-                        if isfield(d,'LparMinos')  % average asymmetric uncertainties
+                        if isfield(d,'LparMinos') && strcmp(obj.AsymErr,'ON') % average asymmetric uncertainties
                             obj.Lpar                       = d.LparMinos;
                             obj.MultiLpar.(SysEffect_save) = d.LparMinos;                
                         end
@@ -2248,7 +2251,7 @@ classdef RunSensitivity < handle
                     obj.CovMatShape.(SysEffect_save) = FitCMShape;
                     
                     if strcmp(obj.RunAnaObj.fitter,'minuit') && contains(obj.RunAnaObj.minuitOpt,'minos')
-                        if isfield(obj,'LparMinos') && sum(obj.LparMinos)~=0 % average asymmetric uncertainties
+                        if sum(obj.LparMinos)~=0 && strcmp(obj.AsymErr,'ON')% average asymmetric uncertainties
                             obj.Lpar                       = LparMinos;
                             obj.MultiLpar.(SysEffect_save) = LparMinos;
                         end
@@ -2394,7 +2397,7 @@ classdef RunSensitivity < handle
             if strcmp(obj.RunAnaObj.DataSet,'FirstTritium.katrin')
                 nTrials = 1000;
             elseif strcmp(obj.RunAnaObj.DataSet,'Knm2')
-                nTrials = 5000; 
+                nTrials = 5000;
             else
                 if ischar(SysEffect)
                     if contains(SysEffect,'RF')

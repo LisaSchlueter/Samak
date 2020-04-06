@@ -1718,6 +1718,7 @@ classdef CovarianceMatrix < handle
             obj.CovMatFile = strcat(covmat_path,covmat_filename);
             
             %Check if CM is already computed
+            obj.RecomputeFlag='ON';
             if exist(obj.CovMatFile,'file')==2 && strcmp(obj.RecomputeFlag,'OFF')
                 fprintf(2,'CovarianceMatrix:ComputeCM_TASR: Loading TASR CM from File \n')
                 obj.ReadCMFile('filename',obj.CovMatFile,'SysEffect','TASR');
@@ -2033,6 +2034,7 @@ function ComputeCM_Background(obj,varargin)
     p.addParameter('qUStartIndex',11);             % here, for Display Only
     p.addParameter('MaxSlopeCpsPereV',0.15E-04);   % qU-Slope constraint - Absolute Slope Value
     p.addParameter('BkgRange',-5,@(x)isfloat(x));  % defines, which points are used to constrain slope. In eV with respect to endpoint
+    p.addParameter('RingCorrCoeff',0,@(x)isfloat(x));  % ring to ring correlation
     
     p.parse(varargin{:});
     Display          = p.Results.Display;
@@ -2040,6 +2042,7 @@ function ComputeCM_Background(obj,varargin)
     qUStartIndex     = p.Results.qUStartIndex;
     MaxSlopeCpsPereV = p.Results.MaxSlopeCpsPereV;
     BkgRange         = p.Results.BkgRange;
+    RingCorrCoeff    = p.Results.RingCorrCoeff;
     
     fprintf(       '--------------------------------------------------------------------------   \n');
     cprintf('blue','CovarianceMatrix:ComputeCM_Background: Compute Background Covariance Matrix  \n');
@@ -2055,7 +2058,7 @@ function ComputeCM_Background(obj,varargin)
         sum(obj.StudyObject.BKG_RateSec)*1e3,MaxSlopeCpsPereV,BkgRange,obj.nTrials);
     % add ring information for ringwise covariance matrices
     if strcmp(obj.StudyObject.FPD_Segmentation,'RING')
-        cm_name = strrep(cm_name,'.mat',sprintf('_Ring%s.mat',obj.StudyObject.FPD_RingMerge));
+        cm_name = strrep(cm_name,'.mat',sprintf('_Ring%s_RingCorrCoeff%.2f.mat',obj.StudyObject.FPD_RingMerge,RingCorrCoeff));
     end
     obj.CovMatFile = [cm_path,cm_name];
     
@@ -2092,39 +2095,51 @@ function ComputeCM_Background(obj,varargin)
         BKG_Asimov        = obj.StudyObject.BKG_RateSec;
         
         if nRingLoop>1 % for more than 1 ring
-            % normalize MaxSlopeCpsPereV to correct number of pixels
-            nPixPerRing = arrayfun(@(x) numel(x{:}),obj.StudyObject.FPD_RingPixList,'UniformOutput',1); %number of pixels in each ring
-            nPixTotal = numel(obj.StudyObject.FPD_PixList);
-            MaxSlopeCpsPereV = MaxSlopeCpsPereV.*(nPixPerRing./nPixTotal);
+            % normalize MaxSlopeCpsPereV to correct statistics
+            %nPixPerRing = arrayfun(@(x) numel(x{:}),obj.StudyObject.FPD_RingPixList,'UniformOutput',1); %number of pixels in each ring
+            %nPixTotal = numel(obj.StudyObject.FPD_PixList);
+            MaxSlopeCpsPereV = MaxSlopeCpsPereV.*(BKG_Asimov./sum(BKG_Asimov));%(nPixPerRing./nPixTotal);
         end
         
-        Slopes     = zeros(nRingLoop,obj.nTrials);
-        SlopesExcl = ones(nRingLoop,obj.nTrials); % 1== included, 0 == excluded
-        for rl=1:1:nRingLoop
-            
-            % Init - Take All Data as 'Background'
-            % Starting from -5 eV below endpoint and beyond
+        Slopes      = zeros(nRingLoop,obj.nTrials); % background fit slope
+        SlopesExcl  = ones(nRingLoop,obj.nTrials); % 1== included, 0 == excluded
+        
+        % randomize background
+        BKGIndex    = find(obj.StudyObject.qU>=(obj.StudyObject.Q_i+BkgRange),1); % Start 5eV below E0
+        BKGnqU      = numel(obj.StudyObject.qU(obj.StudyObject.qU>=(obj.StudyObject.Q_i+BkgRange)));
+        BKGnqU      = BKGnqU./nRingLoop;
+        BKG_RateErr = obj.NonPoissonScaleFactor.* sqrt(BKG_Asimov./(obj.StudyObject.TimeSec.*obj.StudyObject.qUfrac(BKGIndex:end,:)));
+        if nRingLoop>1 % for more than 1 ring
+            BKG_RateErr   = reshape(BKG_RateErr,BKGnqU.*nRingLoop,1); % shape back to nqU*nRing x 1
+            BKG_AsimovqU  = reshape(repmat(BKG_Asimov,BKGnqU,1),BKGnqU.*nRingLoop,1);
+            BKGCorrMat    = diag(ones(BKGnqU.*nRingLoop,1))+RingCorrCoeff.*(repmat(diag(ones(BKGnqU,1) ),nRingLoop,nRingLoop)-diag(ones(BKGnqU.*nRingLoop,1)));
+            BKGCovMat     = BKG_RateErr.*BKGCorrMat.*BKG_RateErr';
+           
+            BKG         = mvnrnd(BKG_AsimovqU,BKGCovMat,obj.nTrials); % ranomize with multivariate distribution
+           % BKG        = BKG_Asimov + BKG_RateErr.*randn(BKGnqU,1);    
+            BKG         = permute(reshape(BKG,obj.nTrials,BKGnqU,nRingLoop),[2,3,1]); % shape back to nqU x nRing x nTrials
+            BKG_RateErr = reshape(BKG_RateErr,BKGnqU,nRingLoop);   % shape back to nqU x nRing
+        else
+            BKG           = BKG_Asimov + BKG_RateErr.*randn(BKGnqU,obj.nTrials);
+        end
+       
+        for rl=1:1:nRingLoop  
             par        = zeros(2,obj.nTrials);
             err        = zeros(2,obj.nTrials);
             chi2min    = zeros(obj.nTrials,1);
-            BKGIndex   = find(obj.StudyObject.qU(:,rl)>=(obj.StudyObject.Q_i+BkgRange),1); % Start 5eV below E0
-            BKGnqU     = numel(obj.StudyObject.qU(obj.StudyObject.qU>=(obj.StudyObject.Q_i+BkgRange))); BKGnqU=BKGnqU./nRingLoop;
             CutOff     = ones(1,obj.nTrials);
             
             % Definitions
             BkgPlot_Data = zeros(BKGnqU,obj.nTrials);              % Store for sanity plot
-            Data        = zeros(BKGnqU,3,obj.nTrials);
+            Data         = zeros(BKGnqU,3,obj.nTrials);
             Bkg_Fit      = zeros(obj.StudyObject.nqU,obj.nTrials); % Store for covmat computation
            
             % Fit Background Rate (in counts per second)
             progressbar(sprintf('Compute Bkg CM ring %.0f out of %.0f',rl,nRingLoop));
             for i=1:obj.nTrials
                 progressbar(i/obj.nTrials);
-                BKG_RateErr   = sqrt(BKG_Asimov(rl)./(obj.StudyObject.TimeSec(rl) .* obj.StudyObject.qUfrac(BKGIndex:end,rl))); % Bkg Rate Error - Poisson
-                BKG_RateSigma = obj.NonPoissonScaleFactor(rl) * sqrt(BKG_Asimov(rl) ./ (obj.StudyObject.TimeSec(rl).*obj.StudyObject.qUfrac(BKGIndex:end,rl)));
-                BKG           = BKG_Asimov(rl) + BKG_RateSigma.*randn(BKGnqU,1);
-                Data(:,:,i)    = [obj.StudyObject.qU(BKGIndex:end,rl),BKG, BKG_RateErr];
-                BKG_i         = wmean(BKG,1./BKG);
+                Data(:,:,i)    = [obj.StudyObject.qU(BKGIndex:end,rl),BKG(:,rl,i), BKG_RateErr(:,rl)];
+                BKG_i         = wmean(BKG(:,rl,i),1./BKG(:,rl,i));
                 Slope_i       = 0;
                 parInit       = [BKG_i+1e-2*rand(1), Slope_i+1e-4*rand(1)];
                 % Call Minuit
@@ -2273,7 +2288,7 @@ function ComputeCM_Background(obj,varargin)
                SlopeOK = Slopes(logical(SlopesExcl));
                h2 = histogram(SlopeOK.*1e06,'FaceColor',rgb('DodgerBlue'),...
                    'FaceAlpha',1,'BinWidth',h1.BinWidth);
-               xlabel('Background slope (mcps / KeV)');
+               xlabel('Background slope (mcps / keV)');
                PrettyFigureFormat('FontSize',22)
                leg = legend('MC fit slopes',sprintf('MC fit slopes < %.1f mcps / keV',MaxSlopeCpsPereV*1e6));
                leg.Location='northwest';

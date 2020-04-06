@@ -1,5 +1,5 @@
-maxE = 9288;
-ELossBinStep = 0.1;
+maxE = 500;
+ELossBinStep = 0.04;
 minE=-maxE; NbinE = (maxE-minE)/ELossBinStep;
 E = minE:ELossBinStep:maxE;
 Estep = E(2) - E(1);

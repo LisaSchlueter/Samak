@@ -65,3 +65,4 @@ elseif strcmp(myEffect,'all')
         'ON','CovMatInput',M.FitCMFracShape,...
         'savedir',plotdir,'savename','KNM1_FS_Uniform');
 end
+

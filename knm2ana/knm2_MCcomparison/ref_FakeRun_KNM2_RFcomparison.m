@@ -41,7 +41,7 @@ p.addParameter('KTFFlag','WGTSMACE',@(x)ismember(x,{'OFF','MACE','WGTSMACE'}));
 p.addParameter('recomputeRF','OFF',@(x)ismember(x,{'ON','OFF'}));
 p.addParameter('UseParallelRF','ON',@(x)ismember(x,{'OFF','ON'}));
 p.addParameter('SynchrotronFlag','ON',@(x)ismember(x,{'OFF','ON'}));
-
+p.addParameter('RFBinStep',0.02,@(x)isfloat(x));
 % General
 p.addParameter('TimeSec',2*60*60,@(x)isfloat(x));
 p.addParameter('mnuSq_i',0,@(x)isfloat(x));
@@ -85,6 +85,7 @@ KTFFlag                  = p.Results.KTFFlag;
 recomputeRF              = p.Results.recomputeRF;
 UseParallelRF            = p.Results.UseParallelRF;
 SynchrotronFlag          = p.Results.SynchrotronFlag;
+RFBinStep                = p.Results.RFBinStep;
 
 %Theory
 ISCS                     = p.Results.ISCS;
@@ -165,7 +166,8 @@ opt_mace = {...
     'MACE_Bmax_T',MACE_Bmax_T,...
     'MACE_Ba_T',MACE_Ba_T,...
     'MACE_Ba_Setting','Data',... do not use pixelmap correction from txt file, use values from runsummary
-    'SynchrotronFlag',SynchrotronFlag}; %
+    'SynchrotronFlag',SynchrotronFlag,...
+    'RFBinStep',RFBinStep}; %
 
 opt_wgtsmace = {...
     'KTFFlag',KTFFlag};

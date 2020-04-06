@@ -9,7 +9,7 @@ freePar = 'mNu E0 Norm Bkg';
 DataType = 'Twin';
 RingMerge = 'Full';
 
-MaxSlopeCpsPereV = 99;
+MaxSlopeCpsPereV = 5.2*-06;
 savedir = [getenv('SamakPath'),'knm2ana/knm2_MultiRingFit/results/'];
 MakeDir(savedir);
 

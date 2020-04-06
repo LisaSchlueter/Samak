@@ -2,7 +2,7 @@
 range = 40;
 RecomputeFlag = 'OFF';
 
-RFBinStep_i = 0.001;
+RFBinStep_i = 0.04;
 RFBinStep = [0.001,0.005,0.01,0.02,0.04,0.06,0.08,0.1,0.2];
 
 %% load or calc
@@ -50,3 +50,23 @@ else
     MakeDir(savedir);
     save(savename,'mNuSq','E0','RFBinStep','RFBinStep_i','RunAnaArg','TBDIS_i')
 end
+
+
+%% display results
+f1 = figure('Units','normalized','Position',[0.1,0.1,0.5,0.5]);
+plot(linspace(-10,1e3,10),zeros(10,1),'-k','LineWidth',2);
+hold on
+p1 =plot(RFBinStep.*1e3,mNuSq,'-.o','LineWidth',2,'MarkerFaceColor',rgb('CadetBlue'),'Color',...
+    rgb('CadetBlue'),'MarkerSize',9);
+pMC = plot(RFBinStep_i.*1e3,mNuSq(RFBinStep==RFBinStep_i),'o',...
+    'LineWidth',2,'MarkerFaceColor',rgb('IndianRed'),'MarkerSize',9,'Color',rgb('IndianRed'));
+xlabel(sprintf('Model \\Delta{\\itE}_{RF} (meV)'));
+ylabel(sprintf('\\Delta{\\itm}_\\nu^2 (eV^2)'));
+PrettyFigureFormat('FontSize',24);
+leg = legend(pMC,sprintf('MC truth \\Delta{\\itE}_{RF} = %.0f meV',RFBinStep_i*1e3),...
+    'Location','northwest','EdgeColor',rgb('Silver'));
+xlim([min(RFBinStep)-0.01,max(RFBinStep)+0.01].*1e3);
+ylim([min(mNuSq)-0.01,max(mNuSq)+0.01])
+plotname = strrep(strrep(savename,'results','plots'),'.mat','.png');
+print(plotname,'-dpng','-r450');
+fprintf('save plot to %s \n',plotname)
