@@ -8,16 +8,21 @@ pullFlag = 4;
 freePar = 'mNu E0 Norm Bkg';
 DataType = 'Twin';
 RingMerge = 'Full';
-
-MaxSlopeCpsPereV = 5.2*-06;
+ScalingOpt = 2;
+MaxSlopeCpsPereV = 5.2*1e-06;
 savedir = [getenv('SamakPath'),'knm2ana/knm2_systematics/results/'];
 MakeDir(savedir);
 
 CorrCoeff = (0:0.2:1);
-
 for i=1:numel(CorrCoeff)
-    savename = [savedir,sprintf('knm2_MultiRingFit_BkgSys_Constrain%.3gCpsPerEv_%s_%s_%s_pull%.0f_%.0feVrange_RingMerge%s_CorrCoeff%.2f.mat',...
-        MaxSlopeCpsPereV,DataType, RunList,strrep(freePar,' ',''),pullFlag,range,RingMerge,CorrCoeff(i))];
+    if ScalingOpt==2
+        extraStr = '_Scaling2';
+    else
+        extraStr = '';
+    end
+    
+    savename = [savedir,sprintf('knm2_MultiRingFit_BkgSys_Constrain%.3gCpsPerEv_%s_%s_%s_pull%.0f_%.0feVrange_RingMerge%s_CorrCoeff%.2f%s.mat',...
+        MaxSlopeCpsPereV,DataType, RunList,strrep(freePar,' ',''),pullFlag,range,RingMerge,CorrCoeff(i),extraStr)];
     if exist(savename,'file')
         load(savename)
     else
@@ -49,7 +54,7 @@ for i=1:numel(CorrCoeff)
         MR.ModelObj.LoadFSD(FSDArg{:});
         
         % stat only
-        savenameStat = strrep(savename,'.mat','_StatOnly');
+        savenameStat = [savedir,'knm2_MRStatOnly.mat'];
         if exist(savenameStat,'file')
             load(savenameStat)
         else  
@@ -63,7 +68,8 @@ for i=1:numel(CorrCoeff)
         MR.SetNPfactor; % convert to right dimension (if multiring)
         BkgRingCorrCoeff = CorrCoeff(i);
         MR.ComputeCM('SysEffects',struct('FSD','OFF'),'BkgCM','ON',...
-            'MaxSlopeCpsPereV',MaxSlopeCpsPereV,'BkgRingCorrCoeff',BkgRingCorrCoeff);
+            'MaxSlopeCpsPereV',MaxSlopeCpsPereV,'BkgRingCorrCoeff',BkgRingCorrCoeff,...
+            'BkgScalingOpt',ScalingOpt);
         BkgCovMatFrac      = MR.FitCM_Obj.CovMatFrac;
         BkgCovMatFracShape = MR.FitCM_Obj.CovMatFracShape;
         BkgCovMat          = MR.FitCM_Obj.CovMat;

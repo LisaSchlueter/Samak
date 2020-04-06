@@ -1142,7 +1142,7 @@ classdef RunAnalysis < handle
             p.addParameter('MACE_VarErr',SysErr.MACE_VarErr,@(x)isfloat(x));
             p.addParameter('is_EOffsetErr',SysErr.is_EOffsetErr,@(x)isfloat(x));
             p.addParameter('BkgRingCorrCoeff',0,@(x)isfloat(x));
-            
+            p.addParameter('BkgScalingOpt',1,@(x)isfloat(x));
             p.parse(varargin{:});
             
             InitNormFit              = p.Results.InitNormFit;
@@ -1172,6 +1172,7 @@ classdef RunAnalysis < handle
             MACE_VarErr              = p.Results.MACE_VarErr; %longitudinal plasma
             is_EOffsetErr            = p.Results.is_EOffsetErr; %longitudinal plasma
             BkgRingCorrCoeff         = p.Results.BkgRingCorrCoeff; % ring to ring correlation coefficient
+            BkgScalingOpt            = p.Results.BkgScalingOpt;
             % --------------------- END PARSER ---------------------------------%
             
             % --------------------  Initialize Covariance Matrix----------------------------%
@@ -1252,7 +1253,7 @@ classdef RunAnalysis < handle
             if strcmp(BkgCM,'ON')
                 obj.FitCM_Obj.ComputeCM_Background('Display',PlotSaveCM,...
                     'MaxSlopeCpsPereV',MaxSlopeCpsPereV,'BkgRange',BkgRange,...
-                    'BkgRingCorrCoeff',BkgRingCorrCoeff);
+                    'RingCorrCoeff',BkgRingCorrCoeff,'ScalingOpt',BkgScalingOpt);
                 
                 obj.FitCM           = obj.FitCM          + obj.FitCM_Obj.CovMat;     % regular covmat:    add background covmat to signal covmat 
                 obj.FitCMFrac       = obj.FitCMFrac      + obj.FitCM_Obj.CovMatFrac; % fractional covmat: add background covmat to signal covmat 

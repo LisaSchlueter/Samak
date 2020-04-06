@@ -2035,6 +2035,7 @@ function ComputeCM_Background(obj,varargin)
     p.addParameter('MaxSlopeCpsPereV',0.15E-04);   % qU-Slope constraint - Absolute Slope Value
     p.addParameter('BkgRange',-5,@(x)isfloat(x));  % defines, which points are used to constrain slope. In eV with respect to endpoint
     p.addParameter('RingCorrCoeff',0,@(x)isfloat(x));  % ring to ring correlation
+    p.addParameter('ScalingOpt',2,@(x)isfloat(x));
     
     p.parse(varargin{:});
     Display          = p.Results.Display;
@@ -2043,7 +2044,7 @@ function ComputeCM_Background(obj,varargin)
     MaxSlopeCpsPereV = p.Results.MaxSlopeCpsPereV;
     BkgRange         = p.Results.BkgRange;
     RingCorrCoeff    = p.Results.RingCorrCoeff;
-    
+    ScalingOpt       = p.Results.ScalingOpt;
     fprintf(       '--------------------------------------------------------------------------   \n');
     cprintf('blue','CovarianceMatrix:ComputeCM_Background: Compute Background Covariance Matrix  \n');
     
@@ -2058,7 +2059,7 @@ function ComputeCM_Background(obj,varargin)
         sum(obj.StudyObject.BKG_RateSec)*1e3,MaxSlopeCpsPereV,BkgRange,obj.nTrials);
     % add ring information for ringwise covariance matrices
     if strcmp(obj.StudyObject.FPD_Segmentation,'RING')
-        cm_name = strrep(cm_name,'.mat',sprintf('_Ring%s_RingCorrCoeff%.2f.mat',obj.StudyObject.FPD_RingMerge,RingCorrCoeff));
+        cm_name = strrep(cm_name,'.mat',sprintf('_Ring%s_RingCorrCoeff%.2f_%.0f.mat',obj.StudyObject.FPD_RingMerge,RingCorrCoeff,ScalingOpt));
     end
     obj.CovMatFile = [cm_path,cm_name];
     
@@ -2098,7 +2099,12 @@ function ComputeCM_Background(obj,varargin)
             % normalize MaxSlopeCpsPereV to correct statistics
             %nPixPerRing = arrayfun(@(x) numel(x{:}),obj.StudyObject.FPD_RingPixList,'UniformOutput',1); %number of pixels in each ring
             %nPixTotal = numel(obj.StudyObject.FPD_PixList);
-            MaxSlopeCpsPereV = MaxSlopeCpsPereV.*(BKG_Asimov./sum(BKG_Asimov));%(nPixPerRing./nPixTotal);
+            switch ScalingOpt   
+                case 1
+                    MaxSlopeCpsPereV = MaxSlopeCpsPereV.*(BKG_Asimov./sum(BKG_Asimov));
+                case 2
+                    MaxSlopeCpsPereV = MaxSlopeCpsPereV.*sqrt(BKG_Asimov./sum(BKG_Asimov));%(nPixPerRing./nPixTotal);
+            end
         end
         
         Slopes      = zeros(nRingLoop,obj.nTrials); % background fit slope
