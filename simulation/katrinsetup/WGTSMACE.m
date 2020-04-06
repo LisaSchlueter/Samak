@@ -203,7 +203,7 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             p.addParameter('MACE_R_eV',2,@(x)isfloat(x) && x>0); %2
             p.addParameter('HVRipples','ON',@(x)ismember(x,{'OFF','ON'}));
             p.addParameter('HVRipplesP2PV',0.52,@(x)isfloat(x) && x>0); % V or eV
-            p.addParameter('ELossFlag','Abdurashitov',@(x)ismember(x,{'KatrinT2','KatrinD2','Aseev','Abdurashitov','CW_GLT','CW_G2LT'}));
+            p.addParameter('ELossFlag','Abdurashitov',@(x)ismember(x,{'KatrinT2A20','KatrinT2','KatrinD2','Aseev','Abdurashitov','CW_GLT','CW_G2LT'}));
             p.addParameter('RFBinStep',0.02,@(x)isfloat(x));
             
             % Both WGTS & MACE
@@ -748,7 +748,7 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
                         f1scat  = @(e) obj.eloss_katrin(e, parKatrinD2_local(1), parKatrinD2_local(2), parKatrinD2_local(3), parKatrinD2_local(4),...
                             parKatrinD2_local(5), parKatrinD2_local(6), parKatrinD2_local(7), parKatrinD2_local(8), parKatrinD2_local(9));
                         f1scatn = @(e) f1scat(e);%function is already properly normalized
-                    case {'KatrinT2'}
+                    case {'KatrinT2','KatrinT2A20'}
                         f1scat  = @(e) obj.eloss_katrin(e, parKatrinT2_local(1), parKatrinT2_local(2), parKatrinT2_local(3), parKatrinT2_local(4),...
                             parKatrinT2_local(5), parKatrinT2_local(6), parKatrinT2_local(7), parKatrinT2_local(8), parKatrinT2_local(9));
                         f1scatn = @(e) f1scat(e);%function is already properly normalized
@@ -922,10 +922,18 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
                     % Ionization energy for T2 [eV]
                     % Global fit of parametrized energy loss function to measured integral and t.o.f. data
                     % Author: V. Hannen, Data preparation: C. Rodenbeck, R. Sack, L. Schimpf
-                    % value from git repo: https://nuserv.uni-muenster.de:8443/katrin-git/KATRIN-eloss/blob/master/code/KNM1/
-                    % Last updated: 18/02/2020
+                    % KNM1: value from git repo: https://nuserv.uni-muenster.de:8443/katrin-git/KATRIN-eloss/blob/master/code/KNM1/
+                    % Last updated: 06/04/2020
                     obj.Ei = 15.487;
-                    [obj.parKatrinT2, obj.errKatrinT2] = GetElossPara;
+                    [obj.parKatrinT2, obj.errKatrinT2] = GetElossPara('ElossFit','M19');
+                case 'KatrinT2A20'
+                    % Ionization energy for T2 [eV]
+                    % Global fit of parametrized energy loss function to measured integral and t.o.f. data
+                    % Author: V. Hannen, Data preparation: C. Rodenbeck, R. Sack, L. Schimpf
+                    % KNM2: https://nuserv.uni-muenster.de:8443/katrin-git/KATRIN-eloss/-/blob/master/parameters/KNM2/t2-eloss_parameterization_v3/fit_result.txt
+                    % Last updated: 06/04/2020
+                    obj.Ei = 15.487;
+                    [obj.parKatrinT2, obj.errKatrinT2] = GetElossPara('ElossFit','A20');
                 case 'Aseev'
                     obj.is_A1    = 0.204;   obj.is_A1e    = 0.001; % Normalization
                     obj.is_A2    = 0.0556;  obj.is_A2e    = 0.0003;% Normalization

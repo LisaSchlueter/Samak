@@ -1,4 +1,3 @@
-
 % ------------------------------------------------------------------- % 
     %   Class to Create & Handle Covariance Matrices
     %  
@@ -1255,7 +1254,13 @@ classdef CovarianceMatrix < handle
                        % correlation taken from V.Hannen (internal communication): May 19
                       %d=importdata([getenv('SamakPath'),'/inputs/ELossFunction/KATRIND2_ELossFunction_CorrMat_old.mat']);     % old
                       % ELossCorrMat = d.ELoss_CorrMat; % old
-                      d = importdata([getenv('SamakPath'),'/inputs/ELossFunction/KATRINT2_ELossFunction_CorrMat.mat']);  % new: May 19
+                      ElossFit = 'A20'; % 'M19';
+                      switch ElossFit
+                          case 'M19'
+                              d = importdata([getenv('SamakPath'),'/inputs/ELossFunction/KATRINT2_ELossFunction_CorrMat.mat']);  % new: May 19
+                          case 'A20'
+                              d = importdata([getenv('SamakPath'),'/inputs/ELossFunction/KATRINT2_ELossFunction_CorrMat_April20.mat']);  % new: April 20
+                      end
                       ELossCorrMat = ELossErr_expected.*d.ELoss_CorrMat.*ELossErr_expected';
             end
             
@@ -2123,7 +2128,7 @@ function ComputeCM_Background(obj,varargin)
                 BKG_RateErr   = sqrt(BKG_Asimov(rl)./(obj.StudyObject.TimeSec(rl) .* obj.StudyObject.qUfrac(BKGIndex:end,rl))); % Bkg Rate Error - Poisson
                 BKG_RateSigma = obj.NonPoissonScaleFactor(rl) * sqrt(BKG_Asimov(rl) ./ (obj.StudyObject.TimeSec(rl).*obj.StudyObject.qUfrac(BKGIndex:end,rl)));
                 BKG           = BKG_Asimov(rl) + BKG_RateSigma.*randn(BKGnqU,1);
-                Data(:,:,i)    = [obj.StudyObject.qU(BKGIndex:end,rl),BKG, BKG_RateErr];
+                Data(:,:,i)   = [obj.StudyObject.qU(BKGIndex:end,rl),BKG, BKG_RateErr];
                 BKG_i         = wmean(BKG,1./BKG);
                 Slope_i       = 0;
                 parInit       = [BKG_i+1e-2*rand(1), Slope_i+1e-4*rand(1)];
@@ -2132,39 +2137,39 @@ function ComputeCM_Background(obj,varargin)
                 Args   = {parInit, squeeze(Data(:,:,i)), '-c', tmparg};
                 [par(:,i), err(:,i),chi2min(i), ~] = fminuit('chi2BKG',Args{:});
                 BkgPlot_Data(:,i) = squeeze(Data(:,2,i)); %for plot in cps
-                Slopes(rl,i) = par(2,i);
+                Slopes(rl,i)      = par(2,i);
                 % Exclude poor fits with high chisquare & large slopes
                 % excluded by additional measurements - KNM1 official propaganda -
                 if  chi2min(i)>Chi2CutOff
                     Bkg_Fit(:,i)      = nan(numel(obj.StudyObject.qU),1); CutOff(i) = 0;
-                    SlopesExcl(rl,i)      = 0;
-                elseif abs(par(2,i))<= MaxSlopeCpsPereV(rl)
+                    SlopesExcl(rl,i)  = 0;
+                elseif abs(par(2,i)) <= MaxSlopeCpsPereV(rl)
                     Bkg_Fit(:,i)      = ComputeBkgSlope(par(:,i),obj.StudyObject.qU(:,rl));
                 else
                     Bkg_Fit(:,i)      = nan(numel(obj.StudyObject.qU(:,rl)),1); CutOff(i) = 0;
-                    SlopesExcl(rl,i)      = 0;
+                    SlopesExcl(rl,i)  = 0;
                 end
             end
-            CutOff = logical(CutOff); % transform 0 and 1 into logicals
+            CutOff                    = logical(CutOff); % transform 0 and 1 into logicals
             
             % Remove Nans
-            Bkg_Fit = Bkg_Fit(~isnan(Bkg_Fit));
-            Bkg_Fit = reshape(Bkg_Fit,numel(obj.StudyObject.qU(:,rl)),numel(Bkg_Fit)/numel(obj.StudyObject.qU(:,rl)));
+            Bkg_Fit         = Bkg_Fit(~isnan(Bkg_Fit));
+            Bkg_Fit         = reshape(Bkg_Fit,numel(obj.StudyObject.qU(:,rl)),numel(Bkg_Fit)/numel(obj.StudyObject.qU(:,rl)));
             nGoodTrials(rl) = size(Bkg_Fit,2);
             %TBDIS_V        = Bkg_Fit(:,chi2min<Chi2CutOff).*obj.StudyObject.TimeSec.*obj.StudyObject.qUfrac;
             %BkgPlot_Data   = BkgPlot_Data(:,chi2min<Chi2CutOff);
             
             % Build Integral Spectrum Underlying Background Spectrum
-            TBDIS_V{rl} = Bkg_Fit(:,:).*obj.StudyObject.TimeSec(:,rl).*obj.StudyObject.qUfrac(:,rl);
+            TBDIS_V{rl}    = Bkg_Fit(:,:).*obj.StudyObject.TimeSec(:,rl).*obj.StudyObject.qUfrac(:,rl);
             BkgPlot_Data   = BkgPlot_Data(:,:);
         end
         
         % convert TBDIS_V back into matrix. for rings: use minimal number of good trials
-        nCommonTrials = min(nGoodTrials);
-        TBDIS_V = cell2mat(cellfun(@(x) x(:,1:nCommonTrials),TBDIS_V,'UniformOutput',0));
+        nCommonTrials      = min(nGoodTrials);
+        TBDIS_V            = cell2mat(cellfun(@(x) x(:,1:nCommonTrials),TBDIS_V,'UniformOutput',0));
         
         % Compute Covariance Matrix
-        obj.CovMat     = cov(TBDIS_V');
+        obj.CovMat         = cov(TBDIS_V');
         
         % Compute Fractional Covariance Matrix
         BKGIS          = obj.StudyObject.BKG_RateSec.*obj.StudyObject.TimeSec.*obj.StudyObject.qUfrac;
