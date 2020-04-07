@@ -9,7 +9,7 @@
 
 %% settings
 RunList               = 'KNM1';
-exclDataStart         = 14; % 27 subruns
+exclDataStart         = 13; % 27 subruns
 RecomputeFlag         = 'OFF';
 BkgCM                 = 'ON';
 
@@ -31,8 +31,10 @@ Real.chi2='chi2CMShape'; Real.ComputeCM('BkgCM',BkgCM);
 
 %Real.PlotFitCovCorMatrices('Mode','Shape');
 Real.Fit('CATS','OFF');
-Real.PlotFit('LabelFlag','FinalKNM1','saveplot','pdf','ErrorBarScaling',1,'YLimRes',[-2.2,2.9],'Colors','RGB','DisplayStyle','PRL');
+Real.PlotFit('LabelFlag','data','saveplot','pdf','ErrorBarScaling',1,'YLimRes',[-2.2,2.9],'Colors','RGB','DisplayStyle','PRL');
+%Real.PlotFit('LabelFlag','FinalKNM1','saveplot','pdf','ErrorBarScaling',1,'YLimRes',[-2.2,2.9],'Colors','RGB','DisplayStyle','PRL');
 %Real.PlotFit('LabelFlag','FinalKNM1','saveplot','pdf','ErrorBarScaling',50,'YLimRes',[-2.2,2.9],'Colors','RGB','DisplayStyle','PRL');
+return;
 
 %Real.PlotFit('LabelFlag','FinalKNM1','saveplot','pdf','ErrorBarScaling',1,'YLimRes',[-2.2,2.9],'Colors','BW');
 %Real.PlotFit('LabelFlag','FinalKNM1','saveplot','pdf','ErrorBarScaling',50,'YLimRes',[-2.2,2.9],'Colors','BW');

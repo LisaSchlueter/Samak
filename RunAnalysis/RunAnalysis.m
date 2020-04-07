@@ -123,7 +123,7 @@ classdef RunAnalysis < handle
             p.addParameter('FakeRunType','Fake1');
             p.addParameter('RunNr',[],@(x)(isfloat(x) && x>0));
             p.addParameter('AnaFlag','StackPixel',@(x)ismember(x,{'StackPixel', 'SinglePixel', 'MultiPixel', 'Ring'}));
-            p.addParameter('ELossFlag','',@(x)ismember(x,{'Aseev','Abdurashitov','CW_GLT','CW_G2LT','KatrinD2','KatrinT2'}));%default given later
+            p.addParameter('ELossFlag','',@(x)ismember(x,{'Aseev','Abdurashitov','CW_GLT','CW_G2LT','KatrinD2','KatrinT2','KatrinT2A20'}));%default given later
             p.addParameter('FSDFlag','Sibille0p5eV',@(x)ismember(x,{'SAENZ','BlindingKNM1','Sibille','Sibille0p5eV','OFF','SibilleFull','BlindingKNM2'}));
             p.addParameter('DopplerEffectFlag','',@(x)ismember(x,{'OFF','FSD','FSD_Knm1'}));%default given later
             p.addParameter('ROIFlag','14keV',@(x)ismember(x,{'Default','14keV'})); % default->default counts in RS, 14kev->[14,32]keV ROI
@@ -1118,7 +1118,7 @@ classdef RunAnalysis < handle
             % CovMat settings
             p.addParameter('SysEffects',defaultEffects,@(x)isstruct(x));
             p.addParameter('RecomputeFlag','OFF',@(x)ismember(x,{'ON','OFF'}));
-            p.addParameter('nTrials',5000,@(x)isfloat(x));
+            p.addParameter('nTrials',1000,@(x)isfloat(x));
             p.addParameter('DataDriven',SysErr.DataDriven,@(x)ismember(x,{'ON','OFF'}));
 %           % default systematic uncertainties
             p.addParameter('WGTS_TASR_RelErr',SysErr.WGTS_TASR_RelErr,@(x)all(isfloat(x)));
@@ -2037,7 +2037,7 @@ classdef RunAnalysis < handle
             p.addParameter('Colors','RGB',@(x)ismember(x,{'RGB','BW'})); % color or back and white
             p.addParameter('qUDisp','Rel',@(x)ismember(x,{'Rel','Abs'}));
             p.addParameter('ring',1,@(x)isfloat(x));
-            p.addParameter('MaxBkgRange',100,@(x)isfloat(x)); %(eV) maximum range of bkg points shown
+            p.addParameter('MaxBkgRange',40,@(x)isfloat(x)); %(eV) maximum range of bkg points shown
             
             p.parse(varargin{:});
             saveplot       = p.Results.saveplot;

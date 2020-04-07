@@ -50,7 +50,7 @@ p.addParameter('ISCS','Edep',@(x)ismember(x,{'Aseev','Theory','Edep'}));        
 p.addParameter('DTFSD','BlindingKNM1',@(x)ismember(x,{'OFF','DOSS','BlindingKNM1','HTFSD','TTFSD','Sibille','Sibille0p5eV','SibilleFull','BlindingKNM2'}));                % final state distributions
 p.addParameter('HTFSD','BlindingKNM1',@(x)ismember(x,{'OFF','SAENZ','BlindingKNM1','Sibille','Sibille0p5eV','SibilleFull','BlindingKNM2'})); 
 p.addParameter('TTFSD','BlindingKNM1',@(x)ismember(x,{'OFF','DOSS','SAENZ','BlindingKNM1','Sibille','Sibille0p5eV','SibilleFull','BlindingKNM2'}));
-p.addParameter('ELossFlag','KatrinT2',@(x)ismember(x,{'Aseev','Abdurashitov','CW_GLT','KatrinD2','KatrinT2'})); % description of energy loss in scattering
+p.addParameter('ELossFlag','KatrinT2',@(x)ismember(x,{'Aseev','Abdurashitov','CW_GLT','KatrinD2','KatrinT2','KatrinT2A20'})); % description of energy loss in scattering
 p.addParameter('DopplerEffectFlag','OFF',@(x)ismember(x,{'FSD','FSD_Knm1','OFF'}));
 p.addParameter('RadiativeFlag','ON',@(x)ismember(x,{'OFF','ON'}));
 % FPD
