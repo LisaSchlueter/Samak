@@ -2160,9 +2160,9 @@ function ComputeCM_Background(obj,varargin)
             progressbar(sprintf('Compute Bkg CM ring %.0f out of %.0f',rl,nRingLoop));
             for i=1:obj.nTrials
                 progressbar(i/obj.nTrials);
-                Data(:,:,i)    = [obj.StudyObject.qU(BKGIndex:end,rl),BKG(:,rl,i), BKG_RateErr(:,rl)];
+                Data(:,:,i)    = [obj.StudyObject.qU(BKGIndex:end,rl),BKG(:,i,rl), BKG_RateErr(:,rl)];
                 %Data(:,:,i)    = [obj.StudyObject.qU(BKGIndex:end,rl),BKG(:,i), BKG_RateErr(:,rl)];
-                BKG_i         = wmean(BKG(:,rl,i),1./BKG(:,rl,i));
+                BKG_i         = wmean(BKG(:,i,rl),1./BKG(:,i,rl));
                 %BKG_i         = wmean(BKG(:,i),1./BKG(:,i));
                 Slope_i       = 0;
                 parInit       = [BKG_i+1e-2*rand(1), Slope_i+1e-4*rand(1)];

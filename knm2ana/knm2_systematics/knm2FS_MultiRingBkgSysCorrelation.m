@@ -66,7 +66,7 @@ for i=1:numel(CorrCoeff)
         save(savenameStat,'FitResultStat','RunArg','MR','FSDArg','E0');
     end
     
-    if exist(savename,'file')
+    if exist(savename,'file') && 1==2
         d = importdata(savename);
         mNuSqErr(i+1)   = 0.5*(-d.FitResultBkgCM.errNeg(1)+d.FitResultBkgCM.errPos(1)); % d.FitResultBkgCM.err(1);
         CovMatFracShape{i} = d.BkgCovMatFracShape;
