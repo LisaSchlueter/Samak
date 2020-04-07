@@ -1143,6 +1143,7 @@ classdef RunAnalysis < handle
             p.addParameter('is_EOffsetErr',SysErr.is_EOffsetErr,@(x)isfloat(x));
             p.addParameter('BkgRingCorrCoeff',0,@(x)isfloat(x));
             p.addParameter('BkgScalingOpt',1,@(x)isfloat(x));
+            p.addParameter('BkgMode','SlopeFit',@(x)ismember(x,{'SlopeFit','Gauss'}));
             p.parse(varargin{:});
             
             InitNormFit              = p.Results.InitNormFit;
@@ -1173,6 +1174,7 @@ classdef RunAnalysis < handle
             is_EOffsetErr            = p.Results.is_EOffsetErr; %longitudinal plasma
             BkgRingCorrCoeff         = p.Results.BkgRingCorrCoeff; % ring to ring correlation coefficient
             BkgScalingOpt            = p.Results.BkgScalingOpt;
+            BkgMode                  = p.Results.BkgMode;
             % --------------------- END PARSER ---------------------------------%
             
             % --------------------  Initialize Covariance Matrix----------------------------%
@@ -1253,7 +1255,8 @@ classdef RunAnalysis < handle
             if strcmp(BkgCM,'ON')
                 obj.FitCM_Obj.ComputeCM_Background('Display',PlotSaveCM,...
                     'MaxSlopeCpsPereV',MaxSlopeCpsPereV,'BkgRange',BkgRange,...
-                    'RingCorrCoeff',BkgRingCorrCoeff,'ScalingOpt',BkgScalingOpt);
+                    'RingCorrCoeff',BkgRingCorrCoeff,'ScalingOpt',BkgScalingOpt,...
+                    'Mode',BkgMode);
                 
                 obj.FitCM           = obj.FitCM          + obj.FitCM_Obj.CovMat;     % regular covmat:    add background covmat to signal covmat 
                 obj.FitCMFrac       = obj.FitCMFrac      + obj.FitCM_Obj.CovMatFrac; % fractional covmat: add background covmat to signal covmat 

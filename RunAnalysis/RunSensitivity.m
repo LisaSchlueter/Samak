@@ -12,8 +12,12 @@ classdef RunSensitivity < handle
         ConfLevel;         % confidence level: e.g. 0.9
         Lpar;              % current sensitivity (all parameters)
         LparMinos;         % current mNuSw sensitivity with MINOS errors (averaged)
+        LparNeg
+        LparPos
         MultiLpar;         % sensitivity of single effects: stat + TC, stat + FSD,....
         MultiLparMinos;
+        MultiLparNeg;
+        MultiLparPos;
         MultiLparStack;    % sensitivities N+1: stat, stat+SysEffectAll{1}, stat + +SysEffectAll{1} ++SysEffectAll{2}, .....
         NPcomponent;       % non poissonian component
         AsymErr;           % use asymmetric uncertainties (only minos) or symmetrized 
@@ -181,7 +185,12 @@ classdef RunSensitivity < handle
             if isfield(obj.RunAnaObj.FitResult,'errNeg')
                 MeanErr =  0.5*(abs(obj.RunAnaObj.FitResult.errNeg(1))+obj.RunAnaObj.FitResult.errPos(1));
                 obj.LparMinos = zeros(size(obj.Lpar));
-                obj.LparMinos(1) = MeanErr*factor;  %use asymmetric MINOS errors (only for mNu)
+                obj.LparNeg   = zeros(size(obj.Lpar));
+                obj.LparPos   = zeros(size(obj.Lpar));
+                %save asymmetric MINOS errors (only for mNu)
+                obj.LparMinos(1) = MeanErr*factor; 
+                obj.LparNeg(1) = obj.RunAnaObj.FitResult.errNeg(1);
+                obj.LparPos(1) = obj.RunAnaObj.FitResult.errPos(1);
             else
                 obj.LparMinos = zeros(size(obj.Lpar));
             end
@@ -1431,15 +1440,24 @@ classdef RunSensitivity < handle
             
             for i = 1:Nranges
                 obj.RunAnaObj.exclDataStart = Ranges(i);
-
-                %single sys
-                obj.SensitivitySys;
-                PlotVarTmp = struct2array(structfun(@(x)x(Parameter),obj.MultiLpar,'UniformOutput',0));
-                PlotVarTmp(PlotVarTmp<PlotVarTmp(1))=PlotVarTmp(1); % no sensitivity can be smaller as stat only
+                obj.SensitivitySys;  % get single sys
                 SingleBarStat(i) = obj.MultiLpar.Stat(Parameter)';
-               
-                SingleBarY(i,1)      = PlotVarTmp(1);%sqrt(PlotVarTmp(1).^2-obj.NPcomponent(Parameter).^2);
-                SingleBarY(i,2:end)  = sqrt(PlotVarTmp(2:end).^2-SingleBarStat(i).^2);
+                
+                if strcmp(obj.AsymErr,'ON')
+                     PlotVarTmpNeg = struct2array(structfun(@(x)abs(x(Parameter)),obj.MultiLparNeg,'UniformOutput',0));
+                     PlotVarTmpNeg(PlotVarTmpNeg<PlotVarTmpNeg(1))=PlotVarTmpNeg(1); % no sensitivity can be smaller as stat only
+                     PlotVarTmpPos = struct2array(structfun(@(x)abs(x(Parameter)),obj.MultiLparPos,'UniformOutput',0));
+                     PlotVarTmpPos(PlotVarTmpPos<PlotVarTmpPos(1))=PlotVarTmpPos(1); % no sensitivity can be smaller as stat only
+                     SingleBarY(i,1)      =  SingleBarStat(i);
+                     SingleBarY(i,2:end)  = 0.5.*(sqrt(PlotVarTmpNeg(2:end).^2-PlotVarTmpNeg(1).^2)+...
+                                                  sqrt(PlotVarTmpPos(2:end).^2-PlotVarTmpPos(1).^2));
+                else
+                    PlotVarTmp = struct2array(structfun(@(x)x(Parameter),obj.MultiLpar,'UniformOutput',0));
+                    PlotVarTmp(PlotVarTmp<PlotVarTmp(1))=PlotVarTmp(1); % no sensitivity can be smaller as stat only
+                    
+                    SingleBarY(i,1)      = PlotVarTmp(1);
+                    SingleBarY(i,2:end)  = sqrt(PlotVarTmp(2:end).^2-SingleBarStat(i).^2);
+                end
             end
             
             %            SingleBarX = obj.GetRangeSingleSys('PlotRanges',StackBarX'); % Single Bar range values
@@ -2231,6 +2249,10 @@ classdef RunSensitivity < handle
                     obj.CovMatFrac.(SysEffect_save)  = d.FitCMFrac;
                     obj.CovMatShape.(SysEffect_save) = d.FitCMShape;
                     if strcmp(obj.RunAnaObj.fitter,'minuit') && contains(obj.RunAnaObj.minuitOpt,'minos')
+                        obj.LparNeg(1) = d.LparNeg(1);
+                        obj.LparPos(1) = d.LparPos(1);
+                        obj.MultiLparNeg.(SysEffect_save)   = d.LparNeg;
+                        obj.MultiLparPos.(SysEffect_save)   = d.LparPos;
                         if isfield(d,'LparMinos') && strcmp(obj.AsymErr,'ON') % average asymmetric uncertainties
                             obj.Lpar                       = d.LparMinos;
                             obj.MultiLpar.(SysEffect_save) = d.LparMinos;                
@@ -2239,12 +2261,14 @@ classdef RunSensitivity < handle
                     fprintf('Load file %s \n',savefile);
                 case 'save'
                     Lpar       = obj.Lpar;
+                    LparNeg       = obj.LparNeg;
+                    LparPos       = obj.LparPos;
                     LparMinos  = obj.LparMinos;
                     FitCMFrac  = obj.RunAnaObj.FitCMFrac;
                     FitCMShape = obj.RunAnaObj.FitCMShape;
                     nTrials    = obj.GetnTrials(SysEffect_save);
                     FitResult  = obj.RunAnaObj.FitResult;
-                    save(savefile,'Lpar','FitCMFrac','FitCMShape','nTrials','LparMinos','FitResult');
+                    save(savefile,'Lpar','FitCMFrac','FitCMShape','nTrials','LparMinos','LparNeg','LparPos','FitResult');
                     
                     obj.MultiLpar.(SysEffect_save)   = Lpar;
                     obj.CovMatFrac.(SysEffect_save)  = FitCMFrac;

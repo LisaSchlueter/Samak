@@ -13,7 +13,7 @@ MaxSlopeCpsPereV = 5.2*1e-06;
 savedir = [getenv('SamakPath'),'knm2ana/knm2_systematics/results/'];
 MakeDir(savedir);
 
-CorrCoeff       = (0:0.2:1);
+CorrCoeff       = 0:0.2:1;%0.9;%(0:0.2:1);
 mNuSqErr        = zeros(numel(CorrCoeff)+1,1);
 CovMatFracShape = cell(numel(CorrCoeff),1);
 CovMatFrac      = cell(numel(CorrCoeff),1);
