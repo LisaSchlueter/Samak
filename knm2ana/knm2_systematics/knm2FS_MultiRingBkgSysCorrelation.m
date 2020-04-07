@@ -13,7 +13,7 @@ MaxSlopeCpsPereV = 5.2*1e-06;
 savedir = [getenv('SamakPath'),'knm2ana/knm2_systematics/results/'];
 MakeDir(savedir);
 
-CorrCoeff       = 0:0.2:1;%0.9;%(0:0.2:1);
+CorrCoeff       = 0;%0:0.2:1;%0.9;%(0:0.2:1);
 mNuSqErr        = zeros(numel(CorrCoeff)+1,1);
 CovMatFracShape = cell(numel(CorrCoeff),1);
 CovMatFrac      = cell(numel(CorrCoeff),1);
@@ -66,7 +66,7 @@ for i=1:numel(CorrCoeff)
         save(savenameStat,'FitResultStat','RunArg','MR','FSDArg','E0');
     end
     
-    if exist(savename,'file') && 1==2
+    if exist(savename,'file') 
         d = importdata(savename);
         mNuSqErr(i+1)   = 0.5*(-d.FitResultBkgCM.errNeg(1)+d.FitResultBkgCM.errPos(1)); % d.FitResultBkgCM.err(1);
         CovMatFracShape{i} = d.BkgCovMatFracShape;
@@ -108,10 +108,13 @@ for i=1:numel(CorrCoeff)
         
         MR.NonPoissonScaleFactor = 1;
         MR.SetNPfactor; % convert to right dimension (if multiring)
+        MR.ComputeCM('SysEffects',struct('FSD','OFF'),'BkgCM','ON',...
+            'MaxSlopeCpsPereV',MaxSlopeCpsPereV,'BkgRingCorrCoeff',BkgRingCorrCoeff,...
+            'BkgScalingOpt',ScalingOpt);
         
         MR.Fit;
         FitResultBkgCM = MR.FitResult;
-        save(savename,'FitResultBkgCM','FitResultStat','RunArg','MR','FSDArg','E0','BkgRingCorrCoeff',...
+        save(savename,'FitResultBkgCM','RunArg','MR','FSDArg','E0','BkgRingCorrCoeff',...
             'BkgCovMatFracShape','BkgCovMatFrac','BkgCovMat');
     end
     

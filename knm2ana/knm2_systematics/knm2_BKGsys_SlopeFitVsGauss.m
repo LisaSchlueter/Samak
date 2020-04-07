@@ -7,7 +7,7 @@ MaxSlopeCpsPereV = 5.2*1e-06;
 savedir = [getenv('SamakPath'),'knm2ana/knm2_systematics/results/'];
 MakeDir(savedir);
 savename = sprintf('%sknm2_BKGsys_SlopeFitVsGauss_%.1fmcpskeV.mat',savedir,MaxSlopeCpsPereV*1e6);
-if exist(savename,'file') & 1==2
+if exist(savename,'file')
     load(savename)
 else
 % model setting
@@ -45,19 +45,14 @@ M.Fit;
 FitResultsStat = M.FitResult;
 %% stat. + syst: calculate covariance matrix: slope fit & cut off
 M.chi2 = 'chi2CMShape';
-M.NonPoissonScaleFactor = 1.112;
 M.ComputeCM(CmArg{:},'BkgMode','SlopeFit');
-M.NonPoissonScaleFactor = 1;
-
 CMFrac      = M.FitCM_Obj.CovMatFrac;
 CMFracShape = M.FitCM_Obj.CovMatFracShape;
 
 M.Fit;
 FitResultsCM = M.FitResult;
 %% stat. + syst: calculate covariance matrix: slope randn
-M.NonPoissonScaleFactor = 1.112;
 M.ComputeCM(CmArg{:},'BkgMode','Gauss');
-M.NonPoissonScaleFactor = 1;
 CMFracGauss      = M.FitCM_Obj.CovMatFrac;
 CMFracGaussShape = M.FitCM_Obj.CovMatFracShape;
 
