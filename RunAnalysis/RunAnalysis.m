@@ -1335,7 +1335,7 @@ classdef RunAnalysis < handle
                         SubRunActivity(~isnan(SubRunActivity))=SubRunActivity(~isnan(SubRunActivity)).*ActiCorrFactor(~isnan(SubRunActivity));
                          
                         %take standard error of the mean
-                        WGTS_TASR_AbsErr = nanstd(SubRunActivity,0,2);%./sqrt(numel(obj.StackedRuns));
+                        WGTS_TASR_AbsErr = nanstd(SubRunActivity,0,2)./sqrt(numel(obj.StackedRuns));
                         
                         % relative uncertainty -> fractional covariance
                         WGTS_TASR_RelErr = WGTS_TASR_AbsErr./nanmean(SubRunActivity,2);

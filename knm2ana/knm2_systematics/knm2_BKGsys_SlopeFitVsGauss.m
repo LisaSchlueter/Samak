@@ -45,9 +45,12 @@ M.Fit;
 FitResultsStat = M.FitResult;
 %% stat. + syst: calculate covariance matrix: slope fit & cut off
 M.chi2 = 'chi2CMShape';
-M.ComputeCM(CmArg{:},'BkgMode','SlopeFit');
+M.NonPoissonScaleFactor = 1.112;
+M.ComputeCM(CmArg{:},'BkgMode','SlopeFit','RecomputeFlag','OFF');
 CMFrac      = M.FitCM_Obj.CovMatFrac;
 CMFracShape = M.FitCM_Obj.CovMatFracShape;
+M.NonPoissonScaleFactor = 1;
+%M.ComputeCM(CmArg{:},'BkgMode','SlopeFit','RecomputeFlag','OFF');
 
 M.Fit;
 FitResultsCM = M.FitResult;
@@ -69,11 +72,17 @@ save(savename,'FitResultsStat','FitResultsCM','FitResultsCMGauss','mNuSys','mNuS
                'CMFracGauss','CMFracGaussShape','CMFrac','CMFracShape');
 end
 %% display results 
-fprintf('mnuSq sensitivity stat only        = %.3f eV^2 \n',0.5*(-FitResultsStat.errNeg(1)+FitResultsStat.errPos(1)));
+mNuStatAsym = 0.5*(-FitResultsStat.errNeg(1)+FitResultsStat.errPos(1));
+fprintf('mnuSq sensitivity stat only        = %.3f eV^2 \n',mNuStatAsym);
 fprintf('mnuSq sensitivity stat + syst only = %.3f eV^2  (slope fit) \n',0.5*(-FitResultsCM.errNeg(1)+FitResultsCM.errPos(1)));
-fprintf('mnuSq sensitivity syst only        = %.3f eV^2  (slope fit) \n',mNuSys);
+fprintf(2,'mnuSq sensitivity syst only (asym.)= %.3f eV^2  (slope fit) \n',mNuSys);
+fprintf('mnuSq sensitivity syst only (sym.) = %.3f eV^2  (slope fit) \n',sqrt(FitResultsCM.err(1).^2-FitResultsStat.err(1).^2));
 fprintf('mnuSq sensitivity stat + syst only = %.3f eV^2  (gauss) \n',0.5*(-FitResultsCMGauss.errNeg(1)+FitResultsCMGauss.errPos(1)));
-fprintf('mnuSq sensitivity syst only        = %.3f eV^2  (gauss) \n',mNuSysGauss);
+fprintf(2,'mnuSq sensitivity syst only (asym) = %.3f eV^2  (gauss) \n',mNuSysGauss);
+fprintf('mnuSq sensitivity syst only (sym.) = %.3f eV^2  (gauss) \n',sqrt(FitResultsCMGauss.err(1).^2-FitResultsStat.err(1).^2));
+
+% symmetric errors
+
 %% plot cov mat
 %M.FitCM_Obj.PlotCM('qUWindowIndexMax',-20,'saveplot','ON');
 

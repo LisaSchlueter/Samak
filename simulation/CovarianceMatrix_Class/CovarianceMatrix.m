@@ -2055,7 +2055,7 @@ function ComputeCM_Background(obj,varargin)
     cprintf('blue','CovarianceMatrix:ComputeCM_Background: Compute Background Covariance Matrix  \n');
     
     % Number of Trials - Hardcoded
-    TrialSave  = obj.nTrials; obj.nTrials = 50001; % BASELINE, termine after obj.nTrials
+    TrialSave  = obj.nTrials; obj.nTrials = 50000; % BASELINE, termine after obj.nTrials
     
     % Covariance Matrix File
     cm_path        = [getenv('SamakPath'),sprintf('inputs/CovMat/Background/CM/')];
@@ -2180,7 +2180,7 @@ function ComputeCM_Background(obj,varargin)
                         Bkg_Fit(:,i)      = nan(numel(obj.StudyObject.qU),1); CutOff(i) = 0;
                         SlopesExcl(rl,i)  = 0;
                     elseif abs(par(2,i))<= MaxSlopeCpsPereV(rl) 
-                        par(1,i) =BKG_Asimov(rl); % do not vary offset!
+                       % par(1,i) = BKG_Asimov(rl); % do not vary offset!
                         Bkg_Fit(:,i)      = ComputeBkgSlope(par(:,i),obj.StudyObject.qU(:,rl));
                     else
                         Bkg_Fit(:,i)      = nan(numel(obj.StudyObject.qU(:,rl)),1); CutOff(i) = 0;
