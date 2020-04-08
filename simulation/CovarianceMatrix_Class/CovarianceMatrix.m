@@ -2034,14 +2034,15 @@ function ComputeCM_Background(obj,varargin)
     % Include Non-Poissonian fluctuations (scaling factor)
     % Lisa Schlueter, Thierry Lasserre, 10/3/2019
     p = inputParser;
-    p.addParameter('Display','ON');
+    p.addParameter('Display','ON',@(x)ismember(x,{'ON','OFF'}));
     p.addParameter('Chi2CutOff',1e9);
     p.addParameter('qUStartIndex',11);             % here, for Display Only
     p.addParameter('MaxSlopeCpsPereV',0.15E-04);   % qU-Slope constraint - Absolute Slope Value
     p.addParameter('BkgRange',-5,@(x)isfloat(x));  % defines, which points are used to constrain slope. In eV with respect to endpoint
     p.addParameter('RingCorrCoeff',0,@(x)isfloat(x));  % ring to ring correlation
     p.addParameter('ScalingOpt',2,@(x)isfloat(x));
-    
+    p.addParameter('Mode','SlopeFit',@(x)ismember(x,{'SlopeFit','Gauss'}));
+      
     p.parse(varargin{:});
     Display          = p.Results.Display;
     Chi2CutOff       = p.Results.Chi2CutOff;
@@ -2050,6 +2051,7 @@ function ComputeCM_Background(obj,varargin)
     BkgRange         = p.Results.BkgRange;
     RingCorrCoeff    = p.Results.RingCorrCoeff;
     ScalingOpt       = p.Results.ScalingOpt;
+    Mode             = p.Results.Mode;
     fprintf(       '--------------------------------------------------------------------------   \n');
     cprintf('blue','CovarianceMatrix:ComputeCM_Background: Compute Background Covariance Matrix  \n');
     
@@ -2059,9 +2061,14 @@ function ComputeCM_Background(obj,varargin)
     % Covariance Matrix File
     cm_path        = [getenv('SamakPath'),sprintf('inputs/CovMat/Background/CM/')];
     MakeDir(cm_path);
-    cm_name        = sprintf('BackgroundCM_%s_%.0fmcps_Constrain%.3gCpsPerEv_%.0feVBkgRange_%.0fTrials.mat',...
+    if ~strcmp(Mode,'SlopeFit')
+        extraStr = sprintf('_%s',Mode);
+    else
+        extraStr = '';
+    end  
+    cm_name        = sprintf('BackgroundCM_%s_%.0fmcps_Constrain%.3gCpsPerEv_%.0feVBkgRange_%.0fTrials%s.mat',...
         strrep(obj.StudyObject.TD,'_E018573.73eV2',''),...
-        sum(obj.StudyObject.BKG_RateSec)*1e3,MaxSlopeCpsPereV,BkgRange,obj.nTrials);
+        sum(obj.StudyObject.BKG_RateSec)*1e3,MaxSlopeCpsPereV,BkgRange,obj.nTrials,extraStr);
     % add ring information for ringwise covariance matrices
     if strcmp(obj.StudyObject.FPD_Segmentation,'RING')
         cm_name = strrep(cm_name,'.mat',sprintf('_Ring%s_RingCorrCoeff%.2f_%.0f.mat',obj.StudyObject.FPD_RingMerge,RingCorrCoeff,ScalingOpt));
@@ -2112,6 +2119,8 @@ function ComputeCM_Background(obj,varargin)
                     MaxSlopeCpsPereV = MaxSlopeCpsPereV.*(BKG_Asimov./sum(BKG_Asimov));
                 case 2
                     MaxSlopeCpsPereV = MaxSlopeCpsPereV.*sqrt(BKG_Asimov./sum(BKG_Asimov));%(nPixPerRing./nPixTotal);
+                case 3
+                    MaxSlopeCpsPereV = repmat(MaxSlopeCpsPereV,nRingLoop,1);
             end
         end
         
@@ -2152,28 +2161,37 @@ function ComputeCM_Background(obj,varargin)
             progressbar(sprintf('Compute Bkg CM ring %.0f out of %.0f',rl,nRingLoop));
             for i=1:obj.nTrials
                 progressbar(i/obj.nTrials);
-                %Data(:,:,i)    = [obj.StudyObject.qU(BKGIndex:end,rl),BKG(:,rl,i), BKG_RateErr(:,rl)];
-                Data(:,:,i)    = [obj.StudyObject.qU(BKGIndex:end,rl),BKG(:,i), BKG_RateErr(:,rl)];
-                %BKG_i         = wmean(BKG(:,rl,i),1./BKG(:,rl,i));
-                BKG_i         = wmean(BKG(:,i),1./BKG(:,i));
+                Data(:,:,i)    = [obj.StudyObject.qU(BKGIndex:end,rl),BKG(:,i,rl), BKG_RateErr(:,rl)];
+                %Data(:,:,i)    = [obj.StudyObject.qU(BKGIndex:end,rl),BKG(:,i), BKG_RateErr(:,rl)];
+                BKG_i         = wmean(BKG(:,i,rl),1./BKG(:,i,rl));
+                %BKG_i         = wmean(BKG(:,i),1./BKG(:,i));
                 Slope_i       = 0;
                 parInit       = [BKG_i+1e-2*rand(1), Slope_i+1e-4*rand(1)];
                 % Call Minuit
                 tmparg = sprintf(['set pri -10; min ; migrad '],'');
                 Args   = {parInit, squeeze(Data(:,:,i)), '-c', tmparg};
-                [par(:,i), err(:,i),chi2min(i), ~] = fminuit('chi2BKG',Args{:});
-                BkgPlot_Data(:,i) = squeeze(Data(:,2,i)); %for plot in cps
-                Slopes(rl,i)      = par(2,i);
-                % Exclude poor fits with high chisquare & large slopes
-                % excluded by additional measurements - KNM1 official propaganda -
-                if  chi2min(i)>Chi2CutOff
-                    Bkg_Fit(:,i)      = nan(numel(obj.StudyObject.qU),1); CutOff(i) = 0;
-                    SlopesExcl(rl,i)  = 0;
-                elseif abs(par(2,i)) <= MaxSlopeCpsPereV(rl)
-                    Bkg_Fit(:,i)      = ComputeBkgSlope(par(:,i),obj.StudyObject.qU(:,rl));
-                else
-                    Bkg_Fit(:,i)      = nan(numel(obj.StudyObject.qU(:,rl)),1); CutOff(i) = 0;
-                    SlopesExcl(rl,i)  = 0;
+                if strcmp(Mode,'SlopeFit')
+                    [par(:,i), err(:,i),chi2min(i), ~] = fminuit('chi2BKG',Args{:});
+                    BkgPlot_Data(:,i) = squeeze(Data(:,2,i)); %for plot in cps
+                    Slopes(rl,i) = par(2,i);
+                    
+                    % Exclude poor fits with high chisquare & large slopes
+                    % excluded by additional measurements - KNM1 official propaganda -
+                    if  chi2min(i)>Chi2CutOff
+                        Bkg_Fit(:,i)      = nan(numel(obj.StudyObject.qU),1); CutOff(i) = 0;
+                        SlopesExcl(rl,i)  = 0;
+                    elseif abs(par(2,i))<= MaxSlopeCpsPereV(rl) 
+                       % par(1,i) = BKG_Asimov(rl); % do not vary offset!
+                        Bkg_Fit(:,i)      = ComputeBkgSlope(par(:,i),obj.StudyObject.qU(:,rl));
+                    else
+                        Bkg_Fit(:,i)      = nan(numel(obj.StudyObject.qU(:,rl)),1); CutOff(i) = 0;
+                        SlopesExcl(rl,i)  = 0;
+                    end
+                elseif strcmp(Mode,'Gauss')
+                    par(1,i) = BKG_Asimov(rl);%mean(BKG(:,i,rl));        % offset
+                    par(2,i) = MaxSlopeCpsPereV.*randn(1);% slopes
+                    Bkg_Fit(:,i)  = ComputeBkgSlope(par(:,i),obj.StudyObject.qU(:,rl));
+                    Slopes(rl,i) = par(2,i);
                 end
             end
             CutOff                    = logical(CutOff); % transform 0 and 1 into logicals
@@ -2225,56 +2243,63 @@ function ComputeCM_Background(obj,varargin)
     % Display
     switch Display
         case 'ON'
-            % Background (Rate) Spectra
             savedir = './plots/';
-            MakeDir(savedir);
-            myMainTitle = sprintf('KATRIN - Background Toy Monte Carlo'); maintitle   = myMainTitle;
-            %savefile    = [savedir,sprintf('/ComputeCM_Background_Fits_Bkg%.0fmcps_Constrain%.0fMcpsPerKeV.pdf',BKG_i*1e3, MaxSlopeCpsPereV)];
-            fig1        = figure('Units','normalized','pos',[0.1 0.1 0.5 0.4]);
-           
-             Q_ref = 18574;
-            pfit = plot(obj.StudyObject.qU(qUStartIndex:end,1)-Q_ref,1e3*Bkg_Fit(qUStartIndex:end,1:1000),...
-                'LineWidth',2,'Color', [rgb('SlateGray') 0.25]);%[1.0000    0.6445      0 0.2]);
-            hold on;
-            sg = scatter(reshape(squeeze(Data(:,1,:))-Q_ref,[BKGnqU*obj.nTrials,1]),...
-                1e3.*reshape(squeeze(Data(:,2,:)),[BKGnqU*obj.nTrials,1]),'o','filled');
-            if size(Data,3)>=5000
-                sg.MarkerFaceAlpha = 0.01;
-            elseif size(Data,3)>=1000
-                 sg.MarkerFaceAlpha = 0.04;
-            else
-                sg.MarkerFaceAlpha = 0.2;
+                MakeDir(savedir);
+            if strcmp(Mode,'SlopeFit')
+                % Background (Rate) Spectra
+                
+                myMainTitle = sprintf('KATRIN - Background Toy Monte Carlo'); maintitle   = myMainTitle;
+                %savefile    = [savedir,sprintf('/ComputeCM_Background_Fits_Bkg%.0fmcps_Constrain%.0fMcpsPerKeV.pdf',BKG_i*1e3, MaxSlopeCpsPereV)];
+                fig1        = figure('Units','normalized','pos',[0.1 0.1 0.5 0.4]);
+                
+                Q_ref = 18574;
+                pfit = plot(obj.StudyObject.qU(qUStartIndex:end,1)-Q_ref,1e3*Bkg_Fit(qUStartIndex:end,1:1000),...
+                    'LineWidth',2,'Color', [rgb('SlateGray') 0.25]);%[1.0000    0.6445      0 0.2]);
+                hold on;
+                sg = scatter(reshape(squeeze(Data(:,1,:))-Q_ref,[BKGnqU*obj.nTrials,1]),...
+                    1e3.*reshape(squeeze(Data(:,2,:)),[BKGnqU*obj.nTrials,1]),'o','filled');
+                if size(Data,3)>=5000
+                    sg.MarkerFaceAlpha = 0.01;
+                elseif size(Data,3)>=1000
+                    sg.MarkerFaceAlpha = 0.04;
+                else
+                    sg.MarkerFaceAlpha = 0.2;
+                end
+                sg.MarkerFaceColor = rgb('DodgerBlue');
+                
+                tmp = scatter(1,1,'o','filled'); % just for display in legend
+                tmp.MarkerFaceColor=sg.MarkerFaceColor;
+                tmp.MarkerFaceAlpha = 0.5;
+                
+                hold off
+                set(gca,'FontSize',20);
+                xlabel(sprintf('Retarding Potential qU - %.0f (eV)',Q_ref));
+                ylabel('Background (mcps)');
+                hold off;
+                PrettyFigureFormat('FontSize',24);
+                if strcmp(Mode,'SlopeFit')
+                    legStr = ' Linear fits';
+                else
+                    legStr = ' Randomized slopes';
+                end
+                
+                if strcmp(obj.StudyObject.FPD_Segmentation,'RING')
+                    leg = legend([tmp, pfit(1)],sprintf(' MC background spectra (ring %.0f)',obj.StudyObject.nRings),...
+                        legStr,'Location','northeast');
+                else
+                    leg = legend([tmp, pfit(1)],' MC background spectra',legStr,'Location','northeast');
+                end
+                
+                leg.EdgeColor = rgb('Silver');
+                leg.FontSize = get(gca,'FontSize');
+                xlim([obj.StudyObject.qU(qUStartIndex,1)-Q_ref,obj.StudyObject.qU(end,1)-Q_ref+5]);
+                ylim([min(min(Data(:,2,:)))*1e3-0.005,max(max(Data(:,2,:)))*1e3+0.1])
+                % sgtitle(maintitle,'FontSize',22);
+                savefile    =  [savedir,strrep(cm_name,'.mat','_ToyMC.png')];
+                print(fig1,savefile,'-dpng','-r500');
+                % export_fig(fig1,savefile);
+                fprintf('Save plot to %s \n',savefile);
             end
-            sg.MarkerFaceColor = rgb('DodgerBlue');
-            
-            tmp = scatter(1,1,'o','filled'); % just for display in legend
-            tmp.MarkerFaceColor=sg.MarkerFaceColor;
-            tmp.MarkerFaceAlpha = 0.5;
-            
-            hold off
-            set(gca,'FontSize',20);
-            xlabel(sprintf('Retarding Potential qU - %.0f (eV)',Q_ref));
-            ylabel('Background (mcps)');
-            hold off;
-            PrettyFigureFormat('FontSize',24);
-            if strcmp(obj.StudyObject.FPD_Segmentation,'RING')
-                leg = legend([tmp, pfit(1)],sprintf(' MC background spectra (ring %.0f)',obj.StudyObject.nRings),...
-                    ' Linear fits','Location','northeast');
-            else
-                leg = legend([tmp, pfit(1)],'MC background spectra','Linear fits','Location','northeast');
-            end
-            
-            leg.EdgeColor = rgb('Silver');
-            leg.FontSize = get(gca,'FontSize');
-            xlim([obj.StudyObject.qU(qUStartIndex,1)-Q_ref,obj.StudyObject.qU(end,1)-Q_ref+5]);
-            ylim([min(min(Data(:,2,:)))*1e3-0.005,max(max(Data(:,2,:)))*1e3+0.1])
-            % sgtitle(maintitle,'FontSize',22);
-            savefile    =  [savedir,strrep(cm_name,'.mat','_ToyMC.png')];
-            print(fig1,savefile,'-dpng','-r500');
-           % export_fig(fig1,savefile);
-           fprintf('Save plot to %s \n',savefile); 
-           
-           
           
            if strcmp(obj.StudyObject.FPD_Segmentation,'RING')
                nRingLoop = obj.StudyObject.nRings;
@@ -2286,13 +2311,17 @@ function ComputeCM_Background(obj,varargin)
                for i=1:nRingLoop
                    subplot(floor(nRingLoop/2),ceil(nRingLoop/2),i);
                    h1 = histogram(Slopes(i,:).*1e6,'FaceColor',rgb('LightGray'));
-                   hold on;
-                   SlopeOK = Slopes(i,logical(SlopesExcl(i,:)));
-                   h2 = histogram(SlopeOK.*1e06,'FaceColor',rgb('DodgerBlue'),...
-                       'FaceAlpha',1,'BinWidth',h1.BinWidth);
+                   if strcmp(Mode,'SlopeFit')
+                       hold on;
+                       SlopeOK = Slopes(i,logical(SlopesExcl(i,:)));
+                       h2 = histogram(SlopeOK.*1e06,'FaceColor',rgb('DodgerBlue'),...
+                           'FaceAlpha',1,'BinWidth',h1.BinWidth);
+                       leg = legend('MC fit slopes',sprintf('MC fit slopes < %.1f mcps / keV',MaxSlopeCpsPereV(i)*1e6));
+                   else
+                        leg = legend(sprintf('Randomized slopes \\sigma = %.1f mcps / keV',MaxSlopeCpsPereV(i)*1e6));
+                   end
                    xlabel('Background slope (mcps / keV)');
                    PrettyFigureFormat('FontSize',18)
-                   leg = legend('MC fit slopes',sprintf('MC fit slopes < %.1f mcps / keV',MaxSlopeCpsPereV(i)*1e6));
                    leg.Location='northwest';
                    leg.EdgeColor = rgb('Silver');
                    leg.Title.String = sprintf('Pseudo-Ring %.0f',i);
@@ -2304,21 +2333,27 @@ function ComputeCM_Background(obj,varargin)
            else
                fig2        = figure('Units','normalized','pos',[0.1 0.1 0.4 0.4]);
                h1 = histogram(Slopes.*1e6,'FaceColor',rgb('LightGray'));
-               hold on;
-               SlopeOK = Slopes(logical(SlopesExcl));
-               h2 = histogram(SlopeOK.*1e06,'FaceColor',rgb('DodgerBlue'),...
-                   'FaceAlpha',1,'BinWidth',h1.BinWidth);
-               xlabel('Background slope (mcps / keV)');
-               PrettyFigureFormat('FontSize',22)
-               leg = legend('MC fit slopes',sprintf('MC fit slopes < %.1f mcps / keV',MaxSlopeCpsPereV*1e6));
+               
+               if strcmp(Mode,'SlopeFit')
+                   hold on;
+                   SlopeOK = Slopes(logical(SlopesExcl));
+                   h2 = histogram(SlopeOK.*1e06,'FaceColor',rgb('DodgerBlue'),...
+                       'FaceAlpha',1,'BinWidth',h1.BinWidth);
+                   leg = legend('MC fit slopes',sprintf('MC fit slopes < %.1f mcps / keV',MaxSlopeCpsPereV*1e6));
+               else
+                   h1.FaceColor = rgb('DodgerBlue');
+                   leg = legend(sprintf('Randomized slopes \\sigma = %.1f mcps / keV',MaxSlopeCpsPereV*1e6));
+               end
                leg.Location='northwest';
                leg.EdgeColor = rgb('Silver');
+               xlabel('Background slope (mcps / keV)');
+               PrettyFigureFormat('FontSize',22)
                hold off;
                ylim([0 2500])
            end
            savefile    =  [savedir,strrep(cm_name,'.mat','_Hist.pdf')];
-          % print(fig2,savefile,'-dpng','-r500');
-            export_fig(fig2,savefile);
+           % print(fig2,savefile,'-dpng','-r500');
+           export_fig(fig2,savefile);
            fprintf('Save plot to %s \n',savefile);
            
            %             % Trials Toy MC Features

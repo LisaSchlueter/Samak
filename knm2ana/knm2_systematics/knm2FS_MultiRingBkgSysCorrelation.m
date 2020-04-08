@@ -8,69 +8,73 @@ pullFlag = 4;
 freePar = 'mNu E0 Norm Bkg';
 DataType = 'Twin';
 RingMerge = 'Full';
-ScalingOpt = 2;
 MaxSlopeCpsPereV = 5.2*1e-06;
 savedir = [getenv('SamakPath'),'knm2ana/knm2_systematics/results/'];
 MakeDir(savedir);
 
-CorrCoeff       = (0:0.2:1);
+CorrCoeff       = [0,1];%0.2:1;%0.9;%(0:0.2:1);
+ScalingOpt      = [2,1];
 mNuSqErr        = zeros(numel(CorrCoeff)+1,1);
 CovMatFracShape = cell(numel(CorrCoeff),1);
 CovMatFrac      = cell(numel(CorrCoeff),1);
+CovMat          = cell(numel(CorrCoeff),1);
 
+RunArg = {'RunList',RunList,...
+    'chi2','chi2Stat',...
+    'DataType',DataType,...
+    'fixPar',freePar,...
+    'RadiativeFlag','ON',...
+    'minuitOpt','min ; minos',...
+    'FSDFlag','BlindingKNM2',...
+    'ELossFlag','KatrinT2',...
+    'SysBudget',33,...
+    'AnaFlag','Ring',...
+    'RingMerge',RingMerge,...
+    'chi2','chi2Stat',...
+    'pullFlag',pullFlag,...
+    'TwinBias_Q',E0,...
+    'ROIFlag','14keV',...
+    'MosCorrFlag','OFF',...
+    'NonPoissonScaleFactor',1};
+
+% stat only
+savenameStat = [savedir,'knm2_MRStatOnly.mat'];
+if  mNuSqErr(1)~=0
+elseif exist(savenameStat,'file')
+    d = importdata(savenameStat);
+    mNuSqErr(1) =0.5*(-d.FitResultStat.errNeg(1)+d.FitResultStat.errPos(1)); % d.FitResultStat.err(1);%
+    fprintf('load from file %s \n',savenameStat)
+else
+    % read data and set up model
+    MR = MultiRunAnalysis(RunArg{:});
+    MR.exclDataStart = MR.GetexclDataStart(range);
+    MR.ModelObj.RFBinStep = 0.02;
+    MR.ModelObj.InitializeRF;
+    Sigma = repmat(std(E0),3,MR.nRings);
+    FSDArg = {'SanityPlot','OFF','Sigma',Sigma};
+    MR.ModelObj.LoadFSD(FSDArg{:});
+    MR.Fit;
+    FitResultStat = MR.FitResult;
+    save(savenameStat,'FitResultStat','RunArg','MR','FSDArg','E0');
+end
+
+% stat + syst
 for i=1:numel(CorrCoeff)
-    if ScalingOpt==2
-        extraStr = '_Scaling2';
-    else
-        extraStr = '';
-    end
     
+    if ScalingOpt(i)==1
+        ScaleStr = '';
+    else
+        ScaleStr = sprintf('_Scaling%.0f',ScalingOpt(i));
+    end
     savename = [savedir,sprintf('knm2_MultiRingFit_BkgSys_Constrain%.3gCpsPerEv_%s_%s_%s_pull%.0f_%.0feVrange_RingMerge%s_CorrCoeff%.2f%s.mat',...
-        MaxSlopeCpsPereV,DataType, RunList,strrep(freePar,' ',''),pullFlag,range,RingMerge,CorrCoeff(i),extraStr)];
-        RunArg = {'RunList',RunList,...
-            'chi2','chi2Stat',...
-            'DataType',DataType,...
-            'fixPar',freePar,...
-            'RadiativeFlag','ON',...
-            'minuitOpt','min ; minos',...
-            'FSDFlag','BlindingKNM2',...
-            'ELossFlag','KatrinT2',...
-            'SysBudget',33,...
-            'AnaFlag','Ring',...
-            'RingMerge',RingMerge,...
-            'chi2','chi2Stat',...
-            'pullFlag',pullFlag,...
-            'TwinBias_Q',E0,...
-            'ROIFlag','14keV',...
-            'MosCorrFlag','OFF',...
-            'NonPoissonScaleFactor',1};
-        
-    % stat only
-    savenameStat = [savedir,'knm2_MRStatOnly.mat'];
-    if  mNuSqErr(1)~=0
-    elseif exist(savenameStat,'file')
-        d = importdata(savenameStat);
-        mNuSqErr(1) =0.5*(-d.FitResultStat.errNeg(1)+d.FitResultStat.errPos(1)); % d.FitResultStat.err(1);%
-        fprintf('load from file %s \n',savenameStat)
-    else
-        % read data and set up model
-        MR = MultiRunAnalysis(RunArg{:});
-        MR.exclDataStart = MR.GetexclDataStart(range);
-        MR.ModelObj.RFBinStep = 0.02;
-        MR.ModelObj.InitializeRF;
-        Sigma = repmat(std(E0),3,MR.nRings);
-        FSDArg = {'SanityPlot','OFF','Sigma',Sigma};
-        MR.ModelObj.LoadFSD(FSDArg{:});
-        MR.Fit;
-        FitResultStat = MR.FitResult;
-        save(savenameStat,'FitResultStat','RunArg','MR','FSDArg','E0');
-    end
-    
-    if exist(savename,'file')
+        MaxSlopeCpsPereV,DataType, RunList,strrep(freePar,' ',''),pullFlag,range,RingMerge,CorrCoeff(i),ScaleStr)];
+
+    if exist(savename,'file') 
         d = importdata(savename);
         mNuSqErr(i+1)   = 0.5*(-d.FitResultBkgCM.errNeg(1)+d.FitResultBkgCM.errPos(1)); % d.FitResultBkgCM.err(1);
         CovMatFracShape{i} = d.BkgCovMatFracShape;
         CovMatFrac{i}      = d.BkgCovMatFrac;
+        CovMat{i}          = d.BkgCovMat;
         fprintf('load from file %s \n',savename)
     else
         if ~exist('MR','var')
@@ -83,17 +87,6 @@ for i=1:numel(CorrCoeff)
             MR.ModelObj.LoadFSD(FSDArg{:});
         end
     
-        
-        % stat only
-        savenameStat = [savedir,'knm2_MRStatOnly.mat'];
-        if exist(savenameStat,'file')
-            d = importdata(savenameStat);
-            mNuSqErr(1) = 0.5*(-d.FitResultStat.errNeg(1)+d.FitResultStat.errPos(1));
-        else
-            MR.Fit;
-            FitResultStat = MR.FitResult;
-            save(savenameStat,'FitResultStat','RunArg','MR','FSDArg','E0');
-        end
         % compute CM
         MR.chi2 = 'chi2CMShape';
         MR.NonPoissonScaleFactor = 1.112;
@@ -101,17 +94,20 @@ for i=1:numel(CorrCoeff)
         BkgRingCorrCoeff = CorrCoeff(i);
         MR.ComputeCM('SysEffects',struct('FSD','OFF'),'BkgCM','ON',...
             'MaxSlopeCpsPereV',MaxSlopeCpsPereV,'BkgRingCorrCoeff',BkgRingCorrCoeff,...
-            'BkgScalingOpt',ScalingOpt);
+            'BkgScalingOpt',ScalingOpt(i));
         BkgCovMatFrac      = MR.FitCM_Obj.CovMatFrac;
         BkgCovMatFracShape = MR.FitCM_Obj.CovMatFracShape;
         BkgCovMat          = MR.FitCM_Obj.CovMat;
         
         MR.NonPoissonScaleFactor = 1;
         MR.SetNPfactor; % convert to right dimension (if multiring)
+        MR.ComputeCM('SysEffects',struct('FSD','OFF'),'BkgCM','ON',...
+            'MaxSlopeCpsPereV',MaxSlopeCpsPereV,'BkgRingCorrCoeff',BkgRingCorrCoeff,...
+            'BkgScalingOpt',ScalingOpt);
         
         MR.Fit;
         FitResultBkgCM = MR.FitResult;
-        save(savename,'FitResultBkgCM','FitResultStat','RunArg','MR','FSDArg','E0','BkgRingCorrCoeff',...
+        save(savename,'FitResultBkgCM','RunArg','MR','FSDArg','E0','BkgRingCorrCoeff',...
             'BkgCovMatFracShape','BkgCovMatFrac','BkgCovMat');
     end
     
@@ -131,8 +127,8 @@ sqrt(mNuSqErr.^2-mNuSqErr(1)^2)
 
 f1 = figure('Units','normalized','Position',[0.1,0.1,0.6,0.5]);
 for i=1:numel(CorrCoeff)
-    subplot(ceil(numel(CorrCoeff)/3),3,i);
-    imagesc(CovMatFrac{i});
+    subplot(ceil(numel(CorrCoeff)/2),2,i);
+    imagesc(CovMatFracShape{i});
     pbaspect([1 1 1])
     colorbar
     title(sprintf('\\rho = %.1f',CorrCoeff(i)),'FontWeight','normal','FontSize',get(gca,'FontSize'));
@@ -150,7 +146,7 @@ end
 %%
 f2 = figure('Units','normalized','Position',[0.1,0.1,0.6,0.5]);
 for i=1:numel(CorrCoeff)
-    subplot(ceil(numel(CorrCoeff)/3),3,i);
+    subplot(ceil(numel(CorrCoeff)/2),2,i);
     imagesc(corrcoef(CovMatFrac{i}));
     pbaspect([1 1 1])
     colorbar
