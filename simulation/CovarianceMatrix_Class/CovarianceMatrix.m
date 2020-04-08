@@ -1848,7 +1848,8 @@ classdef CovarianceMatrix < handle
             obj.CovMatFile = strcat(covmat_path,covmat_filename);
             
             %Check if CM is already computed
-            if exist(obj.CovMatFile,'file')==2 && strcmp(obj.RecomputeFlag,'OFF')
+            if exist(obj.CovMatFile,'file')==2
+%            if exist(obj.CovMatFile,'file')==2 && strcmp(obj.RecomputeFlag,'OFF')
                 fprintf(2,'CovarianceMatrix:ComputeCM_BM1S: Loading BM1S CM from File \n')
                 obj.ReadCMFile('filename',obj.CovMatFile,'SysEffect','BM1S');
                 obj.MultiCovMat.CM_BM1S = obj.CovMat;
@@ -2055,7 +2056,7 @@ function ComputeCM_Background(obj,varargin)
     cprintf('blue','CovarianceMatrix:ComputeCM_Background: Compute Background Covariance Matrix  \n');
     
     % Number of Trials - Hardcoded
-    TrialSave  = obj.nTrials; obj.nTrials = 1000; % BASELINE, termine after obj.nTrials
+    TrialSave  = obj.nTrials; obj.nTrials = 10000; % BASELINE, termine after obj.nTrials
     
     % Covariance Matrix File
     cm_path        = [getenv('SamakPath'),sprintf('inputs/CovMat/Background/CM/')];

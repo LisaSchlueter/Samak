@@ -3947,7 +3947,7 @@ classdef RunAnalysis < handle
                     case 'FirstTritium.katrin'
                         obj.ELossFlag = 'Abdurashitov';
                     case 'Knm2'
-                        obj.ELossFlag = 'KatrinT2';
+                        obj.ELossFlag = 'KatrinT2A20';
                 end
             end
             
