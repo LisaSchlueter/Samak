@@ -3448,6 +3448,8 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                 fprintf('RunList Name unknown! \n');
             end
             
+            h5list(h5list==56589) = [];
+            
             HDF5readallruns('h5runlist',h5list,'reConvert','OFF','DataSet',GetDataSet(h5list(1))); %looks for unconverted runs and converts if needed
             RunList=sort(h5list);
             

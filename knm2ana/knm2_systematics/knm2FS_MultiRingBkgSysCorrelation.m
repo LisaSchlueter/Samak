@@ -11,7 +11,7 @@ RingMerge = 'Full';
 MaxSlopeCpsPereV = 5.2*1e-06;
 savedir = [getenv('SamakPath'),'knm2ana/knm2_systematics/results/'];
 MakeDir(savedir);
-Mode = 'SlopeFit';
+Mode = 'Gauss';%'SlopeFit';
 RecomputeFlag = 'OFF';
 CovMatRecomputeFlag = 'ON';
 
@@ -35,7 +35,7 @@ RunArg = {'RunList',RunList,...
     'RingMerge',RingMerge,...
     'chi2','chi2Stat',...
     'pullFlag',pullFlag,...
-    'TwinBias_Q',E0,...
+    'TwinBias_Q',18573.70,...
     'ROIFlag','14keV',...
     'MosCorrFlag','OFF',...
     'NonPoissonScaleFactor',1};
@@ -106,7 +106,10 @@ for i=1:numel(CorrCoeff)
         BkgCovMatFrac      = MR.FitCM_Obj.CovMatFrac;
         BkgCovMatFracShape = MR.FitCM_Obj.CovMatFracShape;
         BkgCovMat          = MR.FitCM_Obj.CovMat;
-        
+        BkgCovMatFile      = MR.FitCM_Obj.CovMatFile;
+        d = importdata(BkgCovMatFile);
+        Slopes = d.Slopes;
+
         MR.NonPoissonScaleFactor = 1;
         MR.SetNPfactor; % convert to right dimension (if multiring)
         MR.ComputeCM('SysEffects',struct('FSD','OFF'),'BkgCM','ON',...
@@ -116,7 +119,7 @@ for i=1:numel(CorrCoeff)
         MR.Fit;
         FitResultBkgCM = MR.FitResult;
         save(savename,'FitResultBkgCM','RunArg','MR','FSDArg','E0','BkgRingCorrCoeff',...
-            'BkgCovMatFracShape','BkgCovMatFrac','BkgCovMat');
+            'BkgCovMatFracShape','BkgCovMatFrac','BkgCovMat','BkgCovMatFile','Slopes');
         CovMatFracShape{i} = BkgCovMatFracShape;
         CovMatFrac{i}      = BkgCovMatFrac;
         CovMat{i}          = BkgCovMat;
