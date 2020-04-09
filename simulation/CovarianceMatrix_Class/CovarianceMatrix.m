@@ -2214,13 +2214,16 @@ function ComputeCM_Background(obj,varargin)
         end
         
         % convert TBDIS_V back into matrix. for rings: use common good trials
-        SlopesExclCommon =  logical(prod(SlopesExcl));
-        nCommonTrials = sum(SlopesExclCommon);
-      %  nCommonTrials      = min(nGoodTrials);
-        TBDIS_V = squeeze(TBDIS_V(:,:,SlopesExclCommon));
-        %TBDIS_V            = cell2mat(cellfun(@(x) x(:,1:nCommonTrials),TBDIS_V,'UniformOutput',0));
-        if nRingLoop>1
+        
+        if nRingLoop>1  
+            SlopesExclCommon =  logical(prod(SlopesExcl));
+            nCommonTrials = sum(SlopesExclCommon);
+            %  nCommonTrials      = min(nGoodTrials);
+            TBDIS_V = permute(TBDIS_V(:,:,SlopesExclCommon),[2,1,3]); % nqU x nRing x n Trials
+            %TBDIS_V            = cell2mat(cellfun(@(x) x(:,1:nCommonTrials),TBDIS_V,'UniformOutput',0));
             TBDIS_V = reshape(TBDIS_V,[nRingLoop.*obj.StudyObject.nqU,nCommonTrials]);
+        else
+            TBDIS_V = squeeze(TBDIS_V(:,:,logical(SlopesExcl)));
         end
         % Compute Covariance Matrix
         obj.CovMat         = cov(TBDIS_V');

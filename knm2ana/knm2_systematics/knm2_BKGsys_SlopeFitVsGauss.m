@@ -1,9 +1,9 @@
 % background slope (qU) systematics
 % 2 different strategies: fit & cut off or gaussian randomization
 % systematics setting
-RecomputeFlag = 'OFF';
-CovMatRecomputeFlag = 'OFF';
-MaxSlopeCpsPereV = 99;%5.2*1e-06;
+RecomputeFlag = 'ON';
+CovMatRecomputeFlag = 'ON';
+MaxSlopeCpsPereV = 5.2*1e-06;
 
 savedir = [getenv('SamakPath'),'knm2ana/knm2_systematics/results/'];
 MakeDir(savedir);
@@ -23,7 +23,7 @@ RunArg = {'FSDFlag','BlindingKNM2',...
     'RunList',RunList,...      
     'fixPar','mNu E0 Norm Bkg',... % free parameter
     'DataType','Twin',...      % MC twins
-    'TwinBias_Q',E0,...  % twin endpoint
+    'TwinBias_Q',18573.70,...  % twin endpoint
     'SysBudget',34,...
     'RingMerge','Full',...
     'NonPoissonScaleFactor',1};        

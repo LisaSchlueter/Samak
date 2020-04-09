@@ -3,7 +3,7 @@
 
 %% plots
 PlotCorrMat = 'ON';
-PlotCovMat = 'OFF';
+PlotCovMat = 'ON';
 PlotSlopes = 'ON';
 %% settings
 RunList = 'KNM2_Prompt';
@@ -162,7 +162,7 @@ if strcmp(PlotCovMat,'ON')
     f1 = figure('Units','normalized','Position',[0.1,0.1,0.6,0.5]);
     for i=1:numel(CorrCoeff)
         subplot(ceil(numel(CorrCoeff)/2),2,i);
-        imagesc(CovMatFrac{i});
+        imagesc(CovMatFracShape{i});
         pbaspect([1 1 1])
         colorbar
         title(sprintf('\\rho = %.1f',CorrCoeff(i)),'FontWeight','normal','FontSize',get(gca,'FontSize'));
