@@ -72,10 +72,27 @@ for j=1:3
         end
         
         %% Stacked Pixel: Non-Poissonian Component?
+        lambda=2;
+        sigma=1;
+        mu=0.1;
+        par4=1;
+        x=-2:0.0001:2;
+        p = [lambda,sigma,mu,par4,x];
+        [N,edges] = histcounts(corrcount_norm{j,i},15,'Normalization','probability');
+        means = zeros(1,numel(N));
+        for n=1:(numel(edges)-1)
+            means(n) = edges(n)+(edges(n+1)-edges(n))./2;
+        end
+        means = means - mean(edges);
+        Poisson = @(lambda,x) lambda.^x.*exp(1).^(-lambda)./gamma(x+1);
+        Gauss   = @(sigma,mu,x) exp(-0.5.*((x-mu)./sigma).^2)./(sigma.*sqrt(2.*pi));
+        Convolution = @(lambda,sigma,mu,par4,x) par4.*conv(Poisson(lambda,x),Gauss(sigma,mu,x),'same');
+        Conv = fit(means',N',stairs(Convolution),'StartPoint',p,'lower',[1e5,0,1e5,0],'upper',[1e8,1e2,1e8,10]);
+        %plot(Conv);
+        
         pdG = fitdist(corrcount_norm{j,i}','Normal');
         pdN = fitdist(corrcount_norm{j,i}','poisson');
         Broadening = sqrt(pdG.sigma^2-pdN.lambda)/(mean(sstime)*737.8) * 1e3 * 117 / numel(R.PixList);
-        
         
         h = histogram(corrcount_norm{j,i},15,'Normalization','pdf',...
             'FaceColor',rgb('DodgerBlue'),'LineWidth',2,'FaceAlpha',0.7);
@@ -86,15 +103,20 @@ for j=1:3
         pdfG = @(b) 1/sqrt(2*pi*pdG.sigma.^2) .* exp(-(b-pdG.mu).^2/(2*pdG.sigma.^2));
         % Poisson PDF
         pdfP = @(b) 1/sqrt(2*pi*pdN.lambda) .* exp(-(b-pdN.lambda).^2/(2*pdN.lambda));
+        % Convolution PDF
+        pdfC = @(b) Convolution(p(1),p(2),p(3),p(4),b);
+        %pdfC = @(b) Convolution(Conv.lambda,Conv.sigma,Conv.mu,Conv.par4,b);
         hold on
         %b = (h.BinEdges(1:end-1)+h.BinWidth/2);
         b = linspace(min(corrcount_norm{j,i}),max(corrcount_norm{j,i}),100);
         g=plot(b,pdfG(b),'Color',rgb('IndianRed'),'LineWidth',4);
         p=plot(b,pdfP(b),'Color',rgb('GoldenRod'),'LineWidth',4);
-        leg=legend([h g p],...
+        c=plot(b,pdfC(b),'Color',rgb('Blue'),'LineWidth',4);
+        leg=legend([h g p c],...
             sprintf('%.0f scans - PSR %.0f',numel(R.RunList),i),...
             sprintf('Gaussian'),...
             sprintf('Poisson \n NP = %.1f \n \\sigma_{eq} = %.2f mV',pdG.sigma/sqrt(pdN.lambda),Broadening),...
+            sprintf('Convolution'),...
             'location','northwest');
         leg.Color = 'none'; legend boxoff;
         hold off
@@ -103,6 +125,6 @@ for j=1:3
         disp(pdG.sigma/sqrt(pdN.lambda));
         
     end
-    export_fig(fig1,savefile1);
+    %export_fig(fig1,savefile1);
 
 end
