@@ -26,7 +26,8 @@ mNuSqErr        = zeros(numel(CorrCoeff)+1,1);
 CovMatFracShape = cell(numel(CorrCoeff),1);
 CovMatFrac      = cell(numel(CorrCoeff),1);
 CovMat          = cell(numel(CorrCoeff),1);
-Slopes          = cell(numel(CorrCoeff),1);
+SlopesAll          = cell(numel(CorrCoeff),1);
+SlopesExclAll      = cell(numel(CorrCoeff),1);
 CovMatFile      = cell(numel(CorrCoeff),1);
 
 RunArg = {'RunList',RunList,...
@@ -91,8 +92,10 @@ for i=1:numel(CorrCoeff)
         CovMatFrac{i}      = d.BkgCovMatFrac;
         CovMat{i}          = d.BkgCovMat;
         CovMatFile{i}      = d.BkgCovMatFile;
-        Slopes{i}          = d.Slopes;
-     
+        SlopesAll{i}          = d.Slopes;
+        if isfield(d,'SlopesExcl')
+            SlopesExclAll{i}        = d.SlopesExcl;
+        end
         fprintf('load from file %s \n',savename)
     else
         if ~exist('MR','var')
@@ -118,7 +121,9 @@ for i=1:numel(CorrCoeff)
         BkgCovMat          = MR.FitCM_Obj.CovMat;
         BkgCovMatFile      = MR.FitCM_Obj.CovMatFile;
         d = importdata(BkgCovMatFile);
-        Slopes = d.Slopes;
+        Slopes      = d.Slopes;
+        SlopesExcl  = d.SlopesExcl;
+        
         CovMatFile{i}      = BkgCovMatFile;
         MR.NonPoissonScaleFactor = 1;
         MR.SetNPfactor; % convert to right dimension (if multiring)
@@ -133,6 +138,8 @@ for i=1:numel(CorrCoeff)
         CovMatFracShape{i} = BkgCovMatFracShape;
         CovMatFrac{i}      = BkgCovMatFrac;
         CovMat{i}          = BkgCovMat;
+        SlopesExclAll{i} = SlopesExcl;
+        SlopesAll{i} = Slopes;
     end
     
     
@@ -196,7 +203,7 @@ end
 %% correlation of slopes
 if strcmp(PlotSlopes,'ON')
     CorrCoeffIndex = 1;
-    mySlope = cell2mat(Slopes(CorrCoeffIndex)');
+    mySlope = cell2mat(SlopesAll(CorrCoeffIndex)');
     x = 4;
     y = 3;
     ScatterHist2(mySlope(x,:)*1e6,mySlope(y,:)*1e6,...
