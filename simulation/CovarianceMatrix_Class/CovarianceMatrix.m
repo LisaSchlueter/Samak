@@ -2056,7 +2056,7 @@ function ComputeCM_Background(obj,varargin)
     cprintf('blue','CovarianceMatrix:ComputeCM_Background: Compute Background Covariance Matrix  \n');
     
     % Number of Trials - Hardcoded
-    TrialSave  = obj.nTrials; obj.nTrials = 10000; % BASELINE, termine after obj.nTrials
+    TrialSave  = obj.nTrials; obj.nTrials = 50000; % BASELINE, termine after obj.nTrials
     
     % Covariance Matrix File
     cm_path        = [getenv('SamakPath'),sprintf('inputs/CovMat/Background/CM/')];
@@ -2106,7 +2106,7 @@ function ComputeCM_Background(obj,varargin)
             nRingLoop = 1;
         end
         
-        TBDIS_V           = cell(nRingLoop,1);      % will be later converted into matrix
+        TBDIS_V           = zeros(nRingLoop,obj.StudyObject.nqU,obj.nTrials);%cell(nRingLoop,1);      % will be later converted into matrix
         nGoodTrials       = zeros(nRingLoop,1); % number of successfull trials
         BKG_Asimov        = obj.StudyObject.BKG_RateSec;
         
@@ -2139,7 +2139,6 @@ function ComputeCM_Background(obj,varargin)
             BKGCovMat     = BKG_RateErr.*BKGCorrMat.*BKG_RateErr';
            
             BKG         = mvnrnd(BKG_AsimovqU,BKGCovMat,obj.nTrials); % ranomize with multivariate distribution
-           % BKG        = BKG_Asimov + BKG_RateErr.*randn(BKGnqU,1);    
             BKG         = permute(reshape(BKG,obj.nTrials,BKGnqU,nRingLoop),[2,1,3]); % shape back to nqU x nTrials x nRing 
             BKG_RateErr = reshape(BKG_RateErr,BKGnqU,nRingLoop);   % shape back to nqU x nRing
             
@@ -2188,7 +2187,7 @@ function ComputeCM_Background(obj,varargin)
                         Bkg_Fit(:,i)      = nan(numel(obj.StudyObject.qU),1); CutOff(i) = 0;
                         SlopesExcl(rl,i)  = 0;
                     elseif abs(par(2,i))<= MaxSlopeCpsPereV(rl) 
-                       % par(1,i) = BKG_Asimov(rl); % do not vary offset!
+                        par(1,i) = BKG_Asimov(rl); % do not vary offset
                         Bkg_Fit(:,i)      = ComputeBkgSlope(par(:,i),obj.StudyObject.qU(:,rl));
                     else
                         Bkg_Fit(:,i)      = nan(numel(obj.StudyObject.qU(:,rl)),1); CutOff(i) = 0;
@@ -2203,21 +2202,26 @@ function ComputeCM_Background(obj,varargin)
             CutOff                    = logical(CutOff); % transform 0 and 1 into logicals
             
             % Remove Nans
-            Bkg_Fit         = Bkg_Fit(~isnan(Bkg_Fit));
-            Bkg_Fit         = reshape(Bkg_Fit,numel(obj.StudyObject.qU(:,rl)),numel(Bkg_Fit)/numel(obj.StudyObject.qU(:,rl)));
-            nGoodTrials(rl) = size(Bkg_Fit,2);
+           % Bkg_Fit         = Bkg_Fit(~isnan(Bkg_Fit));
+          %  Bkg_Fit         = reshape(Bkg_Fit,numel(obj.StudyObject.qU(:,rl)),numel(Bkg_Fit)/numel(obj.StudyObject.qU(:,rl)));
+             nGoodTrials(rl) = sum(SlopesExcl(rl,:));
             %TBDIS_V        = Bkg_Fit(:,chi2min<Chi2CutOff).*obj.StudyObject.TimeSec.*obj.StudyObject.qUfrac;
             %BkgPlot_Data   = BkgPlot_Data(:,chi2min<Chi2CutOff);
             
             % Build Integral Spectrum Underlying Background Spectrum
-            TBDIS_V{rl}    = Bkg_Fit(:,:).*obj.StudyObject.TimeSec(:,rl).*obj.StudyObject.qUfrac(:,rl);
-            BkgPlot_Data   = BkgPlot_Data(:,:);
+            TBDIS_V(rl,:,:)    = Bkg_Fit.*obj.StudyObject.TimeSec(:,rl).*obj.StudyObject.qUfrac(:,rl);
+            BkgPlot_Data      = BkgPlot_Data(:,:);
         end
         
-        % convert TBDIS_V back into matrix. for rings: use minimal number of good trials
-        nCommonTrials      = min(nGoodTrials);
-        TBDIS_V            = cell2mat(cellfun(@(x) x(:,1:nCommonTrials),TBDIS_V,'UniformOutput',0));
-        
+        % convert TBDIS_V back into matrix. for rings: use common good trials
+        SlopesExclCommon =  logical(prod(SlopesExcl));
+        nCommonTrials = sum(SlopesExclCommon);
+      %  nCommonTrials      = min(nGoodTrials);
+        TBDIS_V = squeeze(TBDIS_V(:,:,SlopesExclCommon));
+        %TBDIS_V            = cell2mat(cellfun(@(x) x(:,1:nCommonTrials),TBDIS_V,'UniformOutput',0));
+        if nRingLoop>1
+            TBDIS_V = reshape(TBDIS_V,[nRingLoop.*obj.StudyObject.nqU,nCommonTrials]);
+        end
         % Compute Covariance Matrix
         obj.CovMat         = cov(TBDIS_V');
         
