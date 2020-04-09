@@ -14,13 +14,13 @@ else
     RunAnaArg = {'RunList','KNM2_Prompt',... % all KNM2 golden runs
         'fixPar','mNu E0 Bkg Norm',...           % free Parameter !!
         'DataType','Twin',...
-        'FSDFlag','BlindingKNM2',...       % final state distribution (theoretical calculation)
+        'FSDFlag','BlindingKNM2',...       % final state distribution (theoretical calculation) 
         'ELossFlag','KatrinT2A20',...         % energy loss function     ( different parametrizations available)
         'AnaFlag','StackPixel',...         % FPD segmentations -> pixel combination
         'chi2',chi2,...              % statistics only
         'TwinBias_Q',E0,...
-        'ROIFlag','14keV',...
-        'SysBudget',34};
+        'ROIFlag','Default',...
+        'SysBudget',34};%        
     if strcmp(chi2,'chi2Stat')
         RunAnaArg = [RunAnaArg,'NonPoissonScaleFactor',1];
     else
