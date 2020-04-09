@@ -77,7 +77,7 @@ RunAnaArg = {'RunList','KNM2_RW2','DataType',DataType,...
         qUmeanRW2(i)    = mean(qUCorrRW2);
     
         % Include HV Drift if any
-        count(i,:)  = R.SingleRunData.TBDIS_RM + ...
+        count(i,:)  = R.SingleRunData.TBDIS_RM_Default + ...
                       HVdriftPerPixel.*numel(R.PixList).*R.SingleRunData.qUfrac_RM.*R.SingleRunData.TimeSec;
         
         % Correct for KNM1 Radial Effect if any
@@ -150,16 +150,16 @@ for j=1:3
         fpdCal(i,:)   = fpdCal(i,:) + (MR.SingleRunData.StartTimeStamp<datetime('02-Oct-2019 14:52:19'))*0.0006566;
         
         % Endpoint Fit
-        R.Fit
-        E0RWPSR(i,j)  = R.FitResult.par(2)+R.ModelObj.Q_i;
-        E0RWPSRE(i,j) = R.FitResult.err(2);
+        %R.Fit
+        %E0RWPSR(i,j)  = R.FitResult.par(2)+R.ModelObj.Q_i;
+        %E0RWPSRE(i,j) = R.FitResult.err(2);
         
         % HV setting
         qUCorrRW      = (R.SingleRunData.qU_RM(1,:));
         qUmeanRW{j,i} = mean(R.SingleRunData.qU_RM(1,:));
     
         % Include HV Drift
-        count(i,:)    = R.SingleRunData.TBDIS_RM.*fpdCal(i,:) + ...
+        count(i,:)    = R.SingleRunData.TBDIS_RM_Default.*fpdCal(i,:) + ...
                       HVdriftPerPixel.*numel(R.PixList).*R.SingleRunData.qUfrac_RM.*R.SingleRunData.TimeSec;
         
                   
