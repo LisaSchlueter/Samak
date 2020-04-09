@@ -1,6 +1,6 @@
 KNM1CorFlag    = 'ON';
 HVdriftCorFlag = 'OFF';
-ROI            = '14keV';
+ROI            = 'Default';
 
 %% KNM1 with Calibration - Divide Rates by
 switch KNM1CorFlag
@@ -383,7 +383,7 @@ for i=1:A.nRings
         'Robust','Bisquare');
     ci = confint(fLin,0.68); uncertaintyLin = (ci(2,1)-ci(1,1))/2;
     hold on
-    H2 = plot(CumTActivity,fLin.a*(CumTActivity)+fLin.b,'-','Color',rgb('DarkBlue'),'LineWidth',2);
+    %H2 = plot(CumTActivity,fLin.a*(CumTActivity)+fLin.b,'-','Color',rgb('DarkBlue'),'LineWidth',2);
     hold off
     
     xlabel('Cumulative Throughput Unit (day at nominal column density and T-purity)');
