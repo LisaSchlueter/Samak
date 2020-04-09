@@ -11,9 +11,12 @@ RingMerge = 'Full';
 MaxSlopeCpsPereV = 5.2*1e-06;
 savedir = [getenv('SamakPath'),'knm2ana/knm2_systematics/results/'];
 MakeDir(savedir);
+Mode = 'SlopeFit';
+RecomputeFlag = 'OFF';
+CovMatRecomputeFlag = 'ON';
 
-CorrCoeff       = [0,1];%0.2:1;%0.9;%(0:0.2:1);
-ScalingOpt      = [2,1];
+CorrCoeff       = [1,0,1];%0.2:1;%0.9;%(0:0.2:1);
+ScalingOpt      = [1,2,2];
 mNuSqErr        = zeros(numel(CorrCoeff)+1,1);
 CovMatFracShape = cell(numel(CorrCoeff),1);
 CovMatFrac      = cell(numel(CorrCoeff),1);
@@ -66,10 +69,15 @@ for i=1:numel(CorrCoeff)
     else
         ScaleStr = sprintf('_Scaling%.0f',ScalingOpt(i));
     end
-    savename = [savedir,sprintf('knm2_MultiRingFit_BkgSys_Constrain%.3gCpsPerEv_%s_%s_%s_pull%.0f_%.0feVrange_RingMerge%s_CorrCoeff%.2f%s.mat',...
-        MaxSlopeCpsPereV,DataType, RunList,strrep(freePar,' ',''),pullFlag,range,RingMerge,CorrCoeff(i),ScaleStr)];
+    if strcmp(Mode,'Gauss')
+        ModeStr = '_Gauss';
+    else
+        ModeStr = '';
+    end
+    savename = [savedir,sprintf('knm2_MultiRingFit_BkgSys_Constrain%.3gCpsPerEv_%s_%s_%s_pull%.0f_%.0feVrange_RingMerge%s_CorrCoeff%.2f%s%s.mat',...
+        MaxSlopeCpsPereV,DataType, RunList,strrep(freePar,' ',''),pullFlag,range,RingMerge,CorrCoeff(i),ScaleStr,ModeStr)];
 
-    if exist(savename,'file') 
+    if exist(savename,'file') && strcmp(RecomputeFlag,'OFF')
         d = importdata(savename);
         mNuSqErr(i+1)   = 0.5*(-d.FitResultBkgCM.errNeg(1)+d.FitResultBkgCM.errPos(1)); % d.FitResultBkgCM.err(1);
         CovMatFracShape{i} = d.BkgCovMatFracShape;
@@ -94,7 +102,7 @@ for i=1:numel(CorrCoeff)
         BkgRingCorrCoeff = CorrCoeff(i);
         MR.ComputeCM('SysEffects',struct('FSD','OFF'),'BkgCM','ON',...
             'MaxSlopeCpsPereV',MaxSlopeCpsPereV,'BkgRingCorrCoeff',BkgRingCorrCoeff,...
-            'BkgScalingOpt',ScalingOpt(i));
+            'BkgScalingOpt',ScalingOpt(i),'BkgMode',Mode,'RecomputeFlag',CovMatRecomputeFlag);
         BkgCovMatFrac      = MR.FitCM_Obj.CovMatFrac;
         BkgCovMatFracShape = MR.FitCM_Obj.CovMatFracShape;
         BkgCovMat          = MR.FitCM_Obj.CovMat;
@@ -103,12 +111,15 @@ for i=1:numel(CorrCoeff)
         MR.SetNPfactor; % convert to right dimension (if multiring)
         MR.ComputeCM('SysEffects',struct('FSD','OFF'),'BkgCM','ON',...
             'MaxSlopeCpsPereV',MaxSlopeCpsPereV,'BkgRingCorrCoeff',BkgRingCorrCoeff,...
-            'BkgScalingOpt',ScalingOpt);
+            'BkgScalingOpt',ScalingOpt(i),'BkgMode',Mode,'RecomputeFlag','OFF');
         
         MR.Fit;
         FitResultBkgCM = MR.FitResult;
         save(savename,'FitResultBkgCM','RunArg','MR','FSDArg','E0','BkgRingCorrCoeff',...
             'BkgCovMatFracShape','BkgCovMatFrac','BkgCovMat');
+        CovMatFracShape{i} = BkgCovMatFracShape;
+        CovMatFrac{i}      = BkgCovMatFrac;
+        CovMat{i}          = BkgCovMat;
     end
     
     
@@ -123,12 +134,12 @@ for i=1:numel(CorrCoeff)
 end
 %%
 %plot(CorrCoeff,sqrt(mNuSqErr(2:end).^2-mNuSqErr(1).^2));
-sqrt(mNuSqErr.^2-mNuSqErr(1)^2)
+sqrt(mNuSqErr(2:end).^2-mNuSqErr(1)^2)
 
 f1 = figure('Units','normalized','Position',[0.1,0.1,0.6,0.5]);
 for i=1:numel(CorrCoeff)
     subplot(ceil(numel(CorrCoeff)/2),2,i);
-    imagesc(CovMatFracShape{i});
+    imagesc(CovMatFrac{i});
     pbaspect([1 1 1])
     colorbar
     title(sprintf('\\rho = %.1f',CorrCoeff(i)),'FontWeight','normal','FontSize',get(gca,'FontSize'));

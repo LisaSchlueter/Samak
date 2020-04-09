@@ -2110,7 +2110,7 @@ function ComputeCM_Background(obj,varargin)
         nGoodTrials       = zeros(nRingLoop,1); % number of successfull trials
         BKG_Asimov        = obj.StudyObject.BKG_RateSec;
         
-        if nRingLoop>1 % for more than 1 ring
+        if nRingLoop>1 && numel(MaxSlopeCpsPereV)== 1% for more than 1 ring
             % normalize MaxSlopeCpsPereV to correct statistics
             %nPixPerRing = arrayfun(@(x) numel(x{:}),obj.StudyObject.FPD_RingPixList,'UniformOutput',1); %number of pixels in each ring
             %nPixTotal = numel(obj.StudyObject.FPD_PixList);
@@ -2142,8 +2142,17 @@ function ComputeCM_Background(obj,varargin)
            % BKG        = BKG_Asimov + BKG_RateErr.*randn(BKGnqU,1);    
             BKG         = permute(reshape(BKG,obj.nTrials,BKGnqU,nRingLoop),[2,1,3]); % shape back to nqU x nTrials x nRing 
             BKG_RateErr = reshape(BKG_RateErr,BKGnqU,nRingLoop);   % shape back to nqU x nRing
+            
+            if strcmp(Mode,'Gauss')
+                GaussCorrMat = RingCorrCoeff.*ones(nRingLoop)+(1-RingCorrCoeff).*diag(ones(1,nRingLoop));
+                GaussCovMat  = MaxSlopeCpsPereV.*GaussCorrMat.*MaxSlopeCpsPereV';
+                Slopes       = mvnrnd(zeros(nRingLoop,1),GaussCovMat,obj.nTrials)';
+            end
         else
             BKG           = BKG_Asimov + BKG_RateErr.*randn(BKGnqU,obj.nTrials);
+            if strcmp(Mode,'Gauss')
+                Slopes = MaxSlopeCpsPereV.*randn(obj.nTrials,1);% slopes
+            end
         end
        
         for rl=1:1:nRingLoop  
@@ -2162,9 +2171,7 @@ function ComputeCM_Background(obj,varargin)
             for i=1:obj.nTrials
                 progressbar(i/obj.nTrials);
                 Data(:,:,i)    = [obj.StudyObject.qU(BKGIndex:end,rl),BKG(:,i,rl), BKG_RateErr(:,rl)];
-                %Data(:,:,i)    = [obj.StudyObject.qU(BKGIndex:end,rl),BKG(:,i), BKG_RateErr(:,rl)];
                 BKG_i         = wmean(BKG(:,i,rl),1./BKG(:,i,rl));
-                %BKG_i         = wmean(BKG(:,i),1./BKG(:,i));
                 Slope_i       = 0;
                 parInit       = [BKG_i+1e-2*rand(1), Slope_i+1e-4*rand(1)];
                 % Call Minuit
@@ -2189,9 +2196,8 @@ function ComputeCM_Background(obj,varargin)
                     end
                 elseif strcmp(Mode,'Gauss')
                     par(1,i) = BKG_Asimov(rl);%mean(BKG(:,i,rl));        % offset
-                    par(2,i) = MaxSlopeCpsPereV.*randn(1);% slopes
+                    par(2,i) = Slopes(rl,i);% slopes
                     Bkg_Fit(:,i)  = ComputeBkgSlope(par(:,i),obj.StudyObject.qU(:,rl));
-                    Slopes(rl,i) = par(2,i);
                 end
             end
             CutOff                    = logical(CutOff); % transform 0 and 1 into logicals
@@ -2232,7 +2238,7 @@ function ComputeCM_Background(obj,varargin)
         obj.MultiCovMatFrac.CM_BkgShape  = obj.CovMatFrac;
         obj.MultiCovMatFracShape.CM_BkgShape = obj.CovMatFracShape;
         save(obj.CovMatFile,'obj','TBDIS_V','BKG_Asimov','par','err','chi2min',...
-            'Bkg_Fit','BKG_i','BKGIndex','BkgPlot_Data','Data','BKGnqU','MaxSlopeCpsPereV',...
+            'Bkg_Fit','BKG_i','BKG','BKGIndex','BkgPlot_Data','Data','BKGnqU','MaxSlopeCpsPereV',...
             'SlopesExcl','Slopes');
         
         if nRingLoop>1

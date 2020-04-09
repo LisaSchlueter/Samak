@@ -53,7 +53,15 @@ TBDIS       = double(TBDISuncorr)./double(EffCorr).*TimeBias;
 TBDISE      = sqrt(TBDIS./EffCorr); % statstical uncertainty
 
 if strcmp(DataSet,'Knm2') && strcmp(Fitter,'Samak')
-    TBDIS14keV = h5read([h5path,h5name],'/RunSummary/CountsKNM1')'; % for compute TBDISE
+    if contains(Version,'Durable')
+        TBDIS1133 = h5read([h5path,h5name],'/RunSummary/Counts1133')'; % for compute TBDISE
+        TBDIS2232 = h5read([h5path,h5name],'/RunSummary/Counts2232')'; % for compute TBDISE
+        TBDIS14keV = zeros(size(TBDIS));
+    else
+        TBDIS14keV = h5read([h5path,h5name],'/RunSummary/CountsKNM1')'; % for compute TBDISE
+         TBDIS1133 = zeros(size(TBDIS));
+         TBDIS2232 = zeros(size(TBDIS));
+    end
 else
     TBDIS14keV = zeros(size(TBDIS));
 end
@@ -88,6 +96,9 @@ end
 
 %% Pinch magnetic field (Bmax)
 VersionTmp = extractAfter(Version,'Prompt');
+if isempty(VersionTmp)
+ VersionTmp = extractAfter(Version,'Durable');   
+end
 if ismember(DataSet,{'FirstTritium.katrin','Knm1'})
     MACE_Bmax_T = 4.23.*ones(148,1); % not available in RS
 else%if strcmp(DataSet,'Knm2') && str2double(VersionTmp(1))>=4
@@ -177,6 +188,9 @@ if  (any(diff(qU(:,1)) < 0))
     qUfrac     = qUfrac(SortedIndex(:,1),:);
     EffCorr    = EffCorr(SortedIndex(:,1),:);
     TBDIS14keV = TBDIS14keV(SortedIndex(:,1),:);
+    TBDIS1133  = TBDIS1133(SortedIndex(:,1),:);
+    TBDIS2232  = TBDIS2232(SortedIndex(:,1),:);
+   
     TimeperSubRunperPixel = TimeperSubRunperPixel(SortedIndex(:,1),:);
     if ~strcmp(Fitter,'Kafit')
         WGTS_CD_MolPerCm2_SubRun = WGTS_CD_MolPerCm2_SubRun(SortedIndex(:,1));
@@ -211,6 +225,8 @@ switch DataSet
         TBDIS_RM                    = TBDIS(1,:)';
         EffCorr_RM                  =  EffCorr(1,:)';
         TBDIS14keV_RM               = TBDIS14keV(1,:)';
+        TBDIS1133_RM                = TBDIS1133(1,:)';
+        TBDIS2232_RM                = TBDIS2232(1,:)';
         TimeperSubRunperPixel_RM    = TimeperSubRunperPixel(1,:)';
         
         % delete rate monitor point: not used for nu-mass analysis
@@ -219,6 +235,8 @@ switch DataSet
         qUfrac                       = qUfrac(qUstart:end,:);
         TBDIS                        = TBDIS(qUstart:end,:);
         TBDIS14keV                   = TBDIS14keV(qUstart:end,:);
+        TBDIS1133                    = TBDIS1133(qUstart:end,:);
+        TBDIS2232                    = TBDIS2232(qUstart:end,:);
         TimeperSubRunperPixel        = TimeperSubRunperPixel(qUstart:end,:);
         EffCorr                      = EffCorr(qUstart:end,:);
         WGTS_CD_MolPerCm2_SubRun     = WGTS_CD_MolPerCm2_SubRun(qUstart:end);
@@ -269,6 +287,8 @@ save(savename,'StartTimeStamp','TBDIS','TBDISE','qU','qUfrac','EffCorr',...
     'matFileName',...
     'TimeBias',...
     'TBDIS14keV','TBDIS14keV_RM',...
+    'TBDIS1133','TBDIS1133_RM',...
+    'TBDIS2232','TBDIS2232_RM',...
     '-v7.3','-nocompression');
 
 h5mat.mpix = struct('StartTimeStamp',StartTimeStamp,'TBDIS',TBDIS,'TBDISE',TBDISE,'qU',qU,'TimeperSubRunperPixel',TimeperSubRunperPixel,...
@@ -294,7 +314,11 @@ h5mat.mpix = struct('StartTimeStamp',StartTimeStamp,'TBDIS',TBDIS,'TBDISE',TBDIS
     'MACE_Bmax_T',MACE_Bmax_T,...
     'TimeBias',TimeBias,....
     'TBDIS14keV',TBDIS14keV,...
-    'TBDIS14keV_RM',TBDIS14keV_RM);
+    'TBDIS14keV_RM',TBDIS14keV_RM,...
+    'TBDIS1133',TBDIS1133,...
+    'TBDIS1133_RM',TBDIS1133_RM,...     
+    'TBDIS2232',TBDIS2232,...
+    'TBDIS2232_RM',TBDIS2232_RM);
 
 % TD (optional)
 switch saveTD_DataBank

@@ -2,7 +2,7 @@
 range = 40;
 E0 = knm2FS_GetE0Twins('SanityPlot','OFF');
 RecomputeFlag = 'OFF';
-chi2 = 'chi2CMShape';
+chi2 = 'chi2Stat';
 %% load or calc
 savedir = [getenv('SamakPath'),'knm2ana/knm2_FigureSkating/results/'];
 savename = sprintf('%sknm2FS_UniformFit_%.0feV_%s.mat',savedir,range,chi2);
@@ -13,14 +13,14 @@ else
     fprintf('start fit\n');
     RunAnaArg = {'RunList','KNM2_Prompt',... % all KNM2 golden runs
         'fixPar','mNu E0 Bkg Norm',...           % free Parameter !!
-        'DataType','Real',...
-        'FSDFlag','BlindingKNM2',...       % final state distribution (theoretical calculation) 
-        'ELossFlag','KatrinT2',...         % energy loss function     ( different parametrizations available)
+        'DataType','Twin',...
+        'FSDFlag','BlindingKNM2',...       % final state distribution (theoretical calculation)
+        'ELossFlag','KatrinT2A20',...         % energy loss function     ( different parametrizations available)
         'AnaFlag','StackPixel',...         % FPD segmentations -> pixel combination
         'chi2',chi2,...              % statistics only
         'TwinBias_Q',E0,...
         'ROIFlag','14keV',...
-        'SysBudget',33};
+        'SysBudget',34};
     if strcmp(chi2,'chi2Stat')
         RunAnaArg = [RunAnaArg,'NonPoissonScaleFactor',1];
     else
@@ -35,38 +35,39 @@ else
     %% fit without corrections
     A.Fit('CATS','ON'); A.PlotFit('FitResultsFlag','OFF');return;
     FitResult_ref  = A.FitResult;
-%     %% fit with broadening of RF + broadening/shift of FSD
-% %     MACE_Sigma = std(A.SingleRunData.qU,0,2);
-% %     A.ModelObj.MACE_Sigma = MACE_Sigma;
-% %     A.ModelObj.InitializeRF;
-%     TimeSec = zeros(3,1);
-%     TimeSec(1) = sum(A.SingleRunData.TimeSec(1:171));
-%     TimeSec(2) = sum(A.SingleRunData.TimeSec(172:268));
-%     TimeSec(3) = sum(A.SingleRunData.TimeSec(269:361));
-%     MultiWeights = TimeSec./sum(TimeSec);
-%     MultiPos =[E0(1),E0(end-120),E0(end)]';
-%     MultiPosRel = MultiPos-wmean(MultiPos,MultiWeights);
+    %     %% fit with broadening of RF + broadening/shift of FSD
+    % %     MACE_Sigma = std(A.SingleRunData.qU,0,2);
+    % %     A.ModelObj.MACE_Sigma = MACE_Sigma;
+    % %     A.ModelObj.InitializeRF;
+    %     TimeSec = zeros(3,1);
+    %     TimeSec(1) = sum(A.SingleRunData.TimeSec(1:171));
+    %     TimeSec(2) = sum(A.SingleRunData.TimeSec(172:268));
+    %     TimeSec(3) = sum(A.SingleRunData.TimeSec(269:361));
+    %     MultiWeights = TimeSec./sum(TimeSec);
+    %     MultiPos =[E0(1),E0(end-120),E0(end)]';
+    %     MultiPosRel = MultiPos-wmean(MultiPos,MultiWeights);
     %%
     Sigma = std(E0);
     FSDArg = {'SanityPlot','ON','Sigma',Sigma};
     A.ModelObj.LoadFSD(FSDArg{:});
     A.ModelObj.ComputeTBDDS; A.ModelObj.ComputeTBDIS;
-
+    
     A.Fit;
     FitResult_imp  = A.FitResult;
     save(savename,'FitResult_imp','FitResult_ref','E0','MACE_Sigma','A','FSDArg');
     %save(savename,'FitResult_imp','FitResult_ref','E0','A','FSDArg');
-%% result
-fprintf('--------------------------------------\n')
-fprintf('mNuSq = %.3f (%.3f +%.3f) eV^2  (ref) \n',FitResult_ref.par(1),FitResult_ref.errNeg(1),FitResult_ref.errPos(1))
-fprintf('mNuSq =  %.3f (%.3f +%.3f) eV^2  (imp) \n',FitResult_imp.par(1),FitResult_imp.errNeg(1),FitResult_imp.errPos(1))
-fprintf('Average mNuSq sensitivity = %.3f eV^2 \n',0.5*(-FitResult_imp.errNeg(1)+FitResult_imp.errPos(1)))
-fprintf('--------------------------------------\n')
-fprintf('E0    = %.0e (+-%.2f) eV (ref) \n',FitResult_ref.par(2)+A.ModelObj.Q_i-mean(E0),FitResult_ref.err(2))
-fprintf('E0    = %.0e (+-%.2f) eV (imp) \n',FitResult_imp.par(2)+A.ModelObj.Q_i-mean(E0),FitResult_imp.err(2))
-fprintf('--------------------------------------\n')
-
-%%
-
-% A.ModelObj.LoadFSD(FSDArg{:},'ZoomPlot','ON')
-%A.Fit('CATS','ON')
+    %% result
+    fprintf('--------------------------------------\n')
+    fprintf('mNuSq = %.3f (%.3f +%.3f) eV^2  (ref) \n',FitResult_ref.par(1),FitResult_ref.errNeg(1),FitResult_ref.errPos(1))
+    fprintf('mNuSq =  %.3f (%.3f +%.3f) eV^2  (imp) \n',FitResult_imp.par(1),FitResult_imp.errNeg(1),FitResult_imp.errPos(1))
+    fprintf('Average mNuSq sensitivity = %.3f eV^2 \n',0.5*(-FitResult_imp.errNeg(1)+FitResult_imp.errPos(1)))
+    fprintf('--------------------------------------\n')
+    fprintf('E0    = %.0e (+-%.2f) eV (ref) \n',FitResult_ref.par(2)+A.ModelObj.Q_i-mean(E0),FitResult_ref.err(2))
+    fprintf('E0    = %.0e (+-%.2f) eV (imp) \n',FitResult_imp.par(2)+A.ModelObj.Q_i-mean(E0),FitResult_imp.err(2))
+    fprintf('--------------------------------------\n')
+    
+    %%
+    
+    % A.ModelObj.LoadFSD(FSDArg{:},'ZoomPlot','ON')
+    %A.Fit('CATS','ON')
+end

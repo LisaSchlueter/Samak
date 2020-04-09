@@ -2,12 +2,13 @@
 % 2 different strategies: fit & cut off or gaussian randomization
 % systematics setting
 RecomputeFlag = 'OFF';
-MaxSlopeCpsPereV = 5.2*1e-06;
+CovMatRecomputeFlag = 'OFF';
+MaxSlopeCpsPereV = 99;%5.2*1e-06;
 
 savedir = [getenv('SamakPath'),'knm2ana/knm2_systematics/results/'];
 MakeDir(savedir);
 savename = sprintf('%sknm2_BKGsys_SlopeFitVsGauss_%.1fmcpskeV.mat',savedir,MaxSlopeCpsPereV*1e6);
-if exist(savename,'file')
+if exist(savename,'file') && strcmp(RecomputeFlag,'OFF')
     load(savename)
 else
 % model setting
@@ -29,7 +30,6 @@ RunArg = {'FSDFlag','BlindingKNM2',...
 
 CmArg = {'BkgCM','ON',...
     'SysEffects',struct('BkgShape','ON'),...
-    'RecomputeFlag',RecomputeFlag,...
     'nTrials',50000,...
     'MaxSlopeCpsPereV',MaxSlopeCpsPereV};
 %% init model
@@ -46,11 +46,11 @@ FitResultsStat = M.FitResult;
 %% stat. + syst: calculate covariance matrix: slope fit & cut off
 M.chi2 = 'chi2CMShape';
 M.NonPoissonScaleFactor = 1.112;
-M.ComputeCM(CmArg{:},'BkgMode','SlopeFit','RecomputeFlag','OFF');
+M.ComputeCM(CmArg{:},'BkgMode','SlopeFit','RecomputeFlag',CovMatRecomputeFlag);
 CMFrac      = M.FitCM_Obj.CovMatFrac;
 CMFracShape = M.FitCM_Obj.CovMatFracShape;
 M.NonPoissonScaleFactor = 1;
-%M.ComputeCM(CmArg{:},'BkgMode','SlopeFit','RecomputeFlag','OFF');
+M.ComputeCM(CmArg{:},'BkgMode','SlopeFit','RecomputeFlag','OFF'); % reset stat. error to non-NP!
 
 M.Fit;
 FitResultsCM = M.FitResult;

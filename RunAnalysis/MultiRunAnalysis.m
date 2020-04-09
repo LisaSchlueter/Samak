@@ -1198,7 +1198,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             
             % Reference Rate KNM2
 %            R200  = sum(obj.SingleRunData.TBDIS_RM,1)'./(obj.SingleRunData.TimeSec.*mean(obj.SingleRunData.qUfrac_RM,1))';
-            R200  = sum(obj.SingleRunData.TBDIS_RM,1)'./(obj.SingleRunData.TimeSec.*obj.SingleRunData.qUfrac_RM)';
+            R200  = sum(obj.SingleRunData.TBDIS_RM_Default,1)'./(obj.SingleRunData.TimeSec.*obj.SingleRunData.qUfrac_RM)';
             qU200 = mean(obj.SingleRunData.qU_RM,1);
             
             
