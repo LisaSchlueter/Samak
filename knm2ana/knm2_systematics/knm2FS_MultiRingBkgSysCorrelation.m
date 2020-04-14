@@ -2,9 +2,10 @@
 % March 2020, Lisa
 
 %% plots
-PlotCorrMat = 'ON';
-PlotCovMat = 'ON';
-PlotSlopes = 'ON';
+SavePlot = 'ON';
+PlotCorrMat = 'OFF';
+PlotCovMat = 'OFF';
+PlotSlopes = 'OFF';
 %% settings
 RunList = 'KNM2_Prompt';
 E0 = knm2FS_GetE0Twins('SanityPlot','OFF');
@@ -13,11 +14,11 @@ pullFlag = 4;
 freePar = 'mNu E0 Norm Bkg';
 DataType = 'Twin';
 RingMerge = 'Full';
-MaxSlopeCpsPereV = 5.2*1e-06; % 99 = unconstrained
+MaxSlopeCpsPereV = 99;%5.2*1e-06; % 99 = unconstrained
 savedir = [getenv('SamakPath'),'knm2ana/knm2_systematics/results/'];
 MakeDir(savedir);
 Mode = 'SlopeFit';
-RecomputeFlag = 'ON';
+RecomputeFlag = 'OFF';
 CovMatRecomputeFlag = 'ON';
 
 CorrCoeff       = [1,0];%0.2:1;%0.9;%(0:0.2:1);
@@ -164,7 +165,7 @@ if strcmp(PlotCovMat,'ON')
         subplot(ceil(numel(CorrCoeff)/2),2,i);
         imagesc(CovMatFracShape{i});
         pbaspect([1 1 1])
-        colorbar
+        
         title(sprintf('\\rho = %.1f',CorrCoeff(i)),'FontWeight','normal','FontSize',get(gca,'FontSize'));
         ax = gca;
         mypos = ax.Position;
@@ -176,16 +177,24 @@ if strcmp(PlotCovMat,'ON')
         ax.Position = [mypos(1) mypos(2)-0.03 mypos(3:4)+0.03];
         xticks([]);
         yticks([]);
+        colormap(parula);
+        colorbar;
+    end
+    if strcmp(SavePlot,'ON')
+        plotname = strrep(strrep(savename,'results','plots'),'.mat','_CovMat.pdf');
+        export_fig(f1,plotname);
+        fprintf('save plot to %s \n',plotname);
     end
 end
-%%
+%% correlation plots
+
 if strcmp(PlotCorrMat,'ON')
     f2 = figure('Units','normalized','Position',[0.1,0.1,0.6,0.5]);
     for i=1:numel(CorrCoeff)
         subplot(ceil(numel(CorrCoeff)/2),2,i);
         imagesc(corrcoef(CovMatFrac{i}));
         pbaspect([1 1 1])
-        colorbar
+        % colorbar
         title(sprintf('\\rho = %.1f',CorrCoeff(i)),'FontWeight','normal','FontSize',get(gca,'FontSize'));
         ax = gca;
         mypos = ax.Position;
@@ -195,22 +204,36 @@ if strcmp(PlotCorrMat,'ON')
         set(gca,'YMinorTick','off');
         set(gca,'LineWidth',0.5);
         ax.Position = [mypos(1) mypos(2)-0.03 mypos(3:4)+0.03];
-        colormap(parula)
+        cmap = colMapGen(rgb('DodgerBlue'),rgb('Orange'),100);
+        colormap(cmap);
+        colorbar;
         xticks([]);
         yticks([]);
+      
+
+    end
+    if strcmp(SavePlot,'ON')
+        plotname = strrep(strrep(savename,'results','plots'),'.mat','_CorrMat.pdf');
+        export_fig(f2,plotname);
+        fprintf('save plot to %s \n',plotname);
     end
 end
 %% correlation of slopes
 if strcmp(PlotSlopes,'ON')
     CorrCoeffIndex = 1;
     mySlope = cell2mat(SlopesAll(CorrCoeffIndex)');
-    x = 4;
+    x = 1;
     y = 3;
-    ScatterHist2(mySlope(x,:)*1e6,mySlope(y,:)*1e6,...
-        'xName',sprintf('Slope ring %.0f',x),'yName',sprintf('Slope ring %.0f',y));
+   f3 =  ScatterHist2(mySlope(x,:)*1e6,mySlope(y,:)*1e6,...
+       'xName',sprintf('Slope ring %.0f',x),'yName',sprintf('Slope ring %.0f',y));
+   if strcmp(SavePlot,'ON')
+       plotname = strrep(strrep(savename,'results','plots'),'.mat','_Slopes.pdf');
+       export_fig(f3,plotname);
+       fprintf('save plot to %s \n',plotname);
+   end
 end
 
 %% background (input) correlation plot for SlopeFit
-CorrCoeffIndex = 1;
+%CorrCoeffIndex = 1;
 %d = importdata(CovMatFile{CorrCoeffIndex});
 
