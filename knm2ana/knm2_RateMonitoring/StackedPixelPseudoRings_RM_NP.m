@@ -82,9 +82,13 @@ for j=1:3
         pdG = fitdist(corrcount_norm{j,i}','Normal');
         pdN = fitdist(corrcount_norm{j,i}','poisson');
         
+        mydata=corrcount_norm{j,i}(abs(corrcount_norm{j,i}-pdG.mu)<(3*pdG.sigma))';
+        pdG = fitdist(mydata,'Normal');
+        pdN = fitdist(mydata,'poisson');
+        
         subplot(A.nRings/2,A.nRings/2,i)
         
-        h = histogram(corrcount_norm{j,i},15,'Normalization','pdf',...
+        h = histogram(mydata,15,'Normalization','pdf',...
             'FaceColor',rgb('DodgerBlue'),'LineWidth',2,'FaceAlpha',0.7);
         xlabel(sprintf('counts in %.2f sec',mean(sstime(i,:))));
         ylabel('Frequency');

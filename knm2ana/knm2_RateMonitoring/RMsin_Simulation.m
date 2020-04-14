@@ -261,7 +261,7 @@ end
 
 %% All Contours - Results From Simulation Compared to Data - Best Fit
 load('plasmaMapv2.mat');
-knm2dataE300V = [1.4 1.7 1.6 1.2; 1.9 1.8 1.8 1.4 ; 1.1 1.1 1.2 1.1];
+knm2dataE300V = [1.1 1.3 1.2 1.0; 1.1 1.1 1.0 1.0 ; 1.1 1.2 1.3 1.1];
 myMainTitle = sprintf('KATRIN - All RW - All FPD-PSR @E_0-300eV - Data Best Fit Verus Simulation');
 fig3        = figure('Name',sprintf('KATRIN - %s - FPD @E_0-300eV - Simulation',RunList),...
     'NumberTitle','off','rend','painters','pos',[10 10 1400 1000]);
@@ -272,7 +272,7 @@ for rwp=1:3
     for psr=1:4
         counter=counter+1;
         subplot(3,4,counter)
-        clevels = [knm2dataE300V(rwp,psr)-0.001 knm2dataE300V(rwp,psr)+0.001];
+        clevels = [knm2dataE300V(rwp,psr)-0.005 knm2dataE300V(rwp,psr)+0.005];
         [X,Y] = meshgrid(Avector*1e3,log10(Pvector));
         hc = contourfcmap(X,Y,plasmaM{rwp,psr}',clevels,flipud(winter(numel(clevels)-1)), ...
             'lo', rgb('White'), ...
@@ -291,7 +291,6 @@ end
 
 %% All Contours - Results From Simulation Compared to Data - Exclusion 2sigma
 load('plasmaMapv2.mat');
-knm2dataE300V = [1.4 1.7 1.6 1.2; 1.9 1.8 1.8 1.4 ; 1.1 1.1 1.2 1.1];
 myMainTitle = sprintf('KATRIN - All RW - All FPD-PSR @E_0-300eV - Data Best Fit Verus Simulation');
 fig3        = figure('Name',sprintf('KATRIN - %s - FPD @E_0-300eV - Simulation',RunList),...
     'NumberTitle','off','rend','painters','pos',[10 10 1400 1000]);
@@ -302,7 +301,7 @@ for rwp=1:3
     for psr=1:4
         counter=counter+1;
         subplot(3,4,counter)
-        clevels = [knm2dataE300V(rwp,psr)-0.001 knm2dataE300V(rwp,psr)+0.001];
+        clevels = [knm2dataE300V(rwp,psr)-0.005 knm2dataE300V(rwp,psr)+0.005];
 [X,Y] = meshgrid(Avector*1e3,log10(Pvector));
 hc = contourfcmap(X,Y,plasmaM{rwp,psr}'-2*plasmaS{rwp,psr}',clevels,flipud(winter(numel(clevels)-1)), ...
      'lo', rgb('SpringGreen'), ...
