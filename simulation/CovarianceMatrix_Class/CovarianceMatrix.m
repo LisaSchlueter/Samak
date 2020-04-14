@@ -2039,10 +2039,10 @@ function ComputeCM_Background(obj,varargin)
     p.addParameter('qUStartIndex',11);             % here, for Display Only
     p.addParameter('MaxSlopeCpsPereV',0.15E-04);   % qU-Slope constraint - Absolute Slope Value
     p.addParameter('BkgRange',-5,@(x)isfloat(x));  % defines, which points are used to constrain slope. In eV with respect to endpoint
-    p.addParameter('RingCorrCoeff',0,@(x)isfloat(x));  % ring to ring correlation
+    p.addParameter('RingCorrCoeff',0,@(x)isfloat(x));  % ring to ring correlation, can also be a matrix
     p.addParameter('ScalingOpt',2,@(x)isfloat(x));
     p.addParameter('Mode','SlopeFit',@(x)ismember(x,{'SlopeFit','Gauss'}));
-      
+    
     p.parse(varargin{:});
     Display          = p.Results.Display;
     Chi2CutOff       = p.Results.Chi2CutOff;
@@ -2071,7 +2071,11 @@ function ComputeCM_Background(obj,varargin)
         sum(obj.StudyObject.BKG_RateSec)*1e3,MaxSlopeCpsPereV,BkgRange,obj.nTrials,extraStr);
     % add ring information for ringwise covariance matrices
     if strcmp(obj.StudyObject.FPD_Segmentation,'RING')
-        cm_name = strrep(cm_name,'.mat',sprintf('_Ring%s_RingCorrCoeff%.2f_%.0f.mat',obj.StudyObject.FPD_RingMerge,RingCorrCoeff,ScalingOpt));
+        if numel(MaxSlopeCpsPereV)~=1 % no scaling, ring by ring input
+            ScalingOpt = 99;
+        end
+        cm_name = strrep(cm_name,'.mat',sprintf('_Ring%s_RingCorrCoeff%.2f_%.0f.mat',...
+            obj.StudyObject.FPD_RingMerge,norm(RingCorrCoeff),ScalingOpt));
     end
     obj.CovMatFile = [cm_path,cm_name];
     
@@ -2112,8 +2116,6 @@ function ComputeCM_Background(obj,varargin)
         
         if nRingLoop>1 && numel(MaxSlopeCpsPereV)== 1% for more than 1 ring
             % normalize MaxSlopeCpsPereV to correct statistics
-            %nPixPerRing = arrayfun(@(x) numel(x{:}),obj.StudyObject.FPD_RingPixList,'UniformOutput',1); %number of pixels in each ring
-            %nPixTotal = numel(obj.StudyObject.FPD_PixList);
             switch ScalingOpt   
                 case 1
                     MaxSlopeCpsPereV = MaxSlopeCpsPereV.*(BKG_Asimov./sum(BKG_Asimov));
@@ -2135,15 +2137,24 @@ function ComputeCM_Background(obj,varargin)
         if nRingLoop>1 % for more than 1 ring
             BKG_RateErr   = reshape(BKG_RateErr,BKGnqU.*nRingLoop,1); % shape back to nqU*nRing x 1
             BKG_AsimovqU  = reshape(repmat(BKG_Asimov,BKGnqU,1),BKGnqU.*nRingLoop,1);
-            BKGCorrMat    = diag(ones(BKGnqU.*nRingLoop,1))+RingCorrCoeff.*(repmat(diag(ones(BKGnqU,1) ),nRingLoop,nRingLoop)-diag(ones(BKGnqU.*nRingLoop,1)));
+            if numel(RingCorrCoeff)==1
+                BKGCorrMat    = diag(ones(BKGnqU.*nRingLoop,1))+RingCorrCoeff.*(repmat(diag(ones(BKGnqU,1) ),nRingLoop,nRingLoop)-diag(ones(BKGnqU.*nRingLoop,1)));
+            else
+               fprintf('more complex ring to ring correlation matrix to be implemented...\n');
+               return
+            end
             BKGCovMat     = BKG_RateErr.*BKGCorrMat.*BKG_RateErr';
-           
+            
             BKG         = mvnrnd(BKG_AsimovqU,BKGCovMat,obj.nTrials); % ranomize with multivariate distribution
             BKG         = permute(reshape(BKG,obj.nTrials,BKGnqU,nRingLoop),[2,1,3]); % shape back to nqU x nTrials x nRing 
             BKG_RateErr = reshape(BKG_RateErr,BKGnqU,nRingLoop);   % shape back to nqU x nRing
             
             if strcmp(Mode,'Gauss')
-                GaussCorrMat = RingCorrCoeff.*ones(nRingLoop)+(1-RingCorrCoeff).*diag(ones(1,nRingLoop));
+                if numel(RingCorrCoeff)==1
+                    GaussCorrMat = RingCorrCoeff.*ones(nRingLoop)+(1-RingCorrCoeff).*diag(ones(1,nRingLoop));
+                else
+                    GaussCorrMat = RingCorrCoeff;
+                end
                 GaussCovMat  = MaxSlopeCpsPereV.*GaussCorrMat.*MaxSlopeCpsPereV';
                 Slopes       = mvnrnd(zeros(nRingLoop,1),GaussCovMat,obj.nTrials)';
             end

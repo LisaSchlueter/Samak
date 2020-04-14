@@ -14,15 +14,19 @@ pullFlag = 4;
 freePar = 'mNu E0 Norm Bkg';
 DataType = 'Twin';
 RingMerge = 'Full';
-MaxSlopeCpsPereV = 99;%5.2*1e-06; % 99 = unconstrained
+MaxSlopeCpsPereV = [1.8, 2.0, 2.6, 4.2].*1e-06;%5.2*1e-06; % 99 = unconstrained
 savedir = [getenv('SamakPath'),'knm2ana/knm2_systematics/results/'];
 MakeDir(savedir);
-Mode = 'SlopeFit';
+Mode = 'Gauss';%'SlopeFit';
 RecomputeFlag = 'OFF';
 CovMatRecomputeFlag = 'ON';
 
-CorrCoeff       = [1,0];%0.2:1;%0.9;%(0:0.2:1);
-ScalingOpt      = [1,2];
+CorrCoeff       = 0;%[1,0];%0.2:1;%0.9;%(0:0.2:1);
+%ScalingOpt      = [1,2];
+if numel(MaxSlopeCpsPereV)>1
+   ScalingOpt = 99.*ones(numel(CorrCoeff),1);
+end
+
 mNuSqErr        = zeros(numel(CorrCoeff)+1,1);
 CovMatFracShape = cell(numel(CorrCoeff),1);
 CovMatFrac      = cell(numel(CorrCoeff),1);
