@@ -16,14 +16,14 @@ for j=1:3
     % Read Data
     DataType  = 'Real';
     RunAnaArg = {'RunList',RunList,'DataType',DataType,...
-        'FSDFlag','BlindingKNM2','ELossFlag','KatrinT2',...
+        'FSDFlag','Sibille0p5eV','ELossFlag','KatrinT2A20',...
         'AnaFlag','StackPixel','RingMerge','Full','NonPoissonScaleFactor',1};
     MR        = MultiRunAnalysis(RunAnaArg{:});
     range = 40;               % fit range in eV below endpoint        
     MR.exclDataStart = MR.GetexclDataStart(range); % find correct data, where to cut spectrum
     A         = RingAnalysis('RunAnaObj',MR,'RingList',1:4);
     R         = A.MultiObj(1);
-    R.ROIFlag='14keV'; R.SetROI;
+    R.ROIFlag='Default'; R.SetROI;
 
     % Slow Control Data
     p1 = (R.SingleRunData.WGTS_MolFrac_TT'+0.5*R.SingleRunData.WGTS_MolFrac_HT'+0.5*R.SingleRunData.WGTS_MolFrac_DT')./mean((R.SingleRunData.WGTS_MolFrac_TT'+0.5*R.SingleRunData.WGTS_MolFrac_HT'+0.5*R.SingleRunData.WGTS_MolFrac_DT')).*R.SingleRunData.WGTS_CD_MolPerCm2'./mean(R.SingleRunData.WGTS_CD_MolPerCm2');
@@ -44,7 +44,7 @@ for j=1:3
     for i=1:A.nRings
 %<<<<<<< HEAD
         R           = A.MultiObj(i);
-        R.ROIFlag='14keV'; R.SetROI;
+        R.ROIFlag='Default'; R.SetROI;
         count(i,:)  = R.SingleRunData.TBDIS_RM;
         sstime(i,:) = mean(R.SingleRunData.qUfrac_RM,1).*R.SingleRunData.TimeSec;
         rate(i,:)   = count(i,:)./sstime(i,:) + HVdriftPerPixel.*numel(R.PixList);

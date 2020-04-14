@@ -22,7 +22,7 @@ switch DataSet
         version = 'MCRunSummary_Run00';
     case 'Knm2'
         %version = 'RunSummary-Prompt4b-fpd00';
-        version = 'RunSummary-Durable5a-fpd00';
+        version = 'RunSummary-Durable5c-fpd00';
 end
 
 if isempty(h5runlist)
