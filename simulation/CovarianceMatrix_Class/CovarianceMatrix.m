@@ -2150,7 +2150,7 @@ function ComputeCM_Background(obj,varargin)
         else
             BKG           = BKG_Asimov + BKG_RateErr.*randn(BKGnqU,obj.nTrials);
             if strcmp(Mode,'Gauss')
-                Slopes = MaxSlopeCpsPereV.*randn(obj.nTrials,1);% slopes
+                Slopes = MaxSlopeCpsPereV.*randn(1,obj.nTrials);% slopes
             end
         end
        

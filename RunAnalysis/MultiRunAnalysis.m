@@ -1589,6 +1589,34 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                 obj.SingleRunData.TBDIS_RM_Default = obj.SingleRunData.TBDIS_RM;
             end
             
+            % interpolate LARA values
+            if any(isnan(obj.SingleRunData.WGTS_MolFrac_TT))
+                LiveTime = hours(obj.SingleRunData.StartTimeStamp-obj.SingleRunData.StartTimeStamp(1));
+                T2NanLogic = isnan(obj.SingleRunData.WGTS_MolFrac_TT);
+                T2NanIndex = find(isnan(obj.SingleRunData.WGTS_MolFrac_TT));
+                
+                obj.SingleRunData.WGTS_MolFrac_TT(T2NanIndex) = ...
+                    interp1(LiveTime(~T2NanLogic),obj.SingleRunData.WGTS_MolFrac_TT(~T2NanLogic),LiveTime( T2NanIndex),'spline');
+            end
+            
+               if any(isnan(obj.SingleRunData.WGTS_MolFrac_HT))
+                LiveTime = hours(obj.SingleRunData.StartTimeStamp-obj.SingleRunData.StartTimeStamp(1));
+                HTNanLogic = isnan(obj.SingleRunData.WGTS_MolFrac_HT);
+                HTNanIndex = find(isnan(obj.SingleRunData.WGTS_MolFrac_HT));
+                
+                obj.SingleRunData.WGTS_MolFrac_HT(HTNanIndex) = ...
+                    interp1(LiveTime(~HTNanLogic),obj.SingleRunData.WGTS_MolFrac_HT(~HTNanLogic),LiveTime(HTNanIndex),'spline');
+               end
+               
+               if any(isnan(obj.SingleRunData.WGTS_MolFrac_DT))
+                LiveTime = hours(obj.SingleRunData.StartTimeStamp-obj.SingleRunData.StartTimeStamp(1));
+                DTNanLogic = isnan(obj.SingleRunData.WGTS_MolFrac_DT);
+                DTNanIndex = find(isnan(obj.SingleRunData.WGTS_MolFrac_DT));
+                
+                obj.SingleRunData.WGTS_MolFrac_DT(DTNanIndex) = ...
+                    interp1(LiveTime(~DTNanLogic),obj.SingleRunData.WGTS_MolFrac_DT(~DTNanLogic),LiveTime(DTNanIndex),'spline');
+               end
+            
             obj.SetMosCorr;
 
         end
@@ -3447,9 +3475,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             else
                 fprintf('RunList Name unknown! \n');
             end
-            
-            h5list(h5list==56589) = [];
-            
+
             HDF5readallruns('h5runlist',h5list,'reConvert','OFF','DataSet',GetDataSet(h5list(1))); %looks for unconverted runs and converts if needed
             RunList=sort(h5list);
             
