@@ -5,7 +5,7 @@
 SavePlot = 'ON';
 PlotCorrMat = 'OFF';
 PlotCovMat = 'OFF';
-PlotSlopes = 'OFF';
+PlotSlopes = 'ON';
 %% settings
 RunList = 'KNM2_Prompt';
 E0 = knm2FS_GetE0Twins('SanityPlot','OFF');
@@ -14,15 +14,15 @@ pullFlag = 4;
 freePar = 'mNu E0 Norm Bkg';
 DataType = 'Twin';
 RingMerge = 'Full';
-MaxSlopeCpsPereV = [1.8, 2.0, 2.6, 4.2].*1e-06;%5.2*1e-06; % 99 = unconstrained
+MaxSlopeCpsPereV = 5.2*1e-06;%[1.8, 2.0, 2.6, 4.2].*1e-06;%5.2*1e-06; % 99 = unconstrained
 savedir = [getenv('SamakPath'),'knm2ana/knm2_systematics/results/'];
 MakeDir(savedir);
-Mode = 'Gauss';%'SlopeFit';
+Mode = 'SlopeFit';
 RecomputeFlag = 'OFF';
 CovMatRecomputeFlag = 'ON';
 
-CorrCoeff       = 0;%[1,0];%0.2:1;%0.9;%(0:0.2:1);
-%ScalingOpt      = [1,2];
+CorrCoeff       = [1,0];%0.2:1;%0.9;%(0:0.2:1);
+ScalingOpt      = [1,2];
 if numel(MaxSlopeCpsPereV)>1
    ScalingOpt = 99.*ones(numel(CorrCoeff),1);
 end
@@ -88,7 +88,7 @@ for i=1:numel(CorrCoeff)
         ModeStr = '';
     end
     savename = [savedir,sprintf('knm2_MultiRingFit_BkgSys_Constrain%.3gCpsPerEv_%s_%s_%s_pull%.0f_%.0feVrange_RingMerge%s_CorrCoeff%.2f%s%s.mat',...
-        MaxSlopeCpsPereV,DataType, RunList,strrep(freePar,' ',''),pullFlag,range,RingMerge,CorrCoeff(i),ScaleStr,ModeStr)];
+        norm(MaxSlopeCpsPereV),DataType, RunList,strrep(freePar,' ',''),pullFlag,range,RingMerge,CorrCoeff(i),ScaleStr,ModeStr)];
     
     if exist(savename,'file') && strcmp(RecomputeFlag,'OFF')
         d = importdata(savename);

@@ -29,7 +29,7 @@ end
 
 if strcmp(LegFlag,'ON')
     Correlation = corrcoef(x,y);
-    leg = legend(sprintf('\\rho = %.2g',Correlation(1,2)));
+    leg = legend(sprintf('\\rho = %.3g',Correlation(1,2)));
     leg.EdgeColor = rgb('Silver');
     leg.Location = 'northwest';
 end

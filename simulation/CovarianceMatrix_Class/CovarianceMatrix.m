@@ -2055,6 +2055,8 @@ function ComputeCM_Background(obj,varargin)
     fprintf(       '--------------------------------------------------------------------------   \n');
     cprintf('blue','CovarianceMatrix:ComputeCM_Background: Compute Background Covariance Matrix  \n');
     
+    MaxSlopeCpsPereV_i = MaxSlopeCpsPereV;
+    
     % Number of Trials - Hardcoded
     TrialSave  = obj.nTrials; obj.nTrials = 50000; % BASELINE, termine after obj.nTrials
     
@@ -2211,21 +2213,14 @@ function ComputeCM_Background(obj,varargin)
                 end
             end
             CutOff                    = logical(CutOff); % transform 0 and 1 into logicals
-            
-            % Remove Nans
-           % Bkg_Fit         = Bkg_Fit(~isnan(Bkg_Fit));
-          %  Bkg_Fit         = reshape(Bkg_Fit,numel(obj.StudyObject.qU(:,rl)),numel(Bkg_Fit)/numel(obj.StudyObject.qU(:,rl)));
-             nGoodTrials(rl) = sum(SlopesExcl(rl,:));
-            %TBDIS_V        = Bkg_Fit(:,chi2min<Chi2CutOff).*obj.StudyObject.TimeSec.*obj.StudyObject.qUfrac;
-            %BkgPlot_Data   = BkgPlot_Data(:,chi2min<Chi2CutOff);
+            nGoodTrials(rl) = sum(SlopesExcl(rl,:));
             
             % Build Integral Spectrum Underlying Background Spectrum
             TBDIS_V(rl,:,:)    = Bkg_Fit.*obj.StudyObject.TimeSec(:,rl).*obj.StudyObject.qUfrac(:,rl);
             BkgPlot_Data      = BkgPlot_Data(:,:);
         end
         
-        % convert TBDIS_V back into matrix. for rings: use common good trials
-        
+        % convert TBDIS_V back into matrix. for rings: use common good trials   
         if nRingLoop>1  
             SlopesExclCommon =  logical(prod(SlopesExcl));
             nCommonTrials = sum(SlopesExclCommon);
@@ -2267,8 +2262,10 @@ function ComputeCM_Background(obj,varargin)
     % Display
     switch Display
         case 'ON'
-            savedir = './plots/';
-                MakeDir(savedir);
+            savedir = './plots/pdf/';
+            savedir2 = './plots/png/';
+            MakeDir(savedir);
+            MakeDir(savedir2);
             if strcmp(Mode,'SlopeFit')
                 % Background (Rate) Spectra
                 
@@ -2332,15 +2329,20 @@ function ComputeCM_Background(obj,varargin)
            end
            if nRingLoop >1
                fig2        = figure('Units','normalized','pos',[0.1 0.1 0.7 0.7]);
+               s= cell(nRingLoop,1);
                for i=1:nRingLoop
-                   subplot(floor(nRingLoop/2),ceil(nRingLoop/2),i);
+                   s{i} = subplot(floor(nRingLoop/2),ceil(nRingLoop/2),i);
                    h1 = histogram(Slopes(i,:).*1e6,'FaceColor',rgb('LightGray'));
                    if strcmp(Mode,'SlopeFit')
                        hold on;
-                       SlopeOK = Slopes(i,logical(SlopesExcl(i,:)));
+                       SlopesExclCommon =  logical(prod(SlopesExcl));
+                       SlopeOK = Slopes(i,SlopesExclCommon);
+                       h22 = histogram(Slopes(i,abs(Slopes(i,:))<MaxSlopeCpsPereV(i)).*1e06,'FaceColor',rgb('PowderBlue'),...
+                           'FaceAlpha',1,'BinWidth',h1.BinWidth);
                        h2 = histogram(SlopeOK.*1e06,'FaceColor',rgb('DodgerBlue'),...
                            'FaceAlpha',1,'BinWidth',h1.BinWidth);
-                       leg = legend('MC fit slopes',sprintf('MC fit slopes < %.1f mcps / keV',MaxSlopeCpsPereV(i)*1e6));
+                       leg = legend('MC fit slopes',sprintf('MC fit slopes < %.1f mcps / keV',MaxSlopeCpsPereV(i)*1e6),...
+                             'MC fit slopes acctepted');
                    else
                         leg = legend(sprintf('Randomized slopes \\sigma = %.1f mcps / keV',MaxSlopeCpsPereV(i)*1e6));
                    end
@@ -2353,7 +2355,9 @@ function ComputeCM_Background(obj,varargin)
                    ylim([0 3200])
                    xlim([-20 20])    
                end
-               suptitle(sprintf('Background slope contrain (all pixels) = %.1f mcps / keV',sum(MaxSlopeCpsPereV)*1e6));
+               sgtitle(sprintf('Background slope contrain (all pixels) = %.1f mcps / keV',MaxSlopeCpsPereV_i*1e6));
+               linkaxes([s{:}],'x');
+               
            else
                fig2        = figure('Units','normalized','pos',[0.1 0.1 0.4 0.4]);
                h1 = histogram(Slopes.*1e6,'FaceColor',rgb('LightGray'));
@@ -2376,10 +2380,17 @@ function ComputeCM_Background(obj,varargin)
                ylim([0 2500])
            end
            savefile    =  [savedir,strrep(cm_name,'.mat','_Hist.pdf')];
-           % print(fig2,savefile,'-dpng','-r500');
+           print(fig2,strrep(strrep(savefile,'.pdf','.png'),'plots/','plots/png/'),'-dpng','-r500');
            export_fig(fig2,savefile);
            fprintf('Save plot to %s \n',savefile);
            
+           if nRingLoop>1
+               xlim([-MaxSlopeCpsPereV_i,MaxSlopeCpsPereV_i]*1e6);
+               savefile    =  [savedir,strrep(cm_name,'.mat','_HistZoom.pdf')];
+               export_fig(fig2,savefile);
+               print(fig2,strrep(strrep(savefile,'.pdf','.png'),'plots/','plots/png/'),'-dpng','-r500');
+               fprintf('Save plot to %s \n',savefile);
+           end
            %             % Trials Toy MC Features
            %             myMainTitle = sprintf('KATRIN - Background Toy Monte Carlo (Slope Constrain = %.0f mcps/keV)',MaxSlopeCpsPereV*1e6); maintitle   = myMainTitle;
            %             savefile    =  [savedir,sprintf('/ComputeCM_Background_2_Bkg%.0fmcps_Hists_Constrain%.0fMcpsPerKeV.pdf',BKG_i*1e3, MaxSlopeCpsPereV)];

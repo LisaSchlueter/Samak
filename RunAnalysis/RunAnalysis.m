@@ -482,10 +482,12 @@ classdef RunAnalysis < handle
                         obj.RunData.TBDISE  = sqrt(obj.RunData.TBDIS./obj.RunData.EffCorr); % statstical uncertainty
                         obj.RunData.MACE_Ba_T = cell2mat(cellfun(@(x) mean(obj.RunData.MACE_Ba_T(x)),obj.RingPixList,'UniformOutput',false)');
                         obj.RunData.MACE_Bmax_T =  mean(obj.RunData.MACE_Bmax_T(obj.PixList));%cell2mat(cellfun(@(x) mean(obj.RunData.MACE_Bmax_T(x)),obj.RingPixList,'UniformOutput',false)');
-                       
+                        
                         % Correction Thierry 1/4/2020
-                        obj.RunData.TBDIS14keV      = cell2mat(cellfun(@(x) sum(obj.RunData.TBDIS14keV(:,x),2),obj.RingPixList,'UniformOutput',false)');
-                            
+                        if isfield(obj.RunData,'TBDIS14keV')
+                            obj.RunData.TBDIS14keV      = cell2mat(cellfun(@(x) sum(obj.RunData.TBDIS14keV(:,x),2),obj.RingPixList,'UniformOutput',false)');
+                        end
+                        
                         % delete not used rings (otherwise problems with NaN)
                         if strcmp(obj.RingMerge,'None')
                             obj.RunData.qU(:,~ismember(1:13,obj.RingList)) = [];
