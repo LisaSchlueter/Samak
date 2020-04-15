@@ -484,7 +484,7 @@ classdef RunAnalysis < handle
                         obj.RunData.MACE_Bmax_T =  mean(obj.RunData.MACE_Bmax_T(obj.PixList));%cell2mat(cellfun(@(x) mean(obj.RunData.MACE_Bmax_T(x)),obj.RingPixList,'UniformOutput',false)');
                         
                         % Correction Thierry 1/4/2020
-                        if isfield(obj.RunData,'TBDIS14keV')
+                        if isfield(obj.RunData,'TBDIS1ISCS4keV')
                             obj.RunData.TBDIS14keV      = cell2mat(cellfun(@(x) sum(obj.RunData.TBDIS14keV(:,x),2),obj.RingPixList,'UniformOutput',false)');
                         end
                         

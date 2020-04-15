@@ -6,22 +6,31 @@ range = 40;
 savedir = [getenv('SamakPath'),'knm2ana/knm2_systematics/results/'];
 MakeDir(savedir);
 
+PixList = [1:28,29:29+27,65:65+27,101:101+27];
 RunAnaArg = {'RunNr',1,...
     'DataType','Fake',...
     'FakeInitFile',InitFile,...
     'fixPar','mNu E0 Bkg Norm',....%free Par
     'NonPoissonScaleFactor',1,...
     'AnaFlag','Ring',...
-    'RingMerge','Full'};
+    'RingMerge','Full',...
+    'PixList',PixList,...
+    'ELossFlag','KatrinT2',...
+    'ISCSFlag','Edep'};
 
 MR = RunAnalysis(RunAnaArg{:});
 MR.exclDataStart= MR.GetexclDataStart(range);
 
+BkgRingCorrCoeff = [1,0];
+ScalingOpt       = [1,2];
+Mode = 'SlopeFit';
+MaxSlopeCpsPereV = 5.2*1e-06;
+
 % init
-mNuSqErr        = zeros(numel(CorrCoeff)+1,1);
-CovMatFracShape = cell(numel(CorrCoeff),1);
-CovMatFrac      = cell(numel(CorrCoeff),1);
-CovMat          = cell(numel(CorrCoeff),1);
+mNuSqErr        = zeros(numel(BkgRingCorrCoeff)+1,1);
+CovMatFracShape = cell(numel(BkgRingCorrCoeff),1);
+CovMatFrac      = cell(numel(BkgRingCorrCoeff),1);
+CovMat          = cell(numel(BkgRingCorrCoeff),1);
 FitResultBkgCM = cell(numel(BkgRingCorrCoeff),1);
 
 % stat. only
@@ -38,10 +47,6 @@ end
 
 % stat + syst.
 MR.chi2 = 'chi2CMShape';
-BkgRingCorrCoeff = [1,0];
-ScalingOpt       = [1,2];
-Mode = 'SlopeFit';
-MaxSlopeCpsPereV = 5.2*1e-06;
 
 for i=1:numel(BkgRingCorrCoeff)
     savename = sprintf('%sMultiRingBkgSys_%s_%.0fCorr_%.2fMaxSlope_%.0fScaling_%s.mat',...
@@ -52,7 +57,7 @@ for i=1:numel(BkgRingCorrCoeff)
         CovMatFracShape{i} = d.BkgCovMatFracShape;
         CovMatFrac{i}      = d.BkgCovMatFrac;
         CovMat{i}          = d.BkgCovMat;
-        mNuSqErr(i+1)      = 0.5*(abs(d.FitResultCM.errNeg)+d.FitResultCM.errPos);
+        mNuSqErr(i+1)      = 0.5*(abs(d.FitResultCM.errNeg(1))+d.FitResultCM.errPos(1));
     else
         MR.ComputeCM('SysEffect',struct('FSD','OFF'),'MaxSlopeCpsPereV',MaxSlopeCpsPereV,...
             'BkgRingCorrCoeff',BkgRingCorrCoeff(i),...
@@ -71,7 +76,7 @@ for i=1:numel(BkgRingCorrCoeff)
         CovMatFracShape{i} = BkgCovMatFracShape;
         CovMatFrac{i}      = BkgCovMatFrac;
         CovMat{i}          = BkgCovMat;
-        mNuSqErr(i+1)      = 0.5*(abs(MR.FitResult.errNeg)+MR.FitResult.errPos);
+        mNuSqErr(i+1)      = 0.5*(abs(MR.FitResult.errNeg(1))+MR.FitResult.errPos(1));
     end
 end
 
