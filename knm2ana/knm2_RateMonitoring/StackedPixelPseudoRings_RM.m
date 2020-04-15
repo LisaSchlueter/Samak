@@ -10,7 +10,7 @@
 
 KNM1CorFlag    = 'ON';
 HVdriftCorFlag = 'OFF';
-ROI            = '14keV';
+ROI            = 'Default';
 
 %% KNM1 with Calibration - Divide Rates by
 switch KNM1CorFlag
@@ -37,18 +37,18 @@ E0RWPSRE  = zeros(4,3);
 %
 DataType  = 'Real';
 RunAnaArg = {'RunList','KNM2_RW2','DataType',DataType,...
-    'FSDFlag','BlindingKNM2','ELossFlag','KatrinT2',...
+    'FSDFlag','Sibille0p5eV','ELossFlag','KatrinT2A20',...
     'AnaFlag','StackPixel','RingMerge','Full',...
     'chi2','chi2Stat',...              % statistics only
     'NonPoissonScaleFactor',1.12,...
     'MosCorrFlag','OFF',...
-    'ROIFlag','14keV',...    
+    'ROIFlag','Default',...    
     'DopplerEffectFlag','FSD'};
 
     MR        = MultiRunAnalysis(RunAnaArg{:});
     A         = RingAnalysis('RunAnaObj',MR,'RingList',1:4);
     R         = A.MultiObj(1);
-    R.ROIFlag = ROI; R.SetROI;
+    %R.ROIFlag = ROI; R.SetROI;
         
     %% Time in days
     StartTimeStampDays           = days(R.SingleRunData.StartTimeStamp-R.SingleRunData.StartTimeStamp(1));
@@ -70,7 +70,7 @@ RunAnaArg = {'RunList','KNM2_RW2','DataType',DataType,...
     
     for i=1:A.nRings
         R           = A.MultiObj(i);
-        R.ROIFlag   = ROI; R.SetROI;
+        %R.ROIFlag   = ROI; R.SetROI;
         
         % Slow Control Data: HV setting
         qUCorrRW2       = R.SingleRunData.qU_RM(1,:);
@@ -100,6 +100,7 @@ RunAnaArg = {'RunList','KNM2_RW2','DataType',DataType,...
     %
     % Loop on Period RW1 RW2 RW3
     %
+    %%
 for j=1:3
     
     RunList   = ['KNM2_RW' num2str(j)];
@@ -107,17 +108,17 @@ for j=1:3
     % Read Data
     DataType  = 'Real';
     RunAnaArg = {'RunList',RunList,'DataType',DataType,...
-        'FSDFlag','BlindingKNM2','ELossFlag','KatrinT2',...
+        'FSDFlag','Sibille0p5eV','ELossFlag','KatrinT2A20',...
         'AnaFlag','StackPixel','RingMerge','Full',...
         'chi2','chi2Stat',...              % statistics only
         'NonPoissonScaleFactor',1.12,...
         'MosCorrFlag','OFF',... 
-        'ROIFlag','14keV',...   
+        'ROIFlag','Default',...   
         'DopplerEffectFlag','FSD'}; 
     MR        = MultiRunAnalysis(RunAnaArg{:});
     A         = RingAnalysis('RunAnaObj',MR,'RingList',1:4);
     R         = A.MultiObj(1);
-    R.ROIFlag = ROI; R.SetROI;
+    %R.ROIFlag = ROI; R.SetROI;
     
     % Time in days
     StartTimeStampDays           = days(R.SingleRunData.StartTimeStamp-R.SingleRunData.StartTimeStamp(1));
@@ -132,6 +133,9 @@ for j=1:3
     % Activity
     Activity{j} =  (R.SingleRunData.WGTS_MolFrac_TT+0.5*R.SingleRunData.WGTS_MolFrac_HT+0.5*R.SingleRunData.WGTS_MolFrac_DT)...
         .*(R.SingleRunData.WGTS_CD_MolPerCm2);
+%     if j==3
+%         Activity{j} = Activity{j}.*0.999;
+%     end
     
     % Stacked Pixel Data for each patch
     count  = zeros(A.nRings,numel(A.RunAnaObj.RunList));
@@ -142,17 +146,17 @@ for j=1:3
     fpdCal = ones(A.nRings,numel(A.RunAnaObj.RunList));
     
     for i=1:A.nRings
-        R           = A.MultiObj(i);
-        R.ROIFlag   = ROI;
-        R.SetROI;
+        R            = A.MultiObj(i);
+        %R.ROIFlag   = ROI;
+        %R.SetROI;
         
         % FPD Calibration Correction
-        fpdCal(i,:)   = fpdCal(i,:) + (MR.SingleRunData.StartTimeStamp<datetime('02-Oct-2019 14:52:19'))*0.0006566;
+        %fpdCal(i,:)   = fpdCal(i,:) + (MR.SingleRunData.StartTimeStamp<datetime('02-Oct-2019 14:52:19'))*0.0006566;
         
         % Endpoint Fit
-        %R.Fit
-        %E0RWPSR(i,j)  = R.FitResult.par(2)+R.ModelObj.Q_i;
-        %E0RWPSRE(i,j) = R.FitResult.err(2);
+        R.Fit
+        E0RWPSR(i,j)  = R.FitResult.par(2)+R.ModelObj.Q_i;
+        E0RWPSRE(i,j) = R.FitResult.err(2);
         
         % HV setting
         qUCorrRW      = (R.SingleRunData.qU_RM(1,:));
@@ -198,7 +202,7 @@ for j=1:3
         
     end
     
-    %% Rate Evolution --> mV equivalent
+    % Rate Evolution --> mV equivalent
     myMainTitle = sprintf('KATRIN - KNM2 RW%s - FPD Rate Evolution 300eV below Endpoint',num2str(j));
     maintitle   = myMainTitle;
     savefile1    = sprintf('plots/KNM2_RM300_EffectivePotentialFluctuation_RW%.0f_PseudoRings_1.png',j);
@@ -266,7 +270,7 @@ for j=1:3
         PrettyFigureFormat
     end
     
-    %% Rate Evolution
+    % Rate Evolution
     myMainTitle = sprintf('KATRIN - KNM2 RW%s - FPD Rate Evolution 300eV below Endpoint',num2str(j));
     maintitle   = myMainTitle;
     savefile2    = sprintf('plots/KNM2_RM300_EffectivePotentialFluctuation_RW%.0f_PseudoRings_2.png',j);
@@ -296,7 +300,7 @@ for j=1:3
     %export_fig(fig2,savefile2);
 end
 
-%% Overall Diagram
+% Overall Diagram
 % OverallStartTimeStamp
 % CrateEquivalentmV
 % rateEquivalentmV_E
@@ -350,7 +354,7 @@ end
 
 save('./data/SamakKNM2_DriftInRW123PSR1234_mVperDay.mat','SlopeRW123PSR1234_mV','SlopeErrorRW123PSR1234_mV');
 
-%% Overall Diagram
+% Overall Diagram
 % OverallStartTimeStamp
 % CrateEquivalentmV
 % rateEquivalentmV_E
@@ -396,7 +400,7 @@ for i=1:A.nRings
         PrettyFigureFormat
 end
 
-%% Mean Values Per Period Per Ring
+% Mean Values Per Period Per Ring
 % CrateEquivalentmVAverage
 % i=psr
 % j=period
@@ -413,7 +417,7 @@ end
 
 save('./data/SamakKNM2_ShiftDriftInRW123PSR1234_mVperDay.mat','CrateEquivalentmVAverage','CrateEquivalentmVAverageE','SlopeEquivalent_mV','SlopeErrorEquivalent_mV');
 
-%% Plot Rate Per Period
+% Plot Rate Per Period
 % Create a ribbon point using the ribbon function
 figure
 hh = ribboncoloredZ(CrateEquivalentmVAverage');
@@ -433,7 +437,7 @@ ht.FontSize=16;
 %view(0,90); % period on x-axis
 %view(0,-90); % period on x-axis
 
-%% Plot Slope Rate Per Period
+% Plot Slope Rate Per Period
 % Create a ribbon point using the ribbon function
 figure
 hh = ribboncoloredZ(SlopeEquivalent_mV');
@@ -450,12 +454,8 @@ zlabel('mV-equivalent / day'); zlim([0 10]);
 PrettyFigureFormat
 ht.FontSize=16;
 
-%% Comparison with the endpoint fitss
+% Comparison with the endpoint fitss
 load('./data/SamakKNM2_ShiftDriftInRW123PSR1234_mVperDay.mat');
-% E0RWPSR  = 18573 + [ .681740 .742798 .572836 ;...
-%     .657357 .717496 .532254 ; ...
-%     .622973 .660231 .529942 ;...
-%     .637982 .664792 .480520 ];
 E0RWPSR_Plot =  E0RWPSR - E0RWPSR(1,2);
 E0RWPSR_Plot = -E0RWPSR_Plot*1e3;
 
@@ -485,7 +485,7 @@ legend([e1 e2],'Endpoint E_0+[-90;+50] eV','Monitoring Data E_0-300 eV','Locatio
  legend boxoff;
 PrettyFigureFormat;
 xlim([0.5 4.5]);
-%ylim([-100 200]);
+ylim([-100 250]);
 xticks([1 2 3 4]);
 end
 
@@ -514,7 +514,7 @@ legend([e1],'Difference Endpoint E_0+[-90;+50] eV - Monitoring Data E_0-300 eV',
  legend boxoff;
 PrettyFigureFormat;
 xlim([0.5 4.5]);
-%ylim([-100 200]);
+ylim([-200 200]);
 xticks([1 2 3 4]);
 end
 
