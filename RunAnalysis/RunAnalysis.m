@@ -1145,7 +1145,7 @@ classdef RunAnalysis < handle
             p.addParameter('is_EOffsetErr',SysErr.is_EOffsetErr,@(x)isfloat(x));
             p.addParameter('BkgRingCorrCoeff',0,@(x)isfloat(x));
             p.addParameter('BkgScalingOpt',1,@(x)isfloat(x));
-            p.addParameter('BkgMode','SlopeFit',@(x)ismember(x,{'SlopeFit','Gauss'}));
+            p.addParameter('BkgMode','Gauss',@(x)ismember(x,{'SlopeFit','Gauss'}));
             p.parse(varargin{:});
             
             InitNormFit              = p.Results.InitNormFit;

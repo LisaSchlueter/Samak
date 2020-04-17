@@ -3,7 +3,7 @@
 % systematics setting
 RecomputeFlag = 'OFF';
 CovMatRecomputeFlag = 'ON';
-MaxSlopeCpsPereV = 6.9*1e-06;%5.2*1e-06;
+MaxSlopeCpsPereV = 12*1e-06;%5.2*1e-06;
 
 savedir = [getenv('SamakPath'),'knm2ana/knm2_systematics/results/'];
 MakeDir(savedir);

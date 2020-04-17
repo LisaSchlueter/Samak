@@ -41,7 +41,7 @@ if exist(savenameStat,'file')
 else
     MR.Fit;
     FitResultStat = MR.FitResult;
-    mNuSqErr(1) = 0.5*(abs(FitResultStat.errNeg)+FitResultStat.errPos);
+    mNuSqErr(1) = 0.5*(abs(FitResultStat.errNeg(1))+FitResultStat.errPos(1));
     save(savenameStat,'mNuSqErr','FitResultStat','RunAnaArg');
 end
 
@@ -79,5 +79,14 @@ for i=1:numel(BkgRingCorrCoeff)
         mNuSqErr(i+1)      = 0.5*(abs(MR.FitResult.errNeg(1))+MR.FitResult.errPos(1));
     end
 end
+
+
+%% results
+mNuSqSys = sqrt(mNuSqErr.^2-mNuSqErr(1)^2);
+fprintf('mNuSq syst. only = %.3g eV^2 (corr coeff = %.0f) \n',mNuSqSys(2),BkgRingCorrCoeff(1));
+fprintf('mNuSq syst. only = %.3g eV^2 (corr coeff = %.0f) \n',mNuSqSys(3),BkgRingCorrCoeff(2));
+
+
+
 
 

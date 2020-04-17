@@ -1486,15 +1486,18 @@ classdef RunSensitivity < handle
                 bsingle{i}.FaceAlpha=1;  
                 bsingle{i}.BarWidth = 0.9;
                 if i==1
-                     bsingle{i}.FaceColor = rgb('LightGray');
+                    bsingle{i}.FaceColor = rgb('LightGray');
                 end
                 
                 if SingleBarY(i)<0.001
                     tstr = sprintf('<10^{-3}') ;
-                elseif SingleBarY(i)<0.01 && SingleBarY(i)>0.001
-                    tstr = sprintf('%.0f\\cdot10^{-3}',SingleBarY(i)*1e3) ;
-                else
-                    tstr = sprintf('%.0f\\cdot10^{-2}',SingleBarY(i)*1e2) ;
+%                 elseif SingleBarY(i)<0.01 && SingleBarY(i)>0.001
+%                     tstr = sprintf('%.0f\\cdot10^{-3}',SingleBarY(i)*1e3) ;
+%                 elseif SingleBarY(i)>0.1
+%                     tstr = sprintf('%.2f',SingleBarY(i)) ;
+                 else
+                     tstr = sprintf('%.0f\\cdot10^{-3}',SingleBarY(i)*1e3) ;
+                    % tstr = sprintf('%.1f\\cdot10^{-2}',SingleBarY(i)*1e2) ;
                 end
                 t{i}= text(1.4,SingleBarX(i),tstr,...%max(SingleBarY)*1.4
                     'HorizontalAlignment','right','FontSize',LocalFontSize-4,...
@@ -1543,7 +1546,7 @@ classdef RunSensitivity < handle
                 savedir = [getenv('SamakPath'),'tritium-data/sensitivity/',obj.RunAnaObj.DataSet,'/plots/'];
                 obj.CreateDir(savedir);
                 ranges_str = strrep(num2str(Ranges),' ','');
-                savefile = [savedir,sprintf('SensitivitySys_%s_%.0feV_%s_Par%.0f_%s%s_ranges%s_SysOnly.png',obj.RunAnaObj.RunData.RunName,...
+                savefile = [savedir,sprintf('SensitivitySys%.0f_%s_%.0feV_%s_Par%.0f_%s%s_ranges%s_SysOnly.png',obj.RunAnaObj.SysBudget,obj.RunAnaObj.RunData.RunName,...
                     obj.GetRange,[obj.SysEffectsAll{:}],Parameter,obj.chi2sys,obj.GetFitLabel,ranges_str)];
                 if strcmp(obj.RunAnaObj.AnaFlag,'Ring')
                     savefile = strrep(savefile,'.png',sprintf('_Ring%s.png',obj.RunAnaObj.RingMerge));

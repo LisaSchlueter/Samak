@@ -144,6 +144,7 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
         Pixel_MACE_Ba_VCorr = zeros(1,148) ; % Analysis Plane E field, Tesla
         MACE_Ba_TallPixels;
         SynchrotronFlag; % ON/OFF
+        DetailedTFFlag; % ON/OFF
         recomputeRF;           % Flag to recompute Response Function, even if there is one saved in cache already
         
     end
@@ -212,6 +213,7 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             
             p.addParameter('recomputeRF','OFF',@(x)ismember(x,{'OFF','ON'}));
             p.addParameter('SynchrotronFlag','ON',@(x)ismember(x,{'OFF','ON'}));
+            p.addParameter('DetailedTFFlag','OFF',@(x)ismember(x,{'OFF','ON'}));
 
             % Parse unmatched parameters to FPD.m
             p.KeepUnmatched=1;
@@ -271,6 +273,7 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             obj.KTFFlag            = p.Results.KTFFlag;
             obj.recomputeRF        = p.Results.recomputeRF;
             obj.SynchrotronFlag    = p.Results.SynchrotronFlag;
+            obj.DetailedTFFlag     = p.Results.DetailedTFFlag;
             
             obj.WGTS_MolFrac_Tm_i =  obj.WGTS_MolFrac_Tm;
             
@@ -489,6 +492,7 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             p.addParameter('saveFile','ON',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('Method','Interp',@(x)ismember(x,{'Exact','Interp'}));
             p.addParameter('Energy',18575,@(x)all(isfloat(x)));
+            p.addParameter('ScatTF','OFF',@(x)ismember(x,{'ON','OFF'}));
             
             p.parse(varargin{:});
             WGTS_DensityProfile        = p.Results.WGTS_DensityProfile;
@@ -500,7 +504,7 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             saveFile                   = p.Results.saveFile;
             Method                     = p.Results.Method;
             Energy                     = p.Results.Energy;
-            
+            ScatTF                     = p.Results.ScatTF;
             % ---------------------------------------------------------
             % comment on New Method: (Lisa, Feb 2020)
             % -> no for loops and different integration style (less binning)
@@ -565,7 +569,11 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             
             % Integration over angles
             ntmp = 720;
-            f = @(i,z,theta) sin(theta).*Pis_z_angle(i,z,theta);
+            if strcmp(ScatTF,'OFF')
+                f = @(i,z,theta) sin(theta).*Pis_z_angle(i,z,theta);
+            else
+                f = @(i,z,theta) sin(theta).^2.*Pis_z_angle(i,z,theta);
+            end
             Pis_z = @(i,z) 1./(1-cos(thetamax)).*simpsons(linspace(0,thetamax,ntmp)',f(i,z,linspace(0,thetamax,ntmp)')); %Integral Mean scattering probability over all angles
             
             % Integratio over z
@@ -580,15 +588,16 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             ISProb_dir = [getenv('SamakPath'),sprintf('/inputs/WGTSMACE/WGTS_ISProb/')];
             MakeDir(ISProb_dir);
             
-            if strcmp(obj.ISCS,'Edep')
-                Estep = Energy(2)-Energy(1);
-                IsXstr  = sprintf('Edep-Xsection-max%.0feV_Xstep%.1feV',max(Energy)-18575,Estep);
-            else
-                IsXstr = sprintf('%.5g-Xsection',ISXsection_local(E));
-            end
-            mystr = [ISProb_dir,sprintf('IS_%.5g-molPercm2_%s_%.0f-NIS_%.3g-Bmax_%.3g-Bs.mat',...
-                WGTS_CD_MolPerCm2_local,IsXstr,obj.NIS+1,MACE_Bmax_T_local, WGTS_B_T_local)];
+           
             if strcmp(saveFile,'ON')
+                if strcmp(obj.ISCS,'Edep')
+                    Estep = Energy(2)-Energy(1);
+                    IsXstr  = sprintf('Edep-Xsection-max%.0feV_Xstep%.1feV',max(Energy)-18575,Estep);
+                else
+                    IsXstr = sprintf('%.5g-Xsection',ISXsection_local(E));
+                end
+                mystr = [ISProb_dir,sprintf('IS_%.5g-molPercm2_%s_%.0f-NIS_%.3g-Bmax_%.3g-Bs.mat',...
+                    WGTS_CD_MolPerCm2_local,IsXstr,obj.NIS+1,MACE_Bmax_T_local, WGTS_B_T_local)];
                 ISXsection_local = ISXsection_local(Energy);
                 Energy = squeeze(Energy);
                 save(mystr,'Pis_m','WGTS_CD_MolPerCm2_local','ISXsection_local','Energy','thetamax');
@@ -653,18 +662,110 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
                     qumax = qu*(1+Ba/MACE_Bmax_T_local*gammaFacApprox);
                     SynchrotronCorr = 0;
             end
+            
             % Compute Transmission of MACE
-            MaceTF = 0 + ((te >= qu) & (te <= qumax)) .* ...
-                (1 - sqrt(1-(te-qu-SynchrotronCorr)./te * WGTS_B_T_local./Ba / gammaFacApprox )) ...
-                ./ (1 - sqrt(1 - WGTS_B_T_local/MACE_Bmax_T_local)) + ...
-                1 * (te > qumax);
+            obj.DetailedTFFlag ='OFF';
+            switch obj.DetailedTFFlag
+                case 'OFF'
+                    MaceTF = 0 + ((te >= qu) & (te <= qumax)) .* ...
+                        (1 - sqrt(1-(te-qu-SynchrotronCorr)./te * WGTS_B_T_local./Ba / gammaFacApprox )) ...
+                        ./ (1 - sqrt(1 - WGTS_B_T_local/MACE_Bmax_T_local)) + ...
+                        1 * (te > qumax);
+                case 'ON'
+                    gammaFacStart = (obj.me/obj.me+1)/2;
+                    SinPreFactor = WGTS_B_T_local./Ba .* (1+gammaFacApprox)./(1+gammaFacStart);
+                    if strcmp(obj.SynchrotronFlag,'ON')
+                    SynchrotronCorrFun = @(e) interp1(te,SynchrotronCorr,e,'spline');
+                    else
+                     SynchrotronCorrFun = @(e) 0;   
+                    end
+                    InnerAsin =  @(e) 0+((e >= qu) & (e <= qumax)).*sqrt((e-qu-SynchrotronCorrFun(e))./e.*SinPreFactor);
+                    Thetatmp = @(e) real(asin(InnerAsin(e)));
+                    ThetaMax   = asin(sqrt(WGTS_B_T_local/MACE_Bmax_T_local));
+                    ThetaTr = @(e) (Thetatmp(e)<=ThetaMax).*Thetatmp(e)+(Thetatmp(e)>ThetaMax).*ThetaMax;
+                    
+                    WGTS_B_T_fun = @(theta) sin(theta).^2.*MACE_Bmax_T_local;
+                    
+                    ISProbfun = @(theta) ...%sin(theta).*...% permute(repmat(sin(theta),[obj.NIS+1,1,obj.nTe]),[1,3,2])...
+                        ISProbInterp('WGTS_CD_MolPerCm2',obj.WGTS_CD_MolPerCm2,...
+                        'MACE_Bmax_T',MACE_Bmax_T_local,...
+                        'WGTS_B_T', WGTS_B_T_fun(theta),...
+                        'NIS',obj.NIS,...
+                        'ISXsection', obj.ISXsection(18575),...
+                        'SanityPlot','OFF');
+ 
+                    mythetatr = ThetaTr(te(((te >= qu) & (te <= qumax))));
+                    tf = zeros(obj.NIS+1,obj.nTe);
+                    tf(:,((te >= qu) & (te <= qumax))) =  ISProbfun(mythetatr)./ISProbfun(ThetaMax);
+                    tf(:,te>qumax) = 1;
+                    T1 = tf(1,:);
+%                     t    = @(thetaMax) obj.ComputeISProb('ScatTF','ON','saveFile','OFF','Method','Exact',...
+%                         'WGTS_CD_MolPerCm2',obj.WGTS_CD_MolPerCm2,...
+%                         'MACE_Bmax_T',MACE_Bmax_T_local,...
+%                         'WGTS_B_T', WGTS_B_T_fun(thetaMax),...
+%                         'ISXsection', obj.ISXsection,...
+%                         'Energy',18575);
+%                     tf = zeros(obj.NIS+1,obj.nTe);
+%                     tfLogic = ((te >= qu) & (te <= qumax));
+%                     tfIndex = find(tfLogic);
+%                     IntNorm = t(ThetaMax);
+%                     for i=1:sum(tfLogic)
+%                         tic;
+%                         tf(:,tfIndex(i)) =  t(ThetaTr(te(tfIndex(i))))./IntNorm;
+%                         toc;
+%                     end
+%                     tf(:,te > qumax) = 1;
+%                     T1 = tf(1,:);
+
+% IntTheta = linspace(0,ThetaMax,1e3);
+% Integrand = ISProbfun(IntTheta);
+% IntNorm = simpsons(IntTheta,(Integrand.*(IntTheta<=ThetaMax))');
+%                     MF =  @(e)  arrayfun(@(a) simpsons(IntTheta,Integrand(1,:).*(IntTheta<=a)),ThetaTr(e))./IntNorm(1);
+%                     tic;
+%                     T1 = zeros(obj.nTe,1);
+%                     T1(((te >= qu) & (te <= qumax))) =  MF(te(((te >= qu) & (te <= qumax))));
+%                     T1(te>qumax) = 1;
+%                     toc;
+                    
+                    % tmp plot
+                    MaceTF = 0 + ((te >= qu) & (te <= qumax)) .* ...
+                        (1 - sqrt(1-(te-qu-SynchrotronCorr)./te * WGTS_B_T_local./Ba / gammaFacApprox )) ...
+                        ./ (1 - sqrt(1 - WGTS_B_T_local/MACE_Bmax_T_local)) + ...
+                        1 * (te > qumax);
+                    figure(1);
+                    pnew = plot(te-qu,T1,'LineWidth',2);
+                    hold on;  
+                    ptf = plot(te-qu,MaceTF,'LineWidth',2);
+                    xlim([-1 3.5]);
+                    ylim([-0.1,1.1])
+                    leg = legend([pnew,ptf],'detailed','regular','Location','northwest');
+                    PrettyFigureFormat
+                    hold off;
+
+
+                   IntNorm = integral(ISProbfun,0,ThetaMax,'ArrayValued',1);
+%                                  
+%                    MACEfun = @(e) cell2mat(arrayfun(@(x) integral(ISProbfun,0,x,'ArrayValued',1),ThetaTr(e)'...
+%                                 ,'UniformOutput',false))./IntNorm;
+%                    TF = 0 + ((te >= qu) & (te <= qumax)) .* MACEfun(te((te >= qu) & (te <= qumax))) + 1 .* (te>qumax);
+%                    
+%                    TestInt = cell2mat(arrayfun(@(x) integral(ISProbfun,0,x,'ArrayValued',1),ThetaTr(ThetaTr>0)'...
+%                         ,'UniformOutput',false)./IntNorm);
+%                     ISProb =  permute(repmat(sin(IntTheta),[obj.NIS+1,1,obj.nTe]),[1,3,2])...
+%                         .*ISProbInterp('WGTS_CD_MolPerCm2',obj.WGTS_CD_MolPerCm2,...
+%                         'MACE_Bmax_T',MACE_Bmax_T_local,...
+%                         'WGTS_B_T', WGTS_B_T_fun(IntTheta),...
+%                         'NIS',obj.NIS,...
+%                         'ISXsection', obj.ISXsection(te),...
+%                         'SanityPlot','OFF');
+%                     % ???
+%                    ISProb(:,ThetaTrans>ThetaMax)=0;
+%                    TF = sum(squeeze(simpsons(IntTheta,permute(ISProb,[3,2,1]))),2);
+                
+                  
+            end
             
-            % if obj.MACE_Sigma>0
-            %     out = TF_Convfun(MaceTF,qu',te,obj.MACE_Sigma);
-            % else
             out = MaceTF;
-            % end
-            
             out(out>1)=1; 
         end
         %% Computating of empirical energy loss function and convolutions

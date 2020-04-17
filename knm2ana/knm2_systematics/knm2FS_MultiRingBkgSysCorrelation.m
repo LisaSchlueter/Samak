@@ -239,5 +239,5 @@ end
 
 %% background (input) correlation plot for SlopeFit
 %CorrCoeffIndex = 1;
-%d = importdata(CovMatFile{CorrCoeffIndex});
+d = importdata(CovMatFile{CorrCoeffIndex});
 
