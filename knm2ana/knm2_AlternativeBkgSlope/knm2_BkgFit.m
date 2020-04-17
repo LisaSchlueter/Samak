@@ -1,23 +1,31 @@
-% 
-% First Tritium Background Slope Constraint
-% Th. Lasserre, April 2020
-%
+% KNM2 Background Fit
+% Extract the Slope
+% Uniform
 
-% start fit
-starfit = 1;
+DiagnosticFlag = 'OFF';
 
-% Import Data
-FT_bg_knm2golden = importdata('./dataAnna/FT_bg_knm2golden.txt');
+% Read KNM2 data
+range         = 5;
+RunAnaArg = {...
+    'RunList','KNM2_Prompt',...        % all KNM2 golden runs
+    'DataType','Real',...
+    'AnaFlag','StackPixel',...         % FPD segmentations -> pixel combination
+    'ROIFlag','Default',...
+    };%
+NonPoissonScaleFactor = 1.112;
+A                     = MultiRunAnalysis(RunAnaArg{:});
+A.exclDataStart       = A.GetexclDataStart(range);
 
-nbin = numel(FT_bg_knm2golden(starfit:end,1));
-hv    = FT_bg_knm2golden(starfit:end,1);
-c     = FT_bg_knm2golden(starfit:end,2)*2/3;
-t     = FT_bg_knm2golden(starfit:end,3);
+%% Fit Slope
+nbin  = numel(A.RunData.qU(A.exclDataStart:end));
+hv    = A.RunData.qU(A.exclDataStart:end);
+c     = A.RunData.TBDIS(A.exclDataStart:end)./A.RunData.qUfrac(A.exclDataStart:end)/A.RunData.TimeSec;
+ce    = NonPoissonScaleFactor*A.RunData.TBDISE(A.exclDataStart:end)./A.RunData.qUfrac(A.exclDataStart:end)/A.RunData.TimeSec;
 % column1: hv in kV
 % column2: rate in mcps
 % column3: rate error in mcps 
-Data = [hv/1e3 c./t*1e3 sqrt(c)./t*1e3];
-
+Data = [hv/1e3 c*1e3 ce*1e3];
+%Data = Data([1 7],:);
 % Linear Model
 parnames = {'baseline','slope'}; 
 ParIni   = [mean(Data(:,2)) 0]; 
@@ -27,8 +35,8 @@ ParIni   = [mean(Data(:,2)) 0];
 Args = {ParIni, Data, '-c', 'min; minos'};
 [ par, err, chi2min, errmat ] = fminuit('Chi2Gauss',Args{:});
 fprintf('=========================== Fit results ========================\n');
-fprintf('  baseline = %.3f ± %.3f\n',par(1),err(1));
-fprintf('  slope    = %.3f ± %.3f\n',par(2),err(2));
+fprintf('  baseline = %.3f Â± %.3f\n',par(1),err(1));
+fprintf('  slope    = %.3f Â± %.3f\n',par(2),err(2));
 fprintf('  chi2min  = %.2f for ndof = %d\n',chi2min,nbin-numel(ParIni));
 fprintf('================================================================\n');
 
@@ -37,56 +45,26 @@ close all
 figure(1)
 set(gcf, 'Position',  [100, 100, 1000, 500])
 hdata = errorbar(Data(:,1),Data(:,2),Data(:,3),'ks',...
-    'MarkerSize',8,'MarkerFaceColor',.8*[1 1 1],'LineWidth',2);
+       'MarkerSize',8,'MarkerFaceColor',.8*[1 1 1],'LineWidth',2);
 hold on;
 hfit    = plot(Data(:,1),Model(par,Data(:,1)),'LineWidth',3);
-hfiteu =  plot(Data(:,1),Model(par-[0 err(2)],Data(:,1)),'LineWidth',1,'LineStyle','--');
-hfited =  plot(Data(:,1),Model(par+[0 err(2)],Data(:,1)),'LineWidth',1,'LineStyle','--');
+%hfiteu =  plot(Data(:,1),Model(par-[0 err(2)],Data(:,1)),'LineWidth',1,'LineStyle','--');
+%hfited =  plot(Data(:,1),Model(par+[0 err(2)],Data(:,1)),'LineWidth',1,'LineStyle','--');
 hold off;
 xlabel('Retarding Potential (keV)','FontSize',14) 
 ylabel('rate (mcps)','FontSize',14) 
 PrettyFigureFormat;
-legend([hdata hfit],'Data',sprintf('Fit \n baseline=%0.3f \\pm %0.3f mcps \n slope=%0.3f \\pm %0.3f mcps/keV',par(1),err(1),par(2),err(2)),'Location','SouthWest')
+legend([hdata hfit],...
+    sprintf('KNM2 Data: %.0f counts in %.0f sec',sum(A.RunData.TBDIS(A.exclDataStart:end)),sum(A.RunData.qUfrac(A.exclDataStart:end).*A.RunData.TimeSec)),...
+    sprintf('Fit \n baseline=%0.3f \\pm %0.3f mcps \n slope=%0.3f \\pm %0.3f mcps/keV \n relative slope = %0.2f \\pm %0.2f %%/keV',...
+    par(1),err(1),par(2),err(2),par(2)/par(1)*100,err(2)/par(1)*100),'Location','NorthEast')
 grid on
-publish_figurePDF(1,'FT_bg_knm2golden_1.pdf');
+publish_figurePDF(1,'BKG_KNM2.pdf');
 
-%% Case 2) Fit All Ranges
-% Plot Slope & Error on Slope Verus HV-start
-for i=1:1:(nbin-10)
-DataHVscan = Data(i:end,:);
-Args = {ParIni, DataHVscan, '-c', 'min; minos'};
-[ parV(i,:), errV(i,:), chi2minV(i), errmatV(i,:,:) ] = fminuit('Chi2Gauss',Args{:});
-HVmin(i) = DataHVscan(1,1);
+switch DiagnosticFlag
+    case 'OFF'
+        return;
 end
-% Figure 2
-figure(2)
-set(gcf, 'Position',  [100, 100, 1000, 1000])
-subplot(3,1,1)
-hdata = errorbar(HVmin,parV(:,1),errV(:,1),'ks',...
-    'MarkerSize',8,'MarkerFaceColor',.8*[1 1 1],'LineWidth',2);
-xlabel('Retarding Potential (keV)','FontSize',14) 
-ylabel('baseline (mcps)','FontSize',14) 
-grid on
-PrettyFigureFormat;
-subplot(3,1,2)
-hdata = errorbar(HVmin,parV(:,2),errV(:,2),'ks',...
-    'MarkerSize',8,'MarkerFaceColor',.8*[1 1 1],'LineWidth',2);
-xlabel('Retarding Potential (keV)','FontSize',14) 
-ylabel('slope (mcps/keV)','FontSize',14) 
-grid on
-PrettyFigureFormat;
-subplot(3,1,3)
-hdata = semilogy(HVmin,parV(:,2)+1*errV(:,2),'ks',...
-    'MarkerSize',8,'MarkerFaceColor',.8*[1 1 1],'LineWidth',2);
-xlabel('Retarding Potential (keV)','FontSize',14) 
-ylabel('m+1\sigma (mcps/keV)','FontSize',14) 
-grid on
-PrettyFigureFormat;
-publish_figurePDF(2,'FT_bg_knm2golden_2.pdf');
-
-% Display Recommended Limit m+1sigma
-SlopeLimit1sigma = table(HVmin',1*errV(:,2),norminv(0.68269,parV(:,2),errV(:,2)),'VariableNames',{'MinqU (keV)','CurrentLimit (mcps/keV)','RecommendedLimit (mcps/keV)'});
-SlopeLimit1sigma = varfun(@(var) round(var, 2), SlopeLimit1sigma)
 
 %% Fit Diagnostics
 % Put the variables into a table, naming them appropriately
@@ -130,3 +108,4 @@ ylabel('\Delta Slope (%)','FontSize',14)
 grid on
 legend([h],sprintf('all data slope \n %0.3f \\pm %0.3f mcps/keV',par(2),err(2)),'Location','SouthEast')
 PrettyFigureFormat
+

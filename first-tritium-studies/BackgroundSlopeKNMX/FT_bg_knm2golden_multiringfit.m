@@ -14,26 +14,26 @@ FT_bg_knm2golden_pseudoring3 = importdata('./dataAnna/FT_bg_knm2golden_pseudorin
 
 nbin(:,1)  = numel(FT_bg_knm2golden_pseudoring0(starfit:end,1));
 hv(:,1)    = FT_bg_knm2golden_pseudoring0(starfit:end,1);
-c(:,1)     = FT_bg_knm2golden_pseudoring0(starfit:end,2);
-ce(:,1)    = sqrt(FT_bg_knm2golden_pseudoring0(starfit:end,2));
+c(:,1)     = FT_bg_knm2golden_pseudoring0(starfit:end,2)*0.6811;
+ce(:,1)    = sqrt(FT_bg_knm2golden_pseudoring0(starfit:end,2)*0.6811);
 t(:,1)     = FT_bg_knm2golden_pseudoring0(starfit:end,3);
 
 nbin(:,2)  = numel(FT_bg_knm2golden_pseudoring1(starfit:end,1));
 hv(:,2)    = FT_bg_knm2golden_pseudoring1(starfit:end,1);
-c(:,2)     = FT_bg_knm2golden_pseudoring1(starfit:end,2);
-ce(:,2)    = sqrt(FT_bg_knm2golden_pseudoring1(starfit:end,2));
+c(:,2)     = FT_bg_knm2golden_pseudoring1(starfit:end,2)*0.6811;
+ce(:,2)    = sqrt(FT_bg_knm2golden_pseudoring1(starfit:end,2)*0.6811);
 t(:,2)     = FT_bg_knm2golden_pseudoring1(starfit:end,3);
 
 nbin(:,3)  = numel(FT_bg_knm2golden_pseudoring2(starfit:end,1));
 hv(:,3)    = FT_bg_knm2golden_pseudoring2(starfit:end,1);
-c(:,3)     = FT_bg_knm2golden_pseudoring2(starfit:end,2);
-ce(:,3)    = sqrt(FT_bg_knm2golden_pseudoring2(starfit:end,2));
+c(:,3)     = FT_bg_knm2golden_pseudoring2(starfit:end,2)*0.6811;
+ce(:,3)    = sqrt(FT_bg_knm2golden_pseudoring2(starfit:end,2)*0.6811);
 t(:,3)     = FT_bg_knm2golden_pseudoring2(starfit:end,3);
 
 nbin(:,4)  = numel(FT_bg_knm2golden_pseudoring3(starfit:end,1));
 hv(:,4)    = FT_bg_knm2golden_pseudoring3(starfit:end,1);
-c(:,4)     = FT_bg_knm2golden_pseudoring3(starfit:end,2);
-ce(:,4)    = sqrt(FT_bg_knm2golden_pseudoring3(starfit:end,2));
+c(:,4)     = FT_bg_knm2golden_pseudoring3(starfit:end,2)*0.6811;
+ce(:,4)    = sqrt(FT_bg_knm2golden_pseudoring3(starfit:end,2)*0.6811);
 t(:,4)     = FT_bg_knm2golden_pseudoring3(starfit:end,3);
 
 % column1: hv in kV

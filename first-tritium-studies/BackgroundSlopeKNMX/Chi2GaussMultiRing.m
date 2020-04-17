@@ -26,7 +26,7 @@ m2 = Model(p(3:4),x2);
 m3 = Model(p(5:6),x3);
 m4 = Model(p(7:8),x4);
 
-slopeError = 1e-4;
+slopeError = 1e4;
 
 chi2 = sum(( y1 - m1 ).^2 ./ z1.^2) + ...
        sum(( y2 - m2 ).^2 ./ z2.^2) + ...
