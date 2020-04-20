@@ -11,9 +11,10 @@ uncertainty  = 'stat';  % syst
 NPfactor     = 1;
 d            = 10;                  % Number of dots per decade
 eVrange      = 90;                  % eV below the endpoint
+ActiveNeut   = 'ON';
 
 % Name for the datafile
-savename     = sprintf('coord_%1$deV_%2$s_%3$s_95_newN2.mat',eVrange,datatype,uncertainty);
+savename     = sprintf('coord_%1$deV_%2$s_%3$s_95_newN.mat',eVrange,datatype,uncertainty);
 
 % Scan settings
 start_decade = -1;
@@ -28,6 +29,7 @@ err = 0.01;                         % Newton convergence tolerance
 m4_Y    = [];
 sith4_X = [];                       % Plot variables
 chi_Z   = [];
+m_beta  = [];
 
 % Scanning range
 m4      = [];
@@ -67,6 +69,14 @@ switch datatype
         sibille = 'Sibille0p5eV';
 end
 
+% Active neutrino
+switch ActiveNeut
+    case 'ON'
+        free_para = 'mNu E0 Norm Bkg';
+    case 'OFF'
+        free_para = 'E0 Norm Bkg';
+end
+
 SysEffects = struct(...
     'RF_EL','OFF',...       % Response Function(RF) EnergyLoss
     'RF_BF','OFF',...       % RF B-Fields
@@ -83,7 +93,7 @@ SysEffects = struct(...
 R = MultiRunAnalysis('RunList','KNM1',...
             'chi2',chi2_type,...
             'DataType',datatype,...
-            'fixPar','E0 Norm Bkg',...
+            'fixPar',free_para,...
             'RadiativeFlag','ON',...
             'NonPoissonScaleFactor',NPfactor,...
             'minuitOpt','min ; migrad',...
@@ -204,6 +214,11 @@ for m = m4
                 sith4_X = [sith4_X,s];
                 m4_Y    = [m4_Y,m];
                 chi_Z   = [chi_Z,X2_a];
+                
+                if strcmp(ActiveNeut,'ON')
+                    m_beta  = [m_beta,R.FitResult.par(1)]; % When m_beta is activated
+                end
+                
             end
         end
     else
@@ -238,7 +253,7 @@ filepath   = [getenv('SamakPath'),'ksn1ana/contour/'];
 file       = [filepath,savename];
 MakeDir(filepath)
 %file_sith4 = '/home/iwsatlas1/guennic/Desktop/Samak2.0/ksn1ana/contour/coord_0to4_dV_90eV_Final';
-save(file,'sith4_X','m4_Y','chi_Z');
+save(file,'sith4_X','m4_Y','chi_Z','m_beta');
 
 
 diary 'progress.txt'

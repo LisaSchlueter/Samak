@@ -9,7 +9,7 @@
 
 filepath   = [getenv('SamakPath'),'ksn1ana/contour/'];
 file_A     = 'coord_fitrium_40_Twin_95.mat';
-file_B     = 'coord_90eV_Twin_stat_newN2.mat';
+file_B     = 'coord_90eV_Twin_stat_95_newN.mat';
 % file_C     = 'coord_90eV_Real_syst_99.mat';
 
 da  = importdata([filepath,file_A]);   % Data A

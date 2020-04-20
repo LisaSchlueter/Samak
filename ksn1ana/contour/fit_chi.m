@@ -14,6 +14,6 @@ function X = fit_chi(m,s,R,eVr)
     R.RunData;
     R.Fit;
     
-    X = R.FitResult.chi2min;
+    X     = R.FitResult.chi2min;
     
 end
