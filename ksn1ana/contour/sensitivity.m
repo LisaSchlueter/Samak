@@ -6,8 +6,8 @@ tic;
 % Parameters
 
 CL           = 95;                  % Confidence level 90% - 95% - 99%
-datatype     = 'Twin';  % Real
-uncertainty  = 'stat';  % syst
+datatype     = 'Real';  % Real
+uncertainty  = 'syst';  % syst
 NPfactor     = 1;
 d            = 10;                  % Number of dots per decade
 eVrange      = 90;                  % eV below the endpoint

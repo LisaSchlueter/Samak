@@ -1,14 +1,15 @@
 %% ===== DATA =====
 
 %% Settings
-E0 = 18570;                                         % Endpoint in eV
-sterile_mass = sqrt(2.3);                                  % Sterile neutrino mass in eV
+E0 = 18574;                                         % Endpoint in eV
+%sterile_mass = 10*sqrt(2.3);                           % Sterile neutrino mass in eV
+sterile_mass  = 10;                           % Sterile neutrino mass in eV
 
-% mixing_angle_1 = 0.1;                               % sin2(th4)
-% mixing_angle_2 = 1-(1-2*mixing_angle_1)^2;          % sin2(2th4)
+% mixing_angle_1 = 0.1;                             % sin2(th4)
+% mixing_angle_2 = 1-(1-2*mixing_angle_1)^2;        % sin2(2th4)
 
-mixing_angle_2 = 0.15;                              % sin2(2th4)
-mixing_angle_1 = (1-sqrt(1-mixing_angle_2))/2;        % sin2(th4)
+mixing_angle_2 = 0.1;                               % sin2(2th4)
+mixing_angle_1 = (1-sqrt(1-mixing_angle_2))/2;      % sin2(th4)
 
 %% No sterile
 
@@ -19,9 +20,10 @@ R = MultiRunAnalysis('RunList','KNM1',...
             'RadiativeFlag','ON',...
             'NonPoissonScaleFactor',1.064,...
             'minuitOpt','min ; migrad',...
-            'FSDFlag','Sibille0p5eV',...
+            'FSDFlag','SibilleFull',...
             'ELossFlag','KatrinT2',...
-            'SysBudget',22);
+            'SysBudget',22,...
+            'exclDataStart',1);
 
 % Global variables
 times = (R.ModelObj.qUfrac*R.ModelObj.TimeSec);
@@ -47,10 +49,11 @@ Rs = MultiRunAnalysis('RunList','KNM1',...
             'RadiativeFlag','ON',...
             'NonPoissonScaleFactor',1.064,...
             'minuitOpt','min ; migrad',...
-            'FSDFlag','Sibille0p5eV',...
+            'FSDFlag','SibilleFull',...
             'ELossFlag','KatrinT2',...
-            'SysBudget',22);
-
+            'SysBudget',22,...
+            'exclDataStart',1);
+        
 Rs.ModelObj.mnu4Sq_i = sterile_mass^2;
 Rs.ModelObj.sin2T4_i = mixing_angle_1;
 
@@ -79,13 +82,13 @@ err  = err./times;
 err  = err./YI;
 
 
-%% Constraining everything to -90eV
-YIsd=YIsd(qU>-90);
-YIs=YIs(qU>-90);
-YI=YI(qU>-90);
+%% Constraining everything to -95eV
+YIsd=YIsd(qU>-95);
+YIs=YIs(qU>-95);
+YI=YI(qU>-95);
 sum(YI)
-err=err(qU>-90);
-qUc=qU(qU>-90);
+err=err(qU>-95);
+qUc=qU(qU>-95);
 
 
 
@@ -172,7 +175,7 @@ PRLFormat;
 
 subplot(4,1,4)
 
-bar(qUc,times(qU>-90)./(60*60),0.5,...
+bar(qUc,times(qU>-95)./(60*60),0.5,...
     'FaceColor',prlB,'EdgeColor',prlB);
 
 xlabel('Retarding energy - 18574 (eV)');

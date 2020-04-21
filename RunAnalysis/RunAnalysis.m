@@ -134,7 +134,7 @@ classdef RunAnalysis < handle
             p.addParameter('chi2','chi2Stat',@(x)ismember(x,{'chi2Stat', 'chi2CM', 'chi2CMFrac','chi2CMShape', 'chi2P','chi2Nfix'}));
             p.addParameter('fitter','minuit',@(x)ismember(x,{'minuit','matlab'}));
             p.addParameter('minuitOpt','min;minos',@(x)ischar(x));
-            p.addParameter('exclDataStart',2,@(x)isfloat(x));
+            p.addParameter('exclDataStart',1,@(x)isfloat(x));
             p.addParameter('exclDataStop',9999,@(x)isfloat(x)); %9999== use all points from exclDataStart to above endpoint 
             p.addParameter('PixList',[],@(x)isfloat(x) && all(x)>0);
             p.addParameter('RingList',1:12,@(x)isfloat(x) && all(x>0));
