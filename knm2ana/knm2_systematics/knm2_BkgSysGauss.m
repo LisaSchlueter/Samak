@@ -1,5 +1,5 @@
 % background slope (qU) systematics
-% 2 different strategies: fit & cut off or gaussian randomization
+% strategies: gaussian randomization
 % systematics setting
 RecomputeFlag = 'OFF';
 CovMatRecomputeFlag = 'ON';

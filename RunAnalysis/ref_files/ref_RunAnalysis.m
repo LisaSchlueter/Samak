@@ -42,6 +42,8 @@ p.addParameter('MACE_Bmax_T',D.MACE_Bmax_T,@(x)isfloat(x) & x>0);
 p.addParameter('MACE_Ba_T',D.MACE_Ba_T,@(x)isfloat(x) & x>0);
 p.addParameter('MACE_Sigma',0,@(x)all(isfloat(x)));                                                  % response function broadening
 p.addParameter('KTFFlag','WGTSMACE',@(x)ismember(x,{'OFF','MACE','WGTSMACE'}));                      % WGTSMACE== normal response function
+p.addParameter('SynchrotronFlag','ON',@(x)ismember(x,{'OFF','ON'}));
+p.addParameter('AngularTFFlag','ON',@(x)ismember(x,{'OFF','ON'}));
 p.addParameter('recomputeRF','OFF',@(x)ismember(x,{'ON','OFF'}));                                    % if ON: complete RF calculated from scratch
 p.addParameter('UseParallelRF','ON',@(x)ismember(x,{'OFF','ON'}));                                   % calculate response function in parallel
 
@@ -108,6 +110,7 @@ BKG_RatePixelSec         = p.Results.BKG_RatePixelSec;
 PixList                  = p.Results.PixList;
 RingList                 = p.Results.RingList;
 RingMerge                = p.Results.RingMerge;
+
 % Theory
 DopplerEffectFlag        = p.Results.DopplerEffectFlag;
 DTFSD                    = p.Results.DTFSD;                 % TBD: Flag FSD's
@@ -116,7 +119,10 @@ TTFSD                    = p.Results.TTFSD;
 ISCS                     = p.Results.ISCS;
 ELossFlag                = p.Results.ELossFlag;
 RadiativeFlag            = p.Results.RadiativeFlag;
+
 % MACE
+SynchrotronFlag          = p.Results.SynchrotronFlag;
+AngularTFFlag            = p.Results.AngularTFFlag;
 KTFFlag                  = p.Results.KTFFlag;
 recomputeRF              = p.Results.recomputeRF;
 UseParallelRF            = p.Results.UseParallelRF;
@@ -167,8 +173,9 @@ opt_mace = {...
     'MACE_Sigma',MACE_Sigma};
 
 opt_wgtsmace = {...
-    'KTFFlag',KTFFlag};
-
+    'KTFFlag',KTFFlag,...
+    'SynchrotronFlag',SynchrotronFlag,...      
+    'AngularTFFlag',AngularTFFlag};
 
 %% Get init Background: Whole FPD (excluding some pixels), per Ring, per Pixel
 switch RingMerge

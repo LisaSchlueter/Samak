@@ -9,6 +9,7 @@ p.addParameter('CDsigma',5*1e17,@(x)isfloat(x));
 p.addParameter('NIS',7,@(x)isfloat(x));
 p.addParameter('ISXsection',3*64e-22,@(x)isfloat(x));
 p.addParameter('SanityPlot','ON',@(x)ismember(x,{'ON','OFF'}));
+p.addParameter('ThetaP','OFF',@(x)ismember(x,{'ON','OFF'})); % enhance Theta parameter space (for scattering TF)
 
 p.parse(varargin{:});
 WGTS_CD_MolPerCm2 = p.Results.WGTS_CD_MolPerCm2;
@@ -17,13 +18,17 @@ MACE_Bmax_T       = p.Results.MACE_Bmax_T;
 WGTS_B_T          = p.Results.WGTS_B_T;
 NIS               = p.Results.NIS;
 SanityPlot        = p.Results.SanityPlot;
+ThetaP            = p.Results.ThetaP;
 
 if WGTS_CD_MolPerCm2<(2*1e17)
     DataSet = 'Knm1';
-else 
+else
     DataSet = 'Knm2';
 end
-    
+
+if strcmp(ThetaP,'ON')
+    DataSet = [DataSet,'Theta+'];
+end
 [RhoDSigma,Theta,ISProb] = Compute_InitISProbMeshGrid('DataSet',DataSet);
 
 ThetaFun = @(bmax,bs)  asin(sqrt(bs./bmax));
