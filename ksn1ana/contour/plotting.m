@@ -9,7 +9,7 @@
 
 filepath   = [getenv('SamakPath'),'ksn1ana/contour/'];
 file_A     = 'coord_fitrium_40_Twin_95.mat';
-file_B     = 'coord_90eV_Twin_stat_95_newN.mat';
+file_B     = 'coord_90eV_Twin_stat_95_freeM.mat';
 % file_C     = 'coord_90eV_Real_syst_99.mat';
 
 da  = importdata([filepath,file_A]);   % Data A
@@ -25,7 +25,7 @@ d_raa_95_b = importdata([filepath,'coord_RAA_95_B.mat']);
 
 d_mainz    = importdata([filepath,'coord_mainz.mat']);
 d_troitsk  = importdata([filepath,'coord_troitsk.mat']);
-
+1+1
 %% sin(2*th4)
 
 da2  = 1-(1-2*da.sith4_X).^2;

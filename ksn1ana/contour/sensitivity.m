@@ -14,7 +14,7 @@ eVrange      = 90;                  % eV below the endpoint
 ActiveNeut   = 'ON';
 
 % Name for the datafile
-savename     = sprintf('coord_%1$deV_%2$s_%3$s_95_newN.mat',eVrange,datatype,uncertainty);
+savename     = sprintf('coord_%1$deV_%2$s_%3$s_95_freeM.mat',eVrange,datatype,uncertainty);
 
 % Scan settings
 start_decade = -1;
@@ -145,6 +145,7 @@ R = MultiRunAnalysis('RunList','KNM1',...
 %% Delta-X2
 X0     = fit_chi(0,0,R,eVrange);
 chilvl = chilvl + X0;
+X0 =0;
 
 %% Loop
 % Initialisation
