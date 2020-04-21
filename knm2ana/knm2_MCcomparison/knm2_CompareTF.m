@@ -1,7 +1,7 @@
 % compare tranmission functions
 SynchrotronFlag = 'ON';
-RecomputeFlag = 'OFF';
-AngTF = 'ON';
+RecomputeFlag = 'ON';
+AngTF = 'OFF';
 SaveTxt = 'ON';
 % Samak TF
 savedir = [getenv('SamakPath'),'knm2ana/knm2_MCcomparison/results/Transmission/'];

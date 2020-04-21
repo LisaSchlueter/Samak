@@ -1,3 +1,9 @@
+%% settings
+RunNr         = 56274; % 56274; 56275;
+freePar       = 'E0 Bkg Norm';
+DataType      = 'Real';
+
+
 RunAnaArg = {'RunNr',RunNr,...
     'fixPar',freePar,...     % free Parameter !!
     'DataType',DataType,...              % Real, Twin or Fake
@@ -15,7 +21,7 @@ SR = RunAnalysis(RunAnaArg{:});
 qu = 18575;%SR.ModelObj.qU(1);
 E  = 18575;
 Theta = linspace(0,0.88,100);
-
+Theta = [0 0.2 0.4 0.6 0.8,0.88];
 % new: effective model
 CommonArg = {'qU',qu,'E',E,'Theta_rad',Theta,'Bs_T',SR.ModelObj.WGTS_B_T,'Bt_T',3.6};
 ElossPara = SR.ModelObj.GetElossSync(CommonArg{:},'Mode','Combi');
