@@ -1,4 +1,4 @@
-ROIstr = '14keV';
+ROIstr = 'Default';
 
 
 RunList   = 'KNM2_RW2';
