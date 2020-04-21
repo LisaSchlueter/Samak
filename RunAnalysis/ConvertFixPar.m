@@ -135,10 +135,10 @@ elseif strcmp(Mode,'Reverse')
       fixPar = [fixPar,'FracTm'];
   end
   
-  if ~contains(freePar,arrayfun(@(x) sprintf('fix %.0f ;',x),4*nPixels+11))
+  if ~contains(freePar,sprintf('fix %.0f ;',4*nPixels+11))
       fixPar = [fixPar,'mnu4Sq'];
   end
-    if ~contains(freePar,arrayfun(@(x) sprintf('fix %.0f ;',x),4*nPixels+12))
+    if ~contains(freePar,sprintf('fix %.0f ;',4*nPixels+12))
       fixPar = [fixPar,'sin2T4'];
     end
   
