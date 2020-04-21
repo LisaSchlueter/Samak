@@ -447,7 +447,7 @@ hh(1).MarkerSize = 20;hh(2).MarkerSize = 20;hh(3).MarkerSize = 20;hh(4).MarkerSi
 ht=title(sprintf('Slope Per Period Per Pseudo-ring \n ROI %s - MOS %s - KNM1 Calibration %s',ROI,HVdriftCorFlag,KNM1CorFlag));
 ylabel('RW Period'); ylim([0.5 3.5]) ; yticks([1 2 3]); %ylabel({'RW1';'RW2';'RW3'});
 xlabel('Pseudo-Ring'); xlim([0.5 4.5]); xticks([1 2 3 4]);%xlabel({'PSR1','PSR2','PSR3','PSR4'});
-zlabel('mV-equivalent / day'); zlim([0 10]);
+zlabel('mV-equivalent / day'); zlim([-inf 10]);
 PrettyFigureFormat
 ht.FontSize=16;
 
