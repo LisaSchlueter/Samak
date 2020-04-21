@@ -19,22 +19,23 @@ R.exclDataStart = R.GetexclDataStart(range); % set region of interest
 
 %% default systematics
 R.chi2 = 'chi2CMShape';
-R.ComputeCM; % calculate covariance matrices: no further aguments == all default sys
+%R.ComputeCM; % calculate covariance matrices: no further aguments == all default sys
 
 %% customize systematics example: only FSD systematics included
 mySysEffects = struct(...
-    'RF_EL','OFF',...   % Response Function(RF) EnergyLoss
-    'RF_BF','OFF',...   % RF B-Fields
-    'RF_RX','OFF',...   % Column Density, inel cross ection
-    'FSD','ON',...     % final states
-    'TASR','OFF',...    % tritium activity fluctuations
-    'TCoff_RAD','OFF',... % radiative thoretical corrections (this has to be OFF for KNM1, because included in model)
+    'RF_EL','OFF',...       % Response Function(RF) EnergyLoss
+    'RF_BF','OFF',...       % RF B-Fields
+    'RF_RX','OFF',...       % Column Density, inel cross ection
+    'FSD','ON',...          % final states
+    'TASR','OFF',...        % tritium activity fluctuations
+    'TCoff_RAD','OFF',...   % radiative thoretical corrections (this has to be OFF for KNM1, because included in model)
     'TCoff_OTHER','OFF',... % other theo corr.
-    'DOPoff','OFF',...     % doppler effects --> OFF, because in model
-    'Stack','OFF',...      % stacking / HV fluctuations
-    'FPDeff','OFF');     % detector efficiency
+    'DOPoff','OFF',...      % doppler effects --> OFF, because in model
+    'Stack','OFF',...       % stacking / HV fluctuations
+    'FPDeff','OFF');        % detector efficiency
+
 R.ComputeCM('SysEffects',mySysEffects,...
-           'BkgCM','OFF'); % background systematics (slope!) switched on/off here
+           'BkgCM','OFF');  % background systematics (slope!) switched on/off here
 
 %% display covariance matrices: example : FSD
 R.FitCM_Obj.nTrials = 5000;
