@@ -11,7 +11,7 @@ FT_bg_knm2golden = importdata('./dataAnna/FT_bg_knm2golden.txt');
 
 nbin = numel(FT_bg_knm2golden(starfit:end,1));
 hv    = FT_bg_knm2golden(starfit:end,1);
-c     = FT_bg_knm2golden(starfit:end,2);
+c     = FT_bg_knm2golden(starfit:end,2)*2/3;
 t     = FT_bg_knm2golden(starfit:end,3);
 % column1: hv in kV
 % column2: rate in mcps

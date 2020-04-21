@@ -2744,7 +2744,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                     DataTypeLabel = 'FitriumTwin_';
                 case 'KafitTwin'
                     DataTypeLabel = 'KafitTwin_';
-            end          
+            end
             fixParstr = ConvertFixPar('freePar',obj.fixPar,'Mode','Reverse');
             
             if strcmp(obj.ROIFlag,'Default') || ~strcmp(obj.DataSet,'Knm2')

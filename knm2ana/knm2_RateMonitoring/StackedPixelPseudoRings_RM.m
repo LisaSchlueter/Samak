@@ -133,9 +133,6 @@ for j=1:3
     % Activity
     Activity{j} =  (R.SingleRunData.WGTS_MolFrac_TT+0.5*R.SingleRunData.WGTS_MolFrac_HT+0.5*R.SingleRunData.WGTS_MolFrac_DT)...
         .*(R.SingleRunData.WGTS_CD_MolPerCm2);
-%     if j==3
-%         Activity{j} = Activity{j}.*0.999;
-%     end
     
     % Stacked Pixel Data for each patch
     count  = zeros(A.nRings,numel(A.RunAnaObj.RunList));

@@ -33,7 +33,7 @@ else
     A.ModelObj.RFBinStep = 0.02;
     A.ModelObj.InitializeRF;
     %% fit without corrections
-    A.Fit('CATS','ON'); A.PlotFit('FitResultsFlag','OFF');return;
+    A.Fit('CATS','OFF'); A.PlotFit('FitResultsFlag','OFF');return;
     FitResult_ref  = A.FitResult;
     %     %% fit with broadening of RF + broadening/shift of FSD
     % %     MACE_Sigma = std(A.SingleRunData.qU,0,2);
@@ -67,7 +67,6 @@ else
     fprintf('--------------------------------------\n')
     
     %%
-    
     % A.ModelObj.LoadFSD(FSDArg{:},'ZoomPlot','ON')
-    %A.Fit('CATS','ON')
+    % A.Fit('CATS','ON')
 end

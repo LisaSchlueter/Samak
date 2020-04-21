@@ -138,7 +138,7 @@ classdef RunAnalysis < handle
             p.addParameter('chi2','chi2Stat',@(x)ismember(x,{'chi2Stat', 'chi2CM', 'chi2CMFrac','chi2CMShape', 'chi2P','chi2Nfix'}));
             p.addParameter('fitter','minuit',@(x)ismember(x,{'minuit','matlab'}));
             p.addParameter('minuitOpt','min;minos',@(x)ischar(x));
-            p.addParameter('exclDataStart',2,@(x)isfloat(x));
+            p.addParameter('exclDataStart',1,@(x)isfloat(x));
             p.addParameter('exclDataStop',9999,@(x)isfloat(x)); %9999== use all points from exclDataStart to above endpoint 
             p.addParameter('PixList',[],@(x)isfloat(x) && all(x)>0);
             p.addParameter('RingList',1:12,@(x)isfloat(x) && all(x>0));
@@ -1203,7 +1203,7 @@ classdef RunAnalysis < handle
             %Initialize Normalization and Background with a stat. Fit
             if strcmp(InitNormFit,'ON')
                 % 40 eV range, stat only, free parameters: E0, Bkg, Norm
-                obj.InitModelObj_Norm_BKG('RecomputeFlag','OFF');
+                obj.InitModelObj_Norm_BKG('RecomputeFlag','ON');
             end
             
             obj.FitCM_Obj = CovarianceMatrix('StudyObject',obj.ModelObj, 'nTrials',nTrials,...
@@ -1239,7 +1239,7 @@ classdef RunAnalysis < handle
             %Initialize Normalization and Background with a stat. Fit
             if strcmp(InitNormFit,'ON')
                 % 40 eV range, stat only, free parameters: E0, Bkg, Norm
-                obj.InitModelObj_Norm_BKG('RecomputeFlag','OFF');
+                obj.InitModelObj_Norm_BKG('RecomputeFlag','ON');
             end
             
             % Move to Fit CM and do renormalization with current statistics
@@ -1572,6 +1572,9 @@ classdef RunAnalysis < handle
                     % 40 eV range
                     obj.exclDataStart = find((obj.ModelObj.qU)>=18574-40,1);
                     obj.exclDataStop = obj.ModelObj.nqU;
+%                    % 90 eV range
+%                    obj.exclDataStart = find((obj.ModelObj.qU)>=18574-90,1);
+
                 end
                 
                % stat only: Model is not initialized to data statistics yet -> use stat. uncertainty from data 
@@ -1646,7 +1649,7 @@ classdef RunAnalysis < handle
                 %                     obj.InitModelObj_Norm_BKG('RecomputeFlag','ON');
                 %                 else
                 if ~contains(obj.fixPar,'fix 3 ;')
-                    obj.InitModelObj_Norm_BKG('RecomputeFlag','OFF');
+                    obj.InitModelObj_Norm_BKG('RecomputeFlag','ON');
                 end
                 
                 [StatCM, StatCMFrac] = obj.ComputeCM_StatPNP(varargin);
@@ -1655,7 +1658,7 @@ classdef RunAnalysis < handle
                obj.FitCMFrac = StatCMFrac; 
                obj.FitCMFracShape = StatCMFrac;
             end
-                    
+            
             F = FITC('SO',obj.ModelObj,'DATA',Data,'fitter',obj.fitter,...
                 'chi2name',obj.chi2,'minuitOpt',obj.minuitOpt,...
                 'COVMAT', real(obj.FitCM),'COVMATFrac', real(obj.FitCMFrac),...
@@ -4025,7 +4028,7 @@ classdef RunAnalysis < handle
             end
         end
         function InitFitPar(obj)
-            obj.nPar = 4*obj.ModelObj.nPixels+10; % number of avaibale fit parameter
+            obj.nPar = 4*obj.ModelObj.nPixels+12; % number of avaibale fit parameter
             
             if strcmp(obj.AnaFlag,'StackPixel') % number of FPD segmentations
                 nFPDSeg = 1;

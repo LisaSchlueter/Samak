@@ -18,7 +18,7 @@ Mode    = p.Results.Mode;
 
 if strcmp(Mode,'Normal')
     if isempty(nPar)
-        nPar = 3*nPixels+10;
+        nPar = 3*nPixels+12;
     end
     
     fixPar_v = 1:nPar; % array of all parameter
@@ -78,6 +78,19 @@ if strcmp(Mode,'Normal')
         findIndex = ismember(fixPar_v,4*nPixels+10);
         fixPar_v(findIndex)=[];
     end
+    
+    % mnu4Sq
+    if contains(freePar,'mnu4Sq')  % ringwise
+        findIndex = ismember(fixPar_v,4*nPixels+11);
+        fixPar_v(findIndex)=[];
+    end
+    
+    % sin2T4
+    if contains(freePar,'sin2T4')  % ringwise
+        findIndex = ismember(fixPar_v,4*nPixels+12);
+        fixPar_v(findIndex)=[];
+    end
+    
     fixPar = sprintf('fix %.0f ;',fixPar_v);
     
 elseif strcmp(Mode,'Reverse')
@@ -121,6 +134,13 @@ elseif strcmp(Mode,'Reverse')
   if ~contains(freePar,sprintf('fix %.0f ;',4*nPixels+10))
       fixPar = [fixPar,'FracTm'];
   end
+  
+  if ~contains(freePar,arrayfun(@(x) sprintf('fix %.0f ;',x),4*nPixels+11))
+      fixPar = [fixPar,'mnu4Sq'];
+  end
+    if ~contains(freePar,arrayfun(@(x) sprintf('fix %.0f ;',x),4*nPixels+12))
+      fixPar = [fixPar,'sin2T4'];
+    end
   
 end
 end

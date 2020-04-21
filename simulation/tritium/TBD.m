@@ -568,7 +568,10 @@ classdef TBD < handle & WGTSMACE %!dont change superclass without modifying pars
                 case {'Sibille0p5eV'}
                     ttfsdfilename = [FSDdir,'FSD_KNM1_T2_Doppler0p5eV.txt'];   
             end
-            ttfsdfile = importdata(ttfsdfilename);
+            %Rebinning
+            ttfsdfile_temp=importdata(ttfsdfilename);
+            ttfsdfile = ttfsdfile_temp(ttfsdfile_temp(:,2)>(10^-8),[1 2]);
+            %
             [obj.TTexE, TTexE_index] = sort(ttfsdfile(:,1)); %sort from small to large excitation energies           
             obj.TTexE = obj.TTexE';
             obj.TTexP = (ttfsdfile(TTexE_index,2))';
@@ -609,7 +612,10 @@ classdef TBD < handle & WGTSMACE %!dont change superclass without modifying pars
                 case {'Sibille0p5eV'}
                     dtfsdfilename = [FSDdir,'FSD_KNM1_DT_Doppler0p5eV.txt'];
             end
-            dtfsdfile = importdata(dtfsdfilename);
+            %Rebinning
+            dtfsdfile_temp=importdata(dtfsdfilename);
+            dtfsdfile = dtfsdfile_temp(dtfsdfile_temp(:,2)>(10^-8),[1 2]);
+            %
             [obj.DTexE, DTexE_index] = sort(dtfsdfile(:,1));
             obj.DTexE = obj.DTexE';
             obj.DTexP = (dtfsdfile(DTexE_index,2))';
@@ -643,7 +649,10 @@ classdef TBD < handle & WGTSMACE %!dont change superclass without modifying pars
                 case {'Sibille0p5eV'}
                     htfsdfilename = [FSDdir,'FSD_KNM1_HT_Doppler0p5eV.txt'];
             end
-            htfsdfile = importdata(htfsdfilename);
+            %Rebinning
+            htfsdfile_temp=importdata(htfsdfilename);
+            htfsdfile= htfsdfile_temp(htfsdfile_temp(:,2)>(10^-8),[1 2]);
+            %
             [obj.HTexE, HTexE_index] = sort(htfsdfile(:,1));
             obj.HTexE = obj.HTexE';
             obj.HTexP = (htfsdfile(HTexE_index,2))';

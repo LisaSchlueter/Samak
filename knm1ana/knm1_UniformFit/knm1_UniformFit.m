@@ -4,6 +4,7 @@
 %% settings
 range = 40; % eV below the endpoint
 %% create MultiRunAnalysis object
+
 R = MultiRunAnalysis('RunList','KNM1',... % runlist defines which runs are analysed -> set MultiRunAnalysis.m -> function: GetRunList()
     'chi2','chi2Stat',...                 % uncertainties: statistical or stat + systematic uncertainties
     'DataType','Real',...                 % can be 'Real' or 'Twin' -> Monte Carlo
@@ -11,13 +12,14 @@ R = MultiRunAnalysis('RunList','KNM1',... % runlist defines which runs are analy
     'RadiativeFlag','ON',...              % theoretical radiative corrections applied in model
     'NonPoissonScaleFactor',1.064,...     % background uncertainty are enhanced
     'minuitOpt','min ; minos',...         % technical fitting options (minuit)
-    'FSDFlag','Sibille0p5eV',...               % final state distribution
+    'FSDFlag','Sibille0p5eV',...          % final state distribution
     'ELossFlag','KatrinT2',...            % energy loss function
     'SysBudget',22,...
     'DopplerEffectFlag','FSD_Knm1',...
     'Twin_SameCDFlag','ON',...
     'Twin_SameIsotopFlag','ON');          % defines syst. uncertainties -> in GetSysErr.m;
 
+% R.ModelObj.mnu4Sq_i=200;
 R.exclDataStart = R.GetexclDataStart(range); % set region of interest
 
 %% look at some properties
