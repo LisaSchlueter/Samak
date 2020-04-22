@@ -21,9 +21,9 @@ D.exclDataStart = D.GetexclDataStart(range);
 %%
 saveplot = 'pdf';
 FitResults= D.PlotFitRunList('Parameter','B','YLim',[170 280],'saveplot',saveplot,'HideGaps','OFF');
-% D.PlotFitRunList('Parameter','E0','YLim',[-0.7,1],'DisplayStyle','Rel','saveplot',saveplot,'HideGaps','OFF');
-% D.PlotFitRunList('Parameter','N','YLim',[0.9,1.1],'saveplot',saveplot,'HideGaps','OFF');
-% D.PlotFitRunList('Parameter','pVal','YLim',[-0.2,1.2],'saveplot',saveplot,'HideGaps','OFF');
+D.PlotFitRunList('Parameter','E0','YLim',[-0.7,1],'DisplayStyle','Rel','saveplot',saveplot,'HideGaps','OFF');
+D.PlotFitRunList('Parameter','N','YLim',[0.9,1.1],'saveplot',saveplot,'HideGaps','OFF');
+D.PlotFitRunList('Parameter','pVal','YLim',[-0.2,1.2],'saveplot',saveplot,'HideGaps','OFF');
 
 %%
 E0 = D.SingleRun_FitResults.chi2Stat.E0;

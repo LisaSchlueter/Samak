@@ -1,9 +1,9 @@
-% twins for the three periods seperatetly 
+% twins for the three periods seperatetly
 RunList = 'KNM2_Prompt';
 fixPar = 'mNu E0 Bkg Norm'; % free parameter
 DataType = 'Twin';
 FSDFlag = 'BlindingKNM2';
-ELossFlag = 'KatrinT2';
+ELossFlag = 'KatrinT2A20';
 AnaFlag = 'StackPixel'; % uniform FPD
 exclDataStart = 11;
 
@@ -14,13 +14,17 @@ RunAnaArg = {'RunList',RunList,...
     'FSDFlag',FSDFlag,...
     'ELossFlag',ELossFlag,...
     'AnaFlag',AnaFlag,'chi2',chi2,...
-    'exclDataStart',exclDataStart};
+    'exclDataStart',exclDataStart,...
+    'ROIFlag','Default',...
+    'SynchrotronFlag','ON',...
+    'AngularTFFlag','ON',...
+    'ISCSFlag','Edep'};
 
 % read data and set up model
-T = MultiRunAnalysis(RunAnaArg{:},'TwinBias_Q','Fit');
+% T = MultiRunAnalysis(RunAnaArg{:},'TwinBias_Q','Fit');
+% T.Fit;
+
+T = MultiRunAnalysis(RunAnaArg{:},'TwinBias_Q',18573.56);
 T.Fit;
-
-TE = MultiRunAnalysis(RunAnaArg{:},'TwinBias_Q',18573.7);
-
 
 

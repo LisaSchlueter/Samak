@@ -1,9 +1,9 @@
 % background slope (qU) systematics
 % 2 different strategies: fit & cut off or gaussian randomization
 % systematics setting
-RecomputeFlag = 'OFF';
+RecomputeFlag = 'ON';
 CovMatRecomputeFlag = 'ON';
-MaxSlopeCpsPereV = 12*1e-06;%5.2*1e-06;
+MaxSlopeCpsPereV = 99;%12*1e-06;%5.2*1e-06;
 
 savedir = [getenv('SamakPath'),'knm2ana/knm2_systematics/results/'];
 MakeDir(savedir);
@@ -14,16 +14,14 @@ else
 % model setting
 RunList   = 'KNM2_Prompt';
 AnaFlag   = 'StackPixel'; % FPD segmentation
-E0 = knm2FS_GetE0Twins('SanityPlot','OFF');
-
 RunArg = {'FSDFlag','BlindingKNM2',...
-    'ELossFlag','KatrinT2',...
+    'ELossFlag','KatrinT2A20',...
     'AnaFlag',AnaFlag,...
     'chi2','chi2Stat',...      % switch on later by hand
     'RunList',RunList,...      
     'fixPar','mNu E0 Norm Bkg',... % free parameter
     'DataType','Twin',...      % MC twins
-    'TwinBias_Q',18573.70,...  % twin endpoint
+    'TwinBias_Q',18573.56,...  % twin endpoint
     'SysBudget',34,...
     'RingMerge','Full',...
     'NonPoissonScaleFactor',1};        
@@ -35,10 +33,6 @@ CmArg = {'BkgCM','ON',...
 %% init model
 M = MultiRunAnalysis(RunArg{:});
 M.exclDataStart = M.GetexclDataStart(40);
-Sigma = std(E0);
-FSDArg = {'SanityPlot','OFF','Sigma',Sigma};
-M.ModelObj.LoadFSD(FSDArg{:});
-M.ModelObj.ComputeTBDDS; M.ModelObj.ComputeTBDIS;
 
 %% stat. only
 M.Fit;
@@ -54,6 +48,11 @@ M.ComputeCM(CmArg{:},'BkgMode','SlopeFit','RecomputeFlag','OFF'); % reset stat. 
 
 M.Fit;
 FitResultsCM = M.FitResult;
+
+CovMatFile = M.FitCM_Obj.CovMatFile;
+d = importdata(CovMatFile);
+Slopes = d.Slopes;
+SlopesExcl = d.SlopesExcl;
 %% stat. + syst: calculate covariance matrix: slope randn
 if MaxSlopeCpsPereV<10
     M.ComputeCM(CmArg{:},'BkgMode','Gauss');
@@ -78,7 +77,7 @@ else
     mNuSysGauss = NaN;
 end
 save(savename,'FitResultsStat','FitResultsCM','FitResultsCMGauss','mNuSys','mNuSysGauss',...
-               'CMFracGauss','CMFracGaussShape','CMFrac','CMFracShape');
+               'CMFracGauss','CMFracGaussShape','CMFrac','CMFracShape','Slopes','SlopesExcl','CovMatFile');
 end
 %% display results 
 mNuStatAsym = 0.5*(-FitResultsStat.errNeg(1)+FitResultsStat.errPos(1));
