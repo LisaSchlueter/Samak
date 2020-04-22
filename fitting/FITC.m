@@ -326,14 +326,14 @@ classdef FITC < handle
             qUOffsettol = 10;     % qUOffset absolute tolerance (eV)
             qUmeanOffsettol = 0.5;  % qUOffset tolerance from ring to ring (eV)
             BkgSlopetol = 5*1e-6; % background slope constrain (cps/eV)
-            mNuSqtol = 1;         % neutrino mass pull tolerance (eV^2)
+            mNuSqtol = 2;         % neutrino mass pull tolerance (eV^2)
             mTSqtol = 1;          % tachyonic neutrino mass (nu-mass offset) from ring to ring (eV^2)
             sin2T4tol = 0.5;
 
             PullTerm = 0;
             % 1: neutrino mass pull
             if any(ismember(obj.pullFlag,1))
-                PullTerm = PullTerm + (par(1)-0)/mNuSqtol^2;
+                PullTerm = PullTerm + (par(1)-0)^2/mNuSqtol^2;
                 %sum( ((par-zeros(1,length(par))).^2)./obj.pulls);
             end
             
