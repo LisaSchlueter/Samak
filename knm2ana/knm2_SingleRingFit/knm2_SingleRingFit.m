@@ -29,7 +29,7 @@ RunAnaArg = {'RunList',RunList,...  % define run number -> see GetRunList
     'fixPar',freePar,...         % free Parameter !!
     'DataType','Real',...              % Real, Twin or Fake
     'FSDFlag','BlindingKNM2',...       % final state distribution (theoretical calculation)
-    'ELossFlag','KatrinT2',...         % energy loss function     ( different parametrizations available)
+    'ELossFlag','KatrinT2A20',...         % energy loss function     ( different parametrizations available)
     'AnaFlag','StackPixel',...         % FPD segmentations -> pixel combination
     'chi2','chi2Stat',...              % statistics only
     'RingMerge',RingMerge,...             % 'Full' == 4 Pseudo rings
@@ -37,7 +37,9 @@ RunAnaArg = {'RunList',RunList,...  % define run number -> see GetRunList
     'minuitOpt','min;minos',...
     'ROIFlag',ROIFlag,...
     'chi2',chi2,...
-    'MosCorrFlag',MosCorrFlag};             
+    'MosCorrFlag',MosCorrFlag,...
+    'SynchrotronFlag','ON',...
+    'AngularTFFlag','ON'};             
             
 
 
