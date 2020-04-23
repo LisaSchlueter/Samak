@@ -6,7 +6,7 @@
 
 %% settings
 nSamples = 1e3;
-Mode = 'Ring';
+Mode = 'Uniform';
 
 RecomputeFlag = 'OFF';
 

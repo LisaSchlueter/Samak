@@ -619,7 +619,7 @@ classdef RunAnalysis < handle
             end
         end
         
-        function [FitPar, FitErr, FitChi2min, dof]  = FitTwin(obj,varargin)
+        function [FitPar, FitErr, FitChi2min, dof,TBDIS]  = FitTwin(obj,varargin)
             % FitMbestPar, FitMbestErr, FitMbestChi2min, dofMbest,...
             %      FitTrueMPar, FitTrueMErr, FitTrueMChi2min, dofTrueM]
             p = inputParser;
@@ -636,7 +636,7 @@ classdef RunAnalysis < handle
            
            % randomize twins (add fluctiations)
            if strcmp(obj.chi2,'chi2Stat')
-               obj.ComputeCM_StatPNP;
+              [StatCM, StatCMFrac]         =  obj.ComputeCM_StatPNP;
                obj.FitCM     = StatCM;       obj.FitCMShape = StatCM;
                obj.FitCMFrac = StatCMFrac;   obj.FitCMFracShape = StatCMFrac;
                TBDIS = mvnrnd(obj.RunData.TBDIS',obj.FitCM,nSamples)';
@@ -658,7 +658,6 @@ classdef RunAnalysis < handle
            
             progressbar('Fit twins with stat. fluctuations')
             
-           % obj.fixPar = '5 6 7 8 9 10 11'; % free nu mass
             for i=1:nSamples
                  progressbar(i/nSamples)
                  
@@ -675,12 +674,16 @@ classdef RunAnalysis < handle
                 FitErr(:,i)   = obj.FitResult.err;
                 FitChi2min(i) = obj.FitResult.chi2min;
                 dof           = obj.FitResult.dof;
-                   
+                
                 obj.ModelObj.SetFitBias(0);
             end
             
             % reset to asimov data
-            obj.ReadData;
+            if isa(obj,'MultiRunAnalysis')
+                obj.StackRuns;
+            else
+                obj.ReadData;
+            end
         end
         
     end

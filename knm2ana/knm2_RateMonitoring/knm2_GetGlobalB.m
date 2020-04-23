@@ -53,3 +53,4 @@ else
 end
 %% display result
 fprintf('Global broadening = %.1f meV \n',1e3.*SigmaGlobal);
+fprintf('Global broadening = %.3g eV^2 \n',SigmaGlobal.^2);

@@ -757,8 +757,8 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
                 Theta_rad = Theta_rad';
             end
             me_kg = obj.me.*abs(obj.mq)./obj.c^2; % convert electron mass to from eV to kg
-            %e_vel_local = sqrt(2*E./(obj.me/obj.c^2)); enrgy dependent velocity
-            GammaFac =(qU_local+obj.me)/obj.me; % approx. gamma factor
+            %e_vel_local = sqrt(2*E./(obj.me/obj.c^2)); %enrgy dependent velocity
+            GammaFac =(E+obj.me)/obj.me; % approx. gamma factor qU_local
             ElossPreFac = obj.mu0.*obj.mq^4.*GammaFac./(3*pi*obj.c*me_kg^3.*obj.e_vel);
             ElossSyncFun = @(b,l,theta) ElossPreFac.*b.^2.*E.*l.*sin(theta).^2./cos(theta);
             

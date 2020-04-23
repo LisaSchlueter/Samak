@@ -345,7 +345,7 @@ classdef RingAnalysis < handle
                 freePar = ConvertFixPar('freePar',obj.RunAnaObj.fixPar,'Mode','Reverse');
                 savename = sprintf('%s_ringwise_%sRuns_%.0frange_%s_Merge_%s_%s_Blind%s%s%s.pdf',...
                     AnaType,obj.RunAnaObj.ModelObj.TD,range,obj.RunAnaObj.RingMerge,freePar,obj.RunAnaObj.DataType,Blind,RoiStr,MosStr);
-                export_fig(gcf,[savedir,savename],'-painters');
+                export_fig(gcf,[savedir,savename]);
                 fprintf('Save plot to %s \n',[savedir,savename])
             end
 %             N = 10000;

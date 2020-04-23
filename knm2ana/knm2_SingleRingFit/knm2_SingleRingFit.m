@@ -53,7 +53,7 @@ R = RingAnalysis('RunAnaObj',A,'RingList',1:4); % object of class RingAnalysis
 %% fit every ring - one after the other
 R.FitRings('SaveResult','ON',...  
           'RecomputeFlag',RecomputeFlag,...  % load from storage or recalculate
-          'AsymErr','OFF');         % asymmetric from scan and more correct uncertainties -> only for mNuSq
+          'AsymErr','OFF');                 % asymmetric from scan and more correct uncertainties -> only for mNuSq
 
 %% display
 R.PlotFits('SavePlot','ON',...
