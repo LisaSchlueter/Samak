@@ -758,8 +758,9 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             end
             me_kg = obj.me.*abs(obj.mq)./obj.c^2; % convert electron mass to from eV to kg
             %e_vel_local = sqrt(2*E./(obj.me/obj.c^2)); %enrgy dependent velocity
-            GammaFac =(E+obj.me)/obj.me; % approx. gamma factor qU_local
-            ElossPreFac = obj.mu0.*obj.mq^4.*GammaFac./(3*pi*obj.c*me_kg^3.*obj.e_vel);
+            Gamma =(E+obj.me)/obj.me; %
+            v_rel = sqrt(obj.c^2*(1-1./Gamma.^2)); % relativistic electron energy
+            ElossPreFac = obj.mu0.*obj.mq^4.*Gamma./(3*pi*obj.c*me_kg^3.*v_rel);
             ElossSyncFun = @(b,l,theta) ElossPreFac.*b.^2.*E.*l.*sin(theta).^2./cos(theta);
             
             % energy-loss in source from synchrotron radiation

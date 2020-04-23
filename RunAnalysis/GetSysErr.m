@@ -3,6 +3,8 @@ function [SysErr,CMArg] = GetSysErr(SysBudget)
 % do not change settings!!
 % add new SysBudget number instead
 
+SysErr.is_EOffsetErr = 0.0; % not used in most
+   
 if SysBudget==0 % default First Tritium 
     SysErr.WGTS_TASR_RelErr = 0.005;
     SysErr.FSDNorm_RelErr=  0.01;
@@ -166,7 +168,7 @@ elseif SysBudget == 35 % preliminary KNM2 systematics (March 27), update: long. 
     SysErr.FPDeff_RelErr = 1e-4;
     SysErr.is_EOffsetErr = 0.05;
     SysErr.MACE_VarErr = 0.2^2/3;
-    SysErr.MaxSlopeCpsPereV = 13.3.*1e-06;
+    SysErr.MaxSlopeCpsPereV = 5.2.*1e-06;
 end
 
 CMArg = {'WGTS_CD_MolPerCm2_RelErr',SysErr.WGTS_CD_MolPerCm2_RelErr,...

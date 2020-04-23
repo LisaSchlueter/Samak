@@ -1589,7 +1589,39 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                 obj.SingleRunData.TBDIS_RM_Default = obj.SingleRunData.TBDIS_RM;
             end
             
-            % interpolate LARA values
+            obj.InterpLARA; % interpolate missing LARA values
+            obj.SetMosCorr;
+
+        end
+        function InterpLARA(obj)
+            %interpolate missing LARA values per subrun: T2
+            if any(any(obj.SingleRunData.WGTS_MolFrac_TT_SubRun==0))
+                T2_SubRun = reshape(obj.SingleRunData.WGTS_MolFrac_TT_SubRun,size(obj.SingleRunData.qU,1).*obj.nRuns,1);
+                GoodSubRuns = (T2_SubRun~=0);
+                x = 1:numel(T2_SubRun);
+                T2_SubRun(~GoodSubRuns) = interp1(x(GoodSubRuns),T2_SubRun(GoodSubRuns),x(~GoodSubRuns),'lin');  
+               obj.SingleRunData.WGTS_MolFrac_TT_SubRun = reshape(T2_SubRun,size(obj.SingleRunData.WGTS_MolFrac_TT_SubRun));
+            end
+            
+            %interpolate missing LARA values per subrun: HT
+            if any(any(obj.SingleRunData.WGTS_MolFrac_HT_SubRun==0))
+                HT_SubRun = reshape(obj.SingleRunData.WGTS_MolFrac_HT_SubRun,size(obj.SingleRunData.qU,1).*obj.nRuns,1);
+                GoodSubRuns = (HT_SubRun~=0);
+                x = 1:numel(HT_SubRun);
+                HT_SubRun(~GoodSubRuns) = interp1(x(GoodSubRuns),HT_SubRun(GoodSubRuns),x(~GoodSubRuns),'lin');  
+               obj.SingleRunData.WGTS_MolFrac_HT_SubRun = reshape(HT_SubRun,size(obj.SingleRunData.WGTS_MolFrac_HT_SubRun));
+            end
+            
+                %interpolate missing LARA values per subrun: DT
+            if any(any(obj.SingleRunData.WGTS_MolFrac_DT_SubRun==0))
+                DT_SubRun = reshape(obj.SingleRunData.WGTS_MolFrac_DT_SubRun,size(obj.SingleRunData.qU,1).*obj.nRuns,1);
+                GoodSubRuns = (DT_SubRun~=0);
+                x = 1:numel(DT_SubRun);
+                DT_SubRun(~GoodSubRuns) = interp1(x(GoodSubRuns),DT_SubRun(GoodSubRuns),x(~GoodSubRuns),'lin');  
+               obj.SingleRunData.WGTS_MolFrac_DT_SubRun = reshape(DT_SubRun,size(obj.SingleRunData.WGTS_MolFrac_DT_SubRun));
+            end
+            
+             %interpolate missing LARA values per run  
             if any(isnan(obj.SingleRunData.WGTS_MolFrac_TT))
                 LiveTime = hours(obj.SingleRunData.StartTimeStamp-obj.SingleRunData.StartTimeStamp(1));
                 T2NanLogic = isnan(obj.SingleRunData.WGTS_MolFrac_TT);
@@ -1599,26 +1631,25 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                     interp1(LiveTime(~T2NanLogic),obj.SingleRunData.WGTS_MolFrac_TT(~T2NanLogic),LiveTime( T2NanIndex),'spline');
             end
             
-               if any(isnan(obj.SingleRunData.WGTS_MolFrac_HT))
+            if any(isnan(obj.SingleRunData.WGTS_MolFrac_HT))
                 LiveTime = hours(obj.SingleRunData.StartTimeStamp-obj.SingleRunData.StartTimeStamp(1));
                 HTNanLogic = isnan(obj.SingleRunData.WGTS_MolFrac_HT);
                 HTNanIndex = find(isnan(obj.SingleRunData.WGTS_MolFrac_HT));
                 
                 obj.SingleRunData.WGTS_MolFrac_HT(HTNanIndex) = ...
                     interp1(LiveTime(~HTNanLogic),obj.SingleRunData.WGTS_MolFrac_HT(~HTNanLogic),LiveTime(HTNanIndex),'spline');
-               end
-               
-               if any(isnan(obj.SingleRunData.WGTS_MolFrac_DT))
+            end
+            
+            if any(isnan(obj.SingleRunData.WGTS_MolFrac_DT))
                 LiveTime = hours(obj.SingleRunData.StartTimeStamp-obj.SingleRunData.StartTimeStamp(1));
                 DTNanLogic = isnan(obj.SingleRunData.WGTS_MolFrac_DT);
                 DTNanIndex = find(isnan(obj.SingleRunData.WGTS_MolFrac_DT));
                 
                 obj.SingleRunData.WGTS_MolFrac_DT(DTNanIndex) = ...
                     interp1(LiveTime(~DTNanLogic),obj.SingleRunData.WGTS_MolFrac_DT(~DTNanLogic),LiveTime(DTNanIndex),'spline');
-               end
+            end
             
-            obj.SetMosCorr;
-
+            
         end
         function StackPixelSingleRun(obj)
             switch obj.AnaFlag

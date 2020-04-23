@@ -1,21 +1,19 @@
 % calculate response function for MC comparison
 SynchrotronFlag = 'ON';
+AngTF = 'OFF';
 RFConvBinStep = 0.01;
-IntMode = 'Integral';
+IntMode = 'Conv';
 if strcmp(IntMode,'Conv')
     RFStepStr = sprintf('_RFbinStep%.2feV',RFConvBinStep);
 elseif strcmp(IntMode,'Integral')
     RFStepStr = '';
 end
-savename = [getenv('SamakPath'),sprintf('knm2ana/knm2_MCcomparison/results/Knm2_SamakRF%s_%s.mat',RFStepStr,IntMode)];
+savename = [getenv('SamakPath'),sprintf('knm2ana/knm2_MCcomparison/results/Response/Knm2_SamakRF%s_%s_Sync%s_ScatTF%s.mat',...
+    RFStepStr,IntMode,SynchrotronFlag,AngTF)];
 
-
-if strcmp( SynchrotronFlag,'OFF')
-    savename = strrep(savename,'.mat','NoSynchrotron.mat');
-end
 tic;
 T = ref_FakeRun_KNM2_RFcomparison('reComputeRF','ON','SynchrotronFlag',SynchrotronFlag,...
-    'ISCS','Edep','RFBinStep',RFConvBinStep);
+    'ISCS','Edep','RFBinStep',RFConvBinStep,'AngularTFFlag',AngTF);
 if strcmp(IntMode,'Conv')
     T.RFBinStep = RFConvBinStep;
 else

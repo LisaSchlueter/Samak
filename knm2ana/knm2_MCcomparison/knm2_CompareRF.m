@@ -1,35 +1,38 @@
 % KNM2 response function comparison
-
+SynchrotronFlag = 'ON';
+AngTF = 'OFF';
 %% Load RF Samak
 RFConvBinStep = 0.01;
-IntMode = 'Integral';
+IntMode = 'Conv';
 if strcmp(IntMode,'Conv')
     RFStepStr = sprintf('_RFbinStep%.2feV',RFConvBinStep);
 elseif strcmp(IntMode,'Integral')
     RFStepStr = '';
 end
-savenameS = [getenv('SamakPath'),sprintf('knm2ana/knm2_MCcomparison/results/Knm2_SamakRF%s_%s.mat',RFStepStr,IntMode)];
+savenameS = [getenv('SamakPath'),sprintf('knm2ana/knm2_MCcomparison/results/Response/Knm2_SamakRF%s_%s_Sync%s_ScatTF%s.mat',...
+    RFStepStr,IntMode,SynchrotronFlag,AngTF)];
+
 dSamak = importdata(savenameS);
 qU = dSamak.qU;
 TeS = dSamak.Te-qU; % energy
 RFS = dSamak.RF; % transmission probability
 fprintf('load file %s \n',savenameS)
 %% Load KaFit
-savenameK = [getenv('SamakPath'),'knm2ana/knm2_MCcomparison/results/Knm2_KaFitRF.dat'];
+if strcmp(AngTF,'ON')
+    savenameK = [getenv('SamakPath'),'knm2ana/knm2_MCcomparison/results/Response/Knm2_KaFit_RF_detailed.dat'];
+else
+    savenameK = [getenv('SamakPath'),'knm2ana/knm2_MCcomparison/results/Response/Knm2_KaFit_RF.dat'];
+end
 dKaFit = importdata(savenameK);
 TeK = dKaFit(6:end-5,1); % energy
 RFK = dKaFit(6:end-5,2); % transmission probability
 
 %% Load Fitrium
-savenameF = [getenv('SamakPath'),'knm2ana/knm2_MCcomparison/results/Knm2_FitriumRF.dat'];
-savenameFconst = [getenv('SamakPath'),'knm2ana/knm2_MCcomparison/results/Knm2_FitriumRF_RXconst.dat'];
+savenameF = [getenv('SamakPath'),'knm2ana/knm2_MCcomparison/results/Response/Knm2_Fitrium_RF.dat'];
 dFitrium = importdata(savenameF);
 TeF = dFitrium(:,1); % energy
 RFF = dFitrium(:,2); % transmission probability
 
-dFitriumConst = importdata(savenameFconst);
-TeFconst = dFitriumConst(:,1); % energy
-RFFconst = dFitriumConst(:,2); % transmission probability
 % %% plot ratio
 % f2 = figure('Units','normalized','Position',[0,0.1,0.5,0.5]);
 % l = plot(linspace(-5,90,100),ones(100,1),'-','LineWidth',2,'Color',rgb('Black'));

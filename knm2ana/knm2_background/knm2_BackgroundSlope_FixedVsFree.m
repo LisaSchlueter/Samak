@@ -24,7 +24,7 @@ RunAnaArg = {'RunList','KNM2_Prompt',...
 savedir = [getenv('SamakPath'),'knm2ana/knm2_background/results/'];
 MakeDir(savedir);
 
-savenameFree = sprintf('%sknm2_BackgroundSlope_Free_%nSamples.mat',nSamples);
+savenameFree = sprintf('%sknm2_BackgroundSlope_Free_%.0fSamples.mat',savedir,nSamples);
 if exist(savenameFree,'file')
     load(savenameFree)
 else
@@ -39,19 +39,18 @@ else
 end
 
 %% fit ranomized MC with background slope systematics
-savenameFix = sprintf('%sknm2_BackgroundSlope_FixCM_%nSamples.mat',nSamples);
+savenameFix = sprintf('%sknm2_BackgroundSlope_FixCM_%.0fSamples.mat',savedir,nSamples);
 
 if exist(savenameFix,'file')
     load(savenameFix)
 else
     T = MultiRunAnalysis(RunAnaArg{:});
     T.exclDataStart = T.GetexclDataStart(range);
+    T.exclDataStop = 37; % exclude first background point
     T.chi2 = 'chi2CMShape';
     T.fixPar = 'mNu E0 Bkg Norm';
-    T.InitFitPar;
-    
-    
-    FitParStd = std(FitPar(12,:),0,2); % standard deviation of background slope over samples
+    T.InitFitPar; 
+    FitParStd = 13.3.*1e-06; %std(FitPar(12,:),0,2); % standard deviation of background slope over samples
     
     CmArg = {'BkgCM','ON',...
         'SysEffects',struct('BkgShape','ON'),...
@@ -80,7 +79,8 @@ else
         
         T.ModelObj.SetFitBias(0);
     end
-    save(savenameFix,'FitParCM','FitErrCM','FitChi2minCM','dofCM','TBDIS_mc','RunAnaArg','CmArg','FitParStd');
+    save(savenameFix,'FitParCM','FitErrCM','FitChi2minCM','dofCM','TBDIS_mc','RunAnaArg','CmArg','FitParStd',...
+                     'FitPar','FitErr','FitChi2min','dof');
 end
 
 

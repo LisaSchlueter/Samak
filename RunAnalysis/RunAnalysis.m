@@ -1339,19 +1339,19 @@ classdef RunAnalysis < handle
                             0.5 * obj.SingleRunData.WGTS_MolFrac_DT_SubRun(:,obj.SingleRunData.Select_all)) .* ...
                             obj.SingleRunData.WGTS_CD_MolPerCm2_SubRun(:,obj.SingleRunData.Select_all)      .* ...
                             obj.ModelObj.ISXsection(obj.ModelObj.Q_i)*1e4;
-                        SubRunActivity(SubRunActivity==0) = NaN;
                         
                         % renormalize to mean activity
                         MeanActivityStackedRun = mean(nanmean(SubRunActivity,2));
                         MeanActivitySingleRuns = nanmean(SubRunActivity,1);
                         ActiCorrFactor = repmat(MeanActivityStackedRun./MeanActivitySingleRuns,size(SubRunActivity,1),1);
+                        
                         SubRunActivity(~isnan(SubRunActivity))=SubRunActivity(~isnan(SubRunActivity)).*ActiCorrFactor(~isnan(SubRunActivity));
                          
                         %take standard error of the mean
-                        WGTS_TASR_AbsErr = nanstd(SubRunActivity,0,2)./sqrt(numel(obj.StackedRuns));
+                        WGTS_TASR_AbsErr = std(SubRunActivity,0,2)./sqrt(numel(obj.StackedRuns));
                         
                         % relative uncertainty -> fractional covariance
-                        WGTS_TASR_RelErr = WGTS_TASR_AbsErr./nanmean(SubRunActivity,2);
+                        WGTS_TASR_RelErr = WGTS_TASR_AbsErr./mean(SubRunActivity,2);
                         
                         % Set Fluctuations to ZERO above enpoint
                         WGTS_TASR_RelErr = WGTS_TASR_RelErr .* TritiumqUIndexes;
@@ -1361,7 +1361,7 @@ classdef RunAnalysis < handle
                             obj.FitCM_Obj.WGTS_TASR_RelErr =  diag(WGTS_TASR_RelErr.^2);
                         elseif strcmp(obj.DataSet,'Knm2')
                             % calculate correlation matrix
-                            SubRunActivity(isnan(SubRunActivity))=1;
+                            %SubRunActivity(isnan(SubRunActivity))=1;
                             TASR_CorrMat = corrcoef(SubRunActivity','Rows','pairwise');
                             %TASR_CorrMat(isnan(TASR_CorrMat)) = (nanmean(TASR_CorrMat(TASR_CorrMat>0)));
                             obj.FitCM_Obj.WGTS_TASR_RelErr = TASR_CorrMat.*WGTS_TASR_RelErr.*WGTS_TASR_RelErr';

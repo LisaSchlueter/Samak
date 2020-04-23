@@ -1,8 +1,9 @@
 % compare tranmission functions
 SynchrotronFlag = 'ON';
 RecomputeFlag = 'ON';
-AngTF = 'OFF';
+AngTF = 'ON';
 SaveTxt = 'ON';
+
 % Samak TF
 savedir = [getenv('SamakPath'),'knm2ana/knm2_MCcomparison/results/Transmission/'];
 savename = sprintf('%sSamakTF_Sync%s_ScatTF%s.mat',savedir,SynchrotronFlag,AngTF);
@@ -38,17 +39,20 @@ if strcmp(AngTF,'ON')
 end
 
 % load fitrium
-if strcmp(AngTF,'ON')
+if strcmp(AngTF,'ON') || strcmp(SynchrotronFlag,'ON')
     dF = importdata([savedir,'TF_Fitrium_sync_scat.dat']); % energy, no angular, 0 scat, 1 scat,
-    yF = dF(:,3); % 0 scat
-    yF1 = dF(:,4); % 1 scat
     xF = dF(:,1); % surplus energy
-    
     Index = ismember(round(xF,5),round(xS,5));
     xF = xF(Index);
+    
+    if strcmp(AngTF,'ON')
+        yF = dF(:,3); % 0 scat
+        yF1 = dF(:,4); % 1 scat
+        yF1 = yF1(Index);
+    else
+        yF = dF(:,2);
+    end
     yF = yF(Index);
-    yF1 = yF1(Index);
-   
 else
     dF = importdata([savedir,'TF_Fitrium_sync.dat']);
     switch SynchrotronFlag
@@ -81,26 +85,31 @@ l = plot(linspace(-5,90,100),zeros(100,1),'-','LineWidth',2,'Color',rgb('Black')
 hold on;
 pF = plot(xS,MaceTF-yF,'-','LineWidth',2.5,'Color',rgb('DodgerBlue'));
 
-pK = plot(xS,MaceTF-yK,'--','LineWidth',2.5,'Color',rgb('GoldenRod'));
-pFK = plot(xS,yF-yK,':','LineWidth',2.5,'Color',rgb('IndianRed'));
+if  strcmp(AngTF,'OFF')
+    pK = plot(xS,MaceTF-yK,'--','LineWidth',2.5,'Color',rgb('GoldenRod'));
+    pFK = plot(xS,yF-yK,':','LineWidth',2.5,'Color',rgb('IndianRed'));
+else
+     hold on;
+     pF1 = plot(xF,MaceTF1-yF1,'-.','Color',rgb('Orange'),'LineWidth',2.5);
+end
 
-% if  strcmp(AngTF,'ON')
-%     hold on;
-%     pF1 = plot(xF,MaceTF1-yF1,'-.','Color',rgb('Orange'),'LineWidth',2.5);
+%    
 % end
 
 xlabel(sprintf('Energy - %.0f (eV)',qu));
 ylabel('Probability diff.');
 PrettyFigureFormat('FontSize',22);
-
-leg = legend([pK,pF,pFK],'Samak - KaFit','Samak - Fitrium','Fitrium - KaFit');
-%   leg = legend([pF,pF1],'Samak - Fitrium (0 scat.)','Samak - Fitrium (1 scat.)');
-
+if strcmp(AngTF,'OFF')
+    leg = legend([pK,pF,pFK],'Samak - KaFit','Samak - Fitrium','Fitrium - KaFit');
+else
+    leg = legend([pF,pF1],'Samak - Fitrium (0 scat.)','Samak - Fitrium (1 scat.)');
+end
 leg.Title.String = sprintf('Synchrotron %s - Angular scattering %s',SynchrotronFlag,AngTF);
 leg.Title.FontWeight = 'normal';
 leg.Location = 'northwest';
 leg.EdgeColor = rgb('Silver');
 xlim([min(xS),max(xS)]);
+%ylim([-5 2.5].*1e-07);
 
 plotdir = strrep(savedir,'results/Transmission','plots');
 MakeDir(plotdir);

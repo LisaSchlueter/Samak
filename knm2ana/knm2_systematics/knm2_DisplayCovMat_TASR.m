@@ -6,17 +6,17 @@ nTrials       = 1000;
 SysBudget     = 31; % 31= knm2 preliminary input
 
 % model setting
-RunList   = 'KNM2_RW1';
+RunList   = 'KNM2_Prompt';
 AnaFlag   = 'StackPixel';%'Ring'; % FPD segmentation
 
 RunArg = {'FSDFlag','BlindingKNM2',...
-    'ELossFlag','KatrinT2',...
+    'ELossFlag','KatrinT2A20',...
     'AnaFlag',AnaFlag,...
     'chi2','chi2Stat',...      % switch on later by hand
     'RunList',RunList,...      
     'fixPar','E0 Norm Bkg',... % free parameter
     'DataType','Twin',...      % MC twins
-    'TwinBias_Q',18573.70,...  % twin endpoint
+    'TwinBias_Q',18573.56,...  % twin endpoint
     'SysBudget',SysBudget,...
     'RingMerge','Full'};        
 
@@ -43,9 +43,9 @@ nqU = M.ModelObj.nqU;
 nruns = size(SubRunActivity,2);
 x          = reshape(repmat(M.ModelObj.qU(:,1),[1,nruns]),[nqU*nruns,1]);
 y          = reshape(SubRunActivity,[nqU*nruns,1]);
-
+y = y-mean(y);
 f1 = figure('Units','normalized','Position',[0.1,0.1,0.5,0.5]);
-l = plot(x-18574,ones(nqU*nruns,1),'-','LineWidth',2,'Color',rgb('Silver'));
+l = plot(x-18574,zeros(nqU*nruns,1),'-','LineWidth',2,'Color',rgb('Silver'));
 hold on;
 sg  = scatter(x-18574,y,'filled');
 sg.MarkerFaceAlpha = 0.2;
@@ -54,10 +54,13 @@ xlabel('Retarding potential - 18574 (eV)');
 ylabel('Rel. Tritium activity');
 PrettyFigureFormat('FontSize',24);
 xlim([-41,0]);
-ylim([0.995, 1.006]);
-leg = legend(sg,sprintf('%.0f runs',nruns));
+%ylim([0.995, 1.006]);
+MeanErrorOfMean = mean(std(SubRunActivity,0,2)./sqrt(nruns));
+leg = legend(sg,sprintf('%.0f scans , \\langle\\sigma / {\\surd %.0f}\\rangle = %.2e',...
+   nruns,nruns,MeanErrorOfMean));
 leg.EdgeColor = rgb('LightGray');
 leg.LineWidth = 2;
+leg.Location = 'northwest';
 
 savename1 = [savedir,'TASR_RelActivityFluctSubrun.png'];
 print(f1,savename1,'-dpng','-r450');
