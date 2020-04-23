@@ -48,4 +48,4 @@ grid on
 PRLFormat     
 
 %% Subscan Average Times
-KSN1.SingleRunData.qUfrac(1).*(KSN1.SingleRunData.TimeSec)
+KSN1.SingleRunData.qUfrac(1).*(KSN1.SingleRunData.TimeSec);

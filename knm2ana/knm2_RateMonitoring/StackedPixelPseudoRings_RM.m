@@ -456,7 +456,7 @@ load('./data/SamakKNM2_ShiftDriftInRW123PSR1234_mVperDay.mat');
 E0RWPSR_Plot =  E0RWPSR - E0RWPSR(1,2);
 E0RWPSR_Plot = -E0RWPSR_Plot*1e3;
 
-% Plot - Absolute Values - normalized to Ring 1 Period 2
+%% Plot - Absolute Values - normalized to Ring 1 Period 2
 myMainTitle = sprintf('KATRIN KNM2 - FPD Rate E_0-300eV Compared To Endpoint Stacked-Scan Fit');
 maintitle   = myMainTitle;
 savefile3   = sprintf('plots/KNM2_RM300_E0+300V_RW%.0f_4PseudoRings.png',123);
