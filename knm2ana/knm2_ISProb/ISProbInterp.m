@@ -9,6 +9,7 @@ p.addParameter('CDsigma',5*1e17,@(x)isfloat(x));
 p.addParameter('NIS',7,@(x)isfloat(x));
 p.addParameter('ISXsection',3*64e-22,@(x)isfloat(x));
 p.addParameter('SanityPlot','ON',@(x)ismember(x,{'ON','OFF'}));
+p.addParameter('ThetaP','OFF',@(x)ismember(x,{'ON','OFF'})); % enhance Theta parameter space (for scattering TF)
 
 p.parse(varargin{:});
 WGTS_CD_MolPerCm2 = p.Results.WGTS_CD_MolPerCm2;
@@ -17,29 +18,44 @@ MACE_Bmax_T       = p.Results.MACE_Bmax_T;
 WGTS_B_T          = p.Results.WGTS_B_T;
 NIS               = p.Results.NIS;
 SanityPlot        = p.Results.SanityPlot;
+ThetaP            = p.Results.ThetaP;
 
 if WGTS_CD_MolPerCm2<(2*1e17)
     DataSet = 'Knm1';
-else 
+else
     DataSet = 'Knm2';
 end
-    
+
+if strcmp(ThetaP,'ON')
+    DataSet = [DataSet,'Theta+'];
+end
 [RhoDSigma,Theta,ISProb] = Compute_InitISProbMeshGrid('DataSet',DataSet);
 
-
-is_Pv = zeros(NIS+1,numel(squeeze(ISXsection)));
-[X,Y] = meshgrid(RhoDSigma,Theta);
 ThetaFun = @(bmax,bs)  asin(sqrt(bs./bmax));
+is_Pv = squeeze(zeros(NIS+1,numel(squeeze(ISXsection)),numel(ThetaFun(MACE_Bmax_T,WGTS_B_T))));
+[X,Y] = meshgrid(RhoDSigma,Theta);
+
+ThetaMax = ThetaFun(MACE_Bmax_T,WGTS_B_T);
+RDISX = ISXsection.*WGTS_CD_MolPerCm2;
+nRDISX = numel(RDISX);
+if numel(ThetaMax)>1 && numel(ThetaMax)~=nRDISX  
+    RDISX =repmat(RDISX,[1,numel(ThetaMax)]);
+    % thetamax has to be nISX x n thetamax
+    if isrow(ThetaMax)
+        ThetaMax = repmat(ThetaMax,[nRDISX,1]); 
+    elseif iscolumn(ThetaMax)
+         ThetaMax = repmat(ThetaMax',[nRDISX,1]);
+    end  
+end
 
 for i=1:NIS+1
-    is_Pv(i,:) = interp2(X,Y,squeeze(ISProb(i,:,:))',...
-        ISXsection.*WGTS_CD_MolPerCm2,...
-        ThetaFun(MACE_Bmax_T,WGTS_B_T),...
-        'spline');
+    is_Pv(i,:,:) = reshape(interp2(X,Y,squeeze(ISProb(i,:,:))',...
+        RDISX,ThetaMax,...
+        'spline'),1,size(is_Pv,2),size(is_Pv,3));
 end
 
 if strcmp(SanityPlot,'ON')
-    
+   
     Scattering = 0;
     
     figure('Units','normalized','Position',[0.1,0.1,0.45,0.63]);

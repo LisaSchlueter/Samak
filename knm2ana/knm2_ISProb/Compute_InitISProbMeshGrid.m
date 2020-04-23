@@ -1,6 +1,6 @@
 function [RhoDSigma,Theta,ISProb] = Compute_InitISProbMeshGrid(varargin)
 p=inputParser;
-p.addParameter('DataSet','Knm1',@(x)ismember(x,{'Knm2','Knm1'}));
+p.addParameter('DataSet','Knm2Theta+',@(x)ismember(x,{'Knm2','Knm1','Knm2Theta+','Knm1Theta+'}));
 p.parse(varargin{:});
 DataSet = p.Results.DataSet;
 
@@ -14,19 +14,27 @@ if exist(savename,'file')
 else
     
     switch DataSet
-        case 'Knm1'
+        case {'Knm1','Knm1Theta+'}
             A = ref_FakeRun_KNM1_CD22_23days;
-        case 'Knm2'
+        case {'Knm2','Knm2Theta+'}
             A = ref_FakeRun_KNM2_CD84_2hours;
     end
     %%
     maxEis = 1000;
     IsProbBinStep = 2;
     Eiscs = 18575+(-maxEis:IsProbBinStep:maxEis);
-    Bmax_Min = A.MACE_Bmax_T.*0.90;
-    Bmax_Max = A.MACE_Bmax_T.*1.10;
-    BmaxSamples = linspace(Bmax_Min,Bmax_Max,20);
-    
+    if contains(DataSet,'Theta+')
+        %         Bmax_Min = A.MACE_Bmax_T.*0.90;
+        %         Bmax_Max = A.MACE_Bmax_T.*2;
+        %         BmaxSamples = linspace(Bmax_Min,Bmax_Max,100);
+        BmaxFun = @(theta) A.WGTS_B_T./sin(theta).^2;
+        ThetaSamples = linspace(1e-05,1,100);
+        BmaxSamples = BmaxFun(ThetaSamples);
+    else
+        Bmax_Min = A.MACE_Bmax_T.*0.90;
+        Bmax_Max = A.MACE_Bmax_T.*1.10;
+        BmaxSamples = linspace(Bmax_Min,Bmax_Max,20);
+    end
     ISProb = zeros(A.NIS+1,numel(Eiscs),numel(BmaxSamples));
     
     for i=1:numel(BmaxSamples)

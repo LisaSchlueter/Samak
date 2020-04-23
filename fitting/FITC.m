@@ -669,17 +669,20 @@ classdef FITC < handle
             cprintf('blue','  m^2       = %g +/- %g eV^2\n', mnuSq_report,err(1));
             cprintf('blue','  m         = %g +/- %g eV\n', mnu_report,err_mnu);
             cprintf('blue',' - - - - - - - - - - - - - - - - - - - - - - - \n');
-            cprintf('blue','  mnu4Sq    = %g +/- %g eV\n', mnu4Sq_fit + obj.SO.mnu4Sq_i,mnu4Sq_fit_err);
-            cprintf('blue','  sin2T4    = %g +/- %g eV\n', sin2T4_fit + obj.SO.sin2T4_i,sin2T4_fit_err);
-            cprintf('blue',' - - - - - - - - - - - - - - - - - - - - - - - \n');
+            if (mnu4Sq_fit_err~=0) || (sin2T4_fit_err~=0)
+                cprintf('blue','  mnu4Sq    = %g +/- %g eV\n', mnu4Sq_fit + obj.SO.mnu4Sq_i,mnu4Sq_fit_err);
+                cprintf('blue','  sin2T4    = %g +/- %g eV\n', sin2T4_fit + obj.SO.sin2T4_i,sin2T4_fit_err);
+                cprintf('blue',' - - - - - - - - - - - - - - - - - - - - - - - \n');
+            end
             cprintf('blue','  (E0)eff   = %0.9g +/- %g eV\n', obj.SO.Q_i+e0_fit,err(2));
             cprintf('blue',' - - - - - - - - - - - - - - - - - - - - - - - \n');
-           
+            
             switch obj.SO.FPD_Segmentation
                 case 'RING'
                     cprintf('blue','  B (peudo ring %.0f)       = %g +/- %g mcps\n', [1:numel(bcks_fit); (obj.SO.BKG_RateSec_i + bcks_fit)*1e3;bcks_fit_err*1e3]);
                     cprintf('blue',' - - - - - - - - - - - - - - - - - - - - - - - \n');
                     cprintf('blue','  N (pseudo ring %.0f)         = %g +/- %g\n', [1:numel(bcks_fit);norms_fit+1;norms_fit_err]);
+              
                 case 'OFF'
                     cprintf('blue','  B         = %g +/- %g mcps (%.0f pixels) \n', (obj.SO.BKG_RateSec_i + bcks_fit)*1e3,bcks_fit_err*1e3,numel(obj.SO.FPD_PixList));
                     cprintf('blue',' - - - - - - - - - - - - - - - - - - - - - - - \n');

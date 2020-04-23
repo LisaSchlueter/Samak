@@ -5,7 +5,7 @@
 RunLists = {'KNM2_RW1','KNM2_RW2','KNM2_RW3','KNM2_Prompt'};
 freePars = {'E0 Bkg Norm','mNu E0 Bkg Norm'};
 Ranges = [90,40];
-ROIFlag = '14keV';
+ROIFlag = 'Default';
 MosCorrFlag = 'OFF';
 RecomputeFlag = 'OFF';
 
@@ -28,6 +28,6 @@ InputArg = [...
     ...
     ];
 
-parfor i=1:size(InputArg,1)
+for i=1:size(InputArg,1)
     knm2_SingleRingFit(InputArg{i,:},'ROIFlag',ROIFlag,'MosCorrFlag',MosCorrFlag,'RecomputeFlag',RecomputeFlag)
 end

@@ -4,8 +4,6 @@
 GetBinariesOptional(){
 #---------------------------
 # create directories if necessary
-mkdir -p ./tritium-data/mat/TwinKnm1/
-mkdir -p ./tritium-data/mat/TwinKnm2/
 mkdir -p ./tritium-data/fit/Knm1/Uniform/
 mkdir -p ./tritium-data/fit/Knm2/Uniform/
 mkdir -p ./tritium-data/fit/Knm1/SingleRingFit/	
@@ -17,11 +15,15 @@ mkdir -p ./inputs/CovMat/RF/CMPartVar/
 mkdir -p ./inputs/CovMat/LongPlasma/CM/
 mkdir -p ./inputs/CovMat/TASR/CM/
 mkdir -p ./inputs/CovMat/FSD/CM/
+mkdir -p ./inputs/ResponseFunction/
 
 #---------------- start synchronization: 
 
 # fit results
 rsync -i -a -v $1@pcltr-01.mpp.mpg.de:/remote/ceph/user/s/schluete/Samak/tritium-data/fit/ ./tritium-data/fit/
+
+# some response functions                                                                                                                                      
+rsync -i -a -v $1@pcltr-01.mpp.mpg.de:/remote/ceph/user/s/schluete/Samak/inputs/ResponseFunction/ ./inputs/ResponseFunction/
 
 # sensitivites
 rsync -i -a -v $1@pcltr-01.mpp.mpg.de:/remote/ceph/user/s/schluete/Samak/tritium-data/sensitivity/ ./tritium-data/sensitivity/

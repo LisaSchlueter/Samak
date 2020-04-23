@@ -28,6 +28,8 @@ classdef RunAnalysis < handle
         KTFFlag;
         DopplerEffectFlag; 
         FSDFlag         % final state distributions: Sibille, Sibille0p5eV, BlindingKNM1, OFF ...
+        SynchrotronFlag;
+        AngularTFFlag;
         ROIFlag;        % region of interest
         MosCorrFlag;    % correct data qU by monitor spectrometer drift 
         ISCSFlag;       % inel. scattering cross section flag
@@ -129,7 +131,9 @@ classdef RunAnalysis < handle
             p.addParameter('ROIFlag','14keV',@(x)ismember(x,{'Default','14keV'})); % default->default counts in RS, 14kev->[14,32]keV ROI
             p.addParameter('MosCorrFlag','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('KTFFlag','WGTSMACE',@(x)ismember(x,{'WGTSMACE','MACE','WGTSMACE_NIS1'}));
-             p.addParameter('ISCSFlag','Edep',@(x)ismember(x,{'Aseev','Theory','Edep'}));
+            p.addParameter('SynchrotronFlag','ON',@(x)ismember(x,{'OFF','ON'}));
+            p.addParameter('AngularTFFlag','ON',@(x)ismember(x,{'OFF','ON'}));
+            p.addParameter('ISCSFlag','Edep',@(x)ismember(x,{'Aseev','Theory','Edep'}));
             % Fit Options
             p.addParameter('chi2','chi2Stat',@(x)ismember(x,{'chi2Stat', 'chi2CM', 'chi2CMFrac','chi2CMShape', 'chi2P','chi2Nfix'}));
             p.addParameter('fitter','minuit',@(x)ismember(x,{'minuit','matlab'}));
@@ -192,6 +196,8 @@ classdef RunAnalysis < handle
             obj.ROIFlag           = p.Results.ROIFlag;
             obj.MosCorrFlag       = p.Results.MosCorrFlag;
             obj.KTFFlag           = p.Results.KTFFlag;
+            obj.SynchrotronFlag   = p.Results.SynchrotronFlag;
+            obj.AngularTFFlag     = p.Results.AngularTFFlag;
             obj.ISCSFlag          = p.Results.ISCSFlag;
             obj.fitter            = p.Results.fitter;
             obj.minuitOpt         = p.Results.minuitOpt;
@@ -613,7 +619,7 @@ classdef RunAnalysis < handle
             end
         end
         
-        function [FitPar, FitErr, FitChi2min, dof]  = FitTwin(obj,varargin)
+        function [FitPar, FitErr, FitChi2min, dof,TBDIS]  = FitTwin(obj,varargin)
             % FitMbestPar, FitMbestErr, FitMbestChi2min, dofMbest,...
             %      FitTrueMPar, FitTrueMErr, FitTrueMChi2min, dofTrueM]
             p = inputParser;
@@ -630,7 +636,7 @@ classdef RunAnalysis < handle
            
            % randomize twins (add fluctiations)
            if strcmp(obj.chi2,'chi2Stat')
-               obj.ComputeCM_StatPNP;
+              [StatCM, StatCMFrac]         =  obj.ComputeCM_StatPNP;
                obj.FitCM     = StatCM;       obj.FitCMShape = StatCM;
                obj.FitCMFrac = StatCMFrac;   obj.FitCMFracShape = StatCMFrac;
                TBDIS = mvnrnd(obj.RunData.TBDIS',obj.FitCM,nSamples)';
@@ -652,7 +658,6 @@ classdef RunAnalysis < handle
            
             progressbar('Fit twins with stat. fluctuations')
             
-           % obj.fixPar = '5 6 7 8 9 10 11'; % free nu mass
             for i=1:nSamples
                  progressbar(i/nSamples)
                  
@@ -669,12 +674,16 @@ classdef RunAnalysis < handle
                 FitErr(:,i)   = obj.FitResult.err;
                 FitChi2min(i) = obj.FitResult.chi2min;
                 dof           = obj.FitResult.dof;
-                   
+                
                 obj.ModelObj.SetFitBias(0);
             end
             
             % reset to asimov data
-            obj.ReadData;
+            if isa(obj,'MultiRunAnalysis')
+                obj.StackRuns;
+            else
+                obj.ReadData;
+            end
         end
         
     end
@@ -720,7 +729,9 @@ classdef RunAnalysis < handle
                 'RadiativeFlag','ON',...
                 'RingMerge',obj.RingMerge...
                 'KTFFlag',obj.KTFFlag,...
-                'NIS',NIS};
+                'NIS',NIS,...
+                'SynchrotronFlag',obj.SynchrotronFlag,...
+                'AngularTFFlag',obj.AngularTFFlag};
             
             if ~isempty(qU)
                 TBDarg = {TBDarg{:},'qU',qU};
@@ -1145,7 +1156,7 @@ classdef RunAnalysis < handle
             p.addParameter('is_EOffsetErr',SysErr.is_EOffsetErr,@(x)isfloat(x));
             p.addParameter('BkgRingCorrCoeff',0,@(x)isfloat(x));
             p.addParameter('BkgScalingOpt',1,@(x)isfloat(x));
-            p.addParameter('BkgMode','SlopeFit',@(x)ismember(x,{'SlopeFit','Gauss'}));
+            p.addParameter('BkgMode','Gauss',@(x)ismember(x,{'SlopeFit','Gauss'}));
             p.parse(varargin{:});
             
             InitNormFit              = p.Results.InitNormFit;

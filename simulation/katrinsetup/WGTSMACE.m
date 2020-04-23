@@ -144,6 +144,7 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
         Pixel_MACE_Ba_VCorr = zeros(1,148) ; % Analysis Plane E field, Tesla
         MACE_Ba_TallPixels;
         SynchrotronFlag; % ON/OFF
+        AngularTFFlag; % ON/OFF
         recomputeRF;           % Flag to recompute Response Function, even if there is one saved in cache already
         
     end
@@ -212,6 +213,7 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             
             p.addParameter('recomputeRF','OFF',@(x)ismember(x,{'OFF','ON'}));
             p.addParameter('SynchrotronFlag','ON',@(x)ismember(x,{'OFF','ON'}));
+            p.addParameter('AngularTFFlag','OFF',@(x)ismember(x,{'OFF','ON'}));
 
             % Parse unmatched parameters to FPD.m
             p.KeepUnmatched=1;
@@ -271,6 +273,7 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             obj.KTFFlag            = p.Results.KTFFlag;
             obj.recomputeRF        = p.Results.recomputeRF;
             obj.SynchrotronFlag    = p.Results.SynchrotronFlag;
+            obj.AngularTFFlag     = p.Results.AngularTFFlag;
             
             obj.WGTS_MolFrac_Tm_i =  obj.WGTS_MolFrac_Tm;
             
@@ -489,6 +492,7 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             p.addParameter('saveFile','ON',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('Method','Interp',@(x)ismember(x,{'Exact','Interp'}));
             p.addParameter('Energy',18575,@(x)all(isfloat(x)));
+            p.addParameter('ScatTF','OFF',@(x)ismember(x,{'ON','OFF'}));
             
             p.parse(varargin{:});
             WGTS_DensityProfile        = p.Results.WGTS_DensityProfile;
@@ -500,7 +504,7 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             saveFile                   = p.Results.saveFile;
             Method                     = p.Results.Method;
             Energy                     = p.Results.Energy;
-            
+            ScatTF                     = p.Results.ScatTF;
             % ---------------------------------------------------------
             % comment on New Method: (Lisa, Feb 2020)
             % -> no for loops and different integration style (less binning)
@@ -508,7 +512,7 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             % - when lambdaintegral not calculated (e.g. in covariance matrix!), then Method 'New' is more than 2x faster
             % - both methods give the same result
             % ---------------------------------------------------------
-            if strcmp(Method,'Interp')  
+            if strcmp(Method,'Interp')
                 try
                     %fprintf('Interpolation of inel. scattering probabilities ...')
                     out = ISProbInterp('WGTS_CD_MolPerCm2',WGTS_CD_MolPerCm2_local,...
@@ -517,11 +521,11 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
                         'NIS',obj.NIS,...
                         'ISXsection', ISXsection_local(squeeze(Energy)),...
                         'SanityPlot','OFF');
-                     %fprintf('succesful! \n')
+                    %fprintf('succesful! \n')
                     return
                 catch
                     fprintf(2,'failed - calculate exact inel. scattering probabilities \n')
-                end  
+                end
             end
             
             switch WGTS_DensityProfile
@@ -565,7 +569,11 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             
             % Integration over angles
             ntmp = 720;
-            f = @(i,z,theta) sin(theta).*Pis_z_angle(i,z,theta);
+            if strcmp(ScatTF,'OFF')
+                f = @(i,z,theta) sin(theta).*Pis_z_angle(i,z,theta);
+            else
+                f = @(i,z,theta) sin(theta).^2.*Pis_z_angle(i,z,theta);
+            end
             Pis_z = @(i,z) 1./(1-cos(thetamax)).*simpsons(linspace(0,thetamax,ntmp)',f(i,z,linspace(0,thetamax,ntmp)')); %Integral Mean scattering probability over all angles
             
             % Integratio over z
@@ -580,15 +588,16 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             ISProb_dir = [getenv('SamakPath'),sprintf('/inputs/WGTSMACE/WGTS_ISProb/')];
             MakeDir(ISProb_dir);
             
-            if strcmp(obj.ISCS,'Edep')
-                Estep = Energy(2)-Energy(1);
-                IsXstr  = sprintf('Edep-Xsection-max%.0feV_Xstep%.1feV',max(Energy)-18575,Estep);
-            else
-                IsXstr = sprintf('%.5g-Xsection',ISXsection_local(E));
-            end
-            mystr = [ISProb_dir,sprintf('IS_%.5g-molPercm2_%s_%.0f-NIS_%.3g-Bmax_%.3g-Bs.mat',...
-                WGTS_CD_MolPerCm2_local,IsXstr,obj.NIS+1,MACE_Bmax_T_local, WGTS_B_T_local)];
+            
             if strcmp(saveFile,'ON')
+                if strcmp(obj.ISCS,'Edep')
+                    Estep = Energy(2)-Energy(1);
+                    IsXstr  = sprintf('Edep-Xsection-max%.0feV_Xstep%.1feV',max(Energy)-18575,Estep);
+                else
+                    IsXstr = sprintf('%.5g-Xsection',ISXsection_local(E));
+                end
+                mystr = [ISProb_dir,sprintf('IS_%.5g-molPercm2_%s_%.0f-NIS_%.3g-Bmax_%.3g-Bs.mat',...
+                    WGTS_CD_MolPerCm2_local,IsXstr,obj.NIS+1,MACE_Bmax_T_local, WGTS_B_T_local)];
                 ISXsection_local = ISXsection_local(Energy);
                 Energy = squeeze(Energy);
                 save(mystr,'Pis_m','WGTS_CD_MolPerCm2_local','ISXsection_local','Energy','thetamax');
@@ -597,29 +606,29 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             
         end
         function MaceTF    = ComputeMaceTF(obj,te,qu,varargin)
-            % Compute MACE Filter Transmission Function - M. Slezak            
-            % Switch depending on the segmentation 
+            % Compute MACE Filter Transmission Function - M. Slezak
+            % Switch depending on the segmentation
             % (to include pixel-dependent magnetic field corrections)
-           % if isscalar(varargin{1}); varargin = {'pixel',varargin{1}}; end
+            % if isscalar(varargin{1}); varargin = {'pixel',varargin{1}}; end
             p = inputParser;
             p.addParameter('MACE_Ba_T',obj.MACE_Ba_T, @(x)all(isfloat(x)));
             p.addParameter('MACE_Bmax_T',obj.MACE_Bmax_T,@(x)isfloat(x));
             p.addParameter('WGTS_B_T',obj.WGTS_B_T,@(x)isfloat(x));
             p.addParameter('pixel',1,@(x)isfloat(x) && x>0);
-            p.addParameter('SynchrotronLoss',40e-03,@(x)isfloat(x) && x>=0);  % Renormalization, for Test
+            p.addParameter('SynchrotronLoss',0,@(x)isfloat(x) && x>=0);  % Renormalization, for Test 40e-03
             p.addParameter('gammaFacApprox','',@(x)isfloat(x) && x>=0 || isempty(x));   % Approximation for Relativist Transmission (Gamma+1)/2=1.018
-
+            
             p.parse(varargin{:});
             
             MACE_Ba_T_local     = p.Results.MACE_Ba_T;
             MACE_Bmax_T_local   = p.Results.MACE_Bmax_T;
             WGTS_B_T_local      = p.Results.WGTS_B_T;
             pixel               = p.Results.pixel; % pixel or a ring number
-            SynchrotronLoss     = p.Results.SynchrotronLoss;
+            % SynchrotronLoss     = p.Results.SynchrotronLoss;
             gammaFacApprox      = p.Results.gammaFacApprox;
             
             if isempty(gammaFacApprox)
-                gammaFacApprox = ((qu+obj.me)/obj.me+1)/2;
+                gammaFacApprox =  ((qu+obj.me)/obj.me+1)/2; % == (gamma+1)/2
             end
             
             switch obj.FPD_Segmentation
@@ -629,47 +638,190 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
                     Ba = MACE_Ba_T_local(pixel);
             end
             
+            ThetaMax   = asin(sqrt(WGTS_B_T_local/MACE_Bmax_T_local)); % (global) maximal transmission angle
+            
             switch obj.SynchrotronFlag
                 case 'ON'
+                    % synchrotron energy loss
+                    %ElossPreFac = -(qu+obj.me)/obj.me).*()/(2*pi*obj.c*obj.me^3); %me in eV
+                    %ElossSync = @(b,theta,e) ElossPreFac.*b.^2.*e.*sin(theta).^2.*
                     % Samak Simulation Providing Synchrotron Loss in WGTS
-                    PinchAngle =   [0.017453    0.034907     0.05236    0.069813    0.087266     0.10472     0.12217     0.13963     0.15708     0.17453     0.19199     0.20944     0.22689     0.24435      0.2618     0.27925     0.29671     0.31416     0.33161     0.34907     0.36652     0.38397     0.40143     0.41888     0.43633     0.45379     0.47124     0.48869     0.50615      0.5236     0.54105     0.55851     0.57596     0.59341     0.61087     0.62832     0.64577     0.66323     0.68068     0.69813     0.71558     0.73304     0.75049     0.76794      0.7854     0.80285      0.8203     0.83776     0.85521     0.87266];
-                    SeLoss     =   [8.4048e-06   3.363e-05  7.5709e-05   0.0001347  0.00021067  0.00030374  0.00041402  0.00054166  0.00068685  0.00084979   0.0010307   0.0012299   0.0014476   0.0016842   0.0019401   0.0022157   0.0025114   0.0028278   0.0031655   0.0035251   0.0039073   0.0043129   0.0047428    0.005198   0.0056796   0.0061889   0.0067271   0.0072959   0.0078971   0.0085326   0.0092046   0.0099157    0.010669    0.011468    0.012316    0.013218    0.014179    0.015206    0.016306    0.017488    0.018763    0.020145     0.02165    0.023299    0.025119    0.027147    0.029428    0.032031    0.035047    0.038618];
-                    DEsyn   = @(angleRad) interp1(PinchAngle,SeLoss,angleRad,'spline','extrap'); % data go till 50 deg, but computation needs 51 deg or so --> spline extrapolation
+                    %PinchAngle =   [0.017453    0.034907     0.05236    0.069813    0.087266     0.10472     0.12217     0.13963     0.15708     0.17453     0.19199     0.20944     0.22689     0.24435      0.2618     0.27925     0.29671     0.31416     0.33161     0.34907     0.36652     0.38397     0.40143     0.41888     0.43633     0.45379     0.47124     0.48869     0.50615      0.5236     0.54105     0.55851     0.57596     0.59341     0.61087     0.62832     0.64577     0.66323     0.68068     0.69813     0.71558     0.73304     0.75049     0.76794      0.7854     0.80285      0.8203     0.83776     0.85521     0.87266];
+                    %SeLoss     =   [8.4048e-06   3.363e-05  7.5709e-05   0.0001347  0.00021067  0.00030374  0.00041402  0.00054166  0.00068685  0.00084979   0.0010307   0.0012299   0.0014476   0.0016842   0.0019401   0.0022157   0.0025114   0.0028278   0.0031655   0.0035251   0.0039073   0.0043129   0.0047428    0.005198   0.0056796   0.0061889   0.0067271   0.0072959   0.0078971   0.0085326   0.0092046   0.0099157    0.010669    0.011468    0.012316    0.013218    0.014179    0.015206    0.016306    0.017488    0.018763    0.020145     0.02165    0.023299    0.025119    0.027147    0.029428    0.032031    0.035047    0.038618];
+                    %DEsyn   = @(angleRad) interp1(PinchAngle,SeLoss,angleRad,'spline','extrap'); % data go till 50 deg, but computation needs 51 deg or so --> spline extrapolation
                     
-                    % Define Edge Location of Transmission MACE Filter
-                    qumax = qu*(1+Ba/MACE_Bmax_T_local*gammaFacApprox) + SynchrotronLoss;
+                    % Define Edge Location of Transmission MACE Filter without synchrotron -> only temporary to calculate transmission angle for interesting region
+                    qumax_tmp = qu*(1+Ba/MACE_Bmax_T_local*gammaFacApprox)+0.1;
                     
-                    % Iterative Solving for Synch. Loss in Transmission Slope
-                    ThetaTR_1 = real(((te >= qu) & (te <= qumax) ) .* (asin(sqrt((te-qu-DEsyn(0))./te*WGTS_B_T_local/Ba*gammaFacApprox))));
-                    ThetaTR_2 = real(( (te >= qu) & (te <= qumax) ) .* asin(sqrt((te-qu-DEsyn(ThetaTR_1))./te*WGTS_B_T_local/Ba*gammaFacApprox)));
-                    ThetaTR_3 = real(( (te >= qu) & (te <= qumax) ) .* asin(sqrt((te-qu-DEsyn(ThetaTR_2))./te*WGTS_B_T_local/Ba*gammaFacApprox)));
-                    ThetaTR_4 = real(( (te >= qu) & (te <= qumax) ) .* asin(sqrt((te-qu-DEsyn(ThetaTR_3))./te*WGTS_B_T_local/Ba*gammaFacApprox)));
-                    SynchrotronCorr = DEsyn(ThetaTR_4)./max(DEsyn(ThetaTR_4)).*SynchrotronLoss;
+                    % solve for polar transmission angle
+                    ElossSync = @(e,theta)  obj.GetElossSync('qU',qu,'E',e,'Theta_rad',theta,...%synchrotron energy loss
+                        'Bt_T',3.6,'Bs_T',obj.WGTS_B_T);
+                    ThetaTrfun = @(e,theta) (e-ElossSync(e,theta)).*(1-sin(theta).^2.*Ba/WGTS_B_T_local.*gammaFacApprox)-qu;
                     
-                    %             tmpA=( (te >= qu) & (te <= qumax) ).*ThetaTR_4;tmpA=tmpA(tmpA>0);
-                    %             tmpS=( (te >= qu) & (te <= qumax) ).*SynchrotronCorr;tmpS=tmpS(tmpS>0);
-                    %             f = @(tdeg) interp1(tmpA,tmpS,tdeg*pi/180);
+                   % find good start values -> values w/o synch
+                    teTmp = te(((te >= qu) & (te <= qumax_tmp) ));
+                    ti = obj.GetThetaTrNoSync('E',teTmp,'qU',qu,'WGTS_B_T',WGTS_B_T_local,...
+                                           'MACE_Bmax_T',MACE_Bmax_T_local,'MACE_Ba_T',Ba); 
+                    ThetaTr_i = mat2cell(ti,ones(size(teTmp))); 
+                    if (isrow(teTmp) && ~isrow(ThetaTr_i)) || (iscolumn(teTmp) && ~iscolumn(ThetaTr_i)) 
+                        ThetaTr_i = ThetaTr_i';
+                    end
+                    % root search
+                    f = arrayfun(@(a) @(theta) ThetaTrfun(a,theta),teTmp,'UniformOutput',0);
+                    ThetaTrSyn = zeros(numel(te),1);
+                    ThetaTrSyn((te >= qu) & (te <= qumax_tmp)) = cellfun(@(x,xi) fzero(x,xi),f,ThetaTr_i);
+                    ThetaTrSyn(ThetaTrSyn>ThetaMax) = ThetaMax;
+                    ThetaTrSyn(te > qumax_tmp) = ThetaMax;
+
+                    % snchrotron loss for each polar transmission angle
+                    SynchrCorr = ElossSync(te,ThetaTrSyn');
+                    
+                    % Define Edge Location of Transmission MACE Filter with synchrotron
+                    qumax = qu*(1+Ba/MACE_Bmax_T_local*gammaFacApprox) +  ElossSync(te,ThetaMax);
+                    
+                    % OLD (Thierry): Iterative Solving for Synch. Loss in Transmission Slope
+                    % ThetaTrfun = @(e,theta) sin(theta).^2-(e-qu-DEsyn(theta))./e*WGTS_B_T_local/Ba*gammaFacApprox;
+                    %                     ThetaTR_1 = real(((te >= qu) & (te <= qumax) ) .* (asin(sqrt((te-qu-DEsyn(0))./te*WGTS_B_T_local/Ba*gammaFacApprox))));
+                    %                     ThetaTR_2 = real(( (te >= qu) & (te <= qumax) ) .* asin(sqrt((te-qu-DEsyn(ThetaTR_1))./te*WGTS_B_T_local/Ba*gammaFacApprox)));
+                    %                     ThetaTR_3 = real(( (te >= qu) & (te <= qumax) ) .* asin(sqrt((te-qu-DEsyn(ThetaTR_2))./te*WGTS_B_T_local/Ba*gammaFacApprox)));
+                    %                     ThetaTR_4 = real(( (te >= qu) & (te <= qumax) ) .* asin(sqrt((te-qu-DEsyn(ThetaTR_3))./te*WGTS_B_T_local/Ba*gammaFacApprox)));
+                    %                    SynchrotronCorr = DEsyn(ThetaTR_4)./max(DEsyn(ThetaTR_4)).*SynchrotronLoss;
+                    
                 case 'OFF'
                     qumax = qu*(1+Ba/MACE_Bmax_T_local*gammaFacApprox);
-                    SynchrotronCorr = 0;
+                    SynchrCorr = 0;
             end
+            
             % Compute Transmission of MACE
-            MaceTF = 0 + ((te >= qu) & (te <= qumax)) .* ...
-                (1 - sqrt(1-(te-qu-SynchrotronCorr)./te * WGTS_B_T_local./Ba / gammaFacApprox )) ...
-                ./ (1 - sqrt(1 - WGTS_B_T_local/MACE_Bmax_T_local)) + ...
-                1 * (te > qumax);
+            switch obj.AngularTFFlag
+                case 'OFF'
+                    MaceTF = 0 + ((te >= qu) & (te <= qumax)) .* ...
+                        (1 - sqrt(1-(te-qu-SynchrCorr)./(te-SynchrCorr) * WGTS_B_T_local./Ba  / gammaFacApprox)) ...
+                        ./ (1 - sqrt(1 - WGTS_B_T_local/MACE_Bmax_T_local)) + ...
+                        1 * (te > qumax);
+                case 'ON'
+                    
+                    % 1. find maximal polar angles for all energies -> transmission angle: ThetaTr
+                    if strcmp(obj.SynchrotronFlag,'OFF')
+                        ThetaTr = obj.GetThetaTrNoSync('E',te,'qU',qu,'WGTS_B_T',WGTS_B_T_local,...
+                                           'MACE_Bmax_T',MACE_Bmax_T_local,'MACE_Ba_T',Ba); 
+                    else
+                        ThetaTr = ThetaTrSyn;   
+                    end
+                    
+                    % 2. calculate scattering probabilities for these angles
+                    WGTS_B_T_fun = @(theta) sin(theta).^2.*MACE_Bmax_T_local;
+                    CorrFactor = @(theta) ((1-cos(theta))./(1-cos(ThetaMax)))'; % normalize ->  scattering probabilities are by default normalized to their theta and not global theta max
+                    ISProbfun = @(theta) ISProbInterp('WGTS_CD_MolPerCm2',obj.WGTS_CD_MolPerCm2,...
+                        'MACE_Bmax_T',MACE_Bmax_T_local,...
+                        'WGTS_B_T', WGTS_B_T_fun(theta),...
+                        'NIS',obj.NIS,...
+                        'ISXsection', obj.ISXsection(18575),...
+                        'SanityPlot','OFF',...
+                        'ThetaP','ON').*CorrFactor(theta);
+                    
+                    % 3. build transmission function
+                    TfLogic            = ((te >= qu) & (te <= qumax)); % energies in transmission edge region
+                    MaceTF             = zeros(numel(te),obj.NIS+1);
+                    MaceTF(TfLogic,:)  = (ISProbfun(ThetaTr(TfLogic))./ISProbfun(ThetaMax))';
+                    MaceTF(te>qumax,:) = 1;
+                    MaceTF = MaceTF';
+            end
             
-            % if obj.MACE_Sigma>0
-            %     out = TF_Convfun(MaceTF,qu',te,obj.MACE_Sigma);
-            % else
             out = MaceTF;
-            % end
-            
-            out(out>1)=1; 
+            out(out>1)=1;
+            out(out<0)=0;
         end
-        %% Computating of empirical energy loss function and convolutions
-        % Parameterization see SSC paper
+        
+        function ElossSync = GetElossSync(obj,varargin)
+            % energy loss from synchrotron radiation in eV
+            p = inputParser;
+            p.addParameter('E',obj.Te,@(x)isfloat(x) &  all(x>0));
+            p.addParameter('qU',18575,@(x)isfloat(x) & all(x>0));
+            p.addParameter('Bs_T',obj.WGTS_B_T,@(x)isfloat(x)); % magnetic field source
+            p.addParameter('Bt_T',3.6,@(x)isfloat(x));     % magnetic field transport section
+            p.addParameter('Theta_rad',0.8,@(x)isfloat(x));
+            p.addParameter('Mode','Combi',@(x)ismember(x,{'Combi','Source','Transp'}));
+            p.parse(varargin{:});
+            Bs_T         = p.Results.Bs_T;      % magnetic field in source (T)
+            Bt_T         = p.Results.Bt_T;      % magnetic field intransport section (T)
+            Theta_rad    = p.Results.Theta_rad; % polar angle (radian)
+            E            = p.Results.E;         % energy of electron (eV)
+            qU_local     = p.Results.qU;        % retarding potential
+            Mode         = p.Results.Mode;
+            
+            LengthS_m      = 5; % mean effective length of source section (m)
+            LengthT_m      = 14;% mean effective length of transport section (m)
+            
+            if (isrow(E) && iscolumn(Theta_rad)) || ( iscolumn(E) && isrow(Theta_rad))
+                Theta_rad = Theta_rad';
+            end
+            me_kg = obj.me.*abs(obj.mq)./obj.c^2; % convert electron mass to from eV to kg
+            %e_vel_local = sqrt(2*E./(obj.me/obj.c^2)); %enrgy dependent velocity
+            GammaFac =(E+obj.me)/obj.me; % approx. gamma factor qU_local
+            ElossPreFac = obj.mu0.*obj.mq^4.*GammaFac./(3*pi*obj.c*me_kg^3.*obj.e_vel);
+            ElossSyncFun = @(b,l,theta) ElossPreFac.*b.^2.*E.*l.*sin(theta).^2./cos(theta);
+            
+            % energy-loss in source from synchrotron radiation
+            ElossSync_s = ElossSyncFun(Bs_T,LengthS_m,Theta_rad);
+            
+            % energy-loss in transport section from synchrotron radiation
+            Theta_Transp_rad = asin(sin(Theta_rad).*sqrt(Bt_T./Bs_T)).*((sin(Theta_rad).*sqrt(Bt_T./Bs_T))<=1)+...
+                asin(1).*((sin(Theta_rad).*sqrt(Bt_T./Bs_T))>1); % polar angle in transport section
+            ElossSync_t      = ElossSyncFun(Bt_T,LengthT_m, Theta_Transp_rad);
+            
+            switch Mode
+                case 'Combi'
+                    ElossSync = ElossSync_s+ElossSync_t;
+                case 'Source'
+                    ElossSync = ElossSync_s;
+                case 'Transp'
+                    ElossSync = ElossSync_t;
+            end
+        end
+        function ThetaTr = GetThetaTrNoSync(obj,varargin)
+            % calculate maximal transmission angle theta_tr w/o synchrotron
+            % SSC paper, formula (23) 
+           
+            p = inputParser;
+            p.addParameter('E',obj.Te,@(x)isfloat(x) &  all(x>0));
+            p.addParameter('qU',18575,@(x)isfloat(x) & all(x>0));
+            p.addParameter('MACE_Ba_T',obj.MACE_Ba_T, @(x)all(isfloat(x)));
+            p.addParameter('MACE_Bmax_T',obj.MACE_Bmax_T,@(x)isfloat(x));
+            p.addParameter('WGTS_B_T',obj.WGTS_B_T,@(x)isfloat(x));
+            p.addParameter('gammaFacApprox','',@(x)isfloat(x) && x>=0 || isempty(x));   % Approximation for Relativist Transmission (Gamma+1)/2=1.018
+            
+            p.parse(varargin{:});
+            
+            MACE_Ba_T_local     = p.Results.MACE_Ba_T;
+            MACE_Bmax_T_local   = p.Results.MACE_Bmax_T;
+            WGTS_B_T_local      = p.Results.WGTS_B_T;
+            E                   = p.Results.E;         % energy of electron (eV)
+            qu_local            = p.Results.qU;        % retarding potential
+            gammaFacApprox      = p.Results.gammaFacApprox;
+            
+            if isempty(gammaFacApprox)
+                gammaFacApprox =  ((qu_local+obj.me)/obj.me+1)/2; % == (gamma+1)/2
+            end
+            
+            ThetaMax            = asin(sqrt(WGTS_B_T_local/MACE_Bmax_T_local)); % (global) maximal transmission angle
+            SinPreFactor        = WGTS_B_T_local./MACE_Ba_T_local .* 1./gammaFacApprox;
+            
+            qumax_tmp = qu_local*(1+MACE_Ba_T_local/MACE_Bmax_T_local*gammaFacApprox)+5; % enlarge slighty
+                      
+            % 1. find maximal polar angles for all energies w/o synchrotron
+            InnerAsin =  @(e) 0+((e >= qu_local) & (e <= qumax_tmp)).*sqrt((e-qu_local)./e.*SinPreFactor);
+            Thetatmp = @(e) real(asin(InnerAsin(e)));
+            ThetaTrFun = @(e) (Thetatmp(e)<=ThetaMax).*Thetatmp(e)+(Thetatmp(e)>ThetaMax).*ThetaMax;
+            if ~iscolumn(E)
+                E  = E';
+            end
+            ThetaTr = ThetaTrFun(E);
+
+        end
         function [fscatn,fscatnE] = ComputeELossFunction(obj,varargin)
+             %% Computating of empirical energy loss function and convolutions
+        % Parameterization see SSC paper
             % output: fscatn  -> energy loss function handle for all scatterings
             %         fscatnE -> energy loss function evaluated at energy E
             
@@ -1134,6 +1286,10 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
                 E_rf = unique([E_rf;E_addLow';E_addUp']);
                 maxE_rf = max(E_rf);
                 minE_rf = min(E_rf);
+                
+                if ~isrow(E_rf)
+                    E_rf = E_rf';
+                end
             end
             
             %% binning for ELoss function -> very wide for convolution  
@@ -1232,6 +1388,16 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             
             obj.fscat       = @(e) 0+(e>0).*interp1(Eel,scatterings,e,'spline','extrap');
             
+            if strcmp(obj.AngularTFFlag,'ON')
+                f1 = @(e) 0+(e>0).*interp1(Eel,ISProb(2,:).*ElossFunctions(1,EindexStart:EindexStop),e,'spline','extrap');
+                f2 = @(e) 0+(e>0).*interp1(Eel,ISProb(3,:).*ElossFunctions(2,EindexStart:EindexStop).*(E(2)-E(1))^1,e,'spline','extrap');
+                f3 = @(e) 0+(e>0).*interp1(Eel,ISProb(4,:).*ElossFunctions(3,EindexStart:EindexStop).*(E(2)-E(1))^2,e,'spline','extrap');
+                f4 = @(e) 0+(e>0).*interp1(Eel,ISProb(5,:).*ElossFunctions(4,EindexStart:EindexStop).*(E(2)-E(1))^3,e,'spline','extrap');
+                f5 = @(e) 0+(e>0).*interp1(Eel,ISProb(6,:).*ElossFunctions(5,EindexStart:EindexStop).*(E(2)-E(1))^4,e,'spline','extrap');
+                f6 = @(e) 0+(e>0).*interp1(Eel,ISProb(7,:).*ElossFunctions(6,EindexStart:EindexStop).*(E(2)-E(1))^5,e,'spline','extrap');
+                f7 = @(e) 0+(e>0).*interp1(Eel,ISProb(8,:).*ElossFunctions(7,EindexStart:EindexStop).*(E(2)-E(1))^6,e,'spline','extrap');
+            end
+            
             % Retreive Transmission Function
             TF  = @obj.ComputeMaceTF;
             
@@ -1265,13 +1431,25 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
                     
                     % out = interp1(Etest,RF,te-qu);
                     RF(RF<0) = 0; % possible because of numerical noise
-                    out = RF;     
+                    out = RF;
                 case 'Conv'
                     ISProb0 = interp1(Eiscs',obj.is_Pv(1,:)',qu+E_rf);
-                    RF = TF(qu+E_rf,qu,'pixel',pixel).*ISProb0 + ...
-                        conv(TF(qu+E_rf,qu,'pixel',pixel,...
-                        'MACE_Bmax_T',MACE_Bmax_T_local,'WGTS_B_T',WGTS_B_T_local,'MACE_Ba_T',MACE_Ba_T_local),...
-                        obj.fscat(E_rf),'same').*Estep_rf;
+                    MaceTF = TF(qu+E_rf,qu,'pixel',pixel,'MACE_Bmax_T',MACE_Bmax_T_local,...
+                        'WGTS_B_T',WGTS_B_T_local,'MACE_Ba_T',MACE_Ba_T_local);
+                    
+                    if strcmp(obj.AngularTFFlag,'OFF')
+                        RF = MaceTF.*ISProb0 + conv(MaceTF,obj.fscat(E_rf),'same').*Estep_rf;
+                    else
+                        RF = MaceTF(1,:).*ISProb0 ...
+                            + conv(MaceTF(2,:),f1(E_rf),'same').*Estep_rf...
+                            + conv(MaceTF(3,:),f2(E_rf),'same').*Estep_rf...
+                            + conv(MaceTF(4,:),f3(E_rf),'same').*Estep_rf...
+                            + conv(MaceTF(5,:),f4(E_rf),'same').*Estep_rf...
+                            + conv(MaceTF(6,:),f5(E_rf),'same').*Estep_rf...
+                            + conv(MaceTF(7,:),f6(E_rf),'same').*Estep_rf...
+                            + conv(MaceTF(8,:),f7(E_rf),'same').*Estep_rf;                           
+                    end
+                    
                     % check is (te-qU) is already contained in E
                     Etmp = round(E_rf,5);
                     TeqUtmp = round(te-qu,5);
@@ -1358,7 +1536,7 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
                 out = 0;
                 return;
             end
-            RFpath = [getenv('SamakPath'),'inputs/ResponseFunction/samakRF'];
+            RFpath = [getenv('SamakPath'),'inputs/ResponseFunction/'];
             if strcmp(obj.ISCS,'Edep')
                 IsXStr = 'Edep';
             else
@@ -1367,19 +1545,19 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             
             switch obj.FPD_Segmentation
                 case 'OFF'
-                    RFfile = sprintf('_Uniform_%.5gcm2_IsX%s_NIS%.0d_Bm%0.3gT_Bs%0.3gT_Ba%0.4gG_Temin%.3f_Temax%.3f_RFBinStep%.3feV_%s.mat',...
+                    RFfile = sprintf('samakRF_Uniform_%.5gcm2_IsX%s_NIS%.0d_Bm%0.3gT_Bs%0.3gT_Ba%0.4gG_Temin%.3f_Temax%.3f_RFBinStep%.3feV_%s_Sync%s_Ang%s.mat',...
                         obj.WGTS_CD_MolPerCm2,IsXStr,obj.NIS,obj.MACE_Bmax_T,obj.WGTS_B_T,...
                         obj.MACE_Ba_T*1e4,obj.TeMin,obj.TeMax,...
-                        obj.RFBinStep,obj.ELossFlag);
+                        obj.RFBinStep,obj.ELossFlag,obj.SynchrotronFlag,obj.AngularTFFlag);
                 case {'MULTIPIXEL','SINGLEPIXEL'}
-                    RFfile = sprintf('_MultiPix_%0.5gcm2_IsX%s_NIS%.0d_Bm%0.3gT_Bs%0.3gT_Ba%0.4gG_Temin%3.f_Temax%3.f_RFBinStep%.3feV_%s.mat',...
+                    RFfile = sprintf('samakRF_MultiPix_%0.5gcm2_IsX%s_NIS%.0d_Bm%0.3gT_Bs%0.3gT_Ba%0.4gG_Temin%3.f_Temax%3.f_RFBinStep%.3feV_%s_Sync%s_Ang%s.mat',...
                         obj.WGTS_CD_MolPerCm2,IsXStr,obj.NIS,obj.MACE_Bmax_T,obj.WGTS_B_T,...
                         mean(obj.MACE_Ba_T(obj.FPD_PixList))*1e4,obj.TeMin,obj.TeMax,...
-                        obj.RFBinStep,obj.ELossFlag);
+                        obj.RFBinStep,obj.ELossFlag,obj.SynchrotronFlag,obj.AngularTFFlag);
                 case 'RING'
-                    RFfile = sprintf('_Ring_%s_%0.5gcm2_IsX%s_NIS%.0d_Bm%0.3gT_Bs%0.3gT_Ba%0.4gG_Temin%.3f_Temax%.3f_RFBinStep%.3feV_nring%.0d.mat',...
+                    RFfile = sprintf('samakRF_Ring_%s_%0.5gcm2_IsX%s_NIS%.0d_Bm%0.3gT_Bs%0.3gT_Ba%0.4gG_Temin%.3f_Temax%.3f_RFBinStep%.3feV_Sync%s_Ang%s_nring%.0d.mat',...
                         obj.FPD_RingMerge,obj.WGTS_CD_MolPerCm2,IsXStr,obj.NIS,obj.MACE_Bmax_T,obj.WGTS_B_T,...
-                        mean(obj.MACE_Ba_T)*1e4,obj.TeMin,obj.TeMax,obj.RFBinStep,obj.nRings);
+                        mean(obj.MACE_Ba_T)*1e4,obj.TeMin,obj.TeMax,obj.RFBinStep,obj.SynchrotronFlag,obj.AngularTFFlag,obj.nRings);
             end
             if obj.is_EOffset ~=0
                 RFfile = strrep(RFfile,obj.ELossFlag,[obj.ELossFlag,sprintf('_%.3fELOffset',obj.is_EOffset)]);

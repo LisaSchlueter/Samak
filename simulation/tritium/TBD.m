@@ -41,7 +41,9 @@ classdef TBD < handle & WGTSMACE %!dont change superclass without modifying pars
         
         % Physics Constants
         fsC = 0.007297352569816;    % Fine Structure Cte
-        me = 510.998918e3;          % Electron Mass eV
+        me = 510.9989461e3          % Electron Mass eV  PDG 2019
+        mq = -1.602176634*1e-19;    % electron charge in Coulomb (C=A*s)
+        mu0 = 1.25663706212*1e-06;  %  magnetic permeability in free space (kg*m*s^-2*A^-2)
         Gf = 8.963859529398992e-50; % Fermi Cte Mev.m^3 PDG2010
         Mn = 939565.360e3;          % Neutron mass eV
         Mp = 938272.029e3;          % Proton mass eV
@@ -49,8 +51,8 @@ classdef TBD < handle & WGTSMACE %!dont change superclass without modifying pars
         kb = 1.38064852e-23;        % [m2 kg s^-2 K^-1] Boltzmann Constant
         kbeV = 8.617343e-5;         % [eV K^-1]
         M = 2*3.0160492e-3/6.022140857e23; % [kg] mass of tritium molecule
-        c = 299792458;              % [m/s] speed of light
-        
+        c = 299792458;              % [m/s] speed of light (PDG 2018)
+ 
         % Tritium Beta Decay
         MH3 = 2.809431917483801e9;  % Tritium mass eV, PRC77,055502(2008)
         MHe3 = 2.809413380751987e9; % Helium-3 mass eV, PRC77,055502(2008)
