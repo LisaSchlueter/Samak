@@ -1,6 +1,7 @@
 function X = fit_chi(m,s,R,eVr)
     % Return the X2 of a basic fit
     
+%     R.pullFlag=1;
     % Initialisation
     R.i_Q=0;
     R.i_B=[];

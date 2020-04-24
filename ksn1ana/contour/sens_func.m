@@ -1,23 +1,28 @@
-function sens_func(SysEffects,bkg,savename)
+function sens_func(contour_settings)
     %% KATRIN Sterile Neutrino sensitivity - KSN1
-    %  Sanity checks - Stat+1 and Syst-1 tests
     %  Nathan Le Guennic - 2020
 
     tic;
     %% Settings
     % Parameters
 
-    % Other parameters
-    d            = 20;                 % Number of dots per decade
+    CL           = 95;                  % Confidence level 90% - 95% - 99%
+    datatype     = 'Twin';  % Real
+    uncertainty  = 'stat';  % syst
+    NPfactor     = 1;
+    d            = 10;                  % Number of dots per decade
     eVrange      = 90;                  % eV below the endpoint
+    ActiveNeut   = 'ON';
 
+    % Name for the datafile
+    savename     = sprintf('coord_%1$deV_%2$s_%3$s_95_freeM.mat',eVrange,datatype,uncertainty);
 
+    % Scan settings
     start_decade = -1;
     stop_decade  = 4;
     min_sin2T4   = 0.00001;              % Lower bound for sin2(th4) for the plot
 
-
-    p   = 0.00001;                    % Newton gradient step
+    p   = 0.00001;                       % Newton gradient step
     err = 0.01;                         % Newton convergence tolerance
 
 
@@ -25,8 +30,9 @@ function sens_func(SysEffects,bkg,savename)
     m4_Y    = [];
     sith4_X = [];                       % Plot variables
     chi_Z   = [];
+    m_beta  = [];
 
-    % Scanning domain
+    % Scanning range
     m4      = [];
     k=1;
     for n=start_decade:stop_decade-2
@@ -37,28 +43,111 @@ function sens_func(SysEffects,bkg,savename)
     m4 = [m4,logspace(stop_decade-1,stop_decade,d)];
 
 
-    %% Constructor Initialisation
+    % Confidence level
+    switch CL
+        case 90
+            chilvl = 4.61;
+        case 95
+            chilvl = 5.99;
+        case 99
+            chilvl = 9.21;
+    end
 
+    % Uncertainties
+    switch uncertainty
+        case 'stat'
+            chi2_type = 'chi2Stat';
+        case 'syst'
+            chi2_type = 'chi2CMShape';
+    end
+
+    % FSD
+    switch datatype
+        case 'Real'
+            sibille = 'SibilleFull';
+            chilvl  = chilvl;
+        case 'Twin'
+            sibille = 'Sibille0p5eV';
+    end
+
+    % Active neutrino
+    switch ActiveNeut
+        case 'ON'
+            free_para = 'mNu E0 Norm Bkg';
+        case 'OFF'
+            free_para = 'E0 Norm Bkg';
+    end
+
+    SysEffects = struct(...
+        'RF_EL','OFF',...       % Response Function(RF) EnergyLoss
+        'RF_BF','OFF',...       % RF B-Fields
+        'RF_RX','OFF',...       % Column Density, inel cross ection
+        'FSD','OFF',...         % final states
+        'TASR','OFF',...        % tritium activity fluctuations
+        'TCoff_RAD','OFF',...   % radiative thoretical corrections (this has to be OFF for KNM1, because included in model)
+        'TCoff_OTHER','OFF',... % other theo corr.
+        'DOPoff','OFF',...      % doppler effects --> OFF, because in model
+        'Stack','OFF',...       % stacking / HV fluctuations
+        'FPDeff','OFF');        % detector efficiency
+
+    %% Constructor Initialisation
     R = MultiRunAnalysis('RunList','KNM1',...
-                'chi2','chi2CMShape',...
-                'DataType','Real',...
-                'fixPar','E0 Norm Bkg',...
+                'chi2',chi2_type,...
+                'DataType',datatype,...
+                'fixPar',free_para,...
                 'RadiativeFlag','ON',...
-                'NonPoissonScaleFactor',1.064,...
+                'NonPoissonScaleFactor',NPfactor,...
                 'minuitOpt','min ; migrad',...
-                'FSDFlag','SibilleFull',...
+                'FSDFlag',sibille,...
                 'ELossFlag','KatrinT2',...
                 'SysBudget',22);
 
-    %% Systematics flags
+    % R.ComputeCM('SysEffects',SysEffects,...
+    %     'BkgCM','ON');
 
-    R.ComputeCM('SysEffects',SysEffects,...
-               'BkgCM',bkg);  % background systematics (slope!) switched on/off here
+    % %% Check systematics errorbars
+    % times = (R.ModelObj.qUfrac*R.ModelObj.TimeSec);
+    % 
+    % CM  = R.FitCM_Obj.CovMatFrac;
+    % 
+    % IS = R.ModelObj.TBDIS;
+    % stat  = sqrt(IS);
+    % stat  = stat./times;
+    % 
+    % err = zeros(1,length(CM));
+    % for k = (1:length(CM))
+    %     err(k) = sqrt(CM(k,k));
+    % end
+    % 
+    % prlB = [50 148 216]/255;
+    % 
+    % plot(R.ModelObj.qU-18574,err,'color',prlB,'LineWidth',3)
+    % hold on
+    % plot(R.ModelObj.qU-18574,stat,'--','color',prlB,'LineWidth',3)
+    % 
+    % % Plot style
+    % xlabel('Retarding energy - 18574 (eV)');
+    % ylabel('Errorbar');
+    % legend({'Stat','Syst'},'Location','southwest','box','off');
+    % 
+    % % xlim([-90 max(qUc+5)]);
+    % PRLFormat;
+    % set(gca, 'YScale', 'log');
+    % axis square
+
+    % R.ModelObj.ComputeTBDDS();
+    % YD=R.ModelObj.TBDDS;
+    % R.ModelObj.ComputeTBDIS();
+    % YI = R.ModelObj.TBDIS;
+    % R.InitModelObj_Norm_BKG
+    % R.RunData.TBDIS
+    % sum(YI)
+
     %% Delta-X2
-    chilvl = 4.61;
     X0     = fit_chi(0,0,R,eVrange);
     chilvl = chilvl + X0;
-    
+    X0 =0;
+
     %% Loop
     % Initialisation
     %progressbar()
@@ -127,6 +216,11 @@ function sens_func(SysEffects,bkg,savename)
                     sith4_X = [sith4_X,s];
                     m4_Y    = [m4_Y,m];
                     chi_Z   = [chi_Z,X2_a];
+
+                    if strcmp(ActiveNeut,'ON')
+                        m_beta  = [m_beta,R.FitResult.par(1)]; % When m_beta is activated
+                    end
+
                 end
             end
         else
@@ -157,14 +251,14 @@ function sens_func(SysEffects,bkg,savename)
     fprintf('Saving file ...\n')
     diary off
 
-    filepath   = [getenv('SamakPath'),'ksn1ana/contour/sanity_checks/'];
+    filepath   = [getenv('SamakPath'),'ksn1ana/contour/'];
     file       = [filepath,savename];
     MakeDir(filepath)
     %file_sith4 = '/home/iwsatlas1/guennic/Desktop/Samak2.0/ksn1ana/contour/coord_0to4_dV_90eV_Final';
-    save(file,'sith4_X','m4_Y','chi_Z');
+    save(file,'R','sith4_X','m4_Y','chi_Z','m_beta','X0');
 
 
     diary 'progress.txt'
-    fprintf('==== FINISHED ====')
+    fprintf('==== FINISHED ====\n')
     diary off
 end

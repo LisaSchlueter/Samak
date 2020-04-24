@@ -254,7 +254,7 @@ filepath   = [getenv('SamakPath'),'ksn1ana/contour/'];
 file       = [filepath,savename];
 MakeDir(filepath)
 %file_sith4 = '/home/iwsatlas1/guennic/Desktop/Samak2.0/ksn1ana/contour/coord_0to4_dV_90eV_Final';
-save(file,'sith4_X','m4_Y','chi_Z','m_beta');
+save(file,'R','sith4_X','m4_Y','chi_Z','m_beta','X0');
 
 
 diary 'progress.txt'
