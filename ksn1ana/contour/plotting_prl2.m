@@ -8,15 +8,15 @@
 %   m4_Y    (sterile mass)
 %   chi_Z   (chiSq values, if everything is OK this should be only 4.61)
 
-filepath   = [getenv('SamakPath'),'ksn1ana/contour/'];
+filepath   = [getenv('SamakPath'),'ksn1ana/contour/contourmatfiles/'];
 % zero fixed nu mass - stat
 file_A1     = 'coord_90eV_Real_stat_95_newN2_thierry.mat';
 % zero fixed nu mass - stat+sys
 file_A2     = 'coord_90eV_Real_syst_95_newN2_thierry.mat';
 % free nu mass - stat+sys
-file_B      = 'coord_90eV_Real_syst_95_newN2_thierry.mat';
+file_B      = 'coord_90eV_Real_syst_95.mat';
 % minus one fixed nu mass - stat+sys
-file_C      = 'coord_90eV_Real_syst_95_newN2_thierry.mat';
+file_C      = 'coord_90eV_Real_syst_Mfree.mat';
 
 da1  = importdata([filepath,file_A1]);   % Data A1
 da2  = importdata([filepath,file_A2]);   % Data A2
@@ -110,4 +110,4 @@ axis([0.01 0.5 0.5 100])
 axis square
 %title('KATRIN Sterile Neutrino Analysis (KSN1) - 95% CL Sensitivity') % Exclusion Limit (Data)
 
-export_fig(fig,'ksn1_contour_test2.pdf')
+export_fig(fig,'./plots/ksn1_contour_test2.pdf')

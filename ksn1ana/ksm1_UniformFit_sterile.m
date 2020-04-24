@@ -3,13 +3,13 @@
 
 %% create MultiRunAnalysis object
 R = MultiRunAnalysis('RunList','KNM1',...        % runlist defines which runs are analysed -> set MultiRunAnalysis.m -> function: GetRunList()
-    'chi2','chi2Stat',...                     % uncertainties: statistical or stat + systematic uncertainties
+    'chi2','chi2Stat',...                        % uncertainties: statistical or stat + systematic uncertainties
     'DataType','Twin',...                        % can be 'Real' or 'Twin' -> Monte Carlo
     'fixPar','E0 Norm Bkg',...                   % free Parameter!!
     'RadiativeFlag','ON',...                     % theoretical radiative corrections applied in model
-    'NonPoissonScaleFactor',1,...            % background uncertainty are enhanced
+    'NonPoissonScaleFactor',1,...                % background uncertainty are enhanced
     'minuitOpt','min ; migrad',...               % technical fitting options (minuit)
-    'FSDFlag','Sibille0p5eV',...                  % final state distribution
+    'FSDFlag','Sibille0p5eV',...                 % final state distribution
     'ELossFlag','KatrinT2',...                   % energy loss function
     'SysBudget',22);                             % defines syst. uncertainties -> in GetSysErr.m;
 

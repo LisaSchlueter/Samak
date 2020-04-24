@@ -7,7 +7,7 @@
 %   m4_Y    (sterile mass)
 %   chi_Z   (chiSq values, if everything is OK this should be only 4.61)
 
-filepath   = [getenv('SamakPath'),'ksn1ana/contour/'];
+filepath   = [getenv('SamakPath'),'ksn1ana/contour/contourmatfiles/'];
 file_A     = 'coord_90eV_Real_stat_95_newN2_thierry.mat';
 file_B     = 'coord_90eV_Real_syst_95_newN2_thierry.mat';
 
@@ -111,4 +111,4 @@ set(gca, 'YScale', 'log');
 axis([0.01 1 0.1 10000])
 axis square
 %title('KATRIN Sterile Neutrino Analysis (KSN1) - 95% CL Sensitivity') % Exclusion Limit (Data)
-export_fig(fig,'ksn1_contour_test1.pdf')
+export_fig(fig,'.plots/ksn1_contour_test1.pdf')
