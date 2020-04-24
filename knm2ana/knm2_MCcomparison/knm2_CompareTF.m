@@ -1,7 +1,7 @@
 % compare tranmission functions
-SynchrotronFlag = 'ON';
+SynchrotronFlag = 'OFF';
 RecomputeFlag = 'ON';
-AngTF = 'ON';
+AngTF = 'OFF';
 SaveTxt = 'ON';
 
 % Samak TF
