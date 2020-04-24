@@ -4,11 +4,11 @@
 % Lisa, April 2020
 
 %% setttings
-SanityPlot = 'OFF'; % plot and save plot
-Mode = 'Uniform';       % Ring or Uniform
+SanityPlot    = 'OFF'; % plot and save plot
+Mode          = 'Ring';       % Ring or Uniform
 RecomputeFlag = 'OFF';
 
-savedir = [getenv('SamakPath'),'knm2ana/knm2_RateMonitoring/results/'];
+savedir  = [getenv('SamakPath'),'knm2ana/knm2_RateMonitoring/results/'];
 MakeDir(savedir);
 savename = sprintf('%sknm2_GetGlobalB_%s.mat',savedir,Mode);
 
@@ -16,20 +16,15 @@ if exist(savename,'file') && strcmp(RecomputeFlag,'OFF')
     load(savename)
 else
     %% inputs from Fabian: broadenings + shifts
+   savenameF = sprintf('%sknm2_RManalysis_%s.mat',savedir,Mode);
+   load(savenameF,'Sigma','Shift');
+   
     Weights_v = [171,93,97]./361; % approx. weights -> numbers of scans
     switch Mode
         case 'Ring'
-            nRings = 4;
-            Sigma_M = (1e-03.*[18.7, 35.7, 29.0, 16.4;...
-                22.9, 14.1, 8.9, 10.5;...
-                26.8, 26.5, 32.9, 30.9]);
-            Shift_M = 1e-03.*[73.5, 84.6, 90.5, 120.3;...
-                0 , 43.2, 60.2, 106.8;...
-                120.5, 148.9, 161.9, 197.7];
+            nRings = 4;     
         case 'Uniform'
-            nRings = 1;
-            Sigma_M = 1e-03.*[31.9,  20.3 , 28.25]';
-            Shift_M = 1e-03.*[41.8 ,0,  105.8]';
+            nRings = 1;  
     end
     
     %% calculate global broadening for uniform or pseudo-ring wise
@@ -43,13 +38,13 @@ else
             plotname = strrep(plotname,'.png',sprintf('_%.0f.png',i));
         end
         
-        SigmaGlobal(i)  = knm2_ConvertShiftDrift2GlobalSigma('shifts_v',Shift_M(:,i),...
-            'sigmas_v',Sigma_M(:,i),...
+        SigmaGlobal(i)  = knm2_ConvertShiftDrift2GlobalSigma('shifts_v',Shift(:,i),...
+            'sigmas_v',Sigma(:,i),...
             'weights_v',Weights_v,...
             'SanityPlot',SanityPlot,'PlotName',plotname);
     end
     
-    save(savename,'SigmaGlobal','Shift_M','Sigma_M','Weights_v');
+    save(savename,'SigmaGlobal','Shift','Sigma','Weights_v');
 end
 %% display result
 fprintf('Global broadening = %.1f meV \n',1e3.*SigmaGlobal);

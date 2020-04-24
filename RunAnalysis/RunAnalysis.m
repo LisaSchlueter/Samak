@@ -620,8 +620,6 @@ classdef RunAnalysis < handle
         end
         
         function [FitPar, FitErr, FitChi2min, dof,TBDIS]  = FitTwin(obj,varargin)
-            % FitMbestPar, FitMbestErr, FitMbestChi2min, dofMbest,...
-            %      FitTrueMPar, FitTrueMErr, FitTrueMChi2min, dofTrueM]
             p = inputParser;
             p.addParameter('nSamples',10,@(x)isfloat(x) & x>0);
             p.addParameter('CATS','OFF',@(x)ismember(x,{'ON','OFF'}));
@@ -1652,7 +1650,7 @@ classdef RunAnalysis < handle
                 %                     obj.InitModelObj_Norm_BKG('RecomputeFlag','ON');
                 %                 else
                 if ~contains(obj.fixPar,'fix 3 ;')
-                    obj.InitModelObj_Norm_BKG('RecomputeFlag','ON');
+                    obj.InitModelObj_Norm_BKG('RecomputeFlag','OFF');
                 end
                 
                 [StatCM, StatCMFrac] = obj.ComputeCM_StatPNP(varargin);
