@@ -142,7 +142,7 @@ classdef FITC < handle
             
             % options for analysis
             p.addParameter('pixels',[],@(x)isfloat(x) && x>0);
-            p.addParameter('exclDataStart',1,@(x)isfloat(x)  && x>0);
+            p.addParameter('exclDataStart',1,@(x)isfloat(x)  && all(x>0));
             p.addParameter('exclDataStop',9999,@(x)isfloat(x) && x>0);
             % options for chi2
             p.addParameter('pulls',0,@(x)isfloat(x) && all(x>0));
@@ -458,23 +458,28 @@ classdef FITC < handle
                 'FracTm_bias',FracTm_fit,...
                 'mnu4Sq_bias',mnu4Sq_fit,...
                 'sin2T4_bias',sin2T4_fit);
-
+            
             obj.SO.ComputeTBDIS();
             
             % exclude data points: data and model TBDIS
-            m = obj.SO.TBDIS(obj.exclDataStart:obj.exclDataStop,:); %model
-            y = obj.counts(obj.exclDataStart:obj.exclDataStop,:);   %data
-            z = obj.c_error(obj.exclDataStart:obj.exclDataStop,:);  %error
+            if numel(obj.exclDataStart)==1
+                IncludeIndices = obj.exclDataStart:obj.exclDataStop;
+            else
+                IncludeIndices = obj.exclDataStart;
+            end
             
-            % exclude points in covariance matrix: 
+            m = obj.SO.TBDIS(IncludeIndices,:); %model
+            y = obj.counts(IncludeIndices,:);   %data
+            z = obj.c_error(IncludeIndices,:);  %error
+            
+            % exclude points in covariance matrix:
             % a bit complicated, because of multiring case
             nrings = numel(obj.SO.MACE_Ba_T); % always gives correct number of pseudo rings
             nqU_used = size(m,1);             % number of subruns, which are NOT excluded
-            exclIndex = sort(reshape(repmat(obj.exclDataStart:obj.exclDataStop,[nrings,1])+[0:nrings-1]'.*obj.SO.nqU,[nqU_used*nrings,1]));
+            exclIndex = sort(reshape(repmat(IncludeIndices,[nrings,1])+[0:nrings-1]'.*obj.SO.nqU,[nqU_used*nrings,1]));
             CovMatFit = obj.COVMAT(exclIndex,exclIndex);
             CovMatFracFit = obj.COVMATFrac(exclIndex,exclIndex);
             CovMatShapeFit = obj.COVMATShape(exclIndex,exclIndex);
-           % CovMatFracShapeFit = obj.COVMATFracShape(exclIndex,exclIndex);
             
             %reshape for multiring
             if strcmp(obj.SO.FPD_Segmentation,'RING')
@@ -495,8 +500,8 @@ classdef FITC < handle
                         chi2 = ((y - m)')*(CovMatFit \ (y - m))  + PullTerm;
                 case 'chi2CMFrac'
                     % use model to renormalize covariance matrix in each iteration
-                    mNoBKG =  obj.SO.TBDIS(obj.exclDataStart:obj.exclDataStop,:)-...
-                        (obj.SO.BKG_RateSec.*obj.SO.qUfrac(obj.exclDataStart:obj.exclDataStop,:).*obj.SO.TimeSec); %model without background
+                    mNoBKG =  obj.SO.TBDIS(IncludeIndices,:)-...
+                        (obj.SO.BKG_RateSec.*obj.SO.qUfrac(IncludeIndices,:).*obj.SO.TimeSec); %model without background
                     mNoBKG(obj.SO.qU>obj.SO.Q,:) = 0; mNoBKG(mNoBKG<0) = 0;
                     CM_tmp = CovMatFracFit.*mNoBKG.*mNoBKG';
                     chi2 = ((y - m)')*(CM_tmp \ (y - m)) + PullTerm;
@@ -595,7 +600,12 @@ classdef FITC < handle
                         fixpar_local = strrep(obj.fixPar,';','');
                         fixpar_local = strrep(fixpar_local,'fix','');
                         
-                        dof = obj.SO.nPixels*(obj.exclDataStop-obj.exclDataStart+1) - ...
+                        if numel(obj.exclDataStart)==1
+                            nqU = obj.exclDataStop-obj.exclDataStart+1;
+                        else
+                            nqU = numel(obj.exclDataStart);
+                        end
+                        dof = obj.SO.nPixels*nqU - ...
                             length(obj.parinit)+numel(str2num(fixpar_local));
                         results = {par, err, chi2min, errmat, dof};
                         

@@ -46,11 +46,11 @@ if exist(savenameFix,'file')
 else
     T = MultiRunAnalysis(RunAnaArg{:});
     T.exclDataStart = T.GetexclDataStart(range);
-    T.exclDataStop = 37; % exclude first background point
+  
     T.chi2 = 'chi2CMShape';
     T.fixPar = 'mNu E0 Bkg Norm';
     T.InitFitPar; 
-    FitParStd = 13.3.*1e-06; %std(FitPar(12,:),0,2); % standard deviation of background slope over samples
+    FitParStd =  std(FitPar(12,:),0,2); % standard deviation of background slope over samples
     
     CmArg = {'BkgCM','ON',...
         'SysEffects',struct('BkgShape','ON'),...
@@ -69,7 +69,7 @@ else
         progressbar(i/nSamples)
         
         T.RunData.TBDIS = TBDIS_mc(:,i); % use the sampe samples!
-        T.RunData.TBDISE = sqrt(TBDIS(:,i));
+        T.RunData.TBDISE = sqrt(TBDIS_mc(:,i));
         
         T.Fit;
         FitParCM(:,i)   = T.FitResult.par;
@@ -84,3 +84,10 @@ else
 end
 
 
+%% plots
+plotdir = strrep(savedir,'results','plots');
+MakeDir(plotdir);
+plotname1 = sprintf('%sknm2_BkgSlope_FixedVsFree_ScatterHist.png',plotdir);
+ScatterHist2(FitPar(1,:),FitPar(12,:).*1e6,'RefLine','ON',...
+    'xName',sprintf('{\\itm}_\\nu^2 (eV^2)'),'yname',sprintf('{\\it B} slope (mcps / keV))'),...
+    'SaveAs',plotname1);
