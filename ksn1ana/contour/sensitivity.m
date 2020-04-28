@@ -5,9 +5,9 @@ tic;
 %% Settings
 % Parameters
 
-CL           = 90;                  % Confidence level 90% - 95% - 99%
+CL           = 95;                  % Confidence level 90% - 95% - 99%
 datatype     = 'Real';  % Real
-uncertainty  = 'stat';  % syst
+uncertainty  = 'syst';  % syst
 NPfactor     = 1.064;
 d            = 10;                  % Number of dots per decade
 eVrange      = 95;                  % eV below the endpoint

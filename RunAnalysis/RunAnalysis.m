@@ -2277,6 +2277,7 @@ classdef RunAnalysis < handle
                          psys = p(1);  pstat = p(2);
                          if strcmp(Colors,'RGB')
                              psys.FaceColor =obj.PlotColor; %psys.FaceAlpha=0.3;
+                             pstat.FaceColor = obj.PlotColorLight;
                              lstat.Color = rgb('Silver');
                          else
                              pstat.FaceColor = rgb('Black')';%obj.PlotColor;

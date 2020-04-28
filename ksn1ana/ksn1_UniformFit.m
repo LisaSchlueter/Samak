@@ -6,7 +6,7 @@ range = 95; % eV below the endpoint
 %% create MultiRunAnalysis object
 
 R = MultiRunAnalysis('RunList','KNM1',... % runlist defines which runs are analysed -> set MultiRunAnalysis.m -> function: GetRunList()
-    'chi2','chi2CMShape',...                 % uncertainties: statistical or stat + systematic uncertainties
+    'chi2','chi2CMShape',...              % uncertainties: statistical or stat + systematic uncertainties
     'DataType','Real',...                 % can be 'Real' or 'Twin' -> Monte Carlo
     'fixPar','mNu E0 Norm Bkg mnu4Sq sin2T4',...        % free Parameter!!
     'RadiativeFlag','ON',...              % theoretical radiative corrections applied in model
