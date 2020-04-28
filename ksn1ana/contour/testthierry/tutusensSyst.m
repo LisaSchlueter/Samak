@@ -5,7 +5,7 @@ tic;
 %% Settings
 % Parameters
 
-CL           = 95;                  % Confidence level 90% - 95% - 99%
+CL           = 99;                  % Confidence level 90% - 95% - 99%
 datatype     = 'Real';  % Real
 uncertainty  = 'syst';  % syst
 NPfactor     = 1.064;
@@ -14,7 +14,7 @@ eVrange      = 95;                  % eV below the endpoint
 
 % Name for the datafile
 %savename     = sprintf('coord_%1$deV_%2$s_%3$s_95_newN2.mat',eVrange,datatype,uncertainty);
-savename     = sprintf('coord_%1$deV_%2$s_%3$s_90_thierry.mat',eVrange,datatype,uncertainty);
+savename     = sprintf('coord_%1$deV_%2$s_%3$s_99_thierry.mat',eVrange,datatype,uncertainty);
 
 % Scan settings
 start_decade = -1;
