@@ -8,7 +8,7 @@
 %   chi_Z   (chiSq values, if everything is OK this should be only 4.61)
 
 filepath   = [getenv('SamakPath'),'ksn1ana/contour/'];
-file_A     = 'coord_90eV_Twin_stat_95_freeM.mat';
+file_A     = 'coord_90eV_Real_syst_95.mat';
 file_B     = 'coord_90eV_Real_syst_95_freeM.mat';
 % file_C     = 'coord_90eV_Real_syst_99.mat';
 
@@ -36,7 +36,7 @@ db2  = 1-(1-2*db.sith4_X).^2;
 %% Plot tunings
 % Cutting the tails
 na   = length(da2); nb   = length(db2); %nc   = length(dc2);
-cuta = (1:na);  cutb = (4:nb);  %cutc = (5:nc);
+cuta = (5:na);  cutb = (4:nb);  %cutc = (5:nc);
 
 % Continuation of the RAA curves
 raa90x = d_raa_90.sith4_X;   raa90y = d_raa_90.m4_Y;   n90 = length(raa90x);
@@ -82,10 +82,11 @@ hold on
 pA      =       plot ([da2(cuta),1],[da.m4_Y(cuta),da.m4_Y(na)],...
                     'color',prlB,'LineWidth',3);
 hold on
-% db2 = [db2(cutb),1]; db2_y =[db.m4_Y(cutb)-db.m_beta(cutb),db.m4_Y(nb)];
-
-pB      =       plot ([db2(cutb),1],[db.m4_Y(cutb),db.m4_Y(nb)],...
+db2 = [db2(cutb),1]; db2_y =[db.m4_Y(cutb)-db.m_beta(cutb),db.m4_Y(nb)];
+pB      =       plot (db2,db2_y,...
                     '--','color',prlB,'LineWidth',3);
+% pB      =       plot ([db2(cutb),1],[db.m4_Y(cutb),db.m4_Y(nb)],...
+%                     '--','color',prlB,'LineWidth',3);
 % hold on
 % pC      =       plot ([dc2(cutc),1],[dc.m4_Y(cutc),dc.m4_Y(nc)],...
 %                     ':','color',prlB,'LineWidth',3);
@@ -99,8 +100,8 @@ ylabel('\Deltam_{41}^2  (eV^2)');
 % Labels
 mainz    = 'Mainz data 90%CL';
 troitsk  = 'Troitsk data 90%CL';
-katrinA  = 'KATRIN fitrium MCdata free m_\beta - stat - 95%CL - [E_0-90;E_0+50] eV';
-katrinB  = 'KATRIN KSN1 MCdata free m_\beta - stat - 95%CL - [E_0-90;E_0+50] eV';
+katrinA  = 'KATRIN KSN1 data - stat+syst - 95%CL - [E_0-90;E_0+50] eV';
+katrinB  = 'KATRIN KSN1 data free m_\beta - stat+syst - 95%CL - [E_0-90;E_0+50] eV';
 katrinC  = 'KATRIN KSN1 data - stat+sys - 99%CL - [E_0-90;E_0+50] eV';
 giunti   = 'arXiv:1912.12956 - - 90%CL - [E_0-40;E_0+50] eV';
 raa90    = 'Phys. Rev. D 83, 073006 (2011) - 90%CL';

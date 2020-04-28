@@ -6,29 +6,30 @@ function sens_func(contour_settings)
     %% Settings
     % Parameters
 
-    CL           = 95;                  % Confidence level 90% - 95% - 99%
-    datatype     = 'Twin';  % Real
-    uncertainty  = 'stat';  % syst
-    NPfactor     = 1;
-    d            = 10;                  % Number of dots per decade
-    eVrange      = 90;                  % eV below the endpoint
-    ActiveNeut   = 'ON';
+    CL           = contour_settings.CL;                  % Confidence level                 % 90% - 95% - 99%
+    datatype     = contour_settings.datatype;                                               % Real - Twin
+    uncertainty  = contour_settings.uncertainty;                                            % syst - stat
+    NPfactor     = contour_settings.NPfactor;           % Non poisson factor                % 1 - 1.064
+    d            = contour_settings.scan_step;          % Number of dots per decade
+    eVrange      = contour_settings.eVrange;            % eV below the endpoint
+    ActiveNeut   = contour_settings.activeFlag;         % Activate the active neutrino fit  % FREE OFF FIX
 
     % Name for the datafile
-    savename     = sprintf('coord_%1$deV_%2$s_%3$s_95_freeM.mat',eVrange,datatype,uncertainty);
+    savename     = sprintf('coord_%1$deV_%2$s_%3$s_%4$dCL',eVrange,datatype,uncertainty,CL);
 
-    % Scan settings
+    
+    %% Scan settings
     start_decade = -1;
     stop_decade  = 4;
-    min_sin2T4   = 0.00001;              % Lower bound for sin2(th4) for the plot
+    min_sin2T4   = 0.00001;                 % Lower bound for sin2(th4) for the plot
 
-    p   = 0.00001;                       % Newton gradient step
-    err = 0.01;                         % Newton convergence tolerance
+    p   = 0.00001;                          % Newton gradient step
+    err = 0.01;                             % Newton convergence tolerance
 
 
     % Variables
     m4_Y    = [];
-    sith4_X = [];                       % Plot variables
+    sith4_X = [];                           % Plot variables
     chi_Z   = [];
     m_beta  = [];
 
@@ -72,23 +73,17 @@ function sens_func(contour_settings)
 
     % Active neutrino
     switch ActiveNeut
-        case 'ON'
+        case 'FREE'
             free_para = 'mNu E0 Norm Bkg';
+            savename  = [savename,'_freeM.mat'];
         case 'OFF'
             free_para = 'E0 Norm Bkg';
+            savename  = [savename,'.mat'];
+        case 'FIX'
+            free_para = 'E0 Norm Bkg';
+            savename  = [savename,'_fixM.mat'];
     end
 
-    SysEffects = struct(...
-        'RF_EL','OFF',...       % Response Function(RF) EnergyLoss
-        'RF_BF','OFF',...       % RF B-Fields
-        'RF_RX','OFF',...       % Column Density, inel cross ection
-        'FSD','OFF',...         % final states
-        'TASR','OFF',...        % tritium activity fluctuations
-        'TCoff_RAD','OFF',...   % radiative thoretical corrections (this has to be OFF for KNM1, because included in model)
-        'TCoff_OTHER','OFF',... % other theo corr.
-        'DOPoff','OFF',...      % doppler effects --> OFF, because in model
-        'Stack','OFF',...       % stacking / HV fluctuations
-        'FPDeff','OFF');        % detector efficiency
 
     %% Constructor Initialisation
     R = MultiRunAnalysis('RunList','KNM1',...
@@ -101,57 +96,13 @@ function sens_func(contour_settings)
                 'FSDFlag',sibille,...
                 'ELossFlag','KatrinT2',...
                 'SysBudget',22);
-
-    % R.ComputeCM('SysEffects',SysEffects,...
-    %     'BkgCM','ON');
-
-    % %% Check systematics errorbars
-    % times = (R.ModelObj.qUfrac*R.ModelObj.TimeSec);
-    % 
-    % CM  = R.FitCM_Obj.CovMatFrac;
-    % 
-    % IS = R.ModelObj.TBDIS;
-    % stat  = sqrt(IS);
-    % stat  = stat./times;
-    % 
-    % err = zeros(1,length(CM));
-    % for k = (1:length(CM))
-    %     err(k) = sqrt(CM(k,k));
-    % end
-    % 
-    % prlB = [50 148 216]/255;
-    % 
-    % plot(R.ModelObj.qU-18574,err,'color',prlB,'LineWidth',3)
-    % hold on
-    % plot(R.ModelObj.qU-18574,stat,'--','color',prlB,'LineWidth',3)
-    % 
-    % % Plot style
-    % xlabel('Retarding energy - 18574 (eV)');
-    % ylabel('Errorbar');
-    % legend({'Stat','Syst'},'Location','southwest','box','off');
-    % 
-    % % xlim([-90 max(qUc+5)]);
-    % PRLFormat;
-    % set(gca, 'YScale', 'log');
-    % axis square
-
-    % R.ModelObj.ComputeTBDDS();
-    % YD=R.ModelObj.TBDDS;
-    % R.ModelObj.ComputeTBDIS();
-    % YI = R.ModelObj.TBDIS;
-    % R.InitModelObj_Norm_BKG
-    % R.RunData.TBDIS
-    % sum(YI)
-
+            
     %% Delta-X2
     X0     = fit_chi(0,0,R,eVrange);
     chilvl = chilvl + X0;
-    X0 =0;
+%     X0   = 0;
 
     %% Loop
-    % Initialisation
-    %progressbar()
-    %progressbar(0)
     c=0;
 
     diary 'progress.txt'
@@ -217,7 +168,7 @@ function sens_func(contour_settings)
                     m4_Y    = [m4_Y,m];
                     chi_Z   = [chi_Z,X2_a];
 
-                    if strcmp(ActiveNeut,'ON')
+                    if strcmp(ActiveNeut,'FREE')
                         m_beta  = [m_beta,R.FitResult.par(1)]; % When m_beta is activated
                     end
 
@@ -245,7 +196,21 @@ function sens_func(contour_settings)
     fprintf('SCANNING OVER\n\n')
     fprintf('Time spent : %.1f hours\n',t/3600)
     diary off
-
+    
+    %% Convert data
+    % Delta M
+    switch ActiveNeut
+        case 'FREE'
+            DM2 = m4_Y-m_beta;
+        case 'OFF'
+            DM2 = m4_Y;
+        case 'FIX'
+            DM2 = m4_Y+0.956847;    % Best KN1 fit
+    end
+    
+    % sin(theta) - sin(2 theta)
+    si2th4_X = 1-(1-2*sith4_X).^2;
+    
     %% Datasave
     diary 'progress.txt'
     fprintf('Saving file ...\n')
@@ -254,9 +219,8 @@ function sens_func(contour_settings)
     filepath   = [getenv('SamakPath'),'ksn1ana/contour/'];
     file       = [filepath,savename];
     MakeDir(filepath)
-    %file_sith4 = '/home/iwsatlas1/guennic/Desktop/Samak2.0/ksn1ana/contour/coord_0to4_dV_90eV_Final';
-    save(file,'R','sith4_X','m4_Y','chi_Z','m_beta','X0');
 
+    save(file,'contour_settings','R','sith4_X','si2th4_X','m4_Y','m_beta','DM2','chi_Z','X0');
 
     diary 'progress.txt'
     fprintf('==== FINISHED ====\n')

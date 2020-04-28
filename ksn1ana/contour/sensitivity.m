@@ -5,18 +5,18 @@ tic;
 %% Settings
 % Parameters
 
-CL           = 95;                  % Confidence level 90% - 95% - 99%
-datatype     = 'Twin';  % Real
-uncertainty  = 'stat';  % syst
-NPfactor     = 1;
+CL           = 95;                  % Confidence level                  % 90% - 95% - 99%
+datatype     = 'Twin';                                                  % Real - Twin
+uncertainty  = 'stat';                                                  % stat - syst
+NPfactor     = 1;                   % Non poisson factor
 d            = 10;                  % Number of dots per decade
 eVrange      = 90;                  % eV below the endpoint
-ActiveNeut   = 'ON';
+ActiveNeut   = 'ON';                % Activate the active neutrino fit  %ON OFF FIX
 
 % Name for the datafile
-savename     = sprintf('coord_%1$deV_%2$s_%3$s_95_freeM.mat',eVrange,datatype,uncertainty);
+savename     = sprintf('coord_%1$deV_%2$s_%3$s_%4$dCL',eVrange,datatype,uncertainty,CL);
 
-% Scan settings
+%% Scan settings
 start_decade = -1;
 stop_decade  = 4;
 min_sin2T4   = 0.00001;              % Lower bound for sin2(th4) for the plot
@@ -73,9 +73,16 @@ end
 switch ActiveNeut
     case 'ON'
         free_para = 'mNu E0 Norm Bkg';
+        savename  = [savename,'_freeM.mat'];
     case 'OFF'
         free_para = 'E0 Norm Bkg';
+        savename  = [savename,'.mat'];
+    case 'FIX'
+        free_para = 'E0 Norm Bkg';
+        savename  = [savename,'_fixM.mat'];
 end
+    
+% Systematics effects
 
 SysEffects = struct(...
     'RF_EL','OFF',...       % Response Function(RF) EnergyLoss
@@ -100,6 +107,13 @@ R = MultiRunAnalysis('RunList','KNM1',...
             'FSDFlag',sibille,...
             'ELossFlag','KatrinT2',...
             'SysBudget',22);
+
+switch ActiveNeut
+    case 'ON'
+        R.pullFlag=1;
+    case 'FIX'
+        R.ModelObj.mnuSq_i=-0.956847;
+end
 
 % R.ComputeCM('SysEffects',SysEffects,...
 %     'BkgCM','ON');
@@ -145,12 +159,9 @@ R = MultiRunAnalysis('RunList','KNM1',...
 %% Delta-X2
 X0     = fit_chi(0,0,R,eVrange);
 chilvl = chilvl + X0;
-X0 =0;
+% X0   = 0;
 
 %% Loop
-% Initialisation
-%progressbar()
-%progressbar(0)
 c=0;
 
 diary 'progress.txt'
@@ -228,11 +239,8 @@ for m = m4
         diary off
     end
     
-    % Progress bar
+    % Progress
     c=c+1;
-    %progressbar(c/length(m4))
-    progress=100*c/length(m4);
-    %waitbar(progress,probar,string(progress*100))
     
     diary 'progress.txt'
     Progress = 100*c/length(m4)
@@ -245,6 +253,20 @@ fprintf('SCANNING OVER\n\n')
 fprintf('Time spent : %.1f hours\n',t/3600)
 diary off
 
+%% Convert data
+% Delta M
+switch ActiveNeut
+    case 'ON'
+        DM2 = m4_Y-m_beta;
+    case 'OFF'
+        DM2 = m4_Y;
+    case 'FIX'
+        DM2 = m4_Y+0.956847;    % Best KN1 fit
+end
+
+% sin(theta) - sin(2 theta)
+si2th4_X = 1-(1-2*sith4_X).^2;
+    
 %% Datasave
 diary 'progress.txt'
 fprintf('Saving file ...\n')
@@ -253,46 +275,9 @@ diary off
 filepath   = [getenv('SamakPath'),'ksn1ana/contour/'];
 file       = [filepath,savename];
 MakeDir(filepath)
-%file_sith4 = '/home/iwsatlas1/guennic/Desktop/Samak2.0/ksn1ana/contour/coord_0to4_dV_90eV_Final';
-save(file,'R','sith4_X','m4_Y','chi_Z','m_beta','X0');
 
+save(file,'contour_settings','R','sith4_X','si2th4_X','m4_Y','m_beta','DM2','chi_Z','X0');
 
 diary 'progress.txt'
 fprintf('==== FINISHED ====\n')
 diary off
-
-
-
-%% Other
-% %% sin(2th)
-% 
-% sith42_X=[];
-% 
-% for elt=sith4_X
-%     sith42_X = [sith42_X,1-(1-2*elt)^2];
-% end
-% 
-% %% Plots
-% 
-% %% KATRIN
-% plot(sith4_X,m4_Y)
-% 
-% xlabel('sin^2(\theta_4)');
-% ylabel('m_4^2');
-% legend({'X^2 = 4.6'},'Location','southwest')
-% 
-% set(gca, 'XScale', 'log');
-% set(gca, 'YScale', 'log');
-% 
-% %% GIUNTI
-% figure;
-% [ms,cut]=max(sith42_X); N=length(sith42_X);
-% %scatter(sith42_X(cut:N),m4_Y(cut:N))      % Remove the bottom tail
-% plot(sith42_X,m4_Y)
-% 
-% xlabel('sin^2(2\theta_4)');
-% ylabel('m_4^2');
-% legend({'X^2 = 4.6'},'Location','southwest')
-% 
-% set(gca, 'XScale', 'log');
-% set(gca, 'YScale', 'log');
