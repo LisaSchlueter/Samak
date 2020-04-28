@@ -14,14 +14,17 @@
 %         MPP/TUM             TUM / MPP                  CEA
 %-------------------------------------------------------------------------%
 
-classdef RunAnalysis < handle
+classdef RunAnalysis < handle & matlab.mixin.Copyable
+     properties (Access=public,NonCopyable=true)
+         ModelObj;
+     end
     properties (Access=public)
         DataType;       % Switch for analysing Real Data of Fake Data
         FakeRunType;    % Prefix for Fake run to be considered
         RunNr;          % Run Number
         DataSet;        % Information about Measurement period, filled automatically
         RunData;        % Structure with all information for runsummaries
-        ModelObj;       % TBD Object
+    %    ModelObj;       % TBD Object
         SingleRunObj;   % cell with TBD Objects of singl runs
         AnaFlag;        % SinglePixel, MultiPixel or StackPixel, Ring
         ELossFlag;
@@ -4297,6 +4300,20 @@ classdef RunAnalysis < handle
             end
         end
         end
+       methods (Access = protected)
+%       function cp = copyElement(obj)
+%          % Shallow copy object
+%          cp = copyElement@matlab.mixin.Copyable(obj);
+%          % Get handle from Prop2
+%          hobj = obj.ModelObj.mnu4Sq;
+%          % Create default object
+%          new_hobj = 0;%eval(class(hobj));
+%          % Add public property values from orig object
+%           Copy.propValues(new_hobj,hobj);
+%          % Assign the new object to property
+%          cp.ModelObj.mnu4Sq  = 0;%new_hobj;
+%       end
+   end
 end
 
 

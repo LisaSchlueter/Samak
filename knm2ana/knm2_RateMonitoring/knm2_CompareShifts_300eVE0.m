@@ -1,7 +1,7 @@
 % comparison plot for "shifts"
 % 300eV rate analysis versus large range E0 fit
 
-Baseline = ' ' ; %'RW2PSR2';
+Baseline = 'Mean' ; %'RW2PSR2';
 
 %% load 300 eV analysis
 file300eV = [getenv('SamakPath'),'knm2ana/knm2_RateMonitoring/results/knm2_RManalysis_Ring.mat'];
@@ -53,7 +53,7 @@ for i = 1:3
     leg.Title.FontWeight = 'normal';
     xlim([0.5 4.5]);
     
-   % ylim([ymin, ymax]);
+    ylim([ymin, ymax]);
     
     PrettyFigureFormat('FontSize',20);
     xticks([1:4]);

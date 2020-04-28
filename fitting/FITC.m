@@ -409,7 +409,7 @@ classdef FITC < handle
             end
             
             if any(ismember(obj.pullFlag,10))
-                
+                PullTerm = PullTerm + par(3*obj.SO.nPixels+9)^2/obj.pulls.^2;
             end
         end
         function chi2 = chi2function(obj,par)

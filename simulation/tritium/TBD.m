@@ -35,7 +35,7 @@
 %
 % ----------------------------------------------------------------------- %
 
-classdef TBD < handle & WGTSMACE %!dont change superclass without modifying parsing rules!
+classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclass without modifying parsing rules!
     
     properties (Constant = true, Hidden = true)
         
@@ -155,8 +155,8 @@ classdef TBD < handle & WGTSMACE %!dont change superclass without modifying pars
         ProbKernDE;       % probability under the curve of the kernel (should = 1)
         
         % Normalization
-        CumFrac;               % Fraction of the decays that happen in the tail of the spectrum, 
-        normFit; normFit_i; 
+        CumFrac;               % Fraction of the decays that happen in the tail of the spectrum,
+        normFit; normFit_i;
         normFitallPixels; normFitallPixels_i;
         NormFactorTBDDSPixels; % Normalization factor for all pixels, Vector
         Norm_BiasPixels;       % Normalization bias for all pixels, Vector
@@ -186,8 +186,8 @@ classdef TBD < handle & WGTSMACE %!dont change superclass without modifying pars
         TmexE_E; TmexP_E;
         
         % FSD broadening
-        FSD_Sigma         % std of gaussian or width of rectangle    
-        FSD_MultiPos      % rel. shifts 
+        FSD_Sigma         % std of gaussian or width of rectangle
+        FSD_MultiPos      % rel. shifts
         FSD_MultiWeights  % weighting
         FSD_MultiSigma    % std of gaussian or width of rectangle for each peak
         FSD_Dist          % Gauss or Rect
@@ -224,7 +224,7 @@ classdef TBD < handle & WGTSMACE %!dont change superclass without modifying pars
         onlyBKGchange = false;
         prevBKG;
     end
-    
+
     methods
         
         function obj    = TBD(varargin)
@@ -712,14 +712,14 @@ classdef TBD < handle & WGTSMACE %!dont change superclass without modifying pars
                 mNuSq_local = obj.mnuSq;
                 %   TexP_M = repmat(TexP,obj.nTe,1); % probability
                 %   TexE_M = repmat(TexE,obj.nTe,1); % energy
-                TexP_M = squeeze(permute(repmat(TexP,1,1,obj.nTe),[3,2,1])); % probability
-                TexE_M = squeeze(permute(repmat(TexE,1,1,obj.nTe),[3,2,1])); % energy
-                Te_M = squeeze(repmat(obj.Te,[1,size(TexP')])); % energies of electron
-                pe_M = squeeze(repmat(obj.pe,[1,size(TexP')])); % momentum of electron
-                Q_M = squeeze(Q_local'.*ones([obj.nTe,size(TexP')]));
-                me_M = squeeze(obj.me.*ones([obj.nTe,size(TexP')]));
+                TexP_M   = squeeze(permute(repmat(TexP,1,1,obj.nTe),[3,2,1])); % probability
+                TexE_M   = squeeze(permute(repmat(TexE,1,1,obj.nTe),[3,2,1])); % energy
+                Te_M     = squeeze(repmat(obj.Te,[1,size(TexP')])); % energies of electron
+                pe_M     = squeeze(repmat(obj.pe,[1,size(TexP')])); % momentum of electron
+                Q_M      = squeeze(Q_local'.*ones([obj.nTe,size(TexP')]));
+                me_M     = squeeze(obj.me.*ones([obj.nTe,size(TexP')]));
                 sin2T4_M = squeeze(obj.sin2T4.*ones([obj.nTe,size(TexP')]));
-                mnuSq_M = squeeze(mNuSq_local'.*ones([obj.nTe,size(TexP')]));
+                mnuSq_M  = squeeze(mNuSq_local'.*ones([obj.nTe,size(TexP')]));
                 mnu4Sq_M = squeeze(obj.mnu4Sq.*ones([obj.nTe,size(TexP')]));
             else
                 % Ground/Excited State
@@ -1006,8 +1006,7 @@ classdef TBD < handle & WGTSMACE %!dont change superclass without modifying pars
                 %    obj.TTNormES = 0;
                 % end
             end
-        end
-        
+        end 
         function          SetFitBiasallPixels(obj,flag)
             %
             % Set the fitting bias parameters
@@ -1033,6 +1032,11 @@ classdef TBD < handle & WGTSMACE %!dont change superclass without modifying pars
             end
         end
         
+        function SetFitBiasSterile(obj,mnu4Sq,sin2T4)
+            obj.mnu4Sq_i = mnu4Sq;
+            obj.sin2T4_i = sin2T4;
+            obj.SetFitBias(0);
+        end
         % Spectrum Computation - 1 pixel Equivalent
         function          ComputePhaseSpace(obj)
             % ----------------------------------------------------------
