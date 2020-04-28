@@ -1,7 +1,7 @@
 %% -- KATRIN KSN1 ANALYSIS - SENSITIVITY CONTOUR SERIES -- %%
 
-serie1 = ['FIX','FREE'];
-serie2 = ['stat','syst'];
+serie1 = {'FIX','FREE'};
+serie2 = {'stat','syst'};
 serie3 = [95,90];
 
 for par1 = serie1
