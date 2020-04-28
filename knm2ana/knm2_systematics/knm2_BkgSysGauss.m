@@ -3,11 +3,17 @@
 % systematics setting
 RecomputeFlag = 'OFF';
 CovMatRecomputeFlag = 'ON';
-MaxSlopeCpsPereV = 13.3*1e-06;%5.2*1e-06;
-
+MaxSlopeCpsPereV = 14.3*1e-06;%5.2*1e-06;
+NPfactor = 1.112;
+if NPfactor~=1
+    npstr = sprintf('_NP%.3f',NPfactor);
+else
+    npstr = '';
+end
+    
 savedir = [getenv('SamakPath'),'knm2ana/knm2_systematics/results/'];
 MakeDir(savedir);
-savename = sprintf('%sknm2_BKGsys_GaussOnly_%.1fmcpskeV.mat',savedir,MaxSlopeCpsPereV*1e6);
+savename = sprintf('%sknm2_BKGsys_GaussOnly_%.1fmcpskeV%s.mat',savedir,MaxSlopeCpsPereV*1e6,npstr);
 if exist(savename,'file') && strcmp(RecomputeFlag,'OFF')
     load(savename)
 else
@@ -23,10 +29,10 @@ RunArg = {'FSDFlag','BlindingKNM2',...
     'RunList',RunList,...      
     'fixPar','mNu E0 Norm Bkg',... % free parameter
     'DataType','Twin',...      % MC twins
-    'TwinBias_Q',18573.70,...  % twin endpoint
+    'TwinBias_Q',18573.56,...  % twin endpoint
     'SysBudget',34,...
     'RingMerge','Full',...
-    'NonPoissonScaleFactor',1};        
+    'NonPoissonScaleFactor',NPfactor};        
 
 CmArg = {'BkgCM','ON',...
     'SysEffects',struct('BkgShape','ON'),...

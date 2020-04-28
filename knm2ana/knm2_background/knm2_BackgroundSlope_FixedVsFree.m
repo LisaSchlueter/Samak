@@ -83,11 +83,44 @@ else
                      'FitPar','FitErr','FitChi2min','dof');
 end
 
-
-%% plots
+%% plots result with free bkg slope
 plotdir = strrep(savedir,'results','plots');
 MakeDir(plotdir);
 plotname1 = sprintf('%sknm2_BkgSlope_FixedVsFree_ScatterHist.png',plotdir);
 ScatterHist2(FitPar(1,:),FitPar(12,:).*1e6,'RefLine','ON',...
-    'xName',sprintf('{\\itm}_\\nu^2 (eV^2)'),'yname',sprintf('{\\it B} slope (mcps / keV))'),...
+    'xName',sprintf('{\\itm}_\\nu^2 (eV^2)'),'yname',sprintf('{\\it B} slope (mcps / keV)'),...
     'SaveAs',plotname1);
+%% plot neutrino mass w and w/o bkg slope
+GetFigure;
+h1 = histogram(FitPar(1,:)-FitParCM(1,:),'FaceColor',rgb('DodgerBlue'),'FaceAlpha',1);
+xlabel(sprintf('{\\itm}_{{\\itB} slope free}^2 - {\\itm}_{{\\itB} slope fixed}^2 (eV^2)'))
+ylabel('Occurence')
+leg = legend(sprintf('Mean = %.1g eV^2',mean(FitPar(1,:)-FitParCM(1,:))),...
+    'EdgeColor',rgb('Silver'),'Location','northwest');
+PrettyFigureFormat('FontSize',22)
+t = title(sprintf('{\\itB} slope constraint in CovMat = %.1f mcps / keV',FitParStd.*1e6),...
+    'FontWeight','normal','FontSize',get(gca,'FontSize'));
+plotname2 = sprintf('%sknm2_BkgSlope_FixedVsFree_mNuSq.png',plotdir);
+print(plotname2,'-dpng','-r450');
+%% plot uncertainties on neutrino mass
+GetFigure;
+ErrBfree  = FitErr(1,FitErr(1,:)>0.05 & FitErr(1,:)<0.8);
+ErrBfixed = FitErrCM(1,FitErrCM(1,:)>0.05 & FitErrCM(1,:)<0.8);
+ErrDiff = FitErr(1,:)-FitErrCM(1,:);
+h1 = histogram(ErrBfree,'FaceColor',rgb('DodgerBlue'),'FaceAlpha',0.3);
+hold on;
+h2 = histogram(ErrBfixed,'FaceColor',rgb('Orange'),'FaceAlpha',0.3);
+hold off;
+xlabel(sprintf('{\\itm}_{err}^2 (eV^2)'))
+ylabel('Occurence')
+leg = legend([h1,h2],sprintf('{\\itB} slope free:   mean = %.2g eV^2',mean(ErrBfree)),...
+    sprintf('{\\itB} slope fixed: mean = %.2g eV^2',mean(ErrBfixed)),...
+    'EdgeColor',rgb('Silver'),'Location','northwest');
+PrettyFigureFormat('FontSize',22)
+xlim([0 0.7])
+plotname3 = sprintf('%sknm2_BkgSlope_FixedVsFree_mNuSqErr.png',plotdir);
+print(plotname3,'-dpng','-r450');
+
+%%
+%std(FitPar(1,:))
+%std(FitParCM(1,:))

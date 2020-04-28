@@ -8,7 +8,7 @@
 nSamples = 1e3;
 Mode = 'Uniform';
 
-RecomputeFlag = 'ON';
+RecomputeFlag = 'OFF';
 
 savedir = [getenv('SamakPath'),'knm2ana/knm2_RateMonitoring/results/'];
 MakeDir(savedir);

@@ -5,7 +5,7 @@
 
 %% setttings
 SanityPlot    = 'OFF'; % plot and save plot
-Mode          = 'Ring';       % Ring or Uniform
+Mode          = 'Uniform';       % Ring or Uniform
 RecomputeFlag = 'OFF';
 
 savedir  = [getenv('SamakPath'),'knm2ana/knm2_RateMonitoring/results/'];

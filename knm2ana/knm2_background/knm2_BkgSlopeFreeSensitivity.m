@@ -57,3 +57,9 @@ fprintf('-----------------------------------------------------------\n')
 fprintf('Neutrino mass sq.->  free bkg slope = %.3f +- %.3f eV^2 \n',FitResults_mNuSqBkgFree.par(1),0.5*(-FitResults_mNuSqBkgFree.errNeg(1)+FitResults_mNuSqBkgFree.errPos(1)))
 fprintf('Neutrino mass sq.-> fixed bkg slope = %.3f +- %.3f eV^2 \n',FitResults_mNuSqFree.par(1),0.5*(-FitResults_mNuSqFree.errNeg(1)+FitResults_mNuSqFree.errPos(1)))
 fprintf('-----------------------------------------------------------\n')
+% impact on sensitivity
+mNuSqStat    =0.5*(-FitResults_mNuSqFree.errNeg(1)+FitResults_mNuSqFree.errPos(1));
+mNuSqStatpSys = 0.5*(-FitResults_mNuSqBkgFree.errNeg(1)+FitResults_mNuSqBkgFree.errPos(1));
+mNuSqSys = sqrt(mNuSqStatpSys^2-mNuSqStat^2);
+fprintf('Neutrino mass sq. sensitivity (sys bkg slope)  %.3f eV^2 \n',mNuSqSys)
+fprintf('-----------------------------------------------------------\n')

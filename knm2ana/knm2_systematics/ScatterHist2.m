@@ -16,7 +16,7 @@ SaveAs  = p.Results.SaveAs;
 % plot
 plotHandle = figure('Units','normalized','Position',[0.1,0.1,0.8,0.8]);
 scatterhist(x,y,'Direction','out',...);%,'HistogramDisplayStyle','bar',...
-    'Location','Northeast','Color',rgb('DodgerBlue'));
+    'Location','Northeast','Color',rgb('DodgerBlue'),'Kernel','off');
 xlabel(xName);
 ylabel(yName);
 PrettyFigureFormat('FontSize',26);

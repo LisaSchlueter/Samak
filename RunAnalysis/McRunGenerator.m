@@ -450,9 +450,12 @@ classdef McRunGenerator < handle
             obj.qUfrac            = obj.VaryParameter(TmpObj.qUfrac,qUfrac_RelErr,'Rel');
             NormFactor            =  sum(TmpObj.qUfrac)./sum(obj.qUfrac);
             obj.qUfrac            = obj.qUfrac.*NormFactor; %renormalize
-
-           obj.WGTS_CD_MolPerCm2 = obj.VaryParameter(TmpObj.WGTS_CD_MolPerCm2,CD_RelErr,'Rel');
-%          
+            
+            if CD_RelErr~=1
+                obj.WGTS_CD_MolPerCm2 = obj.VaryParameter(TmpObj.WGTS_CD_MolPerCm2,CD_RelErr,'Rel');
+            else
+                obj.WGTS_CD_MolPerCm2 =  TmpObj.WGTS_CD_MolPerCm2;
+            end
 %             obj.TimeSec           = obj.VaryParameter(obj.TwinObj{1}.TimeSec,obj.TimeSec_RelErr);
 %             obj.WGTS_MolFrac_TT   = obj.VaryParameter(obj.TwinObj{1}.WGTS_MolFrac_TT,obj.WGTS_MolFrac_TT_RelErr);
 %             obj.WGTS_MolFrac_DT   = obj.VaryParameter(obj.TwinObj{1}.WGTS_MolFrac_DT,obj.WGTS_MolFrac_DT_RelErr);

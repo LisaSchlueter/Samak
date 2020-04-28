@@ -608,10 +608,9 @@ classdef FITC < handle
                             [errNeg, errPos] = GetAsymmErrMinos(minuitOutputStr);
                             results = {results{:},errNeg, errPos};
                         end
-                        system(['rm ', minuitOutputStr]); % delete txt file 
+                        system(['rm ',minuitOutputStr]); % delete txt file 
                 end
-                %'min  ; migrad ; imp;  minos; '],obj.fixPar);
-                
+              
             else
                 obj.preparevars;
                 obj.startfit;
