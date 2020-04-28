@@ -2022,7 +2022,6 @@ classdef RunAnalysis < handle
             else
                 switch obj.DataType
                     case 'Real'
-                        % obj.PlotColor = rgb('SteelBlue');
                         obj.PlotColor = rgb('DodgerBlue');
                         obj.PlotColorLight = rgb('PowderBlue');
                     case {'Twin','FitriumTwin','KafitTwin'}
@@ -2114,7 +2113,7 @@ classdef RunAnalysis < handle
             if contains(obj.DataSet,'FirstTritium')
                   set(fig5, 'Units', 'centimeters', 'Position', [0.001, 0.001,8.4 ,8.4]);
             else
-                set(fig5, 'Units', 'normalized', 'Position', [0.001, 0.001,0.45, 0.7]);
+                 set(fig5, 'Units', 'normalized', 'Position', [0.001, 0.001,0.45, 0.7]);
             end
               
             if strcmp(DisplayStyle,'PRL') || strcmp(DisplayMTD,'ON')
@@ -2275,8 +2274,9 @@ classdef RunAnalysis < handle
                          lsys = l(1);  lstat = l(2);
                          psys = p(1);  pstat = p(2);
                          if strcmp(Colors,'RGB')
-                             psys.FaceColor =obj.PlotColor; %psys.FaceAlpha=0.3;
-                             lstat.Color = rgb('Silver');
+                             psys.FaceColor  = obj.PlotColor; %psys.FaceAlpha=0.3;
+                             pstat.FaceColor = obj.PlotColorLight;
+                             lstat.Color     = rgb('Silver');
                          else
                              pstat.FaceColor = rgb('Black')';%obj.PlotColor;
                              psys.FaceColor = rgb('Black'); psys.FaceAlpha=0.4;
