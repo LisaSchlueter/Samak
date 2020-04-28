@@ -216,7 +216,7 @@ function sens_func(contour_settings)
     fprintf('Saving file ...\n')
     diary off
 
-    filepath   = [getenv('SamakPath'),'ksn1ana/contour/'];
+    filepath   = [getenv('SamakPath'),'ksn1ana/contour/contour_files/V2/'];
     file       = [filepath,savename];
     MakeDir(filepath)
 
