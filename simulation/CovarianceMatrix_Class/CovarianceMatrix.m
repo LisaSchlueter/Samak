@@ -1722,8 +1722,7 @@ classdef CovarianceMatrix < handle
             end
             obj.CovMatFile = strcat(covmat_path,covmat_filename);
             
-            %Check if CM is already computed
-            obj.RecomputeFlag='ON';
+            %Check if CM is already compute 
             if exist(obj.CovMatFile,'file')==2 && strcmp(obj.RecomputeFlag,'OFF')
                 fprintf(2,'CovarianceMatrix:ComputeCM_TASR: Loading TASR CM from File \n')
                 obj.ReadCMFile('filename',obj.CovMatFile,'SysEffect','TASR');

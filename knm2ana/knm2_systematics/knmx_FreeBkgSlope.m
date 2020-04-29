@@ -1,7 +1,7 @@
 % background slope as a free fit parameter for final KATRIN settings
 range = 40;
 InitFile = @ref_FakeRun_FinalKATRIN_CD100_1000days;
-NPfactor = 1.112;
+NPfactor = 1;%.112;
 savedir = [getenv('SamakPath'),'knm2ana/knm2_background/results/'];
 MakeDir(savedir);
 savename = sprintf('%sknm2xFreeBkgSlope.mat',savedir);

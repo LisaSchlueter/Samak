@@ -398,18 +398,26 @@ classdef FITC < handle
             end
 
             % 9: mixing angle pull
-            if any(ismember(obj.pullFlag,9))
+            if any(ismember(obj.pullFlag,9)) % sterile pull I
 %                PullTerm = PullTerm + (par(4*obj.SO.nPixels+12))^2/sin2T4tol^2 + exp(-500*par(4*obj.SO.nPixels+12));
                 PullTerm = PullTerm + ...
-                    exp(500*(par(4*obj.SO.nPixels+12)-0.5)) + ...
+                    exp(500*(par(4*obj.SO.nPixels+12)-0.5)) + ...   % sin2T4
                     exp(-500*par(4*obj.SO.nPixels+12)) + ...
-                    exp(500*( par(4*obj.SO.nPixels+11)-90^2)) + ...
+                    exp(500*( par(4*obj.SO.nPixels+11)-90^2)) + ... % m4
                     exp(-500*par(4*obj.SO.nPixels+11)) + ...
-                    (par(1)-0)^2/1^2;
+                    (par(1)-0)^2/1^2;                               % nu-mass
             end
             
             if any(ismember(obj.pullFlag,10))
                 PullTerm = PullTerm + par(3*obj.SO.nPixels+9)^2/obj.pulls.^2;
+            end
+            
+            if any(ismember(obj.pullFlag,11)) % sterile pull II
+                sin4Central = 0; sin4Tol = 10;
+                m4Central = 0;   m4Tol   = 1e4;
+                PullTerm = PullTerm + ...
+                (par(4*obj.SO.nPixels+12)-sin4Central).^2./sin4Tol^2+...  % sin2t4
+                (par(4*obj.SO.nPixels+11)-m4Central).^2./m4Tol^2;         % m4
             end
         end
         function chi2 = chi2function(obj,par)

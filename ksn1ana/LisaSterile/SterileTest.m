@@ -10,8 +10,9 @@ DataType = 'Real';
 freePar = 'E0 Bkg Norm';
 RunList = 'KNM1';
 savefile = sprintf('%sSterileTest_%s_%s_%s_%.0feVrange_%.0fGridSteps.mat',...
-    savedir,RunList,DataType,strrep(freePar,' ',''),range,nGridSteps);
+           savedir,RunList,DataType,strrep(freePar,' ',''),range,nGridSteps);
 if exist(savefile,'file') 
+    load(savefile)
 else
     RunAnaArg = {'RunList',RunList,...
         'fixPar',freePar,...
@@ -57,20 +58,20 @@ else
 end
 
 %% get contour at X sigma
-% CL = 90;
-% % Confidence level
-% switch CL
-%     case 90
-%         DeltaChi2 = 4.61;
-%     case 95
-%         DeltaChi2 = 5.99;
-%     case 99
-%         DeltaChi2 = 9.21;
-% end
-% 
-% sin2T4_contour = zeros(nGridSteps,1);
-% mnu4Sq_contour = mnu4Sq(:,1);
-% 
-% for i=1:numel(nGridSteps)
-%     sin2T4_contour(i) = interp1(chi2Grid(:,i)-chi2_ref,mnu4Sq_contour,DeltaChi2,'spline');
-% end
+CL = 90;
+% Confidence level
+switch CL
+    case 90
+        DeltaChi2 = 4.61;
+    case 95
+        DeltaChi2 = 5.99;
+    case 99
+        DeltaChi2 = 9.21;
+end
+
+sin2T4_contour = zeros(nGridSteps,1);
+mnu4Sq_contour = mnu4Sq(:,1);
+
+for i=1:numel(nGridSteps)
+    sin2T4_contour(i) = interp1(chi2Grid(:,i)-chi2_ref,mnu4Sq_contour,DeltaChi2,'spline');
+end

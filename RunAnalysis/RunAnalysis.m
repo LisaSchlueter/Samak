@@ -1243,7 +1243,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             %Initialize Normalization and Background with a stat. Fit
             if strcmp(InitNormFit,'ON')
                 % 40 eV range, stat only, free parameters: E0, Bkg, Norm
-                obj.InitModelObj_Norm_BKG('RecomputeFlag','ON');
+                obj.InitModelObj_Norm_BKG('RecomputeFlag','OFF');
             end
             
             % Move to Fit CM and do renormalization with current statistics
