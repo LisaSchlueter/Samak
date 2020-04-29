@@ -13,8 +13,15 @@ end
 DataType = 'Twin';
 freePar = 'E0 Bkg Norm';
 RunList = 'KNM1';
-savefile = sprintf('%sKSN1_GridSearch_%s_%s_%s_%.0feVrange_%s_%.0fnGrid.mat',...
-    savedir,RunList,DataType,strrep(freePar,' ',''),range,chi2,nGridSteps);
+SmartGrid = 'ON';
+if strcmp(SmartGrid,'ON')
+    AddSin2T4 = 0.1;
+   extraStr = sprintf('_SmartGrid%.0e',AddSin2T4);
+else
+    extraStr = '';
+end
+savefile = sprintf('%sKSN1_GridSearch_%s_%s_%s_%.0feVrange_%s_%.0fnGrid%s.mat',...
+    savedir,RunList,DataType,strrep(freePar,' ',''),range,chi2,nGridSteps,extraStr);
 if exist(savefile,'file')
     load(savefile)
 else
@@ -56,11 +63,17 @@ else
         T.pullFlag = 99;
     end
     %% define grid
-    sin2T4      = logspace(-3,log10(0.5),nGridSteps); %linspace(0.001,0.5,nGridSteps)
-    mnu4Sq      = logspace(-1,log10((range+5)^2),nGridSteps)';
-    mnu4Sq      = repmat(mnu4Sq,1,nGridSteps); 
-    sin2T4      = repmat(sin2T4,nGridSteps,1);  
-   
+    switch SmartGrid
+        case 'OFF'
+            sin2T4      = logspace(-3,log10(0.5),nGridSteps); %linspace(0.001,0.5,nGridSteps)
+            mnu4Sq      = logspace(-1,log10((range+5)^2),nGridSteps)';
+            mnu4Sq      = repmat(mnu4Sq,1,nGridSteps);
+            sin2T4      = repmat(sin2T4,nGridSteps,1);
+        case 'ON'
+           [mnu4Sq,sin2T4] = GetSmartKsn1Grid('range',range,'ConfLevel',95,...
+                'nGridSteps',nGridSteps,'AddSin2T4',AddSin2T4,...
+                'SanityPlot','ON');
+    end
     %% make copy of models for parallel computing
     D = copy(repmat(T,nGridSteps.*nGridSteps,1));
 
