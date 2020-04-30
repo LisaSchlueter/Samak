@@ -23,7 +23,7 @@ freePar       = p.Results.freePar;
 RunList       = p.Results.RunList;
 SmartGrid     = p.Results.SmartGrid;
 RecomputeFlag = p.Results.RecomputeFlag;
-
+SysEffect     = p.Results.SysEffect;
 if strcmp(chi2,'chi2CMShape')
     NonPoissonScaleFactor=1.064;
 else
@@ -37,7 +37,9 @@ if strcmp(SmartGrid,'ON')
 else
     extraStr = '';
 end
-
+if strcmp(chi2,'chi2CMShape') || ~strcmp(SysEffect,'all')
+     extraStr = [extraStr,sprintf('_%s',SysEffect)];
+end
 savedir = [getenv('SamakPath'),'ksn1ana/LisaSterile/results/'];
 MakeDir(savedir);
 
@@ -66,7 +68,7 @@ else
         'AngularTFFlag','OFF',...
         'ISCSFlag','Edep',...
         'NonPoissonScaleFactor',NonPoissonScaleFactor,...
-        'TwinBias_Q',18573.73,...
+        'TwinBias_Q',18573.70,...
         'SysBudget',22};
     
     T = MultiRunAnalysis(RunAnaArg{:});
@@ -80,22 +82,17 @@ else
         end
     end
     
-    
-    if strcmp(DataType,'Real')
-        T.fixPar = [freePar,'mnu4Sq , sin2T4'];
-        T.InitFitPar;
-    end
-    
-    T.pullFlag = 9; % limit sin4 to [0,0.5] and m4 [0 range^2]
+    %% reference fit to find global minimum
+    T.fixPar       = [freePar,'mnu4Sq , sin2T4']; % free sterile parameters
+    T.InitFitPar;
+    T.pullFlag     = 9;  % limit sin4 to [0,0.5] and m4 [0 range^2]
     T.Fit;
     FitResults_ref = T.FitResult;
     chi2_ref       = T.FitResult.chi2min;
-    T.pullFlag = 99; % means no pull
+    T.pullFlag     = 99; % remove pull
+    T.fixPar = freePar;  % fix sterile parameters again
+    T.InitFitPar;
     
-    if strcmp(DataType,'Real')
-        T.fixPar = freePar;
-        T.InitFitPar;
-    end
     %% define msq4 - sin2t4 grid
     switch SmartGrid
         case 'OFF'

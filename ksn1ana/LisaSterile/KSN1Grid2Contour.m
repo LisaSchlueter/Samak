@@ -19,20 +19,20 @@ for i=1:nGridStep
     end
 end
 
-ExclLogic = abs(sin2t4_contour)>=1;
+ExclLogic = ( abs(sin2t4_contour)>=1) | isnan(sin2t4_contour);
 sin2t4_contour(ExclLogic) = [];
 mnu4sq_contour(ExclLogic) = [];
 
 nGridStep = numel(mnu4sq_contour);
 %% sanity check
-SanityPlot = 'ON';
+SanityPlot = 'OFF';%OFF';
 if strcmp(SanityPlot,'ON')
     GetFigure;
     mnuIndex = 15;
     tStr1 = 'problem m4 =';
     tStr2 = 'good m4 =';
     for i=1:nGridStep
-        if any((chi2(:,i)-chi2_ref)<0)
+        if any((chi2(:,i)-chi2_ref)<-0.1)
             PlotArg = {'-.','Color',rgb('FireBrick'),'LineWidth',2};
             tStr1 = [tStr1,sprintf(' %.0f ,',sqrt(mnu4sq_contour(i)))];
         else
