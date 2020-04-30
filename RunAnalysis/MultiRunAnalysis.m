@@ -2806,8 +2806,10 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             fprintf('Retrieve %.0f Fit Results from file\n',sum( LoadFilesIndex));
             LoadFiles                  = cellfun(@(x) importdata(x),savefile(LoadFilesIndex)); % import those runs
             if strcmp(obj.DataSet,'Knm1')
-                parAll(LoadFilesIndex,:)   = cell2mat(arrayfun(@(x) x.FitResult.par,LoadFiles,'UniformOutput',false)); %asign to variables
-                errAll(LoadFilesIndex,:)   = cell2mat(arrayfun(@(x) x.FitResult.err,LoadFiles,'UniformOutput',false));
+                a = LoadFiles.FitResult; % less fit parameters for KNM1. 
+                nPartmp = numel(a.par);
+                parAll(LoadFilesIndex,1:nPartmp)   = cell2mat(arrayfun(@(x) x.FitResult.par,LoadFiles,'UniformOutput',false)); %asign to variables
+                errAll(LoadFilesIndex,1:nPartmp)   = cell2mat(arrayfun(@(x) x.FitResult.err,LoadFiles,'UniformOutput',false));
             else
                 parAll(LoadFilesIndex,:)   = cell2mat(arrayfun(@(x) x.FitResult.par',LoadFiles,'UniformOutput',false))'; %asign to variables
                 errAll(LoadFilesIndex,:)   = cell2mat(arrayfun(@(x) x.FitResult.err',LoadFiles,'UniformOutput',false))';

@@ -11,6 +11,7 @@ p.addParameter('freePar','E0 Bkg Norm',@(x)ischar(x)); % check ConvertFixPar.m f
 p.addParameter('RunList','KNM1',@(x)ischar(x)); 
 p.addParameter('SmartGrid','OFF',@(x)ismember(x,{'ON','OFF'})); % work in progress
 p.addParameter('RecomputeFlag','OFF',@(x)ismember(x,{'ON','OFF'})); 
+p.addParameter('SysEffect','all',@(x)ischar(x)); % if chi2CMShape: all or only 1
 
 p.parse(varargin{:});
 
@@ -65,24 +66,35 @@ else
         'AngularTFFlag','OFF',...
         'ISCSFlag','Edep',...
         'NonPoissonScaleFactor',NonPoissonScaleFactor,...
-        'TwinBias_Q',18573.73};
+        'TwinBias_Q',18573.73,...
+        'SysBudget',22};
+    
     T = MultiRunAnalysis(RunAnaArg{:});
     T.exclDataStart = T.GetexclDataStart(range);
+    
+    if strcmp(T.chi2,'chi2CMShape') && ~strcmp(SysEffect,'all')
+        if strcmp(SysEffect,'Bkg')
+            T.ComputeCM('SysEffect',struct('FSD','OFF'),'BkgCM','ON');
+        else
+            T.ComputeCM('SysEffect',struct(SysEffect,'ON'),'BkgCM','OFF');
+        end
+    end
+    
     
     if strcmp(DataType,'Real')
         T.fixPar = [freePar,'mnu4Sq , sin2T4'];
         T.InitFitPar;
-        T.pullFlag = 9; % limit sin4 to [0,0.5] and m4 [0 range^2]
     end
     
+    T.pullFlag = 9; % limit sin4 to [0,0.5] and m4 [0 range^2]
     T.Fit;
     FitResults_ref = T.FitResult;
     chi2_ref       = T.FitResult.chi2min;
+    T.pullFlag = 99; % means no pull
     
     if strcmp(DataType,'Real')
         T.fixPar = freePar;
         T.InitFitPar;
-        T.pullFlag = 99; % means no pull
     end
     %% define msq4 - sin2t4 grid
     switch SmartGrid
