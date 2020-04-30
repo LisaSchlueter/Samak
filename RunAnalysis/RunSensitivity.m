@@ -2386,17 +2386,7 @@ classdef RunSensitivity < handle
                 if strcmp(obj.LimitFlag,'Central')
                     factor = erfinv(cl)*sqrt(2);
                 elseif strcmp(obj.LimitFlag,'Up')
-                    if obj.ConfLevel==0.9
-                        factor = 1.282;
-                    elseif  obj.ConfLevel==0.95
-                        factor = 1.645;
-                    elseif obj.ConfLevel == 0.99
-                        factor = 2.326;
-                    else
-                        fprintf('upper limit conversion only for 90, 95 and 99 C.L. \n');
-                        factor =1;
-                        return
-                    end
+                    factor = norminv(cl);
                 end
             end
             
