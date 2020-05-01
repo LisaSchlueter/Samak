@@ -12,6 +12,7 @@ p.addParameter('RunList','KNM1',@(x)ischar(x));
 p.addParameter('SmartGrid','OFF',@(x)ismember(x,{'ON','OFF'})); % work in progress
 p.addParameter('RecomputeFlag','OFF',@(x)ismember(x,{'ON','OFF'})); 
 p.addParameter('SysEffect','all',@(x)ischar(x)); % if chi2CMShape: all or only 1
+p.addParameter('RandMC','OFF',@(x)ischar(x) || isfloat(x)); % randomize twins if RandMC is float
 
 p.parse(varargin{:});
 
@@ -24,6 +25,8 @@ RunList       = p.Results.RunList;
 SmartGrid     = p.Results.SmartGrid;
 RecomputeFlag = p.Results.RecomputeFlag;
 SysEffect     = p.Results.SysEffect;
+RandMC        = p.Results.RandMC;
+
 if strcmp(chi2,'chi2CMShape')
     NonPoissonScaleFactor=1.064;
 else
@@ -37,14 +40,24 @@ if strcmp(SmartGrid,'ON')
 else
     extraStr = '';
 end
-if strcmp(chi2,'chi2CMShape') || ~strcmp(SysEffect,'all')
+if strcmp(chi2,'chi2CMShape') && ~strcmp(SysEffect,'all')
      extraStr = [extraStr,sprintf('_%s',SysEffect)];
+end
+if isfloat(RandMC) && strcmp(DataType,'Twin')
+    extraStr = sprintf('%s_RandMC%.0f',extraStr); 
 end
 savedir = [getenv('SamakPath'),'ksn1ana/LisaSterile/results/'];
 MakeDir(savedir);
 
 savefile = sprintf('%sKSN1_GridSearch_%s_%s_%s_%.0feVrange_%s_%.0fnGrid%s.mat',...
     savedir,RunList,DataType,strrep(freePar,' ',''),range,chi2,nGridSteps,extraStr);
+
+if ~exist(savefile,'file') && strcmp(RecomputeFlag,'OFF')
+    % if doesn't exist test 25x Grid
+    nGridSteps = 25;
+    savefile = sprintf('%sKSN1_GridSearch_%s_%s_%s_%.0feVrange_%s_%.0fnGrid%s.mat',...
+    savedir,RunList,DataType,strrep(freePar,' ',''),range,chi2,nGridSteps,extraStr);
+end
 %% load or calculate grid
 if exist(savefile,'file') && strcmp(RecomputeFlag,'OFF')
     load(savefile,'mnu4Sq','sin2T4','chi2','chi2_ref')
@@ -82,6 +95,15 @@ else
         end
     end
     
+    if isfloat(RandMC) && strcmp(DataType,'Twin')
+        % change to randomized MC data
+        T.InitModelObj_Norm_BKG('RecomputeFlag','ON');
+        T.ModelObj.ComputeTBDDS;
+        T.ModelObj.ComputeTBDIS;
+        TBDIS_mc = mvnrnd(T.RunData.TBDIS',T.FitCMShape,1)';
+        T.RunData.TBDIS = TBDIS_mc;
+        T.RunData.TBDISE = sqrt(TBDIS_mc);
+    end
     %% reference fit to find global minimum
     T.fixPar       = [freePar,'mnu4Sq , sin2T4']; % free sterile parameters
     T.InitFitPar;
@@ -138,6 +160,10 @@ else
         save(savefile,'mnu4Sq_contour90','sin2T4_contour90','-append')
     catch
     end
+    
+     if isfloat(RandMC) && strcmp(DataType,'Twin')
+          save(savefile,'TBDIS_mc','-append')
+     end
 end
 end
 

@@ -2,11 +2,11 @@
 % Lisa, April 2020
 %% settings
 Nathan = 'ON'; % compare with nathan
-CL = [90];
-SavePlot = 'OFF';
+CL = [90];%, 95 99];
+SavePlot = 'ON';
 PlotSplines = 'OFF'; % plot smooth spline instead of points
-range = 90;%
-nGridSteps =50;%50;
+range = 95;%
+nGridSteps = 50;
 chi2Str = 'chi2CMShape';
 DataType = 'Real';
 freePar = 'E0 Bkg Norm';
@@ -14,17 +14,19 @@ RunList = 'KNM1';
 SmartGrid = 'OFF';
 
 %% load grid (or calculate if doesn't exist)
-[mnu4Sq,sin2T4,chi2,chi2_ref,savefile] = KSN1GridSearch('range',range,...
+GridArg = {'range',range,...
     'nGridSteps',nGridSteps,...
     'chi2',chi2Str,...
-    'DataType',DataType,...
     'freePar',freePar,...
     'RunList',RunList,...
     'SmartGrid',SmartGrid,...
-    'RecomputeFlag','OFF');
+    'RecomputeFlag','OFF'};
+
+    [mnu4Sq,sin2T4,chi2,chi2_ref,savefile] = KSN1GridSearch(...
+        'DataType',DataType,GridArg{:});
+    [pHandle,legStr] = KSN1ContourPlot(mnu4Sq,sin2T4,chi2,chi2_ref,CL);
 
 %% plot contour
-[pHandle,legStr] = KSN1ContourPlot(mnu4Sq,sin2T4,chi2,chi2_ref,CL);
 if range==40
     xlim([1e-02 0.5])
 elseif range>=90
@@ -51,6 +53,7 @@ if strcmp(Nathan,'ON')
     else
         nrange = range;
     end
+    
     nathanfile = sprintf('%sNathan/NathanContour_%.0feV_%s_%s.mat',savedir,nrange,DataType,chi2Str);
     try
         d = importdata(nathanfile);

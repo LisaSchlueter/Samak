@@ -1,0 +1,26 @@
+% contour with randomized twins
+%% settings
+range = 95;%
+nGridSteps = 25;
+chi2Str = 'chi2CMShape';
+DataType = 'Twin';
+freePar = 'E0 Bkg Norm';
+RunList = 'KNM1';
+SmartGrid = 'OFF';
+nContours = 500;
+RandMC = 1:nContours;
+%% load grid (or calculate if doesn't exist)
+for i=1:nContours
+    progressbar(i/nContours)
+    [mnu4Sq,sin2T4,chi2,chi2_ref,savefile] = KSN1GridSearch('range',range,...
+        'nGridSteps',nGridSteps,...
+        'chi2',chi2Str,...
+        'DataType',DataType,...
+        'freePar','E0 Bkg Norm',...
+        'RunList',RunList,...
+        'SmartGrid',SmartGrid,...
+        'RecomputeFlag','OFF',...
+        'RandMC',i);
+end
+
+

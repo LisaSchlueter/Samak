@@ -2,20 +2,27 @@ function [mnu4sq_contour, sin2t4_contour] = KSN1Grid2Contour(mnu4sq,sin2t4,chi2,
 %% calculate contour from msq4 - sin2t4 grid at confidence level cl
 
 % define delta chi2 for given confidence level
-DeltaChi2 = GetDeltaChi2(CL/100,2);
+DeltaChi2 = GetDeltaChi2(CL,2);
 
 nGridStep = size(mnu4sq,1);
 sin2t4_contour = zeros(nGridStep,1);
 mnu4sq_contour = mnu4sq(:,1);
 
-% if chi2_ref>min(min(chi2))
-%     chi2_ref = min(min(chi2));
-% end
+if chi2_ref>min(min(chi2))
+     chi2_ref = min(min(chi2));
+end
 for i=1:nGridStep
     if max(chi2(:,i)-chi2_ref)<DeltaChi2 || min(chi2(:,i)-chi2_ref)>DeltaChi2
         sin2t4_contour(i) = NaN;
-    else
-        sin2t4_contour(i) = interp1(chi2(:,i)-chi2_ref,sin2t4(i,:),DeltaChi2,'spline');
+%    else %chi2(1,i)>min(chi2(:,i))
+%         % points with local minium    
+%        IndexMin = find(chi2(:,i)==min(chi2(:,i)),1);    % find minimum
+%        %[sinInter, IndexInter] = unique(sin2t4(i,IndexMin:end));
+%         [chi2Inter, IndexInter] = unique(chi2(IndexMin:end,i));
+%         sinInter = sin2t4(IndexMin:end,i);
+%        sin2t4_contour(i) = interp1(chi2Inter-chi2_ref,sinInter(IndexInter),DeltaChi2,'spline');
+     else
+         sin2t4_contour(i) = interp1(chi2(:,i)-chi2_ref,sin2t4(i,:),DeltaChi2,'spline');
     end
 end
 

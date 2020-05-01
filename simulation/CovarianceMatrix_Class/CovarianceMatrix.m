@@ -1727,7 +1727,7 @@ classdef CovarianceMatrix < handle
                 fprintf(2,'CovarianceMatrix:ComputeCM_TASR: Loading TASR CM from File \n')
                 obj.ReadCMFile('filename',obj.CovMatFile,'SysEffect','TASR');
                 obj.MultiCovMat.CM_TASR = obj.CovMat;
-               % return
+               return
             end
             
             nRings = numel(obj.StudyObject.MACE_Ba_T);
