@@ -2,7 +2,7 @@
 % Lisa, April 2020
 %% settings
 Nathan = 'OFF'; % compare with nathan
-CL = 90;
+CL = 95;
 SavePlot = 'ON';
 PlotSplines = 'OFF'; % plot smooth spline instead of points
 range = 95;%
@@ -28,10 +28,12 @@ GridArg = {'range',range,...
 [mnu4Sq_D,sin2T4_D,chi2_D,chi2_ref_D,savefile_D] = KSN1GridSearch(...
     'DataType','Real',GridArg{:});
 %% plot
-[pTwin,legStrTwin] = KSN1ContourPlot(mnu4Sq_T,sin2T4_T,chi2_T,chi2_ref_T,CL,...
+[pTwin,legStrTwin] = KSN1ContourPlot('mnu4Sq',mnu4Sq_T,'sin2T4',sin2T4_T,...
+    'chi2',chi2_T,'chi2_ref',chi2_ref_T,'CL',CL,...
     'HoldOn','OFF','PlotSplines','ON','Color','DodgerBlue');
 hold on;
-[pData,legStrData] = KSN1ContourPlot(mnu4Sq_D,sin2T4_D,chi2_D,chi2_ref_D,CL,...
+[pData,legStrData] = KSN1ContourPlot('mnu4Sq',mnu4Sq_D,'sin2T4',sin2T4_D,...
+    'chi2',chi2_D,'chi2_ref',chi2_ref_D,'CL',CL,...
       'HoldOn','ON','PlotSplines','ON','Color','Orange');
 
 
@@ -99,5 +101,5 @@ title(sprintf('%s , %.0f eV at %.0f%% C.L.',chi2Label,range,CL),'FontWeight','no
 %% save plot
 if strcmp(SavePlot,'ON')
     print(plotname,'-dpng','-r450');
+    fprintf('save plot to %s \n',plotname);
 end
-fprintf('save plot to %s \n',plotname);

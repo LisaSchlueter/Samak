@@ -13,6 +13,7 @@ p.addParameter('SmartGrid','OFF',@(x)ismember(x,{'ON','OFF'})); % work in progre
 p.addParameter('RecomputeFlag','OFF',@(x)ismember(x,{'ON','OFF'})); 
 p.addParameter('SysEffect','all',@(x)ischar(x)); % if chi2CMShape: all or only 1
 p.addParameter('RandMC','OFF',@(x)ischar(x) || isfloat(x)); % randomize twins if RandMC is float
+p.addParameter('pullFlag',99,@(x)isfloat(x)); % if above 12 --> no pull
 
 p.parse(varargin{:});
 
@@ -26,6 +27,7 @@ SmartGrid     = p.Results.SmartGrid;
 RecomputeFlag = p.Results.RecomputeFlag;
 SysEffect     = p.Results.SysEffect;
 RandMC        = p.Results.RandMC;
+pullFlag      = p.Results.pullFlag;
 
 if strcmp(chi2,'chi2CMShape')
     NonPoissonScaleFactor=1.064;
@@ -48,6 +50,10 @@ if isfloat(RandMC) && strcmp(DataType,'Twin')
     savedir = [getenv('SamakPath'),'ksn1ana/LisaSterile/results/RandomizedMC/'];
 else
     savedir = [getenv('SamakPath'),'ksn1ana/LisaSterile/results/'];
+end
+
+if pullFlag<=12
+      extraStr = sprintf('%s_pull%.0f',extraStr,pullFlag);
 end
 MakeDir(savedir);
 
@@ -84,7 +90,8 @@ else
         'ISCSFlag','Edep',...
         'NonPoissonScaleFactor',NonPoissonScaleFactor,...
         'TwinBias_Q',18573.70,...
-        'SysBudget',22};
+        'SysBudget',22,...
+        'pullFlag',pullFlag};
     
     T = MultiRunAnalysis(RunAnaArg{:});
     T.exclDataStart = T.GetexclDataStart(range);
@@ -109,16 +116,17 @@ else
     
     %% null hypothesis : no steriles
     T.Fit;
-    FitResults_Null = T.FitResults;
+    FitResults_Null = T.FitResult;
     
-    %% reference fit to find global minimum
+    %% reference fit to find global minimum (if this failed, chi2min is found by grid search)
     T.fixPar       = [freePar,'mnu4Sq , sin2T4']; % free sterile parameters
     T.InitFitPar;
-    T.pullFlag     = 9;  % limit sin4 to [0,0.5] and m4 [0 range^2]
+    pullFlag_i = T.pullFlag;
+    T.pullFlag     = [pullFlag_i,9];  % limit sin4 to [0,0.5] and m4 [0 range^2]
     T.Fit;
     FitResults_ref = T.FitResult;
     chi2_ref       = T.FitResult.chi2min;
-    T.pullFlag     = 99; % remove pull
+    T.pullFlag     = pullFlag_i; % remove pull
     T.fixPar = freePar;  % fix sterile parameters again
     T.InitFitPar;
     

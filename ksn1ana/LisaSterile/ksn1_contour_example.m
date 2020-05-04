@@ -1,27 +1,27 @@
 % example script 
 
 %% settings
+CL = 0.95;
 range = 95;%
 nGridSteps = 50;
 chi2Str = 'chi2CMShape';
 DataType = 'Real';
-freePar = 'E0 Bkg Norm';
+freePar = 'mNu E0 Bkg Norm';
 RunList = 'KNM1';
 SmartGrid = 'OFF';
-
+pullFlag = 12;
 %% plot options
-PlotContour = 'ON';
+PlotContour = 'OFF';
 PlotGrid    = 'ON';
-CL = 0.95;
 if strcmp(chi2Str,'chi2Stat')
     chi2Label = 'stat. only';
 else
     chi2Label = 'stat. and syst.';
 end
 if strcmp(DataType,'Real')
-    DataLabel = 'data';
+    DataLabel = 'Data';
 else
-    DataLabel = 'monte carlo';
+    DataLabel = 'Twins';
 end
 titleStr = sprintf('%s (%s) %.0f eV range',DataLabel,chi2Label,range);
 %% load grid (or calculate if doesn't exist)
@@ -32,7 +32,8 @@ titleStr = sprintf('%s (%s) %.0f eV range',DataLabel,chi2Label,range);
     'freePar',freePar,...
     'RunList',RunList,...
     'SmartGrid',SmartGrid,...
-    'RecomputeFlag','OFF');
+    'RecomputeFlag','OFF',...
+    'pullFlag',pullFlag);
 
 %% plot contour
  PlotArg ={'mnu4Sq',mnu4Sq,...
@@ -45,6 +46,8 @@ if strcmp(PlotContour,'ON')
 end
 
 %% plot grid
+plotnameGrid = strrep(strrep(extractAfter(savefile,'results/'),'.mat','.png'),'KSN1','Chi2Map_KSN1');
 if strcmp(PlotGrid,'ON')
-     KSN1GridPlot(PlotArg{:},'nInter',1e3);
+     KSN1GridPlot(PlotArg{:},'nInter',1e3,...
+    'ContourPlot','Fitrium','SaveAs',plotnameGrid);
 end

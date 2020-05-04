@@ -10,6 +10,7 @@ p.addParameter('HoldOn','OFF',@(x) ismember(x,{'ON','OFF'}));
 p.addParameter('Color','',@(x) ischar(x) || iscell(x));
 p.addParameter('LineStyle','-',@(x) ischar(x));
 p.addParameter('titleStr','',@(x)ischar(x));
+p.addParameter('nInter',1e3,@(x)isfloat(x));
 
 p.parse(varargin{:});
 
@@ -23,6 +24,7 @@ HoldOn      = p.Results.HoldOn;
 Color       = p.Results.Color;
 LineStyle   = p.Results.LineStyle;
 titleStr    = p.Results.titleStr;
+nInter      = p.Results.nInter;
 
 if isempty(mnu4Sq)
     load('KSN1_SmartGridInit_40eVrange.mat','mnu4Sq','sin2T4','chi2','chi2_ref');
@@ -37,7 +39,7 @@ mnu4Sq_contour = cell(numel(CL),1);
 sin2T4_contour = cell(numel(CL),1);
 legStr         = cell(numel(CL),1);
 for i=1:numel(CL)
-    PlotArg = {'LineWidth',2.5,'MarkerSize',4};
+    PlotArg = {'LineWidth',2,'MarkerSize',4};
     if ischar(Color)
         myColor = Color;
     elseif iscell(Color)
@@ -52,7 +54,12 @@ for i=1:numel(CL)
         pHandle  = plot(sin2T4_contour{i},mnu4Sq_contour{i},...
             LineStyle,PlotArg{:},'MarkerSize',20);
     else
-        y = linspace(min(mnu4Sq_contour{i}),max(mnu4Sq_contour{i}),1e3);
+%         [X,Y] = meshgrid(mnu4Sq(:,1),sin2T4(1,:));
+%         mNugrid    = repmat(logspace(log10(min(min(mnu4Sq))),log10(max(max(mnu4Sq))),nInter),nInter,1);
+%         sin2T4grid = repmat(logspace(log10(min(min(sin2T4))),log10(max(max(sin2T4))),nInter),nInter,1)';
+%         chi2grid = reshape(interp2(X,Y,chi2,mNugrid,sin2T4grid),nInter ,nInter );
+            
+        y = logspace(log10(min(mnu4Sq_contour{i})),log10(max(mnu4Sq_contour{i})),1e3);
         x = interp1(mnu4Sq_contour{i},sin2T4_contour{i},y,'spline');
         pHandle = plot(x,y,LineStyle,PlotArg{:});
     end

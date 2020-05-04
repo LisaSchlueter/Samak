@@ -37,10 +37,10 @@ ClosedLog95 =  DeltaChi2>= GetDeltaChi2(0.95,2);
 ClosedFrac95 = sum(ClosedLog95)/nContours;
 fprintf('%.0f%% C.L. : fraction of significant best fits = %.1f   (%.0f out of %.0f)\n',...
     95,ClosedFrac95*100,sum(ClosedLog95),nContours);
-ClosedLog82 =  DeltaChi2>= GetDeltaChi2(0.82,2);
+ClosedLog82 =  DeltaChi2>= GetDeltaChi2(0.84,2);
 ClosedFrac82 = sum(ClosedLog82)/nContours;
 fprintf('%.0f%% C.L. : fraction of significant best fits = %.1f  (%.0f out of %.0f)\n',...
-    82,ClosedFrac82*100,sum(ClosedLog82),nContours);
+    84,ClosedFrac82*100,sum(ClosedLog82),nContours);
 %%
 if strcmp(chi2Str,'chi2Stat')
     chi2Label = 'stat. only';
@@ -48,7 +48,7 @@ else
     chi2Label = 'stat. and syst.';
 end
 %% plot some
-PlotFlag = 'ON';
+PlotFlag = 'OFF';
 if strcmp(PlotFlag,'ON')
     for i=RandMC
         progressbar(i/nContours)
