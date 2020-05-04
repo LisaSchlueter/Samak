@@ -41,12 +41,14 @@ else
     extraStr = '';
 end
 if strcmp(chi2,'chi2CMShape') && ~strcmp(SysEffect,'all')
-     extraStr = [extraStr,sprintf('_%s',SysEffect)];
+    extraStr = [extraStr,sprintf('_%s',SysEffect)];
 end
 if isfloat(RandMC) && strcmp(DataType,'Twin')
-    extraStr = sprintf('%s_RandMC%.0f',extraStr); 
+    extraStr = sprintf('%s_RandMC%.0f',extraStr,RandMC);
+    savedir = [getenv('SamakPath'),'ksn1ana/LisaSterile/results/RandomizedMC/'];
+else
+    savedir = [getenv('SamakPath'),'ksn1ana/LisaSterile/results/'];
 end
-savedir = [getenv('SamakPath'),'ksn1ana/LisaSterile/results/'];
 MakeDir(savedir);
 
 savefile = sprintf('%sKSN1_GridSearch_%s_%s_%s_%.0feVrange_%s_%.0fnGrid%s.mat',...
@@ -54,7 +56,11 @@ savefile = sprintf('%sKSN1_GridSearch_%s_%s_%s_%.0feVrange_%s_%.0fnGrid%s.mat',.
 
 if ~exist(savefile,'file') && strcmp(RecomputeFlag,'OFF')
     % if doesn't exist test 25x Grid
-    nGridSteps = 25;
+    if nGridSteps==50
+        nGridSteps = 25;
+    elseif nGridSteps==25
+        nGridSteps = 50;
+    end
     savefile = sprintf('%sKSN1_GridSearch_%s_%s_%s_%.0feVrange_%s_%.0fnGrid%s.mat',...
     savedir,RunList,DataType,strrep(freePar,' ',''),range,chi2,nGridSteps,extraStr);
 end
@@ -102,8 +108,13 @@ else
         T.ModelObj.ComputeTBDIS;
         TBDIS_mc = mvnrnd(T.RunData.TBDIS',T.FitCMShape,1)';
         T.RunData.TBDIS = TBDIS_mc;
-        T.RunData.TBDISE = sqrt(TBDIS_mc);
+        T.RunData.TBDISE = sqrt(TBDIS_mc); 
     end
+    
+    %% null hypothesis : no steriles
+    T.Fit;
+    FitResults_Null = T.FitResults;
+    
     %% reference fit to find global minimum
     T.fixPar       = [freePar,'mnu4Sq , sin2T4']; % free sterile parameters
     T.InitFitPar;
@@ -149,7 +160,7 @@ else
     FitResults = reshape(FitResultsGrid,nGridSteps,nGridSteps);
     %% save
     save(savefile,'chi2_ref','FitResults_ref','RunAnaArg',...
-        'chi2','mnu4Sq','sin2T4','FitResults');
+        'chi2','mnu4Sq','sin2T4','FitResults','FitResults_Null');
     fprintf('save file to %s \n',savefile)
     
     try 
