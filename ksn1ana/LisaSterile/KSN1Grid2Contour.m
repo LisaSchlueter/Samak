@@ -13,16 +13,13 @@ if chi2_ref>min(min(chi2))
 end
 for i=1:nGridStep
     if max(chi2(:,i)-chi2_ref)<DeltaChi2 || min(chi2(:,i)-chi2_ref)>DeltaChi2
-        sin2t4_contour(i) = NaN;
-%    else %chi2(1,i)>min(chi2(:,i))
-%         % points with local minium    
-%        IndexMin = find(chi2(:,i)==min(chi2(:,i)),1);    % find minimum
-%        %[sinInter, IndexInter] = unique(sin2t4(i,IndexMin:end));
-%         [chi2Inter, IndexInter] = unique(chi2(IndexMin:end,i));
-%         sinInter = sin2t4(IndexMin:end,i);
-%        sin2t4_contour(i) = interp1(chi2Inter-chi2_ref,sinInter(IndexInter),DeltaChi2,'spline');
-     else
-         sin2t4_contour(i) = interp1(chi2(:,i)-chi2_ref,sin2t4(i,:),DeltaChi2,'spline');
+        sin2t4_contour(i) = NaN; % if contour point is not in grid of interest
+    else
+         InterpIndex = find(chi2(:,i)-chi2_ref<DeltaChi2,1,'last'); % last cross of delta chi^2
+         if InterpIndex>=3
+             InterpIndex = InterpIndex-2; % add to more points
+         end
+         sin2t4_contour(i) = interp1(chi2(InterpIndex:end,i)-chi2_ref,sin2t4(i,InterpIndex:end),DeltaChi2,'spline');
     end
 end
 

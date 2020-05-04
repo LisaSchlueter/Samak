@@ -54,15 +54,11 @@ MakeDir(savedir);
 savefile = sprintf('%sKSN1_GridSearch_%s_%s_%s_%.0feVrange_%s_%.0fnGrid%s.mat',...
     savedir,RunList,DataType,strrep(freePar,' ',''),range,chi2,nGridSteps,extraStr);
 
-if ~exist(savefile,'file') && strcmp(RecomputeFlag,'OFF')
-    % if doesn't exist test 25x Grid
-    if nGridSteps==50
-        nGridSteps = 25;
-    elseif nGridSteps==25
-        nGridSteps = 50;
-    end
+if ~exist(savefile,'file') && strcmp(RecomputeFlag,'OFF') && nGridSteps<50
+    % if doesn't exist test 50x Grid
+    nGridSteps = 50;
     savefile = sprintf('%sKSN1_GridSearch_%s_%s_%s_%.0feVrange_%s_%.0fnGrid%s.mat',...
-    savedir,RunList,DataType,strrep(freePar,' ',''),range,chi2,nGridSteps,extraStr);
+        savedir,RunList,DataType,strrep(freePar,' ',''),range,chi2,nGridSteps,extraStr);
 end
 %% load or calculate grid
 if exist(savefile,'file') && strcmp(RecomputeFlag,'OFF')

@@ -70,7 +70,7 @@ set(gca,'YScale','log');
 set(gca,'XScale','log');
 
 xlabel('|U_{e4}|^2');
-ylabel(sprintf('{\\itm}_4 (eV^2)'));
+ylabel(sprintf('{\\itm}_4^2 (eV^2)'));
 
 rangeApprox = sqrt(max(max(mnu4Sq)));
 if rangeApprox<90

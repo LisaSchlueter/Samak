@@ -10,16 +10,26 @@ RunList = 'KNM1';
 SmartGrid = 'OFF';
 
 %% plot options
-PlotContour = 'OFF';
+PlotContour = 'ON';
 PlotGrid    = 'ON';
-CL = 0.82;
-titleStr = sprintf('%s (%s) %.0f eV range',DataType,chi2Str,range);
+CL = 0.95;
+if strcmp(chi2Str,'chi2Stat')
+    chi2Label = 'stat. only';
+else
+    chi2Label = 'stat. and syst.';
+end
+if strcmp(DataType,'Real')
+    DataLabel = 'data';
+else
+    DataLabel = 'monte carlo';
+end
+titleStr = sprintf('%s (%s) %.0f eV range',DataLabel,chi2Label,range);
 %% load grid (or calculate if doesn't exist)
 [mnu4Sq,sin2T4,chi2,chi2_ref,savefile] = KSN1GridSearch('range',range,...
     'nGridSteps',nGridSteps,...
     'chi2',chi2Str,...
     'DataType',DataType,...
-    'freePar','E0 Bkg Norm',...
+    'freePar',freePar,...
     'RunList',RunList,...
     'SmartGrid',SmartGrid,...
     'RecomputeFlag','OFF');
@@ -36,5 +46,5 @@ end
 
 %% plot grid
 if strcmp(PlotGrid,'ON')
-     KSN1GridPlot(PlotArg{:});
+     KSN1GridPlot(PlotArg{:},'nInter',1e3);
 end

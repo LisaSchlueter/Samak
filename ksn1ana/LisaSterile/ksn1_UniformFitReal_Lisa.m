@@ -3,7 +3,7 @@ range = 95; % eV below the endpoint
 %% create MultiRunAnalysis object
 
 R = MultiRunAnalysis('RunList','KNM1',... % runlist defines which runs are analysed -> set MultiRunAnalysis.m -> function: GetRunList()
-    'chi2','chi2CMShape',...              % uncertainties: statistical or stat + systematic uncertainties
+    'chi2','chi2Stat',...%CMShape',...              % uncertainties: statistical or stat + systematic uncertainties
     'DataType','Real',...                 % can be 'Real' or 'Twin' -> Monte Carlo
     'fixPar','E0 Norm Bkg',...        % free Parameter!!
     'RadiativeFlag','ON',...              % theoretical radiative corrections applied in model
@@ -14,7 +14,8 @@ R = MultiRunAnalysis('RunList','KNM1',... % runlist defines which runs are analy
     'SysBudget',22,...
     'SynchrotronFlag','ON',...
     'AngularTFFlag','OFF',...
-    'pullFlag',9);          
+    'pullFlag',9,...
+    'TwinBias_Q',18573.7);          
 
 % R.ModelObj.mnu4Sq_i=200;
 R.exclDataStart = R.GetexclDataStart(range); % set region of interest
