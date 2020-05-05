@@ -4,7 +4,7 @@ range = 95; % eV below the endpoint
 
 R = MultiRunAnalysis('RunList','KNM1',... % runlist defines which runs are analysed -> set MultiRunAnalysis.m -> function: GetRunList()
     'chi2','chi2Stat',...%CMShape',...              % uncertainties: statistical or stat + systematic uncertainties
-    'DataType','Real',...                 % can be 'Real' or 'Twin' -> Monte Carlo
+    'DataType','Twin',...                 % can be 'Real' or 'Twin' -> Monte Carlo
     'fixPar','E0 Norm Bkg',...        % free Parameter!!
     'RadiativeFlag','ON',...              % theoretical radiative corrections applied in model
     'NonPoissonScaleFactor',1.064,...     % background uncertainty are enhanced
@@ -16,7 +16,15 @@ R = MultiRunAnalysis('RunList','KNM1',... % runlist defines which runs are analy
     'AngularTFFlag','OFF',...
     'pullFlag',9,...
     'TwinBias_Q',18573.7);          
-
+%%
+R.exclDataStart = R.GetexclDataStart(95);
+R.Fit
+FitResults_95 = R.FitResult;
+%%
+R.exclDataStart =12;% used for twinsR.GetexclDataStart(40);
+R.Fit
+FitResults_12 = R.FitResult;
+%%
 % R.ModelObj.mnu4Sq_i=200;
 R.exclDataStart = R.GetexclDataStart(range); % set region of interest
 m4_bf     = 56.234; % eV

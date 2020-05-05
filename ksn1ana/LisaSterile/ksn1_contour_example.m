@@ -1,15 +1,15 @@
 % example script 
 
 %% settings
-CL = 0.95;
+CL = 0.9;
 range = 95;%
 nGridSteps = 50;
-chi2Str = 'chi2CMShape';
+chi2Str = 'chi2Stat';%CMShape';
 DataType = 'Real';
-freePar = 'mNu E0 Bkg Norm';
+freePar = 'E0 Bkg Norm';
 RunList = 'KNM1';
 SmartGrid = 'OFF';
-pullFlag = 12;
+pullFlag = 99;
 %% plot options
 PlotContour = 'OFF';
 PlotGrid    = 'ON';
@@ -49,5 +49,5 @@ end
 plotnameGrid = strrep(strrep(extractAfter(savefile,'results/'),'.mat','.png'),'KSN1','Chi2Map_KSN1');
 if strcmp(PlotGrid,'ON')
      KSN1GridPlot(PlotArg{:},'nInter',1e3,...
-    'ContourPlot','Fitrium','SaveAs',plotnameGrid);
+    'ContourPlot','ON','SaveAs',plotnameGrid);
 end

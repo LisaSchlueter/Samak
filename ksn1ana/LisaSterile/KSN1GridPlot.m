@@ -44,6 +44,7 @@ GetFigure;
 DeltaChi2 = GetDeltaChi2(CL,2);
 chi2_ref = min(min(chi2grid));
 
+chi2gridContour = chi2grid;
 chi2grid((chi2grid-chi2_ref)>DeltaChi2) =  NaN;%DeltaChi2+chi2_ref;% NaN;
 zlimMax = DeltaChi2;
 %zlimMax = DeltaChi2;
@@ -55,7 +56,7 @@ c =colorbar;
 c.Label.String = sprintf('\\Delta\\chi^2');
 PrettyFigureFormat('FontSize',24)
 c.Label.FontSize = get(gca,'FontSize')+2;
-%c.Limits=[0 zlimMax];
+c.Limits=[0 zlimMax];
 xlabel('|U_{e4}|^2');
 ylabel(sprintf('{\\itm}_4^2 (eV^2)'));
 zlabel(sprintf('\\Delta\\chi^2'))
@@ -64,12 +65,15 @@ grid off
 
 
 if strcmp(ContourPlot,'ON')
-    [mnu4Sq_contour, sin2T4_contour] = ...
-        KSN1Grid2Contour(mnu4Sq,sin2T4,chi2,chi2_ref,CL);
-    y = linspace(min(mnu4Sq_contour),max(mnu4Sq_contour)+1e3,1e3);
-    x = interp1(mnu4Sq_contour,sin2T4_contour,y,'spline');
+    %     [mnu4Sq_contour, sin2T4_contour] = ...
+    %         KSN1Grid2Contour(mnu4Sq,sin2T4,chi2,chi2_ref,CL);
+    %     y = linspace(min(mnu4Sq_contour),max(mnu4Sq_contour)+1e3,1e3);
+    %     x = interp1(mnu4Sq_contour,sin2T4_contour,y,'spline');
+    %     hold on;
+    %     plot3(x,y,DeltaChi2.*ones(numel(x),1),'k-','LineWidth',2);
     hold on;
-    plot3(x,y,DeltaChi2.*ones(numel(x),1),'k-','LineWidth',2);
+    contour(sin2T4grid,mNugrid,chi2gridContour-chi2_ref,[DeltaChi2 DeltaChi2],...
+        'LineWidth',3,'LineColor','k')
     SaveAs = strrep(SaveAs,'.pdf','_C.pdf');
     SaveAs = strrep(SaveAs,'.png','_C.png');
     % plot3(sin2T4_contour,mnu4Sq_contour,zeros(numel(sin2T4_contour),1));

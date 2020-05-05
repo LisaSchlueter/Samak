@@ -11,7 +11,7 @@ p.addParameter('Color','',@(x) ischar(x) || iscell(x));
 p.addParameter('LineStyle','-',@(x) ischar(x));
 p.addParameter('titleStr','',@(x)ischar(x));
 p.addParameter('nInter',1e3,@(x)isfloat(x));
-
+p.addParameter('BestFit','OFF',@(x) ismember(x,{'ON','OFF'}));
 p.parse(varargin{:});
 
 mnu4Sq      = p.Results.mnu4Sq;
@@ -25,6 +25,7 @@ Color       = p.Results.Color;
 LineStyle   = p.Results.LineStyle;
 titleStr    = p.Results.titleStr;
 nInter      = p.Results.nInter;
+BestFit     = p.Results.BestFit;
 
 if isempty(mnu4Sq)
     load('KSN1_SmartGridInit_40eVrange.mat','mnu4Sq','sin2T4','chi2','chi2_ref');
@@ -39,7 +40,7 @@ mnu4Sq_contour = cell(numel(CL),1);
 sin2T4_contour = cell(numel(CL),1);
 legStr         = cell(numel(CL),1);
 for i=1:numel(CL)
-    PlotArg = {'LineWidth',2,'MarkerSize',4};
+    PlotArg = {'LineWidth',2.5,'MarkerSize',4};
     if ischar(Color)
         myColor = Color;
     elseif iscell(Color)
@@ -52,7 +53,7 @@ for i=1:numel(CL)
         KSN1Grid2Contour(mnu4Sq,sin2T4,chi2,chi2_ref,CL(i));
     if strcmp(PlotSplines,'OFF')
         pHandle  = plot(sin2T4_contour{i},mnu4Sq_contour{i},...
-            LineStyle,PlotArg{:},'MarkerSize',20);
+            LineStyle,PlotArg{:},'MarkerSize',10);
     else
 %         [X,Y] = meshgrid(mnu4Sq(:,1),sin2T4(1,:));
 %         mNugrid    = repmat(logspace(log10(min(min(mnu4Sq))),log10(max(max(mnu4Sq))),nInter),nInter,1);
@@ -67,9 +68,17 @@ for i=1:numel(CL)
     legStr{i} = sprintf('%.0f%% C.L.',CL(i));
 end
 
-
-
 PrettyFigureFormat;
+
+%% plot best fit
+if strcmp(BestFit,'ON')
+    [row, col] = find(chi2 == min(chi2(:)));
+    mnu4Sq_bf =  mnu4Sq(col,row);
+    sin2T4_bf = sin2T4(col,row);
+    
+    hold on;
+    plot(sin2T4_bf,mnu4Sq_bf,'x','Color',rgb(myColor),'MarkerSize',10);
+end
 title(titleStr,'FontWeight','normal','FontSize',get(gca,'FontSize'))
 
 %% axis
