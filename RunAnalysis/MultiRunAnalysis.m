@@ -1405,6 +1405,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                 if strcmp(qUCorrection,'ON')
                     fitobject = fit(permute(qU,[2 1]),permute(rate,[2 1]),'poly1');
                     coeffs = coeffvalues(fitobject);
+                    coeffs(1,1) = -0.0111584997*mean(rate);                              %replace fitted slope with MC slope
                     correlation = corr(qU(:),rate(:));
                     if strcmp(QAplots,'ON')
                         fig88 = figure('Renderer','painters');
@@ -1420,7 +1421,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                         xlabel(sprintf('qU - \\langle qU \\rangle'));
                         ylabel(sprintf('Rate (Activity corrected)'));
                         leg = legend([e2],sprintf('qU vs. rate'));
-                        title(leg,sprintf('Correlation factor = %.2f',correlation));
+                        title(leg,sprintf('Correlation factor = %.2f\nslope=%.2f',correlation,coeffs(1,1)));
                         leg.EdgeColor = rgb('Silver');
                         leg.Location = 'best';
                         PrettyFigureFormat;
@@ -1436,6 +1437,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                     rate1 = rate;
                     rate = rate-slope;
                     DiffqU = abs(rate - rate1)/mean(rate1);
+                    writematrix(rate-rate1,sprintf('DiffqU_%s.txt',pixlist));
                     if strcmp(QAplots,'ON')
                         fig88 = figure('Renderer','painters');
                         set(fig88,'units','normalized','pos',[0.1, 0.1,1,0.6]);
@@ -3445,6 +3447,8 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             runsRW1 = sort(importdata([RunListDir,'KNM2_RW1.dat']));
             runsRW2 = sort(importdata([RunListDir,'KNM2_RW2.dat']));
             runsRW3 = sort(importdata([RunListDir,'KNM2_RW3.dat']));
+            runsRW1a= sort(importdata([RunListDir,'KNM2_RW1a.dat']));
+            runsRW1b= sort(importdata([RunListDir,'KNM2_RW1b.dat']));
             
             if ~isempty(obj.TwinFakeLabel)
                 ListName = strrep(ListName,obj.TwinFakeLabel,'');
@@ -3454,6 +3458,10 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             elseif strcmp(ListName,'KNM2_RW1')   % rear wall setting 1 (different names for back compatibility)
                 h5list = runsRW1;
                 %                h5list = runsRW1(runsRW1>56281);
+            elseif strcmp(ListName,'KNM2_RW1a')
+                h5list = runsRW1a;
+            elseif strcmp(ListName,'KNM2_RW1b')
+                h5list = runsRW1b;
             elseif strcmp(ListName,'KNM2_RW2')   % rear wall setting 2
                 h5list = runsRW2;
             elseif strcmp(ListName,'KNM2_RW3')   % rear wall setting 3

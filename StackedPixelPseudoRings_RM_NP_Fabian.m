@@ -1,9 +1,10 @@
 QAplots = 'OFF';
 HVDrift = 'OFF';
 Detrend = 'OFF';
+NBoot   = 1000;
 ROIstr  = 'Default';
-Corr    = 'Thierry';
-Mode    = 'Uniform';
+Corr    = 'Fabian';
+Mode    = 'Ringwise';
 
 if strcmp(Mode,'Ringwise')
     %% Rate Evolution --> mV equivalent
@@ -72,6 +73,7 @@ if strcmp(Mode,'Ringwise')
                   cf(i,:)     = R.RMRateErosCorrectionqUActivity;
                 corrcount_norm{j,i} = rate.*cf(i,:) .* mean(sstime);
               end
+              
             if j==1
               subplot(3,4,i+j-1);
             elseif j==2
@@ -103,9 +105,26 @@ if strcmp(Mode,'Ringwise')
             pdN = fitdist(corrcount_norm{j,i}','poisson');
             mydata=corrcount_norm{j,i}(abs(corrcount_norm{j,i}-pdG.mu)<(3*pdG.sigma))';
             pdG = fitdist(mydata,'Normal');
-            pdN = fitdist(mydata,'poisson'); 
-            Broadening = sqrt(pdG.sigma^2-pdN.lambda)/(mean(sstime)*737.8) * 1e3 * 117 / numel(R.PixList);
+            pdN = fitdist(mydata,'poisson');
+            Broadening(j,i) = sqrt(pdG.sigma^2-pdN.lambda)/(mean(sstime)*737.8) * 1e3 * 117 / numel(R.PixList);
+            NP(j,i)         = pdG.sigma/sqrt(pdN.lambda);
 
+            %% Error calculation: Bootstrap
+            mydata_rand=zeros(numel(mydata),1);
+            Broadening_rand=zeros(NBoot,1);
+            NP_rand=zeros(NBoot,1);
+            for l=1:NBoot
+                  for k=1:numel(mydata)
+                      mydata_rand(k) = mydata(randi(numel(mydata)));
+                  end
+                  pdG_rand = fitdist(mydata_rand,'Normal');
+                  pdN_rand = fitdist(mydata_rand,'poisson');
+                  Broadening_rand(l) = sqrt(abs(pdG_rand.sigma^2-pdN_rand.lambda))/(mean(sstime)*737.8) * 1e3 * 117 / numel(R.PixList);
+                  NP_rand(l)         = pdG_rand.sigma/sqrt(pdN_rand.lambda);
+            end
+            NP_E(j,i) = std(NP_rand);
+            Broadening_E(j,i) = std(Broadening_rand);
+            
             h = histogram(mydata,15,'Normalization','pdf',...
                 'FaceColor',rgb('DodgerBlue'),'LineWidth',2,'FaceAlpha',0.7);
             xlabel(sprintf('counts in %.2f sec',mean(sstime)));
@@ -127,7 +146,7 @@ if strcmp(Mode,'Ringwise')
             leg=legend([h g p],...
                 sprintf('%.0f scans - PSR %.0f',numel(R.RunList),i),...
                 sprintf('Gaussian'),...
-                sprintf('Poisson \n NP = %.1f \n \\sigma_{eq} = %.2f mV',pdG.sigma/sqrt(pdN.lambda),Broadening),...
+                sprintf('Poisson\nNP=%.1f\\pm%.1f\n\\sigma_{eq}=(%.2f\\pm%.2f)mV',pdG.sigma/sqrt(pdN.lambda),NP_E(j,i),Broadening(j,i),Broadening_E(j,i)),...
                 ...%sprintf('Convolution'),...
                 'location','northwest');
             leg.Color = 'none'; legend boxoff;
@@ -140,6 +159,9 @@ if strcmp(Mode,'Ringwise')
         %export_fig(fig1,savefile1);
 
     end
+    
+    save('SamakKNM2_NPBroadeningsInRW123PSR1234_mV.mat','NP','Broadening','NP_E','Broadening_E');
+    
 elseif strcmp(Mode,'Periodwise')
         %% Rate Evolution --> mV equivalent
     myMainTitle = sprintf('KATRIN - KNM2 - FPD @E_0-300eV - Non-Poissonian Components');
@@ -222,7 +244,24 @@ elseif strcmp(Mode,'Periodwise')
         mydata=corrcount_norm(abs(corrcount_norm-pdG.mu)<(3*pdG.sigma))';
         pdG = fitdist(mydata,'Normal');
         pdN = fitdist(mydata,'poisson'); 
-        Broadening = sqrt(pdG.sigma^2-pdN.lambda)/(mean(sstime)*737.8) * 1e3 * 117 / numel(R.PixList);
+        Broadening(j) = sqrt(pdG.sigma^2-pdN.lambda)/(mean(sstime)*737.8) * 1e3 * 117 / numel(R.PixList);
+        NP(j)         = pdG.sigma/sqrt(pdN.lambda);
+        
+        %% Error calculation: Bootstrap
+        mydata_rand=zeros(numel(mydata),1);
+        Broadening_rand=zeros(NBoot,1);
+        NP_rand=zeros(NBoot,1);
+        for l=1:NBoot
+              for k=1:numel(mydata)
+                  mydata_rand(k) = mydata(randi(numel(mydata)));
+              end
+              pdG_rand = fitdist(mydata_rand,'Normal');
+              pdN_rand = fitdist(mydata_rand,'poisson');
+              Broadening_rand(l) = sqrt(abs(pdG_rand.sigma^2-pdN_rand.lambda))/(mean(sstime)*737.8) * 1e3 * 117 / numel(R.PixList);
+              NP_rand(l)         = pdG_rand.sigma/sqrt(pdN_rand.lambda);
+        end
+        NP_E(j) = std(NP_rand);
+        Broadening_E(j) = std(Broadening_rand);
 
         h = histogram(mydata,15,'Normalization','pdf',...
             'FaceColor',rgb('DodgerBlue'),'LineWidth',2,'FaceAlpha',0.7);
@@ -243,9 +282,9 @@ elseif strcmp(Mode,'Periodwise')
         p=plot(b,pdfP(b),'Color',rgb('GoldenRod'),'LineWidth',4);
         %c=plot(b,pdfC(b),'Color',rgb('Blue'),'LineWidth',4);
         leg=legend([h g p],...
-            sprintf('%.0f scans',numel(R.RunList)),...
+            sprintf('RW%i',j),...
             sprintf('Gaussian'),...
-            sprintf('Poisson \n NP = %.1f \n \\sigma_{eq} = %.2f mV',pdG.sigma/sqrt(pdN.lambda),Broadening),...
+            sprintf('Poisson\nNP=%.1f\\pm%.1f\n\\sigma_{eq}=(%.2f\\pm%.2f)mV',pdG.sigma/sqrt(pdN.lambda),NP_E(j),Broadening(j),Broadening_E(j)),...
             ...%sprintf('Convolution'),...
             'location','northwest');
         leg.Color = 'none'; legend boxoff;
@@ -255,7 +294,10 @@ elseif strcmp(Mode,'Periodwise')
         disp(pdG.sigma/sqrt(pdN.lambda));
 
     end
-elseif strcmp(Mode,'Uniform')
+    
+    save('SamakKNM2_NPBroadeningsInRW123uniform_mV.mat','NP','Broadening','NP_E','Broadening_E');
+    
+elseif strcmp(Mode,'Uniform')                                                                   %Needs Rework!
             %% Rate Evolution --> mV equivalent
     myMainTitle = sprintf('KATRIN - KNM2 - FPD @E_0-300eV - Non-Poissonian Components');
     maintitle   = myMainTitle;
@@ -368,4 +410,6 @@ elseif strcmp(Mode,'Uniform')
     PrettyFigureFormat
     set(gca,'FontSize',12);
     disp(pdG.sigma/sqrt(pdN.lambda));
+    
+    save('SamakKNM2_NPBroadeningsInRW123uniform_mV.mat','NP','Broadenings');
 end
