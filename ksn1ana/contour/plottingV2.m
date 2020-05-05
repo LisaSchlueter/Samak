@@ -5,11 +5,11 @@
 % Each datafile contains these variables : 
 % 'contour_settings','R','sith4_X','si2th4_X','m4_Y','m_beta','DM2','chi_Z','X0'
 
-plt_title = 'KATRIN Sterile Neutrino Analysis (KS1) - 90% Sensitivity'
+plt_title = 'KATRIN Sterile Neutrino Analysis (KS1) - 90% Sensitivity';
 
-filepath   = [getenv('SamakPath'),'ksn1ana/contour/contour_files/V2'];
-file_A     = 'coord_90eV_Real_syst_95.mat';
-file_B     = 'coord_90eV_Real_syst_95_freeM.mat';
+filepath   = [getenv('SamakPath'),'ksn1ana/contour/contour_files/V2/'];
+file_A     = 'coord_90eV_Twin_syst_90CL_freeM.mat';
+file_B     = 'coord_90eV_Twin_syst_95CL_fixM.mat';
 % file_C     = 'coord_90eV_Real_syst_99.mat';
 
 da  = importdata([filepath,file_A]);    % Data A
@@ -20,6 +20,7 @@ setB = db.contour_settings;             % Contour settings B
 % setC = dc.contour_settings;           % Contour settings C
 
 % Constant data
+filepath   = [getenv('SamakPath'),'ksn1ana/contour/contour_files/other/'];
 d_giunti   = importdata([filepath,'coord_Giunti.mat']);         % KATRIN Data from Giunti
 
 d_raa_90   = importdata([filepath,'coord_RAA_90.mat']);         % Data RAA
@@ -103,21 +104,21 @@ raa95    = 'Phys. Rev. D 83, 073006 (2011) - 95%CL';
 
 % KATRIN Labels
 
-katrinA  = sprintf('KATRIN KSN1 %1$s %2$s - %3$s - %4$d % CL - [E_0-%5$d;E_0+50] eV',...
-    s(setA.datatype),s(setA.activeFlag),s(setA.uncertainty),s(setA.CL),s(setA.eVrange));
-katrinB  = sprintf('KATRIN KSN1 %1$s %2$s - %3$s - %4$d % CL - [E_0-%5$d;E_0+50] eV',...
-    s(setB.datatype),s(setB.activeFlag),s(setB.uncertainty),s(setB.CL),s(setB.eVrange));
+% katrinA  = sprintf('KATRIN KSN1 %1$s %2$s - %3$s - %4$d % CL - [E_0-%5$d;E_0+50] eV',...
+%     s(setA.datatype),s(setA.activeFlag),s(setA.uncertainty),s(setA.CL),s(setA.eVrange));
+% katrinB  = sprintf('KATRIN KSN1 %1$s %2$s - %3$s - %4$d % CL - [E_0-%5$d;E_0+50] eV',...
+%     s(setB.datatype),s(setB.activeFlag),s(setB.uncertainty),s(setB.CL),s(setB.eVrange));
 % katrinC  = sprintf('KATRIN KSN1 %1$s %2$s - %3$s - %4$d % CL - [E_0-%5$d;E_0+50] eV',...
 %     s(setC.datatype),s(setC.activeFlag),s(setC.uncertainty),s(setC.CL),s(setC.eVrange));
 
 % Legend
-legend([p_m p_t pA pB p_g p_raa95 p_raa90],...      % Label order
-        {mainz,troitsk,...                          % Mainz&Troitsk
-        katrinA,katrinB,...                         % KATRIN
-        giunti,...                                  % Giunti
-        raa95,raa90},...                            % RAA
-        'Location','southwest',...                  % Legend settings
-        'box','off')
+% legend([p_m p_t pA pB p_g p_raa95 p_raa90],...      % Label order
+%         {mainz,troitsk,...                          % Mainz&Troitsk
+%         katrinA,katrinB,...                         % KATRIN
+%         giunti,...                                  % Giunti
+%         raa95,raa90},...                            % RAA
+%         'Location','southwest',...                  % Legend settings
+%         'box','off')
 
 grid on
 

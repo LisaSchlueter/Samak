@@ -97,6 +97,10 @@ function sens_func(contour_settings)
                 'ELossFlag','KatrinT2',...
                 'SysBudget',22);
             
+    if strcmp(ActiveNeut,'FREE')
+        R.pullFlag=1;
+    end    
+
     %% Delta-X2
     X0     = fit_chi(0,0,R,eVrange);
     chilvl = chilvl + X0;
