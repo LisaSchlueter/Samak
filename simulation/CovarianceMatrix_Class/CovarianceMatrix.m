@@ -2794,7 +2794,7 @@ function ComputeCM_FSD(obj,varargin)
     obj.GetTDlabel;
     covmat_path =[getenv('SamakPath'),sprintf('inputs/CovMat/FSD/CM/')];
     MakeDir(covmat_path);
-    covmat_filename = sprintf('FSD_%s_%sCovMat_%uTrials_%s_%.2fNormErr_%.2fGS_%.2fES_ShapeErr.mat',...
+    covmat_filename = sprintf('FSD_%s_%sCovMat_%uTrials_%s_%.2gNormErr_%.2fGS_%.2fES_ShapeErr.mat',...
         obj.StudyObject.TTFSD,IsoName,obj.nTrials, obj.TDlabel,obj.FSDNorm_RelErr, obj.FSDShapeGS_RelErr, obj.FSDShapeES_RelErr);
     if strcmp(obj.StudyObject.FPD_Segmentation,'RING')
         % add ring information for ringwise covariance matrices

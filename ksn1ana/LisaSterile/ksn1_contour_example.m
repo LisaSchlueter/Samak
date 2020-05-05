@@ -4,12 +4,13 @@
 CL = 0.9;
 range = 95;%
 nGridSteps = 50;
-chi2Str = 'chi2Stat';%CMShape';
+chi2Str = 'chi2CMShape';
 DataType = 'Real';
 freePar = 'E0 Bkg Norm';
 RunList = 'KNM1';
 SmartGrid = 'OFF';
 pullFlag = 99;
+SysBudget = 23;
 %% plot options
 PlotContour = 'OFF';
 PlotGrid    = 'ON';
@@ -33,7 +34,8 @@ titleStr = sprintf('%s (%s) %.0f eV range',DataLabel,chi2Label,range);
     'RunList',RunList,...
     'SmartGrid',SmartGrid,...
     'RecomputeFlag','OFF',...
-    'pullFlag',pullFlag);
+    'pullFlag',pullFlag,...
+    'SysBudget',SysBudget);
 
 %% plot contour
  PlotArg ={'mnu4Sq',mnu4Sq,...

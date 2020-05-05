@@ -14,7 +14,7 @@ p.addParameter('RecomputeFlag','OFF',@(x)ismember(x,{'ON','OFF'}));
 p.addParameter('SysEffect','all',@(x)ischar(x)); % if chi2CMShape: all or only 1
 p.addParameter('RandMC','OFF',@(x)ischar(x) || isfloat(x)); % randomize twins if RandMC is float
 p.addParameter('pullFlag',99,@(x)isfloat(x)); % if above 12 --> no pull
-
+p.addParameter('SysBudget',22,@(x)isfloat(x));
 p.parse(varargin{:});
 
 range         = p.Results.range;
@@ -28,6 +28,7 @@ RecomputeFlag = p.Results.RecomputeFlag;
 SysEffect     = p.Results.SysEffect;
 RandMC        = p.Results.RandMC;
 pullFlag      = p.Results.pullFlag;
+SysBudget     = p.Results.SysBudget;
 
 if strcmp(chi2,'chi2CMShape')
     NonPoissonScaleFactor=1.064;
@@ -42,8 +43,11 @@ if strcmp(SmartGrid,'ON')
 else
     extraStr = '';
 end
-if strcmp(chi2,'chi2CMShape') && ~strcmp(SysEffect,'all')
-    extraStr = [extraStr,sprintf('_%s',SysEffect)];
+if strcmp(chi2,'chi2CMShape')
+     extraStr = [extraStr,sprintf('_Budget%.0f',SysBudget)];
+    if ~strcmp(SysEffect,'all')
+        extraStr = [extraStr,sprintf('_%s',SysEffect)];
+    end
 end
 if isfloat(RandMC) && strcmp(DataType,'Twin')
     extraStr = sprintf('%s_RandMC%.0f',extraStr,RandMC);
@@ -60,12 +64,12 @@ MakeDir(savedir);
 savefile = sprintf('%sKSN1_GridSearch_%s_%s_%s_%.0feVrange_%s_%.0fnGrid%s.mat',...
     savedir,RunList,DataType,strrep(freePar,' ',''),range,chi2,nGridSteps,extraStr);
 
-% if ~exist(savefile,'file') && strcmp(RecomputeFlag,'OFF') && nGridSteps<50
-%     % if doesn't exist test 50x Grid
-%     nGridSteps = 50;
-%     savefile = sprintf('%sKSN1_GridSearch_%s_%s_%s_%.0feVrange_%s_%.0fnGrid%s.mat',...
-%         savedir,RunList,DataType,strrep(freePar,' ',''),range,chi2,nGridSteps,extraStr);
-% end
+if ~exist(savefile,'file') && strcmp(RecomputeFlag,'OFF') && nGridSteps<50
+    % if doesn't exist test 50x Grid
+    nGridSteps = 50;
+    savefile = sprintf('%sKSN1_GridSearch_%s_%s_%s_%.0feVrange_%s_%.0fnGrid%s.mat',...
+        savedir,RunList,DataType,strrep(freePar,' ',''),range,chi2,nGridSteps,extraStr);
+end
 %% load or calculate grid
 if exist(savefile,'file') && strcmp(RecomputeFlag,'OFF')
     load(savefile,'mnu4Sq','sin2T4','chi2','chi2_ref')
@@ -90,7 +94,7 @@ else
         'ISCSFlag','Edep',...
         'NonPoissonScaleFactor',NonPoissonScaleFactor,...
         'TwinBias_Q',18573.70,...
-        'SysBudget',22,...
+        'SysBudget',SysBudget,...
         'pullFlag',pullFlag};
     
     T = MultiRunAnalysis(RunAnaArg{:});
