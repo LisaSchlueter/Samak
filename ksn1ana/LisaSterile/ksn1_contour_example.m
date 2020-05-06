@@ -1,9 +1,9 @@
 % example script 
 
 %% settings
-CL = 0.9;
+CL = 95;
 range = 95;%
-nGridSteps = 50;
+nGridSteps =25;
 chi2Str = 'chi2CMShape';
 DataType = 'Real';
 freePar = 'E0 Bkg Norm';
@@ -12,7 +12,7 @@ SmartGrid = 'OFF';
 pullFlag = 99;
 SysBudget = 23;
 %% plot options
-PlotContour = 'OFF';
+PlotContour = 'ON';
 PlotGrid    = 'ON';
 if strcmp(chi2Str,'chi2Stat')
     chi2Label = 'stat. only';
@@ -44,7 +44,7 @@ titleStr = sprintf('%s (%s) %.0f eV range',DataLabel,chi2Label,range);
         'CL',CL,...
         'titleStr',titleStr};
 if strcmp(PlotContour,'ON')
-    KSN1ContourPlot(PlotArg{:},'LineStyle','-','PlotSplines','ON');
+    KSN1ContourPlot(PlotArg{:},'LineStyle','-','PlotSplines','OFF');
 end
 
 %% plot grid

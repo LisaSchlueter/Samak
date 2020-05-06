@@ -49,23 +49,37 @@ for i=1:numel(CL)
     if ~isempty(Color)
         PlotArg = [PlotArg,{'Color',rgb(myColor)}];
     end
+    
     [mnu4Sq_contour{i}, sin2T4_contour{i}] = ...
-        KSN1Grid2Contour(mnu4Sq,sin2T4,chi2,chi2_ref,CL(i));
-    if strcmp(PlotSplines,'OFF')
-        pHandle  = plot(sin2T4_contour{i},mnu4Sq_contour{i},...
-            LineStyle,PlotArg{:},'MarkerSize',10);
-    else
-%         [X,Y] = meshgrid(mnu4Sq(:,1),sin2T4(1,:));
-%         mNugrid    = repmat(logspace(log10(min(min(mnu4Sq))),log10(max(max(mnu4Sq))),nInter),nInter,1);
-%         sin2T4grid = repmat(logspace(log10(min(min(sin2T4))),log10(max(max(sin2T4))),nInter),nInter,1)';
-%         chi2grid = reshape(interp2(X,Y,chi2,mNugrid,sin2T4grid),nInter ,nInter );
-            
-        y = logspace(log10(min(mnu4Sq_contour{i})),log10(max(mnu4Sq_contour{i})),1e3);
-        x = interp1(mnu4Sq_contour{i},sin2T4_contour{i},y,'spline');
-        pHandle = plot(x,y,LineStyle,PlotArg{:});
+        KSN1Grid2Contour(mnu4Sq,sin2T4,chi2,chi2_ref,CL(i),'Mode','New');
+    
+    mnu4Sq_tmp = mnu4Sq_contour{i};
+    sin2T4_tmp = sin2T4_contour{i};
+    
+    nContour = size(mnu4Sq_tmp,1);
+    if nContour>1 || numel(mnu4Sq_tmp{i})>1e3
+        PlotSplines='OFF';
     end
-    hold on;
+    
+    for c=1:nContour
+        if strcmp(PlotSplines,'OFF')
+            pHandle  = plot(sin2T4_tmp{i}, mnu4Sq_tmp{i},...
+                LineStyle,PlotArg{:},'MarkerSize',10);
+        else
+            try 
+                y = logspace(log10(min(mnu4Sq_tmp{i})),log10(max(mnu4Sq_tmp{i})),5e3);
+                x = interp1(mnu4Sq_tmp{i},sin2T4_tmp{i},y,'spline');
+                pHandle = plot(x,y,LineStyle,PlotArg{:});
+            catch
+                fprintf('Interpolation failed/interupted - probably closed contour \n')
+                pHandle  = plot(sin2T4_tmp{i}, mnu4Sq_tmp{i},...
+                    LineStyle,PlotArg{:},'MarkerSize',10);
+            end
+        end
+        hold on;
+    end
     legStr{i} = sprintf('%.0f%% C.L.',CL(i));
+    
 end
 
 PrettyFigureFormat;

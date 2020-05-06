@@ -3,7 +3,6 @@
 % MC figure skating
 range = 40;
 
-
 E0 = knm2FS_GetE0Twins('SanityPlot','OFF','Mode','FS2');
 
 RunAnaArg = {'RunList','KNM2_Prompt',... % all KNM2 golden runs

@@ -65,14 +65,8 @@ grid off
 
 
 if strcmp(ContourPlot,'ON')
-    %     [mnu4Sq_contour, sin2T4_contour] = ...
-    %         KSN1Grid2Contour(mnu4Sq,sin2T4,chi2,chi2_ref,CL);
-    %     y = linspace(min(mnu4Sq_contour),max(mnu4Sq_contour)+1e3,1e3);
-    %     x = interp1(mnu4Sq_contour,sin2T4_contour,y,'spline');
-    %     hold on;
-    %     plot3(x,y,DeltaChi2.*ones(numel(x),1),'k-','LineWidth',2);
     hold on;
-    contour(sin2T4grid,mNugrid,chi2gridContour-chi2_ref,[DeltaChi2 DeltaChi2],...
+    [M,c]=contour(sin2T4grid,mNugrid,chi2gridContour-chi2_ref,[DeltaChi2 DeltaChi2],...
         'LineWidth',3,'LineColor','k')
     SaveAs = strrep(SaveAs,'.pdf','_C.pdf');
     SaveAs = strrep(SaveAs,'.png','_C.png');

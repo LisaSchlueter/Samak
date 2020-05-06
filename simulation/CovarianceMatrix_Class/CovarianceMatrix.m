@@ -2840,28 +2840,28 @@ function ComputeCM_FSD(obj,varargin)
         % Vary Norm
         NormBiasDT = randn(obj.nTrials,1).*obj.StudyObject.DTNormGS_i'.*obj.FSDNorm_RelErr;
         % Bin-to-Bin uncorrelated variation
-        DT_P_rand =permute(repmat(1+randn(size(obj.StudyObject.DTexP,2),obj.nTrials),1,1,nRings),[3,1,2]);
-        DT_P(:,1:obj.StudyObject.DTGSTh,:)  = DT_P(:,1:obj.StudyObject.DTGSTh,:).* (DT_P_rand(:,1:obj.StudyObject.DTGSTh,:).*obj.FSDShapeGS_RelErr);
-        DT_P(:,obj.StudyObject.DTGSTh+1:end,:) = DT_P(:,obj.StudyObject.DTGSTh+1:end,:).*(DT_P_rand(:,obj.StudyObject.DTGSTh+1:end,:).*obj.FSDShapeES_RelErr); 
+        DT_P_rand =permute(repmat(randn(size(obj.StudyObject.DTexP,2),obj.nTrials),1,1,nRings),[3,1,2]);
+        DT_P(:,1:obj.StudyObject.DTGSTh,:)  = DT_P(:,1:obj.StudyObject.DTGSTh,:).* (1+(DT_P_rand(:,1:obj.StudyObject.DTGSTh,:).*obj.FSDShapeGS_RelErr));
+        DT_P(:,obj.StudyObject.DTGSTh+1:end,:) = DT_P(:,obj.StudyObject.DTGSTh+1:end,:).*(1+(DT_P_rand(:,obj.StudyObject.DTGSTh+1:end,:).*obj.FSDShapeES_RelErr)); 
         DT_P(DT_P<0)=0;
     end
     if strcmp(obj.HTFlag,'ON')
         NormBiasHT = randn(obj.nTrials,1).*obj.StudyObject.HTNormGS_i'*obj.FSDNorm_RelErr;
-        HT_P_rand = permute(repmat(1+randn(size(obj.StudyObject.HTexP,2),obj.nTrials),1,1,nRings),[3,1,2]);
-        HT_P(:,1:obj.StudyObject.HTGSTh,:)  = HT_P(:,1:obj.StudyObject.HTGSTh,:).* (HT_P_rand(:,1:obj.StudyObject.HTGSTh,:).*obj.FSDShapeGS_RelErr);
-        HT_P(:,obj.StudyObject.HTGSTh+1:end,:) = HT_P(:,obj.StudyObject.HTGSTh+1:end,:).*(HT_P_rand(:,obj.StudyObject.HTGSTh+1:end,:).*obj.FSDShapeES_RelErr); 
+        HT_P_rand = permute(repmat(randn(size(obj.StudyObject.HTexP,2),obj.nTrials),1,1,nRings),[3,1,2]);
+        HT_P(:,1:obj.StudyObject.HTGSTh,:)  = HT_P(:,1:obj.StudyObject.HTGSTh,:).* (1+(HT_P_rand(:,1:obj.StudyObject.HTGSTh,:).*obj.FSDShapeGS_RelErr));
+        HT_P(:,obj.StudyObject.HTGSTh+1:end,:) = HT_P(:,obj.StudyObject.HTGSTh+1:end,:).*(1+(HT_P_rand(:,obj.StudyObject.HTGSTh+1:end,:).*obj.FSDShapeES_RelErr));
         HT_P(HT_P<0)=0;
-        %HT_P(1:obj.StudyObject.HTGSTh,:,1)     = obj.StudyObject.HTexP(1:obj.StudyObject.HTGSTh)'.*(1+randn(numel(obj.StudyObject.HTexP(1:obj.StudyObject.HTGSTh)),obj.nTrials).*obj.FSDShapeGS_RelErr);
-        %HT_P(obj.StudyObject.HTGSTh+1:end,:,1) = obj.StudyObject.HTexP(obj.StudyObject.HTGSTh+1:end)'.*(1+randn(numel(obj.StudyObject.HTexP(obj.StudyObject.HTGSTh+1:end)),obj.nTrials).*obj.FSDShapeES_RelErr);
     end
     if strcmp(obj.TTFlag,'ON')
         NormBiasTT = randn(obj.nTrials,1).*obj.StudyObject.TTNormGS_i'*obj.FSDNorm_RelErr;
-        TT_P_rand = permute(repmat(1+randn(size(obj.StudyObject.TTexP,2),obj.nTrials),1,1,nRings),[3,1,2]);
-        TT_P(:,1:obj.StudyObject.TTGSTh,:)  = TT_P(:,1:obj.StudyObject.TTGSTh,:).* (TT_P_rand(:,1:obj.StudyObject.TTGSTh,:).*obj.FSDShapeGS_RelErr);
-        TT_P(:,obj.StudyObject.TTGSTh+1:end,:) = TT_P(:,obj.StudyObject.TTGSTh+1:end,:).*(TT_P_rand(:,obj.StudyObject.TTGSTh+1:end,:).*obj.FSDShapeES_RelErr); 
-        TT_P(TT_P<0)=0;
-        %TT_P(1:obj.StudyObject.TTGSTh,:,1)     = obj.StudyObject.TTexP(1:obj.StudyObject.TTGSTh)'.*(1+randn(numel(obj.StudyObject.TTexP(1:obj.StudyObject.TTGSTh)),obj.nTrials).*obj.FSDShapeGS_RelErr);
-        %TT_P(obj.StudyObject.TTGSTh+1:end,:,1) = obj.StudyObject.TTexP(obj.StudyObject.TTGSTh+1:end)'.*(1+randn(numel(obj.StudyObject.TTexP(obj.StudyObject.TTGSTh+1:end)),obj.nTrials).*obj.FSDShapeES_RelErr);
+        % TT_P_rand = permute(repmat(1+randn(size(obj.StudyObject.TTexP,2),obj.nTrials),1,1,nRings),[3,1,2]);
+        TT_P_rand = permute(repmat(randn(size(obj.StudyObject.TTexP,2),obj.nTrials),1,1,nRings),[3,1,2]);
+        TT_P(:,1:obj.StudyObject.TTGSTh,:)  = TT_P(:,1:obj.StudyObject.TTGSTh,:).* (1+(TT_P_rand(:,1:obj.StudyObject.TTGSTh,:).*obj.FSDShapeGS_RelErr));
+        TT_P(:,obj.StudyObject.TTGSTh+1:end,:) = TT_P(:,obj.StudyObject.TTGSTh+1:end,:).*(1+(TT_P_rand(:,obj.StudyObject.TTGSTh+1:end,:).*obj.FSDShapeES_RelErr)); 
+             
+%         TT_P(:,1:obj.StudyObject.TTGSTh,:)  = TT_P(:,1:obj.StudyObject.TTGSTh,:).* (TT_P_rand(:,1:obj.StudyObject.TTGSTh,:).*obj.FSDShapeGS_RelErr);
+%         TT_P(:,obj.StudyObject.TTGSTh+1:end,:) = TT_P(:,obj.StudyObject.TTGSTh+1:end,:).*(TT_P_rand(:,obj.StudyObject.TTGSTh+1:end,:).*obj.FSDShapeES_RelErr); 
+         TT_P(TT_P<0)=0;
     end
     
     %Start trials
@@ -2926,6 +2926,7 @@ function ComputeCM_FSD(obj,varargin)
     save(obj.CovMatFile, 'obj','-append');
     
     %% some plots for sanity check
+    
     if strcmp(obj.SanityPlots,'ON')
         fig55 = figure(55);
         set(fig55, 'Units', 'normalized', 'Position', [0.9, 0.9, 0.8, 1.2]);

@@ -7,15 +7,15 @@ Fitrium = 'ON';
 % Troitsk = 'OFF';
 CL = [95];%, 95 99];
 SavePlot = 'ON';
-PlotSplines = 'ON'; % plot smooth spline instead of points
-range = 40;%
+PlotSplines = 'ON'; % plot smooth spline instead of points -> fails for closed contours
+range = 95;%
 nGridSteps = 25;
 chi2Str = {'chi2Stat','chi2CMShape'};
 DataType = 'Twin';
 freePar = 'E0 Bkg Norm';
 RunList = 'KNM1';
 SmartGrid = 'OFF';
-
+SysBudget = 23;
 %% load grid (or calculate if doesn't exist)
 
 mnu4Sq   = cell(numel(chi2Str),1);
@@ -31,7 +31,7 @@ for i=1:numel(chi2Str)
     'RunList',RunList,...
     'SmartGrid',SmartGrid,...
     'RecomputeFlag','OFF',...
-     };
+     'SysBudget',SysBudget};
 [mnu4Sq{i},sin2T4{i},chi2{i},chi2_ref{i},savefile] = KSN1GridSearch(...
     'DataType',DataType,GridArg{:});
 end
@@ -56,9 +56,9 @@ PlotArg ={'mnu4Sq',mnu4Sq{i},...
     'titleStr',titleStr,'LineStyle','-'};
 %% plot
 if i>1
-    [p2,~] = KSN1ContourPlot(PlotArg{:},'PlotSplines','ON','HoldOn','ON');
+    [p2,~] = KSN1ContourPlot(PlotArg{:},'PlotSplines',PlotSplines,'HoldOn','ON','Color','Orange');
 else
-    [p1,~] = KSN1ContourPlot(PlotArg{:},'PlotSplines','ON');
+    [p1,~] = KSN1ContourPlot(PlotArg{:},'PlotSplines',PlotSplines,'Color','DodgerBlue');
 end
 
 end
@@ -93,9 +93,9 @@ savedir = [getenv('SamakPath'),'ksn1ana/LisaSterile/results/'];
             d = importdata(fitriumfile);
             hold on;
             if i==1
-            pFstat = plot(d.data(:,1),d.data(:,2),'-.','LineWidth',2,'Color',p1.Color);
+                pFstat = plot(d.data(:,1),d.data(:,2),'-.','LineWidth',2,'Color',p1.Color);
             elseif i==2
-                 pFsys = plot(d.data(:,1),d.data(:,2),'-.','LineWidth',2,'Color',p2.Color);
+                pFsys = plot(d.data(:,1),d.data(:,2),'-.','LineWidth',2,'Color',p2.Color);
             end
         catch
             fprintf('fitrium file %s not available \n',fitriumfile)
