@@ -1,13 +1,17 @@
 function [RhoDSigma,Theta,ISProb] = Compute_InitISProbMeshGrid(varargin)
 p=inputParser;
 p.addParameter('DataSet','Knm2Theta+',@(x)ismember(x,{'Knm2','Knm1','Knm2Theta+','Knm1Theta+'}));
+p.addParameter('NIS',7,@(x)isfloat(x));
 p.parse(varargin{:});
 DataSet = p.Results.DataSet;
-
+NIS     = p.Results.NIS;
 
 savedir = [getenv('SamakPath'),'inputs/WGTSMACE/WGTS_ISProb/'];
 savename = [savedir,sprintf('InitISProbMeshGrid_%s.mat',DataSet)];
 
+if NIS~=7
+    savename = strrep(savename,'.mat',sprintf('_%.0fNIS.mat',NIS));
+end
 
 if exist(savename,'file')
     load(savename,'RhoDSigma','Theta','ISProb')
@@ -15,9 +19,9 @@ else
     
     switch DataSet
         case {'Knm1','Knm1Theta+'}
-            A = ref_FakeRun_KNM1_CD22_23days;
+            A = ref_FakeRun_KNM1_CD22_23days('NIS',NIS);
         case {'Knm2','Knm2Theta+'}
-            A = ref_FakeRun_KNM2_CD84_2hours;
+            A = ref_FakeRun_KNM2_CD84_2hours('NIS',NIS);
     end
     %%
     maxEis = 1000;

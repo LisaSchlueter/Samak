@@ -1,7 +1,7 @@
 % example script 
 
 %% settings
-CL = 95;
+CL =96;
 range = 95;%
 nGridSteps =25;
 chi2Str = 'chi2CMShape';
@@ -10,9 +10,9 @@ freePar = 'E0 Bkg Norm';
 RunList = 'KNM1';
 SmartGrid = 'OFF';
 pullFlag = 99;
-SysBudget = 23;
+SysBudget = 24;
 %% plot options
-PlotContour = 'ON';
+PlotContour = 'OFF';
 PlotGrid    = 'ON';
 if strcmp(chi2Str,'chi2Stat')
     chi2Label = 'stat. only';

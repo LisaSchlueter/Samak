@@ -1465,17 +1465,19 @@ classdef CovarianceMatrix < handle
             
             % calculate response functions with varied parameters
             RFfun = @ComputeRF;
-            parqU = obj.StudyObject.qU;
             parnqU = obj.StudyObject.nqU;
             ResponseFunction = zeros(obj.StudyObject.nTe,obj.StudyObject.nqU,obj.nTrials,nRings);
 
+            ParObj = copy(repmat(obj.StudyObject,obj.nTrials,1));
             progressbar('Compute RF lookup table');
-            for i = 1:obj.nTrials
-                progressbar(i/obj.nTrials);
+            nTrials_local = obj.nTrials;
+            parfor i = 1:nTrials_local
+                parqU = ParObj(i).qU;
+                parTe = ParObj(i).Te;
+                progressbar(i/nTrials_local);
                 for ri = 1:nRings
-                    parTe = obj.StudyObject.Te;
                     for ii = 1:parnqU
-                        ResponseFunction(:,ii,i,ri) = RFfun(obj.StudyObject,parTe,parqU(ii,ri),'pixel',ri,...
+                        ResponseFunction(:,ii,i,ri) = RFfun(ParObj(i),parTe,parqU(ii,ri),'pixel',ri,...
                             'ELossRange',maxE_el,'ELossBinStep',ELossBinStep,...
                             'ElossFunctions',ElossFunctions(:,:,i),...
                             'RFBinStep',RFBinStep,...
@@ -1486,7 +1488,7 @@ classdef CovarianceMatrix < handle
                     end
                 end
             end
-        
+            
             % do not save all samples, just some infos
             if strcmp(obj.SysEffect.RF_BF,'ON') && strcmp(obj.SysEffect.RF_RX,'ON') && strcmp(obj.SysEffect.RF_EL,'ON')
                 rf_path = [getenv('SamakPath'),sprintf('inputs/CovMat/RF/LookupTables/RF/')];
@@ -1534,6 +1536,7 @@ classdef CovarianceMatrix < handle
             fprintf('--------------------------------------------------------------------------\n')
             cprintf('blue','CovarianceMatrix:ComputeCM_RF: Compute Response Function Covariance Matrix \n')
             
+            obj.StudyObject.SynchrotronFlag = 'OFF';
             if ismember(obj.StudyObject.TD,{'FTpaper','StackCD100all','StackCD100_3hours'}) || str2double(obj.StudyObject.TD)<51410 || contains(obj.StudyObject.TD,'FTpaper')% first tritium binning!
                 DefaultRFBinStep = 0.4;
                 if strcmp(obj.SysEffect.RF_EL,'ON')
@@ -2854,14 +2857,10 @@ function ComputeCM_FSD(obj,varargin)
     end
     if strcmp(obj.TTFlag,'ON')
         NormBiasTT = randn(obj.nTrials,1).*obj.StudyObject.TTNormGS_i'*obj.FSDNorm_RelErr;
-        % TT_P_rand = permute(repmat(1+randn(size(obj.StudyObject.TTexP,2),obj.nTrials),1,1,nRings),[3,1,2]);
         TT_P_rand = permute(repmat(randn(size(obj.StudyObject.TTexP,2),obj.nTrials),1,1,nRings),[3,1,2]);
         TT_P(:,1:obj.StudyObject.TTGSTh,:)  = TT_P(:,1:obj.StudyObject.TTGSTh,:).* (1+(TT_P_rand(:,1:obj.StudyObject.TTGSTh,:).*obj.FSDShapeGS_RelErr));
         TT_P(:,obj.StudyObject.TTGSTh+1:end,:) = TT_P(:,obj.StudyObject.TTGSTh+1:end,:).*(1+(TT_P_rand(:,obj.StudyObject.TTGSTh+1:end,:).*obj.FSDShapeES_RelErr)); 
-             
-%         TT_P(:,1:obj.StudyObject.TTGSTh,:)  = TT_P(:,1:obj.StudyObject.TTGSTh,:).* (TT_P_rand(:,1:obj.StudyObject.TTGSTh,:).*obj.FSDShapeGS_RelErr);
-%         TT_P(:,obj.StudyObject.TTGSTh+1:end,:) = TT_P(:,obj.StudyObject.TTGSTh+1:end,:).*(TT_P_rand(:,obj.StudyObject.TTGSTh+1:end,:).*obj.FSDShapeES_RelErr); 
-         TT_P(TT_P<0)=0;
+        TT_P(TT_P<0)=0;
     end
     
     %Start trials

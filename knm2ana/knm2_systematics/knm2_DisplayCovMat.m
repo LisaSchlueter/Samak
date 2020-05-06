@@ -1,19 +1,19 @@
 % Plot Covariance Matrix for 1 single systematic effect
 % systematics setting
 
-myEffect      = 'LongPlasma';
+myEffect      = 'RF_BF';
 RecomputeFlag = 'OFF';
-nTrials       =  1000;
-SysBudget     = 34; % 34= knm2 preliminary input
+nTrials       =  10;
+SysBudget     = 36; % 34= knm2 preliminary input
 
 % model setting
 RunList   = 'KNM2_Prompt';
 AnaFlag   = 'StackPixel'; % FPD segmentation
 
-E0 = knm2FS_GetE0Twins('SanityPlot','OFF');
+E0 = knm2FS_GetE0Twins('SanityPlot','OFF','Mode','FS2');
 
 RunArg = {'FSDFlag','BlindingKNM2',...
-    'ELossFlag','KatrinT2',...
+    'ELossFlag','KatrinT2A20',...
     'AnaFlag',AnaFlag,...
     'chi2','chi2Stat',...      % switch on later by hand
     'RunList',RunList,...
@@ -22,7 +22,7 @@ RunArg = {'FSDFlag','BlindingKNM2',...
     'TwinBias_Q',E0,...  % twin endpoint
     'SysBudget',SysBudget,...
     'RingMerge','Full',...
-    'NonPoissonScaleFactor',1.1121};
+    'NonPoissonScaleFactor',1.112};
 if strcmp(myEffect,'Bkg')
     CmArg = {'BkgCM','ON',...%  'SysEffects',struct(myEffect,'ON'),...
         'RecomputeFlag',RecomputeFlag,...

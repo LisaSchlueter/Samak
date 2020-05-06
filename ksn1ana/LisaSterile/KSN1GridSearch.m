@@ -64,14 +64,16 @@ MakeDir(savedir);
 savefile = sprintf('%sKSN1_GridSearch_%s_%s_%s_%.0feVrange_%s_%.0fnGrid%s.mat',...
     savedir,RunList,DataType,strrep(freePar,' ',''),range,chi2,nGridSteps,extraStr);
 
+%% check if a file with larger n grid size exist. If yes, load that on instead
 if ~exist(savefile,'file') && strcmp(RecomputeFlag,'OFF') && nGridSteps<50
-    % if doesn't exist test 50x Grid
     nGridSteps_i = nGridSteps;
     nGridSteps = 50;
     savefile = sprintf('%sKSN1_GridSearch_%s_%s_%s_%.0feVrange_%s_%.0fnGrid%s.mat',...
         savedir,RunList,DataType,strrep(freePar,' ',''),range,chi2,nGridSteps,extraStr);
     if ~exist(savefile,'file') % if grid for 50 also doesn't exist -> go back to 25 grid
         nGridSteps = nGridSteps_i;
+        savefile = sprintf('%sKSN1_GridSearch_%s_%s_%s_%.0feVrange_%s_%.0fnGrid%s.mat',...
+            savedir,RunList,DataType,strrep(freePar,' ',''),range,chi2,nGridSteps,extraStr);
     end
 end
 %% load or calculate grid
@@ -111,7 +113,7 @@ else
             T.ComputeCM('SysEffect',struct(SysEffect,'ON'),'BkgCM','OFF');
         end
     end
-    
+    %% ranomized mc data
     if isfloat(RandMC) && strcmp(DataType,'Twin')
         % change to randomized MC data
         T.InitModelObj_Norm_BKG('RecomputeFlag','ON');

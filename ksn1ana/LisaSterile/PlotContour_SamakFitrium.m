@@ -11,7 +11,7 @@ PlotSplines = 'ON'; % plot smooth spline instead of points -> fails for closed c
 range = 95;%
 nGridSteps = 25;
 chi2Str = {'chi2Stat','chi2CMShape'};
-DataType = 'Twin';
+DataType = 'Real';
 freePar = 'E0 Bkg Norm';
 RunList = 'KNM1';
 SmartGrid = 'OFF';
@@ -84,6 +84,7 @@ end
 
 savedir = [getenv('SamakPath'),'ksn1ana/LisaSterile/results/'];
     %% fitrum
+    range = 95;
     if strcmp(Fitrium,'ON')
 
       for i=1:numel(chi2Str)

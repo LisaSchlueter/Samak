@@ -2418,9 +2418,7 @@ classdef RunSensitivity < handle
         function nTrials = GetnTrials(obj,SysEffect)
             if strcmp(obj.RunAnaObj.DataSet,'FirstTritium.katrin')
                 nTrials = 1000;
-            elseif strcmp(obj.RunAnaObj.DataSet,'Knm2')
-                nTrials = 5000;
-            else
+            else 
                 if ischar(SysEffect)
                     if contains(SysEffect,'RF')
                         nTrials = 1000;

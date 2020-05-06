@@ -17,6 +17,7 @@ p.addParameter('WGTS_MolFrac_DT_SubRun','');
 p.addParameter('WGTS_MolFrac_HT',0.035,@(x)isfloat(x)&& x>0);
 p.addParameter('WGTS_MolFrac_HT_SubRun','');
 p.addParameter('WGTS_B_T',2.52,@(x)isfloat(x) && x>0);
+p.addParameter('NIS',7,@(x)isfloat(x));
 
 % Theory
 p.addParameter('ISCS','Edep',@(x)ismember(x,{'Aseev','Theory'}));
@@ -25,6 +26,7 @@ p.addParameter('HTFSD','Sibille0p5eV',@(x)ismember(x,{'OFF','SAENZ','BlindingKNM
 p.addParameter('TTFSD','Sibille0p5eV',@(x)ismember(x,{'OFF','DOSS','SAENZ','BlindingKNM1','SibilleFull','Sibille0p5eV'}));
 p.addParameter('ELossFlag','KatrinT2',@(x)ismember(x,{'Aseev','Abdurashitov','CW_GLT','KatrinD2'}));
 p.addParameter('DopplerEffectFlag','OFF',@(x)ismember(x,{'OFF'}));
+p.addParameter('SynchrotronFlag','OFF',@(x)ismember(x,{'ON','OFF'}));
 % Binning
 p.addParameter('nTeBinningFactor',100,@(x)isfloat(x) && x>0);
 p.addParameter('qU',mean(D.qU,2),@(x)isfloat(x) && all(x>0));
@@ -67,6 +69,7 @@ WGTS_MolFrac_DT_SubRun   = p.Results.WGTS_MolFrac_DT_SubRun;
 WGTS_MolFrac_TT          = p.Results.WGTS_MolFrac_TT;
 WGTS_MolFrac_TT_SubRun   = p.Results.WGTS_MolFrac_TT_SubRun;
 WGTS_B_T                 = p.Results.WGTS_B_T;
+NIS                      = p.Results.NIS;
 
 % Parameters: Calculation precision
 nTeBinningFactor         = p.Results.nTeBinningFactor;
@@ -153,7 +156,7 @@ opt_wgts = {...
     'ELossFlag',ELossFlag,...
     'recomputeRF',recomputeRF,...
     'UseParallelRF',UseParallelRF,...
-    'NIS',7}; %Thierry WARNING 13/2/2019
+    'NIS',NIS}; 
 
 opt_mace = {...
     'MACE_Bmax_T',MACE_Bmax_T,...
@@ -161,7 +164,8 @@ opt_mace = {...
     'MACE_Ba_Setting','Data'}; %do not use pixelmap correction from txt file, use values from runsummary
 
 opt_wgtsmace = {...
-    'KTFFlag',KTFFlag};
+    'KTFFlag',KTFFlag,...
+    'SynchrotronFlag',SynchrotronFlag};
 
 %% qu
 

@@ -1,4 +1,4 @@
- RunAnaArg = {'RunNr',51645,...
+ RunAnaArg = {'RunList','KNM1',...%'RunNr',51645,...
         'fixPar','E0 Norm Bkg',...
         'FSDFlag','SibilleFull',...
         'ELossFlag','KatrinT2',...
@@ -12,14 +12,14 @@
         'TwinBias_Q',18573.73,...
         'SysBudget',22};
 
-R = RunAnalysis(RunAnaArg{:},'DataType','Real');
-T = RunAnalysis(RunAnaArg{:},'DataType','Twin');
+R = MultiRunAnalysis(RunAnaArg{:},'DataType','Real');
+T = MultiRunAnalysis(RunAnaArg{:},'DataType','Twin');
 
 %%
 StatData = sum(R.RunData.TBDIS);
 StatTwin = sum(T.RunData.TBDIS);
 
-RelDiffStat = 1-abs(StatData-StatTwin)/(0.5*(StatData+StatTwin))
+RelDiffStat = 1-abs(StatData-StatTwin)/(0.5*(StatData+StatTwin));
 %%
 
 % R.exclDataStart = R.GetexclDataStart(40);

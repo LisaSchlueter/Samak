@@ -40,7 +40,7 @@ mnu4Sq_contour = cell(numel(CL),1);
 sin2T4_contour = cell(numel(CL),1);
 legStr         = cell(numel(CL),1);
 for i=1:numel(CL)
-    PlotArg = {'LineWidth',2.5,'MarkerSize',4};
+    PlotArg = {'LineWidth',2,'MarkerSize',4};
     if ischar(Color)
         myColor = Color;
     elseif iscell(Color)
@@ -63,16 +63,16 @@ for i=1:numel(CL)
     
     for c=1:nContour
         if strcmp(PlotSplines,'OFF')
-            pHandle  = plot(sin2T4_tmp{i}, mnu4Sq_tmp{i},...
+            pHandle  = plot(sin2T4_tmp{c}, mnu4Sq_tmp{c},...
                 LineStyle,PlotArg{:},'MarkerSize',10);
         else
             try 
-                y = logspace(log10(min(mnu4Sq_tmp{i})),log10(max(mnu4Sq_tmp{i})),5e3);
-                x = interp1(mnu4Sq_tmp{i},sin2T4_tmp{i},y,'spline');
+                y = logspace(log10(min(mnu4Sq_tmp{c})),log10(max(mnu4Sq_tmp{c})),5e3);
+                x = interp1(mnu4Sq_tmp{c},sin2T4_tmp{c},y,'spline');
                 pHandle = plot(x,y,LineStyle,PlotArg{:});
             catch
                 fprintf('Interpolation failed/interupted - probably closed contour \n')
-                pHandle  = plot(sin2T4_tmp{i}, mnu4Sq_tmp{i},...
+                pHandle  = plot(sin2T4_tmp{c}, mnu4Sq_tmp{c},...
                     LineStyle,PlotArg{:},'MarkerSize',10);
             end
         end

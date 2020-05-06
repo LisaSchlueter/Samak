@@ -512,6 +512,7 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             % - when lambdaintegral not calculated (e.g. in covariance matrix!), then Method 'New' is more than 2x faster
             % - both methods give the same result
             % ---------------------------------------------------------
+          
             if strcmp(Method,'Interp')
                 try
                     %fprintf('Interpolation of inel. scattering probabilities ...')
@@ -521,7 +522,7 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
                         'NIS',obj.NIS,...
                         'ISXsection', ISXsection_local(squeeze(Energy)),...
                         'SanityPlot','OFF');
-                    %fprintf('succesful! \n')
+                    fprintf('succesful! \n')
                     return
                 catch
                     fprintf(2,'failed - calculate exact inel. scattering probabilities \n')

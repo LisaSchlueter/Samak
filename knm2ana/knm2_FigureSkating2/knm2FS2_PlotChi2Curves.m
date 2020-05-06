@@ -2,7 +2,7 @@
 range = 40;
 AuxLines = 'OFF';
 ShowResults = 'OFF';
-SavePlot = 'OFF';
+SavePlot = 'ON';
 %%
 savedir = [getenv('SamakPath'),'knm2ana/knm2_FigureSkating2/results/'];
 savenameStat = sprintf('%sknm2FS2_ComputeTwinScanResults_chi2Stat_%.0feV.mat',savedir,range);
@@ -39,7 +39,7 @@ mychi2minCM = mychi2minCM(sortI);
 %% plot
 
  f4 = figure('Units','normalized','Position',[0.1,0.1,0.5,0.5]);
-pCM = plot(mNuSqCM,mychi2minStat,'-','LineWidth',3,'Color',rgb('DodgerBlue'));
+pCM = plot(mNuSqCM,mychi2minCM,'-','LineWidth',3,'Color',rgb('DodgerBlue'));
 hold on;
 pStat = plot(mNuSqStat,mychi2minStat,'-.','LineWidth',3,'Color',rgb('SkyBlue'));
 
@@ -68,7 +68,7 @@ else
 end
 if strcmp(ShowResults,'ON')
 leg = legend([pStat,pCM],...
-   sprintf('Stat. only         : %s = %.3f (%.3f +%.3f) %s',xstr,FitResultStat.par(1), ScanResultStat.AsymErr(2),ScanResultStat.AsymErr(1),xUnit),...
+   sprintf('Stat. only:        %s = %.3f (%.3f +%.3f) %s',xstr,FitResultStat.par(1), ScanResultStat.AsymErr(2),ScanResultStat.AsymErr(1),xUnit),...
    sprintf('Stat. and syst: %s = %.3f (%.3f +%.3f) %s',xstr,FitResultCM.par(1), ScanResultCM.AsymErr(2),ScanResultCM.AsymErr(1),xUnit));
 else
     leg = legend([pStat,pCM],'Stat. only','Stat. and syst.');
@@ -76,7 +76,7 @@ end
 leg.EdgeColor = rgb('Silver');
 leg.Location = 'northwest';
 xlim([-1,1]);
-
+t = title('Twins','FontWeight','normal','FontSize',get(gca,'FontSize'));
 %% save
 if strcmp(SavePlot,'ON')
 plotdir = strrep(savedir,'results','plots');
