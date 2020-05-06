@@ -2841,7 +2841,7 @@ function ComputeCM_FSD(obj,varargin)
         NormBiasDT = randn(obj.nTrials,1).*obj.StudyObject.DTNormGS_i'.*obj.FSDNorm_RelErr;
         % Bin-to-Bin uncorrelated variation
         DT_P_rand =permute(repmat(randn(size(obj.StudyObject.DTexP,2),obj.nTrials),1,1,nRings),[3,1,2]);
-        DT_P(:,1:obj.StudyObject.DTGSTh,:)  = DT_P(:,1:obj.StudyObject.DTGSTh,:).* (1+(DT_P_rand(:,1:obj.StudyObject.DTGSTh,:).*obj.FSDShapeGS_RelErr));
+        DT_P(:,1:obj.StudyObject.DTGSTh,:)     = DT_P(:,1:obj.StudyObject.DTGSTh,:).* (1+(DT_P_rand(:,1:obj.StudyObject.DTGSTh,:).*obj.FSDShapeGS_RelErr));
         DT_P(:,obj.StudyObject.DTGSTh+1:end,:) = DT_P(:,obj.StudyObject.DTGSTh+1:end,:).*(1+(DT_P_rand(:,obj.StudyObject.DTGSTh+1:end,:).*obj.FSDShapeES_RelErr)); 
         DT_P(DT_P<0)=0;
     end

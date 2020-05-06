@@ -15,7 +15,7 @@ DataType = 'Twin';
 freePar = 'E0 Bkg Norm';
 RunList = 'KNM1';
 SmartGrid = 'OFF';
-SysBudget = 23;
+SysBudget = 24;
 %% load grid (or calculate if doesn't exist)
 
 mnu4Sq   = cell(numel(chi2Str),1);

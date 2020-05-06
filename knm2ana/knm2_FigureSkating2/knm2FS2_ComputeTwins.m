@@ -10,7 +10,7 @@ RunAnaArg = {'RunList','KNM2_Prompt',...     % all KNM2 golden runs
     'FSDFlag','BlindingKNM2',...             % final state distribution (theoretical calculation)
     'ELossFlag','KatrinT2A20',...            % energy-loss function     ( different parametrizations available)
     'AnaFlag','StackPixel',...               % FPD segmentations -> pixel combination
-    'chi2','chi2Stat',...                    % statistics only
+    'chi2','chi2CMShape',...                    % statistics only
     'NonPoissonScaleFactor',1,...
     'TwinBias_Q',E0,...
     'ROIFlag','Default',...
@@ -27,7 +27,7 @@ A.PlotFit
 if strcmp(Chi2Scan,'ON')
     savedir = [getenv('SamakPath'),'knm2ana/knm2_FigureSkating2/results/'];
     MakeDir(savedir);
-    savename = sprintf('%sknm2FS2_ComputeTwinScanResults_%.0feV.mat',savedir,range);
+    savename = sprintf('%sknm2FS2_ComputeTwinScanResults_%s_%.0feV.mat',savedir,A.chi2,range);
     
     if exist(savename,'file')
         load(savename,'ScanResult','ScanResult2','FitResult')
@@ -41,5 +41,5 @@ if strcmp(Chi2Scan,'ON')
     end
     
     A.PlotChi2Curve('Parameter','mNu','ScanResult',ScanResult,'FitResult',A.FitResult);
-    A.PlotChi2Curve('Parameter','mNu','ScanResult',ScanResult2,'FitResult',A.FitResult);
+   % A.PlotChi2Curve('Parameter','mNu','ScanResult',ScanResult2,'FitResult',A.FitResult);
 end
