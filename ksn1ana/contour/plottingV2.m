@@ -8,8 +8,8 @@
 plt_title = 'KATRIN Sterile Neutrino Analysis (KS1) - 90% Sensitivity';
 
 filepath   = [getenv('SamakPath'),'ksn1ana/contour/contour_files/V2/'];
-file_A     = 'coord_90eV_Twin_syst_90CL_freeM.mat';
-file_B     = 'coord_90eV_Twin_syst_95CL_fixM.mat';
+file_A     = 'coord_90eV_Real_syst_90CL.mat';
+file_B     = 'coord_90eV_Real_syst_95CL.mat';
 % file_C     = 'coord_90eV_Real_syst_99.mat';
 
 da  = importdata([filepath,file_A]);    % Data A
@@ -33,7 +33,7 @@ d_troitsk  = importdata([filepath,'coord_troitsk.mat']);        % Data Troitsk
 %% Plot tunings
 % Cutting the tails
 na   = length(da.sith4_X); nb   = length(db.sith4_X); %nc   = length(dc.sith4_X);
-cuta = (1:na);  cutb = (1:nb);  %cutc = (1:nc);
+cuta = (4:na);  cutb = (4:nb);  %cutc = (1:nc);
 
 % Continuation of the RAA curves
 raa90x = d_raa_90.sith4_X;   raa90y = d_raa_90.m4_Y;   n90 = length(raa90x);
@@ -51,7 +51,7 @@ prlB = [50 148 216]/255;
 %%%% ================ %%%%
 %% Plotting
 figure
-title(plt_title)
+
 
 % === Constant Data ===
 %   Mainz & Troitsk
@@ -104,21 +104,21 @@ raa95    = 'Phys. Rev. D 83, 073006 (2011) - 95%CL';
 
 % KATRIN Labels
 
-% katrinA  = sprintf('KATRIN KSN1 %1$s %2$s - %3$s - %4$d % CL - [E_0-%5$d;E_0+50] eV',...
-%     s(setA.datatype),s(setA.activeFlag),s(setA.uncertainty),s(setA.CL),s(setA.eVrange));
-% katrinB  = sprintf('KATRIN KSN1 %1$s %2$s - %3$s - %4$d % CL - [E_0-%5$d;E_0+50] eV',...
-%     s(setB.datatype),s(setB.activeFlag),s(setB.uncertainty),s(setB.CL),s(setB.eVrange));
+katrinA  = sprintf('KATRIN KSN1 %1$s %2$s - %3$s - %4$d CL - [E_0- %5$d ;E_0+50] eV',...
+    s(setA.datatype),s(setA.activeFlag),s(setA.uncertainty),setA.CL,setA.eVrange);
+katrinB  = sprintf('KATRIN KSN1 %1$s %2$s - %3$s - %4$d CL - [E_0- %5$d ;E_0+50] eV',...
+    s(setB.datatype),s(setB.activeFlag),s(setB.uncertainty),setB.CL,setB.eVrange);
 % katrinC  = sprintf('KATRIN KSN1 %1$s %2$s - %3$s - %4$d % CL - [E_0-%5$d;E_0+50] eV',...
 %     s(setC.datatype),s(setC.activeFlag),s(setC.uncertainty),s(setC.CL),s(setC.eVrange));
 
 % Legend
-% legend([p_m p_t pA pB p_g p_raa95 p_raa90],...      % Label order
-%         {mainz,troitsk,...                          % Mainz&Troitsk
-%         katrinA,katrinB,...                         % KATRIN
-%         giunti,...                                  % Giunti
-%         raa95,raa90},...                            % RAA
-%         'Location','southwest',...                  % Legend settings
-%         'box','off')
+legend([p_m p_t pA pB p_g p_raa95 p_raa90],...      % Label order
+        {mainz,troitsk,...                          % Mainz&Troitsk
+        katrinA,katrinB,...                         % KATRIN
+        giunti,...                                  % Giunti
+        raa95,raa90},...                            % RAA
+        'Location','southwest',...                  % Legend settings
+        'box','off')
 
 grid on
 
@@ -131,9 +131,11 @@ set(gca, 'YScale', 'log');
 axis([0.01 1 0.1 10000])
 axis square
 
+title(plt_title)
 %% MISC
 function b = s(a)
 % Just a function for automatic labels
+    b = '';
     if strcmp(a,'syst')
         b = 'stat+syst';
     elseif strcmp(a,'stat')

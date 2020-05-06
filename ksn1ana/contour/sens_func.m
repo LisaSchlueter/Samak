@@ -104,7 +104,7 @@ function sens_func(contour_settings)
     %% Delta-X2
     X0     = fit_chi(0,0,R,eVrange);
     chilvl = chilvl + X0;
-%     X0   = 0;
+    X0   = 30.3201;
 
     %% Loop
     c=0;
