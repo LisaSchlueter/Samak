@@ -3,9 +3,11 @@ function [mnu4sq_contour, sin2t4_contour] = KSN1Grid2Contour(mnu4sq,sin2t4,chi2,
 % define delta chi2 for given confidence level
 p = inputParser;
 p.addParameter('Mode','New',@(x)ismember(x,{'New','Old'}));
+p.addParameter('Npar',2,@(x)isfloat(x));
 p.parse(varargin{:});
 Mode = p.Results.Mode;
-DeltaChi2 = GetDeltaChi2(CL,2);
+Npar = p.Results.Npar;
+DeltaChi2 = GetDeltaChi2(CL,Npar);
 if chi2_ref>min(min(chi2))
     chi2_ref = min(min(chi2));
 end

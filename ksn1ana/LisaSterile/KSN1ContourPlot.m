@@ -12,6 +12,7 @@ p.addParameter('LineStyle','-',@(x) ischar(x));
 p.addParameter('titleStr','',@(x)ischar(x));
 p.addParameter('nInter',1e3,@(x)isfloat(x));
 p.addParameter('BestFit','OFF',@(x) ismember(x,{'ON','OFF'}));
+p.addParameter('Method','New',@(x) ismember(x,{'New','Old'}));
 p.parse(varargin{:});
 
 mnu4Sq      = p.Results.mnu4Sq;
@@ -26,7 +27,7 @@ LineStyle   = p.Results.LineStyle;
 titleStr    = p.Results.titleStr;
 nInter      = p.Results.nInter;
 BestFit     = p.Results.BestFit;
-
+Method      = p.Results.Method;
 if isempty(mnu4Sq)
     load('KSN1_SmartGridInit_40eVrange.mat','mnu4Sq','sin2T4','chi2','chi2_ref');
     fprintf('no input grid specified - load default grid \n')
@@ -51,13 +52,17 @@ for i=1:numel(CL)
     end
     
     [mnu4Sq_contour{i}, sin2T4_contour{i}] = ...
-        KSN1Grid2Contour(mnu4Sq,sin2T4,chi2,chi2_ref,CL(i),'Mode','New');
+        KSN1Grid2Contour(mnu4Sq,sin2T4,chi2,chi2_ref,CL(i),'Mode',Method);
     
-    mnu4Sq_tmp = mnu4Sq_contour{i};
-    sin2T4_tmp = sin2T4_contour{i};
-    
+    if strcmp(Method,'New')
+        mnu4Sq_tmp = mnu4Sq_contour{i};
+        sin2T4_tmp = sin2T4_contour{i};
+    else
+        mnu4Sq_tmp = mnu4Sq_contour(i);
+        sin2T4_tmp = sin2T4_contour(i);
+    end
     nContour = size(mnu4Sq_tmp,1);
-    if nContour>1 || numel(mnu4Sq_tmp{i})>1e3
+    if nContour>1 || numel(mnu4Sq_tmp{i})>1e4
         PlotSplines='OFF';
     end
     
@@ -67,7 +72,7 @@ for i=1:numel(CL)
                 LineStyle,PlotArg{:},'MarkerSize',10);
         else
             try 
-                y = logspace(log10(min(mnu4Sq_tmp{c})),log10(max(mnu4Sq_tmp{c})),5e3);
+                y = logspace(log10(min(mnu4Sq_tmp{c})),log10(max(mnu4Sq_tmp{c})),1e3);
                 x = interp1(mnu4Sq_tmp{c},sin2T4_tmp{c},y,'spline');
                 pHandle = plot(x,y,LineStyle,PlotArg{:});
             catch

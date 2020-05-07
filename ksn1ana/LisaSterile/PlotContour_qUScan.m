@@ -5,10 +5,10 @@
 CL = 95;%, 95 99];
 SavePlot = 'ON';
 PlotSplines = 'ON'; % plot smooth spline instead of points -> fails for closed contours
-range = (95:-5:75);%
-nGridSteps = 25;
+range = [95:-5:70];%[65:-5:45,41,40];%[95,90,80,75,70];%
+nGridSteps = 50;
 chi2Str = 'chi2CMShape';
-DataType = 'Real';
+DataType = 'Twin';
 freePar = 'E0 Bkg Norm';
 RunList = 'KNM1';
 SmartGrid = 'OFF';
@@ -41,8 +41,9 @@ else
 end
 titleStr = sprintf('%s , %s at %.0f%% C.L.',DataType,chi2Label,CL);
 
-LineStyles = {'-','-.','--','-',':','-.','--',':'};
-Colors = {'DodgerBlue','Orange','ForestGreen','FireBrick','DarkSlateGray','LimeGreen','CadetBlue'};
+LineStyles = {'-','-.',':','-','--','-.',':','--','-','-',':','-.','--'};
+Colors = {'DodgerBlue','Orange','DarkSlateGray','FireBrick','Magenta','LimeGreen','CadetBlue',...
+    'Navy','ForestGreen','PowderBlue','Pink'};
 legStr = cell(nContours,1);
 pl = cell(nContours,1);
 for i=1:nContours
@@ -63,13 +64,17 @@ legStr{i} = sprintf('%.0f eV range',range(i));
 end
 
 leg = legend([pl{:}]',legStr{:},'EdgeColor',rgb('Silver'),'Location','southwest');
-leg.Title.String = 'Lower fit boundary - 18574 eV';
-leg.Title.String.FontWeight = 'normal';
-ylim([1 95^2]);
-xlim([1e-03 0.5]);
-
+leg.Title.String = 'Lower fit boundary';
+leg.Title.FontWeight = 'normal';
+ylim([1 1e4+4e3]);
+if strcmp(DataType,'Real')
+    xlim([1e-03 0.5]);
+else
+    xlim([4e-03 0.5]);
+end
 plotdir = [getenv('SamakPath'),'ksn1ana/LisaSterile/plots/'];
 plotname = sprintf('%sksn1qUScan_%s.png',plotdir,DataType);
 print(gcf,plotname,'-dpng','-r450');
+
 
 

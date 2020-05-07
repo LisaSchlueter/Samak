@@ -24,6 +24,11 @@ chi2     = cell(numel(chi2Str),1);
 chi2_ref = cell(numel(chi2Str),1);
 
 for i=1:numel(chi2Str)
+    if i==1
+       nGridSteps = 50; 
+    elseif i==2
+       nGridSteps = 50; 
+    end
     GridArg = {'range',range,...
     'nGridSteps',nGridSteps,...
     'chi2',chi2Str{i},...
@@ -84,25 +89,34 @@ end
 
 savedir = [getenv('SamakPath'),'ksn1ana/LisaSterile/results/'];
     %% fitrum
-    range = 95;
+    
     if strcmp(Fitrium,'ON')
-
-      for i=1:numel(chi2Str)
-        fitriumfile = sprintf('%sOthers/contour_KSN1_Fitrium_%s_%.0feV_%s_%.0f_0.txt',...
-            savedir,DataType,range,chi2Str{i},CL);
-        try
-            d = importdata(fitriumfile);
-            hold on;
-            if i==1
-                pFstat = plot(d.data(:,1),d.data(:,2),'-.','LineWidth',2,'Color',p1.Color);
-            elseif i==2
-                pFsys = plot(d.data(:,1),d.data(:,2),'-.','LineWidth',2,'Color',p2.Color);
+        
+        for i=1:numel(chi2Str)
+            fitriumfile = sprintf('%sOthers/contour_KSN1_Fitrium_%s_%.0feV_%s_%.0f_0.txt',...
+                savedir,DataType,range,chi2Str{i},CL);
+            try
+                d = importdata(fitriumfile);
+                hold on;
+                if i==1
+                    pFstat = plot(d.data(:,1),d.data(:,2),'-.','LineWidth',2,'Color',p1.Color);
+                elseif i==2
+                    pFsys = plot(d.data(:,1),d.data(:,2),'-.','LineWidth',2,'Color',p2.Color);
+                    if range==95 
+                        d1 = importdata(strrep(fitriumfile,'_0.txt','_1.txt'));
+                        d2 = importdata(strrep(fitriumfile,'_0.txt','_2.txt'));
+                        plot(d1.data(:,1),d1.data(:,2),'-.','LineWidth',2,'Color',p2.Color);
+                        plot(d2.data(:,1),d2.data(:,2),'-.','LineWidth',2,'Color',p2.Color);
+                    end
+                end
+                
+                
+            catch
+                fprintf('fitrium file %s not available \n',fitriumfile)
             end
-        catch
-            fprintf('fitrium file %s not available \n',fitriumfile)
+            
         end
-      end
-     
+        
     end
 %% legend
 

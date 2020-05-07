@@ -1,14 +1,14 @@
 
 %% settings
 CL = 95;
-range = 95;%
-nGridSteps = 50;
+range =  65;%
+nGridSteps = 25;
 chi2Str = 'chi2CMShape';
 DataType = 'Real';
-freePar = 'mNu E0 Bkg Norm';
+freePar = 'E0 Bkg Norm';
 RunList = 'KNM1';
 SmartGrid = 'OFF';
-pullFlag = 12;%99;
+pullFlag = 99;
 
 [mnu4Sq,sin2T4,chi2,chi2_ref,savefileGrid] = KSN1GridSearch('range',range,...
     'nGridSteps',nGridSteps,...
@@ -18,24 +18,25 @@ pullFlag = 12;%99;
     'RunList',RunList,...
     'SmartGrid',SmartGrid,...
     'RecomputeFlag','OFF',...
-    'pullFlag',pullFlag);
+    'pullFlag',pullFlag,...
+    'SysBudget',24);
 
 [mnu4Sq_tmp90, sin2T4_tmp90] = ...
-    KSN1Grid2Contour(mnu4Sq,sin2T4,chi2,chi2_ref,0.9);
-mnu4Sq_contour_90 = logspace(log10(min(mnu4Sq_tmp90)),log10(max(mnu4Sq_tmp90)),5e3);
-sin2T4_contour_90 = interp1(mnu4Sq_tmp90,sin2T4_tmp90,mnu4Sq_contour_90,'lin');
+    KSN1Grid2Contour(mnu4Sq,sin2T4,chi2,chi2_ref,0.9,'Mode','New');
+mnu4Sq_contour_90 = logspace(log10(min(mnu4Sq_tmp90{1})),log10(max(mnu4Sq_tmp90{1})),5e3);
+sin2T4_contour_90 = interp1(mnu4Sq_tmp90{1},sin2T4_tmp90{1},mnu4Sq_contour_90,'lin');
 
 [mnu4Sq_tmp95, sin2T4_tmp95] = ...
-    KSN1Grid2Contour(mnu4Sq,sin2T4,chi2,chi2_ref,0.95);
-mnu4Sq_contour_95 = logspace(log10(min(mnu4Sq_tmp95)),log10(max(mnu4Sq_tmp95)),5e3);
-sin2T4_contour_95 = interp1(mnu4Sq_tmp95,sin2T4_tmp95,mnu4Sq_contour_95,'lin');
+    KSN1Grid2Contour(mnu4Sq,sin2T4,chi2,chi2_ref,0.95,'Mode','New');
+mnu4Sq_contour_95 = logspace(log10(min(mnu4Sq_tmp95{1})),log10(max(mnu4Sq_tmp95{1})),5e3);
+sin2T4_contour_95 = interp1(mnu4Sq_tmp95{1},sin2T4_tmp95{1},mnu4Sq_contour_95,'lin');
 
 
 
 GetFigure
 plot(sin2T4_contour_90,mnu4Sq_contour_90,'LineStyle','-');
 hold on;
-plot(sin2T4_tmp90,mnu4Sq_tmp90,'.','MarkerSize',20);
+%plot(sin2T4_tmp90,mnu4Sq_tmp90,'.','MarkerSize',20);
 plot(sin2T4_contour_95,mnu4Sq_contour_95,'LineStyle','-.');
 set(gca,'YScale','log');
 set(gca,'XScale','log');

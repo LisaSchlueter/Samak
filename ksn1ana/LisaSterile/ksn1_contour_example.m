@@ -1,10 +1,10 @@
 % example script 
 
 %% settings
-CL =96;
+CL =99.9;
 range = 95;%
-nGridSteps =25;
-chi2Str = 'chi2CMShape';
+nGridSteps =25;%50;
+chi2Str = 'chi2Stat';%CMShape';
 DataType = 'Real';
 freePar = 'E0 Bkg Norm';
 RunList = 'KNM1';

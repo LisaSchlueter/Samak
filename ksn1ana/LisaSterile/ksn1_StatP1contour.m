@@ -1,5 +1,5 @@
 %% calculate grid for ksn1 stat. + 1 syst
-range = 40;
+range = 95;
 nGridSteps = 25;
 chi2Str = 'chi2CMShape';
 DataType = 'Twin';
@@ -78,7 +78,7 @@ LineStyle =  {'-','-','-.',':','--','-.',':','--','-.',':','--'};
 %   'Background slope'};
 %% plot
 for i=1:(nSys+2)
-    PlotArg = {'Color',PlotColor{i},'LineStyle',LineStyle{i}};
+    PlotArg = {'Color',PlotColor{i},'LineStyle',LineStyle{i},'PlotSplines','ON'};
     if i>1
         PlotArg = [PlotArg,{'HoldOn','ON'}];
         hold on;
@@ -95,8 +95,8 @@ end
 leg = legend(DefaultSysLeg,'EdgeColor',rgb('Silver'),'Location','southwest');
 if range==40
     xlim([1e-02 0.5])
-elseif range>=90
-    xlim([1e-03 0.5])
+elseif range>40
+       xlim([2e-03 0.5])
 end
 ylim([1 (range+5)^2])
 
