@@ -1463,6 +1463,9 @@ classdef CovarianceMatrix < handle
                 WGTS_CD_MolPerCm2_v = repmat(obj.StudyObject.WGTS_CD_MolPerCm2,obj.nTrials,1);
             end
             
+            % switch off synchrotron -> takes too long
+            SynchrotronFlag_i = obj.StudyObject.SynchrotronFlag;
+            obj.StudyObject.SynchrotronFlag = 'OFF';
             % calculate response functions with varied parameters
             RFfun = @ComputeRF;
             parnqU = obj.StudyObject.nqU;
@@ -1489,6 +1492,7 @@ classdef CovarianceMatrix < handle
                 end
             end
             
+            obj.StudyObject.SynchrotronFlag = SynchrotronFlag_i;
             % do not save all samples, just some infos
             if strcmp(obj.SysEffect.RF_BF,'ON') && strcmp(obj.SysEffect.RF_RX,'ON') && strcmp(obj.SysEffect.RF_EL,'ON')
                 rf_path = [getenv('SamakPath'),sprintf('inputs/CovMat/RF/LookupTables/RF/')];
@@ -1637,8 +1641,8 @@ classdef CovarianceMatrix < handle
             %% When CovMat files doesnt exist: compute it
             %Init
             nRings = numel(obj.StudyObject.MACE_Ba_T);
-            TBDIS_V  = zeros(obj.StudyObject.nqU,obj.nTrials,nRings);
- 
+            TBDIS_V  = zeros(obj.StudyObject.nqU,obj.nTrials,nRings);  
+      
             % Loop Computing TBDIS Matrix
             RF_Samples = obj.ComputeRFLookupTable('maxE_el',maxE_el,'ELossBinStep',ELossBinStep,'RFBinStep',RFBinStep);  %
             progressbar('ComputeTBDISCovarianceMatrix');
@@ -1706,7 +1710,8 @@ classdef CovarianceMatrix < handle
                 obj.MultiCovMatFracNorm.CM_RF  =  obj.CovMatFracNorm;
             end
             
-            save(obj.CovMatFile, 'obj','-mat','-append');
+            save(obj.CovMatFile, 'obj','-mat','-append');     
+    
         end
         function ComputeCM_TASR(obj,varargin)
             fprintf('--------------------------------------------------------------------------\n')
@@ -3274,6 +3279,8 @@ function ComputeCM_LongPlasma(obj,varargin)
     end
     
     if loadSuccess==0
+ SynchrotronFlag_i = obj.StudyObject.SynchrotronFlag;
+  obj.StudyObject.SynchrotronFlag = 'OFF';
         % longi plasma uncertainty
         PlasmaErr =  [obj.MACE_VarErr,obj.is_EOffsetErr];
         PlasmaCovMat      = PlasmaErr.*[1,CorrCoeff;CorrCoeff,1].*PlasmaErr';
@@ -3371,6 +3378,7 @@ function ComputeCM_LongPlasma(obj,varargin)
         
         % Save again
         save(obj.CovMatFile, 'obj','-append');
+  obj.StudyObject.SynchrotronFlag = SynchrotronFlag_i;
     end
     
     if strcmp(SanityPlot,'ON')

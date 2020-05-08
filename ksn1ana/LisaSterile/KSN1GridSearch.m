@@ -127,18 +127,20 @@ else
     %% null hypothesis : no steriles
     T.Fit;
     FitResults_Null = T.FitResult;
-    
-    %% reference fit to find global minimum (if this failed, chi2min is found by grid search)
-    T.fixPar       = [freePar,'mnu4Sq , sin2T4']; % free sterile parameters
-    T.InitFitPar;
-    pullFlag_i = T.pullFlag;
-    T.pullFlag     = [pullFlag_i,9];  % limit sin4 to [0,0.5] and m4 [0 range^2]
-    T.Fit;
-    FitResults_ref = T.FitResult;
-    chi2_ref       = T.FitResult.chi2min;
-    T.pullFlag     = pullFlag_i; % remove pull
-    T.fixPar = freePar;  % fix sterile parameters again
-    T.InitFitPar;
+  
+    %% reference fit to find global minimum (if this fails, chi2min is found by grid search)
+    % stop doing this -> makes the grid search too slow
+    % do it later, in cases needed
+%     T.fixPar       = [freePar,'mnu4Sq , sin2T4']; % free sterile parameters
+%     T.InitFitPar;
+%     pullFlag_i = T.pullFlag;
+%     T.pullFlag     = [pullFlag_i,9];  % limit sin4 to [0,0.5] and m4 [0 range^2]
+%     T.Fit;
+%     FitResults_ref = T.FitResult;
+%     chi2_ref       = T.FitResult.chi2min;
+%     T.pullFlag     = pullFlag_i; % remove pull
+%     T.fixPar = freePar;  % fix sterile parameters again
+%     T.InitFitPar;
     
     %% define msq4 - sin2t4 grid
     switch SmartGrid
@@ -172,8 +174,14 @@ else
     
     chi2       = reshape(chi2Grid,nGridSteps,nGridSteps);
     FitResults = reshape(FitResultsGrid,nGridSteps,nGridSteps);
+    
+    if min(min(chi2))<T.FitResult.chi2min
+        chi2_ref = min(min(chi2));
+    else
+        chi2_ref = T.FitResult.chi2min;
+    end
     %% save
-    save(savefile,'chi2_ref','FitResults_ref','RunAnaArg',...
+    save(savefile,'chi2_ref','RunAnaArg',...%'FitResults_ref'
         'chi2','mnu4Sq','sin2T4','FitResults','FitResults_Null');
     fprintf('save file to %s \n',savefile)
     

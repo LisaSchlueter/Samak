@@ -8,13 +8,16 @@ DataType = 'Twin';
 freePar = 'E0 Bkg Norm';
 RunList = 'KNM1';
 SmartGrid = 'OFF';
-RandMC = [1:151,500:643];
+RandMC = [1:500];%,500:643];
+SysBudget = 24;
+%% init
 nContours = numel(RandMC);
 mnu4Sq   = cell(nContours,1);
 sin2T4   = cell(nContours,1);
 chi2     = cell(nContours,1);
 chi2_ref = cell(nContours,1);
 savefile = cell(nContours,1);
+FitResults_ref = cell(nContours,1);
 DeltaChi2 = zeros(nContours,1);
 %% load grid (or calculate if doesn't exist)
 mnu4Sq_bf = zeros(numel(RandMC),1);
@@ -29,7 +32,8 @@ for i=RandMC
         'RunList',RunList,...
         'SmartGrid',SmartGrid,...
         'RecomputeFlag','OFF',...
-        'RandMC',i);
+        'RandMC',i,...
+        'SysBudget',SysBudget);
     
     chi2tmp   = chi2{i};
     DeltaChi2(i) = chi2tmp(1,1)-min(min(chi2tmp));
@@ -63,10 +67,20 @@ else
 end
 %% plot only best fits + sensitivity
 GetFigure;
-pbf = plot(sin2T4_bf,mnu4Sq_bf,'x');
+%pbf = scatter(sin2T4_bf,mnu4Sq_bf,'filled','MarkerFaceAlpha',0.1,'MarkerFaceColor',rgb('DarkSlateGray'));
+%pbf.SizeData=80;
+yedge = sort(mnu4Sq_bf);
+xedge = sort(sin2T4_bf);
+h = histogram2(sin2T4_bf,mnu4Sq_bf,xedge,yedge,'FaceColor','flat','Normalization','probability'); 
+PrettyFigureFormat('FontSize',24);
+view([0 0 1])
+grid off
+c = colorbar;
+colormap('cool')
+c.Label.String = 'Best fit probability';
+c.Label.FontSize = get(gca,'FontSize');
 set(gca,'YScale','log');
 set(gca,'XScale','log');
-PrettyFigureFormat
 xlabel('|U_{e4}|^2');
 ylabel(sprintf('{\\itm}_4^2 (eV^2)'));
  [mnu4Sq_sensi,sin2T4_sensi,chi2_sensi,chi2_ref_sensi,savefile_sensi] = KSN1GridSearch('range',range,...
@@ -83,14 +97,25 @@ ylabel(sprintf('{\\itm}_4^2 (eV^2)'));
         'chi2',chi2_sensi,'chi2_ref',chi2_ref_sensi,...
         'CL',CL};
 
-   [pHandle,legStr] =  KSN1ContourPlot(PlotArg{:},'LineStyle','-','PlotSplines','OFF','HoldOn','ON');
-
-leg = legend([pbf,pHandle],'MC best fits','Sensitivity','EdgeColor',rgb('Silver'),'Location','southwest');
+   [pHandle,legStr] =  KSN1ContourPlot(PlotArg{:},'LineStyle','-','PlotSplines','ON','HoldOn','ON','Color','Black');
+   pHandle.ZData = 1e3*ones(1e3,1);
+xlim([1e-03 0.5]);
+ylim([1 94^2]);
+leg = legend([h,pHandle],'MC best fits','Sensitivity','EdgeColor',rgb('Silver'),'Location','southwest');
 plotdir = strrep(extractBefore(savefile{1},'KSN1'),'results','plots');
 MakeDir(plotdir);
 plotname = sprintf('%sRandMC_BestFits_%.0f.png',plotdir,range);
 print(gcf,plotname,'-dpng','-r450');
-
+%%
+close all ;
+yedge = sort(mnu4Sq_bf);
+xedge = sort(sin2T4_bf);
+h = histogram2(sin2T4_bf,mnu4Sq_bf,xedge,yedge,'FaceColor','flat','Normalization','probability'); 
+set(gca,'YScale','log');
+set(gca,'XScale','log');
+view(2)
+grid off;
+colorbar
 %% plot all contours
 PlotContoursFlag = 'OFF';
 if strcmp(PlotContoursFlag,'ON')

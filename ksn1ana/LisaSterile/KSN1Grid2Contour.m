@@ -18,7 +18,7 @@ switch Mode
         [X,Y] = meshgrid(mnu4sq(:,1),sin2t4(1,:));
         mNugrid    = repmat(logspace(log10(min(min(mnu4sq))),log10(max(max(mnu4sq))),nInter),nInter,1);
         sin2t4grid = repmat(logspace(log10(min(min(sin2t4))),log10(max(max(sin2t4))),nInter),nInter,1)';
-        chi2grid = reshape(interp2(X,Y,chi2,mNugrid,sin2t4grid),nInter,nInter );
+        chi2grid = reshape(interp2(X,Y,chi2,mNugrid,sin2t4grid,'spline'),nInter,nInter );
 
         hold on;
         [M,c]=contour(sin2t4grid,mNugrid,chi2grid-chi2_ref,[DeltaChi2 DeltaChi2],...

@@ -13,6 +13,7 @@ p.addParameter('titleStr','',@(x)ischar(x));
 p.addParameter('nInter',1e3,@(x)isfloat(x));
 p.addParameter('BestFit','OFF',@(x) ismember(x,{'ON','OFF'}));
 p.addParameter('Method','New',@(x) ismember(x,{'New','Old'}));
+
 p.parse(varargin{:});
 
 mnu4Sq      = p.Results.mnu4Sq;

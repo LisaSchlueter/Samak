@@ -70,6 +70,7 @@ classdef RunSensitivity < handle
             fprintf('-----------------Start RunSensitivity contructor ----------------------\n');
             
             DefaultSysAll    = {'TCoff_OTHER','FSD','TASR','RF_EL','RF_BF','RF_RX','Stack','LongPlasma','FPDeff','NP','Bkg'}; %Bkg has to be last
+    
             DefaultSysLeg    = {'Theoretical corrections';'Final-state distribution';...
                                 'Tritium activity fluctuations';'Energy-loss function';...
                                 'Magnetic fields';'Source scattering';'HV fluctuations';...
@@ -950,6 +951,10 @@ classdef RunSensitivity < handle
             [~,CmArg] = GetSysErr(obj.RunAnaObj.SysBudget);
             
             for i=1:obj.nSys
+%                 if contains(obj.SysEffectsAll{i},'RF')
+%                     continue
+%                     %WARNING temporary
+%                 end
                 % get covariance matrix
                 nTrials = obj.GetnTrials(obj.SysEffectsAll{i});
                 
@@ -2420,7 +2425,7 @@ classdef RunSensitivity < handle
                 nTrials = 1000;
             else 
                 if ischar(SysEffect)
-                    if contains(SysEffect,'RF')
+                    if contains(SysEffect,'RF') || contains(SysEffect,'LongPlasma')
                         nTrials = 1000;
                     else
                         nTrials = 5000;
