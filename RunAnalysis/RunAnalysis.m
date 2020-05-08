@@ -2358,7 +2358,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                    end
                     if numel(pRes)>1
                         for i=1:numel(pRes)
-                            pRes(i).Color = c(i,:);
+                            pRes(i).Color = rgb('Black'); % Warning Cut/Past Bug before
                         end
                     end
                     if ~isempty(YLimRes)

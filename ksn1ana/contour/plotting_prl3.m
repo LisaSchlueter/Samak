@@ -9,11 +9,15 @@
 
 filepath   = [getenv('SamakPath'),'ksn1ana/contour/contourmatfiles/'];
 CLflag     = '95'; % Confidence Level
-file_A     = sprintf('coord_95eV_Real_stat_%s_thierry.mat',CLflag);
-file_B     = sprintf('coord_95eV_Real_syst_%s_thierry.mat',CLflag);
+%file_A     = 'SamakContour_Real_95eV_chi2CMShape_E0BkgNorm.mat';
+file_A     = 'SamakContour_Real_70eV_chi2CMShape_E0BkgNorm.mat';
 
 da  = importdata([filepath,file_A]);   % Data A
-db  = importdata([filepath,file_B]);   % Data B
+ksn1SinSq2Theta  = 4*da.sin2T4_contour_95.*(1-da.sin2T4_contour_95);
+ksn1DeltaMSq     = da.mnu4Sq_contour_95;
+% 
+% ksn1SinSq2Theta  = 4*da.sin2T4_contour_90.*(1-da.sin2T4_contour_90);
+% ksn1DeltaMSq     = da.mnu4Sq_contour_90;
 
 % Constant data
 d_giunti   = importdata([filepath,'coord_Giunti.mat']);         % KATRIN Data from Giunti
@@ -33,14 +37,11 @@ d_neutrino4 = importdata([filepath,'coord_Neutrino4_123sigma.mat']);
 
 d_danss    = importdata([filepath,'coord_DANSS_95CL.mat']);
 
-%% sin(2*th4)
-da2  = 1-(1-2*da.sith4_X).^2;
-db2  = 1-(1-2*db.sith4_X).^2;
 
 %% Plot tunings
 % Cutting the tails
 na   = length(da2); nb   = length(db2);  
-cuta = (3:na);  cutb = (3:nb);  
+cuta = (1:na);  cutb = (1:nb);  
 
 % Continuation of the RAA curves
 raa90x = d_raa_90.sith4_X;   raa90y = d_raa_90.m4_Y;   n90 = length(raa90x);
@@ -98,11 +99,12 @@ p_d     =       plot (smooth(d_danss.SinSquare2Theta_X),smooth(d_danss.DmSquare4
                     'color',rgb('Grey'),'LineWidth',1);
                 
 % === Our Data ===
-pA      =       plot (smooth([da2(cuta),1]),smooth([da.m4_Y(cuta),da.m4_Y(na)]),...
-                    '--','color',prlB,'LineWidth',3);
+%pA      =       plot (smooth([da2(cuta),1]),smooth([da.m4_Y(cuta),da.m4_Y(na)]),...
+%                    '--','color',prlB,'LineWidth',3);
 hold on
-pB      =       plot (smooth([db2(cutb),1]),smooth([db.m4_Y(cutb),db.m4_Y(nb)]),...
+pB      =       plot (ksn1SinSq2Theta,ksn1DeltaMSq,...
                     '-','color',prlB,'LineWidth',5);
+
 %% Plot Parameters
 
 % Axis
@@ -118,13 +120,13 @@ neutrino4 = 'Neutrino-4 2\sigma';
 danss     = 'DANSS 95% CL';
 katrinA   = ['KATRIN KSN1 - stat - ' CLflag '% CL'];% - [E_0-90;E_0+50] eV'];
 katrinB   = ['KATRIN KSN1 - stat+syst - ' CLflag '% CL'];% - [E_0-90;E_0+50] eV'];
-giunti    = 'arXiv:1912.12956 - - 90% CL - [E_0-40;E_0+50] eV';
+giunti    = 'arXiv:1912.12956 - 90% CL - [E_0-40;E_0+50] eV';
 raa90     = 'RAA+GA - PRD 83, 073006 (2011) - 90% CL';
 raa95     = 'RAA+GA - PRD 83, 073006 (2011) - 95% CL';
 
-hl=legend([p_m p_t p_s p_p p_n p_d pA pB p_raa95],...          % Label order omit p_g
+hl=legend([p_m p_t p_s p_p p_n p_d pB p_raa95],...          % Label order omit p_g
         {mainz,troitsk,stereo,prospect,neutrino4,danss,...
-        katrinA,katrinB,...                     % KATRIN
+        katrinB,...                     % KATRIN
         raa95},...                              % RAA
         'Location','northoutside',...              % Legend settings
         'box','off')
@@ -138,7 +140,7 @@ PRLFormat;
 set(gca, 'XScale', 'log');
 set(gca, 'YScale', 'log');
 
-axis([0.01 1 0.1 10000])
+axis([0.02 1 0.1 6800])
 axis square
 %title('KATRIN Sterile Neutrino Analysis (KSN1) - 95% CL Sensitivity') % Exclusion Limit (Data)
 fileString = sprintf('./plots/ksn1_exlimit_%sCL_Dm24sinSq2T.pdf',CLflag);

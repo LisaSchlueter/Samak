@@ -8,7 +8,7 @@ MainzTroitzk = 'ON';
 
 % Each datafile contains three variables : 
 %   sith4_X (mixing angle)
-%   m4_Y    (sterile mass)
+%   mnu4Sq    (sterile mass)
 %   chi_Z   (chiSq values, if everything is OK this should be only 4.61)
 
 filepath   = [getenv('SamakPath'),'ksn1ana/contour/contourmatfiles/'];
@@ -18,17 +18,13 @@ switch RealTwinFlag
     case 'Real'
         TwinLabel   = '';
         % zero fixed nu mass - stat
-%        file_A1     = sprintf('coord_95eV_Real_stat_%s_thierry.mat',CLflag);
-        file_A1     = sprintf('coord_90eV_Real_stat.mat','');
+        file_A1     = 'SamakContour_Real_95eV_chi2CMShape_E0BkgNorm.mat';
         % zero fixed nu mass - stat+sys
-        file_A2     = sprintf('coord_90eV_Real_syst_%s.mat',CLflag);
-%        file_A2     = sprintf('coord_95eV_Real_syst_%s_thierry.mat',CLflag);
+        file_A2     = 'SamakContour_Real_95eV_chi2CMShape_E0BkgNorm.mat';
         % free nu mass - stat+sys
-        file_B      = sprintf('coord_90eV_Real_syst_%s_freeM.mat',CLflag);
-%        file_B      = sprintf('coord_95eV_Real_syst_%s_thierry.mat',CLflag);
+        file_B      = 'SamakContour_Real_95eV_chi2CMShape_mNuE0BkgNorm_pull12.mat';
         % minus one fixed nu mass - stat+sys
-        file_C      = sprintf('coord_90eV_Real_syst_%s.mat',CLflag);
-%        file_C      = sprintf('coord_95eV_Real_syst_%s_thierry.mat',CLflag);
+        file_C      = 'SamakContour_Real_95eV_chi2CMShape_E0BkgNorm.mat';
     case 'Twin'
         TwinLabel   = 'Simulation';
         % zero fixed nu mass - stat
@@ -43,19 +39,21 @@ end
 
 da1  = importdata([filepath,file_A1]);   % Data A1
 da2  = importdata([filepath,file_A2]);   % Data A2
-db   = importdata([filepath,file_B]);   % Data B
-dc   = importdata([filepath,file_C]);   % Data C
+db   = importdata([filepath,file_B]);    % Data B
+dc   = importdata([filepath,file_C]);    % Data C
+
+
+%% sin(th4)
+da12  = da1.sin2T4_contour_95;
+da22  = da2.sin2T4_contour_95;
+db2   = db.sin2T4_contour_95;
+dc2   = dc.sin2T4_contour_95;
 
 % Constant data
-d_giunti   = importdata([filepath,'coord_Giunti.mat']);         % KATRIN Data from Giunti
+d_giunti   = importdata([filepath,'coord_Giunti.mat']); % KATRIN Data from Giunti
 d_mainz    = importdata([filepath,'coord_mainz.mat']);
 d_troitsk  = importdata([filepath,'coord_troitsk.mat']);
 
-%% sin(th4)
-da12  = da1.sith4_X;
-da22  = da2.sith4_X;
-db2   = db.sith4_X;
-dc2   = dc.sith4_X;
 
 %% Plot tunings
 % Cutting the tails
@@ -74,26 +72,32 @@ set(fig, 'Units', 'normalized', 'Position', [0.001, 0.001,0.5, 0.999]);
 
 %hold on
 %   Giunti
-%p_g     =       plot (d_giunti.sith4_X, d_giunti.m4_Y,...
+%p_g     =       plot (d_giunti.sith4_X, d_giunti.mnu4Sq_contour_95,...
 %                    'color',[0.9290 0.6940 0.1250],'LineWidth',1);
                 
 hold on
 
 % === Our Data ===
-pA1      =       plot (smooth([da12(cuta1),1]),smooth(sqrt([da1.m4_Y(cuta1),da1.m4_Y(na1)])),...
-    ':','color',prlA,'LineWidth',4);
+% pA1      =       plot (([da12(cuta1),1]),(([da1.mnu4Sq_contour_95(cuta1),da1.mnu4Sq_contour_95(na1)])),...
+%     ':','color',prlA,'LineWidth',4);
 
-pA2      =       plot (smooth([da22(cuta2),1]),smooth(sqrt([da2.m4_Y(cuta2),da2.m4_Y(na2)])),...
+pA2      =       plot (([da22(cuta2),1]),(([da2.mnu4Sq_contour_95(cuta2),da2.mnu4Sq_contour_95(na2)])),...
     '-','color',prlA,'LineWidth',4);
 
 hold on
-pB      =       plot (smooth([db2(cutb),1]),smooth(sqrt([db.m4_Y(cutb),db.m4_Y(nb)])),...
-    '--','color',prlA,'LineWidth',4);
+
+plot([0.014 0.014],[62.5 62.5].^2,'s','LineWidth',3,'Color',prlA);
+
+pB      =       plot (([db2(cutb),1]),(([db.mnu4Sq_contour_95(cutb),db.mnu4Sq_contour_95(nb)])),...
+    '--','color',prlC,'LineWidth',4);
+
+plot([0.014 0.014],[53 53].^2,'d','LineWidth',3,'Color',prlC);
+
 
 switch RealTwinFlag
     case 'RealKNM1'
         hold on
-        pC      =       plot (smooth([dc2(cutc),1]),smooth(sqrt([dc.m4_Y(cutc),dc.m4_Y(nc)])),...
+        pC      =       plot (smooth([dc2(cutc),1]),smooth(([dc.mnu4Sq_contour_95(cutc),dc.mnu4Sq_contour_95(nc)])),...
             '-.','color',prlC,'LineWidth',4);
 end
 
@@ -102,11 +106,11 @@ switch MainzTroitzk
         
         %   Mainz & Troitsk
         mainzSinTheta2 = 0.5 * (1-sqrt(1-d_mainz.sith4_X));
-        p_m     =       plot (smooth(mainzSinTheta2), smooth(sqrt(d_mainz.m4_Y)),...
+        p_m     =       plot (smooth(mainzSinTheta2), smooth((d_mainz.m4_Y)),...
             '-.','color',rgb('Salmon'),'LineWidth',2);
         % hold on
         troitskSinTheta2 = 0.5 * (1-sqrt(1-d_troitsk.sith4_X));
-        p_t     =      plot (smooth(troitskSinTheta2), smooth(sqrt(d_troitsk.m4_Y)),...
+        p_t     =      plot (smooth(troitskSinTheta2), smooth((d_troitsk.m4_Y)),...
             '-.','color',rgb('DarkSlateGrey'),'LineWidth',2);
 end
 
@@ -114,14 +118,14 @@ end
 
 % Axis
 xlabel('|U_{e4}|^2');
-ylabel('m_{4}  (eV)');
+ylabel('m^2_{4}  (eV)');
 
 % Labels
 mainz    = 'Mainz 90%CL - m_\nu^2 = 0 eV^2';
 troitsk  = 'Troitsk 90%CL - m_\nu^2 = 0 eV^2';
 katrinA1  = ['KATRIN KSN1 ' CLflag '%CL' TwinLabel ' - stat only - m_\nu^2 = 0 eV^2'];
 katrinA2  = ['KATRIN KSN1 ' CLflag '%CL' TwinLabel ' - m_\nu^2 = 0 eV^2'];
-katrinB  = ['KATRIN KSN1 ' CLflag '%CL' TwinLabel ' - free m_\nu^2 - 4 eV^2 pull term'];
+katrinB  = ['KATRIN KSN1 ' CLflag '%CL' TwinLabel ' - m_\nu^2 = nuisance parameter'];
 katrinC  = ['KATRIN KSN1 ' CLflag '%CL' TwinLabel ' - m_\nu^2 = -1 eV^2'];
 giunti   = 'arXiv:1912.12956 - 90%CL - [E_0-40;E_0+50] eV';
 
@@ -129,9 +133,9 @@ switch MainzTroitzk
     case 'ON'
         switch RealTwinFlag
             case 'Real'
-                legend([p_m p_t pA1 pA2 pB ],{mainz,troitsk,katrinA1,katrinA2,katrinB},'Location','southwest','box','off');
+                legend([p_m p_t  pA2 pB ],{mainz,troitsk,katrinA2,katrinB},'Location','southwest','box','off');
             case 'Twin'
-                legend([p_m p_t pA1 pA2 pB],{mainz,troitsk,katrinA1,katrinA2,katrinB},'Location','southwest','box','off')
+                legend([p_m p_t  pA2 pB],{mainz,troitsk,katrinA2,katrinB},'Location','southwest','box','off')
         end
     case 'OFF'
         switch RealTwinFlag
@@ -148,7 +152,7 @@ PRLFormat;
 set(gca, 'XScale', 'log');
 set(gca, 'YScale', 'log');
 
-axis([0.005 0.5 0.5 100])
+axis([0.005 0.5 0.5 10000])
 axis square
 %title('KATRIN Sterile Neutrino Analysis (KSN1) - 95% CL Sensitivity') % Exclusion Limit (Data)
 

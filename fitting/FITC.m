@@ -399,7 +399,7 @@ classdef FITC < handle
 
             % 9: mixing angle pull
             if any(ismember(obj.pullFlag,9)) % sterile pull I
-%                PullTerm = PullTerm + (par(4*obj.SO.nPixels+12))^2/sin2T4tol^2 + exp(-500*par(4*obj.SO.nPixels+12));
+%               PullTerm = PullTerm + (par(4*obj.SO.nPixels+12))^2/sin2T4tol^2 + exp(-500*par(4*obj.SO.nPixels+12));
                 PullTerm = PullTerm + ...
                     exp(500*(par(4*obj.SO.nPixels+12)-0.5)) + ...   % sin2T4
                     exp(-500*par(4*obj.SO.nPixels+12)) + ...

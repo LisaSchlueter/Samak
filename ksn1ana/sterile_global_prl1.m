@@ -3,14 +3,14 @@
 %% Settings
 E0 = 18574;                                         % Endpoint in eV
 %sterile_mass = 10*sqrt(2.3);                       % Sterile neutrino mass in eV
-sterile_mass  = 10;                                 % Sterile neutrino mass in eV
+sterile_mass  = 56.234;                             % Sterile neutrino mass in eV
 
 % mixing_angle_1 = 0.1;                             % sin2(th4)
 % mixing_angle_2 = 1-(1-2*mixing_angle_1)^2;        % sin2(2th4)
 
-%mixing_angle_2 = 0.1;                               % sin2(2th4)
-%mixing_angle_1 = (1-sqrt(1-mixing_angle_2))/2;      % sin2(th4)
-mixing_angle_1  = 0.03;
+%mixing_angle_2 = 0.1;                              % sin2(2th4)
+%mixing_angle_1 = (1-sqrt(1-mixing_angle_2))/2;     % sin2(th4)
+mixing_angle_1  = 0.5;
 
 %% Data
 D = MultiRunAnalysis('RunList','KNM1',...
@@ -32,7 +32,7 @@ D = MultiRunAnalysis('RunList','KNM1',...
 R = MultiRunAnalysis('RunList','KNM1',...
             'chi2','chi2Stat',...
             'DataType','Twin',...
-            'fixPar','',...
+            'fixPar','Norm',...
             'RadiativeFlag','ON',...
             'NonPoissonScaleFactor',1.064,...
             'minuitOpt','min ; migrad',...
@@ -44,26 +44,19 @@ R = MultiRunAnalysis('RunList','KNM1',...
             'AngularTFFlag','OFF');
 
 % Global variables
-times = (R.ModelObj.qUfrac*R.ModelObj.TimeSec);
-
-qU = R.ModelObj.qU;     % Energy axis
-qU = qU-E0;
+times = R.ModelObj.qUfrac*R.ModelObj.TimeSec;
+qU    = R.ModelObj.qU; qU    = qU-E0; % Energy axis
 
 % Spectrum
-R.ModelObj.ComputeTBDDS();
-YD=R.ModelObj.TBDDS;
-R.ModelObj.ComputeTBDIS();
-
-YI = R.ModelObj.TBDIS;
-sum(YI)
-YI = YI./times;
+R.ModelObj.ComputeTBDDS(); YD = R.ModelObj.TBDDS;
+R.ModelObj.ComputeTBDIS(); YI = R.ModelObj.TBDIS; YI = YI./times;
 
 %% Sterile theoretical
 
 Rs = MultiRunAnalysis('RunList','KNM1',...
             'chi2','chi2Stat',...
             'DataType','Twin',...
-            'fixPar','',...
+            'fixPar','Norm',...
             'RadiativeFlag','ON',...
             'NonPoissonScaleFactor',1.064,...
             'minuitOpt','min ; migrad',...
@@ -77,30 +70,29 @@ Rs = MultiRunAnalysis('RunList','KNM1',...
 Rs.ModelObj.mnu4Sq_i = sterile_mass^2;
 Rs.ModelObj.sin2T4_i = mixing_angle_1;
 
-% Spectrum
-Rs.ModelObj.ComputeTBDDS();
-YDs=Rs.ModelObj.TBDDS;
-Rs.ModelObj.ComputeTBDIS();
+% Spectrum sterile
+Rs.Fit;
+Rs.ModelObj.ComputeTBDDS(); YDs = Rs.ModelObj.TBDDS;
+Rs.ModelObj.ComputeTBDIS(); IS  = Rs.ModelObj.TBDIS; YIs = IS./times;
 
-IS = Rs.ModelObj.TBDIS;     % Counts
-YIs = IS./times;
+% Spectrum no-sterile
+R.Fit;
+R.ModelObj.ComputeTBDDS(); YD = R.ModelObj.TBDDS;
+R.ModelObj.ComputeTBDIS(); YI = R.ModelObj.TBDIS; YI = YI./times;
 
 %% Sterile "data"
 
 YIsd = IS;
-
 % Error
 err  = sqrt(YIsd);
 
 % Fluctuations (data sim)
-YIsd = YIsd + err.*randn(length(YIsd),1);
-
+% YIsd = YIsd + err.*randn(length(YIsd),1);
 YIsd = YIsd./times;
 
 % Error bar
 err  = err./times;
 err  = err./YI;
-
 
 %% Constraining everything to -95eV
 YIsd=YIsd(qU>-95);
@@ -109,8 +101,6 @@ YI=YI(qU>-95);
 sum(YI)
 err=err(qU>-95);
 qUc=qU(qU>-95);
-
-
 
 %% ===== PLOTTING =====
 
@@ -135,15 +125,17 @@ s1=subplot(4,1,[1 2]);
 % 
 % % Sterile Branch somehow
 % YS = YI_N-YI+bkg;
-YI_N = YIs; bkg=YI_N(length(YI_N));
+YI_N = YIs; bkg = YI_N(length(YI_N));
 YI_N = (YI_N-bkg).*(YI(1)/YI_N(1)) + bkg;
 
 % Plot
-plot(qUc,YI,'DisplayName','No Sterile','color',prlB,'LineWidth',3,'LineStyle','-')
+%plot(qUc,YI,'DisplayName','No Sterile','color',prlB,'LineWidth',3,'LineStyle','-')
+plot(D.RunData.qU-E0,D.RunData.TBDIS./(D.ModelObj.qUfrac*D.ModelObj.TimeSec),'DisplayName','No Sterile','color',prlB,'LineWidth',3,'LineStyle','-')
 hold on
 %plot(qUc,YI_N,'--','DisplayName','With Sterile','color',prlB,'LineWidth',3,'LineStyle','-')
 %hold on
-errorbar(qUc,YIsd,err.*50,FitStyleArg{:},'CapSize',0)
+%errorbar(qUc,YIsd,err.*50,FitStyleArg{:},'CapSize',0)
+errorbar(D.RunData.qU-E0,D.RunData.TBDIS./(D.ModelObj.qUfrac*D.ModelObj.TimeSec),sqrt(D.RunData.TBDIS)./(D.ModelObj.qUfrac*D.ModelObj.TimeSec)*50,FitStyleArg{:},'CapSize',0)
 
 % hold on;
 % plot(qUc,YS,'DisplayName','Sterile branch')
