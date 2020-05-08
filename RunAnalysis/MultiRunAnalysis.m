@@ -2758,7 +2758,9 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                 'chi2',obj.chi2,...
                 'NonPoissonScaleFactor',obj.NonPoissonScaleFactor,...
                 'MosCorrFlag',obj.MosCorrFlag,...
-                'ROIFlag',obj.ROIFlag};
+                'ROIFlag',obj.ROIFlag,...
+                'AngularTFFlag',obj.AngularTFFlag,...
+                'SynchrotronFlag',obj.SynchrotronFlag};
             
             obj.InitFitPar;
             parAll     = zeros(numel(obj.RunList),obj.nPar);
@@ -2805,16 +2807,19 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             LoadFilesIndex             = cellfun(@(x) exist(x,'file')==2,savefile);            %logicals, indicate which runs are already fitted
             fprintf('Retrieve %.0f Fit Results from file\n',sum( LoadFilesIndex));
             LoadFiles                  = cellfun(@(x) importdata(x),savefile(LoadFilesIndex)); % import those runs
-            if strcmp(obj.DataSet,'Knm1')
-                parAll(LoadFilesIndex,:)   = cell2mat(arrayfun(@(x) x.FitResult.par,LoadFiles,'UniformOutput',false)); %asign to variables
-                errAll(LoadFilesIndex,:)   = cell2mat(arrayfun(@(x) x.FitResult.err,LoadFiles,'UniformOutput',false));
-            else
-                parAll(LoadFilesIndex,:)   = cell2mat(arrayfun(@(x) x.FitResult.par',LoadFiles,'UniformOutput',false))'; %asign to variables
-                errAll(LoadFilesIndex,:)   = cell2mat(arrayfun(@(x) x.FitResult.err',LoadFiles,'UniformOutput',false))';
+            if sum(LoadFilesIndex)~=0
+                if strcmp(obj.DataSet,'Knm1')
+                    a = LoadFiles.FitResult; % less fit parameters for KNM1.
+                    nPartmp = numel(a.par);
+                    parAll(LoadFilesIndex,1:nPartmp)   = cell2mat(arrayfun(@(x) x.FitResult.par,LoadFiles,'UniformOutput',false)); %asign to variables
+                    errAll(LoadFilesIndex,1:nPartmp)   = cell2mat(arrayfun(@(x) x.FitResult.err,LoadFiles,'UniformOutput',false));
+                else
+                    parAll(LoadFilesIndex,:)   = cell2mat(arrayfun(@(x) x.FitResult.par',LoadFiles,'UniformOutput',false))'; %asign to variables
+                    errAll(LoadFilesIndex,:)   = cell2mat(arrayfun(@(x) x.FitResult.err',LoadFiles,'UniformOutput',false))';
+                end
+                chi2minAll(LoadFilesIndex) = cell2mat(arrayfun(@(x) x.FitResult.chi2min,LoadFiles,'UniformOutput',false));
+                dofAll(LoadFilesIndex)     = cell2mat(arrayfun(@(x) x.FitResult.dof,LoadFiles,'UniformOutput',false));
             end
-            chi2minAll(LoadFilesIndex) = cell2mat(arrayfun(@(x) x.FitResult.chi2min,LoadFiles,'UniformOutput',false));
-            dofAll(LoadFilesIndex)     = cell2mat(arrayfun(@(x) x.FitResult.dof,LoadFiles,'UniformOutput',false));
-            
             % calculate missing fit results
            if sum(LoadFilesIndex)==numel(obj.RunList) % all runs are already fitted
                fprintf('Fit results from all runs loaded from file \n');

@@ -336,7 +336,7 @@ classdef FITC < handle
             PullTerm = 0;
             % 1: neutrino mass pull
             if any(ismember(obj.pullFlag,1))
-                PullTerm = PullTerm + (par(1)-0)/mNuSqtol^2;
+                PullTerm = PullTerm + (par(1)-0)^2/mNuSqtol^2;
                 %sum( ((par-zeros(1,length(par))).^2)./obj.pulls);
             end
             
@@ -400,12 +400,21 @@ classdef FITC < handle
             % 9: mixing angle pull
             if any(ismember(obj.pullFlag,9)) % sterile pull I
 %               PullTerm = PullTerm + (par(4*obj.SO.nPixels+12))^2/sin2T4tol^2 + exp(-500*par(4*obj.SO.nPixels+12));
-                PullTerm = PullTerm + ...
-                    exp(500*(par(4*obj.SO.nPixels+12)-0.5)) + ...   % sin2T4
-                    exp(-500*par(4*obj.SO.nPixels+12)) + ...
-                    exp(500*( par(4*obj.SO.nPixels+11)-90^2)) + ... % m4
-                    exp(-500*par(4*obj.SO.nPixels+11)) + ...
-                    (par(1)-0)^2/1^2;                               % nu-mass
+%                 PullTerm = PullTerm + ...
+%                     exp(500*(par(4*obj.SO.nPixels+12)-0.5)) + ...   % sin2T4
+%                     exp(-500*par(4*obj.SO.nPixels+12)) + ...
+%                     exp(500*( par(4*obj.SO.nPixels+11)-90^2)) + ... % m4
+%                     exp(-500*par(4*obj.SO.nPixels+11)) + ...
+%                     (par(1)-0)^2/1^2;                               % nu-mass
+%                PullTerm = PullTerm + (par(4*obj.SO.nPixels+12))^2/sin2T4tol^2 + exp(-500*par(4*obj.SO.nPixels+12));
+          
+            range =  ceil(abs(obj.SO.qU(min(obj.exclDataStart))-18574));
+                    PullTerm = PullTerm + ...
+                    exp(1e3*(par(4*obj.SO.nPixels+12)-(0.5+1e-02))) + ...  % sin2t4 upper bound 
+                    exp(-1e3*(par(4*obj.SO.nPixels+12)+1e-02)) + ...       % sin2t4 lower bound 
+                    exp(1e3*(par(4*obj.SO.nPixels+11)-range^2)) + ...      % mSq4 lower bound
+                    exp(-1e3*(par(4*obj.SO.nPixels+11)+1e-02)) + ...       % mSq4 upper bound
+                    (par(1)-0)^2/1^2;                                      % nu-mass
             end
             
             if any(ismember(obj.pullFlag,10))
@@ -416,8 +425,14 @@ classdef FITC < handle
                 sin4Central = 0; sin4Tol = 10;
                 m4Central = 0;   m4Tol   = 1e4;
                 PullTerm = PullTerm + ...
-                (par(4*obj.SO.nPixels+12)-sin4Central).^2./sin4Tol^2+...  % sin2t4
-                (par(4*obj.SO.nPixels+11)-m4Central).^2./m4Tol^2;         % m4
+                    (par(4*obj.SO.nPixels+12)-sin4Central).^2./sin4Tol^2+...  % sin2t4
+                    (par(4*obj.SO.nPixels+11)-m4Central).^2./m4Tol^2;         % m4
+            end
+            
+            
+            if any(ismember(obj.pullFlag,12)) % nu-mass pull: mainz&troitzk
+                mNuSqtol_MT =  1.94; % eV^2
+                PullTerm = PullTerm + (par(1)-0)^2/mNuSqtol_MT^2;
             end
         end
         function chi2 = chi2function(obj,par)
@@ -597,7 +612,8 @@ classdef FITC < handle
 
                     case 'minuit'
                         cprintf('blue','----------BEGIN FIT MINUIT-------------- \n');
-                        
+
+                       % set lim 16 0 0.5 ; set lim 15 0 10000;
                         tmparg = sprintf(['%s set pri 1; set STRATEGY 2;'...
                             '%s'],obj.fixPar,obj.minuitOpt);
                         Args = {obj.parinit, obj, '-c',tmparg};

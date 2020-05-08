@@ -1,7 +1,7 @@
 function [mnu4Sq,sin2T4] = GetSmartKsn1Grid(varargin)
 p = inputParser;
 p.addParameter('SanityPlot','ON',@(x)ismember(x,{'ON','OFF'}));
-p.addParameter('range',95,@(x)isfloat(x));
+p.addParameter('range',40,@(x)isfloat(x));
 p.addParameter('nGridSteps',100,@(x)isfloat(x));
 p.addParameter('ConfLevel',90,@(x)isfloat(x));
 p.addParameter('AddSin2T4',1e-02,@(x)isfloat(x)); % scan around expected contour within this region 

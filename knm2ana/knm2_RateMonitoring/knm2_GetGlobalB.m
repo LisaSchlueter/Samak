@@ -4,9 +4,9 @@
 % Lisa, April 2020
 
 %% setttings
-SanityPlot    = 'OFF'; % plot and save plot
+SanityPlot    = 'ON'; % plot and save plot
 Mode          = 'Uniform';       % Ring or Uniform
-RecomputeFlag = 'OFF';
+RecomputeFlag = 'ON';
 
 savedir  = [getenv('SamakPath'),'knm2ana/knm2_RateMonitoring/results/'];
 MakeDir(savedir);

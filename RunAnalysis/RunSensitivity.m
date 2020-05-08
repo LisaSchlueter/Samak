@@ -70,6 +70,7 @@ classdef RunSensitivity < handle
             fprintf('-----------------Start RunSensitivity contructor ----------------------\n');
             
             DefaultSysAll    = {'TCoff_OTHER','FSD','TASR','RF_EL','RF_BF','RF_RX','Stack','LongPlasma','FPDeff','NP','Bkg'}; %Bkg has to be last
+    
             DefaultSysLeg    = {'Theoretical corrections';'Final-state distribution';...
                                 'Tritium activity fluctuations';'Energy-loss function';...
                                 'Magnetic fields';'Source scattering';'HV fluctuations';...
@@ -950,6 +951,10 @@ classdef RunSensitivity < handle
             [~,CmArg] = GetSysErr(obj.RunAnaObj.SysBudget);
             
             for i=1:obj.nSys
+%                 if contains(obj.SysEffectsAll{i},'RF')
+%                     continue
+%                     %WARNING temporary
+%                 end
                 % get covariance matrix
                 nTrials = obj.GetnTrials(obj.SysEffectsAll{i});
                 
@@ -2386,17 +2391,7 @@ classdef RunSensitivity < handle
                 if strcmp(obj.LimitFlag,'Central')
                     factor = erfinv(cl)*sqrt(2);
                 elseif strcmp(obj.LimitFlag,'Up')
-                    if obj.ConfLevel==0.9
-                        factor = 1.282;
-                    elseif  obj.ConfLevel==0.95
-                        factor = 1.645;
-                    elseif obj.ConfLevel == 0.99
-                        factor = 2.326;
-                    else
-                        fprintf('upper limit conversion only for 90, 95 and 99 C.L. \n');
-                        factor =1;
-                        return
-                    end
+                    factor = norminv(cl);
                 end
             end
             
@@ -2428,11 +2423,9 @@ classdef RunSensitivity < handle
         function nTrials = GetnTrials(obj,SysEffect)
             if strcmp(obj.RunAnaObj.DataSet,'FirstTritium.katrin')
                 nTrials = 1000;
-            elseif strcmp(obj.RunAnaObj.DataSet,'Knm2')
-                nTrials = 5000;
-            else
+            else 
                 if ischar(SysEffect)
-                    if contains(SysEffect,'RF')
+                    if contains(SysEffect,'RF') || contains(SysEffect,'LongPlasma')
                         nTrials = 1000;
                     else
                         nTrials = 5000;

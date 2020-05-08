@@ -1463,19 +1463,24 @@ classdef CovarianceMatrix < handle
                 WGTS_CD_MolPerCm2_v = repmat(obj.StudyObject.WGTS_CD_MolPerCm2,obj.nTrials,1);
             end
             
+            % switch off synchrotron -> takes too long
+            SynchrotronFlag_i = obj.StudyObject.SynchrotronFlag;
+            obj.StudyObject.SynchrotronFlag = 'OFF';
             % calculate response functions with varied parameters
             RFfun = @ComputeRF;
-            parqU = obj.StudyObject.qU;
             parnqU = obj.StudyObject.nqU;
             ResponseFunction = zeros(obj.StudyObject.nTe,obj.StudyObject.nqU,obj.nTrials,nRings);
 
+            ParObj = copy(repmat(obj.StudyObject,obj.nTrials,1));
             progressbar('Compute RF lookup table');
-            for i = 1:obj.nTrials
-                progressbar(i/obj.nTrials);
+            nTrials_local = obj.nTrials;
+            parfor i = 1:nTrials_local
+                parqU = ParObj(i).qU;
+                parTe = ParObj(i).Te;
+                progressbar(i/nTrials_local);
                 for ri = 1:nRings
-                    parTe = obj.StudyObject.Te;
                     for ii = 1:parnqU
-                        ResponseFunction(:,ii,i,ri) = RFfun(obj.StudyObject,parTe,parqU(ii,ri),'pixel',ri,...
+                        ResponseFunction(:,ii,i,ri) = RFfun(ParObj(i),parTe,parqU(ii,ri),'pixel',ri,...
                             'ELossRange',maxE_el,'ELossBinStep',ELossBinStep,...
                             'ElossFunctions',ElossFunctions(:,:,i),...
                             'RFBinStep',RFBinStep,...
@@ -1486,7 +1491,8 @@ classdef CovarianceMatrix < handle
                     end
                 end
             end
-        
+            
+            obj.StudyObject.SynchrotronFlag = SynchrotronFlag_i;
             % do not save all samples, just some infos
             if strcmp(obj.SysEffect.RF_BF,'ON') && strcmp(obj.SysEffect.RF_RX,'ON') && strcmp(obj.SysEffect.RF_EL,'ON')
                 rf_path = [getenv('SamakPath'),sprintf('inputs/CovMat/RF/LookupTables/RF/')];
@@ -1534,6 +1540,7 @@ classdef CovarianceMatrix < handle
             fprintf('--------------------------------------------------------------------------\n')
             cprintf('blue','CovarianceMatrix:ComputeCM_RF: Compute Response Function Covariance Matrix \n')
             
+            obj.StudyObject.SynchrotronFlag = 'OFF';
             if ismember(obj.StudyObject.TD,{'FTpaper','StackCD100all','StackCD100_3hours'}) || str2double(obj.StudyObject.TD)<51410 || contains(obj.StudyObject.TD,'FTpaper')% first tritium binning!
                 DefaultRFBinStep = 0.4;
                 if strcmp(obj.SysEffect.RF_EL,'ON')
@@ -1634,8 +1641,8 @@ classdef CovarianceMatrix < handle
             %% When CovMat files doesnt exist: compute it
             %Init
             nRings = numel(obj.StudyObject.MACE_Ba_T);
-            TBDIS_V  = zeros(obj.StudyObject.nqU,obj.nTrials,nRings);
- 
+            TBDIS_V  = zeros(obj.StudyObject.nqU,obj.nTrials,nRings);  
+      
             % Loop Computing TBDIS Matrix
             RF_Samples = obj.ComputeRFLookupTable('maxE_el',maxE_el,'ELossBinStep',ELossBinStep,'RFBinStep',RFBinStep);  %
             progressbar('ComputeTBDISCovarianceMatrix');
@@ -1703,7 +1710,8 @@ classdef CovarianceMatrix < handle
                 obj.MultiCovMatFracNorm.CM_RF  =  obj.CovMatFracNorm;
             end
             
-            save(obj.CovMatFile, 'obj','-mat','-append');
+            save(obj.CovMatFile, 'obj','-mat','-append');     
+    
         end
         function ComputeCM_TASR(obj,varargin)
             fprintf('--------------------------------------------------------------------------\n')
@@ -1727,7 +1735,7 @@ classdef CovarianceMatrix < handle
                 fprintf(2,'CovarianceMatrix:ComputeCM_TASR: Loading TASR CM from File \n')
                 obj.ReadCMFile('filename',obj.CovMatFile,'SysEffect','TASR');
                 obj.MultiCovMat.CM_TASR = obj.CovMat;
-               % return
+               return
             end
             
             nRings = numel(obj.StudyObject.MACE_Ba_T);
@@ -2794,7 +2802,7 @@ function ComputeCM_FSD(obj,varargin)
     obj.GetTDlabel;
     covmat_path =[getenv('SamakPath'),sprintf('inputs/CovMat/FSD/CM/')];
     MakeDir(covmat_path);
-    covmat_filename = sprintf('FSD_%s_%sCovMat_%uTrials_%s_%.2fNormErr_%.2fGS_%.2fES_ShapeErr.mat',...
+    covmat_filename = sprintf('FSD_%s_%sCovMat_%uTrials_%s_%.2gNormErr_%.2fGS_%.2fES_ShapeErr.mat',...
         obj.StudyObject.TTFSD,IsoName,obj.nTrials, obj.TDlabel,obj.FSDNorm_RelErr, obj.FSDShapeGS_RelErr, obj.FSDShapeES_RelErr);
     if strcmp(obj.StudyObject.FPD_Segmentation,'RING')
         % add ring information for ringwise covariance matrices
@@ -2840,28 +2848,24 @@ function ComputeCM_FSD(obj,varargin)
         % Vary Norm
         NormBiasDT = randn(obj.nTrials,1).*obj.StudyObject.DTNormGS_i'.*obj.FSDNorm_RelErr;
         % Bin-to-Bin uncorrelated variation
-        DT_P_rand =permute(repmat(1+randn(size(obj.StudyObject.DTexP,2),obj.nTrials),1,1,nRings),[3,1,2]);
-        DT_P(:,1:obj.StudyObject.DTGSTh,:)  = DT_P(:,1:obj.StudyObject.DTGSTh,:).* (DT_P_rand(:,1:obj.StudyObject.DTGSTh,:).*obj.FSDShapeGS_RelErr);
-        DT_P(:,obj.StudyObject.DTGSTh+1:end,:) = DT_P(:,obj.StudyObject.DTGSTh+1:end,:).*(DT_P_rand(:,obj.StudyObject.DTGSTh+1:end,:).*obj.FSDShapeES_RelErr); 
+        DT_P_rand =permute(repmat(randn(size(obj.StudyObject.DTexP,2),obj.nTrials),1,1,nRings),[3,1,2]);
+        DT_P(:,1:obj.StudyObject.DTGSTh,:)     = DT_P(:,1:obj.StudyObject.DTGSTh,:).* (1+(DT_P_rand(:,1:obj.StudyObject.DTGSTh,:).*obj.FSDShapeGS_RelErr));
+        DT_P(:,obj.StudyObject.DTGSTh+1:end,:) = DT_P(:,obj.StudyObject.DTGSTh+1:end,:).*(1+(DT_P_rand(:,obj.StudyObject.DTGSTh+1:end,:).*obj.FSDShapeES_RelErr)); 
         DT_P(DT_P<0)=0;
     end
     if strcmp(obj.HTFlag,'ON')
         NormBiasHT = randn(obj.nTrials,1).*obj.StudyObject.HTNormGS_i'*obj.FSDNorm_RelErr;
-        HT_P_rand = permute(repmat(1+randn(size(obj.StudyObject.HTexP,2),obj.nTrials),1,1,nRings),[3,1,2]);
-        HT_P(:,1:obj.StudyObject.HTGSTh,:)  = HT_P(:,1:obj.StudyObject.HTGSTh,:).* (HT_P_rand(:,1:obj.StudyObject.HTGSTh,:).*obj.FSDShapeGS_RelErr);
-        HT_P(:,obj.StudyObject.HTGSTh+1:end,:) = HT_P(:,obj.StudyObject.HTGSTh+1:end,:).*(HT_P_rand(:,obj.StudyObject.HTGSTh+1:end,:).*obj.FSDShapeES_RelErr); 
+        HT_P_rand = permute(repmat(randn(size(obj.StudyObject.HTexP,2),obj.nTrials),1,1,nRings),[3,1,2]);
+        HT_P(:,1:obj.StudyObject.HTGSTh,:)  = HT_P(:,1:obj.StudyObject.HTGSTh,:).* (1+(HT_P_rand(:,1:obj.StudyObject.HTGSTh,:).*obj.FSDShapeGS_RelErr));
+        HT_P(:,obj.StudyObject.HTGSTh+1:end,:) = HT_P(:,obj.StudyObject.HTGSTh+1:end,:).*(1+(HT_P_rand(:,obj.StudyObject.HTGSTh+1:end,:).*obj.FSDShapeES_RelErr));
         HT_P(HT_P<0)=0;
-        %HT_P(1:obj.StudyObject.HTGSTh,:,1)     = obj.StudyObject.HTexP(1:obj.StudyObject.HTGSTh)'.*(1+randn(numel(obj.StudyObject.HTexP(1:obj.StudyObject.HTGSTh)),obj.nTrials).*obj.FSDShapeGS_RelErr);
-        %HT_P(obj.StudyObject.HTGSTh+1:end,:,1) = obj.StudyObject.HTexP(obj.StudyObject.HTGSTh+1:end)'.*(1+randn(numel(obj.StudyObject.HTexP(obj.StudyObject.HTGSTh+1:end)),obj.nTrials).*obj.FSDShapeES_RelErr);
     end
     if strcmp(obj.TTFlag,'ON')
         NormBiasTT = randn(obj.nTrials,1).*obj.StudyObject.TTNormGS_i'*obj.FSDNorm_RelErr;
-        TT_P_rand = permute(repmat(1+randn(size(obj.StudyObject.TTexP,2),obj.nTrials),1,1,nRings),[3,1,2]);
-        TT_P(:,1:obj.StudyObject.TTGSTh,:)  = TT_P(:,1:obj.StudyObject.TTGSTh,:).* (TT_P_rand(:,1:obj.StudyObject.TTGSTh,:).*obj.FSDShapeGS_RelErr);
-        TT_P(:,obj.StudyObject.TTGSTh+1:end,:) = TT_P(:,obj.StudyObject.TTGSTh+1:end,:).*(TT_P_rand(:,obj.StudyObject.TTGSTh+1:end,:).*obj.FSDShapeES_RelErr); 
+        TT_P_rand = permute(repmat(randn(size(obj.StudyObject.TTexP,2),obj.nTrials),1,1,nRings),[3,1,2]);
+        TT_P(:,1:obj.StudyObject.TTGSTh,:)  = TT_P(:,1:obj.StudyObject.TTGSTh,:).* (1+(TT_P_rand(:,1:obj.StudyObject.TTGSTh,:).*obj.FSDShapeGS_RelErr));
+        TT_P(:,obj.StudyObject.TTGSTh+1:end,:) = TT_P(:,obj.StudyObject.TTGSTh+1:end,:).*(1+(TT_P_rand(:,obj.StudyObject.TTGSTh+1:end,:).*obj.FSDShapeES_RelErr)); 
         TT_P(TT_P<0)=0;
-        %TT_P(1:obj.StudyObject.TTGSTh,:,1)     = obj.StudyObject.TTexP(1:obj.StudyObject.TTGSTh)'.*(1+randn(numel(obj.StudyObject.TTexP(1:obj.StudyObject.TTGSTh)),obj.nTrials).*obj.FSDShapeGS_RelErr);
-        %TT_P(obj.StudyObject.TTGSTh+1:end,:,1) = obj.StudyObject.TTexP(obj.StudyObject.TTGSTh+1:end)'.*(1+randn(numel(obj.StudyObject.TTexP(obj.StudyObject.TTGSTh+1:end)),obj.nTrials).*obj.FSDShapeES_RelErr);
     end
     
     %Start trials
@@ -2926,6 +2930,7 @@ function ComputeCM_FSD(obj,varargin)
     save(obj.CovMatFile, 'obj','-append');
     
     %% some plots for sanity check
+    
     if strcmp(obj.SanityPlots,'ON')
         fig55 = figure(55);
         set(fig55, 'Units', 'normalized', 'Position', [0.9, 0.9, 0.8, 1.2]);
@@ -3274,6 +3279,8 @@ function ComputeCM_LongPlasma(obj,varargin)
     end
     
     if loadSuccess==0
+ SynchrotronFlag_i = obj.StudyObject.SynchrotronFlag;
+  obj.StudyObject.SynchrotronFlag = 'OFF';
         % longi plasma uncertainty
         PlasmaErr =  [obj.MACE_VarErr,obj.is_EOffsetErr];
         PlasmaCovMat      = PlasmaErr.*[1,CorrCoeff;CorrCoeff,1].*PlasmaErr';
@@ -3371,6 +3378,7 @@ function ComputeCM_LongPlasma(obj,varargin)
         
         % Save again
         save(obj.CovMatFile, 'obj','-append');
+  obj.StudyObject.SynchrotronFlag = SynchrotronFlag_i;
     end
     
     if strcmp(SanityPlot,'ON')

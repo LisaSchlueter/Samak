@@ -3,9 +3,17 @@ function E0 = knm2FS_GetE0Twins(varargin)
 % March 2020, Lisa
 p = inputParser;
 p.addParameter('SanityPlot','ON',@(x)ismember(x,{'ON','OFF'}));
+p.addParameter('Mode','FS1',@(x)ismember(x,{'FS1','FS2'}));
 p.parse(varargin{:});
 SanityPlot  = p.Results.SanityPlot;
+Mode        = p.Results.Mode;
 
+switch Mode
+    case 'FS1' %figure skating 1
+        PeriodE0 = [18573.62,18573.78,18573.71];
+    case 'FS2' %figure skating 2
+       PeriodE0 = [18573.572,18573.613,18573.507];
+end
 RunListDir = [getenv('SamakPath'),'inputs/RunLists/KNM2/'];    
 runsRW1 = sort(importdata([RunListDir,'KNM2_RW1.dat']));
 runsRW2 = sort(importdata([RunListDir,'KNM2_RW2.dat']));
@@ -13,9 +21,9 @@ runsRW3 = sort(importdata([RunListDir,'KNM2_RW3.dat']));
 
 E0 = zeros(numel([runsRW1,runsRW2,runsRW3]),1);
 
-E0(1:numel(runsRW1)) = 18573.62;
-E0(numel(runsRW1)+1:numel(runsRW2)+numel(runsRW1)) = 18573.78;
-E0(numel(runsRW2)+numel(runsRW1)+1:end) = 18573.71;
+E0(1:numel(runsRW1)) = PeriodE0(1);
+E0(numel(runsRW1)+1:numel(runsRW2)+numel(runsRW1)) = PeriodE0(2);
+E0(numel(runsRW2)+numel(runsRW1)+1:end) = PeriodE0(3);
 
 
 if strcmp(SanityPlot,'ON')

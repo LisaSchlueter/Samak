@@ -17,6 +17,7 @@ p.addParameter('WGTS_MolFrac_DT_SubRun','');
 p.addParameter('WGTS_MolFrac_HT',0.035,@(x)isfloat(x)&& x>0);
 p.addParameter('WGTS_MolFrac_HT_SubRun','');
 p.addParameter('WGTS_B_T',2.52,@(x)isfloat(x) && x>0);
+p.addParameter('NIS',7,@(x)isfloat(x));
 
 % Theory
 p.addParameter('ISCS','Edep',@(x)ismember(x,{'Aseev','Theory','Edep'}));
@@ -80,6 +81,7 @@ MACE_Ba_T                = p.Results.MACE_Ba_T;
 KTFFlag                  = p.Results.KTFFlag;
 recomputeRF              = p.Results.recomputeRF;
 UseParallelRF            = p.Results.UseParallelRF;
+NIS                      = p.Results.NIS;
 
 %Theory
 ISCS                     = p.Results.ISCS;
@@ -155,8 +157,8 @@ opt_wgts = {...
     'ELossFlag',ELossFlag,...
     'recomputeRF',recomputeRF,...
     'UseParallelRF',UseParallelRF,...
-    'NIS',7,...
-    'RadiativeFlag',RadiativeFlag}; 
+    'RadiativeFlag',RadiativeFlag,...
+    'NIS',NIS}; 
 
 opt_mace = {...
     'MACE_Bmax_T',MACE_Bmax_T,...

@@ -249,12 +249,13 @@ classdef McRunGenerator < handle
             tmpKTF = obj.RunObj.KTFFlag;
             obj.RunObj.KTFFlag = 'WGTSMACE';
             
-            
             %set range and fixed parameter to something reliable
             if strcmp(obj.RunObj.DataSet,'FirstTritium.katrin')
                 obj.RunObj.exclDataStart = 12; % 125eV range
-            else % 40eV range
-               [~, obj.RunObj.exclDataStart] = min(abs(obj.RunObj.RunData.qU-18574+40));
+            elseif strcmp(obj.RunObj.DataSet,'Knm1')
+                obj.RunObj.exclDataStart = 13; %27 subruns -> 40 eV range
+            else% 40eV range
+                [~, obj.RunObj.exclDataStart] = min(abs(obj.RunObj.RunData.qU-18574+40));
             end
             
             nPixels =numel(obj.RunObj.RunData.MACE_Ba_T);

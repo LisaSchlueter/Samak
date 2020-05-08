@@ -94,7 +94,37 @@ elseif SysBudget ==22 % default Knm1
     SysErr.FPDeff_RelErr = 1e-4;
     SysErr.is_EOffsetErr = 0;
     SysErr.MACE_VarErr = 0;
-    SysErr.MaxSlopeCpsPereV = 15*1e-06;
+    SysErr.MaxSlopeCpsPereV = 5.2*1e-06; % warning: changed 02.May 2020 from 15e-6
+elseif SysBudget ==23 % with martins FSd onset Knm1
+    SysErr.WGTS_TASR_RelErr = 5e-4;
+    SysErr.FSDNorm_RelErr=  0.008435031923794;
+    SysErr.FSDShapeGS_RelErr= 0.04;
+    SysErr.FSDShapeES_RelErr= 0.18;
+    SysErr.MACE_Ba_T_RelErr= 0.01;
+    SysErr.MACE_Bmax_T_RelErr= 0.002;
+    SysErr.WGTS_B_T_RelErr= 0.025;
+    SysErr.WGTS_CD_MolPerCm2_RelErr= 0.0085;
+    SysErr.ISXsection_RelErr= 0; %use rhod sigma together as uncertainty
+    SysErr.DataDriven = 'ON';
+    SysErr.FPDeff_RelErr = 1e-4;
+    SysErr.is_EOffsetErr = 0;
+    SysErr.MACE_VarErr = 0;
+    SysErr.MaxSlopeCpsPereV = 5.2*1e-06; % warning: changed 02.May 2020 from 15e-6
+elseif SysBudget ==24 % new default Knm1
+    SysErr.WGTS_TASR_RelErr = 5e-4;
+    SysErr.FSDNorm_RelErr=  0.01;
+    SysErr.FSDShapeGS_RelErr= 0.04;
+    SysErr.FSDShapeES_RelErr= 0.18;
+    SysErr.MACE_Ba_T_RelErr= 0.01;
+    SysErr.MACE_Bmax_T_RelErr= 0.002;
+    SysErr.WGTS_B_T_RelErr= 0.025;
+    SysErr.WGTS_CD_MolPerCm2_RelErr= 0.01;
+    SysErr.ISXsection_RelErr= 0; %use rhod sigma together as uncertainty
+    SysErr.DataDriven = 'ON';
+    SysErr.FPDeff_RelErr = 1e-4;
+    SysErr.is_EOffsetErr = 0;
+    SysErr.MACE_VarErr = 0;
+    SysErr.MaxSlopeCpsPereV = 5.2*1e-06; % warning: changed 02.May 2020 from 15e-6
 elseif SysBudget == 31 % preliminary KNM2 systematics (January 20)
     SysErr.WGTS_TASR_RelErr = 5e-4; % data driven
     SysErr.FSDNorm_RelErr=  0.01;
@@ -169,6 +199,21 @@ elseif SysBudget == 35 % preliminary KNM2 systematics (March 27), update: long. 
     SysErr.is_EOffsetErr = 0.05;
     SysErr.MACE_VarErr = 0.2^2/3;
     SysErr.MaxSlopeCpsPereV = 5.2.*1e-06;
+elseif SysBudget == 36 % KNM2 Figure skating II systematics (5th May 2020), update: longplasma, bkg slope
+    SysErr.WGTS_TASR_RelErr = 5e-4; % data driven
+    SysErr.FSDNorm_RelErr=  0.01;
+    SysErr.FSDShapeGS_RelErr= 0.04;
+    SysErr.FSDShapeES_RelErr= 0.18;
+    SysErr.MACE_Ba_T_RelErr= 0.0065;
+    SysErr.MACE_Bmax_T_RelErr= 0.001;
+    SysErr.WGTS_B_T_RelErr= 0.017;
+    SysErr.WGTS_CD_MolPerCm2_RelErr= 0.0025;
+    SysErr.ISXsection_RelErr= 0; %use rhod sigma together as uncertainty
+    SysErr.DataDriven = 'ON';
+    SysErr.FPDeff_RelErr = 1e-4;
+    SysErr.is_EOffsetErr = 0.05;
+    SysErr.MACE_VarErr = 0.0149;
+    SysErr.MaxSlopeCpsPereV = 4.74.*1e-06;   
 end
 
 CMArg = {'WGTS_CD_MolPerCm2_RelErr',SysErr.WGTS_CD_MolPerCm2_RelErr,...
