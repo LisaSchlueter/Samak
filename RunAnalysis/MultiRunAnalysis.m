@@ -3581,7 +3581,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                 else
                     p = scatter(obj.RunData.qU(obj.exclDataStart:end)-18574,...
                         obj.SingleRunData.qU(obj.exclDataStart:end,rr)-qUmean(obj.exclDataStart:end),...
-                        80,c(rr,:),'x','filled','MarkerEdgeColor',rgb('DimGray'));
+                        80,'x','filled','MarkerEdgeColor',rgb('DimGray'));
                 end
                 
                 PrettyFigureFormat;
