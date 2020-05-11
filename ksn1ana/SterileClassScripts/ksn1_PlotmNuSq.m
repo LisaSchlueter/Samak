@@ -5,7 +5,7 @@
 % nuissance parameter + pull
 % fixed parameter
 %% settings for runanalysis
-DataType = 'Twin';
+DataType = 'Real';
 %%
 RunAnaArg = {'RunList','KNM1',...
     'fixPar','E0 Norm Bkg',...

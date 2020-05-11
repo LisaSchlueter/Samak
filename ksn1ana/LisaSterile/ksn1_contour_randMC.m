@@ -1,6 +1,6 @@
 % contour with randomized twins
 %% settings
-CL = 0.95;
+CL = 95;
 range = 95;%
 nGridSteps = 25;
 chi2Str = 'chi2CMShape';
@@ -14,7 +14,7 @@ switch Mode
         RandMC = [1:151,500:643]*1e3; 
         SysBudget =22;
     case 'New'
-        RandMC = [1:138,500:626,921:1084];
+        RandMC = [1:155,500:645,901:1101];
         SysBudget =24;
 end
 %% init
@@ -62,26 +62,21 @@ end
 mnu4Sq_bf = mnu4Sq_bf(RandMC);
 sin2T4_bf =sin2T4_bf(RandMC); 
 chi2min_bf = chi2min_bf(RandMC);
-%%
-RelErr = @(n,p) sqrt((n*p*(1-p)))/n;
+%% significant best fits
+
 ClosedLog95 =  DeltaChi2>= GetDeltaChi2(0.95,2);
 ClosedFrac95 = sum(ClosedLog95)/nContours;
+RelErr = @(n,p) sqrt((n*p*(1-p)))/n;
+
 fprintf('%.0f%% C.L. : fraction of significant best fits = %.1f  +- %.1f  (%.0f out of %.0f)\n',...
     95,ClosedFrac95*100,RelErr(nContours,ClosedFrac95)*100,sum(ClosedLog95),nContours);
-ClosedLog82 =  DeltaChi2>= GetDeltaChi2(0.84,2);
-ClosedFrac82 = sum(ClosedLog82)/nContours;
-fprintf('%.0f%% C.L. : fraction of significant best fits = %.1f +- %.1f (%.0f out of %.0f)\n',...
-    84,ClosedFrac82*100,RelErr(nContours,ClosedFrac82)*100,sum(ClosedLog82),nContours);
-%%
-if strcmp(chi2Str,'chi2Stat')
-    chi2Label = 'stat. only';
-else
-    chi2Label = 'stat. and syst.';
-end
+
+% ClosedLog82 =  DeltaChi2>= GetDeltaChi2(0.84,2);
+% ClosedFrac82 = sum(ClosedLog82)/nContours;
+% fprintf('%.0f%% C.L. : fraction of significant best fits = %.1f +- %.1f (%.0f out of %.0f)\n',...
+%     84,ClosedFrac82*100,RelErr(nContours,ClosedFrac82)*100,sum(ClosedLog82),nContours);
 %% plot only best fits + sensitivity
 GetFigure;
-%pbf = scatter(sin2T4_bf,mnu4Sq_bf,'filled','MarkerFaceAlpha',0.1,'MarkerFaceColor',rgb('DarkSlateGray'));
-%pbf.SizeData=80;
 yedge = sort(mnu4Sq_bf);
 xedge = sort(sin2T4_bf);
 h = histogram2(sin2T4_bf,mnu4Sq_bf,xedge,yedge,'FaceColor','flat','Normalization','probability');
@@ -114,7 +109,7 @@ PlotArg ={'mnu4Sq',mnu4Sq_sensi,...
 pHandle.ZData = 1e3*ones(1e3,1);
 xlim([1e-03 0.5]);
 ylim([1 94^2]);
-leg = legend([h,pHandle],'MC best fits','Sensitivity','EdgeColor',rgb('Silver'),'Location','southwest');
+legend([h,pHandle],'MC best fits',sprintf('Sensitivity %.0f eV range (%.0f%% C.L.)',range,CL),'EdgeColor',rgb('Silver'),'Location','southwest');
 plotdir = strrep(extractBefore(savefile{1},'KSN1'),'results','plots');
 MakeDir(plotdir);
 plotname = sprintf('%sRandMC_BestFits_%.0f_%s.png',plotdir,range,Mode);
@@ -136,9 +131,36 @@ leg = legend([hchi2,pchi2],sprintf('%.0f pseudo-experiments',numel(chi2min_bf)),
                  sprintf('\\chi^2 distribution for %.0f dof',dof),...
                  'EdgeColor',rgb('Silver'));
 xlim([0 70]);
-plotnameChi2 = sprintf('%sRandMC_BestFitsChi2Dist_%.0f.png',plotdir,range);
+plotnameChi2 = sprintf('%sRandMC_BestFitsChi2Dist_%.0f_%s.png',plotdir,range,Mode);
 print(gcf,plotnameChi2,'-dpng','-r450');
-%% plot all contours
+
+%% delta chi2 distribution: Kolmogorov-Smirnov Test
+close all
+GetFigure;
+chi2min =sort(chi2min_bf);
+Chi2CDFEmp = cumsum(chi2min)./max(cumsum(chi2min));
+Chi2CDFTheo = chi2cdf(chi2min,dof);
+pEmp =plot(chi2min,Chi2CDFEmp,'-.','LineWidth',2);
+hold on;
+pTheo = plot(chi2min,Chi2CDFTheo,'-','LineWidth',2);
+PrettyFigureFormat('FontSize',22);
+xlabel(sprintf('\\chi^2 (%.0f dof)',dof));
+ylabel(sprintf('Cumulative probability'));
+[h,p,ksstat,cv] = kstest(chi2min,'CDF',[chi2min,Chi2CDFTheo]);
+resultsStr = sprintf('KS test: p-value = %.3f',p);
+%sprintf('max. difference = %.2f',max(abs(Chi2CDFEmp-Chi2CDFTheo)))
+title(resultsStr,'FontWeight','normal','FontSize',get(gca,'FontSize'))
+legend([pTheo,pEmp],sprintf('Null hypothesis: \\chi^2 distribution'),...
+    sprintf('Empirical distribution'),'EdgeColor',rgb('Silver'),'Location','northwest');
+ylim([-0.05 1.05])
+plotnameChi2KS = sprintf('%sRandMC_Chi2DistKSTest_%.0f_%s.png',plotdir,range,Mode);
+%print(gcf,plotnameChi2KS,'-dpng','-r450');
+%% plot all contours - one after the after
+if strcmp(chi2Str,'chi2Stat')
+    chi2Label = 'stat. only';
+else
+    chi2Label = 'stat. and syst.';
+end
 PlotContoursFlag = 'OFF';
 if strcmp(PlotContoursFlag,'ON')
     for i=RandMC
@@ -156,8 +178,3 @@ if strcmp(PlotContoursFlag,'ON')
         close all
     end
 end
-%%
-
- %KSN1ContourPlot(PlotArg{:},'LineStyle','-','PlotSplines','ON');
- 
- 

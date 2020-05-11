@@ -52,7 +52,7 @@ S.CompareBestFitNull;
 S.ContourPlot('BestFit','OFF','SavePlot','OFF','CL',[90 95 99]);
 
 %% 4. grid plot with contour and best fit
-S.GridPlot('BestFit','ON','Contour','ON')
+S.GridPlot('BestFit','ON','Contour','ON','SavePlot','png')
 
 %% 5. contour plot in oscillation parameter space (you can switch on/off foreign contours, all on by default
 S.ContourPlotOsci();
@@ -61,6 +61,6 @@ S.ContourPlotOsci();
 if S.range==95 && strcmp(S.RunAnaObj.DataType,'Real')
     S.InterpMode = 'lin';
 else
-      S.InterpMode = 'spline';
+    S.InterpMode = 'spline';
 end
-S.PlotFitriumSamak;
+S.PlotFitriumSamak('SavePlot','png');

@@ -3,7 +3,7 @@
 % plot qU Scan
 % fixed parameter
 %% settings for runanalysis
-DataType = 'Real';
+DataType = 'Twin';
 %%
 RunAnaArg = {'RunList','KNM1',...
     'fixPar','E0 Norm Bkg',...
@@ -38,7 +38,7 @@ S = SterileAnalysis(SterileArg{:});
 switch S.RunAnaObj.DataType
     case 'Real'
         S.InterpMode = 'lin';
-        Arg = {'SavePlot','png','Ranges',[95:-5:45,41,40]};
+        Arg = {'SavePlot','png','Ranges',[95:-5:45,41,40],'BestFit','OFF'};
     case 'Twin'
         S.InterpMode = 'spline';
         Arg = {'SavePlot','png','Ranges',[95:-5:45,41,40]};%,41,40]};
