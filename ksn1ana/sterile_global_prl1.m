@@ -1,20 +1,21 @@
 %% ===== DATA =====
 
 %% Settings
-E0 = 18574;                                         % Endpoint in eV
-%sterile_mass = 10*sqrt(2.3);                       % Sterile neutrino mass in eV
-sterile_mass  = 56.234;                             % Sterile neutrino mass in eV
+E0 = 18573.7;                                         % Endpoint in eV
+%sterile_mass = sqrt(70.3);                                    % Sterile neutrino mass in eV
+sterile_mass  = 10;                              % Sterile neutrino mass in eV
 
-% mixing_angle_1 = 0.1;                             % sin2(th4)
-% mixing_angle_2 = 1-(1-2*mixing_angle_1)^2;        % sin2(2th4)
+mixing_angle_1 = 0.01;                                % sin2(th4)
+%mixing_angle_1 = 0.0224;                                % sin2(th4)
+% mixing_angle_2 = 1-(1-2*mixing_angle_1)^2;          % sin2(2th4)
 
-%mixing_angle_2 = 0.1;                              % sin2(2th4)
-%mixing_angle_1 = (1-sqrt(1-mixing_angle_2))/2;     % sin2(th4)
-mixing_angle_1  = 0.5;
+% mixing_angle_2 = 0.1;                               % sin2(2th4)
+%mixing_angle_1 = (1-sqrt(1-mixing_angle_2))/2;       % sin2(th4)
+%mixing_angle_1  = 0.5;
 
 %% Data
 D = MultiRunAnalysis('RunList','KNM1',...
-            'chi2','chi2Stat',...
+            'chi2','chi2CMShape',...
             'DataType','Real',...
             'fixPar','',...
             'RadiativeFlag','ON',...
@@ -23,7 +24,7 @@ D = MultiRunAnalysis('RunList','KNM1',...
             'FSDFlag','SibilleFull',...
             'ELossFlag','KatrinT2',...
             'SysBudget',22,...
-            'exclDataStart',1,...
+            'exclDataStart',7,...
             'SynchrotronFlag','OFF',...
             'AngularTFFlag','OFF');
 
@@ -39,7 +40,7 @@ R = MultiRunAnalysis('RunList','KNM1',...
             'FSDFlag','SibilleFull',...
             'ELossFlag','KatrinT2',...
             'SysBudget',22,...
-            'exclDataStart',1,...
+            'exclDataStart',7,...
             'SynchrotronFlag','OFF',...
             'AngularTFFlag','OFF');
 
@@ -63,7 +64,7 @@ Rs = MultiRunAnalysis('RunList','KNM1',...
             'FSDFlag','SibilleFull',...
             'ELossFlag','KatrinT2',...
             'SysBudget',22,...
-            'exclDataStart',1,...
+            'exclDataStart',7,...
             'SynchrotronFlag','OFF',...
             'AngularTFFlag','OFF');
         
@@ -83,26 +84,29 @@ R.ModelObj.ComputeTBDIS(); YI = R.ModelObj.TBDIS; YI = YI./times;
 %% Sterile "data"
 
 YIsd = IS;
-% Error
-err  = sqrt(YIsd);
+% Error - stat - 
+% err  = sqrt(YIsd) ;
+% Error - stat +syst
+err  = (diag(sqrt(D.FitCMShape))) ;
 
 % Fluctuations (data sim)
-% YIsd = YIsd + err.*randn(length(YIsd),1);
+%YIsd = YIsd + err.*randn(length(YIsd),1);
 YIsd = YIsd./times;
 
 % Error bar
 err  = err./times;
 err  = err./YI;
 
-%% Constraining everything to -95eV
-YIsd=YIsd(qU>-95);
-YIs=YIs(qU>-95);
-YI=YI(qU>-95);
-sum(YI)
-err=err(qU>-95);
-qUc=qU(qU>-95);
+% Constraining everything to qULimiteV
+qULimit = -65;
+YIsd=YIsd(qU>qULimit);
+YIs=YIs(qU>qULimit);
+YI=YI(qU>qULimit);
+sum(YI);
+err=err(qU>qULimit);
+qUc=qU(qU>qULimit);
 
-%% ===== PLOTTING =====
+% ===== PLOTTING =====
 
 fig = figure('Renderer','painters');
 set(fig, 'Units', 'normalized', 'Position', [0.001, 0.001,0.45, 0.8]);
@@ -194,7 +198,7 @@ PRLFormat;
 
 s3=subplot(4,1,4)
 
-bar(qUc,times(qU>-95)./(60*60),0.5,...
+bar(qUc,times(qU>qULimit)./(60*60),0.5,...
     'FaceColor',prlB,'EdgeColor',prlB);
 
 xlabel('Retarding energy - 18574 (eV)');

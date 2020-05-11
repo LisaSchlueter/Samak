@@ -4611,7 +4611,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             
             switch obj.StackFileName
                 case 'KNM1'
-            MyqU1 = 1;
+            MyqU1 = 7; % --> KSN1
             MyqU2 = 14;
             MyqU3 = 35;
                 case {'KNM2','Others','KNM2_after2ndFix'}
@@ -4638,10 +4638,12 @@ t.addRow('$\beta$-scan Time',sprintf('%.1f \\rm{ \\, hours} - (%.1f \\%%)',hours
 t.addRow('Signal+Background','');
 locaTime=hours(seconds(sum(obj.RunData.TimeperSubRunperPixel(MyqU1:end,1),1)));
 t.addRow(sprintf('At qU$>$%.1f eV',obj.ModelObj.qU(MyqU1)),...
-         sprintf('%.2f \\rm{ \\, hours} - (%.2f \\%%) - %.3g \\rm{ \\, electrons}',locaTime, locaTime/localTimetotal*100,sum(obj.RunData.TBDIS(MyqU1:end))));
+         sprintf('%.2f \\rm{ \\, hours} - (%.2f \\%%) - %.3g \\rm{ \\, electrons}',...
+         locaTime, locaTime/localTimetotal*100,sum(obj.RunData.TBDIS(MyqU1:end))));
 locaTime=hours(seconds(sum(obj.RunData.TimeperSubRunperPixel(MyqU2:end,1),1)));
 t.addRow(sprintf('At qU$>$%.1f eV',obj.ModelObj.qU(MyqU2)),...
-         sprintf('%.2f \\rm{ \\, hours} - (%.2f \\%%) - %.3g \\rm{ \\, electrons}',locaTime, locaTime/localTimetotal*100,sum(obj.RunData.TBDIS(MyqU2:end))));
+         sprintf('%.2f \\rm{ \\, hours} - (%.2f \\%%) - %.3g \\rm{ \\, electrons}',...
+         locaTime, locaTime/localTimetotal*100,sum(obj.RunData.TBDIS(MyqU2:end))));
 
      t.addRow('Only Background','');
 locaTime=hours(seconds(sum(obj.RunData.TimeperSubRunperPixel(MyqU3:end,1),1)));
