@@ -1710,8 +1710,10 @@ classdef CovarianceMatrix < handle
                 obj.MultiCovMatFracNorm.CM_RF  =  obj.CovMatFracNorm;
             end
             
-            save(obj.CovMatFile, 'obj','-mat','-append');     
-    
+            save(obj.CovMatFile, 'obj','-mat','-append');
+            
+            obj.StudyObject.fscatnE = []; % reset e-loss functions
+            obj.StudyObject.fscatn  = [];
         end
         function ComputeCM_TASR(obj,varargin)
             fprintf('--------------------------------------------------------------------------\n')
@@ -3311,6 +3313,8 @@ function ComputeCM_LongPlasma(obj,varargin)
         RFfun = @ComputeRF;
         ResponseFunction = zeros(obj.StudyObject.nTe,obj.StudyObject.nqU,obj.nTrials,nRings);
         ElossFunc_v       = zeros(obj.StudyObject.NIS,numel(E),obj.nTrials);
+        obj.StudyObject.fscatnE = []; % reset
+        obj.StudyObject.fscatn  = [];
         
         progressbar('Compute longitudinal plasma cov mat')
         for i=1:obj.nTrials

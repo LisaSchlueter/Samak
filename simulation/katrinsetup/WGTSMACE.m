@@ -1356,8 +1356,8 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
               
             %% Retrieve/Compute Energy Loss Functions
             obj.recomputeRF = 'OFF';
-            if isempty(ElossFunctions)
-                if isempty(obj.fscatnE)
+            if isempty(ElossFunctions)   
+                if isempty(obj.fscatnE) || obj.is_EOffset~=0
                 [~,ElossFunctions] = obj.ComputeELossFunction('E',E); % load if already exists, otherwise compute
                 else
                    ElossFunctions =  obj.fscatnE;
