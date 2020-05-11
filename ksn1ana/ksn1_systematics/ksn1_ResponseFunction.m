@@ -26,32 +26,33 @@ else
         'SysBudget',24,...
         'pullFlag',99,...
         'NonPoissonScaleFactor',1};
-    R = MultiRunAnalysis(RunAnaArg{:});
-    
-    
+%     R = MultiRunAnalysis(RunAnaArg{:});
+%     
+R.ModelObj.SynchrotronFlag='OFF';
+    tic;
     qU = 18545;
     Te = (qU-5:0.1:qU+100)';
     RF = R.ModelObj.ComputeRF(Te,qU,'IntMode','Conv');
- 
+ toc;
 end
 
 
-%% plot overlay
-GetFigure;
-pS = plot(Te-qU,RF,'-','LineWidth',2,'Color',rgb('Orange'));
-hold on;
-pF = plot(Te-qU,RF_fitrium,'-.','LineWidth',2,'Color',rgb('DodgerBlue'));
-PrettyFigureFormat('FontSize',22);
-xlabel(sprintf('{\\itE}_{kin} - {\\itqU} (eV)'));
-ylabel('Transmission probability');
-legend('Samak','Fitrium','EdgeColor',rgb('Silver'));
-%% Plot abs difference
-GetFigure;
-pS = plot(Te-qU,RF-RF_fitrium,'-','LineWidth',2,'Color',rgb('DodgerBlue'));
-PrettyFigureFormat('FontSize',22);
-xlabel(sprintf('{\\itE}_{kin} - {\\itqU} (eV)'));
-ylabel('Transmission probability diff.');
-legend('Samak - Fitrium','EdgeColor',rgb('Silver'));
-
+% %% plot overlay
+% GetFigure;
+% pS = plot(Te-qU,RF,'-','LineWidth',2,'Color',rgb('Orange'));
+% hold on;
+% pF = plot(Te-qU,RF_fitrium,'-.','LineWidth',2,'Color',rgb('DodgerBlue'));
+% PrettyFigureFormat('FontSize',22);
+% xlabel(sprintf('{\\itE}_{kin} - {\\itqU} (eV)'));
+% ylabel('Transmission probability');
+% legend('Samak','Fitrium','EdgeColor',rgb('Silver'));
+% %% Plot abs difference
+% GetFigure;
+% pS = plot(Te-qU,RF-RF_fitrium,'-','LineWidth',2,'Color',rgb('DodgerBlue'));
+% PrettyFigureFormat('FontSize',22);
+% xlabel(sprintf('{\\itE}_{kin} - {\\itqU} (eV)'));
+% ylabel('Transmission probability diff.');
+% legend('Samak - Fitrium','EdgeColor',rgb('Silver'));
+% 
 
 

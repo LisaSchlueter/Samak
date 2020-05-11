@@ -123,6 +123,8 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
         % Energy Loss Function 
         ELossFlag; % Aseev, Abdurashitov
         fscat    = [];
+        fscatnE
+        fscatn;
         
         % MACE
         MACE_Bmax_T        ;    % Pinch B field, Tesla
@@ -522,7 +524,7 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
                         'NIS',obj.NIS,...
                         'ISXsection', ISXsection_local(squeeze(Energy)),...
                         'SanityPlot','OFF');
-                    fprintf('succesful! \n')
+                    %fprintf('succesful! \n')
                     return
                 catch
                     fprintf(2,'failed - calculate exact inel. scattering probabilities \n')
@@ -843,6 +845,7 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             p.addParameter('LoadOrSaveEloss','ON',@(x)ismember(x,{'ON','OFF'}));   % Only for covariance matrices has to be off
             p.addParameter('is_EOffset',obj.is_EOffset,@(x)isfloat(x));
             p.addParameter('ConvFlag','Conv',@(x)ismember(x,{'IntConv','Conv'}));
+            
             p.parse(varargin{:});
             
             is_A1_local       = p.Results.is_A1;
@@ -897,8 +900,8 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             end
             
             if ~isempty(file_logic)  && strcmp(obj.recomputeRF,'OFF') && strcmp(LoadOrSaveEloss,'ON') && numel(E)==numel(tmp.E) % if one exists and has correct binning
-                fscatnE = tmp.fscatnE;
-                fscatn  = tmp.fscatn;
+                obj.fscatnE = tmp.fscatnE;
+                obj.fscatn  = tmp.fscatn;
                 if strcmp(Debug,'ON')
                     fprintf(2,'loading energy loss function from file \n')
                 end
@@ -962,8 +965,8 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
                 %f2scat = @(e) integral(tmp,-inf,inf,'ArrayValued',1);
                 %f2scatn = @(e) f2scat(e);%/simpsons(e,f2scat(e));
                % E = E(E>=0);
-                fscatnE      = zeros(7,numel(E)); % evaluate functions at E
-                fscatnE(1,:) = f1scatn(E+ is_EOffset_local);
+                obj.fscatnE      = zeros(7,numel(E)); % evaluate functions at E
+                obj.fscatnE(1,:) = f1scatn(E+ is_EOffset_local);
                 
                 Eint = linspace(0,max(E),1e4);
                 if obj.NIS>1
@@ -973,8 +976,8 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
                         f2scat = @(e) conv(f1scat(e),f1scat(e),'same');
                     end
                     f2scatn = @(e) f2scat(e);%/simpsons(e,f2scat(e));
-                    fscatn(1:2) = {f1scatn; f2scatn};
-                    fscatnE(2,:) = f2scatn(E+ is_EOffset_local);
+                    obj.fscatn(1:2) = {f1scatn; f2scatn};
+                    obj.fscatnE(2,:) = f2scatn(E+ is_EOffset_local);
                 end
                 
                 if obj.NIS>2
@@ -984,8 +987,8 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
                         f3scat = @(e) conv(f2scat(e),f1scat(e),'same');
                     end
                     f3scatn = @(e) f3scat(e);%/simpsons(e,f3scat(e));
-                    fscatn(1:3) = {f1scatn; f2scatn; f3scatn;};
-                    fscatnE(3,:) = f3scatn(E+ is_EOffset_local);
+                    obj.fscatn(1:3) = {f1scatn; f2scatn; f3scatn;};
+                    obj.fscatnE(3,:) = f3scatn(E+ is_EOffset_local);
                 end
                 
                 if obj.NIS>3
@@ -995,8 +998,8 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
                         f4scat = @(e) conv(f3scat(e),f1scat(e),'same');
                     end
                     f4scatn = @(e) f4scat(e);%/simpsons(e,f4scat(e));
-                    fscatn(1:4) = {f1scatn; f2scatn; f3scatn; f4scatn};
-                    fscatnE(4,:) = f4scatn(E+ is_EOffset_local);
+                    obj.fscatn(1:4) = {f1scatn; f2scatn; f3scatn; f4scatn};
+                    obj.fscatnE(4,:) = f4scatn(E+ is_EOffset_local);
                 end
                 
                 if obj.NIS>4
@@ -1006,8 +1009,8 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
                         f5scat = @(e) conv(f4scat(e),f1scat(e),'same');
                     end
                     f5scatn = @(e) f5scat(e);%/simpsons(e,f5scat(e));
-                    fscatn(1:5) = {f1scatn; f2scatn; f3scatn; f4scatn; f5scatn};
-                    fscatnE(5,:) = f5scatn(E+ is_EOffset_local);
+                    obj.fscatn(1:5) = {f1scatn; f2scatn; f3scatn; f4scatn; f5scatn};
+                    obj.fscatnE(5,:) = f5scatn(E+ is_EOffset_local);
                 end
                 
                 if obj.NIS>5
@@ -1018,7 +1021,7 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
                     end
                     f6scatn = @(e) f6scat(e);%/simpsons(e,f6scat(e));
                     fscatn(1:6) = {f1scatn; f2scatn; f3scatn; f4scatn; f5scatn; f6scatn};
-                    fscatnE(6,:) = f6scatn(E+ is_EOffset_local);
+                    obj.fscatnE(6,:) = f6scatn(E+ is_EOffset_local);
                 end
                 
                 if obj.NIS>6
@@ -1028,8 +1031,8 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
                         f7scat = @(e) conv(f6scat(e),f1scat(e),'same');
                     end
                     f7scatn = @(e) f7scat(e);%/simpsons(e,f7scat(e));
-                    fscatn(1:7) = {f1scatn; f2scatn; f3scatn; f4scatn; f5scatn;f6scatn;f7scatn};
-                    fscatnE(7,:) = f7scatn(E+ is_EOffset_local);
+                    obj.fscatn(1:7) = {f1scatn; f2scatn; f3scatn; f4scatn; f5scatn;f6scatn;f7scatn};
+                    obj.fscatnE(7,:) = f7scatn(E+ is_EOffset_local);
                 end
                 
                 if obj.NIS>7
@@ -1039,7 +1042,7 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
                         f8scat = @(e) conv(f7scat(e),f1scat(e),'same');
                     end
                     f8scatn = @(e) f8scat(e);%/simpsons(e,f8scat(e));
-                    fscatn(1:8) = {f1scatn; f2scatn; f3scatn; f4scatn; f5scatn;f6scatn;f7scatn;f8scatn};
+                    obj.fscatn(1:8) = {f1scatn; f2scatn; f3scatn; f4scatn; f5scatn;f6scatn;f7scatn;f8scatn};
                 end
                 
                 if obj.NIS>8
@@ -1049,7 +1052,7 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
                         f9scat = @(e) conv(f8scat(e),f1scat(e),'same');
                     end
                     f9scatn = @(e) f9scat(e);%/simpsons(e,f9scat(e));
-                    fscatn(1:9) = {f1scatn; f2scatn; f3scatn; f4scatn; f5scatn;f6scatn;f7scatn;f8scatn;f9scatn};
+                    obj.fscatn(1:9) = {f1scatn; f2scatn; f3scatn; f4scatn; f5scatn;f6scatn;f7scatn;f8scatn;f9scatn};
                 end
                 
                 if obj.NIS>9
@@ -1059,7 +1062,7 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
                         f10scat = @(e) conv(f9scat(e),f1scat(e),'same');
                     end
                     f10scatn = @(e) f10scat(e);%/simpsons(e,f10scat(e));
-                    fscatn(1:10) = {f1scatn; f2scatn; f3scatn; f4scatn; f5scatn; f6scatn; f7scatn; f8scatn; f9scatn; f10scatn};
+                    obj.fscatn(1:10) = {f1scatn; f2scatn; f3scatn; f4scatn; f5scatn; f6scatn; f7scatn; f8scatn; f9scatn; f10scatn};
                 end
                 
                 % output
@@ -1067,7 +1070,10 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
                 if strcmp(LoadOrSaveEloss,'ON')
                     save(file_eloss{1},'fscatn','fscatnE','E');
                 end
+  
             end
+             fscatn = obj.fscatn;
+             fscatnE = obj.fscatnE;
         end
         
         function  InitializeELossFunction(obj)
@@ -1250,6 +1256,7 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
                 E_rf            = minE_rf:Estep_rf:maxE_rf;
             else
                 Edef_rf    = te-qu;
+                
                 BinFactor = ceil(obj.TeStep/RFBinStep_local); 
                 if BinFactor<=1
                     E_add = [];
@@ -1261,17 +1268,12 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
                     E_add = [E_add1;E_add2];
                 elseif BinFactor>=4
                     E_add = zeros(BinFactor-1,numel(Edef_rf));
+                  %   E_add = zeros(BinFactor-1,size(Edef_rf,1),size(Edef_rf,2));
                     for i=1:BinFactor-1
                         E_add(i,:) = Edef_rf+obj.TeStep.*i/BinFactor;
                     end
                     E_add = sort(reshape(E_add,(BinFactor-1)*numel(Edef_rf),1));
-%                     E_add1 = Edef_rf-obj.TeStep/4;
-%                     E_add2 = Edef_rf+obj.TeStep/4;
-%                     E_add3 = Edef_rf-obj.TeStep/2;
-                   
-                   % end
-                     %E_add = [E_add1;E_add2;E_add3];
-               % elseif 
+                     % E_add = sort(reshape(E_add,(BinFactor-1)*size(Edef_rf,1),size(Edef_rf,2)));
                 end
                 E_rf = unique([Edef_rf;E_add]); % sorts and delete repetitions
                 Estep_rf = E_rf(2) - E_rf(1);
@@ -1355,7 +1357,11 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             %% Retrieve/Compute Energy Loss Functions
             obj.recomputeRF = 'OFF';
             if isempty(ElossFunctions)
+                if isempty(obj.fscatnE)
                 [~,ElossFunctions] = obj.ComputeELossFunction('E',E); % load if already exists, otherwise compute
+                else
+                   ElossFunctions =  obj.fscatnE;
+                end
             end
             obj.recomputeRF = 'ON';
             
