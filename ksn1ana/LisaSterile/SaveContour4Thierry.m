@@ -2,9 +2,9 @@
 %% settings
 CL = 95;
 range =  65;%
-nGridSteps = 25;
-chi2Str = 'chi2CMShape';
-DataType = 'Real';
+nGridSteps = 50;
+chi2Str = 'chi2Stat';%CMShape';
+DataType = 'Twin';
 freePar = 'E0 Bkg Norm';
 RunList = 'KNM1';
 SmartGrid = 'OFF';
@@ -54,6 +54,7 @@ fprintf('save file to %s \n',savefile);
 
 
 %%
+
 if contains(freePar,'mNu')
     d = importdata(savefileGrid);
     mNuSq = cell2mat(cellfun(@(x) x.par(1),d.FitResults,'UniformOutput',false));

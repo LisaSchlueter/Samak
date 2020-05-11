@@ -8,8 +8,15 @@ DataType = 'Twin';
 freePar = 'E0 Bkg Norm';
 RunList = 'KNM1';
 SmartGrid = 'OFF';
-RandMC = [1:500];%,500:643];
-SysBudget = 24;
+Mode = 'New';
+switch Mode
+    case 'Old'
+        RandMC = [1:151,500:643]*1e3; 
+        SysBudget =22;
+    case 'New'
+        RandMC = [1:138,500:626,921:1084];
+        SysBudget =24;
+end
 %% init
 nContours = numel(RandMC);
 mnu4Sq   = cell(nContours,1);
@@ -19,11 +26,15 @@ chi2_ref = cell(nContours,1);
 savefile = cell(nContours,1);
 FitResults_ref = cell(nContours,1);
 DeltaChi2 = zeros(nContours,1);
+
 %% load grid (or calculate if doesn't exist)
 mnu4Sq_bf = zeros(numel(RandMC),1);
 sin2T4_bf = zeros(numel(RandMC),1);
+chi2min_bf   = zeros(numel(RandMC),1);
+
 for i=RandMC
     progressbar(i/nContours)
+
     [mnu4Sq{i},sin2T4{i},chi2{i},chi2_ref{i},savefile{i}] = KSN1GridSearch('range',range,...
         'nGridSteps',nGridSteps,...
         'chi2',chi2Str,...
@@ -45,20 +56,22 @@ for i=RandMC
     [row, col] = find(chi2tmp == min(chi2tmp(:)));
     mnu4Sq_bf(i) =  mnu4Sqtmp(col,row);
     sin2T4_bf(i)  = sin2T4tmp(col,row);
-    
+    chi2min_bf(i) =min(chi2tmp(:));
 end
-%%
+%
 mnu4Sq_bf = mnu4Sq_bf(RandMC);
 sin2T4_bf =sin2T4_bf(RandMC); 
-
+chi2min_bf = chi2min_bf(RandMC);
+%%
+RelErr = @(n,p) sqrt((n*p*(1-p)))/n;
 ClosedLog95 =  DeltaChi2>= GetDeltaChi2(0.95,2);
 ClosedFrac95 = sum(ClosedLog95)/nContours;
-fprintf('%.0f%% C.L. : fraction of significant best fits = %.1f   (%.0f out of %.0f)\n',...
-    95,ClosedFrac95*100,sum(ClosedLog95),nContours);
+fprintf('%.0f%% C.L. : fraction of significant best fits = %.1f  +- %.1f  (%.0f out of %.0f)\n',...
+    95,ClosedFrac95*100,RelErr(nContours,ClosedFrac95)*100,sum(ClosedLog95),nContours);
 ClosedLog82 =  DeltaChi2>= GetDeltaChi2(0.84,2);
 ClosedFrac82 = sum(ClosedLog82)/nContours;
-fprintf('%.0f%% C.L. : fraction of significant best fits = %.1f  (%.0f out of %.0f)\n',...
-    84,ClosedFrac82*100,sum(ClosedLog82),nContours);
+fprintf('%.0f%% C.L. : fraction of significant best fits = %.1f +- %.1f (%.0f out of %.0f)\n',...
+    84,ClosedFrac82*100,RelErr(nContours,ClosedFrac82)*100,sum(ClosedLog82),nContours);
 %%
 if strcmp(chi2Str,'chi2Stat')
     chi2Label = 'stat. only';
@@ -71,7 +84,7 @@ GetFigure;
 %pbf.SizeData=80;
 yedge = sort(mnu4Sq_bf);
 xedge = sort(sin2T4_bf);
-h = histogram2(sin2T4_bf,mnu4Sq_bf,xedge,yedge,'FaceColor','flat','Normalization','probability'); 
+h = histogram2(sin2T4_bf,mnu4Sq_bf,xedge,yedge,'FaceColor','flat','Normalization','probability');
 PrettyFigureFormat('FontSize',24);
 view([0 0 1])
 grid off
@@ -83,39 +96,48 @@ set(gca,'YScale','log');
 set(gca,'XScale','log');
 xlabel('|U_{e4}|^2');
 ylabel(sprintf('{\\itm}_4^2 (eV^2)'));
- [mnu4Sq_sensi,sin2T4_sensi,chi2_sensi,chi2_ref_sensi,savefile_sensi] = KSN1GridSearch('range',range,...
-        'nGridSteps',nGridSteps,...
-        'chi2',chi2Str,...
-        'DataType',DataType,...
-        'freePar','E0 Bkg Norm',...
-        'RunList',RunList,...
-        'SmartGrid',SmartGrid,...
-        'RecomputeFlag','OFF',...
-        'RandMC','OFF');
-     PlotArg ={'mnu4Sq',mnu4Sq_sensi,...
-        'sin2T4',sin2T4_sensi,...
-        'chi2',chi2_sensi,'chi2_ref',chi2_ref_sensi,...
-        'CL',CL};
+[mnu4Sq_sensi,sin2T4_sensi,chi2_sensi,chi2_ref_sensi,savefile_sensi] = KSN1GridSearch('range',range,...
+    'nGridSteps',nGridSteps,...
+    'chi2',chi2Str,...
+    'DataType',DataType,...
+    'freePar','E0 Bkg Norm',...
+    'RunList',RunList,...
+    'SmartGrid',SmartGrid,...
+    'RecomputeFlag','OFF',...
+    'RandMC','OFF');
+PlotArg ={'mnu4Sq',mnu4Sq_sensi,...
+    'sin2T4',sin2T4_sensi,...
+    'chi2',chi2_sensi,'chi2_ref',chi2_ref_sensi,...
+    'CL',CL};
 
-   [pHandle,legStr] =  KSN1ContourPlot(PlotArg{:},'LineStyle','-','PlotSplines','ON','HoldOn','ON','Color','Black');
-   pHandle.ZData = 1e3*ones(1e3,1);
+[pHandle,legStr] =  KSN1ContourPlot(PlotArg{:},'LineStyle','-','PlotSplines','ON','HoldOn','ON','Color','Black');
+pHandle.ZData = 1e3*ones(1e3,1);
 xlim([1e-03 0.5]);
 ylim([1 94^2]);
 leg = legend([h,pHandle],'MC best fits','Sensitivity','EdgeColor',rgb('Silver'),'Location','southwest');
 plotdir = strrep(extractBefore(savefile{1},'KSN1'),'results','plots');
 MakeDir(plotdir);
-plotname = sprintf('%sRandMC_BestFits_%.0f.png',plotdir,range);
+plotname = sprintf('%sRandMC_BestFits_%.0f_%s.png',plotdir,range,Mode);
 print(gcf,plotname,'-dpng','-r450');
-%%
-close all ;
-yedge = sort(mnu4Sq_bf);
-xedge = sort(sin2T4_bf);
-h = histogram2(sin2T4_bf,mnu4Sq_bf,xedge,yedge,'FaceColor','flat','Normalization','probability'); 
-set(gca,'YScale','log');
-set(gca,'XScale','log');
-view(2)
-grid off;
-colorbar
+%% plot chi2 distribution of best-fits
+GetFigure;
+hchi2 = histogram(chi2min_bf,'BinWidth',3,...
+    'FaceAlpha',1,'FaceColor',rgb('DeepSkyBlue'),'EdgeColor',rgb('SteelBlue'),'Normalization','probability');
+hold on;
+d = importdata(savefile{1});
+dof = d.FitResults_ref.dof;
+x = linspace(0,dof*3,1e3);
+y = chi2pdf(x,dof);
+pchi2 = plot(x,y*hchi2.BinWidth,'Color',rgb('Black'),'LineWidth',2);
+PrettyFigureFormat('FontSize',22);
+xlabel(sprintf('\\chi^2_{min} (%.0f dof)',dof));
+ylabel('Frequency');
+leg = legend([hchi2,pchi2],sprintf('%.0f pseudo-experiments',numel(chi2min_bf)),...
+                 sprintf('\\chi^2 distribution for %.0f dof',dof),...
+                 'EdgeColor',rgb('Silver'));
+xlim([0 70]);
+plotnameChi2 = sprintf('%sRandMC_BestFitsChi2Dist_%.0f.png',plotdir,range);
+print(gcf,plotnameChi2,'-dpng','-r450');
 %% plot all contours
 PlotContoursFlag = 'OFF';
 if strcmp(PlotContoursFlag,'ON')

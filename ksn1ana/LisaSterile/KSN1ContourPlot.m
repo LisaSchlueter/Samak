@@ -51,7 +51,7 @@ for i=1:numel(CL)
     if ~isempty(Color)
         PlotArg = [PlotArg,{'Color',rgb(myColor)}];
     end
-    
+ 
     [mnu4Sq_contour{i}, sin2T4_contour{i}] = ...
         KSN1Grid2Contour(mnu4Sq,sin2T4,chi2,chi2_ref,CL(i),'Mode',Method);
     
@@ -63,7 +63,7 @@ for i=1:numel(CL)
         sin2T4_tmp = sin2T4_contour(i);
     end
     nContour = size(mnu4Sq_tmp,1);
-    if nContour>1 || numel(mnu4Sq_tmp{i})>1e4
+    if nContour>1 % || numel(mnu4Sq_tmp{i})>1e4
         PlotSplines='OFF';
     end
     
@@ -92,12 +92,13 @@ PrettyFigureFormat;
 
 %% plot best fit
 if strcmp(BestFit,'ON')
+    
     [row, col] = find(chi2 == min(chi2(:)));
     mnu4Sq_bf =  mnu4Sq(col,row);
     sin2T4_bf = sin2T4(col,row);
     
     hold on;
-    plot(sin2T4_bf,mnu4Sq_bf,'x','Color',rgb(myColor),'MarkerSize',10);
+    plot(sin2T4_bf,mnu4Sq_bf,'x','MarkerSize',10);%'Color',rgb(myColor)
 end
 title(titleStr,'FontWeight','normal','FontSize',get(gca,'FontSize'))
 
@@ -109,9 +110,9 @@ xlabel('|U_{e4}|^2');
 ylabel(sprintf('{\\itm}_4^2 (eV^2)'));
 
 rangeApprox = sqrt(max(max(mnu4Sq)));
-if rangeApprox<90
+if rangeApprox==40
     xlim([1e-02 0.5])
-elseif rangeApprox>=90
+else
     xlim([1e-03 0.5])
 end
 ylim([1 (rangeApprox)^2]);

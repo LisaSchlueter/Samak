@@ -6,9 +6,9 @@
 CL  =68.27;        % 1 sigma
 Npar = 1;           % confidence level condition for Npar parameter
 SavePlot = 'OFF';
-PlotSplines = 'OFF'; % plot smooth spline instead of points -> fails for closed contours
-range = [95:-5:65,40];%;%:-5:75);%
-nGridSteps = 25;
+PlotSplines = 'ON'; % plot smooth spline instead of points -> fails for closed contours
+range = [95:-5:45,41,40];%;%:-5:75);%
+nGridSteps = 50;
 DataType = 'Twin';
 freePar = 'E0 Bkg Norm';
 RunList = 'KNM1';
@@ -79,8 +79,11 @@ for i=1:nContours
 end
 
 %% some plot arguments
-LineStyles = {'-','-.',':','-','--','-.',':','-','--'};
-Colors = {'DodgerBlue','Orange','DarkSlateGray','FireBrick','Magenta','LimeGreen','CadetBlue','Navy'};
+Colors =  {rgb('DodgerBlue'),rgb('Orange'),rgb('DarkSlateGray'),rgb('FireBrick'),...
+                rgb('Magenta'),rgb('LimeGreen'),rgb('CadetBlue'),rgb('Navy'),...
+                rgb('ForestGreen'),rgb('PowderBlue'),rgb('Pink'),rgb('DarkOrange'),rgb('Black'),...
+                rgb('ForestGreen'),rgb('PowderBlue'),rgb('Pink'),rgb('DarkOrange')};
+LineStyles = {'-','-.',':','--','-','-.',':','--','-','-.',':','--','-','-.',':','--'};
 legStr = cell(nContours+1,1);
 legStr{1} = sprintf('\\sigma^2_{syst.} = \\sigma^2_{stat.}');
 plotdir  = [getenv('SamakPath'),'ksn1ana/LisaSterile/plots/'];
@@ -100,11 +103,11 @@ if ismember(PlotSplines,{'ON','Lin'})
     mnu4SqCMPlot       = cell(nContours,1);
     
     for i=1:nContours
-        mnu4SqCommonPlot{i}   = logspace(log10(min(mnu4SqCommon{i})),log10(max(mnu4SqCommon{i})),1e4);
+        mnu4SqCommonPlot{i}   = logspace(log10(min(mnu4SqCommon{i})),log10((range(i)-5)^2),1e4);
         sin2T4SystOnlyPlot{i} = interp1(mnu4SqCommon{i},sin2T4SystOnly{i},mnu4SqCommonPlot{i},intArg);
         sin2T4StatOnlyPlot{i} = interp1(mnu4SqCommon{i},sin2T4StatOnly{i},mnu4SqCommonPlot{i},intArg);
         
-         mnu4SqCMPlot{i} = logspace(log10(min(mnu4SqCM{i})),log10(max(mnu4SqCM{i})),1e4);
+         mnu4SqCMPlot{i} = logspace(log10(min(mnu4SqCM{i})),log10(max(mnu4SqCM{i})),1e3);
          sin2T4CMPlot{i}= interp1(mnu4SqCM{i},sin2T4CM{i},mnu4SqCMPlot{i},'spline');
     end
 else
@@ -129,37 +132,43 @@ for i=1:nContours
     
 end
 %% ratio:  syst only/ stat only
-pl = cell(nContours,1);
-GetFigure;
-pref = plot(ones(10,1),logspace(0,4,10),'k-','LineWidth',2);
-hold on;
-for i=1:nContours  
-    pl{i}= plot(sin2T4SystOnlyPlot{i}.^2./sin2T4StatOnlyPlot{i}.^2,mnu4SqCommonPlot{i},...
-        LineStyles{i},'LineWidth',2.5,'Color',rgb(Colors{i}));
-    set(gca,'YScale','log');
-    set(gca,'XScale','lin');
-    xlabel(sprintf('\\sigma^2_{syst.}/\\sigma^2_{stat.}(|U_{e4}|^2)'));
-    ylabel(sprintf('{\\itm}_4^2 (eV^2)'));
-
-    if strcmp(PlotStatDom,'ON')
-        legStr{i+1} = sprintf('%.0f eV range (%.0f%% stat. dominated)',...
-            range(i),100*StatDomFraction(i));
-    else
-        legStr{i+1} = sprintf('%.0f eV range',range(i));
-    end
-end
-PrettyFigureFormat;
-leg = legend([pref,pl{:}]',legStr{:},'EdgeColor',rgb('Silver'),'Location','southeast');
-% leg.Title.String = 'Lower fit boundary - 18574 eV';
-% leg.Title.FontWeight = 'normal';
-plotname1 = sprintf('%sksn1_StatOverSyst_%s.png',plotdir,DataType);
-print(gcf,plotname1,'-dpng','-r450');
-fprintf('save plot to %s \n',plotname1);
+% pl = cell(nContours,1);
+% GetFigure;
+% pref = plot(ones(10,1),logspace(0,4,10),'k-','LineWidth',2);
+% hold on;
+% %Colors = (colorcube(nContours));
+% for i=1:nContours  
+%     pl{i}= plot(sin2T4SystOnlyPlot{i}.^2./sin2T4StatOnlyPlot{i}.^2,mnu4SqCommonPlot{i},...
+%         LineStyles{i},'LineWidth',2.5,'Color',Colors{i});
+%     set(gca,'YScale','log');
+%     set(gca,'XScale','lin');
+%     xlabel(sprintf('\\sigma^2_{syst.}/\\sigma^2_{stat.}(|U_{e4}|^2)'));
+%     ylabel(sprintf('{\\itm}_4^2 (eV^2)'));
+% 
+%     if strcmp(PlotStatDom,'ON')
+%         legStr{i+1} = sprintf('%.0f eV range (%.0f%% stat. dominated)',...
+%             range(i),100*StatDomFraction(i));
+%     else
+%         legStr{i+1} = sprintf('%.0f eV range',range(i));
+%     end
+% end
+% PrettyFigureFormat;
+% leg = legend([pref,pl{:}]',legStr{:},'EdgeColor',rgb('Silver'),'Location','southeast');
+% if nContours>7
+%     leg.NumColumns = 2;
+% end
+% % leg.Title.String = 'Lower fit boundary - 18574 eV';
+% % leg.Title.FontWeight = 'normal';
+% plotname1 = sprintf('%sksn1_StatOverSyst_%s.png',plotdir,DataType);
+% print(gcf,plotname1,'-dpng','-r450');
+% fprintf('save plot to %s \n',plotname1);
 
 %% plot 2: mnu on x -axis, stat and syst seperately
+
+Colors = (cool(nContours));
 pl = cell(nContours,1);
 GetFigure;
-pref = plot(logspace(0,4,10),ones(10,1),'k-','LineWidth',2);
+pref = plot(logspace(0,4,10),ones(10,1),'-','LineWidth',2,'Color',rgb('DimGray'));
 hold on;
 for i=1:nContours  
 %     pl{i}= plot(mnu4SqCommonPlot{i},sin2T4StatOnlyPlot{i}.^2,...
@@ -168,7 +177,12 @@ for i=1:nContours
 %     pl{i}= plot(mnu4SqCommonPlot{i},sin2T4SystOnlyPlot{i}.^2,...
 %         ':','LineWidth',2.5,'Color',rgb(Colors{i}));
  pl{i}= plot(mnu4SqCommonPlot{i},sin2T4SystOnlyPlot{i}.^2./sin2T4StatOnlyPlot{i}.^2,...
-        LineStyles{i},'LineWidth',2.5,'Color',rgb(Colors{i}));
+        LineStyles{i},'LineWidth',2.5,'Color',Colors(i,:));
+   if range(i)==65
+       pl{i}.LineWidth=3.5;
+       pl{i}.LineStyle = '-';
+       pl{i}.Color = rgb('Black');
+   end
 %     set(gca,'YScale','lin');
     set(gca,'XScale','log');
   ylabel(sprintf('\\sigma^2_{syst.}/\\sigma^2_{stat.}(|U_{e4}|^2)'));
@@ -181,9 +195,13 @@ for i=1:nContours
         legStr{i+1} = sprintf('%.0f eV range',range(i));
     end
 end
-ylim([0 6.5])
+ylim([0 10])
+xlim([1.3 7e3]);
 PrettyFigureFormat;
 leg = legend([pref,pl{:}]',legStr{:},'EdgeColor',rgb('Silver'),'Location','northwest');
+% if nContours>7
+%     leg.NumColumns = 2;
+% end
 % leg.Title.String = 'Lower fit boundary - 18574 eV';
 % leg.Title.FontWeight = 'normal';
 plotname3 = sprintf('%sksn1_StatOverSyst2_%s.png',plotdir,DataType);
@@ -193,7 +211,7 @@ fprintf('save plot to %s \n',plotname3);
 %% sanityplot: syst only , stat only
 SanityPlot = 'ON';
 if strcmp(SanityPlot,'ON')
-    myContour = 1;
+    myContour = 5;
     GetFigure;
     pStat= plot(mnu4SqCommonPlot{myContour},sin2T4StatOnlyPlot{myContour}.^2,'-','LineWidth',2.5);
     hold on;

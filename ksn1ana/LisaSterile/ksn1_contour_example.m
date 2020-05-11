@@ -1,10 +1,10 @@
 % example script 
 
 %% settings
-CL =99.9;
-range = 95;%
-nGridSteps =25;%50;
-chi2Str = 'chi2Stat';%CMShape';
+CL =95;
+range = 65;%
+nGridSteps = 25;
+chi2Str = 'chi2CMShape';
 DataType = 'Real';
 freePar = 'E0 Bkg Norm';
 RunList = 'KNM1';
@@ -12,7 +12,7 @@ SmartGrid = 'OFF';
 pullFlag = 99;
 SysBudget = 24;
 %% plot options
-PlotContour = 'OFF';
+PlotContour = 'ON';
 PlotGrid    = 'ON';
 if strcmp(chi2Str,'chi2Stat')
     chi2Label = 'stat. only';
@@ -37,6 +37,8 @@ titleStr = sprintf('%s (%s) %.0f eV range',DataLabel,chi2Label,range);
     'pullFlag',pullFlag,...
     'SysBudget',SysBudget);
 
+%% find best fit
+d = importdata(savefile);
 %% plot contour
  PlotArg ={'mnu4Sq',mnu4Sq,...
         'sin2T4',sin2T4,...
@@ -44,7 +46,7 @@ titleStr = sprintf('%s (%s) %.0f eV range',DataLabel,chi2Label,range);
         'CL',CL,...
         'titleStr',titleStr};
 if strcmp(PlotContour,'ON')
-    KSN1ContourPlot(PlotArg{:},'LineStyle','-','PlotSplines','OFF');
+    KSN1ContourPlot(PlotArg{:},'LineStyle','-','PlotSplines','OFF','BestFit','ON');
 end
 
 %% plot grid
