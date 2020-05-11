@@ -50,14 +50,15 @@ switch Mode
         
         
         for i=1:nGridStep
-            if max(chi2(:,i)-chi2_ref)<DeltaChi2 || min(chi2(:,i)-chi2_ref)>DeltaChi2
+            if max(chi2(:,i)-chi2_ref)<DeltaChi2  || min(chi2(:,i)-chi2_ref)>DeltaChi2
                 sin2t4_contour(i) = NaN; % if contour point is not in grid of interest
             else
                 InterpIndex = find(chi2(:,i)-chi2_ref<DeltaChi2,1,'last'); % last crossing of delta chi^2
                 if InterpIndex>=3
                     InterpIndex = InterpIndex-2; % add to more points
                 end
-                sin2t4_contour(i) = interp1(chi2(InterpIndex:end,i)-chi2_ref,sin2t4(i,InterpIndex:end),DeltaChi2,'spline');
+                sin2t4_contour(i) = interp1(chi2(InterpIndex:end,i)-chi2_ref,...
+                    sin2t4(i,InterpIndex:end),DeltaChi2,'spline');
             end
         end
         

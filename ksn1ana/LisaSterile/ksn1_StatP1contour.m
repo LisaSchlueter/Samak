@@ -1,5 +1,5 @@
 %% calculate grid for ksn1 stat. + 1 syst
-range = 95;
+range = 75;
 nGridSteps = 25;
 chi2Str = 'chi2CMShape';
 DataType = 'Twin';
@@ -17,7 +17,8 @@ mySysEffects = {...
     'Stack',...            % stacking
     'FPDeff',...           % fpd efficiecny
     'Bkg'};            
-DefaultSysLeg    = { 'Stat. only' ;'All syst. combined';...
+DefaultSysLeg    = {'Stat. only' ;...
+    'All syst. combined';...
     'Final-state distribution';...
     'Tritium activity fluctuations';...
     'Energy-loss function';
@@ -71,7 +72,7 @@ end
 pHandle = cell(nSys,1);
 PlotColor = {'DodgerBlue','Orange','Navy','PowderBlue','CadetBlue',...
     'YellowGreen','SeaGreen','FireBrick','DarkSlateGray',...
-    'Magenta','DarkOrange'};
+    'Magenta','DimGray'};
 
 
 LineStyle =  {'-','-','-.',':','--','-.',':','--','-.',':','--'};
@@ -92,7 +93,7 @@ for i=1:(nSys+2)
 end
 
 %% appearance
-leg = legend(DefaultSysLeg,'EdgeColor',rgb('Silver'),'Location','southwest');
+leg = legend([pHandle{:}],DefaultSysLeg,'EdgeColor',rgb('Silver'),'Location','southwest');
 if range==40
     xlim([1e-02 0.5])
 elseif range>40

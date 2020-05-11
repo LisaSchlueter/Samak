@@ -1,6 +1,7 @@
 
-range = 95; % eV below the endpoint
+
 %% create MultiRunAnalysis object
+range = 65; % eV below the endpoint
 
 R = MultiRunAnalysis('RunList','KNM1',... % runlist defines which runs are analysed -> set MultiRunAnalysis.m -> function: GetRunList()
     'chi2','chi2Stat',...%CMShape',...              % uncertainties: statistical or stat + systematic uncertainties
@@ -16,8 +17,9 @@ R = MultiRunAnalysis('RunList','KNM1',... % runlist defines which runs are analy
     'AngularTFFlag','OFF',...
     'pullFlag',9,...
     'TwinBias_Q',18573.7);          
-%%
+%
 R.exclDataStart = R.GetexclDataStart(95);
+%%
 R.Fit
 FitResults_95 = R.FitResult;
 %%

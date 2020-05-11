@@ -3646,6 +3646,8 @@ end
             fprintf('--------------------------------------------------------------------------\n')
             cprintf('blue','CovarianceMatrix:ComputeCM: Compute Combi Covariance Matrix  \n')
             
+            obj.nTrials = 1000;
+            
             %Labeling
             combi_path= [getenv('SamakPath'),sprintf('/inputs/CovMat/Combi/')];
             effects_logic = structfun(@(x)strcmp(x,'ON'),obj.SysEffect);

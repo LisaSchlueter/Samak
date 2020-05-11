@@ -70,11 +70,12 @@ if ~exist(savefile,'file') && strcmp(RecomputeFlag,'OFF') && nGridSteps<50
     nGridSteps = 50;
     savefile = sprintf('%sKSN1_GridSearch_%s_%s_%s_%.0feVrange_%s_%.0fnGrid%s.mat',...
         savedir,RunList,DataType,strrep(freePar,' ',''),range,chi2,nGridSteps,extraStr);
+       nGridSteps = nGridSteps_i;
     if ~exist(savefile,'file') % if grid for 50 also doesn't exist -> go back to 25 grid
-        nGridSteps = nGridSteps_i;
         savefile = sprintf('%sKSN1_GridSearch_%s_%s_%s_%.0feVrange_%s_%.0fnGrid%s.mat',...
             savedir,RunList,DataType,strrep(freePar,' ',''),range,chi2,nGridSteps,extraStr);
     end
+
 end
 %% load or calculate grid
 if exist(savefile,'file') && strcmp(RecomputeFlag,'OFF')

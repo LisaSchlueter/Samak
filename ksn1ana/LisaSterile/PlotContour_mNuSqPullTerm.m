@@ -4,17 +4,18 @@
 %% settings
 CL = 95;
 SavePlot = 'ON';
-PlotSplines = 'ON'; % plot smooth spline instead of points
+PlotSplines = 'OFF'; % plot smooth spline instead of points
 range = 65;%
-nGridSteps = 50;
+nGridSteps = 25;%50;
 chi2Str = 'chi2CMShape';
-DataType = 'Twin';
+DataType = 'Real';
 freePar = 'mNu E0 Bkg Norm';
 RunList = 'KNM1';
 SmartGrid = 'OFF';
 pullFlag = {99, 12}; %%everything above 12 means no pull
 BestFit = 'OFF';
 SysBudget = 24;
+Grid2ContourMethod = 'New';
 %% load grid (or calculate if doesn't exist)
 GridArg = {'range',range,...
     'nGridSteps',nGridSteps,...
@@ -36,14 +37,17 @@ GridArg = {'range',range,...
 %% plot
 [p1,~] = KSN1ContourPlot('mnu4Sq',mnu4Sq_p1,'sin2T4',sin2T4_p1,...
     'chi2',chi2_p1,'chi2_ref',chi2_ref_p1,'CL',CL,...
-    'HoldOn','OFF','PlotSplines','ON','Color','DodgerBlue','LineStyle','-','BestFit',BestFit);
+    'HoldOn','OFF','PlotSplines','ON','Color','DodgerBlue','LineStyle','-','BestFit',BestFit,...
+    'Method',Grid2ContourMethod);
 hold on;
 [p2,~] = KSN1ContourPlot('mnu4Sq',mnu4Sq_p2,'sin2T4',sin2T4_p2,...
     'chi2',chi2_p2,'chi2_ref',chi2_ref_p2,'CL',CL,'Method','New',...
-    'HoldOn','ON','PlotSplines','ON','Color','Orange','LineStyle','-.','BestFit',BestFit);
+    'HoldOn','ON','PlotSplines','ON','Color','Orange','LineStyle','-.','BestFit',BestFit,...
+    'Method',Grid2ContourMethod);
 [pfree,~] = KSN1ContourPlot('mnu4Sq',mnu4Sq_free,'sin2T4',sin2T4_free,...
     'chi2',chi2_free,'chi2_ref',chi2_ref_free,'CL',CL,...
-    'HoldOn','ON','PlotSplines','ON','Color','ForestGreen','LineStyle',':','BestFit',BestFit);
+    'HoldOn','ON','PlotSplines','ON','Color','ForestGreen','LineStyle',':','BestFit',BestFit,...
+    'Method',Grid2ContourMethod);
 
 %% find best fits
 [row, col] = find(chi2_p1 == min(chi2_p1(:)));
@@ -57,11 +61,7 @@ sin2T4_p2BF = sin2T4_p2(col,row);
 mnu4Sq_freeBF =  mnu4Sq_free(col,row);
 sin2T4_freeBF = sin2T4_free(col,row);
 %% plot contour
-if range==40
-    xlim([1e-02 0.4])
-elseif range>=90
     xlim([4e-03 0.4])
-end
 ylim([1 (range+5)^2])
 
 if strcmp(chi2Str,'chi2Stat')

@@ -5,7 +5,7 @@
 CL = 95;%, 95 99];
 SavePlot = 'ON';
 PlotSplines = 'ON'; % plot smooth spline instead of points -> fails for closed contours
-range = [95:-5:70];%[65:-5:45,41,40];%[95,90,80,75,70];%
+range = [95:-5:45,41,40];%[65:-5:45,41,40];%[95,90,80,75,70];%
 nGridSteps = 50;
 chi2Str = 'chi2CMShape';
 DataType = 'Twin';
@@ -41,9 +41,9 @@ else
 end
 titleStr = sprintf('%s , %s at %.0f%% C.L.',DataType,chi2Label,CL);
 
-LineStyles = {'-','-.',':','-','--','-.',':','--','-','-',':','-.','--'};
+LineStyles = {'-','-.',':','-','--','-.',':','--','-','-',':','-.','-'};
 Colors = {'DodgerBlue','Orange','DarkSlateGray','FireBrick','Magenta','LimeGreen','CadetBlue',...
-    'Navy','ForestGreen','PowderBlue','Pink'};
+    'Navy','ForestGreen','PowderBlue','Pink','DarkOrange','Black'};
 legStr = cell(nContours,1);
 pl = cell(nContours,1);
 for i=1:nContours
@@ -54,10 +54,15 @@ for i=1:nContours
         'titleStr',titleStr,'LineStyle',LineStyles{i},...
         'Color',Colors{i}};
     %% plot
+    if strcmp(DataType,'Twin')
+        Method = 'Old';
+    else
+        Method = 'New';
+    end
 if i>1
-    [pl{i},~] = KSN1ContourPlot(PlotArg{:},'PlotSplines',PlotSplines,'HoldOn','ON');
+    [pl{i},~] = KSN1ContourPlot(PlotArg{:},'PlotSplines',PlotSplines,'HoldOn','ON','Method',Method);
 else
-    [pl{i},~] = KSN1ContourPlot(PlotArg{:},'PlotSplines',PlotSplines);
+    [pl{i},~] = KSN1ContourPlot(PlotArg{:},'PlotSplines',PlotSplines,'Method',Method);
 end
 
 legStr{i} = sprintf('%.0f eV range',range(i));
@@ -66,7 +71,10 @@ end
 leg = legend([pl{:}]',legStr{:},'EdgeColor',rgb('Silver'),'Location','southwest');
 leg.Title.String = 'Lower fit boundary';
 leg.Title.FontWeight = 'normal';
-ylim([1 1e4+4e3]);
+if numel(range)>5
+    leg.NumColumns=2;
+end
+ylim([1 1e4]);
 if strcmp(DataType,'Real')
     xlim([1e-03 0.5]);
 else
