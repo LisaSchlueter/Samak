@@ -48,7 +48,10 @@ FSDArg = {'MultiPos',MultiPosRel,'MultiWeight',MultiWeights,...
 MR.ModelObj.LoadFSD(FSDArg{:});
 
 %%
-S = RunSensitivity('RunAnaObj',MR);
+DefaultSysAll    = {'TASR','Bkg','LongPlasma'}; %Bkg has to be last
+
+DefaultSysLeg    = {'Tritium activity fluctuations';'Background slope';'Long. source potential'};
+S = RunSensitivity('RunAnaObj',MR,'DefaultSysAll',DefaultSysAll,'DefaultSysLeg',DefaultSysLeg);
 S.RecomputeFlag='OFF';
 S.LimitFlag = 'Central';
 S.ConfLevel=0; % 0 == 1 sigma

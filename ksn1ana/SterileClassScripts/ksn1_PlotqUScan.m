@@ -41,7 +41,7 @@ switch S.RunAnaObj.DataType
         Arg = {'SavePlot','png','Ranges',[95:-5:45,41,40],'BestFit','OFF'};
     case 'Twin'
         S.InterpMode = 'spline';
-        Arg = {'SavePlot','png','Ranges',[95:-5:45,41,40]};%,41,40]};
+        Arg = {'SavePlot','png','Ranges',[95:-5:65]};%45,41,40]};%,41,40]};
 end
 S.PlotqUScan(Arg{:});
 

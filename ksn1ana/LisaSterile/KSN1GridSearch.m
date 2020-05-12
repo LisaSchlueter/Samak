@@ -1,4 +1,4 @@
-function [mnu4Sq,sin2T4,chi2,chi2_ref,savefile] = KSN1GridSearch(varargin)
+function [mnu4Sq,sin2T4,chi2,chi2_ref,savefile,FitResults_Null] = KSN1GridSearch(varargin)
 % parallel grid search for sterile ksn1 analysis
 % Lisa, April 2020
 
@@ -79,7 +79,7 @@ if ~exist(savefile,'file') && strcmp(RecomputeFlag,'OFF') && nGridSteps<50
 end
 %% load or calculate grid
 if exist(savefile,'file') && strcmp(RecomputeFlag,'OFF')
-    load(savefile,'mnu4Sq','sin2T4','chi2','chi2_ref')
+    load(savefile,'mnu4Sq','sin2T4','chi2','chi2_ref','FitResults_Null')
     fprintf('load grid from file %s \n',savefile)
 else
     if range<=40

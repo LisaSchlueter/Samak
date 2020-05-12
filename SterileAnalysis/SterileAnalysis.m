@@ -102,7 +102,7 @@ classdef SterileAnalysis < handle
             if obj.range==65    
                 Maxm4Sq = 59^2;
             else
-                Maxm4Sq = (obj.range-4)^2;
+                Maxm4Sq =  (obj.range-4)^2;
             end
             
             [X,Y] = meshgrid(obj.mNu4Sq(:,1),obj.sin2T4(1,:));
@@ -146,6 +146,10 @@ classdef SterileAnalysis < handle
             
             % null 
             fprintf('Null hypothesis: chi2 = %.3f (%.0f dof) -> p-value = %.2f\n',obj.chi2_Null,obj.dof+2,1-chi2cdf(obj.chi2_Null,obj.dof));
+            x = linspace(10,99,1e2);
+            y =GetDeltaChi2(x,2);
+            SignificanceBF = interp1(y,x,obj.chi2_Null-obj.chi2_bf,'spline');
+            fprintf('Delta chi2 = %.2f -> %.1f%% C.L. significance \n',obj.chi2_Null-obj.chi2_bf,SignificanceBF);
           
         end
         function [DeltamNu41Sq,sin2T4Sq] = Convert2Osci(obj,varargin)
@@ -781,12 +785,12 @@ classdef SterileAnalysis < handle
            end
            
            if strcmp(obj.RunAnaObj.DataType,'Real') && strcmp(BestFit,'ON')
-               if obj.range==65
+               if obj.range==65    
                    if strcmp(PlotStat,'ON')
-                       pF_bfStat = plot(0.009368, 171.110711,'o','MarkerSize',8,'Color',pFStat.Color,'LineWidth',pFStat.LineWidth);
+                       pF_bfStat = plot(2.532e-02,7.466e+01,'o','MarkerSize',8,'Color',pFStat.Color,'LineWidth',pFStat.LineWidth);
                    end
                    if strcmp(PlotTot,'ON')
-                       pF_bfSys = plot(0.025320, 74.657114,'o','MarkerSize',8,'Color',pFSys.Color,'LineWidth',pFSys.LineWidth);
+                       pF_bfSys = plot(2.532e-02,7.466e+01,'o','MarkerSize',8,'Color',pFSys.Color,'LineWidth',pFSys.LineWidth);
                    end
                elseif obj.range==95
                    if strcmp(PlotStat,'ON')
@@ -794,6 +798,13 @@ classdef SterileAnalysis < handle
                    end
                    if strcmp(PlotTot,'ON')
                        pF_bfSys = plot(0.013601, 3942.813341,'o','MarkerSize',8,'Color',pFSys.Color,'LineWidth',pFSys.LineWidth);
+                   end
+               elseif obj.range==40
+                     if strcmp(PlotStat,'ON')
+                       pF_bfStat = plot(3.676e-02, 7.218e+01,'o','MarkerSize',8,'Color',pFStat.Color,'LineWidth',pFStat.LineWidth);
+                   end
+                   if strcmp(PlotTot,'ON')
+                       pF_bfSys = plot(3.247e-02, 7.218e+01,'o','MarkerSize',8,'Color',pFSys.Color,'LineWidth',pFSys.LineWidth);
                    end
                end
            end
@@ -814,8 +825,11 @@ classdef SterileAnalysis < handle
            
            obj.RunAnaObj.chi2 = chi2_i;
             if obj.range==65
-            xlim([4e-03 0.5])
-            ylim([1 1e4])
+                xlim([4e-03 0.5])
+                ylim([1 1e4])
+            elseif obj.range==40
+                xlim([1e-02 0.5])
+                ylim([1 3e3])
             end
            %% save
            if ~strcmp(SavePlot,'OFF')

@@ -34,7 +34,7 @@ SterileArg = {'RunAnaObj',T,... % Mother Object: defines RunList, Column Density
 
 S = SterileAnalysis(SterileArg{:});
 %%
-S.RunAnaObj.DataType = 'Real';
+S.RunAnaObj.DataType = 'Twin';
 S.ConfLevel = 95;
 S.range = 65;
 switch S.RunAnaObj.DataType
@@ -43,9 +43,10 @@ switch S.RunAnaObj.DataType
         S.InterpMode = 'spline';
     case 'Twin'
          Arg = {'SavePlot','png'};%,41,40]};
+           S.InterpMode = 'spline';
 end
-S.LoadGridFile;
-S.Interp1Grid('RecomputeFlag','ON');
+%S.LoadGridFile;
+%S.Interp1Grid('RecomputeFlag','ON');
 %S.GridPlot('BestFit','OFF','Contour','OFF');
-S.PlotFitriumSamak(Arg{:},'PlotStat','OFF');
+S.PlotFitriumSamak(Arg{:},'PlotStat','ON');
  
