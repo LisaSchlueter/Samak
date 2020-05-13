@@ -1,7 +1,7 @@
 % compare tranmission functions
-SynchrotronFlag = 'OFF';
-RecomputeFlag = 'ON';
-AngTF = 'OFF';
+SynchrotronFlag = 'ON';
+RecomputeFlag = 'OFF';
+AngTF = 'ON';
 SaveTxt = 'ON';
 
 % Samak TF
@@ -80,7 +80,7 @@ xK = xK(Index);
 yK = yK(Index);
 
 %% plot difference
-f1 = figure('Units','normalized','Position',[0.5,0.1,0.5,0.5]);
+f1 = figure('Units','normalized','Position',[0.5,0.1,0.5,0.48]);
 l = plot(linspace(-5,90,100),zeros(100,1),'-','LineWidth',2,'Color',rgb('Black'));
 hold on;
 pF = plot(xS,MaceTF-yF,'-','LineWidth',2.5,'Color',rgb('DodgerBlue'));
@@ -93,23 +93,30 @@ else
      pF1 = plot(xF,MaceTF1-yF1,'-.','Color',rgb('Orange'),'LineWidth',2.5);
 end
 
-%    
-% end
-
-xlabel(sprintf('Energy - %.0f (eV)',qu));
+xlabel(sprintf('Surplus energy (eV)'));
 ylabel('Probability diff.');
 PrettyFigureFormat('FontSize',22);
 if strcmp(AngTF,'OFF')
     leg = legend([pK,pF,pFK],'Samak - KaFit','Samak - Fitrium','Fitrium - KaFit');
+    AngStr = 'isotropic transmission';
 else
     leg = legend([pF,pF1],'Samak - Fitrium (0 scat.)','Samak - Fitrium (1 scat.)');
+    AngStr = 'non-isotropic transmission';
 end
-leg.Title.String = sprintf('Synchrotron %s - Angular scattering %s',SynchrotronFlag,AngTF);
+if strcmp(SynchrotronFlag,'ON')
+    SyncStr = 'Synchrotron radiation';
+else
+    SyncStr = 'Without synchrotron radiation';
+end
+
+ title(sprintf('%s and %s',SyncStr,AngStr),...
+       'FontWeight','normal','FontSize',get(gca,'FontSize'));
 leg.Title.FontWeight = 'normal';
-leg.Location = 'northwest';
 leg.EdgeColor = rgb('Silver');
+leg.Location = 'northwest';
 xlim([min(xS),max(xS)]);
-%ylim([-5 2.5].*1e-07);
+ylim([-5 1.5].*1e-07);
+set(gca,'XMinorTick','off');
 
 plotdir = strrep(savedir,'results/Transmission','plots');
 MakeDir(plotdir);

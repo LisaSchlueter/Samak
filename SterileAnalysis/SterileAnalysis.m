@@ -830,7 +830,13 @@ classdef SterileAnalysis < handle
             elseif obj.range==40
                 xlim([1e-02 0.5])
                 ylim([1 3e3])
+            elseif obj.range==95
+                xlim([3e-03 0.5])
+                ylim([1 2e4]) 
             end
+            
+            title(sprintf('%s , %.0f eV range , %.0f%% C.L.',obj.GetPlotTitle('Mode','data'),obj.range,obj.ConfLevel),'FontWeight','normal','FontSize',get(gca,'FontSize'));
+          
            %% save
            if ~strcmp(SavePlot,'OFF')
                name_i = strrep(obj.DefPlotName,sprintf('_%s',chi2_i),'');

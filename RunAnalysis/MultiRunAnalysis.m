@@ -1493,12 +1493,17 @@ classdef MultiRunAnalysis < RunAnalysis & handle
     end    % Data Import Methods end
     
     methods % Preparation for Fit Methods  
-        function ReadSingleRunData(obj)
+        function ReadSingleRunData(obj,varargin)
             %------------------------------------------------------------
             % Read the mat files from all runs in "RunList"
             % fill struct "SingleRunData"
             %------------------------------------------------------------
             % Init
+            p = inputParser;
+            p.addParameter('InterpLARA','ON',@(x)ismember(x,{'ON','OFF'}));
+            p.parse(varargin{:});
+            InterpLARA = p.Results.InterpLARA;
+            
             obj.SingleRunData = struct('Runs',obj.RunList);
             DataFiles = cell(obj.nRuns,1);
             
@@ -1564,8 +1569,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                     if ismember(RSvariables{i},{'matFileName','TBDarg'})
                          obj.SingleRunData.(RSvariables{i}) = ...
                             cellfun(@(x) x.(RSvariables{i}),DataFiles,'UniFormOutput',0);  
-                    elseif contains(RSvariables{i},{'StartTimeStamp'}) && ~strcmp(obj.DataType,'Real')
-                        
+                    %elseif contains(RSvariables{i},{'StartTimeStamp'}) && ~strcmp(obj.DataType,'Real')     
                     elseif ~contains(RSvariables{i},{'RunTimeStart'})
                         obj.SingleRunData.(RSvariables{i}) = ...
                             cell2mat(cellfun(@(x) x.(RSvariables{i})',DataFiles,'UniFormOutput',0))';
@@ -1589,12 +1593,15 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                 obj.SingleRunData.TBDIS_RM_Default = obj.SingleRunData.TBDIS_RM;
             end
             
-            obj.InterpLARA; % interpolate missing LARA values
+            if strcmp(InterpLARA,'ON')
+                obj.InterpLARA; % interpolate missing LARA values
+            end
             obj.SetMosCorr;
-
+            
         end
         function InterpLARA(obj)
             %interpolate missing LARA values per subrun: T2
+
             if any(any(obj.SingleRunData.WGTS_MolFrac_TT_SubRun==0))
                 T2_SubRun = reshape(obj.SingleRunData.WGTS_MolFrac_TT_SubRun,size(obj.SingleRunData.qU,1).*obj.nRuns,1);
                 GoodSubRuns = (T2_SubRun~=0);
@@ -1651,6 +1658,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             
             
         end
+    
         function StackPixelSingleRun(obj)
             switch obj.AnaFlag
                 case 'StackPixel'

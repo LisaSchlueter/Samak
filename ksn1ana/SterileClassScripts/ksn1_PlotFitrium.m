@@ -34,15 +34,15 @@ SterileArg = {'RunAnaObj',T,... % Mother Object: defines RunList, Column Density
 
 S = SterileAnalysis(SterileArg{:});
 %%
-S.RunAnaObj.DataType = 'Twin';
+S.RunAnaObj.DataType = 'Real';
 S.ConfLevel = 95;
 S.range = 65;
 switch S.RunAnaObj.DataType
     case 'Real'
-        Arg = {'SavePlot','png'}; 
+        Arg = {'SavePlot','ON'}; 
         S.InterpMode = 'spline';
     case 'Twin'
-         Arg = {'SavePlot','png'};%,41,40]};
+         Arg = {'SavePlot','ON'};%,41,40]};
            S.InterpMode = 'spline';
 end
 %S.LoadGridFile;

@@ -1,4 +1,6 @@
 % KNM2 Figure skating twins
+
+%MR.ComputeCM('SysEffect',struct('LongPlasma','ON'),'InitNormFit','OFF')
 range = 40;
 Chi2Scan = 'ON';
 
@@ -36,7 +38,7 @@ end
 
 %%
 MR.Fit;
-MR.PlotFit
+%MR.PlotFit
 
 %% Chi2 - scan
 if strcmp(Chi2Scan,'ON')
@@ -50,11 +52,11 @@ if strcmp(Chi2Scan,'ON')
         FitResult = MR.FitResult;
         
         ScanResult = MR.GetAsymFitError('Mode','Uniform');
-     %  ScanResult2 = MR.GetAsymFitError('Mode','Uniform','ParScanMax',0.1,'nFitMax',10);
+        %  ScanResult2 = MR.GetAsymFitError('Mode','Uniform','ParScanMax',0.1,'nFitMax',10);
         
         save(savename,'ScanResult','FitResult')
     end
     
     MR.PlotChi2Curve('Parameter','mNu','ScanResult',ScanResult,'FitResult',MR.FitResult);
-   % A.PlotChi2Curve('Parameter','mNu','ScanResult',ScanResult2,'FitResult',A.FitResult);
+    % A.PlotChi2Curve('Parameter','mNu','ScanResult',ScanResult2,'FitResult',A.FitResult);
 end

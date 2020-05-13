@@ -1500,8 +1500,9 @@ classdef RunSensitivity < handle
 %                     tstr = sprintf('%.0f\\cdot10^{-3}',SingleBarY(i)*1e3) ;
 %                 elseif SingleBarY(i)>0.1
 %                     tstr = sprintf('%.2f',SingleBarY(i)) ;
-                 else
-                     tstr = sprintf('%.0f\\cdot10^{-3}',SingleBarY(i)*1e3) ;
+                else
+                      tstr = sprintf('%.3f',SingleBarY(i)) ;
+                     %tstr = sprintf('%.0f\\cdot10^{-3}',SingleBarY(i)*1e3) ;
                     % tstr = sprintf('%.1f\\cdot10^{-2}',SingleBarY(i)*1e2) ;
                 end
                 t{i}= text(1.4,SingleBarX(i),tstr,...%max(SingleBarY)*1.4

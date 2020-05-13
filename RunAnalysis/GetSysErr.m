@@ -213,7 +213,7 @@ elseif SysBudget == 36 % KNM2 Figure skating II systematics (5th May 2020), upda
     SysErr.FPDeff_RelErr = 1e-4;
     SysErr.is_EOffsetErr = 0.05;
     SysErr.MACE_VarErr = 0.0149;
-    SysErr.MaxSlopeCpsPereV = 4.74.*1e-06;   
+    SysErr.MaxSlopeCpsPereV = 4.74.*1e-06;
 end
 
 CMArg = {'WGTS_CD_MolPerCm2_RelErr',SysErr.WGTS_CD_MolPerCm2_RelErr,...

@@ -20,13 +20,18 @@ RunAnaArg = {'RunList','KNM2_Prompt',... % all KNM2 golden runs
 
 MC = MultiRunAnalysis(RunAnaArg{:});
 MC.exclDataStart = MC.GetexclDataStart(range);
+%%
+
 
 if numel(E0)>0
     FSDArg = {'SanityPlot','OFF','Sigma',std(E0)};
     MC.ModelObj.LoadFSD(FSDArg{:});
 end
 %%
-S = RunSensitivity('RunAnaObj',MC);
+SysAll    = {'TASR','Bkg','LongPlasma'}; %Bkg has to be last
+SysLeg    = {'Tritium activity fluctuations';'Background slope';'Long. source potential'};
+
+S = RunSensitivity('RunAnaObj',MC,'SysEffectsAll',SysAll,'SysEffectLeg',SysLeg);
 S.RecomputeFlag='OFF';
 S.LimitFlag = 'Central';
 S.ConfLevel=0; % 0 == 1 sigma

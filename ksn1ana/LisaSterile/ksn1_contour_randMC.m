@@ -14,7 +14,7 @@ switch Mode
         RandMC = [1:151,500:643]*1e3; 
         SysBudget =22;
     case 'New'
-        RandMC = [1:204,500:695,851:1151];
+        RandMC = [1:234,500:734,812:1181];
         SysBudget =24;
 end
 %% init
@@ -67,6 +67,9 @@ sin2T4_bf =sin2T4_bf(RandMC);
 chi2min_bf = chi2min_bf(RandMC);
 chi2min_null = chi2min_null(RandMC);
 DeltaChi2 = DeltaChi2(RandMC);
+
+d = importdata(savefile{1});
+dof = d.FitResults_ref.dof;
 %% significant best fits
 
 ClosedLog95 =  DeltaChi2>= GetDeltaChi2(0.95,2);
@@ -146,8 +149,6 @@ GetFigure;
 hchi2 = histogram(chi2min_bf,'BinWidth',3,...
     'FaceAlpha',1,'FaceColor',rgb('DeepSkyBlue'),'EdgeColor',rgb('SteelBlue'),'Normalization','probability');
 hold on;
-d = importdata(savefile{1});
-dof = d.FitResults_ref.dof;
 x = linspace(0,dof*3,1e3);
 y = chi2pdf(x,dof);
 pchi2 = plot(x,y*hchi2.BinWidth,'Color',rgb('Black'),'LineWidth',2);
