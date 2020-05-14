@@ -172,10 +172,12 @@ classdef RunSensitivity < handle
             if ~strcmp(obj.RunAnaObj.chi2,'chi2Stat') && strcmp(GetCM,'ON')
                 if strcmp(obj.SysEffect,'Bkg')
                     obj.RunAnaObj.ComputeCM('SysEffect',struct('FSD','OFF'),...
-                        'BkgCM','ON','nTrials',nTrials);
+                        'BkgCM','ON','nTrials',nTrials,'Mode','Gauss',...
+                        'BkgScalingOpt',2,'BkgRingCorrCoeff',0);
                     obj.RunAnaObj.NonPoissonScaleFactor = 1;
                       obj.RunAnaObj.ComputeCM('SysEffect',struct('FSD','OFF'),...
-                        'BkgCM','ON','nTrials',nTrials);
+                        'BkgCM','ON','nTrials',nTrials,'Mode','Gauss',...
+                        'BkgScalingOpt',2,'BkgRingCorrCoeff',0);
                 else
                     [~,CmArg] = GetSysErr(obj.RunAnaObj.SysBudget);
                     obj.RunAnaObj.ComputeCM('SysEffects',obj.SysEffect,CmArg{:},...
@@ -2424,12 +2426,13 @@ classdef RunSensitivity < handle
         function nTrials = GetnTrials(obj,SysEffect)
             if strcmp(obj.RunAnaObj.DataSet,'FirstTritium.katrin')
                 nTrials = 1000;
-            else 
+            else
                 if ischar(SysEffect)
-                    if contains(SysEffect,'RF') || contains(SysEffect,'LongPlasma')
+                    nTrials = 5000;
+                    if contains(SysEffect,'RF') %|| contains(SysEffect,'LongPlasma')
                         nTrials = 1000;
-                    else
-                        nTrials = 5000;
+                    elseif contains(SysEffect,'LongPlasma') && strcmp(obj.RunAnaObj.AnaFlag,'Ring')
+                        nTrials = 1000;
                     end
                 else
                     if structfun(@(x) contains(x,'RF'),SysEffect)

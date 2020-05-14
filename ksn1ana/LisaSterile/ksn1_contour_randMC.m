@@ -14,7 +14,7 @@ switch Mode
         RandMC = [1:151,500:643]*1e3; 
         SysBudget =22;
     case 'New'
-        RandMC = [1:234,500:734,812:1181];
+        RandMC = [1:258,500:757,793:1206];
         SysBudget =24;
 end
 %% init

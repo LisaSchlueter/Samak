@@ -28,8 +28,8 @@ if numel(E0)>0
     MC.ModelObj.LoadFSD(FSDArg{:});
 end
 %%
-SysAll    = {'TASR','Bkg','LongPlasma'}; %Bkg has to be last
-SysLeg    = {'Tritium activity fluctuations';'Background slope';'Long. source potential'};
+SysAll    = {'TASR','LongPlasma','Bkg'}; %Bkg has to be last
+SysLeg    = {'Tritium activity fluctuations';'Long. source potential';'Background slope'};
 
 S = RunSensitivity('RunAnaObj',MC,'SysEffectsAll',SysAll,'SysEffectLeg',SysLeg);
 S.RecomputeFlag='OFF';

@@ -1156,7 +1156,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             p.addParameter('MACE_VarErr',SysErr.MACE_VarErr,@(x)isfloat(x));
             p.addParameter('is_EOffsetErr',SysErr.is_EOffsetErr,@(x)isfloat(x));
             p.addParameter('BkgRingCorrCoeff',0,@(x)isfloat(x));
-            p.addParameter('BkgScalingOpt',1,@(x)isfloat(x));
+            p.addParameter('BkgScalingOpt',2,@(x)isfloat(x));
             p.addParameter('BkgMode','Gauss',@(x)ismember(x,{'SlopeFit','Gauss'}));
             p.parse(varargin{:});
             

@@ -1,13 +1,10 @@
 
-A.ModelObj.InitializeRF;
-
-
 % KNM2 Figure skating twins
 range = 40;
 Chi2Scan = 'OFF';
 
 E0 = knm2FS_GetE0Twins('SanityPlot','OFF','Mode','FS2');
-chi2 = 'chi2Stat';
+chi2 = 'chi2CMShape';
 RunAnaArg = {'RunList','KNM2_Prompt',...     % all KNM2 golden runs
     'fixPar','mNu E0 Bkg Norm',...           % free Parameter !!
     'DataType','Twin',...
@@ -28,6 +25,7 @@ if strcmp(chi2,'chi2Stat')
     A.NonPoissonScaleFactor=1;
 else
     A.NonPoissonScaleFactor=1.112;
+    A.ComputeCM;
 end
 A.Fit;
 %A.PlotFit

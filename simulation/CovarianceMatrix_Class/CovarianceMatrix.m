@@ -2227,7 +2227,7 @@ function ComputeCM_Background(obj,varargin)
                 case 1
                     MaxSlopeCpsPereV = MaxSlopeCpsPereV.*(BKG_Asimov./sum(BKG_Asimov));
                 case 2
-                    MaxSlopeCpsPereV = MaxSlopeCpsPereV.*sqrt(BKG_Asimov./sum(BKG_Asimov));%(nPixPerRing./nPixTotal);
+                    MaxSlopeCpsPereV = MaxSlopeCpsPereV.*sqrt(BKG_Asimov./sum(BKG_Asimov));
                 case 3
                     MaxSlopeCpsPereV = repmat(MaxSlopeCpsPereV,nRingLoop,1);
             end
@@ -3755,7 +3755,7 @@ end
             
             fprintf('--------------------------------------------------------------------------\n')
             cprintf('blue','CovarianceMatrix:ComputeCM: Compute Combi Covariance Matrix  \n')
-            
+             obj.nTrials = 5000;
             %Labeling
             combi_path= [getenv('SamakPath'),sprintf('/inputs/CovMat/Combi/')];
             effects_logic = structfun(@(x)strcmp(x,'ON'),obj.SysEffect);
@@ -3799,7 +3799,7 @@ end
             
             %Load / Compute CM of SysEffects
             %% Response Function
-            
+            obj.nTrials = 1000;
             if strcmp(obj.SysEffect.RF_EL,'ON') && strcmp(obj.SysEffect.RF_BF,'ON') && strcmp(obj.SysEffect.RF_RX,'ON') % all RF Effects ON
                 %all 'ON'
                 obj.ComputeCM_RF;
@@ -3829,6 +3829,7 @@ end
                 end
             end
             
+             obj.nTrials = 5000;
             %% FSD   
             if strcmp(obj.SysEffect.FSD,'ON')
                 obj.ComputeCM_FSD;
