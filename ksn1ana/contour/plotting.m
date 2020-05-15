@@ -8,23 +8,23 @@
 %   chi_Z   (chiSq values, if everything is OK this should be only 4.61)
 
 filepath   = [getenv('SamakPath'),'ksn1ana/contour/'];
-file_A     = 'coord_90eV_Real_syst_95.mat';
-file_B     = 'coord_90eV_Real_syst_95_freeM.mat';
+file_A     = 'contour_files/V2/coord_95eV_Real_syst_95CL.mat';
+file_B     = 'contour_files/other/coord_fitrium_Real_95eV.mat';
 % file_C     = 'coord_90eV_Real_syst_99.mat';
 
 da  = importdata([filepath,file_A]);   % Data A
 db  = importdata([filepath,file_B]);   % Data B
-% dc  = importdata([filepath,file_C]);   % Data c
+% dc  = importdata([filepath,file_C]);   % Data C
 
 % Constant data
-d_giunti   = importdata([filepath,'coord_Giunti.mat']);         % KATRIN Data from Giunti
+d_giunti   = importdata([filepath,'contour_files/other/coord_Giunti.mat']);         % KATRIN Data from Giunti
 
-d_raa_90   = importdata([filepath,'coord_RAA_90.mat']);         % Data RAA
-d_raa_95_a = importdata([filepath,'coord_RAA_95_A.mat']);
-d_raa_95_b = importdata([filepath,'coord_RAA_95_B.mat']);
+d_raa_90   = importdata([filepath,'contour_files/other/coord_RAA_90.mat']);         % Data RAA
+d_raa_95_a = importdata([filepath,'contour_files/other/coord_RAA_95_A.mat']);
+d_raa_95_b = importdata([filepath,'contour_files/other/coord_RAA_95_B.mat']);
 
-d_mainz    = importdata([filepath,'coord_mainz.mat']);
-d_troitsk  = importdata([filepath,'coord_troitsk.mat']);
+d_mainz    = importdata([filepath,'contour_files/other/coord_mainz.mat']);
+d_troitsk  = importdata([filepath,'contour_files/other/coord_troitsk.mat']);
 
 %% sin(2*th4)
 
@@ -82,10 +82,10 @@ hold on
 pA      =       plot ([da2(cuta),1],[da.m4_Y(cuta),da.m4_Y(na)],...
                     'color',prlB,'LineWidth',3);
 hold on
-db2 = [db2(cutb),1]; db2_y =[db.m4_Y(cutb)-db.m_beta(cutb),db.m4_Y(nb)];
-pB      =       plot (db2,db2_y,...
-                    '--','color',prlB,'LineWidth',3);
-% pB      =       plot ([db2(cutb),1],[db.m4_Y(cutb),db.m4_Y(nb)],...
+% db2 = [db2(cutb),1]; db2_y =[db.m4_Y(cutb)-db.m_beta(cutb),db.m4_Y(nb)];
+% pB      =       plot (db2,db2_y,...
+%                     '--','color',prlB,'LineWidth',3);
+pB      =       scatter ([db2(cutb),1],[db.m4_Y(cutb),db.m4_Y(nb)])%,...
 %                     '--','color',prlB,'LineWidth',3);
 % hold on
 % pC      =       plot ([dc2(cutc),1],[dc.m4_Y(cutc),dc.m4_Y(nc)],...

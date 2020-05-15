@@ -5,11 +5,11 @@
 % Each datafile contains these variables : 
 % 'contour_settings','R','sith4_X','si2th4_X','m4_Y','m_beta','DM2','chi_Z','X0'
 
-plt_title = 'KATRIN Sterile Neutrino Analysis (KS1) - 90% Sensitivity';
+plt_title = 'KATRIN Sterile Neutrino Analysis (KSN1) - 95% Sensitivity';
 
 filepath   = [getenv('SamakPath'),'ksn1ana/contour/contour_files/V2/'];
-file_A     = 'coord_90eV_Real_syst_90CL.mat';
-file_B     = 'coord_90eV_Real_syst_95CL.mat';
+file_A     = 'coord_95eV_Real_syst_95CL_bestfit.mat';
+file_B     = 'coord_95eV_Real_syst_95CL.mat';
 % file_C     = 'coord_90eV_Real_syst_99.mat';
 
 da  = importdata([filepath,file_A]);    % Data A
