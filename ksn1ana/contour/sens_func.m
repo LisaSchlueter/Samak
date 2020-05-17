@@ -15,7 +15,7 @@ function sens_func(contour_settings)
     ActiveNeut   = contour_settings.activeFlag;         % Activate the active neutrino fit  % FREE OFF FIX
 
     % Name for the datafile
-    savename     = sprintf('coord_%1$deV_%2$s_%3$s_%4$dCL',eVrange,datatype,uncertainty,CL);
+    savename     = sprintf('coord_%1$deV_%2$s_%3$s_%4$dCL_new',eVrange,datatype,uncertainty,CL);
 
     
     %% Scan settings

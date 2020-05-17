@@ -8,8 +8,8 @@
 plt_title = 'KATRIN Sterile Neutrino Analysis (KSN1) - 95% Sensitivity';
 
 filepath   = [getenv('SamakPath'),'ksn1ana/contour/contour_files/V2/'];
-file_A     = 'coord_95eV_Real_syst_95CL_bestfit.mat';
-file_B     = 'coord_95eV_Real_syst_95CL.mat';
+file_A     = 'coord_90eV_Real_stat_95CL.mat';
+file_B     = 'coord_90eV_Real_syst_95CL.mat';
 % file_C     = 'coord_90eV_Real_syst_99.mat';
 
 da  = importdata([filepath,file_A]);    % Data A

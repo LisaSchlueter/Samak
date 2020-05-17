@@ -2,7 +2,7 @@
 
 serie1 = {'OFF'};
 serie2 = {'stat','syst'};
-serie3 = [40];
+serie3 = [95];
 
 for par1 = serie1
     for par2 = serie2
@@ -14,7 +14,7 @@ for par1 = serie1
                 'uncertainty',par2,...
                 'NPfactor',1,...
                 'scan_step',10,...
-                'eVrange',90,...
+                'eVrange',40,...
                 'activeFlag',par1);
 
             % Scan
