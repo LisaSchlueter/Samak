@@ -21,8 +21,6 @@ RunAnaArg = {'RunList','KNM2_Prompt',... % all KNM2 golden runs
 MC = MultiRunAnalysis(RunAnaArg{:});
 MC.exclDataStart = MC.GetexclDataStart(range);
 %%
-
-
 if numel(E0)>0
     FSDArg = {'SanityPlot','OFF','Sigma',std(E0)};
     MC.ModelObj.LoadFSD(FSDArg{:});

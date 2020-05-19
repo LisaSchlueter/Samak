@@ -1,5 +1,5 @@
 %% calculate grid for ksn1 stat. + 1 syst
-range = 75;
+range = 95;
 nGridSteps = 25;
 chi2Str = 'chi2CMShape';
 DataType = 'Twin';

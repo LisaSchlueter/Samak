@@ -14,7 +14,7 @@ switch Mode
         RandMC = [1:151,500:643]*1e3; 
         SysBudget =22;
     case 'New'
-        RandMC = [1:258,500:757,793:1206];
+        RandMC = [1:1500];
         SysBudget =24;
 end
 %% init
@@ -35,7 +35,6 @@ chi2min_null  = zeros(numel(RandMC),1);
 
 for i=RandMC
     progressbar(i/nContours)
-
     [mnu4Sq{i},sin2T4{i},chi2{i},chi2_ref{i},savefile{i},FitResults_Null] = KSN1GridSearch('range',range,...
         'nGridSteps',nGridSteps,...
         'chi2',chi2Str,...
@@ -48,8 +47,7 @@ for i=RandMC
         'SysBudget',SysBudget);
     
     chi2tmp   = chi2{i};
-   
-    
+
     % find best fit
     mnu4Sqtmp = mnu4Sq{i};
     sin2T4tmp = sin2T4{i};

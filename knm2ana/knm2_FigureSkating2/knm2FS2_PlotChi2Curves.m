@@ -3,8 +3,8 @@ range = 40;
 AuxLines = 'OFF';
 ShowResults = 'OFF';
 SavePlot = 'ON';
-AnaMode = 'Uniform';%MultiRing';
-if strcmp(AnaMode,'MultiRing')
+AnaMode = 'MultiRing';
+if ~strcmp(AnaMode,'MultiRing')
     AnaStr= '';
 else
     AnaStr = '_MultiRing';

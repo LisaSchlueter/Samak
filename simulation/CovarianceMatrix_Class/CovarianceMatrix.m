@@ -2163,7 +2163,7 @@ function ComputeCM_Background(obj,varargin)
     MaxSlopeCpsPereV_i = MaxSlopeCpsPereV;
     
     % Number of Trials - Hardcoded
-    TrialSave  = obj.nTrials; obj.nTrials = 50000; % BASELINE, termine after obj.nTrials
+    TrialSave  = obj.nTrials; obj.nTrials = 100000; % BASELINE, termine after obj.nTrials
     
     % Covariance Matrix File
     cm_path        = [getenv('SamakPath'),sprintf('inputs/CovMat/Background/CM/')];
@@ -2175,7 +2175,7 @@ function ComputeCM_Background(obj,varargin)
     end  
     cm_name        = sprintf('BackgroundCM_%s_%.0fmcps_Constrain%.3gCpsPerEv_%.0feVBkgRange_%.0fTrials%s.mat',...
         strrep(obj.StudyObject.TD,'_E018573.73eV2',''),...
-        sum(obj.StudyObject.BKG_RateSec)*1e3,MaxSlopeCpsPereV,BkgRange,obj.nTrials,extraStr);
+        sum(obj.StudyObject.BKG_RateSec)*1e3,sum(MaxSlopeCpsPereV),BkgRange,obj.nTrials,extraStr);
     % add ring information for ringwise covariance matrices
     if strcmp(obj.StudyObject.FPD_Segmentation,'RING')
         if numel(MaxSlopeCpsPereV)~=1 % no scaling, ring by ring input
@@ -3330,7 +3330,7 @@ function ComputeCM_LongPlasma(obj,varargin)
     p=inputParser;
     p.addParameter('CorrCoeff',0,@(x)isfloat(x));
     p.addParameter('NegSigma','Troitsk',@(x)ismember(x,{'Abs','Troitsk'}));
-    p.addParameter('SanityPlot','ON');
+    p.addParameter('SanityPlot','OFF');
     p.parse(varargin{:});
     CorrCoeff  = p.Results.CorrCoeff;
     NegSigma   = p.Results.NegSigma;    % how to deal with negative sigmas
@@ -3755,7 +3755,7 @@ end
             
             fprintf('--------------------------------------------------------------------------\n')
             cprintf('blue','CovarianceMatrix:ComputeCM: Compute Combi Covariance Matrix  \n')
-             obj.nTrials = 5000;
+           %  obj.nTrials = 5000;
             %Labeling
             combi_path= [getenv('SamakPath'),sprintf('/inputs/CovMat/Combi/')];
             effects_logic = structfun(@(x)strcmp(x,'ON'),obj.SysEffect);
@@ -3799,7 +3799,7 @@ end
             
             %Load / Compute CM of SysEffects
             %% Response Function
-            obj.nTrials = 1000;
+           % obj.nTrials = 1000;
             if strcmp(obj.SysEffect.RF_EL,'ON') && strcmp(obj.SysEffect.RF_BF,'ON') && strcmp(obj.SysEffect.RF_RX,'ON') % all RF Effects ON
                 %all 'ON'
                 obj.ComputeCM_RF;
@@ -3829,7 +3829,7 @@ end
                 end
             end
             
-             obj.nTrials = 5000;
+          %   obj.nTrials = 5000;
             %% FSD   
             if strcmp(obj.SysEffect.FSD,'ON')
                 obj.ComputeCM_FSD;
@@ -3916,12 +3916,18 @@ end
             
             %% Plasma longitudinal
             if strcmp(obj.SysEffect.LongPlasma,'ON')
+                nTrials_i = obj.nTrials;
+                if numel(obj.StudyObject.MACE_Ba_T)>1 && obj.nTrials>1000% multiring
+                    obj.nTrials = 1000;
+                end
                 obj.ComputeCM_LongPlasma;
                 CovMatFracCombi = CovMatFracCombi + obj.MultiCovMatFrac.CM_LongPlasma;
                 if strcmp(PlotSaveCM,'ON')
                     obj.PlotCM('PlotEffect','LongPlasma','savePlot','ON','savename',SysBudget_Label,...
                         'ConvergenceTest','OFF');
                 end
+                
+                obj.nTrials = nTrials_i;
             end
             
             %%Combined Fractional CM

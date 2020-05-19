@@ -5,15 +5,16 @@ CL =95;
 range = 65;%
 nGridSteps = 25;
 chi2Str = 'chi2CMShape';
-DataType = 'Real';
+mySysEffect = 'FSD';
+SysBudget = 241; %242
+DataType = 'Twin';
 freePar = 'E0 Bkg Norm';
 RunList = 'KNM1';
 SmartGrid = 'OFF';
 pullFlag = 99;
-SysBudget = 24;
 %% plot options
-PlotContour = 'ON';
-PlotGrid    = 'ON';
+PlotContour = 'OFF';
+PlotGrid    = 'OFF';
 if strcmp(chi2Str,'chi2Stat')
     chi2Label = 'stat. only';
 else
@@ -35,7 +36,8 @@ titleStr = sprintf('%s (%s) %.0f eV range',DataLabel,chi2Label,range);
     'SmartGrid',SmartGrid,...
     'RecomputeFlag','OFF',...
     'pullFlag',pullFlag,...
-    'SysBudget',SysBudget);
+    'SysBudget',SysBudget,...
+    'SysEffect',mySysEffect);
 
 %% find best fit
 d = importdata(savefile);

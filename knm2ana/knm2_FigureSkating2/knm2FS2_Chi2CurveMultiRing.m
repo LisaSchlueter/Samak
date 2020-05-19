@@ -2,10 +2,10 @@
 
 %MR.ComputeCM('SysEffect',struct('LongPlasma','ON'),'InitNormFit','OFF')
 range = 40;
-Chi2Scan = 'ON';
+Chi2Scan = 'OFF';
 
 E0 = knm2FS_GetE0Twins('SanityPlot','OFF','Mode','FS2');
-chi2 = 'chi2CMShape';
+chi2 = 'chi2Stat';%CMShape';
 
 RunAnaArg = {'RunList','KNM2_Prompt',...
     'chi2','chi2Stat',...

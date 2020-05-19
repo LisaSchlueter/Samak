@@ -2431,7 +2431,7 @@ classdef RunSensitivity < handle
                     nTrials = 5000;
                     if contains(SysEffect,'RF') %|| contains(SysEffect,'LongPlasma')
                         nTrials = 1000;
-                    elseif contains(SysEffect,'LongPlasma') && strcmp(obj.RunAnaObj.AnaFlag,'Ring')
+                    elseif contains(SysEffect,'LongPlasma') %&& strcmp(obj.RunAnaObj.AnaFlag,'Ring')
                         nTrials = 1000;
                     end
                 else
