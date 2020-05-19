@@ -6,12 +6,12 @@ range = 95;%65
 nGridSteps = 25;
 chi2Str = 'chi2CMShape';
 mySysEffect = 'all';
-SysBudget = 29; %254
+SysBudget = 299; %254
 DataType = 'Real';
 freePar = 'E0 Bkg Norm';
 RunList = 'KNM1';
 SmartGrid = 'OFF';
-ELossFlag = 'KatrinT2A20'; %KatrinT2
+ELossFlag = 'KatrinT2';
 AngularTFFlag = 'ON'; % OFF
 pullFlag = 99;
 %% plot options

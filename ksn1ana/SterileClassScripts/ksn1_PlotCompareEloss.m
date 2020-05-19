@@ -34,8 +34,8 @@ SterileArg = {'RunAnaObj',R,... % Mother Object: defines RunList, Column Density
 
 S = SterileAnalysis(SterileArg{:});
 %% plot
-S.range = 65;
-CL = 95;
+S.range = 95;
+CL = 99;
 
 % new (KNM2) energy-loss
 S.RunAnaObj.SysBudget= 29;
@@ -43,15 +43,15 @@ S.RunAnaObj.ELossFlag = 'KatrinT2';
 S.LoadGridFile('CheckSmallerN','ON','CheckLargerN','ON'); % if CheckSmallerN also look for grid with more/less nGridSteps
 S.InterpMode = 'lin'; % waring: if contour is closed, spline interp sometimes sensitive to artefacts! Switch to "lin" in this case
 S.Interp1Grid('RecomputeFlag','ON');% interpolate chi2 map -> nicer appearance of all plots. some
-S.ContourPlot('BestFit','OFF','SavePlot','OFF','CL',CL);
+S.ContourPlot('BestFit','ON','SavePlot','OFF','CL',CL);
 
 % new (KNM2) energy-loss
-S.RunAnaObj.SysBudget=29;
-S.RunAnaObj.ELossFlag = 'KatrinT2A20';
+S.RunAnaObj.SysBudget=299;
+S.RunAnaObj.ELossFlag = 'KatrinT2';%%A20';
 S.LoadGridFile('CheckSmallerN','ON','CheckLargerN','ON'); % if CheckSmallerN also look for grid with more/less nGridSteps
 S.InterpMode = 'lin'; % waring: if contour is closed, spline interp sometimes sensitive to artefacts! Switch to "lin" in this case
 S.Interp1Grid('RecomputeFlag','ON');% interpolate chi2 map -> nicer appearance of all plots. some
-S.ContourPlot('BestFit','OFF','SavePlot','OFF','CL',CL,'Color',rgb('Orange'),'HoldOn','ON');
+S.ContourPlot('BestFit','ON','SavePlot','OFF','CL',CL,'Color',rgb('Orange'),'HoldOn','ON');
 %%
 % old (KNM1) energy-loss
 S.RunAnaObj.SysBudget=24;
