@@ -15,6 +15,7 @@ p.addParameter('SysEffect','all',@(x)ischar(x)); % if chi2CMShape: all or only 1
 p.addParameter('RandMC','OFF',@(x)ischar(x) || isfloat(x)); % randomize twins if RandMC is float
 p.addParameter('pullFlag',99,@(x)isfloat(x)); % if above 12 --> no pull
 p.addParameter('SysBudget',22,@(x)isfloat(x));
+p.addParameter('ELossFlag','KatrinT2',@(x)ischar(x));
 p.parse(varargin{:});
 
 range         = p.Results.range;
@@ -29,6 +30,7 @@ SysEffect     = p.Results.SysEffect;
 RandMC        = p.Results.RandMC;
 pullFlag      = p.Results.pullFlag;
 SysBudget     = p.Results.SysBudget;
+ELossFlag     = p.Results.ELossFlag;
 
 if strcmp(chi2,'chi2CMShape')
     NonPoissonScaleFactor=1.064;
@@ -49,6 +51,11 @@ if strcmp(chi2,'chi2CMShape')
         extraStr = [extraStr,sprintf('_%s',SysEffect)];
     end
 end
+
+if ~strcmp(ELossFlag,'KatrinT2')
+     extraStr = [extraStr,sprintf('_%s',ELossFlag)];
+end
+
 if isfloat(RandMC) && strcmp(DataType,'Twin')
     extraStr = sprintf('%s_RandMC%.0f',extraStr,RandMC);
     savedir = [getenv('SamakPath'),'ksn1ana/LisaSterile/results/RandomizedMC/'];
@@ -92,7 +99,7 @@ else
         'fixPar',freePar,...
         'DataType',DataType,...
         'FSDFlag',FSDFlag,...
-        'ELossFlag','KatrinT2',...
+        'ELossFlag',ELossFlag,...
         'AnaFlag','StackPixel',...
         'chi2',chi2,...
         'ROIFlag','Default',...

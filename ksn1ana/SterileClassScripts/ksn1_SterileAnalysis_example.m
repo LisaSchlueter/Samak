@@ -38,29 +38,37 @@ S = SterileAnalysis(SterileArg{:});
 
 %% do some thing with the class: 
 % 1. change some settings if you want: -> no need to recalc. RunAnalysis object
-S.RunAnaObj.DataType = 'Twin';
-S.range = 65;
-
+S.RunAnaObj.DataType = 'Real';
+S.range = 95;
+S.RunAnaObj.SysBudget = 251;
 %% 2 load a chi2 map and find the best fit
 S.LoadGridFile('CheckSmallerN','ON','CheckLargerN','ON'); % if CheckSmallerN also look for grid with more/less nGridSteps
-S.InterpMode = 'spline'; % waring: if contour is closed, spline interp sometimes sensitive to artefacts! Switch to "lin" in this case
+S.InterpMode = 'lin'; % waring: if contour is closed, spline interp sometimes sensitive to artefacts! Switch to "lin" in this case
 S.Interp1Grid('RecomputeFlag','ON');% interpolate chi2 map -> nicer appearance of all plots. some
 S.FindBestFit;
 S.CompareBestFitNull;
 
 %% 3. contour plot for some confidence levels
-S.ContourPlot('BestFit','OFF','SavePlot','OFF','CL',[90 95 99]);
-
+S.RunAnaObj.SysBudget = 24;
+S.LoadGridFile('CheckSmallerN','ON','CheckLargerN','ON'); % if CheckSmallerN also look for grid with more/less nGridSteps
+S.InterpMode = 'lin'; % waring: if contour is closed, spline interp sometimes sensitive to artefacts! Switch to "lin" in this case
+S.Interp1Grid('RecomputeFlag','ON');% interpolate chi2 map -> nicer appearance of all plots. some
+S.ContourPlot('BestFit','OFF','SavePlot','OFF','CL',[95]);
+% S.RunAnaObj.SysBudget = 25;
+% S.LoadGridFile('CheckSmallerN','ON','CheckLargerN','ON'); % if CheckSmallerN also look for grid with more/less nGridSteps
+% S.InterpMode = 'lin'; % waring: if contour is closed, spline interp sometimes sensitive to artefacts! Switch to "lin" in this case
+% S.Interp1Grid('RecomputeFlag','ON');% interpolate chi2 map -> nicer appearance of all plots. some
+% S.ContourPlot('BestFit','OFF','SavePlot','OFF','CL',[95],'HoldOn','ON');
 %% 4. grid plot with contour and best fit
-S.GridPlot('BestFit','ON','Contour','ON','SavePlot','png')
-
-%% 5. contour plot in oscillation parameter space (you can switch on/off foreign contours, all on by default
-S.ContourPlotOsci();
- 
-%% comparisonw ith fitrium (works only for 65 eV & 95 range)
-if S.range==95 && strcmp(S.RunAnaObj.DataType,'Real')
-    S.InterpMode = 'lin';
-else
-    S.InterpMode = 'spline';
-end
-S.PlotFitriumSamak('SavePlot','png');
+% S.GridPlot('BestFit','ON','Contour','ON','SavePlot','png')
+% 
+% %% 5. contour plot in oscillation parameter space (you can switch on/off foreign contours, all on by default
+% S.ContourPlotOsci();
+%  
+% %% comparisonw ith fitrium (works only for 65 eV & 95 range)
+% if S.range==95 && strcmp(S.RunAnaObj.DataType,'Real')
+%     S.InterpMode = 'lin';
+% else
+%     S.InterpMode = 'spline';
+% end
+% S.PlotFitriumSamak('SavePlot','png');

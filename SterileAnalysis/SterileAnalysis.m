@@ -32,6 +32,7 @@ classdef SterileAnalysis < handle
         ConfLevel;
         dof;
         
+        
         % plot
         PlotColors;
         PlotLines;
@@ -100,9 +101,11 @@ classdef SterileAnalysis < handle
             
             %% define maximum m4:
             if obj.range==65    
-                Maxm4Sq = 59^2;
+                Maxm4Sq = 60^2;%59^2;
+            elseif obj.range==95 && strcmp(obj.RunAnaObj.DataType,'Twin')
+                  Maxm4Sq =  94^2;
             else
-                Maxm4Sq =  (obj.range-4)^2;
+                Maxm4Sq =  (obj.range-5)^2;
             end
             
             [X,Y] = meshgrid(obj.mNu4Sq(:,1),obj.sin2T4(1,:));
@@ -574,7 +577,13 @@ classdef SterileAnalysis < handle
          pl     = cell(numel(Ranges),1);
          range_i = obj.range;
          
-         Colors = parula(numel(Ranges));
+         if numel(Ranges)>3
+             Colors = parula(numel(Ranges));
+         else
+             Colors = cell2mat(obj.PlotColors');
+             
+         end
+         
          for i=1:numel(Ranges)
              progressbar(i/numel(Ranges));
              obj.range = Ranges(i);
@@ -589,19 +598,20 @@ classdef SterileAnalysis < handle
              legStr{i} = sprintf('%.0f eV range',Ranges(i));
          end
          
-         leg = legend(legStr{:},'EdgeColor',rgb('Silver'),'Location','southwest');
+         leg = legend([pl{:}],legStr{:},'EdgeColor',rgb('Silver'),'Location','southwest');
          %leg.Title.String = 'Lower fit boundary';
          %leg.Title.FontWeight = 'normal';
-          ylim([1 1e4])
+         ylim([1 1e4])
          if numel(Ranges)>5 &&numel(Ranges)<10
              leg.NumColumns=2;
          elseif numel(Ranges)>=10
-              leg.NumColumns=3;
-              
+              leg.NumColumns=3; 
          end
+%          xlim([5e-03,0.4]);
+%          ylim([1 3e4]);
           set(leg.BoxFace, 'ColorType','truecoloralpha', 'ColorData',uint8(255*[1;1;1;0.3]));
           
-         title(sprintf('%s (%s)',obj.RunAnaObj.DataType,obj.GetPlotTitle('Mode','chi2')),...
+         title(sprintf('%s (%s) %.0f%% C.L.',obj.GetPlotTitle('Mode','data'),obj.GetPlotTitle('Mode','chi2'),obj.ConfLevel),...
              'FontWeight','normal','FontSize',get(gca,'FontSize'));
 
              if ~strcmp(SavePlot,'OFF')
