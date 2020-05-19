@@ -1025,15 +1025,20 @@ classdef SterileAnalysis < handle
             savedir = sprintf('%sSterileAnalysis/GridSearchFiles/%s/%s/',...
                      getenv('SamakPath'),obj.RunAnaObj.DataSet,obj.RunAnaObj.DataType);
             
-            if isfloat(obj.RandMC) && strcmp(obj.RunAnaObj.DataType,'Twin')
-                extraStr = sprintf('%s_RandMC%.0f',extraStr,obj.RandMC);
-                savedir = strrep(savedir,'Twin/','TwinRandomizedMC/'); 
-            end
-            
-            if obj.RunAnaObj.pullFlag<=12
-                extraStr = sprintf('%s_pull%.0f',extraStr,obj.RunAnaObj.pullFlag);
-            end
-            MakeDir(savedir);
+                 if isfloat(obj.RandMC) && strcmp(obj.RunAnaObj.DataType,'Twin')
+                     extraStr = sprintf('%s_RandMC%.0f',extraStr,obj.RandMC);
+                     savedir = strrep(savedir,'Twin/','TwinRandomizedMC/');
+                 end
+                 
+                 if ~strcmp(obj.RunAnaObj.ELossFlag,'KatrinT2')
+                     extraStr = [extraStr,sprintf('_%s',obj.RunAnaObj.ELossFlag)];
+                 end
+                 if obj.RunAnaObj.pullFlag<=12
+                     extraStr = sprintf('%s_pull%.0f',extraStr,obj.RunAnaObj.pullFlag);
+                 end
+                 
+                 
+                 MakeDir(savedir);
 
             % get runlist-name
             RunList = extractBefore(obj.RunAnaObj.RunData.RunName,'_E0');

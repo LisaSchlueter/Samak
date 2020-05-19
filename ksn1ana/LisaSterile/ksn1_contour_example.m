@@ -2,16 +2,17 @@
 
 %% settings
 CL =95;
-range = 95;%
+range = 95;%65
 nGridSteps = 25;
 chi2Str = 'chi2CMShape';
 mySysEffect = 'all';
-SysBudget = 29; %242
+SysBudget = 29; %254
 DataType = 'Real';
 freePar = 'E0 Bkg Norm';
 RunList = 'KNM1';
 SmartGrid = 'OFF';
-ELossFlag = 'KatrinT2A20';
+ELossFlag = 'KatrinT2A20'; %KatrinT2
+AngularTFFlag = 'ON'; % OFF
 pullFlag = 99;
 %% plot options
 PlotContour = 'OFF';
@@ -39,7 +40,8 @@ titleStr = sprintf('%s (%s) %.0f eV range',DataLabel,chi2Label,range);
     'pullFlag',pullFlag,...
     'SysBudget',SysBudget,...
     'SysEffect',mySysEffect,...
-    'ELossFlag',ELossFlag);
+    'ELossFlag',ELossFlag,...
+    'AngularTFFlag',AngularTFFlag);
 
 %% find best fit
 d = importdata(savefile);

@@ -245,6 +245,21 @@ elseif SysBudget == 255 % % test: KNM1 with exaggerated FSD onset uncertainty : 
     SysErr.is_EOffsetErr = 0;
     SysErr.MACE_VarErr = 0;
     SysErr.MaxSlopeCpsPereV = 5.2*1e-06; % warning: changed 02.May 2020 from 15e-6
+elseif SysBudget == 256 % test: KNM1 with exaggerated rhodsigma uncertainty : 0.85*2=1.7%
+    SysErr.FSDNorm_RelErr=  0.01;
+    SysErr.FSDShapeGS_RelErr= 0.04;
+    SysErr.FSDShapeES_RelErr= 0.18;
+    SysErr.WGTS_TASR_RelErr = 5e-4;
+    SysErr.MACE_Ba_T_RelErr= 0.01;
+    SysErr.MACE_Bmax_T_RelErr= 0.002;
+    SysErr.WGTS_B_T_RelErr= 0.025;
+    SysErr.WGTS_CD_MolPerCm2_RelErr= 0.02;
+    SysErr.ISXsection_RelErr= 0; %use rhod sigma together as uncertainty
+    SysErr.DataDriven = 'ON';
+    SysErr.FPDeff_RelErr = 1e-4;
+    SysErr.is_EOffsetErr = 0;
+    SysErr.MACE_VarErr = 0;
+    SysErr.MaxSlopeCpsPereV = 5.2*1e-06; % warning: changed 02.May 2020 from 15e-6
 elseif SysBudget == 29 % new KNM1 default
     SysErr.FSDNorm_RelErr=  0.01;
     SysErr.FSDShapeGS_RelErr= 0.04;
@@ -259,6 +274,21 @@ elseif SysBudget == 29 % new KNM1 default
     SysErr.FPDeff_RelErr = 1e-4;
     SysErr.is_EOffsetErr = 0;
     SysErr.MACE_VarErr = 0;
+    SysErr.MaxSlopeCpsPereV = 5.2*1e-06; % warning: changed 02.May 2020 from 15e-6
+elseif SysBudget == 299 % new KNM1 default + plasma knm1
+    SysErr.FSDNorm_RelErr=  0.01;
+    SysErr.FSDShapeGS_RelErr= 0.04;
+    SysErr.FSDShapeES_RelErr= 0.18;
+    SysErr.WGTS_TASR_RelErr = 5e-4;
+    SysErr.MACE_Ba_T_RelErr= 0.01;
+    SysErr.MACE_Bmax_T_RelErr= 0.002;
+    SysErr.WGTS_B_T_RelErr= 0.025;
+    SysErr.WGTS_CD_MolPerCm2_RelErr= 0.0085;
+    SysErr.ISXsection_RelErr= 0; %use rhod sigma together as uncertainty
+    SysErr.DataDriven = 'ON';
+    SysErr.FPDeff_RelErr = 1e-4;
+    SysErr.is_EOffsetErr = 0.04;
+    SysErr.MACE_VarErr = 0.08^2/3;
     SysErr.MaxSlopeCpsPereV = 5.2*1e-06; % warning: changed 02.May 2020 from 15e-6
 elseif SysBudget == 31 % preliminary KNM2 systematics (January 20)
     SysErr.WGTS_TASR_RelErr = 5e-4; % data driven

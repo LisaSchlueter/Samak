@@ -16,6 +16,7 @@ p.addParameter('RandMC','OFF',@(x)ischar(x) || isfloat(x)); % randomize twins if
 p.addParameter('pullFlag',99,@(x)isfloat(x)); % if above 12 --> no pull
 p.addParameter('SysBudget',22,@(x)isfloat(x));
 p.addParameter('ELossFlag','KatrinT2',@(x)ischar(x));
+p.addParameter('AngularTFFlag','OFF',@(x)ismember(x,{'ON','OFF'})); 
 p.parse(varargin{:});
 
 range         = p.Results.range;
@@ -31,6 +32,7 @@ RandMC        = p.Results.RandMC;
 pullFlag      = p.Results.pullFlag;
 SysBudget     = p.Results.SysBudget;
 ELossFlag     = p.Results.ELossFlag;
+AngularTFFlag = p.Results.AngularTFFlag;
 
 if strcmp(chi2,'chi2CMShape')
     NonPoissonScaleFactor=1.064;
@@ -54,6 +56,10 @@ end
 
 if ~strcmp(ELossFlag,'KatrinT2')
      extraStr = [extraStr,sprintf('_%s',ELossFlag)];
+end
+
+if ~strcmp(AngularTFFlag,'OFF')
+     extraStr = [extraStr,'_AngTF'];
 end
 
 if isfloat(RandMC) && strcmp(DataType,'Twin')
@@ -100,6 +106,7 @@ else
         'DataType',DataType,...
         'FSDFlag',FSDFlag,...
         'ELossFlag',ELossFlag,...
+        'AngularTFFlag',AngularTFFlag
         'AnaFlag','StackPixel',...
         'chi2',chi2,...
         'ROIFlag','Default',...

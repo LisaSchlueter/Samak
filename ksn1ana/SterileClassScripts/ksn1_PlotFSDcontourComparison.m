@@ -30,7 +30,7 @@ SterileArg = {'RunAnaObj',T,... % Mother Object: defines RunList, Column Density
     'RecomputeFlag','OFF',...
     'SysEffect','all',...
     'RandMC','OFF',...
-    'range',95,...
+    'range',65,...
     'ConfLevel',95};
 
 S = SterileAnalysis(SterileArg{:});
@@ -52,12 +52,19 @@ S.Interp1Grid('RecomputeFlag','ON');
 pFSDuncorr = S.ContourPlot('CL',S.ConfLevel,'HoldOn','ON',...
     'Color',rgb('FireBrick'),'LineStyle','-','BestFit','OFF','PlotSplines','OFF');
 
-S.SysEffect = 'all';
-S.RunAnaObj.SysBudget = 24; % only FSD bin-to-bin
+S.SysEffect = 'FSD';
+S.RunAnaObj.SysBudget = 24; %
 S.LoadGridFile('CheckSmallerN','ON');
 S.Interp1Grid('RecomputeFlag','ON');
 pSysall = S.ContourPlot('CL',S.ConfLevel,'HoldOn','ON',...
     'Color',rgb('DarkSlateGray'),'LineStyle','-','BestFit','OFF','PlotSplines','OFF');
+
+% S.SysEffect = 'all';
+% S.RunAnaObj.SysBudget = 24; %
+% S.LoadGridFile('CheckSmallerN','ON');
+% S.Interp1Grid('RecomputeFlag','ON');
+% pSysall = S.ContourPlot('CL',S.ConfLevel,'HoldOn','ON',...
+%     'Color',rgb('Silver'),'LineStyle',':','BestFit','OFF','PlotSplines','OFF');
 
 % S.RunAnaObj.chi2 = 'chi2Stat';
 % S.LoadGridFile('CheckSmallerN','ON');
