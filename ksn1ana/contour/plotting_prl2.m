@@ -83,8 +83,8 @@ d_mainz    = importdata([filepath,'coord_Mainz_95CL.mat']);
 d_troitsk  = importdata([filepath,'coord_Troitsk_95CL.mat']);
 
 % Plot tunings
-na1   = length(da12); na2   = length(da22); nb   = length(db2);  nc   = length(dc2);  
-cuta1 = (1:na1); cuta2 = (1:na2);  cutb = (1:nb);  cutc = (1:nc);  
+na1   = length(da12); na2   = length(da22); nb   = length(db2);  %nc   = length(dc2);  
+cuta1 = (1:na1); cuta2 = (1:na2);  cutb = (1:nb);  %cutc = (1:nc);  
 
 %% Colors
 prlA = [50 148 216]/255;
@@ -112,12 +112,12 @@ pA2      =       plot (([da22(cuta2),1]),(([da2.mnu4Sq_contour_95(cuta2),da2.mnu
 
 hold on
 
-plot(BFsin2theta,BFm24,'s','LineWidth',3,'Color',prlA);
+%plot(BFsin2theta,BFm24,'s','LineWidth',3,'Color',prlA);
 
 pB      =       plot (([db2(cutb),1]),(([db.mnu4Sq_contour_95(cutb),db.mnu4Sq_contour_95(nb)])),...
     ':','color',prlC,'LineWidth',4);
 
-plot(BFsin2theta_mfree,BFm24_mfree,'+','LineWidth',3,'Color',prlC);
+%plot(BFsin2theta_mfree,BFm24_mfree,'+','LineWidth',3,'Color',prlC);
 
 % === Mainz / Troitsk Results ===
 
