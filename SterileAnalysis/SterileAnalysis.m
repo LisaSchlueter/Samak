@@ -101,7 +101,7 @@ classdef SterileAnalysis < handle
             
             %% define maximum m4:
             if obj.range==65    
-                Maxm4Sq = 60^2;%59^2;
+                Maxm4Sq = 59^2;%59^2;
             elseif obj.range==95 && strcmp(obj.RunAnaObj.DataType,'Twin')
                   Maxm4Sq =  94^2;
             else
@@ -1033,6 +1033,11 @@ classdef SterileAnalysis < handle
                  if ~strcmp(obj.RunAnaObj.ELossFlag,'KatrinT2')
                      extraStr = [extraStr,sprintf('_%s',obj.RunAnaObj.ELossFlag)];
                  end
+                 
+                 if ~strcmp(obj.RunAnaObj.AngularTFFlag,'OFF')
+                     extraStr = [extraStr,'_AngTF'];
+                 end
+                 
                  if obj.RunAnaObj.pullFlag<=12
                      extraStr = sprintf('%s_pull%.0f',extraStr,obj.RunAnaObj.pullFlag);
                  end

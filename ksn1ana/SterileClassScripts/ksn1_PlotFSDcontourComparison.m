@@ -30,7 +30,7 @@ SterileArg = {'RunAnaObj',T,... % Mother Object: defines RunList, Column Density
     'RecomputeFlag','OFF',...
     'SysEffect','all',...
     'RandMC','OFF',...
-    'range',65,...
+    'range',95,...
     'ConfLevel',95};
 
 S = SterileAnalysis(SterileArg{:});
@@ -52,12 +52,12 @@ S.Interp1Grid('RecomputeFlag','ON');
 pFSDuncorr = S.ContourPlot('CL',S.ConfLevel,'HoldOn','ON',...
     'Color',rgb('FireBrick'),'LineStyle','-','BestFit','OFF','PlotSplines','OFF');
 
-S.SysEffect = 'FSD';
-S.RunAnaObj.SysBudget = 24; %
-S.LoadGridFile('CheckSmallerN','ON');
-S.Interp1Grid('RecomputeFlag','ON');
-pSysall = S.ContourPlot('CL',S.ConfLevel,'HoldOn','ON',...
-    'Color',rgb('DarkSlateGray'),'LineStyle','-','BestFit','OFF','PlotSplines','OFF');
+% S.SysEffect = 'FSD';
+% S.RunAnaObj.SysBudget = 24; %
+% S.LoadGridFile('CheckSmallerN','ON');
+% S.Interp1Grid('RecomputeFlag','ON');
+% pSysall = S.ContourPlot('CL',S.ConfLevel,'HoldOn','ON',...
+%     'Color',rgb('DarkSlateGray'),'LineStyle','-','BestFit','OFF','PlotSplines','OFF');
 
 % S.SysEffect = 'all';
 % S.RunAnaObj.SysBudget = 24; %
@@ -72,37 +72,39 @@ pSysall = S.ContourPlot('CL',S.ConfLevel,'HoldOn','ON',...
 % pStat = S.ContourPlot('CL',S.ConfLevel,'HoldOn','ON',...
 %     'Color',rgb('DimGray'),'LineStyle',':','BestFit','OFF','PlotSplines','OFF');
 
-%% fitrium
+% fitrium
 LineWidth = 2.5;
 savedirF = [getenv('SamakPath'),'SterileAnalysis/GridSearchFiles/Knm1/Others/'];
-fonset = sprintf('%scontour_KSN1_Fitrium_%s_%.0feV_FSDonset_95CL_0.txt',savedirF,S.RunAnaObj.DataType,S.range);
-%dfFSDonset = importdata(fonset);
+fonset = sprintf('%scontour_KSN1_Fitrium_%s_%.0feV_FSD_onsetOnly_95CL_0.txt',savedirF,S.RunAnaObj.DataType,S.range);
+dfFSDonset = importdata(fonset);
 
-funcorr     = sprintf('%scontour_KSN1_Fitrium_%s_%.0feV_FSDuncorr_95CL_0.txt',savedirF,S.RunAnaObj.DataType,S.range);
-%dfFSDuncorr = importdata(funcoff);
+funcorr     = sprintf('%scontour_KSN1_Fitrium_%s_%.0feV_FSD_binsOnly_95CL_0.txt',savedirF,S.RunAnaObj.DataType,S.range);
+dfFSDuncorr = importdata(funcorr);
 
-ftotal     = sprintf('%scontour_KSN1_Fitrium_%s_%.0feV_total_95CL_0.txt',savedirF,S.RunAnaObj.DataType,S.range);
-dftotal = importdata(ftotal);
-pFtotal = plot(dftotal.data(:,1),dftotal.data(:,2),'LineStyle','-.','Color',rgb('Silver'),'LineWidth',LineWidth);
-% 
-% pFFSDonset = plot(dfFSDonset.data(:,1),dfFSDonset.data(:,2),'LineStyle','-.','Color',rgb('PowderBlue'),'LineWidth',LineWidth);
-% hold on;
-% pFFSDuncorr = plot(dfFSDuncorr.data(:,1),dfFSDuncorr.data(:,2),'LineStyle','-.','Color',rgb('Orange'),'LineWidth',LineWidth);
+% ftotal     = sprintf('%scontour_KSN1_Fitrium_%s_%.0feV_total_95CL_0.txt',savedirF,S.RunAnaObj.DataType,S.range);
+% dftotal = importdata(ftotal);
+% pFtotal = plot(dftotal.data(:,1),dftotal.data(:,2),'LineStyle','-.','Color',rgb('Silver'),'LineWidth',LineWidth);
+% % 
+pFFSDonset = plot(dfFSDonset.data(:,1),dfFSDonset.data(:,2),'LineStyle','-.','Color',rgb('PowderBlue'),'LineWidth',LineWidth);
+hold on;
+pFFSDuncorr = plot(dfFSDuncorr.data(:,1),dfFSDuncorr.data(:,2),'LineStyle','-.','Color',rgb('Orange'),'LineWidth',LineWidth);
 
 % %% 
-% legend([pFSDonset,pFFSDonset,pFSDuncorr,pFFSDuncorr],...
-%     'Samak (stat + FSD onset)', 'Fitrium (stat + FSD onset)',...
-%     'Samak (stat + FSD shape)', 'Fitrium (stat + FSD shape)',...
-%     'EdgeColor',rgb('Silver'),'Location','southwest');
-
-%%
-legend([pFSDonset,pFSDuncorr,pSysall,pFtotal],...
-    'Samak (stat + FSD onset)',...
-    'Samak (stat + FSD shape)', 'Samak (total)',...
-    'Fitrium (total)',...
+legend([pFSDonset,pFFSDonset,pFSDuncorr,pFFSDuncorr],...
+    'Samak (stat + FSD onset)', 'Fitrium (stat + FSD onset)',...
+    'Samak (stat + FSD shape)', 'Fitrium (stat + FSD shape)',...
     'EdgeColor',rgb('Silver'),'Location','southwest');
+
+%
+% legend([pFSDonset,pFSDuncorr,pSysall,pFtotal],...
+%     'Samak (stat + FSD onset)',...
+%     'Samak (stat + FSD shape)', 'Samak (total)',...
+%     'Fitrium (total)',...
+%     'EdgeColor',rgb('Silver'),'Location','southwest');
 xlim([1e-03,0.4])
 ylim([3 90^2]);
 
 title(sprintf('%s - %.0f eV range - %.0f%% C.L.',S.GetPlotTitle('Mode','data'),S.range,S.ConfLevel),...
     'FontWeight','normal','FontSize',get(gca,'FontSize'));
+
+print(gcf,'KSN1_FSDuncertainty95eV_95CL.png','-dpng','-r400')
