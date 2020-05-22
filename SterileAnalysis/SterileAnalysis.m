@@ -109,6 +109,13 @@ classdef SterileAnalysis < handle
                 else
                     Maxm4Sq =  84.5^2;
                 end
+            elseif obj.range==40 && strcmp(obj.RunAnaObj.DataType,'Real')
+                freePar = ConvertFixPar('freePar',obj.RunAnaObj.fixPar,'Mode','Reverse');
+                if contains(freePar,'mNu')
+                    Maxm4Sq = 30^2;
+                else
+                    Maxm4Sq =  (obj.range-3)^2;
+                end
             else
                 Maxm4Sq =  (obj.range-5)^2;
             end
@@ -996,8 +1003,8 @@ classdef SterileAnalysis < handle
             legHandle{numel(legHandle)+1} = pPull;
             
             %% appearance + legend
-            legStr = [legStr,{sprintf('KATRIN KSN1 %.0f%% C.L. - {\\itm}_\\nu^2 free - \\sigma({\\itm}_\\nu^2) = 1.94 eV^2',obj.ConfLevel),...
-                sprintf('KATRIN KSN1 %.0f%% C.L. - {\\itm}_\\nu^2 = 0 eV^2',obj.ConfLevel)}];
+            legStr = [legStr,{sprintf('KATRIN KSN1 %.0f%% C.L. - {\\itm}_\\nu^2 = 0 eV^2',obj.ConfLevel),...
+                sprintf('KATRIN KSN1 %.0f%% C.L. - {\\itm}_\\nu^2 free - \\sigma({\\itm}_\\nu^2) = 1.94 eV^2',obj.ConfLevel)}];
             PrettyFigureFormat('FontSize',20);
             leg =  legend([legHandle{:}],legStr{:},...
                 'EdgeColor',rgb('Silver'),'Location','southwest');
@@ -1010,6 +1017,9 @@ classdef SterileAnalysis < handle
             elseif obj.range==95
                 ylim([1 1e4]);
                 xlim([9e-04 0.5]);
+            elseif obj.range==40
+                ylim([1 1.25e3]);
+                xlim([6e-03 0.5]);
             end
             title('');%remove title
             %% save
