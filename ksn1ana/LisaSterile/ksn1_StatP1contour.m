@@ -1,5 +1,5 @@
 %% calculate grid for ksn1 stat. + 1 syst
-range = 95;
+range = 40;%65;
 nGridSteps = 25;
 chi2Str = 'chi2CMShape';
 DataType = 'Twin';
@@ -7,6 +7,7 @@ freePar = 'E0 Bkg Norm';
 RunList = 'KNM1';
 SmartGrid = 'OFF';
 CL= 95;
+SysBudget = 24;
 mySysEffects = {...
     'FSD',...             % final state distribution       
     'TASR',...             % tritium activity fluctuations from subrun to subrun
@@ -43,7 +44,8 @@ chi2_ref = cell(nSys+2,1);
     'freePar',freePar,...
     'RunList',RunList,...
     'SmartGrid',SmartGrid,...
-    'RecomputeFlag','OFF');
+    'RecomputeFlag','OFF',...
+    'SysBudget',SysBudget);
 %% stat + all syst
 [mnu4Sq{2},sin2T4{2},chi2{2},chi2_ref{2},savefile] = KSN1GridSearch('range',range,...
     'nGridSteps',nGridSteps,...
@@ -53,7 +55,8 @@ chi2_ref = cell(nSys+2,1);
     'RunList',RunList,...
     'SmartGrid',SmartGrid,...
     'RecomputeFlag','OFF',...
-    'SysEffect','all');
+    'SysEffect','all',...
+     'SysBudget',SysBudget);
 %%
 for i=3:(nSys+2)
     [mnu4Sq{i},sin2T4{i},chi2{i},chi2_ref{i},savefile] = KSN1GridSearch('range',range,...
@@ -64,7 +67,8 @@ for i=3:(nSys+2)
         'RunList',RunList,...
         'SmartGrid',SmartGrid,...
         'RecomputeFlag','OFF',...
-        'SysEffect',mySysEffects{i-2});
+        'SysEffect',mySysEffects{i-2},...
+         'SysBudget',SysBudget);
 end
 
 
@@ -100,9 +104,11 @@ elseif range>40
        xlim([2e-03 0.5])
 end
 ylim([1 (range+5)^2])
-
+leg.NumColumns=2;
+set(leg.BoxFace, 'ColorType','truecoloralpha', 'ColorData',uint8(255*[1;1;1;0.8]));
 title(sprintf('%s , %.0f eV at %.0f%% C.L.',DataType,range,CL),'FontWeight','normal');
 
 plotdir = [getenv('SamakPath'),'ksn1ana/LisaSterile/plots/'];
 plotname = sprintf('%sStatPlus1_%s_%.0feV.png',plotdir,DataType,range);
 print(gcf,plotname,'-dpng','-r400');
+export_fig(gcf,strrep(plotname,'.png','.pdf'));

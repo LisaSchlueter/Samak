@@ -1,10 +1,10 @@
 
 %% settings
 CL = 95;
-range =  65;%
+range =  95;%
 nGridSteps = 50;
-chi2Str = 'chi2Stat';%CMShape';
-DataType = 'Twin';
+chi2Str = 'chi2CMShape';
+DataType = 'Real';
 freePar = 'E0 Bkg Norm';
 RunList = 'KNM1';
 SmartGrid = 'OFF';

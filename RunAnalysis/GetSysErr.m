@@ -200,15 +200,15 @@ elseif SysBudget == 252 % test: KNM1 with exaggerated rhodsigma uncertainty : 5%
     SysErr.is_EOffsetErr = 0;
     SysErr.MACE_VarErr = 0;
     SysErr.MaxSlopeCpsPereV = 5.2*1e-06; % warning: changed 02.May 2020 from 15e-6
-elseif SysBudget == 253 % test: KNM1 with exaggerated FSD excited states uncertainty x3
+elseif SysBudget == 253 % test: KNM1 with exaggerated FSD excited states uncertainty: 40% 
     SysErr.FSDNorm_RelErr=  0.01;
     SysErr.FSDShapeGS_RelErr= 0.04;
-    SysErr.FSDShapeES_RelErr= 0.54;
+    SysErr.FSDShapeES_RelErr= 0.40;
     SysErr.WGTS_TASR_RelErr = 5e-4;
     SysErr.MACE_Ba_T_RelErr= 0.01;
     SysErr.MACE_Bmax_T_RelErr= 0.002;
     SysErr.WGTS_B_T_RelErr= 0.025;
-    SysErr.WGTS_CD_MolPerCm2_RelErr= 0.01;
+    SysErr.WGTS_CD_MolPerCm2_RelErr= 0.0085;
     SysErr.ISXsection_RelErr= 0; %use rhod sigma together as uncertainty
     SysErr.DataDriven = 'ON';
     SysErr.FPDeff_RelErr = 1e-4;
@@ -245,7 +245,7 @@ elseif SysBudget == 255 % % test: KNM1 with exaggerated FSD onset uncertainty : 
     SysErr.is_EOffsetErr = 0;
     SysErr.MACE_VarErr = 0;
     SysErr.MaxSlopeCpsPereV = 5.2*1e-06; % warning: changed 02.May 2020 from 15e-6
-elseif SysBudget == 256 % test: KNM1 with exaggerated rhodsigma uncertainty : 0.85*2=1.7%
+elseif SysBudget == 256 % test: KNM1 with exaggerated rhodsigma uncertainty : 1.5%
     SysErr.FSDNorm_RelErr=  0.01;
     SysErr.FSDShapeGS_RelErr= 0.04;
     SysErr.FSDShapeES_RelErr= 0.18;
@@ -253,7 +253,37 @@ elseif SysBudget == 256 % test: KNM1 with exaggerated rhodsigma uncertainty : 0.
     SysErr.MACE_Ba_T_RelErr= 0.01;
     SysErr.MACE_Bmax_T_RelErr= 0.002;
     SysErr.WGTS_B_T_RelErr= 0.025;
-    SysErr.WGTS_CD_MolPerCm2_RelErr= 0.02;
+    SysErr.WGTS_CD_MolPerCm2_RelErr= 0.015;
+    SysErr.ISXsection_RelErr= 0; %use rhod sigma together as uncertainty
+    SysErr.DataDriven = 'ON';
+    SysErr.FPDeff_RelErr = 1e-4;
+    SysErr.is_EOffsetErr = 0;
+    SysErr.MACE_VarErr = 0;
+    SysErr.MaxSlopeCpsPereV = 5.2*1e-06; % warning: changed 02.May 2020 from 15e-6
+elseif SysBudget == 257 % test: KNM1 with exaggerated FSD excited states uncertainty 50%
+    SysErr.FSDNorm_RelErr=  0.01;
+    SysErr.FSDShapeGS_RelErr= 0.04;
+    SysErr.FSDShapeES_RelErr= 0.50;
+    SysErr.WGTS_TASR_RelErr = 5e-4;
+    SysErr.MACE_Ba_T_RelErr= 0.01;
+    SysErr.MACE_Bmax_T_RelErr= 0.002;
+    SysErr.WGTS_B_T_RelErr= 0.025;
+    SysErr.WGTS_CD_MolPerCm2_RelErr= 0.0085;
+    SysErr.ISXsection_RelErr= 0; %use rhod sigma together as uncertainty
+    SysErr.DataDriven = 'ON';
+    SysErr.FPDeff_RelErr = 1e-4;
+    SysErr.is_EOffsetErr = 0;
+    SysErr.MACE_VarErr = 0;
+    SysErr.MaxSlopeCpsPereV = 5.2*1e-06; % warning: changed 02.May 2020 from 15e-6
+elseif SysBudget == 258 % test: KNM1 with exaggerated FSD excited states uncertainty 45%
+    SysErr.FSDNorm_RelErr=  0.01;
+    SysErr.FSDShapeGS_RelErr= 0.04;
+    SysErr.FSDShapeES_RelErr= 0.45;
+    SysErr.WGTS_TASR_RelErr = 5e-4;
+    SysErr.MACE_Ba_T_RelErr= 0.01;
+    SysErr.MACE_Bmax_T_RelErr= 0.002;
+    SysErr.WGTS_B_T_RelErr= 0.025;
+    SysErr.WGTS_CD_MolPerCm2_RelErr= 0.0085;
     SysErr.ISXsection_RelErr= 0; %use rhod sigma together as uncertainty
     SysErr.DataDriven = 'ON';
     SysErr.FPDeff_RelErr = 1e-4;

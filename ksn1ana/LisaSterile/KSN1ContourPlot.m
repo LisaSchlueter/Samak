@@ -88,7 +88,7 @@ for i=1:numel(CL)
     
 end
 
-PrettyFigureFormat;
+PrettyFigureFormat('FontSize',22);
 
 %% plot best fit
 if strcmp(BestFit,'ON')
@@ -106,7 +106,7 @@ title(titleStr,'FontWeight','normal','FontSize',get(gca,'FontSize'))
 set(gca,'YScale','log');
 set(gca,'XScale','log');
 
-xlabel('|U_{e4}|^2');
+xlabel(sprintf('|{\\itU}_{e4}|^2'));
 ylabel(sprintf('{\\itm}_4^2 (eV^2)'));
 
 rangeApprox = sqrt(max(max(mnu4Sq)));
