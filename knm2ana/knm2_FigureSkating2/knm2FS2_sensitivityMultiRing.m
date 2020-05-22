@@ -4,7 +4,7 @@
 range = 40;
 
 E0 = knm2FS_GetE0Twins('SanityPlot','OFF','Mode','FS2');
-chi2 = 'chi2CMShape';
+chi2 = 'chi2Stat';
 
 %% set up model
 RunArg = {'RunList','KNM2_Prompt',...
@@ -15,7 +15,7 @@ RunArg = {'RunList','KNM2_Prompt',...
     'minuitOpt','min ; minos',...
     'FSDFlag','BlindingKNM2',...
     'ELossFlag','KatrinT2A20',...
-    'SysBudget',36,...
+    'SysBudget',37,...
     'AnaFlag','Ring',...
     'RingMerge','Full',...
     'chi2','chi2Stat',...
@@ -31,24 +31,18 @@ if ~strcmp(chi2,'chi2Stat')
     MR.NonPoissonScaleFactor = 1.112;
     MR.SetNPfactor; % convert to right dimension (if multiring)
     MR.chi2 = chi2;
-    MR.ComputeCM;
+   % MR.ComputeCM;
 end
 
-%%  broadening of RF + broadening/shift of FSD
-TimeSec = zeros(3,1);
-TimeSec(1) = sum(MR.SingleRunData.TimeSec(1:171));
-TimeSec(2) = sum(MR.SingleRunData.TimeSec(172:268));
-TimeSec(3) = sum(MR.SingleRunData.TimeSec(269:361));
-MultiWeights = TimeSec./sum(TimeSec);
-MultiPos = [E0(1),E0(end-120),E0(end)]';
-MultiPosRel = repmat(MultiPos-wmean(MultiPos,MultiWeights),1,MR.nRings);
-Sigma = repmat(std(E0),3,MR.nRings);
-FSDArg = {'MultiPos',MultiPosRel,'MultiWeight',MultiWeights,...
-    'SanityPlot','OFF','Sigma',Sigma};
-MR.ModelObj.LoadFSD(FSDArg{:});
-
+%%  broadening of FSD
+if numel(E0)>0
+    FSDArg = {'SanityPlot','OFF','Sigma',std(E0)};
+    MR.ModelObj.LoadFSD(FSDArg{:});
+end
 %%
-S = RunSensitivity('RunAnaObj',MR);
+SysAll    = {'TASR','LongPlasma','Bkg'}; %Bkg has to be last
+SysLeg    = {'Tritium activity fluctuations';'Long. source potential';'Background slope'};
+S = RunSensitivity('RunAnaObj',MR,'SysEffectsAll',SysAll,'SysEffectLeg',SysLeg);
 S.RecomputeFlag='OFF';
 S.LimitFlag = 'Central';
 S.ConfLevel=0; % 0 == 1 sigma

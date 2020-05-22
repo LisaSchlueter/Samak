@@ -3,10 +3,16 @@ range = 40;
 AuxLines = 'OFF';
 ShowResults = 'OFF';
 SavePlot = 'ON';
+AnaMode = 'MultiRing';
+if ~strcmp(AnaMode,'MultiRing')
+    AnaStr= '';
+else
+    AnaStr = '_MultiRing';
+end
 %%
 savedir = [getenv('SamakPath'),'knm2ana/knm2_FigureSkating2/results/'];
-savenameStat = sprintf('%sknm2FS2_ComputeTwinScanResults_chi2Stat_%.0feV.mat',savedir,range);
-savenameCM = sprintf('%sknm2FS2_ComputeTwinScanResults_chi2CMShape_%.0feV.mat',savedir,range);
+savenameStat = sprintf('%sknm2FS2_ComputeTwinScanResults_chi2Stat_%.0feV%s.mat',savedir,range,AnaStr);
+savenameCM = sprintf('%sknm2FS2_ComputeTwinScanResults_chi2CMShape_%.0feV%s.mat',savedir,range,AnaStr);
 try
 dStat = importdata(savenameStat);
 dCM = importdata(savenameCM);
@@ -81,7 +87,13 @@ t = title('Twins','FontWeight','normal','FontSize',get(gca,'FontSize'));
 if strcmp(SavePlot,'ON')
 plotdir = strrep(savedir,'results','plots');
 MakeDir(plotdir);
-plotname = sprintf('%sknm2FS2_Chi2CurveStatSyst.pdf',plotdir);
+plotname = sprintf('%sknm2FS2_Chi2CurveStatSyst%s.pdf',plotdir,AnaStr);
 fprintf('save plot to %s \n',plotname);
 export_fig(gcf,plotname);
 end
+
+%% 
+fprintf('--------%s----------------------------------\n',AnaMode)
+fprintf('stat. only mnu^2 = %.3f (-%.3f + %.3f) eV^2 \n',FitResultStat.par(1),-FitResultStat.errNeg(1),FitResultStat.errPos(1));
+fprintf('syst. only mnu^2 = %.3f (-%.3f + %.3f) eV^2 \n',FitResultCM.par(1),sqrt(FitResultCM.errNeg(1)^2-FitResultStat.errNeg(1)^2),sqrt(FitResultCM.errPos(1)^2-FitResultStat.errPos(1)^2));
+fprintf('total      mnu^2 = %.3f (-%.3f + %.3f) eV^2 \n',FitResultCM.par(1),-FitResultCM.errNeg(1),FitResultCM.errPos(1));

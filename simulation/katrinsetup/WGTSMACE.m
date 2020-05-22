@@ -123,6 +123,7 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
         % Energy Loss Function 
         ELossFlag; % Aseev, Abdurashitov
         fscat    = [];
+        ElossFunctions;
         
         % MACE
         MACE_Bmax_T        ;    % Pinch B field, Tesla
@@ -512,7 +513,7 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             % - when lambdaintegral not calculated (e.g. in covariance matrix!), then Method 'New' is more than 2x faster
             % - both methods give the same result
             % ---------------------------------------------------------
-          
+            
             if strcmp(Method,'Interp')
                 try
                     %fprintf('Interpolation of inel. scattering probabilities ...')
@@ -522,7 +523,12 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
                         'NIS',obj.NIS,...
                         'ISXsection', ISXsection_local(squeeze(Energy)),...
                         'SanityPlot','OFF');
-                    fprintf('succesful! \n')
+                    %fprintf('succesful! \n')
+                    
+                    Pis_m = out;
+                    pis_file = [getenv('SamakPath'), sprintf('inputs/WGTSMACE/WGTS_ISProb/IS_%.5g-molPercm2_Edep-Xsection-max%.0feV_Xstep%.1feV_%.0f-NIS_%.3g-Bmax_%.3g-Bs.mat',...
+                        WGTS_CD_MolPerCm2_local,max(Energy),Energy(2)-Energy(1),obj.NIS+1,MACE_Bmax_T_local,WGTS_B_T_local)];
+                    save(pis_file,'Pis_m','Energy','MACE_Bmax_T_local','WGTS_B_T_local','WGTS_CD_MolPerCm2_local','ISXsection_local');
                     return
                 catch
                     fprintf(2,'failed - calculate exact inel. scattering probabilities \n')
@@ -843,6 +849,7 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             p.addParameter('LoadOrSaveEloss','ON',@(x)ismember(x,{'ON','OFF'}));   % Only for covariance matrices has to be off
             p.addParameter('is_EOffset',obj.is_EOffset,@(x)isfloat(x));
             p.addParameter('ConvFlag','Conv',@(x)ismember(x,{'IntConv','Conv'}));
+            
             p.parse(varargin{:});
             
             is_A1_local       = p.Results.is_A1;
@@ -1040,6 +1047,7 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
                     end
                     f8scatn = @(e) f8scat(e);%/simpsons(e,f8scat(e));
                     fscatn(1:8) = {f1scatn; f2scatn; f3scatn; f4scatn; f5scatn;f6scatn;f7scatn;f8scatn};
+                    fscatnE(8,:) = f8scatn(E+ is_EOffset_local);
                 end
                 
                 if obj.NIS>8
@@ -1050,6 +1058,7 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
                     end
                     f9scatn = @(e) f9scat(e);%/simpsons(e,f9scat(e));
                     fscatn(1:9) = {f1scatn; f2scatn; f3scatn; f4scatn; f5scatn;f6scatn;f7scatn;f8scatn;f9scatn};
+                    fscatnE(9,:) = f9scatn(E+ is_EOffset_local);
                 end
                 
                 if obj.NIS>9
@@ -1060,13 +1069,13 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
                     end
                     f10scatn = @(e) f10scat(e);%/simpsons(e,f10scat(e));
                     fscatn(1:10) = {f1scatn; f2scatn; f3scatn; f4scatn; f5scatn; f6scatn; f7scatn; f8scatn; f9scatn; f10scatn};
-                end
-                
-                % output
+                    fscatnE(10,:) = f8scatn(E+ is_EOffset_local);
+                end   
                 % save
                 if strcmp(LoadOrSaveEloss,'ON')
                     save(file_eloss{1},'fscatn','fscatnE','E');
                 end
+                
             end
         end
         
@@ -1214,6 +1223,7 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             p.addParameter('RFBinStep',obj.RFBinStep,@(x)isfloat(x));    % for Final RF Convolution 0.04
             p.addParameter('AdjustISProba','OFF',@(x)ismember(x,{'ON','OFF'}));    % for Final RF Convolution
             p.addParameter('ElossFunctions','',@(x)isfloat(x)); % for covariance matrix only
+            p.addParameter('ISProb','',@(x)isfloat(x)); % for covariance matrix only
             p.addParameter('MACE_Bmax_T',obj.MACE_Bmax_T,@(x)isfloat(x)); 
             p.addParameter('WGTS_B_T',obj.WGTS_B_T,@(x)isfloat(x));
             p.addParameter('MACE_Ba_T',obj.MACE_Ba_T, @(x)all(isfloat(x)));
@@ -1230,7 +1240,8 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             RFBinStep_local            = p.Results.RFBinStep;
             AdjustISProba              = p.Results.AdjustISProba;
             pixel                      = p.Results.pixel;
-            ElossFunctions             = p.Results.ElossFunctions;
+            ElossFunctions_local       = p.Results.ElossFunctions;
+            ISProb_local               = p.Results.ISProb;
             MACE_Bmax_T_local          = p.Results.MACE_Bmax_T;
             WGTS_B_T_local             = p.Results.WGTS_B_T;
             ISXsection_local           = p.Results.ISXsection;
@@ -1250,6 +1261,7 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
                 E_rf            = minE_rf:Estep_rf:maxE_rf;
             else
                 Edef_rf    = te-qu;
+                
                 BinFactor = ceil(obj.TeStep/RFBinStep_local); 
                 if BinFactor<=1
                     E_add = [];
@@ -1261,17 +1273,12 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
                     E_add = [E_add1;E_add2];
                 elseif BinFactor>=4
                     E_add = zeros(BinFactor-1,numel(Edef_rf));
+                  %   E_add = zeros(BinFactor-1,size(Edef_rf,1),size(Edef_rf,2));
                     for i=1:BinFactor-1
                         E_add(i,:) = Edef_rf+obj.TeStep.*i/BinFactor;
                     end
                     E_add = sort(reshape(E_add,(BinFactor-1)*numel(Edef_rf),1));
-%                     E_add1 = Edef_rf-obj.TeStep/4;
-%                     E_add2 = Edef_rf+obj.TeStep/4;
-%                     E_add3 = Edef_rf-obj.TeStep/2;
-                   
-                   % end
-                     %E_add = [E_add1;E_add2;E_add3];
-               % elseif 
+                     % E_add = sort(reshape(E_add,(BinFactor-1)*size(Edef_rf,1),size(Edef_rf,2)));
                 end
                 E_rf = unique([Edef_rf;E_add]); % sorts and delete repetitions
                 Estep_rf = E_rf(2) - E_rf(1);
@@ -1308,7 +1315,7 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             file_pis = cell(numel((obj.NIS+1):11),1);
             if strcmp(obj.ISCS,'Edep')
                 file_pis{1} = [getenv('SamakPath'), sprintf('inputs/WGTSMACE/WGTS_ISProb/IS_%.5g-molPercm2_Edep-Xsection-max%.0feV_Xstep%.1feV_%.0f-NIS_%.3g-Bmax_%.3g-Bs.mat',...
-                    WGTS_CD_MolPerCm2_local,maxEis,IsProbBinStep,obj.NIS+1,MACE_Bmax_T_local,WGTS_B_T_local)];
+                    WGTS_CD_MolPerCm2_local,max(Eiscs),IsProbBinStep,obj.NIS+1,MACE_Bmax_T_local,WGTS_B_T_local)];
             else
                 file_pis{1} = [getenv('SamakPath'), sprintf('inputs/WGTSMACE/WGTS_ISProb/IS_%.5g-molPercm2_%.5g-Xsection_%.0f-NIS_%.3g-Bmax_%.3g-Bs.mat',...
                                WGTS_CD_MolPerCm2_local,ISXsection_local(18575),obj.NIS+1,MACE_Bmax_T_local,WGTS_B_T_local)];
@@ -1320,20 +1327,24 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             
             %% IS Probabilities: load from lookup table or compute new
             if strcmp(obj.recomputeRF,'OFF')
-                % file names
-                file_logic = find(isfile(file_pis));
-                if numel(file_logic)>1
-                    file_logic = file_logic(1);
-                end
-                % import/calculation
-                if ~isempty(file_logic) % if one of the files exist: load it
-                    w = load(file_pis{file_logic});
-                else % if not: compute scattering probabilities
-                    w.Pis_m = obj.ComputeISProb('Energy',reshape(Eiscs,[1,1,numel(Eiscs)]),...
-                        'MACE_Bmax_T',MACE_Bmax_T_local,...
-                        'WGTS_B_T',WGTS_B_T_local,...
-                        'ISXsection',ISXsection_local,...
-                        'WGTS_CD_MolPerCm2',WGTS_CD_MolPerCm2_local);
+                if isempty(ISProb_local)
+                    % file names
+                    file_logic = find(isfile(file_pis));
+                    if numel(file_logic)>1
+                        file_logic = file_logic(1);
+                    end
+                    % import/calculation
+                    if ~isempty(file_logic) % if one of the files exist: load it
+                        w  = load(file_pis{file_logic},'Pis_m');
+                    else % if not: compute scattering probabilities
+                        w.Pis_m = obj.ComputeISProb('Energy',reshape(Eiscs,[1,1,numel(Eiscs)]),...
+                            'MACE_Bmax_T',MACE_Bmax_T_local,...
+                            'WGTS_B_T',WGTS_B_T_local,...
+                            'ISXsection',ISXsection_local,...
+                            'WGTS_CD_MolPerCm2',WGTS_CD_MolPerCm2_local);
+                    end
+                else
+                    w.Pis_m = ISProb_local;
                 end
             elseif strcmp(obj.recomputeRF,'ON')
                 w.Pis_m = obj.ComputeISProb('Energy',reshape(Eiscs,[1,1,numel(Eiscs)]),...
@@ -1351,14 +1362,15 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
                 case 'ON'
                     obj.is_Pv = w.Pis_m /100 .* ratioMasterSamak;
             end
-              
-            %% Retrieve/Compute Energy Loss Functions
-            obj.recomputeRF = 'OFF';
-            if isempty(ElossFunctions)
-                [~,ElossFunctions] = obj.ComputeELossFunction('E',E); % load if already exists, otherwise compute
-            end
-            obj.recomputeRF = 'ON';
             
+            %% Retrieve/Compute Energy Loss Functions
+            if isempty(ElossFunctions_local)
+                if isempty(obj.ElossFunctions)
+                    [~,obj.ElossFunctions] = obj.ComputeELossFunction('E',E); % load if already exists, otherwise compute
+                end
+                ElossFunctions_local = obj.ElossFunctions;
+            end
+
             if numel(obj.is_Pv)<8 && obj.NIS<7
                 obj.is_Pv(obj.NIS+2:end) = 0;
                 obj.is_Pv =  [obj.is_Pv;zeros(8,1)]; %add some zeros
@@ -1380,24 +1392,24 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             
             ISProb = interp1(Eiscs',obj.is_Pv',qu+Eel)';
             
-            scatterings  = ISProb(2,:).*ElossFunctions(1,EindexStart:EindexStop) + ... % first scattering
-                ISProb(3,:).*ElossFunctions(2,EindexStart:EindexStop).*(E(2)-E(1))^1 + ...
-                ISProb(4,:).*ElossFunctions(3,EindexStart:EindexStop).*(E(2)-E(1))^2 + ...
-                ISProb(5,:).*ElossFunctions(4,EindexStart:EindexStop).*(E(2)-E(1))^3 + ...
-                ISProb(6,:).*ElossFunctions(5,EindexStart:EindexStop).*(E(2)-E(1))^4 + ...
-                ISProb(7,:).*ElossFunctions(6,EindexStart:EindexStop).*(E(2)-E(1))^5 + ...
-                ISProb(8,:).*ElossFunctions(7,EindexStart:EindexStop).*(E(2)-E(1))^6;
+            scatterings  = ISProb(2,:).*ElossFunctions_local(1,EindexStart:EindexStop) + ... % first scattering
+                ISProb(3,:).*ElossFunctions_local(2,EindexStart:EindexStop).*(E(2)-E(1))^1 + ...
+                ISProb(4,:).*ElossFunctions_local(3,EindexStart:EindexStop).*(E(2)-E(1))^2 + ...
+                ISProb(5,:).*ElossFunctions_local(4,EindexStart:EindexStop).*(E(2)-E(1))^3 + ...
+                ISProb(6,:).*ElossFunctions_local(5,EindexStart:EindexStop).*(E(2)-E(1))^4 + ...
+                ISProb(7,:).*ElossFunctions_local(6,EindexStart:EindexStop).*(E(2)-E(1))^5 + ...
+                ISProb(8,:).*ElossFunctions_local(7,EindexStart:EindexStop).*(E(2)-E(1))^6;
             
             obj.fscat       = @(e) 0+(e>0).*interp1(Eel,scatterings,e,'spline','extrap');
             
             if strcmp(obj.AngularTFFlag,'ON')
-                f1 = @(e) 0+(e>0).*interp1(Eel,ISProb(2,:).*ElossFunctions(1,EindexStart:EindexStop),e,'spline','extrap');
-                f2 = @(e) 0+(e>0).*interp1(Eel,ISProb(3,:).*ElossFunctions(2,EindexStart:EindexStop).*(E(2)-E(1))^1,e,'spline','extrap');
-                f3 = @(e) 0+(e>0).*interp1(Eel,ISProb(4,:).*ElossFunctions(3,EindexStart:EindexStop).*(E(2)-E(1))^2,e,'spline','extrap');
-                f4 = @(e) 0+(e>0).*interp1(Eel,ISProb(5,:).*ElossFunctions(4,EindexStart:EindexStop).*(E(2)-E(1))^3,e,'spline','extrap');
-                f5 = @(e) 0+(e>0).*interp1(Eel,ISProb(6,:).*ElossFunctions(5,EindexStart:EindexStop).*(E(2)-E(1))^4,e,'spline','extrap');
-                f6 = @(e) 0+(e>0).*interp1(Eel,ISProb(7,:).*ElossFunctions(6,EindexStart:EindexStop).*(E(2)-E(1))^5,e,'spline','extrap');
-                f7 = @(e) 0+(e>0).*interp1(Eel,ISProb(8,:).*ElossFunctions(7,EindexStart:EindexStop).*(E(2)-E(1))^6,e,'spline','extrap');
+                f1 = @(e) 0+(e>0).*interp1(Eel,ISProb(2,:).*ElossFunctions_local(1,EindexStart:EindexStop),e,'spline','extrap');
+                f2 = @(e) 0+(e>0).*interp1(Eel,ISProb(3,:).*ElossFunctions_local(2,EindexStart:EindexStop).*(E(2)-E(1))^1,e,'spline','extrap');
+                f3 = @(e) 0+(e>0).*interp1(Eel,ISProb(4,:).*ElossFunctions_local(3,EindexStart:EindexStop).*(E(2)-E(1))^2,e,'spline','extrap');
+                f4 = @(e) 0+(e>0).*interp1(Eel,ISProb(5,:).*ElossFunctions_local(4,EindexStart:EindexStop).*(E(2)-E(1))^3,e,'spline','extrap');
+                f5 = @(e) 0+(e>0).*interp1(Eel,ISProb(6,:).*ElossFunctions_local(5,EindexStart:EindexStop).*(E(2)-E(1))^4,e,'spline','extrap');
+                f6 = @(e) 0+(e>0).*interp1(Eel,ISProb(7,:).*ElossFunctions_local(6,EindexStart:EindexStop).*(E(2)-E(1))^5,e,'spline','extrap');
+                f7 = @(e) 0+(e>0).*interp1(Eel,ISProb(8,:).*ElossFunctions_local(7,EindexStart:EindexStop).*(E(2)-E(1))^6,e,'spline','extrap');
             end
             
             % Retreive Transmission Function

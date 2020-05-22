@@ -1,4 +1,4 @@
-function [mnu4Sq,sin2T4,chi2,chi2_ref,savefile] = KSN1GridSearch(varargin)
+function [mnu4Sq,sin2T4,chi2,chi2_ref,savefile,FitResults_Null] = KSN1GridSearch(varargin)
 % parallel grid search for sterile ksn1 analysis
 % Lisa, April 2020
 
@@ -15,6 +15,8 @@ p.addParameter('SysEffect','all',@(x)ischar(x)); % if chi2CMShape: all or only 1
 p.addParameter('RandMC','OFF',@(x)ischar(x) || isfloat(x)); % randomize twins if RandMC is float
 p.addParameter('pullFlag',99,@(x)isfloat(x)); % if above 12 --> no pull
 p.addParameter('SysBudget',22,@(x)isfloat(x));
+p.addParameter('ELossFlag','KatrinT2',@(x)ischar(x));
+p.addParameter('AngularTFFlag','OFF',@(x)ismember(x,{'ON','OFF'})); 
 p.parse(varargin{:});
 
 range         = p.Results.range;
@@ -29,6 +31,8 @@ SysEffect     = p.Results.SysEffect;
 RandMC        = p.Results.RandMC;
 pullFlag      = p.Results.pullFlag;
 SysBudget     = p.Results.SysBudget;
+ELossFlag     = p.Results.ELossFlag;
+AngularTFFlag = p.Results.AngularTFFlag;
 
 if strcmp(chi2,'chi2CMShape')
     NonPoissonScaleFactor=1.064;
@@ -49,6 +53,15 @@ if strcmp(chi2,'chi2CMShape')
         extraStr = [extraStr,sprintf('_%s',SysEffect)];
     end
 end
+
+if ~strcmp(ELossFlag,'KatrinT2')
+     extraStr = [extraStr,sprintf('_%s',ELossFlag)];
+end
+
+if ~strcmp(AngularTFFlag,'OFF')
+     extraStr = [extraStr,'_AngTF'];
+end
+
 if isfloat(RandMC) && strcmp(DataType,'Twin')
     extraStr = sprintf('%s_RandMC%.0f',extraStr,RandMC);
     savedir = [getenv('SamakPath'),'ksn1ana/LisaSterile/results/RandomizedMC/'];
@@ -79,7 +92,7 @@ if ~exist(savefile,'file') && strcmp(RecomputeFlag,'OFF') && nGridSteps<50
 end
 %% load or calculate grid
 if exist(savefile,'file') && strcmp(RecomputeFlag,'OFF')
-    load(savefile,'mnu4Sq','sin2T4','chi2','chi2_ref')
+    load(savefile,'mnu4Sq','sin2T4','chi2','chi2_ref','FitResults_Null')
     fprintf('load grid from file %s \n',savefile)
 else
     if range<=40
@@ -92,12 +105,12 @@ else
         'fixPar',freePar,...
         'DataType',DataType,...
         'FSDFlag',FSDFlag,...
-        'ELossFlag','KatrinT2',...
+        'ELossFlag',ELossFlag,...
+        'AngularTFFlag',AngularTFFlag,...
         'AnaFlag','StackPixel',...
         'chi2',chi2,...
         'ROIFlag','Default',...
         'SynchrotronFlag','ON',...
-        'AngularTFFlag','OFF',...
         'ISCSFlag','Edep',...
         'NonPoissonScaleFactor',NonPoissonScaleFactor,...
         'TwinBias_Q',18573.73,...
@@ -113,6 +126,22 @@ else
         else
             T.ComputeCM('SysEffect',struct(SysEffect,'ON'),'BkgCM','OFF');
         end
+    end
+    
+    if SysBudget==299 %exception
+         AllEffects = struct(...
+                        'RF_EL','ON',...   % Response Function(RF) EnergyLoss
+                        'RF_BF','ON',...   % RF B-Fields
+                        'RF_RX','ON',...   % Column Density, inel cross ection
+                        'FSD','ON',...
+                        'TASR','ON',...
+                        'TCoff_RAD','OFF',...
+                        'TCoff_OTHER','ON',...
+                        'DOPoff','OFF',...
+                        'Stack','ON',...
+                        'FPDeff','ON',...
+                        'LongPlasma','ON');
+        T.ComputeCM('SysEffect',AllEffects,'BkgCM','ON');
     end
     %% ranomized mc data
     if isfloat(RandMC) && strcmp(DataType,'Twin')

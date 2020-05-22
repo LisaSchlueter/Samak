@@ -1,16 +1,17 @@
+
 % KNM2 Figure skating twins
 range = 40;
-Chi2Scan = 'ON';
+Chi2Scan = 'OFF';
 
 E0 = knm2FS_GetE0Twins('SanityPlot','OFF','Mode','FS2');
-
+chi2 = 'chi2CMShape';
 RunAnaArg = {'RunList','KNM2_Prompt',...     % all KNM2 golden runs
     'fixPar','mNu E0 Bkg Norm',...           % free Parameter !!
     'DataType','Twin',...
     'FSDFlag','BlindingKNM2',...             % final state distribution (theoretical calculation)
     'ELossFlag','KatrinT2A20',...            % energy-loss function     ( different parametrizations available)
     'AnaFlag','StackPixel',...               % FPD segmentations -> pixel combination
-    'chi2','chi2CMShape',...                    % statistics only
+    'chi2',chi2,...                    % statistics only
     'NonPoissonScaleFactor',1,...
     'TwinBias_Q',E0,...
     'ROIFlag','Default',...
@@ -20,8 +21,14 @@ RunAnaArg = {'RunList','KNM2_Prompt',...     % all KNM2 golden runs
 %% build object of MultiRunAnalysis class
 A = MultiRunAnalysis(RunAnaArg{:});
 A.exclDataStart = A.GetexclDataStart(range);
+if strcmp(chi2,'chi2Stat')
+    A.NonPoissonScaleFactor=1;
+else
+    A.NonPoissonScaleFactor=1.112;
+    A.ComputeCM;
+end
 A.Fit;
-A.PlotFit
+%A.PlotFit
 
 %% Chi2 - scan
 if strcmp(Chi2Scan,'ON')

@@ -39,13 +39,14 @@ S.ConfLevel = 95;
 S.range = 65;
 switch S.RunAnaObj.DataType
     case 'Real'
-        Arg = {'SavePlot','OFF'}; 
+        Arg = {'SavePlot','ON'}; 
         S.InterpMode = 'spline';
     case 'Twin'
-         Arg = {'SavePlot','png'};%,41,40]};
+         Arg = {'SavePlot','ON'};%,41,40]};
+           S.InterpMode = 'spline';
 end
-S.LoadGridFile;
-S.Interp1Grid('RecomputeFlag','ON');
-S.GridPlot('BestFit','OFF','Contour','OFF');
-%S.PlotFitriumSamak(Arg{:});
+%S.LoadGridFile;
+%S.Interp1Grid('RecomputeFlag','ON');
+%S.GridPlot('BestFit','OFF','Contour','OFF');
+S.PlotFitriumSamak(Arg{:},'PlotStat','ON');
  

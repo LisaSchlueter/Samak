@@ -32,6 +32,7 @@ classdef SterileAnalysis < handle
         ConfLevel;
         dof;
         
+        
         % plot
         PlotColors;
         PlotLines;
@@ -100,9 +101,11 @@ classdef SterileAnalysis < handle
             
             %% define maximum m4:
             if obj.range==65    
-                Maxm4Sq = 59^2;
+                Maxm4Sq = 59^2;%59^2;
+            elseif obj.range==95 && strcmp(obj.RunAnaObj.DataType,'Twin')
+                  Maxm4Sq =  94^2;
             else
-                Maxm4Sq = (obj.range-4)^2;
+                Maxm4Sq =  (obj.range-5)^2;
             end
             
             [X,Y] = meshgrid(obj.mNu4Sq(:,1),obj.sin2T4(1,:));
@@ -111,7 +114,7 @@ classdef SterileAnalysis < handle
             obj.sin2T4 = repmat(logspace(log10(min(min(obj.sin2T4))),log10(max(max(obj.sin2T4))),nInter),nInter,1)';
             obj.chi2   = reshape(interp2(X,Y,obj.chi2,obj.mNu4Sq,obj.sin2T4,obj.InterpMode),nInter,nInter);
             
-            obj.chi2(obj.chi2<0) = 0;%NaN;
+            obj.chi2(obj.chi2<0) = NaN;
             %             if strcmp(InterpMode,'spline')
             %                 [row, col]    = find(obj.chi2 < 0);
             %                 obj.chi2(row,:) = NaN;
@@ -126,15 +129,14 @@ classdef SterileAnalysis < handle
         function FindBestFit(obj,varargin)
             % best fit parameters of m4 and sin2t4
             % based on interpolated grid
-            if numel(obj.mNu4Sq)<1e3
+            if size(obj.mNu4Sq,1)<1e3
                 obj.Interp1Grid;
             end
             [row, col]    = find(obj.chi2 == min(obj.chi2(:)));
             
-            obj.mNu4Sq_bf =  obj.mNu4Sq(col,row);
-            obj.sin2T4_bf = obj.sin2T4(col,row);    
-            obj.chi2_bf   = obj.chi2_ref;
-            
+            obj.mNu4Sq_bf =   obj.mNu4Sq(row,col);%obj.mNu4Sq(col,row);
+            obj.sin2T4_bf = obj.sin2T4(row,col);    
+            obj.chi2_bf   = obj.chi2_ref;    
         end
         function CompareBestFitNull(obj,varargin)
             if isempty(obj.chi2_bf)
@@ -147,6 +149,10 @@ classdef SterileAnalysis < handle
             
             % null 
             fprintf('Null hypothesis: chi2 = %.3f (%.0f dof) -> p-value = %.2f\n',obj.chi2_Null,obj.dof+2,1-chi2cdf(obj.chi2_Null,obj.dof));
+            x = linspace(10,99,1e2);
+            y =GetDeltaChi2(x,2);
+            SignificanceBF = interp1(y,x,obj.chi2_Null-obj.chi2_bf,'spline');
+            fprintf('Delta chi2 = %.2f -> %.1f%% C.L. significance \n',obj.chi2_Null-obj.chi2_bf,SignificanceBF);
           
         end
         function [DeltamNu41Sq,sin2T4Sq] = Convert2Osci(obj,varargin)
@@ -561,21 +567,29 @@ classdef SterileAnalysis < handle
          p = inputParser;
          p.addParameter('Ranges',[95:-5:45,41,40],@(x)isfloat(x));
          p.addParameter('SavePlot','ON',@(x)ismember(x,{'ON','OFF','png'}));
+         p.addParameter('BestFit','OFF',@(x)ismember(x,{'ON','OFF'}));
          p.parse(varargin{:});
          Ranges   = p.Results.Ranges;
          SavePlot = p.Results.SavePlot;
+         BestFit  = p.Results.BestFit;
          
          legStr = cell(numel(Ranges),1);
          pl     = cell(numel(Ranges),1);
          range_i = obj.range;
          
-         Colors = parula(numel(Ranges));
+         if numel(Ranges)>3
+             Colors = parula(numel(Ranges));
+         else
+             Colors = cell2mat(obj.PlotColors');
+             
+         end
+         
          for i=1:numel(Ranges)
              progressbar(i/numel(Ranges));
              obj.range = Ranges(i);
              obj.LoadGridFile('CheckSmallerN','ON');
              obj.Interp1Grid('RecomputeFlag','ON');
-             PlotArg = {'Color',Colors(i,:),'LineStyle',obj.PlotLines{i}};
+             PlotArg = {'Color',Colors(i,:),'LineStyle',obj.PlotLines{i},'BestFit',BestFit};
              if i>1
                  pl{i} = obj.ContourPlot('CL',obj.ConfLevel,'HoldOn','ON',PlotArg{:});
              else
@@ -584,24 +598,22 @@ classdef SterileAnalysis < handle
              legStr{i} = sprintf('%.0f eV range',Ranges(i));
          end
          
-         leg = legend(legStr{:},'EdgeColor',rgb('Silver'),'Location','southwest');
+         leg = legend([pl{:}],legStr{:},'EdgeColor',rgb('Silver'),'Location','southwest');
          %leg.Title.String = 'Lower fit boundary';
          %leg.Title.FontWeight = 'normal';
-          ylim([1 1e4])
+         ylim([1 1e4])
          if numel(Ranges)>5 &&numel(Ranges)<10
              leg.NumColumns=2;
          elseif numel(Ranges)>=10
-              leg.NumColumns=3;
-              
+              leg.NumColumns=3; 
          end
+%          xlim([5e-03,0.4]);
+%          ylim([1 3e4]);
           set(leg.BoxFace, 'ColorType','truecoloralpha', 'ColorData',uint8(255*[1;1;1;0.3]));
           
-         title(sprintf('%s (%s)',obj.RunAnaObj.DataType,obj.GetPlotTitle('Mode','chi2')),...
+         title(sprintf('%s (%s) %.0f%% C.L.',obj.GetPlotTitle('Mode','data'),obj.GetPlotTitle('Mode','chi2'),obj.ConfLevel),...
              'FontWeight','normal','FontSize',get(gca,'FontSize'));
-         
-          
-             
-             
+
              if ~strcmp(SavePlot,'OFF')
                  name_i = strrep(obj.DefPlotName,sprintf('_%.0feVrange',Ranges(end)),'');
                  if strcmp(SavePlot,'ON')
@@ -726,30 +738,38 @@ classdef SterileAnalysis < handle
         function PlotFitriumSamak(obj,varargin)
             p = inputParser;
             p.addParameter('SavePlot','OFF',@(x)ismember(x,{'ON','OFF','png'}));
+            p.addParameter('PlotStat','ON',@(x)ismember(x,{'ON','OFF'}));
+            p.addParameter('PlotTot','ON',@(x)ismember(x,{'ON','OFF'}));
             
             p.parse(varargin{:});
             SavePlot = p.Results.SavePlot;
-            chi2_i = obj.RunAnaObj.chi2;
-            
+            PlotStat = p.Results.PlotStat;
+            PlotTot  = p.Results.PlotTot;
+            chi2_i   = obj.RunAnaObj.chi2;
+        
             if strcmp(obj.RunAnaObj.DataType,'Real')
                 BestFit = 'ON';
             else
                 BestFit = 'OFF';
             end
         
+            LineWidth = 2.5;
             %% load samak
-            obj.RunAnaObj.chi2 = 'chi2Stat';
-            obj.LoadGridFile('CheckSmallerN','ON');
-            obj.Interp1Grid('RecomputeFlag','ON');
-            pStat = obj.ContourPlot('CL',obj.ConfLevel,'HoldOn','OFF',...
-                'Color',rgb('DodgerBlue'),'LineStyle','-','BestFit',BestFit,'PlotSplines','OFF');
+            if strcmp(PlotStat,'ON')
+                obj.RunAnaObj.chi2 = 'chi2Stat';
+                obj.LoadGridFile('CheckSmallerN','ON');
+                obj.Interp1Grid('RecomputeFlag','ON');
+                pStat = obj.ContourPlot('CL',obj.ConfLevel,'HoldOn','OFF',...
+                    'Color',rgb('DodgerBlue'),'LineStyle','-','BestFit',BestFit,'PlotSplines','OFF');
+            end
             
-            obj.RunAnaObj.chi2 = 'chi2CMShape';
-            obj.LoadGridFile('CheckSmallerN','ON');
-            obj.Interp1Grid('RecomputeFlag','ON');
-            pSys = obj.ContourPlot('CL',obj.ConfLevel,'HoldOn','ON',...
-                'Color',rgb('FireBrick'),'LineStyle','-','BestFit',BestFit,'PlotSplines','OFF');
-                      
+            if strcmp(PlotTot,'ON')
+                obj.RunAnaObj.chi2 = 'chi2CMShape';
+                obj.LoadGridFile('CheckSmallerN','ON');
+                obj.Interp1Grid('RecomputeFlag','ON');
+                pSys = obj.ContourPlot('CL',obj.ConfLevel,'HoldOn','ON',...
+                    'Color',rgb('FireBrick'),'LineStyle','-','BestFit',BestFit,'PlotSplines','OFF');
+            end
            %% load fitrium
            savedirF = [getenv('SamakPath'),'SterileAnalysis/GridSearchFiles/Knm1/Others/'];
            fstat = sprintf('%scontour_KSN1_Fitrium_%s_%.0feV_stat_95CL_0.txt',savedirF,obj.RunAnaObj.DataType,obj.range);
@@ -757,31 +777,84 @@ classdef SterileAnalysis < handle
            
            fsys = sprintf('%scontour_KSN1_Fitrium_%s_%.0feV_total_95CL_0.txt',savedirF,obj.RunAnaObj.DataType,obj.range);
            dfSys = importdata(fsys);
-          
-           pFStat = plot(dfStat.data(:,1),dfStat.data(:,2),'LineStyle','-.','Color',rgb('PowderBlue'),'LineWidth',pStat.LineWidth);
-           pFSys  = plot(dfSys.data(:,1),dfSys.data(:,2),'LineStyle','-.','Color',rgb('Orange'),'LineWidth',pStat.LineWidth);
            
-           if strcmp(obj.RunAnaObj.DataType,'Real') && strcmp(BestFit,'ON')
-               pF_bfStat = plot(0.009368, 171.110711,'o','MarkerSize',8,'Color',pFStat.Color,'LineWidth',pFStat.LineWidth);
-               pF_bfSys = plot(0.008273, 201.984663,'o','MarkerSize',8,'Color',pFSys.Color,'LineWidth',pFSys.LineWidth);
+           if strcmp(PlotStat,'ON')
+               pFStat = plot(dfStat.data(:,1),dfStat.data(:,2),'LineStyle','-.','Color',rgb('PowderBlue'),'LineWidth',LineWidth);
            end
            
-           legStr = {'Samak (stat. only)','Fitrium (stat. only)','Samak (stat. and syst.)','Fitrium (stat. and syst.)'};
-           legend([pStat,pFStat,pSys,pFSys],legStr,'EdgeColor',rgb('Silver'),'Location','southwest');
+           if strcmp(PlotTot,'ON')
+               pFSys  = plot(dfSys.data(:,1),dfSys.data(:,2),'LineStyle','-.','Color',rgb('Orange'),'LineWidth',LineWidth);
+               if obj.range==95 &&strcmp(obj.RunAnaObj.DataType,'Real')
+                   fsys1 = sprintf('%scontour_KSN1_Fitrium_%s_%.0feV_total_95CL_1.txt',savedirF,obj.RunAnaObj.DataType,obj.range);
+                   dfSys1 = importdata(fsys1);
+                   fsys2 = sprintf('%scontour_KSN1_Fitrium_%s_%.0feV_total_95CL_2.txt',savedirF,obj.RunAnaObj.DataType,obj.range);
+                   dfSys2 = importdata(fsys2);
+                   plot(dfSys1.data(:,1),dfSys1.data(:,2),'LineStyle','-.','Color',rgb('Orange'),'LineWidth',LineWidth);
+                   plot(dfSys2.data(:,1),dfSys2.data(:,2),'LineStyle','-.','Color',rgb('Orange'),'LineWidth',LineWidth);
+               end
+           end
            
-            obj.RunAnaObj.chi2 = chi2_i;
+           if strcmp(obj.RunAnaObj.DataType,'Real') && strcmp(BestFit,'ON')
+               if obj.range==65    
+                   if strcmp(PlotStat,'ON')
+                       pF_bfStat = plot(2.532e-02,7.466e+01,'o','MarkerSize',8,'Color',pFStat.Color,'LineWidth',pFStat.LineWidth);
+                   end
+                   if strcmp(PlotTot,'ON')
+                       pF_bfSys = plot(2.532e-02,7.466e+01,'o','MarkerSize',8,'Color',pFSys.Color,'LineWidth',pFSys.LineWidth);
+                   end
+               elseif obj.range==95
+                   if strcmp(PlotStat,'ON')
+                       pF_bfStat = plot(0.015401, 3942.813341,'o','MarkerSize',8,'Color',pFStat.Color,'LineWidth',pFStat.LineWidth);
+                   end
+                   if strcmp(PlotTot,'ON')
+                       pF_bfSys = plot(0.013601, 3942.813341,'o','MarkerSize',8,'Color',pFSys.Color,'LineWidth',pFSys.LineWidth);
+                   end
+               elseif obj.range==40
+                     if strcmp(PlotStat,'ON')
+                       pF_bfStat = plot(3.676e-02, 7.218e+01,'o','MarkerSize',8,'Color',pFStat.Color,'LineWidth',pFStat.LineWidth);
+                   end
+                   if strcmp(PlotTot,'ON')
+                       pF_bfSys = plot(3.247e-02, 7.218e+01,'o','MarkerSize',8,'Color',pFSys.Color,'LineWidth',pFSys.LineWidth);
+                   end
+               end
+           end
+           
+           if strcmp(PlotStat,'ON') && strcmp(PlotTot,'ON')
+               legStr = {'Samak (stat. only)','Fitrium (stat. only)','Samak (stat. and syst.)','Fitrium (stat. and syst.)'};
+               legend([pStat,pFStat,pSys,pFSys],legStr,'EdgeColor',rgb('Silver'),'Location','southwest');
+               extraStr = '';
+           elseif strcmp(PlotStat,'ON')
+                legStr = {'Samak (stat. only)','Fitrium (stat. only)'};
+               legend([pStat,pFStat],legStr,'EdgeColor',rgb('Silver'),'Location','southwest');
+               extraStr = '_StatOnly';
+           elseif strcmp(PlotTot,'ON')
+                legStr = {'Samak (stat. and syst.)','Fitrium (stat. and syst.)'};
+               legend([pSys,pFSys],legStr,'EdgeColor',rgb('Silver'),'Location','southwest');
+               extraStr = '_Tot';
+           end
+           
+           obj.RunAnaObj.chi2 = chi2_i;
             if obj.range==65
-            xlim([4e-03 0.5])
-            ylim([1 1e4])
+                xlim([4e-03 0.5])
+                ylim([1 1e4])
+            elseif obj.range==40
+                xlim([1e-02 0.5])
+                ylim([1 3e3])
+            elseif obj.range==95
+                xlim([3e-03 0.5])
+                ylim([1 2e4]) 
             end
+            
+            title(sprintf('%s , %.0f eV range , %.0f%% C.L.',obj.GetPlotTitle('Mode','data'),obj.range,obj.ConfLevel),'FontWeight','normal','FontSize',get(gca,'FontSize'));
+          
            %% save
            if ~strcmp(SavePlot,'OFF')
                name_i = strrep(obj.DefPlotName,sprintf('_%s',chi2_i),'');
                if strcmp(SavePlot,'ON')
-                   plotname = sprintf('%s_Fitrium_%.2gCL.pdf',name_i,obj.ConfLevel);
+                   plotname = sprintf('%s_Fitrium_%.2gCL%s.pdf',name_i,obj.ConfLevel,extraStr);
                    export_fig(gcf,plotname);
                elseif strcmp(SavePlot,'png')
-                   plotname = sprintf('%s_Fitrium_%.2gCL.png',name_i,obj.ConfLevel);
+                   plotname = sprintf('%s_Fitrium_%.2gCL%s.png',name_i,obj.ConfLevel,extraStr);
                    print(gcf,plotname,'-dpng','-r450');
                end
                fprintf('save plot to %s \n',plotname);
@@ -952,15 +1025,25 @@ classdef SterileAnalysis < handle
             savedir = sprintf('%sSterileAnalysis/GridSearchFiles/%s/%s/',...
                      getenv('SamakPath'),obj.RunAnaObj.DataSet,obj.RunAnaObj.DataType);
             
-            if isfloat(obj.RandMC) && strcmp(obj.RunAnaObj.DataType,'Twin')
-                extraStr = sprintf('%s_RandMC%.0f',extraStr,obj.RandMC);
-                savedir = strrep(savedir,'Twin/','TwinRandomizedMC/'); 
-            end
-            
-            if obj.RunAnaObj.pullFlag<=12
-                extraStr = sprintf('%s_pull%.0f',extraStr,obj.RunAnaObj.pullFlag);
-            end
-            MakeDir(savedir);
+                 if isfloat(obj.RandMC) && strcmp(obj.RunAnaObj.DataType,'Twin')
+                     extraStr = sprintf('%s_RandMC%.0f',extraStr,obj.RandMC);
+                     savedir = strrep(savedir,'Twin/','TwinRandomizedMC/');
+                 end
+                 
+                 if ~strcmp(obj.RunAnaObj.ELossFlag,'KatrinT2')
+                     extraStr = [extraStr,sprintf('_%s',obj.RunAnaObj.ELossFlag)];
+                 end
+                 
+                 if ~strcmp(obj.RunAnaObj.AngularTFFlag,'OFF')
+                     extraStr = [extraStr,'_AngTF'];
+                 end
+                 
+                 if obj.RunAnaObj.pullFlag<=12
+                     extraStr = sprintf('%s_pull%.0f',extraStr,obj.RunAnaObj.pullFlag);
+                 end
+                 
+                 
+                 MakeDir(savedir);
 
             % get runlist-name
             RunList = extractBefore(obj.RunAnaObj.RunData.RunName,'_E0');

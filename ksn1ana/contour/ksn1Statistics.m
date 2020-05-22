@@ -8,7 +8,7 @@ KSN1 = MultiRunAnalysis('RunList','KNM1',...
     'FSDFlag','SibilleFull',...
     'ELossFlag','KatrinT2',...
     'SysBudget',22,...
-    'exclDataStart',7); % --> 65 eV Range
+    'exclDataStart',1); % 7 = --> 65 eV  /  13 = --> 40 eV / 
 
 %KSN1.Fit;
 %KSN1.PlotDataModel_KSN1;
@@ -37,7 +37,7 @@ fprintf(2,'KSN1 - Tritium Beta Decay + Background Electrons: %.3g counts \n',spl
 fprintf(2,'KSN1 - Tritium Beta Decay Electrons: %.3g counts \n',s);
 fprintf(2,'KSN1 - Total Background Electrons: %.3g counts \n',b);
 fprintf(2,'KSN1 - Total Background Below E0: %.3g counts \n',bbelowE0);
-fprintf(2,'KSN1 - Max S/B: %.4g  \n',KSN1.RunData.TBDIS(KSN1.exclDataStart)./KSN1.RunData.qUfrac(KSN1.exclDataStart)./KSN1.RunData.TimeSec./brate);
+fprintf(2,'KSN1 - Max S/B: %.4g  \n',(KSN1.RunData.TBDIS(KSN1.exclDataStart)./KSN1.RunData.qUfrac(KSN1.exclDataStart)./KSN1.RunData.TimeSec - brate)./brate);
 fprintf(2,'\n');
 
 %% Signal / Background
