@@ -482,7 +482,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
         end
         
         function  LoadFSD(obj,varargin)
-                 % Load FSD Excitation Energies and Probabilities
+            % Load FSD Excitation Energies and Probabilities
             % If requested by the user
             % For: T-T / D-T / H-T / T^-
             p=inputParser;

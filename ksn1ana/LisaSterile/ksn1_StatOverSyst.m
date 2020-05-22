@@ -185,7 +185,7 @@ for i=1:nContours
    end
 %     set(gca,'YScale','lin');
     set(gca,'XScale','log');
-  ylabel(sprintf('\\sigma^2_{syst.}/\\sigma^2_{stat.}(|U_{e4}|^2)'));
+  ylabel(sprintf('\\sigma^2_{syst.}/\\sigma^2_{stat.}(|{\\itU}_{e4}|^2)'));
     xlabel(sprintf('{\\itm}_4^2 (eV^2)'));
 
     if strcmp(PlotStatDom,'ON')
@@ -204,14 +204,15 @@ leg = legend([pref,pl{:}]',legStr{:},'EdgeColor',rgb('Silver'),'Location','north
 % end
 % leg.Title.String = 'Lower fit boundary - 18574 eV';
 % leg.Title.FontWeight = 'normal';
-plotname3 = sprintf('%sksn1_StatOverSyst2_%s.png',plotdir,DataType);
+plotname3 = sprintf('%sksn1_StatOverSyst_%s.png',plotdir,DataType);
 print(gcf,plotname3,'-dpng','-r450');
+export_fig(gcf,strrep(plotname3,'.png','.pdf'));
 fprintf('save plot to %s \n',plotname3);
 
 %% sanityplot: syst only , stat only
 SanityPlot = 'ON';
 if strcmp(SanityPlot,'ON')
-    myContour = 5;
+    myContour = 13;
     GetFigure;
     pStat= plot(mnu4SqCommonPlot{myContour},sin2T4StatOnlyPlot{myContour}.^2,'-','LineWidth',2.5);
     hold on;
@@ -230,6 +231,7 @@ if strcmp(SanityPlot,'ON')
         'FontWeight','normal');
     plotname2 = sprintf('%sksn1_StatOverSyst_SanityPlot%.0feV_%s.png',plotdir,range(myContour),DataType);
     print(gcf,plotname2,'-dpng','-r450');
+    export_fig(gcf,strrep(plotname2,'.png','.pdf'));
     fprintf('save plot to %s \n',plotname2);
 end
 

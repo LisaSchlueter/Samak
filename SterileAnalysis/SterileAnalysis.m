@@ -100,10 +100,15 @@ classdef SterileAnalysis < handle
             end
             
             %% define maximum m4:
-            if obj.range==65    
-                Maxm4Sq = 59^2;%59^2;
-            elseif obj.range==95 && strcmp(obj.RunAnaObj.DataType,'Twin')
-                  Maxm4Sq =  94^2;
+            if obj.range==65
+                Maxm4Sq = 59^2;
+            elseif obj.range==95 && strcmp(obj.RunAnaObj.DataType,'Real')
+                freePar = ConvertFixPar('freePar',obj.RunAnaObj.fixPar,'Mode','Reverse');
+                if contains(freePar,'mNu')
+                    Maxm4Sq = 83^2;
+                else
+                    Maxm4Sq =  84.5^2;
+                end
             else
                 Maxm4Sq =  (obj.range-5)^2;
             end
@@ -164,7 +169,7 @@ classdef SterileAnalysis < handle
             sinT4 = p.Results.sinT4;
             % convert KATRIN parameters into oscillation experiment parameter space
             % (sin(t4)^2,m4^2) --> (sin(2t4)^2,Delta(m41)^2)
-            DeltamNu41Sq = m4 -obj.RunAnaObj.ModelObj.mnuSq;
+            DeltamNu41Sq = m4 - obj.RunAnaObj.ModelObj.mnuSq;
             sin2T4Sq     = 4*sinT4.*(1-sinT4);
         end
         function [sin2T4_Stat, sin2T4_Sys, sin2T4_Tot, mNu4SqCommon, StatDomFraction] = StatOverSys(obj,varargin)
@@ -379,18 +384,18 @@ classdef SterileAnalysis < handle
             savedirOther = [getenv('SamakPath'),'SterileAnalysis/GridSearchFiles/Knm1/Others/'];
             %% Mainz
             if strcmp(Mainz,'ON')
-                filenameMainz = sprintf('%scoord_Mainz.mat',savedirOther);
+                filenameMainz = sprintf('%scoord_Mainz_95CL.mat',savedirOther);
                 dMainz = importdata(filenameMainz);
-                pMainz = plot(dMainz.sith4_X,dMainz.m4_Y,'-.','LineWidth',1.5,'Color',rgb('SeaGreen'));
+                pMainz = plot(dMainz.SinSquare2Theta_X,dMainz.DmSquare41_Y,'-.','LineWidth',1.5,'Color',rgb('SeaGreen'));
                 legHandle{numel(legHandle)+1} = pMainz;
                 legStr = [legStr,{sprintf('Mainz 95%% C.L.')}];
                 hold on;
             end
             %% Troitsk
             if strcmp(Troitsk,'ON')
-                filenameTroitsk = sprintf('%scoord_Troitsk.mat',savedirOther);
+                filenameTroitsk = sprintf('%scoord_Troitsk_95CL.mat',savedirOther);
                 dTroitsk = importdata(filenameTroitsk);
-                pTroitsk = plot(dTroitsk.sith4_X,dTroitsk.m4_Y,'-.','LineWidth',1.5,'Color',rgb('Gold'));
+                pTroitsk = plot(dTroitsk.SinSquare2Theta_X,dTroitsk.DmSquare41_Y,'-.','LineWidth',1.5,'Color',rgb('Gold'));
                 legHandle{numel(legHandle)+1} = pTroitsk;
                 legStr = [legStr,{sprintf('Troitsk 95%% C.L.')}];
                 hold on;
@@ -861,6 +866,168 @@ classdef SterileAnalysis < handle
            end
         end
         
+        function PlotStatandSys(obj,varargin)
+            % plot for a given range: stat. only and stat + syst
+            p = inputParser;
+            p.addParameter('SavePlot','OFF',@(x)ismember(x,{'ON','OFF','png'}));
+            
+            p.parse(varargin{:});
+            SavePlot = p.Results.SavePlot;
+            
+            chi2_i   = obj.RunAnaObj.chi2;
+        
+            if strcmp(obj.RunAnaObj.DataType,'Real')
+                BestFit = 'ON';
+            else
+                BestFit = 'OFF';
+            end
+        
+            LineWidth = 2.5;
+            %% load stat and syst
+            obj.RunAnaObj.chi2 = 'chi2Stat';
+            obj.LoadGridFile('CheckSmallerN','ON');
+            obj.Interp1Grid('RecomputeFlag','ON');
+            pStat = obj.ContourPlot('CL',obj.ConfLevel,'HoldOn','OFF',...
+                'Color',rgb('DodgerBlue'),'LineStyle','-','BestFit',BestFit,'PlotSplines','OFF');
+            
+            obj.RunAnaObj.chi2 = 'chi2CMShape';
+            obj.LoadGridFile('CheckSmallerN','ON');
+            obj.Interp1Grid('RecomputeFlag','ON');
+            pSys = obj.ContourPlot('CL',obj.ConfLevel,'HoldOn','ON',...
+                'Color',rgb('Orange'),'LineStyle','-','BestFit',BestFit,'PlotSplines','OFF');
+
+        %% legend
+        
+           
+               legStr = {'Stat. only','All syst. combined'};
+               legend([pStat,pSys],legStr,'EdgeColor',rgb('Silver'),'Location','southwest');
+               extraStr = '';
+           
+           obj.RunAnaObj.chi2 = chi2_i;
+            if obj.range==65
+                xlim([4e-03 0.5])
+                ylim([1 1e4])
+            elseif obj.range==40
+                xlim([1e-02 0.5])
+                ylim([1 3e3])
+            elseif obj.range==95
+                xlim([3e-03 0.5])
+                ylim([1 2e4]) 
+            end
+            
+            title(sprintf('%s , %.0f eV range , %.0f%% C.L.',obj.GetPlotTitle('Mode','data'),obj.range,obj.ConfLevel),'FontWeight','normal','FontSize',get(gca,'FontSize'));
+          
+           %% save
+           if ~strcmp(SavePlot,'OFF')
+               name_i = strrep(obj.DefPlotName,sprintf('_%s',chi2_i),'');
+               if strcmp(SavePlot,'ON')
+                   plotname = sprintf('%s_StatandSyst_%.2gCL%s.pdf',name_i,obj.ConfLevel,extraStr);
+                   export_fig(gcf,plotname);
+               elseif strcmp(SavePlot,'png')
+                   plotname = sprintf('%s_StatandSyst_%.2gCL%s.png',name_i,obj.ConfLevel,extraStr);
+                   print(gcf,plotname,'-dpng','-r450');
+               end
+               fprintf('save plot to %s \n',plotname);
+           end
+        end
+        function PlotPRL1(obj,varargin)
+             % prl plot 1: comparison with mainz & troitsk
+            p = inputParser;
+            p.addParameter('BestFit','OFF',@(x)ismember(x,{'ON','OFF'}));
+            p.addParameter('SavePlot','OFF',@(x)ismember(x,{'ON','OFF','png'}));
+            p.addParameter('Mainz','ON',@(x)ismember(x,{'ON','OFF'}));  
+            p.addParameter('Troitsk','ON',@(x)ismember(x,{'ON','OFF'}));
+            
+            p.parse(varargin{:});
+            BestFit  = p.Results.BestFit;
+            SavePlot = p.Results.SavePlot;
+            Troitsk  = p.Results.Troitsk;
+            Mainz    = p.Results.Mainz;
+            
+            fixPar_i = obj.RunAnaObj.fixPar;
+            pull_i = obj.RunAnaObj.pullFlag;
+            
+           fPRL = figure('Units','normalized','Position',[0.1,0.1,0.4,0.6]); 
+            legHandle = cell(0,0);
+            legStr = '';
+            savedirOther = [getenv('SamakPath'),'SterileAnalysis/GridSearchFiles/Knm1/Others/'];
+            
+            if strcmp(Mainz,'ON')
+                filenameMainz = sprintf('%scoord_Mainz_95CL.mat',savedirOther);
+                dMainz = importdata(filenameMainz);
+                sinTsq = 0.5*(1-sqrt(1-dMainz.SinSquare2Theta_X));
+                pMainz = plot(sinTsq,dMainz.DmSquare41_Y,'-.','LineWidth',1.5,'Color',rgb('Red'));
+                legHandle{numel(legHandle)+1} = pMainz;
+                legStr = [legStr,{sprintf('Mainz 95%% C.L.  - {\\itm}_\\nu^2 = 0 eV^2')}];
+                hold on;
+            end
+            %% Troitsk
+            if strcmp(Troitsk,'ON')
+                filenameTroitsk = sprintf('%scoord_Troitsk_95CL.mat',savedirOther);
+                dTroitsk = importdata(filenameTroitsk);
+                pTroitsk = plot(dTroitsk.SinSquareTheta_X,dTroitsk.m4Square_Y,'--','LineWidth',1.5,...
+                    'Color',rgb('Orange'));
+                legHandle{numel(legHandle)+1} = pTroitsk;
+                legStr = [legStr,{sprintf('Troitsk 95%% C.L. - {\\itm}_\\nu^2 = 0 eV^2')}];
+                hold on;
+            end
+            %             %% 1. nuissance nu-mass without pull
+            %             obj.RunAnaObj.fixPar = 'mNu E0 Norm Bkg'; obj.RunAnaObj.InitFitPar;
+            %             obj.RunAnaObj.pullFlag = 99;
+            %             obj.LoadGridFile('CheckSmallerN','ON');
+            %             obj.Interp1Grid('RecomputeFlag','ON');
+            %             pFree = obj.ContourPlot('CL',obj.ConfLevel,'HoldOn','OFF',...
+            %                 'Color',rgb('ForestGreen'),'LineStyle','-','BestFit',BestFit);
+            %% fixed nu-mass
+            obj.RunAnaObj.fixPar = 'E0 Norm Bkg'; obj.RunAnaObj.InitFitPar;
+            obj.RunAnaObj.pullFlag = 99;
+            obj.LoadGridFile('CheckSmallerN','ON');
+            obj.Interp1Grid('RecomputeFlag','ON');
+            pFix = obj.ContourPlot('CL',obj.ConfLevel,'HoldOn','ON',...
+                'Color',rgb('DodgerBlue'),'LineStyle','-','BestFit',BestFit);
+            legHandle{numel(legHandle)+1} = pFix;
+            %%  nuissance nu-mass + pull
+            obj.RunAnaObj.fixPar = 'mNu E0 Norm Bkg'; obj.RunAnaObj.InitFitPar;
+            obj.RunAnaObj.pullFlag = 12;
+            obj.LoadGridFile('CheckSmallerN','ON');
+            obj.Interp1Grid('RecomputeFlag','ON');
+            pPull = obj.ContourPlot('CL',obj.ConfLevel,'HoldOn','ON',...
+                'Color',rgb('PowderBlue'),'LineStyle',':','BestFit',BestFit);
+            legHandle{numel(legHandle)+1} = pPull;
+            
+            %% appearance + legend
+            legStr = [legStr,{sprintf('KATRIN KSN1 %.0f%% C.L. - {\\itm}_\\nu^2 free - \\sigma({\\itm}_\\nu^2) = 1.94 eV^2',obj.ConfLevel),...
+                sprintf('KATRIN KSN1 %.0f%% C.L. - {\\itm}_\\nu^2 = 0 eV^2',obj.ConfLevel)}];
+            PrettyFigureFormat('FontSize',20);
+            leg =  legend([legHandle{:}],legStr{:},...
+                'EdgeColor',rgb('Silver'),'Location','southwest');
+            set(leg.BoxFace, 'ColorType','truecoloralpha', 'ColorData',uint8(255*[1;1;1;0.8]));
+            leg.FontSize = get(gca,'FontSize')-2;
+            legend boxoff
+            if obj.range==65
+                ylim([1 6e3]);
+                xlim([2e-03 0.5]);
+            elseif obj.range==95
+                ylim([1 1e4]);
+                xlim([9e-04 0.5]);
+            end
+            title('');%remove title
+            %% save
+            if ~strcmp(SavePlot,'OFF')
+                name_i = strrep(obj.DefPlotName,'_mNuE0BkgNorm','');
+                if strcmp(SavePlot,'ON')
+                    plotname = sprintf('%s_PRL1_%.2gCL.pdf',name_i,obj.ConfLevel);
+                    export_fig(gcf,plotname);
+                elseif strcmp(SavePlot,'png')
+                    plotname = sprintf('%s_PRL1_%.2gCL.png',name_i,obj.ConfLevel);
+                    print(gcf,plotname,'-dpng','-r450');
+                end
+                fprintf('save plot to %s \n',plotname);
+            end
+            
+            obj.RunAnaObj.fixPar = fixPar_i;
+            obj.RunAnaObj.pullFlag = pull_i ;
+        end
         function PlotStatOverSys(obj,varargin)
             p = inputParser;
             p.addParameter('Ranges',[95:-5:65],@(x)isfloat(x));

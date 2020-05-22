@@ -1,7 +1,13 @@
-% ksn1 - study influence of energy-loss parametrizations
-% Lisa, May 2020
+% ksn1 - study influence of some systematics/modelling
+% options: 
+% new (KNM2 T2) energy-loss vs. old (KNM1 T2) parametrizations
+% plasma uncertainty vs. no plasma uncertainty
+% enhance column density uncertainty: 0.85% -->1.5% or 2%
+% enhance FSD onset uncertainty: 1% --> 1.5%
+% enhance FSD excited states uncertainty: 18% --> 50%
+% non-isotropic transmission function 
 
-% work flow:
+% Lisa, May 2020
 
 %% 1. RunAnalysis object
 RunAnaArg = {'RunList','KNM1',...
@@ -36,19 +42,24 @@ S.RunAnaObj.SysBudget= 29;
 S.RunAnaObj.ELossFlag = 'KatrinT2';
 S.RunAnaObj.AngularTFFlag = 'OFF';
 %% plot
-Mode = 'RhoDerr';
-S.range = 95;
 CL = 95;
+S.InterpMode = 'lin'; % waring: if contour is closed, spline interp sometimes sensitive to artefacts! Switch to "lin" in this case
+S.range = 65;
 
-% new: e-loss, different uncertainty etc.
+Mode = 'FSDexcitedStates45';%Plasmaerr';
+
 switch Mode
-    case 'Eloss'
+    case 'Eloss' % new: e-loss, different uncertainty etc.
         S.RunAnaObj.ELossFlag = 'KatrinT2A20';
         legStrNew = 'KNM2 KATRIN energy-loss function (April 2020)';
         legStrOld = 'KNM1 KATRIN energy-loss function';
-    case 'RhoDerr'
+    case 'RhoDerr2'
         S.RunAnaObj.SysBudget= 254;
         legStrNew = sprintf('\\Delta\\rhod\\sigma = 2.00%%');
+        legStrOld = sprintf('\\Delta\\rhod\\sigma = 0.85%%');
+    case 'RhoDerr1p5'
+        S.RunAnaObj.SysBudget= 256;
+        legStrNew = sprintf('\\Delta\\rhod\\sigma = 1.50%%');
         legStrOld = sprintf('\\Delta\\rhod\\sigma = 0.85%%');
     case 'Plasmaerr'
         S.RunAnaObj.SysBudget = 299;
@@ -58,17 +69,37 @@ switch Mode
         S.RunAnaObj.AngularTFFlag = 'ON';
         legStrNew = sprintf('With non-isotropic transmission function');
         legStrOld = sprintf('Without non-isotropic transmission function');
+    case 'AngTFEloss'
+        S.RunAnaObj.AngularTFFlag = 'ON';
+        S.RunAnaObj.ELossFlag = 'KatrinT2A20';
+        legStrNew = sprintf('With non-isotropic transmission function + KNM2 energy-loss');
+        legStrOld = sprintf('Without non-isotropic transmission function + KNM1 energy-loss');
+    case 'FSDonset'
+        S.RunAnaObj.SysBudget = 256;
+        legStrNew = sprintf('\\Delta FSD onset = 1.5%%');
+        legStrOld = sprintf('\\Delta FSD onset = 1.0%%');
+    case 'FSDexcitedStates50'
+        S.RunAnaObj.SysBudget = 257;
+        legStrNew = sprintf('\\Delta FSD excited states (bin-to-bin) = 50%%');
+        legStrOld = sprintf('\\Delta FSD excited states (bin-to-bin) = 18%%');
+    case 'FSDexcitedStates45'
+        S.RunAnaObj.SysBudget = 258;
+        legStrNew = sprintf('\\Delta FSD excited states (bin-to-bin) = 45%%');
+        legStrOld = sprintf('\\Delta FSD excited states (bin-to-bin) = 18%%');
+    case 'FSDexcitedStates40'
+        S.RunAnaObj.SysBudget = 253;
+        legStrNew = sprintf('\\Delta FSD excited states (bin-to-bin) = 40%%');
+        legStrOld = sprintf('\\Delta FSD excited states (bin-to-bin) = 18%%');
 end
 S.LoadGridFile('CheckSmallerN','ON','CheckLargerN','ON'); % if CheckSmallerN also look for grid with more/less nGridSteps
 S.Interp1Grid('RecomputeFlag','ON');% interpolate chi2 map -> nicer appearance of all plots. some
 pnew = S.ContourPlot('BestFit','ON','SavePlot','OFF','CL',CL,'HoldOn','OFF');
 
-% default case:
+% default ksn1 contour:
 S.RunAnaObj.SysBudget= 29;
 S.RunAnaObj.ELossFlag = 'KatrinT2';
 S.RunAnaObj.AngularTFFlag = 'OFF';
 S.LoadGridFile('CheckSmallerN','ON','CheckLargerN','ON'); % if CheckSmallerN also look for grid with more/less nGridSteps
-S.InterpMode = 'lin'; % waring: if contour is closed, spline interp sometimes sensitive to artefacts! Switch to "lin" in this case
 S.Interp1Grid('RecomputeFlag','ON');% interpolate chi2 map -> nicer appearance of all plots. some
 pold = S.ContourPlot('BestFit','ON','SavePlot','OFF','CL',CL,'Color',rgb('Orange'),'LineStyle','-.','HoldOn','ON');
 
@@ -82,3 +113,4 @@ title(sprintf('%s - %.0f%% C.L.',S.GetPlotTitle,CL),'FontWeight','normal','FontS
 plotname = sprintf('%s_%sComparison_%.2gCL.png',S.DefPlotName,Mode,CL);
 print(gcf,plotname,'-dpng','-r450');
 fprintf('save plot to %s \n',plotname);
+export_fig(gcf,strrep(plotname,'.png','.pdf'));

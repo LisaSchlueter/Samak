@@ -1,12 +1,14 @@
 % Test SterileAnalysis class
 % Lisa, May2020
-% plot qU Scan
+% plot with neutrino mass as
+% nuissance parameter free
+% nuissance parameter + pull
 % fixed parameter
 %% settings for runanalysis
-DataType = 'Twin';
+DataType = 'Real';
 %%
 RunAnaArg = {'RunList','KNM1',...
-    'fixPar','E0 Norm Bkg',...
+    'fixPar','mNu E0 Norm Bkg',...
     'DataType',DataType,...
     'FSDFlag','SibilleFull',...
     'ELossFlag','KatrinT2',...
@@ -34,16 +36,7 @@ SterileArg = {'RunAnaObj',T,... % Mother Object: defines RunList, Column Density
 
 S = SterileAnalysis(SterileArg{:});
 %%
-%%
-S.RunAnaObj.DataType = 'Twin';
-S.ConfLevel = 95;
-switch S.RunAnaObj.DataType
-    case 'Real'
-        S.InterpMode = 'lin';
-        Arg = {'SavePlot','png','Ranges',[95:-5:45,41,40],'BestFit','OFF'};%'BestFit','ON'};
-    case 'Twin'
-        S.InterpMode = 'spline';
-        Arg = {'SavePlot','ON','Ranges',[95:-5:45,41,40]};%[95:-5:45,41,40]};
-end
-S.PlotqUScan(Arg{:});
 
+% S.InterpMode = 'lin'; %'spline' sometimes causes weird artefacts, but looks smoother than 'lin'
+Arg = {'SavePlot','png','BestFit','OFF'};
+S.PlotPRL1(Arg{:});

@@ -59,12 +59,12 @@ pFSDuncorr = S.ContourPlot('CL',S.ConfLevel,'HoldOn','ON',...
 % pSysall = S.ContourPlot('CL',S.ConfLevel,'HoldOn','ON',...
 %     'Color',rgb('DarkSlateGray'),'LineStyle','-','BestFit','OFF','PlotSplines','OFF');
 
-% S.SysEffect = 'all';
-% S.RunAnaObj.SysBudget = 24; %
-% S.LoadGridFile('CheckSmallerN','ON');
-% S.Interp1Grid('RecomputeFlag','ON');
-% pSysall = S.ContourPlot('CL',S.ConfLevel,'HoldOn','ON',...
-%     'Color',rgb('Silver'),'LineStyle',':','BestFit','OFF','PlotSplines','OFF');
+S.SysEffect = 'all';
+S.RunAnaObj.SysBudget = 24; %
+S.LoadGridFile('CheckSmallerN','ON');
+S.Interp1Grid('RecomputeFlag','ON');
+pSysall = S.ContourPlot('CL',S.ConfLevel,'HoldOn','ON',...
+    'Color',rgb('DimGray'),'LineStyle','-','BestFit','OFF','PlotSplines','OFF');
 
 % S.RunAnaObj.chi2 = 'chi2Stat';
 % S.LoadGridFile('CheckSmallerN','ON');
@@ -81,9 +81,13 @@ dfFSDonset = importdata(fonset);
 funcorr     = sprintf('%scontour_KSN1_Fitrium_%s_%.0feV_FSD_binsOnly_95CL_0.txt',savedirF,S.RunAnaObj.DataType,S.range);
 dfFSDuncorr = importdata(funcorr);
 
-% ftotal     = sprintf('%scontour_KSN1_Fitrium_%s_%.0feV_total_95CL_0.txt',savedirF,S.RunAnaObj.DataType,S.range);
-% dftotal = importdata(ftotal);
-% pFtotal = plot(dftotal.data(:,1),dftotal.data(:,2),'LineStyle','-.','Color',rgb('Silver'),'LineWidth',LineWidth);
+ftotal     = sprintf('%scontour_KSN1_Fitrium_%s_%.0feV_total_95CL_0.txt',savedirF,S.RunAnaObj.DataType,S.range);
+dftotal = importdata(ftotal);
+pFtotal = plot(dftotal.data(:,1),dftotal.data(:,2),'LineStyle','-.','Color',rgb('Silver'),'LineWidth',LineWidth);
+% % 
+% fstat     = sprintf('%scontour_KSN1_Fitrium_%s_%.0feV_stat_95CL_0.txt',savedirF,S.RunAnaObj.DataType,S.range);
+% dfstat = importdata(fstat);
+% pFstat = plot(dfstat.data(:,1),dfstat.data(:,2),'LineStyle','-.','Color',rgb('Silver'),'LineWidth',LineWidth);
 % % 
 pFFSDonset = plot(dfFSDonset.data(:,1),dfFSDonset.data(:,2),'LineStyle','-.','Color',rgb('PowderBlue'),'LineWidth',LineWidth);
 hold on;
