@@ -956,7 +956,7 @@ classdef SterileAnalysis < handle
                 filenameMainz = sprintf('%scoord_Mainz_95CL.mat',savedirOther);
                 dMainz = importdata(filenameMainz);
                 sinTsq = 0.5*(1-sqrt(1-dMainz.SinSquare2Theta_X));
-                pMainz = plot(sinTsq,dMainz.DmSquare41_Y,'-.','LineWidth',1.5,'Color',rgb('Red'));
+                pMainz = plot(sinTsq,dMainz.DmSquare41_Y,'-.','LineWidth',1.5,'Color',rgb('Red')); %Salmon
                 legHandle{numel(legHandle)+1} = pMainz;
                 legStr = [legStr,{sprintf('Mainz 95%% C.L.  - {\\itm}_\\nu^2 = 0 eV^2')}];
                 hold on;
@@ -966,7 +966,7 @@ classdef SterileAnalysis < handle
                 filenameTroitsk = sprintf('%scoord_Troitsk_95CL.mat',savedirOther);
                 dTroitsk = importdata(filenameTroitsk);
                 pTroitsk = plot(dTroitsk.SinSquareTheta_X,dTroitsk.m4Square_Y,'--','LineWidth',1.5,...
-                    'Color',rgb('Orange'));
+                    'Color',rgb('Orange')); % DarkSlateGrey
                 legHandle{numel(legHandle)+1} = pTroitsk;
                 legStr = [legStr,{sprintf('Troitsk 95%% C.L. - {\\itm}_\\nu^2 = 0 eV^2')}];
                 hold on;
@@ -1012,6 +1012,7 @@ classdef SterileAnalysis < handle
                 xlim([9e-04 0.5]);
             end
             title('');%remove title
+            grid on
             %% save
             if ~strcmp(SavePlot,'OFF')
                 name_i = strrep(obj.DefPlotName,'_mNuE0BkgNorm','');

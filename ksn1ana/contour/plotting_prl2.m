@@ -3,6 +3,9 @@
 %% In m4 sin2theta Plane
 %% L.Schlueter / N. Le Guennic / T. Lasserre / 
 
+% Range
+Range        = '65';
+
 % Plot Real = Data or Twin
 RealTwinFlag = 'Real';
 
@@ -18,23 +21,42 @@ switch RealTwinFlag
     case 'Real'
         TwinLabel   = '';
         
-        % KATRIN KSN1 zero fixed nu mass - stat
+        switch Range
+            case '65'
+        % KATRIN KSN1 zero fixed nu mass - stat - 65eV
         file_A1     = 'SamakContour_Real_65eV_chi2CMShape_E0BkgNorm.mat';
         
-        % KATRIN KSN1 zero fixed nu mass - stat+sys
+        % KATRIN KSN1 zero fixed nu mass - stat+sys - 65eV
         file_A2     = 'SamakContour_Real_65eV_chi2CMShape_E0BkgNorm.mat';
         BFsin2theta = 0.0277;
         BFm24       = 68.6182; 
         
-        % KATRIN KSN1 free nu mass - stat+sys 
+        % KATRIN KSN1 free nu mass - stat+sys  - 65eV
         % file_B      = 'SamakContour_Real_65eV_chi2CMShape_mNuE0BkgNorm.mat';
         % BFsin2theta_mfree = 0.0182;
         % BFm24_mfree       = 206.5607; % eV^2
         
-        % KATRIN KSN1 free nu mass - stat+sys + pull
+        % KATRIN KSN1 free nu mass - stat+sys + pull - 65eV
         file_B      = 'SamakContour_Real_65eV_chi2CMShape_mNuE0BkgNorm_pull12.mat';
         BFsin2theta_mfree = 0.022;
         BFm24_mfree       = 115.7005; % eV^2
+        
+            case '40'
+                
+        % KATRIN KSN1 zero fixed nu mass - stat - 40eV
+        file_A1     = 'SamakContour_Real_40eV_chi2CMShape_E0BkgNorm.mat';
+        
+        % KATRIN KSN1 zero fixed nu mass - stat+sys - 40eV
+        file_A2     = 'SamakContour_Real_40eV_chi2CMShape_E0BkgNorm.mat';
+        BFsin2theta = 0;
+        BFm24       = 0; 
+        
+        % KATRIN KSN1 free nu mass - stat+sys + pull - 40eV
+        file_B      = 'SamakContour_Real_40eV_chi2CMShape_E0BkgNorm.mat';
+        BFsin2theta_mfree = 0;
+        BFm24_mfree       = 0; % eV^2
+        
+        end
         
     case 'Twin'
         TwinLabel   = 'Simulation';
@@ -173,5 +195,5 @@ set(gca, 'YScale', 'log');
 axis([0.005 0.5 1 5000])
 axis square
 
-fileString = sprintf('./plots/%sksn1_exlimit_%sCL_m4sinSqT.pdf',TwinLabel,CLflag);
+fileString = sprintf('./plots/%sksn1_exlimit_%sCL_m4sinSqT_%seVrange.pdf',TwinLabel,CLflag,Range);
 export_fig(fig,fileString)

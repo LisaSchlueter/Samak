@@ -3,12 +3,21 @@
 %% In Oscillation parameters Deltam41^2 sin^2(2theta) Plane
 %% L.Schlueter / N. Le Guennic / T. Lasserre / 
 
+% Range
+Range      = '40';
+
 % Confidence Level
 CLflag     = '95'; % Confidence Level
 
 % Path & KATRIN Results
 filepath   = [getenv('SamakPath'),'ksn1ana/contour/contourmatfiles/'];
-file_A     = 'SamakContour_Real_65eV_chi2CMShape_E0BkgNorm.mat';
+switch Range
+    case '65'
+        file_A     = 'SamakContour_Real_65eV_chi2CMShape_E0BkgNorm.mat';
+    case '40'
+        file_A    = 'SamakContour_Real_40eV_chi2CMShape_E0BkgNorm.mat';
+end
+
 da         = importdata([filepath,file_A]);   
 
 % Conversion to Oscillation parameters Deltam41^2 sin^2(2theta)
@@ -139,5 +148,5 @@ axis([0.02 1 0.1 6800])
 axis square
 
 % Save Files
-fileString = sprintf('./plots/ksn1_exlimit_%sCL_Dm24sinSq2T.pdf',CLflag);
+fileString = sprintf('./plots/ksn1_exlimit_%sCL_Dm24sinSq2T_%seVrange.pdf',CLflag,Range);
 export_fig(fig,fileString)

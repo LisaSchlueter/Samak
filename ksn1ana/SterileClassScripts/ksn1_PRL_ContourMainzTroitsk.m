@@ -32,11 +32,11 @@ SterileArg = {'RunAnaObj',T,... % Mother Object: defines RunList, Column Density
     'RecomputeFlag','OFF',...
     'SysEffect','all',...
     'RandMC','OFF',...
-    'range',65};
+    'range',95};
 
 S = SterileAnalysis(SterileArg{:});
-%%
+%
 
 % S.InterpMode = 'lin'; %'spline' sometimes causes weird artefacts, but looks smoother than 'lin'
-Arg = {'SavePlot','png','BestFit','OFF'};
+Arg = {'SavePlot','ON','BestFit','OFF'};
 S.PlotPRL1(Arg{:});
