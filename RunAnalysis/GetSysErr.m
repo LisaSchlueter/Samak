@@ -94,7 +94,7 @@ elseif SysBudget ==22 % default Knm1
     SysErr.FPDeff_RelErr = 1e-4;
     SysErr.is_EOffsetErr = 0;
     SysErr.MACE_VarErr = 0;
-    SysErr.MaxSlopeCpsPereV = 5.2*1e-06; % warning: changed 02.May 2020 from 15e-6
+    SysErr.MaxSlopeCpsPereV = 3*5.2*1e-06; 
 elseif SysBudget ==23 % with martins FSd onset Knm1
     SysErr.WGTS_TASR_RelErr = 5e-4;
     SysErr.FSDNorm_RelErr=  0.008435031923794;

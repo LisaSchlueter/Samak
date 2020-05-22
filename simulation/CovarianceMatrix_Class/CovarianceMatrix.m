@@ -1454,7 +1454,7 @@ classdef CovarianceMatrix < handle
             is_filename = [savedir,str_rx,str_bf,str_common];
             
             
-            if exist(is_filename,'file')
+            if exist(is_filename,'file') 
                 d = importdata(is_filename);
                 ISProb = d.is_Pv;  
                 fprintf('load is prob. lookup table from file %s \n',is_filename)
@@ -1481,7 +1481,7 @@ classdef CovarianceMatrix < handle
                 for i=1:obj.StudyObject.NIS+1
                     is_Pv(i,:,:) = reshape(interp2(X,Y,squeeze(ISProb(i,:,:))',...
                         RDISX,ThetaMax,...
-                        'spline'),1,size(is_Pv,2),size(is_Pv,3));
+                        'spline')',1,size(is_Pv,2),size(is_Pv,3));
                 end
                 
                 save(is_filename,'is_Pv','MACE_Bmax_T','WGTS_B_T','ISXsection','WGTS_CD_MolPerCm2','Energy');
@@ -1497,7 +1497,7 @@ classdef CovarianceMatrix < handle
             % Parser
             p = inputParser;
             p.addParameter('Debug','OFF',@(x)ismember(x,{'ON','OFF'}));
-            p.addParameter('RFBinStep',0.1,@(x)isfloat(x)); % eV 0.04
+            p.addParameter('RFBinStep',0.04,@(x)isfloat(x)); % eV 0.04
             p.addParameter('ELossBinStep',0.2,@(x)isfloat(x)); % for ELoss Convolution
             p.addParameter('maxE_el',500,@(x)isfloat(x)); % maximal energy of ELoss Convolution %9288;
             p.parse(varargin{:});
@@ -1542,11 +1542,7 @@ classdef CovarianceMatrix < handle
             elseif strcmp(obj.SysEffect.RF_RX,'OFF')
                 WGTS_CD_MolPerCm2_v = repmat(obj.StudyObject.WGTS_CD_MolPerCm2,obj.nTrials,1);
             end
-            
-            % switch off synchrotron -> takes too long
-            SynchrotronFlag_i = obj.StudyObject.SynchrotronFlag;
-            obj.StudyObject.SynchrotronFlag = 'OFF';
-            
+
             %% scattering probabilities for all samples
             ISProb = obj.ComputeISProbLookupTable('MACE_Bmax_T',Bmax_v,...
                                        'WGTS_B_T',Bs_v,...
@@ -1554,19 +1550,17 @@ classdef CovarianceMatrix < handle
    
             % calculate response functions with varied parameters
             RFfun = @ComputeRF;
-            parnqU = obj.StudyObject.nqU;
             ResponseFunction = zeros(obj.StudyObject.nTe,obj.StudyObject.nqU,obj.nTrials,nRings);
 
-            ParObj = copy(repmat(obj.StudyObject,obj.nTrials,1));
+           % ParObj = copy(repmat(obj.StudyObject,obj.nTrials,1));
             progressbar('Compute RF lookup table');
             nTrials_local = obj.nTrials;
             for i = 1:nTrials_local
-                parqU = ParObj(i).qU;
-                parTe = ParObj(i).Te;
                 progressbar(i/nTrials_local);
                 for ri = 1:nRings
-                    for ii = 1:parnqU
-                        ResponseFunction(:,ii,i,ri) = RFfun(ParObj(i),parTe,parqU(ii,ri),'pixel',ri,...
+                    for ii = 1:obj.StudyObject.nqU
+                        ResponseFunction(:,ii,i,ri) = RFfun(obj.StudyObject,obj.StudyObject.Te,...
+                            obj.StudyObject.qU(ii,ri),'pixel',ri,...
                             'ELossRange',maxE_el,'ELossBinStep',ELossBinStep,...
                             'ElossFunctions',ElossFunctions(:,:,i),...
                             'RFBinStep',RFBinStep,...
@@ -1579,7 +1573,6 @@ classdef CovarianceMatrix < handle
                 end
             end
             
-            obj.StudyObject.SynchrotronFlag = SynchrotronFlag_i;
             % do not save all samples, just some infos
             if strcmp(obj.SysEffect.RF_BF,'ON') && strcmp(obj.SysEffect.RF_RX,'ON') && strcmp(obj.SysEffect.RF_EL,'ON')
                 rf_path = [getenv('SamakPath'),sprintf('inputs/CovMat/RF/LookupTables/RF/')];
@@ -1626,8 +1619,7 @@ classdef CovarianceMatrix < handle
         function ComputeCM_RF(obj,varargin)
             fprintf('--------------------------------------------------------------------------\n')
             cprintf('blue','CovarianceMatrix:ComputeCM_RF: Compute Response Function Covariance Matrix \n')
-            
-            obj.StudyObject.SynchrotronFlag = 'OFF';
+
             if ismember(obj.StudyObject.TD,{'FTpaper','StackCD100all','StackCD100_3hours'}) || str2double(obj.StudyObject.TD)<51410 || contains(obj.StudyObject.TD,'FTpaper')% first tritium binning!
                 DefaultRFBinStep = 0.4;
                 if strcmp(obj.SysEffect.RF_EL,'ON')
@@ -2163,7 +2155,7 @@ function ComputeCM_Background(obj,varargin)
     MaxSlopeCpsPereV_i = MaxSlopeCpsPereV;
     
     % Number of Trials - Hardcoded
-    TrialSave  = obj.nTrials; obj.nTrials = 100000; % BASELINE, termine after obj.nTrials
+    TrialSave  = obj.nTrials; obj.nTrials = 50000; % BASELINE, termine after obj.nTrials
     
     % Covariance Matrix File
     cm_path        = [getenv('SamakPath'),sprintf('inputs/CovMat/Background/CM/')];

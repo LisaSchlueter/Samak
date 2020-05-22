@@ -110,12 +110,7 @@ classdef SterileAnalysis < handle
                     Maxm4Sq =  84.5^2;
                 end
             elseif obj.range==40 && strcmp(obj.RunAnaObj.DataType,'Real')
-                freePar = ConvertFixPar('freePar',obj.RunAnaObj.fixPar,'Mode','Reverse');
-                if contains(freePar,'mNu')
-                    Maxm4Sq = 30^2;
-                else
-                    Maxm4Sq =  (obj.range-3)^2;
-                end
+                Maxm4Sq =  36^2;%(obj.range-3)^2;
             else
                 Maxm4Sq =  (obj.range-5)^2;
             end
@@ -1018,7 +1013,7 @@ classdef SterileAnalysis < handle
                 ylim([1 1e4]);
                 xlim([9e-04 0.5]);
             elseif obj.range==40
-                ylim([1 1.25e3]);
+                ylim([1 1.6e3]);
                 xlim([6e-03 0.5]);
             end
             title('');%remove title
