@@ -68,21 +68,13 @@ classdef RunSensitivity < handle
     methods
         function obj = RunSensitivity(varargin) % constructor
             fprintf('-----------------Start RunSensitivity contructor ----------------------\n');
-            
-            DefaultSysAll    = {'TCoff_OTHER','FSD','TASR','RF_EL','RF_BF','RF_RX','Stack','LongPlasma','FPDeff','NP','Bkg'}; %Bkg has to be last
-    
-            DefaultSysLeg    = {'Theoretical corrections';'Final-state distribution';...
-                                'Tritium activity fluctuations';'Energy-loss function';...
-                                'Magnetic fields';'Source scattering';'HV fluctuations';...
-                                'Long. source potential';...
-                                'Detector efficiency';'Non-Poisson background';'Background slope'};
-
+        
             p = inputParser;
             p.addParameter('AsymErr','ON',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('ConfLevel',0.9, @(x)isfloat(x));
             p.addParameter('RunAnaObj','', @(x) isa(x,'RunAnalysis') || isa(x,'MultiRunAnalysis'));
-            p.addParameter('SysEffectsAll',DefaultSysAll,@(x)iscell(x));
-            p.addParameter('SysEffectLeg',DefaultSysLeg,@(x)iscell(x));
+            p.addParameter('SysEffectsAll','',@(x)iscell(x));
+            p.addParameter('SysEffectLeg','',@(x)iscell(x));
             p.addParameter('SysEffect',struct('FPDeff','ON'),@(x)isstruct(x));
             p.addParameter('RecomputeFlag','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('Mode','Asimov',@(x)ismember(x,{'Asimov','Scan'}));
@@ -100,7 +92,7 @@ classdef RunSensitivity < handle
             obj.Mode           = p.Results.Mode;
             obj.chi2sys        = p.Results.chi2sys;
             obj.ScanSide       = p.Results.ScanSide;
-            obj.nSys           = numel(obj.SysEffectsAll);
+           
             obj.LimitFlag      = p.Results.LimitFlag;
             obj.AsymErr        = p.Results.AsymErr;
             
@@ -119,6 +111,11 @@ classdef RunSensitivity < handle
                 % do 1 init fit
                 obj.RunAnaObj.Fit;
             end
+            
+            if isempty(obj.SysEffectsAll)
+                obj.GetDefSysEffect;
+            end
+            obj.nSys           = numel(obj.SysEffectsAll);
             fprintf('-----------------End RunSensitivity contructor ----------------------\n');
         end
         function GetData(obj)
@@ -171,12 +168,17 @@ classdef RunSensitivity < handle
             nTrials = obj.GetnTrials(obj.SysEffect);
             if ~strcmp(obj.RunAnaObj.chi2,'chi2Stat') && strcmp(GetCM,'ON')
                 if strcmp(obj.SysEffect,'Bkg')
+                    if strcmp(obj.RunAnaObj.DataSet,'Knm1')
+                        BkgMode = 'SlopeFit';
+                    else
+                        BkgMode = 'Gauss';
+                    end
                     obj.RunAnaObj.ComputeCM('SysEffect',struct('FSD','OFF'),...
-                        'BkgCM','ON','nTrials',nTrials,'Mode','Gauss',...
+                        'BkgCM','ON','nTrials',nTrials,'Mode',BkgMode,...
                         'BkgScalingOpt',2,'BkgRingCorrCoeff',0);
                     obj.RunAnaObj.NonPoissonScaleFactor = 1;
-                      obj.RunAnaObj.ComputeCM('SysEffect',struct('FSD','OFF'),...
-                        'BkgCM','ON','nTrials',nTrials,'Mode','Gauss',...
+                    obj.RunAnaObj.ComputeCM('SysEffect',struct('FSD','OFF'),...
+                        'BkgCM','ON','nTrials',nTrials,'Mode',BkgMode,...
                         'BkgScalingOpt',2,'BkgRingCorrCoeff',0);
                 else
                     [~,CmArg] = GetSysErr(obj.RunAnaObj.SysBudget);
@@ -240,15 +242,20 @@ classdef RunSensitivity < handle
             fixPar_i = obj.RunAnaObj.fixPar;
             obj.RunAnaObj.fixPar = '1 5 6 7 8 9 10 11'; %parameter of interest has to be fixed in scan
             obj.Lpar = zeros(obj.RunAnaObj.nPar,1);
-            
+            if strcmp(obj.RunAnaObj.DataSet,'Knm1')
+                BkgMode = 'SlopeFit';
+            else
+                BkgMode = 'Gauss';
+            end
             nTrials = obj.GetnTrials(obj.SysEffect);
             if ~strcmp(obj.RunAnaObj.chi2,'chi2Stat') && strcmp(GetCM,'ON')
                 if strcmp(obj.SysEffect,'Bkg')
-                    obj.RunAnaObj.ComputeCM('SysEffect',struct('FSD','OFF'),'BkgCM','ON','nTrials',nTrials);
+                    obj.RunAnaObj.ComputeCM('SysEffect',struct('FSD','OFF'),'BkgCM','ON','BkgMode',BkgMode,...
+                        'nTrials',nTrials);
                 else
                     [~,CmArg] = GetSysErr(obj.RunAnaObj.SysBudget);
                     obj.RunAnaObj.ComputeCM('SysEffects',obj.SysEffect,CmArg{:},...
-                        'BkgCM','OFF','nTrials',nTrials);
+                        'BkgCM','OFF','nTrials',nTrials,'BkgMode',BkgMode);
                 end
             end
             
@@ -969,18 +976,24 @@ classdef RunSensitivity < handle
                      
                     % get covariance matrix
                     if ~ismember(obj.SysEffectsAll{i},{'Bkg','NP'})
+                        obj.RunAnaObj.NonPoissonScaleFactor=1;
                         obj.RunAnaObj.ComputeCM('SysEffect',struct(obj.SysEffectsAll{i},'ON'),...
                             'nTrials',nTrials,CmArg{:},'BkgCM','OFF');
                     elseif strcmp(obj.SysEffectsAll{i},'Bkg')
+                        if strcmp(obj.RunAnaObj.DataSet,'Knm1')
+                            BkgMode = 'SlopeFit';
+                        else
+                            BkgMode = 'Gauss';
+                        end
                         % exception for background shape cov mat
                         obj.RunAnaObj.NonPoissonScaleFactor=NP_prev;
                         obj.RunAnaObj.SetNPfactor;
                         obj.RunAnaObj.ComputeCM('SysEffect',struct('FSD','OFF'),...
-                            'BkgCM','ON','nTrials',nTrials);
+                            'BkgCM','ON','nTrials',nTrials,'BkgMode',BkgMode);
                         obj.RunAnaObj.NonPoissonScaleFactor=1;
                         obj.RunAnaObj.SetNPfactor;
                         obj.RunAnaObj.ComputeCM('SysEffect',struct('FSD','OFF'),...
-                            'BkgCM','ON','nTrials',nTrials);
+                            'BkgCM','ON','nTrials',nTrials,'BkgMode',BkgMode);
                     elseif strcmp(obj.SysEffectsAll{i},'NP')
                         % exception for background rate (Non-Poiss)
                         obj.RunAnaObj.chi2          = 'chi2Stat';
@@ -988,6 +1001,8 @@ classdef RunSensitivity < handle
                         obj.RunAnaObj.SetNPfactor;
                     end
                     
+                    obj.RunAnaObj.NonPoissonScaleFactor=NP_prev;
+                      
                     %compute sensitivity
                     switch obj.Mode
                         case 'Asimov'
@@ -1459,7 +1474,7 @@ classdef RunSensitivity < handle
                 SingleBarY(i,1)      = PlotVarTmp(1);
                 SingleBarY(i,2:end)  = sqrt(PlotVarTmp(2:end).^2-SingleBarStat(i).^2);
                 
-                if strcmp(obj.AsymErr,'ON')
+                if strcmp(obj.AsymErr,'ON') && strcmp(obj.RunAnaObj.fitter,'minuit')
                     PlotVarTmpNeg = struct2array(structfun(@(x)abs(x(Parameter)),obj.MultiLparNeg,'UniformOutput',0));
                     PlotVarTmpNeg(PlotVarTmpNeg<PlotVarTmpNeg(1))=PlotVarTmpNeg(1); % no sensitivity can be smaller as stat only
                     PlotVarTmpPos = struct2array(structfun(@(x)abs(x(Parameter)),obj.MultiLparPos,'UniformOutput',0));
@@ -1470,7 +1485,7 @@ classdef RunSensitivity < handle
                 end
             end
             
-            %            SingleBarX = obj.GetRangeSingleSys('PlotRanges',StackBarX'); % Single Bar range values
+            % SingleBarX = obj.GetRangeSingleSys('PlotRanges',StackBarX'); % Single Bar range values
             
             % MultiBar Plot (Stacked)
             if strcmp(HoldOn,'OFF')
@@ -2444,7 +2459,7 @@ classdef RunSensitivity < handle
             end
         end
         function PlotWhiteSpace(obj)
-                   % remove white space around figure
+            % remove white space around figure
             ax = gca;
             outerpos = ax.OuterPosition;
             ti = ax.TightInset;
@@ -2453,6 +2468,25 @@ classdef RunSensitivity < handle
             ax_width = outerpos(3) - ti(1) - ti(3)-0.01;
             ax_height = outerpos(4)- ti(2) - ti(4);
             ax.Position = [left bottom ax_width ax_height];
+        end
+        function GetDefSysEffect(obj)
+            
+            switch obj.RunAnaObj.DataSet
+                case 'Knm2'
+                    Default
+                    obj.SysEffectsAll   = {'TCoff_OTHER','FSD','TASR','RF_EL','RF_BF','RF_RX','Stack','LongPlasma','FPDeff','NP','Bkg'}; %Bkg has to be last
+                    obj.SysEffectLeg    = {'Theoretical corrections';'Final-state distribution';...
+                        'Tritium activity fluctuations';'Energy-loss function';...
+                        'Magnetic fields';'Source scattering';'HV fluctuations';...
+                        'Long. source potential';...
+                        'Detector efficiency';'Non-Poisson background';'Background slope'};
+                case 'Knm1'
+                    obj.SysEffectsAll      = {'TCoff_OTHER','FSD','TASR','RF_EL','RF_BF','RF_RX','Stack','FPDeff','NP','Bkg'}; %Bkg has to be last
+                    obj.SysEffectLeg      = {'Theoretical corrections';'Final-state distribution';...
+                        'Tritium activity fluctuations';'Energy-loss function';...
+                        'Magnetic fields';'Source scattering';'HV fluctuations';...
+                        'Detector efficiency';'Non-Poisson background';'Background slope'};
+            end
         end
     end
 end
