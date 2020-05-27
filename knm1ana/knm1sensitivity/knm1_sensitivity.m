@@ -27,8 +27,9 @@ S.ConfLevel=0; % 0 == 1 sigma
 %S.PlotSysBreakdownBars('Ranges',14,'SavePlot','pdf','HoldOn','OFF','SysInfoBox','OFF','DispTitle','OFF');
 S.PlotSysBreakdownBars2('Ranges',M.exclDataStart,'SavePlot','pdf','HoldOn','OFF','SysInfoBox','OFF');
 
- %% KNM1 real data
- D = MultiRunAnalysis(RunAnaArg{:},'DataType','Real');
+%% KNM1 real data
+D = MultiRunAnalysis(RunAnaArg{:},'DataType','Real');
+D.exclDataStart=D.GetexclDataStart(range);
 Sd = RunSensitivity('RunAnaObj',D);
 Sd.RecomputeFlag='OFF';
 Sd.LimitFlag = 'Central';

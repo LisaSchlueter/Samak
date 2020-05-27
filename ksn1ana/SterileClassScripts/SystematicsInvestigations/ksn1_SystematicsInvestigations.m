@@ -11,7 +11,7 @@
 
 %% 1. RunAnalysis object
 RunAnaArg = {'RunList','KNM1',...
-    'fixPar','E0 Norm Bkg',...
+    'fixPar','mNu E0 Norm Bkg',...
     'DataType','Real',...
     'FSDFlag','SibilleFull',...
     'ELossFlag','KatrinT2',...
@@ -24,10 +24,10 @@ RunAnaArg = {'RunList','KNM1',...
     'TwinBias_Q',18573.73,...
     'SysBudget',29,...
     'pullFlag',99,...
-    'NonPoissonScaleFactor',1};
+    'NonPoissonScaleFactor',1.064};
 
-R = MultiRunAnalysis(RunAnaArg{:});
-R.chi2 = 'chi2CMShape';
+A = MultiRunAnalysis(RunAnaArg{:});
+A.chi2 = 'chi2Stat';
 %% 2. SterileAnalysis class
 SterileArg = {'RunAnaObj',R,... % Mother Object: defines RunList, Column Density, Stacking Cuts,....
     'nGridSteps',50,...
@@ -38,15 +38,15 @@ SterileArg = {'RunAnaObj',R,... % Mother Object: defines RunList, Column Density
     'range',95};
 
 S = SterileAnalysis(SterileArg{:});
-S.RunAnaObj.SysBudget= 29;
+S.RunAnaObj.SysBudget= 24;
 S.RunAnaObj.ELossFlag = 'KatrinT2';
 S.RunAnaObj.AngularTFFlag = 'OFF';
 %% plot
-CL = 95;
+CL = 96.46;
 S.InterpMode = 'lin'; % waring: if contour is closed, spline interp sometimes sensitive to artefacts! Switch to "lin" in this case
-S.range = 65;
+S.range = 95;
 
-Mode = 'FSDexcitedStates45';%Plasmaerr';
+Mode = 'AngTFEloss';
 
 switch Mode
     case 'Eloss' % new: e-loss, different uncertainty etc.
@@ -96,7 +96,7 @@ S.Interp1Grid('RecomputeFlag','ON');% interpolate chi2 map -> nicer appearance o
 pnew = S.ContourPlot('BestFit','ON','SavePlot','OFF','CL',CL,'HoldOn','OFF');
 
 % default ksn1 contour:
-S.RunAnaObj.SysBudget= 29;
+S.RunAnaObj.SysBudget= 24;
 S.RunAnaObj.ELossFlag = 'KatrinT2';
 S.RunAnaObj.AngularTFFlag = 'OFF';
 S.LoadGridFile('CheckSmallerN','ON','CheckLargerN','ON'); % if CheckSmallerN also look for grid with more/less nGridSteps
@@ -108,7 +108,8 @@ ylim([1 1e4])
 leg = legend([pnew,pold],legStrNew,legStrOld,...
     'EdgeColor',rgb('Silver'),'Location','southwest');
 
-title(sprintf('%s - %.0f%% C.L.',S.GetPlotTitle,CL),'FontWeight','normal','FontSize',get(gca,'FontSize'));
+%title(sprintf('%s - %.1f%% C.L.',S.GetPlotTitle,CL),'FontWeight','normal','FontSize',get(gca,'FontSize'));
+title(sprintf('%s - \\Delta\\chi^2 = %.2f',S.GetPlotTitle,GetDeltaChi2(CL,2)),'FontWeight','normal','FontSize',get(gca,'FontSize'));
 
 plotname = sprintf('%s_%sComparison_%.2gCL.png',S.DefPlotName,Mode,CL);
 print(gcf,plotname,'-dpng','-r450');

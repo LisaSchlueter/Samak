@@ -3369,7 +3369,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
         end
         
         
-        function [parqU, errqU, chi2qU, dofqU] = qUScan(obj,varargin)
+        function [parqU, errqU, chi2qU, dofqU,e1] = qUScan(obj,varargin)
             % Perform qUmin Fit Scan
             % -------------------------------------------------------------%
             p=inputParser;
@@ -3377,9 +3377,10 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             p.addParameter('RecomputeFlag','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('qURange',[90,20],@(x)all(isfloat(x)));
             p.addParameter('CorrMean','OFF',@(x)ismember(x,{'ON','OFF'})); % doesnt work atm
-            p.addParameter('HoldOn','OFF',@(x)ismember(x,{'ON','OFF'})); % plotting multiple FSDs...
-            p.addParameter('RelFlag','OFF',@(x)ismember(x,{'ON','OFF'})); % show results to mean
+            p.addParameter('HoldOn','OFF',@(x)ismember(x,{'ON','OFF','ON1'})); % plotting multiple FSDs...
+            p.addParameter('RelFlag','OFF',@(x)ismember(x,{'ON','OFF'})); % show results to mean 
             p.addParameter('ErrorBarScaling',1,@(x)isfloat(x)); % scale error bars in fit results
+            p.addParameter('RefLine','OFF',@(x) isfloat(x) || strcmp(x,'OFF')); % reference line for respect to certain range
             p.addParameter('saveStr','',@(x)ischar(x) || isempty(x));
             p.parse(varargin{:});
             saveplot        = p.Results.saveplot;
@@ -3390,6 +3391,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             RelFlag         = p.Results.RelFlag;
             ErrorBarScaling = p.Results.ErrorBarScaling;
             saveStr         = p.Results.saveStr; % additional label for result and plots
+            RefLine         = p.Results.RefLine;
             
             if strcmp(obj.DataSet,'Knm1')
                 savedir = [getenv('SamakPath'),'knm1ana/knm1_qUScan/results/'];
@@ -3406,49 +3408,47 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             nFits = numel(exclDataStart_v);
             
             freeParStr = ConvertFixPar('Mode','Reverse','freePar',obj.fixPar);
-            savename = [savedir,sprintf('qUScan_%s_%s_%s_FitPar%s_%.0feV-%.0feV_%s%s.mat',...
-                obj.RunData.RunName,obj.DataType,obj.chi2,freeParStr,...
+            savename = [savedir,sprintf('qUScan_%s_%s_%sNP%.3f_FitPar%s_%.0feV-%.0feV_%s%s.mat',...
+                obj.RunData.RunName,obj.DataType,obj.chi2,obj.NonPoissonScaleFactor,freeParStr,...
                 qURange(1),qURange(2),obj.FSDFlag,saveStr)];
             if exist(savename,'file') && strcmp(RecomputeFlag,'OFF')
                 load(savename,'parqU', 'errqU', 'chi2qU', 'dofqU');
+                fprintf('load qU scan from file %s \n',savename)
             else
-                
                 parqU                   = zeros(obj.nPar,nFits);
                 errqU                   = zeros(obj.nPar,nFits);
                 chi2qU                  = zeros(nFits,1);
                 dofqU                   = zeros(nFits,1);
-
-                 progressbar('qU Scan')
+                
+                progressbar('qU Scan')
                 for i=1:nFits
                     progressbar(i/nFits);
-                   
+                    
                     obj.exclDataStart = exclDataStart_v(i);
-                    %                 if ~strcmp(obj.chi2,'chi2Stat')
-                    %                     obj.ComputeCM;
-                    %                 end
-                    obj.Fit;
+                    savename_tmp = strrep(savename,sprintf('%.0feV-%.0feV',qURange(1),qURange(2)),...
+                        sprintf('%.0feV',obj.GetRange));
+                    
+                    if exist(savename_tmp,'file') && strcmp(RecomputeFlag,'OFF')
+                        FitResult_tmp = importdata(savename_tmp);
+                        obj.FitResult = FitResult_tmp;
+                        fprintf('load fit from file %s \n',savename_tmp)
+                    else
+                        obj.Fit;
+                        FitResult = obj.FitResult;
+                        save(savename_tmp,'FitResult');
+                    end
                     parqU(:,i) = obj.FitResult.par;
                     errqU(:,i) = obj.FitResult.err;
                     chi2qU(i)  = obj.FitResult.chi2min;
                     dofqU(i)   = obj.FitResult.dof;
                 end
-                save(savename,'parqU', 'errqU', 'chi2qU', 'dofqU');   
+                save(savename,'parqU', 'errqU', 'chi2qU', 'dofqU');
             end
             
             
             %% Plot qU Scan
-           % qUmin = min(obj.RunData.qU(firstPoint:lastPoint,1)-obj.ModelObj.Q_i);
-           % qUmax = max(obj.RunData.qU(firstPoint:lastPoint,1)-obj.ModelObj.Q_i);
-%             if ~isempty(obj.RunNr) %RunAnalysis
-%                 Runtitle      = sprintf('Run%u',obj.RunNr);
-%                 Runtitle_save = sprintf('Run%u',obj.RunNr);
-%             else
-%                 Runtitle      = sprintf('%uRuns %.0f - %.0f',numel(obj.StackedRuns),obj.RunList(1),obj.RunList(end));
-%                 Runtitle_save = sprintf('%uRuns_%.0f_%.0f',numel(obj.StackedRuns),obj.RunList(1),obj.RunList(end));
-%             end
-            
-            if strcmp(HoldOn,'ON')
-                fitPar = 1;
+            if ismember(HoldOn,{'ON','ON1'})
+                fitPar = 1; % hack for nu mass plot with different models
             else
                 fitPar = 1:5;
             end
@@ -3519,8 +3519,8 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                     
                 else
                     
-                    x =flip(obj.RunData.qU(exclDataStart_v(1):exclDataStart_v(end),1))-18575;%obj.ModelObj.Q_i;
-                    if strcmp(HoldOn,'OFF') && ~contains(obj.DataSet,'FirstTritium')
+                 x =flip(obj.RunData.qU(exclDataStart_v(1):exclDataStart_v(end),1))-18575;%obj.ModelObj.Q_i;
+                    if (strcmp(HoldOn,'OFF') || strcmp(HoldOn,'ON1')) && ~contains(obj.DataSet,'FirstTritium')
                         fig12345 = figure('Renderer','painters');
                         set(fig12345, 'Units', 'normalized', 'Position', [0.1, 0.1, 0.7, 0.6]);
                         ColorArg = {'MarkerFaceColor',obj.PlotColor,'Color',obj.PlotColor};
@@ -3530,24 +3530,36 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                         ColorArg = {'MarkerFaceColor',rgb('CadetBlue'),'Color',rgb('DarkCyan')};
                     else
                         hold on;
-                        ColorArg = {'MarkerFaceColor',obj.PlotColor,'Color',obj.PlotColor};
-                        %ColorArg = {'MarkerFaceColor',rgb('GoldenRod'),'Color',rgb('DarkGoldenRod')};
+                        ColorArg = {'MarkerFaceColor',obj.PlotColorLight,'Color',obj.PlotColorLight};
+                       % ColorArg = {'MarkerFaceColor',rgb('GoldenRod'),'Color',rgb('DarkGoldenRod')};
                         x = x+0.5;
                     end
                     
                     
                     if i~=5 && strcmp(CorrMean,'ON')
-                        p1 = plot(linspace(min(x)-3,max(x)+3,numel(x)),...
-                            Mean.*ones(numel(x),1),'--','Color',rgb('Silver'),'LineWidth',3);
+                        pref = plot(linspace(min(x)-3,max(x)+3,numel(x)),...
+                            Mean.*ones(numel(x),1),':','Color',rgb('Silver'),'LineWidth',3);
+                        hold on
+                    elseif ~strcmp(RefLine,'OFF')
+                        % reference line with respect to certain range
+                        RefIndex = find(abs(x+RefLine)==min(abs(x+RefLine)));  
+                        pref = plot(linspace(min(x)-3,max(x)+3,numel(x)),...
+                            y(RefIndex).*ones(numel(x),1),':','Color',rgb('Silver'),'LineWidth',3);
                         hold on
                     end
+                    
                     if contains(obj.DataSet,'FirstTritium') && i==2
                         plot(linspace(min(x)-10,max(x)+10,numel(x)),zeros(numel(x),1),'-','Color',rgb('Black'),'LineWidth',1);
                         hold on;
                     end
                     e1 = errorbar(x, y,yErr,...
-                        'o','LineWidth',2.5,'MarkerSize',12,ColorArg{:});
+                        '.','LineWidth',2.5,'MarkerSize',25,ColorArg{:});
                     e1.CapSize = 0;
+                    if ~strcmp(RefLine,'OFF')
+                          plot(x(RefIndex),y(RefIndex),...
+                        '.','LineWidth',2.5,'MarkerSize',e1.MarkerSize,...
+                        'MarkerEdgeColor',obj.PlotColor,'MarkerFaceColor',obj.PlotColorLight);
+                    end
                     xlabel(sprintf('Lower fit boundary below {\\itE}_0 (eV)'));
                     ylabel(ystr);
                     xlim([min(x)-2,max(x)+2]);
@@ -3565,7 +3577,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                         e1.MarkerSize = 3;
                         xlim([min(x)-10,max(x)+10]);
                     else
-                        PrettyFigureFormat('FontSize',28);
+                        PrettyFigureFormat('FontSize',24);
                     end
                     
                     
@@ -3577,11 +3589,9 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                     end
                     
                     if i~=5 && strcmp(CorrMean,'ON')
-                        %if strcmp(CorrMean,'OFF')
-                        %   leg = legend([e1,p1],legstr,'weighted mean');
-                        %else
-                        leg = legend([e1,p1],legstr,'correlated weighted mean');
-                        % end
+                        leg = legend([e1,pref],legstr,'correlated weighted mean');
+                    elseif ~strcmp(RefLine,'OFF')
+                         leg = legend([e1,pref],legstr,sprintf('%.0f eV range',x(RefIndex)));
                     else
                         leg = legend(e1,legstr);
                     end
@@ -3598,7 +3608,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                         leg.Position = [mypos(1)-0.05, mypos(2)+0.02,mypos(3:end)];
                         leg.FontSize = 9;
                     else
-                        leg.FontSize = get(gca,'FontSize')+4;
+                        leg.FontSize = get(gca,'FontSize')+2;
                     end
                     
                     leg.delete;

@@ -1,14 +1,14 @@
 
 %% settings
 CL = 95;
-range =  95;%
+range =  40;%
 nGridSteps = 50;
 chi2Str = 'chi2CMShape';
 DataType = 'Real';
-freePar = 'E0 Bkg Norm';
+freePar = 'mNu E0 Bkg Norm';
 RunList = 'KNM1';
 SmartGrid = 'OFF';
-pullFlag = 99;
+pullFlag = 12;
 
 [mnu4Sq,sin2T4,chi2,chi2_ref,savefileGrid] = KSN1GridSearch('range',range,...
     'nGridSteps',nGridSteps,...

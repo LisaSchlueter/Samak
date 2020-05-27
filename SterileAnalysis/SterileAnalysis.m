@@ -107,7 +107,7 @@ classdef SterileAnalysis < handle
                 if contains(freePar,'mNu')
                     Maxm4Sq = 83^2;
                 else
-                    Maxm4Sq =  84.5^2;
+                    Maxm4Sq =  90^2;%84.5^2;
                 end
             elseif obj.range==40 && strcmp(obj.RunAnaObj.DataType,'Real')
                 Maxm4Sq =  36^2;%(obj.range-3)^2;
@@ -326,7 +326,7 @@ classdef SterileAnalysis < handle
             if any(CL<1)
                 CL = CL*1e2;
             end
-            legStr = sprintf(' %.0f%% C.L. -',CL);  
+            legStr = sprintf(' %.1f%% C.L. -',CL);  
             legend(legStr(1:end-1),'EdgeColor',rgb('Silver'),'Location','southwest');
             
               if ~strcmp(SavePlot,'OFF')
@@ -415,7 +415,7 @@ classdef SterileAnalysis < handle
             if strcmp(DANSS,'ON')
                 filenameDANSS = sprintf('%scoord_DANSS_95CL.mat',savedirOther);
                 dDANSS = importdata(filenameDANSS);
-                pDANSS = plot(dDANSS.SinSquare2Theta_X,dDANSS.DmSquare41_Y,'-','LineWidth',1,'Color',rgb('LightGreen'));
+                pDANSS = plot(dDANSS.SinSquare2Theta_X,dDANSS.DmSquare41_Y,'-','LineWidth',1,'Color',rgb('LightGray'));
                 legHandle{numel(legHandle)+1} = pDANSS;
                 legStr = [legStr,{sprintf('DANSS 95%% C.L.')}];
                 hold on;
@@ -424,19 +424,20 @@ classdef SterileAnalysis < handle
             if strcmp(Stereo,'ON')
                 filenameStereo = sprintf('%scoord_Stereo_95CL.mat',savedirOther);
                 dStereo = importdata(filenameStereo);
-                pStereo = plot(dStereo.SinSquare2Theta_X,dStereo.DmSquare41_Y,'-','LineWidth',1,'Color',rgb('LightGray'));
+                pStereo = plot(dStereo.SinSquare2Theta_X,dStereo.DmSquare41_Y,'-','LineWidth',1,'Color',rgb('LightGreen'));
                 legHandle{numel(legHandle)+1} = pStereo;
                 legStr = [legStr,{sprintf('Stéréo 95%% C.L.')}];
                 hold on;
             end
             %% RAA
             if strcmp(RAA,'ON')
+                hold on;
                 filenameRAA1 = sprintf('%scoord_RAA_95_A.mat',savedirOther);
                 filenameRAA2 = sprintf('%scoord_RAA_95_B.mat',savedirOther);
                 dRAA1 = importdata(filenameRAA1,'file');
-                hold on;
-                dRAA2 = importdata(filenameRAA2,'file');
-                pRAA = plot(dRAA1.sith4_X,dRAA1.m4_Y,'-','LineWidth',2,'Color',rgb('Orange'));
+                dRAA2 = importdata(filenameRAA2,'file');  
+                pRAA = plot([dRAA1.sith4_X(1),dRAA1.sith4_X,dRAA1.sith4_X(end)],...
+                         [1e5,dRAA1.m4_Y,1e5],'-','LineWidth',2,'Color',rgb('Orange'));
                 plot(dRAA2.sith4_X,dRAA2.m4_Y,'-','LineWidth',pRAA.LineWidth,'Color',pRAA.Color);
                 legHandle{numel(legHandle)+1} = pRAA;
                 legStr = [legStr,{sprintf('RAA+GA 95%% CL')}];%-PRD 83, 073006 (2011) -

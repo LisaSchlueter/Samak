@@ -1,7 +1,7 @@
 % contour with randomized twins
 %% settings
 CL = 95;
-range = 65;%
+range = 40;%
 nGridSteps = 25;
 chi2Str = 'chi2CMShape';
 DataType = 'Twin';
@@ -17,8 +17,10 @@ switch Mode
           SysBudget =24;
         if range== 95      
             RandMC = 1:1500;
-        else 
-            RandMC = [1:36,364:435,868:931,1472:1500];
+        elseif range==65
+            RandMC = [1:654,868:931,1219:1500];
+        elseif range==40
+            RandMC = [195:309,500:504,726:803];
         end
 end
 %% init
@@ -70,7 +72,7 @@ chi2min_bf = chi2min_bf(RandMC);
 chi2min_null = chi2min_null(RandMC);
 DeltaChi2 = DeltaChi2(RandMC);
 
-d = importdata(savefile{1});
+d = importdata(savefile{200});
 dof = d.FitResults_Null.dof-2;
 %% significant best fits
 
@@ -119,9 +121,19 @@ PlotArg ={'mnu4Sq',mnu4Sq_sensi,...
 [pHandle,legStr] =  KSN1ContourPlot(PlotArg{:},'LineStyle','-','PlotSplines','ON','HoldOn','ON','Color','Black');
 pHandle.ZData = 1e3*ones(1e3,1);
 xlim([1e-03 0.5]);
-ylim([1 94^2]);
-legend([h,pHandle],'MC best fits',sprintf('Sensitivity %.0f eV range (%.0f%% C.L.)',range,CL),'EdgeColor',rgb('Silver'),'Location','southwest');
-plotdir = strrep(extractBefore(savefile{1},'KSN1'),'results','plots');
+if range==95
+    ylim([1 94^2]);
+elseif range==65
+    ylim([1 65^2]);
+else
+    ylim([1 40^2]);
+end
+legend([h,pHandle],sprintf('Best fits %.0f pseudo-experiments',numel(RandMC)),sprintf('Sensitivity %.0f eV range (%.0f%% C.L.)',range,CL),'EdgeColor',rgb('Silver'),'Location','southwest');
+
+title(sprintf('Significant best fits (%.2f \\pm %.2f)%% ',...
+    ClosedFrac95*100,RelErr(nContours,ClosedFrac95)*100),...
+    'FontSize',get(gca,'FontSize'));
+plotdir = strrep(extractBefore(savefile{200},'KSN1'),'results','plots');
 MakeDir(plotdir);
 plotname = sprintf('%sRandMC_BestFits_%.0feV_%.0fsamples.png',plotdir,range,numel(RandMC));
 print(gcf,plotname,'-dpng','-r450');
