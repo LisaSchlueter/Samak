@@ -42,7 +42,7 @@ classdef SterileAnalysis < handle
     methods % constructor
         function obj = SterileAnalysis(varargin)
             p = inputParser;
-            p.addParameter('RunAnaObj','', @(x) isa(x,'RunAnalysis') || isa(x,'MultiRunAnalysis'));
+            p.addParameter('RunAnaObj','', @(x)  isa(x,'RunAnalysis') || isa(x,'MultiRunAnalysis'));
             p.addParameter('nGridSteps',50,@(x)isfloat(x)); % time on server: 25 points ~ 7-10 minutes, 50 points ~ 40 minutes on csltr server
             p.addParameter('SmartGrid','OFF',@(x)ismember(x,{'ON','OFF'})); % work in progress
             p.addParameter('RecomputeFlag','OFF',@(x)ismember(x,{'ON','OFF'}));
@@ -698,6 +698,60 @@ classdef SterileAnalysis < handle
                 
         end
         
+        function TestCoverageImpact(obj,varargin)
+            p = inputParser;
+            p.addParameter('BestFit','OFF',@(x)ismember(x,{'ON','OFF'}));
+            p.addParameter('SavePlot','OFF',@(x)ismember(x,{'ON','OFF','png'}));
+            p.parse(varargin{:});
+            BestFit  = p.Results.BestFit;
+            SavePlot = p.Results.SavePlot;
+            fixPar_i = obj.RunAnaObj.fixPar;
+            pull_i   = obj.RunAnaObj.pullFlag;
+
+            %%  95CL - Wilks Theorem
+            obj.RunAnaObj.fixPar = 'E0 Norm Bkg'; obj.RunAnaObj.InitFitPar;
+            obj.RunAnaObj.pullFlag = 99;
+            obj.LoadGridFile('CheckSmallerN','ON');
+            obj.Interp1Grid('RecomputeFlag','ON');
+            pFix1 = obj.ContourPlot('CL',95,'HoldOn','ON',...
+                'Color',rgb('Orange'),'LineStyle','-.','BestFit',BestFit);
+            
+            %% 95CL - Wilks Theorem Corrected wia MC simulation
+            obj.RunAnaObj.fixPar = 'E0 Norm Bkg'; obj.RunAnaObj.InitFitPar;
+            obj.RunAnaObj.pullFlag = 99;
+            obj.LoadGridFile('CheckSmallerN','ON');
+            obj.Interp1Grid('RecomputeFlag','ON');
+            pFix2 = obj.ContourPlot('CL',96.45,'HoldOn','ON',...
+                'Color',rgb('DodgerBlue'),'LineStyle',':','BestFit',BestFit);
+            
+            PrettyFigureFormat('FontSize',22);
+                legend([pFix1,pFix2],...
+                    sprintf('Fixed {\\itm}_\\nu^2 = 0 eV^2 - \\Delta\\chi^2 = 5.99'),...
+                    sprintf('Fixed {\\itm}_\\nu^2 = 0 eV^2 - \\Delta\\chi^2 = 6.68'),...
+                    'EdgeColor',rgb('Silver'),'Location','southwest');
+                obj.RunAnaObj.fixPar = fixPar_i;
+                obj.RunAnaObj.pullFlag = pull_i ;
+               
+                if obj.range==65
+                    ylim([1 6e3]);
+                    xlim([2e-03 0.5]);
+                end
+                %% save
+                if ~strcmp(SavePlot,'OFF')
+                    name_i = strrep(obj.DefPlotName,'_mNuE0BkgNorm','');
+                    if strcmp(SavePlot,'ON')
+                        plotname = sprintf('%s_TestCoverageImpact_%.2gCL.pdf',name_i,obj.ConfLevel);
+                        export_fig(gcf,plotname);
+                    elseif strcmp(SavePlot,'png')
+                        plotname = sprintf('%s_TestCoverageImpact_%.2gCL.png',name_i,obj.ConfLevel);
+                        print(gcf,plotname,'-dpng','-r450');
+                    end
+                    fprintf('save plot to %s \n',plotname);
+                end
+                
+        end
+
+        
         function PlotTwinData(obj,varargin)
             p=inputParser;
             p.addParameter('BestFit','OFF',@(x)ismember(x,{'ON','OFF'}));
@@ -959,7 +1013,7 @@ classdef SterileAnalysis < handle
                 filenameMainz = sprintf('%scoord_Mainz_95CL.mat',savedirOther);
                 dMainz = importdata(filenameMainz);
                 sinTsq = 0.5*(1-sqrt(1-dMainz.SinSquare2Theta_X));
-                pMainz = plot(sinTsq,dMainz.DmSquare41_Y,'-.','LineWidth',1.5,'Color',rgb('Red'));
+                pMainz = plot(sinTsq,dMainz.DmSquare41_Y,'-.','LineWidth',1.5,'Color',rgb('Salmon')); %Red
                 legHandle{numel(legHandle)+1} = pMainz;
                 legStr = [legStr,{sprintf('Mainz 95%% C.L.  - {\\itm}_\\nu^2 = 0 eV^2')}];
                 hold on;
@@ -969,7 +1023,7 @@ classdef SterileAnalysis < handle
                 filenameTroitsk = sprintf('%scoord_Troitsk_95CL.mat',savedirOther);
                 dTroitsk = importdata(filenameTroitsk);
                 pTroitsk = plot(dTroitsk.SinSquareTheta_X,dTroitsk.m4Square_Y,'--','LineWidth',1.5,...
-                    'Color',rgb('Orange'));
+                    'Color',rgb('DarkSlateGrey')); % Orange
                 legHandle{numel(legHandle)+1} = pTroitsk;
                 legStr = [legStr,{sprintf('Troitsk 95%% C.L. - {\\itm}_\\nu^2 = 0 eV^2')}];
                 hold on;
@@ -1018,6 +1072,7 @@ classdef SterileAnalysis < handle
                 xlim([6e-03 0.5]);
             end
             title('');%remove title
+            %grid on
             %% save
             if ~strcmp(SavePlot,'OFF')
                 name_i = strrep(obj.DefPlotName,'_mNuE0BkgNorm','');
