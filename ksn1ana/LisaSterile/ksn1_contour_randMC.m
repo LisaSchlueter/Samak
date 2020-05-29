@@ -20,7 +20,7 @@ switch Mode
         elseif range==65
             RandMC = [1:654,868:931,1219:1500];
         elseif range==40
-            RandMC = [195:309,500:504,726:803];
+            RandMC = [1:411,500:583,629:914];
         end
 end
 %% init
@@ -188,7 +188,11 @@ export_fig(gcf,strrep(plotnameChi2,'.png','.pdf'));
 GetFigure;
 PlotDeltaChi2 = sort(DeltaChi2);
 DeltaChi2CDF = arrayfun(@(x) sum(PlotDeltaChi2<=x)./numel(PlotDeltaChi2),PlotDeltaChi2);
-DeltaChi2CrApprox = PlotDeltaChi2(find(abs(DeltaChi2CDF-0.95)==min(abs(DeltaChi2CDF-0.95)),1));
+% calculate 95 quantile: interpolation
+[DeltaChi2CDFquantile,ia] = unique(DeltaChi2CDF);
+DeltaChi2CrApprox = interp1(DeltaChi2CDFquantile,PlotDeltaChi2(ia),0.95,'lin');%quantile(PlotDeltaChi2,0.95);% PlotDeltaChi2(find(abs(DeltaChi2CDF-0.95)==min(abs(DeltaChi2CDF-0.95)),1));
+
+% plot
 DeltaChi2CDFTheo = chi2cdf(PlotDeltaChi2,2);
 xInter = linspace(0,10,1e2);
 DeltaChi2CrTheo = interp1(chi2cdf(xInter,2),xInter,0.95,'spline');
@@ -213,10 +217,15 @@ plotnameChi2crit = sprintf('%sRandMC_DeltaChi2Crit_%.0feV_%.0fsamples.png',plotd
 print(gcf,plotnameChi2crit,'-dpng','-r450');
 fprintf('save plot to %s \n',plotnameChi2crit);
 export_fig(gcf,strrep(plotnameChi2crit,'.png','.pdf'));
-%%
+%% calculate quantile of you best fit (delta chi2 = 1.58)
+DeltaChi2_bf = 1.58;
+NumLargerDeltaChi2 = sum(PlotDeltaChi2>=DeltaChi2_bf);
+FracLargerDeltaChi2 = NumLargerDeltaChi2/numel(PlotDeltaChi2);
 
-
-
+fprintf('Empirical: %.0f out of %.0f have Delta chi2  larger or equal compared to best fit (%.2f) -> p-value = %.2f \n',...
+    NumLargerDeltaChi2,numel(PlotDeltaChi2),DeltaChi2_bf,FracLargerDeltaChi2)
+fprintf('Empirical: p-value from interpolation instead of fraction: %.2f \n',1-interp1(PlotDeltaChi2(ia),DeltaChi2CDFquantile,DeltaChi2_bf,'lin'));
+fprintf('p-value from expected chi2cdf (2 dof) = %.3f \n',1-chi2cdf(DeltaChi2_bf,2));
 %% plot all contours - one after the after
 if strcmp(chi2Str,'chi2Stat')
     chi2Label = 'stat. only';

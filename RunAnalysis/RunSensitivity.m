@@ -580,8 +580,10 @@ classdef RunSensitivity < handle
             % label
             savedir = [getenv('SamakPath'),sprintf('tritium-data/fit/TwinMC%s/',obj.RunAnaObj.DataSet)];
             obj.CreateDir(savedir);
-            savename = sprintf('%s_%s_%.0fbE0_fixPar%s_%.0fsamples.mat',obj.RunAnaObj.RunData.RunName,obj.RunAnaObj.chi2,...
-                obj.GetRange,strrep(strrep(strrep(obj.RunAnaObj.fixPar,'fix ',''),' ;',' '),' ',''),nSamples);
+            fix_str = ConvertFixPar('freePar',obj.RunAnaObj.fixPar,'Mode','Reverse');%strrep(strrep(strrep(obj.RunAnaObj.fixPar,'fix ',''),' ;',' '),' ','');
+           
+            savename = sprintf('%s_%s_%.0fbE0_freePar%s_%.0fsamples.mat',obj.RunAnaObj.RunData.RunName,obj.RunAnaObj.chi2,...
+                obj.GetRange,fix_str,nSamples);
             LoadLogic = zeros(numel(mNuSq_t),1); % incidates which files were loaded and which new computed
             
             obj.FC_savename = cell(numel(mNuSq_t),1);
@@ -603,8 +605,8 @@ classdef RunSensitivity < handle
                     mNuSq = mNuSq_t(i);
                     save(thisfile,'par','err','chi2min','dof','mNuSq');
                 end
-                parAll(i,:,:)      = par;
-                errAll(i,:,:)      = err;
+                parAll(i,1:size(par,1),:)      = par;
+                errAll(i,1:size(par,1),:)      = err;
                 chi2minAll(i,:)    = chi2min;
                 dofAll(i)          = dof;
             end
@@ -694,9 +696,9 @@ classdef RunSensitivity < handle
             SanityPlot = p.Results.SanityPlot;
             
             % label
-            fix_str = strrep(strrep(strrep(obj.RunAnaObj.fixPar,'fix ',''),' ;',' '),' ','');
+            fix_str = ConvertFixPar('freePar',obj.RunAnaObj.fixPar,'Mode','Reverse');%strrep(strrep(strrep(obj.RunAnaObj.fixPar,'fix ',''),' ;',' '),' ','');
             savedir = [getenv('SamakPath'),'tritium-data/FC/DeltaChi2LookupTable/'];
-            save_str = sprintf('AsimovDeltaChi2_mNuSq%.3geV2_%s_%s_%.0fbE0_fixPar%s_%.0fsamples.mat',...
+            save_str = sprintf('AsimovDeltaChi2_mNuSq%.3geV2_%s_%s_%.0fbE0_freePar%s_%.0fsamples.mat',...
                 mNuSq_t,obj.RunAnaObj.RunData.RunName,obj.RunAnaObj.chi2,obj.GetRange,fix_str,nSamples);
             
             if strcmp(obj.RunAnaObj.AnaFlag,'Ring')
@@ -1758,7 +1760,7 @@ classdef RunSensitivity < handle
             Sensitivity = p.Results.Sensitivity;
             XLim = p.Results.XLim;
             
-            LocalFontSize = 30;
+            LocalFontSize = 32;
             
             if isempty(obj.FC_x1)
                 fprintf('No FC belt computed \n');
@@ -1915,7 +1917,8 @@ classdef RunSensitivity < handle
             
             % axis style etc.
             PrettyFigureFormat('FontSize',LocalFontSize);
-           
+          % PRLFormat;
+           %set(gca,'FontSize',LocalFontSize)
             %%
             if ~strcmp(SavePlot,'OFF')
                 savedir = [getenv('SamakPath'),'/tritium-data/FC/plots/'];
@@ -1923,7 +1926,7 @@ classdef RunSensitivity < handle
                 savefile = [savedir,sprintf('%s_FCbelt_%s%s_%.2fCL.pdf',obj.RunAnaObj.DataSet,savestr,obj.RunAnaObj.chi2,obj.ConfLevel*100)];
                 if strcmp(Lokov,'ON')
                     leg.FontSize = get(gca,'FontSize')-6;
-                    savefile = [savedir,sprintf('%s_Lokovbelt_%s%s_%.2fCL.pdf',obj.RunAnaObj.DataSet,savestr,obj.RunAnaObj.chi2,obj.ConfLevel*100)];
+                    savefile = [savedir,sprintf('%s_Lokovbelt_%s%s_%.0fCL.pdf',obj.RunAnaObj.DataSet,savestr,obj.RunAnaObj.chi2,obj.ConfLevel*100)];
                 end
                 
                 if strcmp(SavePlot,'png')
@@ -2060,7 +2063,7 @@ classdef RunSensitivity < handle
               %  xlim([-4,4])
                 ax = gca;
                 mNuSqFrac =100.*interp1(x,CumSum,mNuSq_bestfit,'spline');
-                t = text(mNuSq_bestfit-1.1,interp1(x,y,mNuSq_bestfit-1.0)/2,sprintf('%.1f %s',mNuSqFrac,'%'),...
+                t = text(mNuSq_bestfit-1.2,interp1(x,y,mNuSq_bestfit-1.0)/2,sprintf('%.1f %s',mNuSqFrac,'%'),...
                     'FontSize',ax.FontSize,'FontWeight',ax.FontWeight,'Color',rgb('White'));
             elseif strcmp(PDF,'1sigma')
                  CumSum = GetCDF(obj.FC_mNuSqFit(Index,:),y);%cumsum(y);
@@ -2098,7 +2101,7 @@ classdef RunSensitivity < handle
                    legend boxoff;
             end
              mylim = ylim;
-             text(-3.85,max(mylim)*0.94,'d)','FontSize',get(gca,'FontSize')+6,'FontName',get(gca,'FontName'));
+           %  text(-3.85,max(mylim)*0.94,'d)','FontSize',get(gca,'FontSize')+6,'FontName',get(gca,'FontName'));
             savedir = [getenv('SamakPath'),'/tritium-data/FC/plots/'];
             obj.CreateDir(savedir);
             savefile = [savedir,sprintf('%s_DeltaChi2_%.3geV2_%s%s.pdf',obj.RunAnaObj.DataSet,mNuSq_t,obj.RunAnaObj.chi2,savestr)];

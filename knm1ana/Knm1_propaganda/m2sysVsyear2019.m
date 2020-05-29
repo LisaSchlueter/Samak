@@ -11,11 +11,11 @@ function m2sysVsyear2019()
 maintitle=sprintf('Squared neutrino mass Uncertainties obtained from tritium \\beta -decay in the period 1990-2019');
 savefile=sprintf('plots/m2sysVsyear2019.png');
 fig1 = figure('Name','Test','NumberTitle','off','rend','painters','pos',[10 10 1400 600]);
-a=annotation('textbox', [0 0.9 1 0.1], ...
-    'String', maintitle, ...
-    'EdgeColor', 'none', ...
-    'HorizontalAlignment', 'center');
-a.FontSize=26;a.FontWeight='normal';
+% a=annotation('textbox', [0 0.9 1 0.1], ...
+%     'String', maintitle, ...
+%     'EdgeColor', 'none', ...
+%     'HorizontalAlignment', 'center');
+% a.FontSize=26;a.FontWeight='normal';
 stem([mBetaSquared.Year], [mBetaSquared.Sys],'LineStyle','--','Color','Black','LineWidth',2,'Marker','none');
 hold on
 for i=1:12
@@ -36,23 +36,32 @@ l=legend(h,[mBetaSquared(1).Experiment ' ' mBetaSquared(2).Reference],...
     [mBetaSquared(10).Experiment ' ' mBetaSquared(10).Reference],...
     [mBetaSquared(11).Experiment ' ' mBetaSquared(11).Reference],...
     [mBetaSquared(12).Experiment ' ' mBetaSquared(12).Reference],...
-    'FontSize',12,'Location','north');
+    'FontSize',13.5,'Location','north');
 l.NumColumns=4;
-legend('boxoff');
-xlabel('year');
-ylabel('m^2(\nu_e) c^4 systematic uncertainty (eV^2)');
+%legend('boxoff');
+set(l.BoxFace, 'ColorType','truecoloralpha', 'ColorData',uint8(255*[1;1;1;0.8]));
+l.EdgeColor = 'none';
+xlabel('Year');
+ylabel(sprintf('{\\itm}_\\nu^2 systematic uncertainty (eV^2)'));
+
 grid on
-FontName = 'Arial';
-FontSize = 22;
-set(gca,'FontName',FontName,'FontSize',FontSize);
-set(get(gca,'XLabel'),'FontName',FontName,'FontSize',FontSize);
-set(get(gca,'YLabel'),'FontName',FontName,'FontSize',FontSize);
-set(gca,'TickLength',[.01 .01]);
+%FontName = 'Arial';
+%set(gca,'FontName',FontName,'FontSize',FontSize);
+%set(get(gca,'XLabel'),'FontName',FontName,'FontSize',FontSize);
+%set(get(gca,'YLabel'),'FontName',FontName,'FontSize',FontSize);
+%set(gca,'TickLength',[.01 .01]);
+%set(gca,'YMinorTick','on');
+%set(gcf,'Color','w');
+
+LocalFontSize = 32; %22
+PRLFormat
+set(gca,'FontSize',LocalFontSize);
+set(get(gca,'XLabel'),'FontSize',LocalFontSize+4);
+set(get(gca,'YLabel'),'FontSize',LocalFontSize+4)
 set(gca,'XMinorTick','off');
-set(gca,'YMinorTick','on');
-set(gcf,'Color','w');
 set(gca,'YScale','log');
 box on;
 xlim([mBetaSquared(1).Year-1 mBetaSquared(12).Year+1]);
-ylim([1e-1 3*max([mBetaSquared.Sys])])
+ylim([1e-1 3.3*max([mBetaSquared.Sys])])
 export_fig(gcf,savefile,'-r300');
+export_fig(gcf,strrep(savefile,'.png','.pdf'));

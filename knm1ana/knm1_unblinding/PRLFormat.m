@@ -2,7 +2,7 @@
 % FontName = 'Times New Roman';
 % FontSize = 18;
 % AxisFontSize = 23;
-FontName = 'Arial';%''Times New Roman';%'Helvetica';%'Times New Roman';%'Helvetica';%'Deja Vous Sans';
+FontName = 'Times New Roman';%'Helvetica';%'Times New Roman';%'Helvetica';%'Deja Vous Sans';
 FontSize = 18;
 AxisFontSize = 22;%24;
 FontWeight = 'normal';

@@ -1064,6 +1064,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
             
             mNuSq_local = obj.mnuSq-2.*obj.mTSq;
             Q_local = obj.Q; %+ obj.qUOffset;
+            
             % NO FSD
             if ((strcmp(obj.TTFSD,'OFF')) ...
                     && (strcmp(obj.DTFSD,'OFF')) ...

@@ -782,8 +782,10 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             % (not a Fit)
             p=inputParser;
             p.addParameter('saveplot','OFF',@(x)ismember(x,{'ON','OFF','png','pdf','eps'}));
+           p.addParameter('Style','Reg',@(x)ismember(x,{'Reg','PRD'}));
             p.parse(varargin{:});
             saveplot = p.Results.saveplot;
+            Style    = p.Results.Style;
             
             switch obj.chi2
                 case {'chi2Stat','chi2P'}
@@ -816,10 +818,10 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             hold off
             
             set(gca, 'YScale', 'lin');
-            xlabel(sprintf('retarding energy - %.0f (eV)',18575),'FontSize',16);
-            ylabel('rate (cps)','FontSize',16);
+            xlabel(sprintf('Retarding energy - %.0f (eV)',18574),'FontSize',16);
+            ylabel('Rate (cps)','FontSize',16);
             set(gca,'FontSize',24);
-            l1 = sprintf('data (run %s, %.0f minutes)',num2str(obj.RunNr),obj.ModelObj.TimeSec/60);
+            l1 = sprintf('Data (run %s, %.0f minutes)',num2str(obj.RunNr),obj.ModelObj.TimeSec/60);
             l2 = sprintf('model and uncorrelated error band (not a fit)');
             axis([min(obj.ModelObj.qU-obj.ModelObj.Q) max(obj.ModelObj.qU-obj.ModelObj.Q) -1000 max(obj.RunData.TBDIS./obj.ModelObj.qUfrac./obj.ModelObj.TimeSec)*1.1 ]);
             title('');
@@ -871,12 +873,13 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             p.addParameter('saveplot','ON',@(x)ismember(x,{'ON','OFF','png','pdf','eps'}));
             p.addParameter('scale','log',@(x)ismember(x,{'lin','log'}));
             p.addParameter('RunLabel',numel(obj.RunList));
-            p.addParameter('ErrorBarScaling',50,@(x)isfloat(x)); % limits for norm. residuals            
-            
+            p.addParameter('ErrorBarScaling',50,@(x)isfloat(x)); % limits for norm. residuals
+            p.addParameter('Style','PRD',@(x)ismember(x,{'Reg','PRD'}));
             p.parse(varargin{:});
             saveplot = p.Results.saveplot;
             scale = p.Results.scale;
             RunLabel = p.Results.RunLabel;
+            Style    = p.Results.Style;
             obj.ErrorBarScaling= p.Results.ErrorBarScaling;
 
             switch obj.chi2
@@ -890,108 +893,109 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             
             % Model / Data overlay
             fig6 = figure(6);
-            set(fig6, 'Units', 'normalized', 'Position', [0., 0.1, 0.9 , 0.8]);
+            set(fig6, 'Units', 'normalized', 'Position', [0., 0.1, 0.75 , 0.8]);
+           
+            AxisLabelFontSize = 32;
+            LocalFontSize = 27;
             
-            h1=errorbar(obj.RunData.qU-obj.ModelObj.Q_i,...
-                obj.RunData.TBDIS./obj.ModelObj.qUfrac./obj.ModelObj.TimeSec,...
-                obj.RunData.TBDISE./obj.ModelObj.qUfrac./obj.ModelObj.TimeSec*0,...
-                'o','MarkerSize',10,'MarkerEdgeColor' , rgb('DarkSlateGray'),'MarkerFaceColor' , rgb('DarkSlateGray'));
-             h1.Color =rgb('DarkSlateGray') ; h1.MarkerSize = 6; h1.CapSize = 0;h1.LineStyle= 'none';h1.LineWidth= 3;legend hide
-            hold on
-            hfit1 = boundedline(obj.ModelObj.qU-obj.ModelObj.Q_i,...
-                obj.ModelObj.TBDIS./obj.ModelObj.qUfrac./obj.ModelObj.TimeSec,...
-                diag(sqrt(PlotCM))./obj.ModelObj.qUfrac./obj.ModelObj.TimeSec,...
-                'alpha','cmap',rgb('IndianRed'));
-            [ll la]= boundedline(obj.ModelObj.qU-obj.ModelObj.Q_i,...
+           % best fit
+            [lmodel, ~]= boundedline(obj.ModelObj.qU-obj.ModelObj.Q_i,...
                 obj.ModelObj.TBDIS./obj.ModelObj.qUfrac./obj.ModelObj.TimeSec,...
                 sqrt(diag(PlotCM))./obj.ModelObj.qUfrac./obj.ModelObj.TimeSec,...
-                'alpha','cmap',rgb('IndianRed'));
-            ll.LineWidth= 3
-            ll.LineStyle='--'; legend hide
-            
-            % Background Line
-            [lll lla]= boundedline(obj.ModelObj.qU-obj.ModelObj.Q_i,...
+                'alpha','cmap',rgb('DodgerBlue'));
+            lmodel.LineWidth= 3;
+            lmodel.LineStyle='-'; %legend hide
+            hold on;
+
+             % Background Line
+            [lbkg, ~]= boundedline(obj.ModelObj.qU-obj.ModelObj.Q_i,...
                 obj.ModelObj.BKG_RateSec./obj.ModelObj.qUfrac.*obj.ModelObj.qUfrac,...
                 obj.FitResult.err(3)./obj.ModelObj.qUfrac.*obj.ModelObj.qUfrac,...
-                'alpha','cmap',rgb('SeaGreen')); lll.LineWidth= 3;
-            lll.LineStyle='--'; legend hide
+                'alpha','cmap',rgb('IndianRed')); lbkg.LineWidth= 3;
+            lbkg.LineStyle='-.'; legend hide
+      
             % Tritium
-            [llll llla]= boundedline(obj.ModelObj.qU-obj.ModelObj.Q_i,...
+            [lsignal, ~]= boundedline(obj.ModelObj.qU-obj.ModelObj.Q_i,...
                 obj.ModelObj.TBDIS./obj.ModelObj.qUfrac./obj.ModelObj.TimeSec-obj.ModelObj.BKG_RateSec./obj.ModelObj.qUfrac.*obj.ModelObj.qUfrac,...
                 0./obj.ModelObj.qUfrac.*obj.ModelObj.qUfrac,...
-                'alpha','cmap',rgb('RoyalBlue')); llll.LineWidth= 3;
-            llll.LineStyle='--'; legend hide
+                'alpha','cmap',rgb('Orange')); lsignal.LineWidth= 3;
+            lsignal.LineStyle=':'; legend hide
             
-           % data again, for superimposition 
-           h1=errorbar(obj.RunData.qU-obj.ModelObj.Q_i,...
+            pdata =errorbar(obj.RunData.qU-obj.ModelObj.Q_i,...
                 obj.RunData.TBDIS./obj.ModelObj.qUfrac./obj.ModelObj.TimeSec,...
-                obj.RunData.TBDISE./obj.ModelObj.qUfrac./obj.ModelObj.TimeSec*0,...
-                'o','MarkerSize',10,'MarkerEdgeColor' , rgb('DarkSlateGray'),'MarkerFaceColor' , rgb('DarkSlateGray'));
-            h1.Color =rgb('DarkSlateGray') ;  h1.MarkerSize = 6; h1.CapSize = 0;h1.LineStyle= 'none';h1.LineWidth= 3;legend hide
+                obj.RunData.TBDISE./obj.ModelObj.qUfrac./obj.ModelObj.TimeSec,...
+                '.','MarkerSize',27,'MarkerEdgeColor' , rgb('Black'),'MarkerFaceColor' , rgb('Black'));
+            pdata.Color =rgb('Black') ; pdata.CapSize = 0;pdata.LineStyle= 'none';pdata.LineWidth= 3;legend hide
+
+            if ~strcmp(Style,'PRD')
+                if obj.RunNr
+                    title(sprintf('KATRIN First m_^2(\\nu_e) Mass Run (KNM1) - run %s, %.0f hours, %.0f e^-',num2str(obj.RunNr),obj.ModelObj.TimeSec/3600,sum(obj.ModelObj.TBDIS(obj.exclDataStart:end))));
+                else
+                    %title(sprintf('KATRIN - m_{\\beta} Test Scan - March 2019 - %0.f run stacked, %.0f hours, %.0f e^-',RunLabel,obj.ModelObj.TimeSec/3600,sum(obj.ModelObj.TBDIS(obj.exclDataStart))));
+                    title(sprintf('KATRIN First m^2(\\nu_e) Mass Run (KNM1) - %.0f hours, %.0g e^- in [E_0-%.0f ; E_0+%.0f] eV',obj.ModelObj.TimeSec/3600,sum(obj.ModelObj.TBDIS(obj.exclDataStart:end)),...
+                        obj.ModelObj.Q_i-obj.ModelObj.qU(obj.exclDataStart),obj.ModelObj.qU(end)-obj.ModelObj.Q_i));
+                end
+            end
             
-            hold off
+            l1 = sprintf('KATRIN data with 1\\sigma error bars');
+            l2 = sprintf('Fit result with 1\\sigma uncertaintes (stat. only)');
             axis([1.1*min(obj.ModelObj.qU-obj.ModelObj.Q) 1.1*max(obj.ModelObj.qU-obj.ModelObj.Q)  obj.ModelObj.BKG_RateSec/2 max(obj.RunData.TBDIS./obj.ModelObj.qUfrac./obj.ModelObj.TimeSec)*1.1 ]);
             set(gca, 'YScale', scale);
-            xlabel(sprintf('retarding energy - %.1f (eV)',obj.ModelObj.Q_i),'FontSize',16);
-            ylabel('rate (cps)','FontSize',16);
-            set(gca,'FontSize',24);
-            if obj.RunNr
-            title(sprintf('KATRIN First m_^2(\\nu_e) Mass Run (KNM1) - run %s, %.0f hours, %.0f e^-',num2str(obj.RunNr),obj.ModelObj.TimeSec/3600,sum(obj.ModelObj.TBDIS(obj.exclDataStart:end))));
-            else
-            %title(sprintf('KATRIN - m_{\\beta} Test Scan - March 2019 - %0.f run stacked, %.0f hours, %.0f e^-',RunLabel,obj.ModelObj.TimeSec/3600,sum(obj.ModelObj.TBDIS(obj.exclDataStart))));
-            title(sprintf('KATRIN First m^2(\\nu_e) Mass Run (KNM1) - %.0f hours, %.0g e^- in [E_0-%.0f ; E_0+%.0f] eV',obj.ModelObj.TimeSec/3600,sum(obj.ModelObj.TBDIS(obj.exclDataStart:end)),...
-                obj.ModelObj.Q_i-obj.ModelObj.qU(obj.exclDataStart),obj.ModelObj.qU(end)-obj.ModelObj.Q_i));
-            end
-            l1 = 'data    ';
-            l2 = sprintf('model + uncertainty    ');
-            PrettyFigureFormat
-            set(gca,'FontSize',22);
+            
+            PRLFormat;
+            xlabel(sprintf('Retarding energy - %.1f (eV)',obj.ModelObj.Q_i));
+            ylabel('Rate (cps)');
+            set(gca,'FontSize',LocalFontSize);
+            set(get(gca,'XLabel'),'FontSize',AxisLabelFontSize);
+            set(get(gca,'YLabel'),'FontSize',AxisLabelFontSize)
             %xlim([-100,+51]); ylim([0.1,1000]);
-            a = legend([h1 la lll llll],l1,l2,'background','tritium','Location','SouthWest','Box','off'); %a.String=a.String(1:2);
-            set(a,'Color',rgb('White'),'Box', 'on');
+            legend([pdata lmodel lbkg lsignal],l1,l2,'Background','Tritium signal','Location','northwest','Box','off'); %a.String=a.String(1:2);
+            % set(a,'Color',rgb('White'),'Box', 'on');
             xlim([-40 50]);
-            ylim([0.2 30]);
-            grid on;
+            ylim([0.2 100]) %ylim([0.2 30]);
+            grid off;
+            hold off;
             
             % zoomPlot to highlight a portion of the major plot
-            [aL,aZ] = zoomPlotError(obj.RunData.qU-obj.ModelObj.Q_i,...
+                [~,~] = zoomPlotError(obj.RunData.qU-obj.ModelObj.Q,...
                 obj.RunData.TBDIS./obj.ModelObj.qUfrac./obj.ModelObj.TimeSec,...
-                obj.RunData.TBDISE./obj.ModelObj.qUfrac./obj.ModelObj.TimeSec.*obj.ErrorBarScaling,...
-                [-25 5],[0.5 0.35 0.35 0.5],[]); h1.MarkerSize=5;
-            hold on
-              hfit1 = boundedline(obj.ModelObj.qU-obj.ModelObj.Q_i,...
+                obj.RunData.TBDISE./obj.ModelObj.qUfrac./obj.ModelObj.TimeSec,...
+               [-25 5],[0.4 0.33 0.45 0.45],[]);%[-25 5],[0.5 0.35 0.35 0.5],[]);
+          
+            hold on;
+            % best fit
+            [lzoomBestFit,~] = boundedline(obj.ModelObj.qU-obj.ModelObj.Q_i,...
                 obj.ModelObj.TBDIS./obj.ModelObj.qUfrac./obj.ModelObj.TimeSec,...
                 diag(sqrt(PlotCM))./obj.ModelObj.qUfrac./obj.ModelObj.TimeSec.*1,...
-                'alpha','cmap',rgb('IndianRed'));
-            [ll la]= boundedline(obj.ModelObj.qU-obj.ModelObj.Q_i,...
-                obj.ModelObj.TBDIS./obj.ModelObj.qUfrac./obj.ModelObj.TimeSec,...
-                sqrt(diag(PlotCM))./obj.ModelObj.qUfrac./obj.ModelObj.TimeSec.*1,...
-                'alpha','cmap',rgb('IndianRed'));
-            ll.LineStyle='--';ll.LineWidth=2; legend hide 
-            hz1=errorbar(obj.RunData.qU-obj.ModelObj.Q_i,...
+                'alpha','cmap',rgb('DodgerBlue'));
+            lzoomBestFit.LineWidth = lmodel.LineWidth;
+            hold on
+            % data
+            zoomData=errorbar(obj.RunData.qU-obj.ModelObj.Q_i,...
                 obj.RunData.TBDIS./obj.ModelObj.qUfrac./obj.ModelObj.TimeSec,...
                 obj.RunData.TBDISE./obj.ModelObj.qUfrac./obj.ModelObj.TimeSec*obj.ErrorBarScaling,...
-                'o','MarkerSize',10,'MarkerEdgeColor' , rgb('DarkSlateGray'),'MarkerFaceColor' , rgb('DarkSlateGray'));
-             hz1.Color =rgb('DarkSlateGray') ; hz1.MarkerSize = 6; hz1.CapSize = 0;hz1.LineStyle= 'none';hz1.LineWidth=3;legend hide
-            az = legend([hz1],sprintf('Zoom on m^2(\\nu_e) ROI \n data with %.0f \\sigma errorbars',obj.ErrorBarScaling));
+                '.','MarkerSize',pdata.MarkerSize,'Color',pdata.Color);
+            zoomData.CapSize = pdata.CapSize; zoomData.LineStyle= pdata.LineStyle; zoomData.LineWidth=pdata.LineWidth; legend hide
+            legZoom = legend(zoomData,sprintf(' Zoom on {\\itm}_\\nu^2 ROI \n KATRIN data with 1 \\sigma error bars \\times %.0f',obj.ErrorBarScaling));
             hold off
             set(gca, 'YScale', 'lin');
-            a = legend([h1 la lll llll],l1,l2,'background    ','tritium    ','Location','SouthWest','Box','off'); a.String=a.String(1:4);
-            a.NumColumns=4;
-            set(a,'Color',rgb('White'),'EdgeColor',rgb('White'),'Box', 'on');
+           % a = legend([pdata la lbkg lsignal],l1,l2,'background    ','tritium    ','Location','SouthWest','Box','off'); a.String=a.String(1:4);
+           % a.NumColumns=4;
+          %  set(a,'Color',rgb('White'),'EdgeColor',rgb('White'),'Box', 'on');
             legend('boxoff');
             set(gca,'yscale','lin');
-            PrettyFigureFormat;
-            set(gca,'YMinorTick','on');
+            PRLFormat
+            
             set(gca,'TickLength',[0.01 0.01]);
             set(gca,'YTick',[0.1, 0.5, 1, 2, 3, 4, 5]);
-            aZ.YAxisLocation = 'right';
+            set(gca,'YAxisLocation','right');
             %aZ.Title.String = ' Zoom on m_{\beta} ROI'; 
-            set(gca,'FontSize',20);
+            set(gca,'FontSize',LocalFontSize);
  
             if strcmp(saveplot,'ON') 
                 save_name = sprintf('./plots/KNM1_DataModel%s_%s-excl%u.png',num2str(obj.RunNr),obj.chi2,obj.exclDataStart);
                 export_fig(fig6,save_name,'-q101','-m3');
+                export_fig(fig6,strrep(save_name,'.png','.pdf'));
             end
            
           end

@@ -1,7 +1,8 @@
 % plot for KNM1: correlation plot
 D = MultiRunAnalysis('RunList','KNM1','FSDFlag','Sibille0p5eV','fitter',...
-    'minuit','minuitOpt','min;minos','exclDataStart',14,'chi2','chi2Stat',...
-    'TwinBias_mNuSq',0);
+    'minuit','minuitOpt','min;minos','exclDataStart',13,'chi2','chi2Stat',...
+    'TwinBias_mNuSq',0,'AngularTFFlag','OFF','NonPoissonScaleFactor',1.064,...
+    'fixPar','mNu E0 Bkg Norm');
 S = RunSensitivity('RunAnaObj',D);
 Tweak2Zero = 'OFF'; % shift everything to mNuSq =0
 %%
@@ -29,7 +30,7 @@ B(IndexOutlier) = [];
 N(IndexOutlier) = [];
 CorrMat = corrcoef([mNuSq,E0,B,N]);
 cp= corplot(CorrMat);
-myticklabels = {sprintf('m^2(\\nu_e)'),sprintf('E_{0,fit}'),'N','B'};
+myticklabels = {sprintf('{\\itm}_\\nu^2'),sprintf('\\itE}_0^{fit}'),'N','B'};
 xticklabels(myticklabels);
 yticklabels(myticklabels);
 PrettyFigureFormat('FontSize',28);
@@ -59,8 +60,8 @@ f111 = figure('Renderer','opengl');
 set(f111, 'Units', 'normalized', 'Position', [0.1, 0.1, 0.8, 0.8]);
 p = scatterhist(mNuSq,E0,'Direction','out',...);%,'HistogramDisplayStyle','bar',...
     'Location','Northeast','Color',rgb('DodgerBlue'));
-xlabel(sprintf('m^2(\\nu_e) (eV^{ 2})'));
-ylabel(sprintf('E_{0,fit} - 18574 (eV)'));
+xlabel(sprintf('{\\itm}_\\nu^2 (eV^{ 2})'));
+ylabel(sprintf('{\\itE}_0^{fit} - 18574 (eV)'));
 PrettyFigureFormat('FontSize',30);
 hold on;
 thisYlim = ylim; thisXlim =xlim;
