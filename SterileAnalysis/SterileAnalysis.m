@@ -357,7 +357,8 @@ classdef SterileAnalysis < handle
             p.addParameter('Prospect','ON',@(x) ismember(x,{'ON','OFF'}));
             p.addParameter('DANSS','ON',@(x) ismember(x,{'ON','OFF'}));
             p.addParameter('Stereo','ON',@(x) ismember(x,{'ON','OFF'}));
-
+            p.addParameter('Style','Reg',@(x) ismember(x,{'Reg','PRL'}));
+            
             p.parse(varargin{:});  
             CL          = p.Results.CL;      % also works with vector
             HoldOn      = p.Results.HoldOn;
@@ -371,13 +372,14 @@ classdef SterileAnalysis < handle
             Prospect    = p.Results.Prospect;
             DANSS       = p.Results.DANSS;
             Stereo      = p.Results.Stereo;
+            Style       = p.Results.Style;
             
             [DeltamNu41Sq,sin2T4Sq] = obj.Convert2Osci;
             
             if strcmp(HoldOn,'ON')
                 hold on;
             elseif strcmp(HoldOn,'OFF')
-                figure('Units','normalized','Position',[0.1,0.1,0.382,0.618]);
+                figure('Units','normalized','Position',[0.1,0.1,0.382,0.66]);%0.618]);
             end
             
             obj.DeltaChi2 = GetDeltaChi2(CL,2);
@@ -397,7 +399,11 @@ classdef SterileAnalysis < handle
             if strcmp(Troitsk,'ON')
                 filenameTroitsk = sprintf('%scoord_Troitsk_95CL.mat',savedirOther);
                 dTroitsk = importdata(filenameTroitsk);
+<<<<<<< HEAD
                 pTroitsk = plot(dTroitsk.SinSquare2Theta_X,dTroitsk.DmSquare41_Y,'--','LineWidth',1.5,'Color',rgb('DarkSlateGrey'));
+=======
+                pTroitsk = plot(dTroitsk.SinSquare2Theta_X,dTroitsk.DmSquare41_Y,'--','LineWidth',1.5,'Color',rgb('Black'));
+>>>>>>> a934f00897c5c8f13f806e7c535ace475ea0ce08
                 legHandle{numel(legHandle)+1} = pTroitsk;
                 legStr = [legStr,{sprintf('Troitsk 95%% C.L.')}];
                 hold on;
@@ -424,7 +430,11 @@ classdef SterileAnalysis < handle
             if strcmp(Stereo,'ON')
                 filenameStereo = sprintf('%scoord_Stereo_95CL.mat',savedirOther);
                 dStereo = importdata(filenameStereo);
+<<<<<<< HEAD
                 pStereo = plot(dStereo.SinSquare2Theta_X,dStereo.DmSquare41_Y,'-','LineWidth',1,'Color',rgb('Gold'));
+=======
+                pStereo = plot(dStereo.SinSquare2Theta_X,dStereo.DmSquare41_Y,'-','LineWidth',1,'Color',rgb('Orange'));
+>>>>>>> a934f00897c5c8f13f806e7c535ace475ea0ce08
                 legHandle{numel(legHandle)+1} = pStereo;
                 legStr = [legStr,{sprintf('Stéréo 95%% C.L.')}];
                 hold on;
@@ -440,13 +450,17 @@ classdef SterileAnalysis < handle
                          [1e5,dRAA1.m4_Y,1e5],'-','LineWidth',2,'Color',rgb('ForestGreen'));
                 plot(dRAA2.sith4_X,dRAA2.m4_Y,'-','LineWidth',pRAA.LineWidth,'Color',pRAA.Color);
                 legHandle{numel(legHandle)+1} = pRAA;
-                legStr = [legStr,{sprintf('RAA+GA 95%% CL')}];%-PRD 83, 073006 (2011) -
+                legStr = [legStr,{sprintf('RAA + GA 95%% CL')}];%-PRD 83, 073006 (2011) -
             end
             %% Neutrino 4
             if strcmp(Neutrino4,'ON')
                 filenameN4 = sprintf('%scoord_Neutrino4_123sigma.mat',savedirOther);
                 dN4 = importdata(filenameN4);
+<<<<<<< HEAD
                 pN4 = plot(dN4.SinSquare2Theta_X_2sigma,dN4.DmSquare41_Y_2sigma,'-','LineWidth',1.5,'Color',rgb('DarkRed'));
+=======
+                pN4 = plot(dN4.SinSquare2Theta_X_2sigma,dN4.DmSquare41_Y_2sigma,'-','LineWidth',1.5,'Color',rgb('FireBrick'));
+>>>>>>> a934f00897c5c8f13f806e7c535ace475ea0ce08
                 legHandle{numel(legHandle)+1} = pN4;
                 legStr = [legStr,{sprintf('Neutrino-4 2\\sigma')}];
                 hold on;
@@ -459,22 +473,47 @@ classdef SterileAnalysis < handle
             [~,legHandle{numel(legHandle)+1}]= contour(sin2T4Sq,DeltamNu41Sq,obj.chi2-obj.chi2_ref,...
                 [obj.DeltaChi2 obj.DeltaChi2],...
                 PlotArg{:});
+            
+            %% leg + appearance
             set(gca,'YScale','log');
             set(gca,'XScale','log');
-            xlabel(sprintf('{\\itsin}^2(2\\theta_{ee})'));
-            ylabel(sprintf('\\Delta{\\itm}_{41}^2 (eV^2)'));
-            PrettyFigureFormat('FontSize',22);
+            xlabel(sprintf('{sin}^2(2\\theta_{ee})'));
+            ylabel(sprintf('\\Delta{\\itm}_{41}^2 (eV^2)'));    
             legStr = [legStr,{sprintf('KATRIN KSN1 %.0f%% C.L. (%s)',obj.ConfLevel,obj.GetPlotTitle('Mode','chi2'))}];
+            leg = legend([legHandle{:}],legStr{:},'EdgeColor','none','Location','northoutside');
             
+<<<<<<< HEAD
             %%
           leg = legend([legHandle{:}],legStr{:},'EdgeColor','none','Location','northoutside',...
               'FontSize',12);
           xlim([2.e-02 1]);
           ylim([.1 2000]);
           
+=======
+            if strcmp(Style,'Reg')
+                PrettyFigureFormat('FontSize',22);
+                leg.FontSize = 12;
+            else
+                PRLFormat;
+                set(gca,'FontSize',20);
+                leg.FontSize = 13;
+            end
+           
+          xlim([1.2e-02 1]);
+          if obj.range==65
+                ylim([0.1 6e3]);       
+            elseif obj.range==95
+                ylim([0.1 1e4]);
+            elseif obj.range==40
+                ylim([0.1 2e3]);   
+                yticks([1e-01 1e0 1e1 1e2 1e3])
+          end
+            
+>>>>>>> a934f00897c5c8f13f806e7c535ace475ea0ce08
           if numel(legStr)>4
               leg.NumColumns = 2;
           end
+          
           if ~strcmp(SavePlot,'OFF')
               if strcmp(SavePlot,'ON')
                   plotname = sprintf('%s_OsciContour_%.2gCL.pdf',obj.DefPlotName,obj.ConfLevel);
@@ -995,17 +1034,19 @@ classdef SterileAnalysis < handle
             p.addParameter('SavePlot','OFF',@(x)ismember(x,{'ON','OFF','png'}));
             p.addParameter('Mainz','ON',@(x)ismember(x,{'ON','OFF'}));  
             p.addParameter('Troitsk','ON',@(x)ismember(x,{'ON','OFF'}));
+            p.addParameter('Style','Reg',@(x)ismember(x,{'Reg','PRL'}));
             
             p.parse(varargin{:});
             BestFit  = p.Results.BestFit;
             SavePlot = p.Results.SavePlot;
             Troitsk  = p.Results.Troitsk;
             Mainz    = p.Results.Mainz;
+            Style    = p.Results.Style;
             
             fixPar_i = obj.RunAnaObj.fixPar;
             pull_i = obj.RunAnaObj.pullFlag;
             
-           fPRL = figure('Units','normalized','Position',[0.1,0.1,0.4,0.6]); 
+            fPRL = figure('Units','normalized','Position',[0.1,0.1,0.4,0.6]); 
             legHandle = cell(0,0);
             legStr = '';
             savedirOther = [getenv('SamakPath'),'SterileAnalysis/GridSearchFiles/Knm1/Others/'];
@@ -1024,18 +1065,12 @@ classdef SterileAnalysis < handle
                 filenameTroitsk = sprintf('%scoord_Troitsk_95CL.mat',savedirOther);
                 dTroitsk = importdata(filenameTroitsk);
                 pTroitsk = plot(dTroitsk.SinSquareTheta_X,dTroitsk.m4Square_Y,'--','LineWidth',1.5,...
-                    'Color',rgb('DarkSlateGrey')); % Orange
+                    'Color',rgb('Black')); % Orange
                 legHandle{numel(legHandle)+1} = pTroitsk;
                 legStr = [legStr,{sprintf('Troitsk 95%% C.L. - {\\itm}_\\nu^2 = 0 eV^2')}];
                 hold on;
             end
-            %             %% 1. nuissance nu-mass without pull
-            %             obj.RunAnaObj.fixPar = 'mNu E0 Norm Bkg'; obj.RunAnaObj.InitFitPar;
-            %             obj.RunAnaObj.pullFlag = 99;
-            %             obj.LoadGridFile('CheckSmallerN','ON');
-            %             obj.Interp1Grid('RecomputeFlag','ON');
-            %             pFree = obj.ContourPlot('CL',obj.ConfLevel,'HoldOn','OFF',...
-            %                 'Color',rgb('ForestGreen'),'LineStyle','-','BestFit',BestFit);
+           
             %% fixed nu-mass
             obj.RunAnaObj.fixPar = 'E0 Norm Bkg'; obj.RunAnaObj.InitFitPar;
             obj.RunAnaObj.pullFlag = 99;
@@ -1050,17 +1085,29 @@ classdef SterileAnalysis < handle
             obj.LoadGridFile('CheckSmallerN','ON');
             obj.Interp1Grid('RecomputeFlag','ON');
             pPull = obj.ContourPlot('CL',obj.ConfLevel,'HoldOn','ON',...
+<<<<<<< HEAD
                 'Color',rgb('SteelBlue'),'LineStyle',':','BestFit',BestFit);
+=======
+                'Color',rgb('Navy'),'LineStyle',':','BestFit',BestFit);
+>>>>>>> a934f00897c5c8f13f806e7c535ace475ea0ce08
             legHandle{numel(legHandle)+1} = pPull;
             
             %% appearance + legend
             legStr = [legStr,{sprintf('KATRIN KSN1 %.0f%% C.L. - {\\itm}_\\nu^2 = 0 eV^2',obj.ConfLevel),...
                 sprintf('KATRIN KSN1 %.0f%% C.L. - {\\itm}_\\nu^2 free - \\sigma({\\itm}_\\nu^2) = 1.94 eV^2',obj.ConfLevel)}];
-            PrettyFigureFormat('FontSize',20);
-            leg =  legend([legHandle{:}],legStr{:},...
+           leg =  legend([legHandle{:}],legStr{:},...
                 'EdgeColor',rgb('Silver'),'Location','southwest');
             set(leg.BoxFace, 'ColorType','truecoloralpha', 'ColorData',uint8(255*[1;1;1;0.8]));
-            leg.FontSize = get(gca,'FontSize')-2;
+            
+            if strcmp(Style,'Reg')
+                PrettyFigureFormat('FontSize',20);
+                leg.FontSize = get(gca,'FontSize')-2;
+            else
+                PRLFormat
+                set(gca,'FontSize',20);
+                leg.FontSize = 16;
+            end
+
             legend boxoff
             if obj.range==65
                 ylim([1 6e3]);
@@ -1069,7 +1116,7 @@ classdef SterileAnalysis < handle
                 ylim([1 1e4]);
                 xlim([9e-04 0.5]);
             elseif obj.range==40
-                ylim([1 1.6e3]);
+                ylim([1 2e3]);
                 xlim([6e-03 0.5]);
             end
             title('');%remove title

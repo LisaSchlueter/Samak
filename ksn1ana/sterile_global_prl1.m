@@ -4,7 +4,7 @@
 E0 = 18573.7;                                         % Endpoint in eV
 %sterile_mass = sqrt(70.3);                           % Sterile neutrino mass in eV
 sterile_mass  = 10;                                   % Sterile neutrino mass in eV
-
+range = 40;
 mixing_angle_1 = 0.01;                                % sin2(th4)
 %mixing_angle_1 = 0.0224;                             % sin2(th4)
 % mixing_angle_2 = 1-(1-2*mixing_angle_1)^2;          % sin2(2th4)
@@ -28,6 +28,7 @@ D = MultiRunAnalysis('RunList','KNM1',...
             'SynchrotronFlag','OFF',...
             'AngularTFFlag','OFF');
 
+D.exclDataStart = D.GetexclDataStart(range);
 %% No sterile
 
 R = MultiRunAnalysis('RunList','KNM1',...
@@ -43,8 +44,9 @@ R = MultiRunAnalysis('RunList','KNM1',...
             'exclDataStart',13,...
             'SynchrotronFlag','OFF',...
             'AngularTFFlag','OFF');
+R.exclDataStart = R.GetexclDataStart(range);
 
-% Global variables
+%% Global variables
 times = R.ModelObj.qUfrac*R.ModelObj.TimeSec;
 qU    = R.ModelObj.qU; qU    = qU-E0; % Energy axis
 
@@ -67,7 +69,7 @@ Rs = MultiRunAnalysis('RunList','KNM1',...
             'exclDataStart',13,...
             'SynchrotronFlag','OFF',...
             'AngularTFFlag','OFF');
-        
+Rs.exclDataStart = Rs.GetexclDataStart(range);       
 Rs.ModelObj.mnu4Sq_i = sterile_mass^2;
 Rs.ModelObj.sin2T4_i = mixing_angle_1;
 
@@ -97,8 +99,8 @@ YIsd = YIsd./times;
 err  = err./times;
 err  = err./YI;
 
-% Constraining everything to qULimiteV
-qULimit = -40;
+%% Constraining everything to qULimiteV
+qULimit = -range;
 YIsd=YIsd(qU>qULimit);
 YIs=YIs(qU>qULimit);
 YI=YI(qU>qULimit);
@@ -106,7 +108,8 @@ sum(YI);
 err=err(qU>qULimit);
 qUc=qU(qU>qULimit);
 
-% ===== PLOTTING =====
+%% ===== PLOTTING =====
+LocalFontSize = 20;
 
 fig = figure('Renderer','painters');
 set(fig, 'Units', 'normalized', 'Position', [0.001, 0.001,0.45, 0.8]);
@@ -134,34 +137,52 @@ YI_N = (YI_N-bkg).*(YI(1)/YI_N(1)) + bkg;
 
 % Plot
 %plot(qUc,YI,'DisplayName','No Sterile','color',prlB,'LineWidth',3,'LineStyle','-')
-plot(D.RunData.qU(D.exclDataStart:end)-E0,D.RunData.TBDIS(D.exclDataStart:end)./(D.ModelObj.qUfrac(D.exclDataStart:end)*D.ModelObj.TimeSec),'DisplayName','No Sterile','color',prlB,'LineWidth',3,'LineStyle','-')
+% <<<<<<< HEAD
+% plot(D.RunData.qU(D.exclDataStart:end)-E0,D.RunData.TBDIS(D.exclDataStart:end)./(D.ModelObj.qUfrac(D.exclDataStart:end)*D.ModelObj.TimeSec),...
+%     'DisplayName','No Sterile','color',prlB,'LineWidth',3,'LineStyle','-')
+% =======
+pfit = plot(D.RunData.qU(D.exclDataStart:end)-E0,...
+    D.RunData.TBDIS(D.exclDataStart:end)./...
+    (D.ModelObj.qUfrac(D.exclDataStart:end)*D.ModelObj.TimeSec),...
+    'DisplayName','No Sterile','color',prlB,'LineWidth',3,'LineStyle','-');
 hold on
 %plot(qUc,YI_N,'--','DisplayName','With Sterile','color',prlB,'LineWidth',3,'LineStyle','-')
 %hold on
 %errorbar(qUc,YIsd,err.*50,FitStyleArg{:},'CapSize',0)
-errorbar(D.RunData.qU(D.exclDataStart:end)-E0,D.RunData.TBDIS(D.exclDataStart:end)./(D.ModelObj.qUfrac(D.exclDataStart:end)*D.ModelObj.TimeSec),sqrt(D.RunData.TBDIS(D.exclDataStart:end))./(D.ModelObj.qUfrac(D.exclDataStart:end)*D.ModelObj.TimeSec)*50,FitStyleArg{:},'CapSize',0)
+% <<<<<<< HEAD
+% errorbar(D.RunData.qU(D.exclDataStart:end)-E0,D.RunData.TBDIS(D.exclDataStart:end)./(D.ModelObj.qUfrac(D.exclDataStart:end)*D.ModelObj.TimeSec),sqrt(D.RunData.TBDIS(D.exclDataStart:end))./(D.ModelObj.qUfrac(D.exclDataStart:end)*D.ModelObj.TimeSec)*50,FitStyleArg{:},'CapSize',0)
+% =======
+pdata = errorbar(D.RunData.qU(D.exclDataStart:end)-E0,...
+    D.RunData.TBDIS(D.exclDataStart:end)./...
+    (D.ModelObj.qUfrac(D.exclDataStart:end)*D.ModelObj.TimeSec),...
+    sqrt(D.RunData.TBDIS(D.exclDataStart:end))./(D.ModelObj.qUfrac(D.exclDataStart:end)*D.ModelObj.TimeSec)*50,FitStyleArg{:},'CapSize',0);
 
 % hold on;
 % plot(qUc,YS,'DisplayName','Sterile branch')
 
 % Plot style
 % xlabel('Retarding energy - 18574 (eV)');
-ylabel('Rate (cps)');
+yl1 = ylabel('Count rate (cps)');
 %legend({'3-\nu model',plot_title,'KATRIN data with errobars \times50'},'Location','northeast','box','off');
-legend({'3-\nu model','KATRIN data with errobars \times50'},'Location','northeast','box','off');
+legend([pdata,pfit],{sprintf('KATRIN data with 1 \\sigma error bars \\times 50'),'3-\nu model'},'Location','northeast','box','off');
 lgd=legend;
+lgd.FontSize = LocalFontSize-2;
 
 xlim([min(qUc-5) max(qUc+5)]);
 ylim([0.18 2*max(YI_N)]);
 PRLFormat;
+set(gca,'FontSize',LocalFontSize);
+set(get(gca,'XLabel'),'FontSize',LocalFontSize+4);
+set(get(gca,'YLabel'),'FontSize',LocalFontSize+4);
 set(gca, 'YScale', 'log');
 yticks([1 10 100])
+ylim([0.15 45])
+text(-41.243,31,'a)','FontSize',LocalFontSize,'FontName',get(gca,'FontName'));
 
 % Title
 % plot_title = sprintf('\\Deltam^{2}_{14} = %.1f eV^2 and sin^2(2\\theta_{ee}) = %.2f',sterile_mass^2,mixing_angle_2);
 % % ('Trtitum beta decay spectra comparison\nwith and without sterile neutrino\n\
 % title(plot_title)
-
 
 % Ratio    - Second Subplot
 
@@ -180,35 +201,56 @@ hold on;
 hr4 = plot(qUc,RSPd,'o','MarkerSize',2,'MarkerFaceColor',...
                 rgb('Black'),'MarkerEdgeColor',rgb('Black'),'LineWidth',3);
 
-hr5 = plot([0 0],[0 0],'Color',rgb('White'));
+%hr5 = plot([0 0],[0 0],'Color',rgb('White'));
+pnone = plot(qUc,zeros(numel(qUc),1),'LineStyle','none');
 % Plot style
 %ylabel('Ratio \nu_4/\nu_{\beta}');
 ylabel('Ratio');
-katrinsim   = sprintf('3+1 simulation m_{4}=%.1f eV   |U_{e4}|^2=%.2f',sterile_mass,mixing_angle_1);
+katrinsim   = sprintf('3+1 simulation m_{4} = %.1f eV   |U_{e4}|^2 = %.2f',sterile_mass,mixing_angle_1);
 sterilemod  = sprintf('3+1 model');
-hl=legend([hr2 hr1 hr5 hr3],{'3-\nu model',sterilemod,'',katrinsim},'Location','southwest','box','off');
+% <<<<<<< HEAD
+% hl=legend([hr2 hr1 hr5 hr3],{'3-\nu model',sterilemod,'',katrinsim},'Location','southwest','box','off');
+% hl.NumColumns=2;
+% =======
+hl=legend([hr2 hr1 pnone hr3],{'3-\nu model',sterilemod,'',katrinsim},'Location','southwest','box','off');
 hl.NumColumns=2;
+hl.FontSize = LocalFontSize-2;
 
 xlim([min(qUc-5) max(qUc+5)]);
+
 % ylim([min([min(RSP) min(RSPd)])*0.99 max([max(RSP) max(RSPd)])*1.01])
-ylim([min(RSP)*0.985 1.01])
+%ylim([min(RSP)*0.985 1.01])
 PRLFormat;
+set(gca,'FontSize',LocalFontSize);
+set(get(gca,'XLabel'),'FontSize',LocalFontSize+4);
+set(get(gca,'YLabel'),'FontSize',LocalFontSize+4);
+text(ax2.YLabel.Position(1)+10,1.006,'b)','FontSize',LocalFontSize,'FontName',get(gca,'FontName'));  
+
+ylim([0.975 1.012]);
+hl.Position(2) = 0.333;
+ax2 = gca;
 % yticks([0.9 1])
 
 % MTD      -  Third Subplot
 
-s3=subplot(4,1,4)
+s3=subplot(4,1,4);
 
 bar(qUc,times(qU>qULimit)./(60*60),0.5,...
     'FaceColor',prlB,'EdgeColor',prlB);
 
-xlabel('Retarding energy - 18573.7 (eV)');
+xlabel('Retarding energy - 18574 (eV)');
+ylh = ylabel('Time (h)');
+ylh.Position(1) = ax2.YLabel.Position(1);%-range-6.8;
+yl1.Position(1) = ax2.YLabel.Position(1);
 
-ylabel('Time (h)');
-%ylh.Position(1) = -105;
 ylim([0 50])
 yticks([0 25 50])
+xlim([-range-2 50])
 PRLFormat;
-linkaxes([s1,s2,s3],'x');
+set(gca,'FontSize',LocalFontSize);
+set(get(gca,'XLabel'),'FontSize',LocalFontSize+4);
+set(get(gca,'YLabel'),'FontSize',LocalFontSize+4);
+text(ax2.YLabel.Position(1)+10,42,'c)','FontSize',get(gca,'FontSize'),'FontName',get(gca,'FontName'));      
 
 export_fig(fig,'./plots/ksn1_spectrum_prl1.pdf');
+linkaxes([s1,s2,s3],'x');

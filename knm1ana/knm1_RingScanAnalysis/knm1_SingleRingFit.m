@@ -1,7 +1,7 @@
 % uniform fit on knm2 stacked data
 % settings
 RunList = 'KNM1';
-fixPar = '5 6 7 8 9 10 11 12'; % fixed parameter
+fixPar = 'E0 Bkg Norm'; % free parameter
 DataType = 'Real';
 FSDFlag = 'Sibille0p5eV';
 NonPoissonScaleFactor = 1.064;
@@ -13,11 +13,11 @@ RunAnaArg = {'RunList',RunList,'fixPar',fixPar,'DataType',DataType,...
             'FSDFlag',FSDFlag,'ELossFlag',ELossFlag,...
             'NonPoissonScaleFactor',NonPoissonScaleFactor,'exclDataStart',exclDataStart,...
             'AnaFlag',AnaFlag,'chi2',chi2,...
-            'RingMerge','Full'};
+            'RingMerge','None','AngularTFFlag','OFF'};
 
 % read data and set up model
 A = MultiRunAnalysis(RunAnaArg{:});
-R = RingAnalysis('RunAnaObj',A,'RingList',1:4);
+R = RingAnalysis('RunAnaObj',A,'RingList',1:12);
 
 %%
 R.FitRings('SaveResult','OFF','RecomputeFlag','ON');
