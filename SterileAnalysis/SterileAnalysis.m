@@ -388,7 +388,7 @@ classdef SterileAnalysis < handle
             if strcmp(Mainz,'ON')
                 filenameMainz = sprintf('%scoord_Mainz_95CL.mat',savedirOther);
                 dMainz = importdata(filenameMainz);
-                pMainz = plot(dMainz.SinSquare2Theta_X,dMainz.DmSquare41_Y,'-.','LineWidth',1.5,'Color',rgb('SeaGreen'));
+                pMainz = plot(dMainz.SinSquare2Theta_X,dMainz.DmSquare41_Y,'-.','LineWidth',1.5,'Color',rgb('Salmon'));
                 legHandle{numel(legHandle)+1} = pMainz;
                 legStr = [legStr,{sprintf('Mainz 95%% C.L.')}];
                 hold on;
@@ -397,7 +397,7 @@ classdef SterileAnalysis < handle
             if strcmp(Troitsk,'ON')
                 filenameTroitsk = sprintf('%scoord_Troitsk_95CL.mat',savedirOther);
                 dTroitsk = importdata(filenameTroitsk);
-                pTroitsk = plot(dTroitsk.SinSquare2Theta_X,dTroitsk.DmSquare41_Y,'-.','LineWidth',1.5,'Color',rgb('Gold'));
+                pTroitsk = plot(dTroitsk.SinSquare2Theta_X,dTroitsk.DmSquare41_Y,'--','LineWidth',1.5,'Color',rgb('DarkSlateGrey'));
                 legHandle{numel(legHandle)+1} = pTroitsk;
                 legStr = [legStr,{sprintf('Troitsk 95%% C.L.')}];
                 hold on;
@@ -424,7 +424,7 @@ classdef SterileAnalysis < handle
             if strcmp(Stereo,'ON')
                 filenameStereo = sprintf('%scoord_Stereo_95CL.mat',savedirOther);
                 dStereo = importdata(filenameStereo);
-                pStereo = plot(dStereo.SinSquare2Theta_X,dStereo.DmSquare41_Y,'-','LineWidth',1,'Color',rgb('LightGreen'));
+                pStereo = plot(dStereo.SinSquare2Theta_X,dStereo.DmSquare41_Y,'-','LineWidth',1,'Color',rgb('Gold'));
                 legHandle{numel(legHandle)+1} = pStereo;
                 legStr = [legStr,{sprintf('Stéréo 95%% C.L.')}];
                 hold on;
@@ -437,7 +437,7 @@ classdef SterileAnalysis < handle
                 dRAA1 = importdata(filenameRAA1,'file');
                 dRAA2 = importdata(filenameRAA2,'file');  
                 pRAA = plot([dRAA1.sith4_X(1),dRAA1.sith4_X,dRAA1.sith4_X(end)],...
-                         [1e5,dRAA1.m4_Y,1e5],'-','LineWidth',2,'Color',rgb('Orange'));
+                         [1e5,dRAA1.m4_Y,1e5],'-','LineWidth',2,'Color',rgb('ForestGreen'));
                 plot(dRAA2.sith4_X,dRAA2.m4_Y,'-','LineWidth',pRAA.LineWidth,'Color',pRAA.Color);
                 legHandle{numel(legHandle)+1} = pRAA;
                 legStr = [legStr,{sprintf('RAA+GA 95%% CL')}];%-PRD 83, 073006 (2011) -
@@ -446,7 +446,7 @@ classdef SterileAnalysis < handle
             if strcmp(Neutrino4,'ON')
                 filenameN4 = sprintf('%scoord_Neutrino4_123sigma.mat',savedirOther);
                 dN4 = importdata(filenameN4);
-                pN4 = plot(dN4.SinSquare2Theta_X_2sigma,dN4.DmSquare41_Y_2sigma,'-','LineWidth',1.5,'Color',rgb('Red'));
+                pN4 = plot(dN4.SinSquare2Theta_X_2sigma,dN4.DmSquare41_Y_2sigma,'-','LineWidth',1.5,'Color',rgb('DarkRed'));
                 legHandle{numel(legHandle)+1} = pN4;
                 legStr = [legStr,{sprintf('Neutrino-4 2\\sigma')}];
                 hold on;
@@ -469,7 +469,8 @@ classdef SterileAnalysis < handle
             %%
           leg = legend([legHandle{:}],legStr{:},'EdgeColor','none','Location','northoutside',...
               'FontSize',12);
-          xlim([1.2e-02 1]);
+          xlim([2.e-02 1]);
+          ylim([.1 2000]);
           
           if numel(legStr)>4
               leg.NumColumns = 2;
@@ -1049,7 +1050,7 @@ classdef SterileAnalysis < handle
             obj.LoadGridFile('CheckSmallerN','ON');
             obj.Interp1Grid('RecomputeFlag','ON');
             pPull = obj.ContourPlot('CL',obj.ConfLevel,'HoldOn','ON',...
-                'Color',rgb('PowderBlue'),'LineStyle',':','BestFit',BestFit);
+                'Color',rgb('SteelBlue'),'LineStyle',':','BestFit',BestFit);
             legHandle{numel(legHandle)+1} = pPull;
             
             %% appearance + legend

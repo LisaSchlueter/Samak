@@ -2,11 +2,11 @@
 
 %% Settings
 E0 = 18573.7;                                         % Endpoint in eV
-%sterile_mass = sqrt(70.3);                                    % Sterile neutrino mass in eV
-sterile_mass  = 10;                              % Sterile neutrino mass in eV
+%sterile_mass = sqrt(70.3);                           % Sterile neutrino mass in eV
+sterile_mass  = 10;                                   % Sterile neutrino mass in eV
 
 mixing_angle_1 = 0.01;                                % sin2(th4)
-%mixing_angle_1 = 0.0224;                                % sin2(th4)
+%mixing_angle_1 = 0.0224;                             % sin2(th4)
 % mixing_angle_2 = 1-(1-2*mixing_angle_1)^2;          % sin2(2th4)
 
 % mixing_angle_2 = 0.1;                               % sin2(2th4)
@@ -24,7 +24,7 @@ D = MultiRunAnalysis('RunList','KNM1',...
             'FSDFlag','SibilleFull',...
             'ELossFlag','KatrinT2',...
             'SysBudget',22,...
-            'exclDataStart',7,...
+            'exclDataStart',13,...
             'SynchrotronFlag','OFF',...
             'AngularTFFlag','OFF');
 
@@ -40,7 +40,7 @@ R = MultiRunAnalysis('RunList','KNM1',...
             'FSDFlag','SibilleFull',...
             'ELossFlag','KatrinT2',...
             'SysBudget',22,...
-            'exclDataStart',7,...
+            'exclDataStart',13,...
             'SynchrotronFlag','OFF',...
             'AngularTFFlag','OFF');
 
@@ -64,7 +64,7 @@ Rs = MultiRunAnalysis('RunList','KNM1',...
             'FSDFlag','SibilleFull',...
             'ELossFlag','KatrinT2',...
             'SysBudget',22,...
-            'exclDataStart',7,...
+            'exclDataStart',13,...
             'SynchrotronFlag','OFF',...
             'AngularTFFlag','OFF');
         
@@ -98,7 +98,7 @@ err  = err./times;
 err  = err./YI;
 
 % Constraining everything to qULimiteV
-qULimit = -65;
+qULimit = -40;
 YIsd=YIsd(qU>qULimit);
 YIs=YIs(qU>qULimit);
 YI=YI(qU>qULimit);
@@ -134,12 +134,12 @@ YI_N = (YI_N-bkg).*(YI(1)/YI_N(1)) + bkg;
 
 % Plot
 %plot(qUc,YI,'DisplayName','No Sterile','color',prlB,'LineWidth',3,'LineStyle','-')
-plot(D.RunData.qU-E0,D.RunData.TBDIS./(D.ModelObj.qUfrac*D.ModelObj.TimeSec),'DisplayName','No Sterile','color',prlB,'LineWidth',3,'LineStyle','-')
+plot(D.RunData.qU(D.exclDataStart:end)-E0,D.RunData.TBDIS(D.exclDataStart:end)./(D.ModelObj.qUfrac(D.exclDataStart:end)*D.ModelObj.TimeSec),'DisplayName','No Sterile','color',prlB,'LineWidth',3,'LineStyle','-')
 hold on
 %plot(qUc,YI_N,'--','DisplayName','With Sterile','color',prlB,'LineWidth',3,'LineStyle','-')
 %hold on
 %errorbar(qUc,YIsd,err.*50,FitStyleArg{:},'CapSize',0)
-errorbar(D.RunData.qU-E0,D.RunData.TBDIS./(D.ModelObj.qUfrac*D.ModelObj.TimeSec),sqrt(D.RunData.TBDIS)./(D.ModelObj.qUfrac*D.ModelObj.TimeSec)*50,FitStyleArg{:},'CapSize',0)
+errorbar(D.RunData.qU(D.exclDataStart:end)-E0,D.RunData.TBDIS(D.exclDataStart:end)./(D.ModelObj.qUfrac(D.exclDataStart:end)*D.ModelObj.TimeSec),sqrt(D.RunData.TBDIS(D.exclDataStart:end))./(D.ModelObj.qUfrac(D.exclDataStart:end)*D.ModelObj.TimeSec)*50,FitStyleArg{:},'CapSize',0)
 
 % hold on;
 % plot(qUc,YS,'DisplayName','Sterile branch')
@@ -180,13 +180,14 @@ hold on;
 hr4 = plot(qUc,RSPd,'o','MarkerSize',2,'MarkerFaceColor',...
                 rgb('Black'),'MarkerEdgeColor',rgb('Black'),'LineWidth',3);
 
+hr5 = plot([0 0],[0 0],'Color',rgb('White'));
 % Plot style
 %ylabel('Ratio \nu_4/\nu_{\beta}');
 ylabel('Ratio');
 katrinsim   = sprintf('3+1 simulation m_{4}=%.1f eV   |U_{e4}|^2=%.2f',sterile_mass,mixing_angle_1);
 sterilemod  = sprintf('3+1 model');
-hl=legend([hr2 hr1 hr3],{'3-\nu model',sterilemod,katrinsim},'Location','southwest','box','off');
-hl.NumColumns=1;
+hl=legend([hr2 hr1 hr5 hr3],{'3-\nu model',sterilemod,'',katrinsim},'Location','southwest','box','off');
+hl.NumColumns=2;
 
 xlim([min(qUc-5) max(qUc+5)]);
 % ylim([min([min(RSP) min(RSPd)])*0.99 max([max(RSP) max(RSPd)])*1.01])
@@ -201,12 +202,13 @@ s3=subplot(4,1,4)
 bar(qUc,times(qU>qULimit)./(60*60),0.5,...
     'FaceColor',prlB,'EdgeColor',prlB);
 
-xlabel('Retarding energy - 18574 (eV)');
-ylh = ylabel('Time (h)');
-ylh.Position(1) = -105;
+xlabel('Retarding energy - 18573.7 (eV)');
+
+ylabel('Time (h)');
+%ylh.Position(1) = -105;
 ylim([0 50])
 yticks([0 25 50])
 PRLFormat;
 linkaxes([s1,s2,s3],'x');
 
-export_fig(fig,'./plots/ksn1_spectrum.pdf');
+export_fig(fig,'./plots/ksn1_spectrum_prl1.pdf');
