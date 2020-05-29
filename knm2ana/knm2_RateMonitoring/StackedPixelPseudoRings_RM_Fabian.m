@@ -1,8 +1,9 @@
 KNM1CorFlag    = 'ON';
 HVdriftCorFlag = 'OFF';
-ROI            = 'Default';
-Corr           = 'Fabian';
-Mode           = 'Periodwise';
+ROI            = 'Default';     %Default, 14keV
+Corr           = 'Fabian';      %Fabian, Thierry
+CorrMode       = 'MC';         %Fit, MC
+Mode           = 'Periodwise';    %Ringwise, Periodwise
 
 %% KNM1 with Calibration - Divide Rates by
 switch KNM1CorFlag
@@ -59,7 +60,7 @@ if strcmp(Mode,'Ringwise')
             qUmeanRW2(i)    = mean(qUCorrRW2);
 
             % Correct for activity and qU
-            R.RMCorrection('saveplot','OFF','pixlist',sprintf('ring%i',i),'QAplots','OFF');
+            R.RMCorrection('saveplot','OFF','pixlist',sprintf('ring%i',i),'QAplots','OFF','Mode',CorrMode);
 
             % Include HV Drift if any
             count(i,:)  = R.SingleRunData.TBDIS_RM + HVdriftPerPixel.*numel(R.PixList).*R.SingleRunData.qUfrac_RM.*R.SingleRunData.TimeSec;
@@ -153,7 +154,7 @@ if strcmp(Mode,'Ringwise')
             
 
             % Correct for activity and qU
-            R.RMCorrection('saveplot','OFF','pixlist',sprintf('ring%i',i),'QAplots','OFF');                                                 % KNM1 correction included here!
+            R.RMCorrection('saveplot','ON','pixlist',sprintf('ring%i',i),'QAplots','OFF','Mode',CorrMode);                                                 % KNM1 correction included here!
             count(i,:)  = R.SingleRunData.TBDIS_RM + HVdriftPerPixel.*numel(R.PixList).*R.SingleRunData.qUfrac_RM.*R.SingleRunData.TimeSec;
 
             rate{j,i}   = count(i,:)./sstime(i,:);
@@ -267,7 +268,7 @@ if strcmp(Mode,'Periodwise')
         qUmeanRW2       = mean(qUCorrRW2);
 
         % Correct for activity and qU
-        Ref.RMCorrection('saveplot','OFF','QAplots','OFF');
+        Ref.RMCorrection('saveplot','OFF','QAplots','OFF','Mode',CorrMode);
 
         % Include HV Drift if any
         count  = Ref.SingleRunData.TBDIS_RM + HVdriftPerPixel.*numel(Ref.PixList).*Ref.SingleRunData.qUfrac_RM.*Ref.SingleRunData.TimeSec;
@@ -339,7 +340,7 @@ if strcmp(Mode,'Periodwise')
         cf     = R.RMRateErosCorrectionqUActivity;
         Crate1{j} = (rateRaw.*cf./mean(Activity{j}).*ActivityRW2 + HVcorrCPSperPixel{j});
         % Correct for activity and qU
-        R.RMCorrection('saveplot','OFF','QAplots','OFF');
+        R.RMCorrection('saveplot','ON','QAplots','OFF','Mode',CorrMode);
         count  = R.SingleRunData.TBDIS_RM + HVdriftPerPixel.*numel(R.PixList).*R.SingleRunData.qUfrac_RM.*R.SingleRunData.TimeSec;
         count  = count./(28/118.*KNM1correction(1)+36/117.*KNM1correction(2)+34/117.*KNM1correction(3)+19/117.*KNM1correction(4));
 

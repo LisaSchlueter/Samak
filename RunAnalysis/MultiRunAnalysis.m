@@ -1312,6 +1312,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             p.addParameter('saveplot','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('pixlist','uniform',@(x)ismember(x,{'uniform','ring1','ring2','ring3','ring4'}));
             p.addParameter('QAplots','ON',@(x)ismember(x,{'ON','OFF'}));
+            p.addParameter('Mode','MC',@(x)ismember(x,{'MC','Fit'}));
             p.parse(varargin{:});
             ActivityCorrection = p.Results.ActivityCorrection;
             qUCorrection       = p.Results.ActivityCorrection;
@@ -1319,6 +1320,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             saveplot           = p.Results.saveplot;
             pixlist            = p.Results.pixlist;
             QAplots            = p.Results.QAplots;
+            Mode               = p.Results.Mode;
             
             rhoD = obj.SingleRunData.WGTS_CD_MolPerCm2;
             T2 = obj.SingleRunData.WGTS_MolFrac_TT;
@@ -1354,7 +1356,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                 if strcmp(saveplot,'ON')
                     SaveDir = [getenv('SamakPath'),sprintf('tritium-data/plots/%s/corrections/',obj.DataSet)];
                     MakeDir(SaveDir);
-                    SaveName = sprintf('RateCorrection_raw_%s_%s.pdf',obj.RunData.RunName,pixlist);
+                    SaveName = sprintf('RateCorrection_raw_%s_%s_%s.pdf',obj.RunData.RunName,pixlist,Mode);
                     export_fig(fig88,[SaveDir,SaveName]);
                 end
             end
@@ -1374,7 +1376,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                     if strcmp(saveplot,'ON')
                         SaveDir = [getenv('SamakPath'),sprintf('tritium-data/plots/%s/corrections/',obj.DataSet)];
                         MakeDir(SaveDir);
-                        SaveName = sprintf('CorrectionPercentage_Activity_%s_%s.pdf',obj.RunData.RunName,pixlist);
+                        SaveName = sprintf('CorrectionPercentage_Activity_%s_%s_%s.pdf',obj.RunData.RunName,pixlist,Mode);
                         export_fig(fig88,[SaveDir,SaveName]);
                     end
                 end
@@ -1398,14 +1400,16 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                     if strcmp(saveplot,'ON')
                         SaveDir = [getenv('SamakPath'),sprintf('tritium-data/plots/%s/corrections/',obj.DataSet)];
                         MakeDir(SaveDir);
-                        SaveName = sprintf('RateCorrection_Activity_%s_%s.pdf',obj.RunData.RunName,pixlist);
+                        SaveName = sprintf('RateCorrection_Activity_%s_%s_%s.pdf',obj.RunData.RunName,pixlist,Mode);
                         export_fig(fig88,[SaveDir,SaveName]);
                     end
                 end
                 if strcmp(qUCorrection,'ON')
                     fitobject = fit(permute(qU,[2 1]),permute(rate,[2 1]),'poly1');
                     coeffs = coeffvalues(fitobject);
-                    coeffs(1,1) = -0.0111584997*mean(rate);                              %replace fitted slope with MC slope
+                    if strcmp(Mode,'MC')
+                        coeffs(1,1) = -0.0111584997*mean(rate);                              %replace fitted slope with MC slope
+                    end
                     correlation = corr(qU(:),rate(:));
                     if strcmp(QAplots,'ON')
                         fig88 = figure('Renderer','painters');
@@ -1429,7 +1433,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                         if strcmp(saveplot,'ON')
                             SaveDir = [getenv('SamakPath'),sprintf('tritium-data/plots/%s/corrections/',obj.DataSet)];
                             MakeDir(SaveDir);
-                            SaveName = sprintf('RateCorrection_qU_raw_%s_%s.pdf',obj.RunData.RunName,pixlist);
+                            SaveName = sprintf('RateCorrection_qU_raw_%s_%s_%s.pdf',obj.RunData.RunName,pixlist,Mode);
                             export_fig(fig88,[SaveDir,SaveName]);
                         end
                     end
@@ -1442,13 +1446,13 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                         fig88 = figure('Renderer','painters');
                         set(fig88,'units','normalized','pos',[0.1, 0.1,1,0.6]);
                         histogram(DiffqU)
-                        leg = legend(sprintf('\\sigma = %.2f x10^{-4}',std(DiffqU)*10.^4));
+                        leg = legend(sprintf('\\sigma = %.2f x10^{-4}\n\\mu = %.2f x10^{-4}',std(DiffqU)*10.^4,mean(DiffqU)*10.^4));
                         title(leg,sprintf('qU Correction percentage'));
                         PrettyFigureFormat;
                         if strcmp(saveplot,'ON')
                             SaveDir = [getenv('SamakPath'),sprintf('tritium-data/plots/%s/corrections/',obj.DataSet)];
                             MakeDir(SaveDir);
-                            SaveName = sprintf('CorrectionPercentage_qU_%s_%s.pdf',obj.RunData.RunName,pixlist);
+                            SaveName = sprintf('CorrectionPercentage_qU_%s_%s_%s.pdf',obj.RunData.RunName,pixlist,Mode);
                             export_fig(fig88,[SaveDir,SaveName]);
                         end
                     end
@@ -1473,7 +1477,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                         if strcmp(saveplot,'ON')
                             SaveDir = [getenv('SamakPath'),sprintf('tritium-data/plots/%s/corrections/',obj.DataSet)];
                             MakeDir(SaveDir);
-                            SaveName = sprintf('RateCorrection_qU_%s_%s.pdf',obj.RunData.RunName,pixlist);
+                            SaveName = sprintf('RateCorrection_qU_%s_%s_%s.pdf',obj.RunData.RunName,pixlist,Mode);
                             export_fig(fig88,[SaveDir,SaveName]);
                         end
                     end

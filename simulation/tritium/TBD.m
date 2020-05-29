@@ -43,7 +43,7 @@ classdef TBD < handle & WGTSMACE %!dont change superclass without modifying pars
         fsC = 0.007297352569816;    % Fine Structure Cte
         me = 510.9989461e3          % Electron Mass eV  PDG 2019
         mq = -1.602176634*1e-19;    % electron charge in Coulomb (C=A*s)
-        mu0 = 1.25663706212*1e-06;  %  magnetic permeability in free space (kg*m*s^-2*A^-2)
+        mu0 = 1.25663706212*1e-06;  % magnetic permeability in free space (kg*m*s^-2*A^-2)
         Gf = 8.963859529398992e-50; % Fermi Cte Mev.m^3 PDG2010
         Mn = 939565.360e3;          % Neutron mass eV
         Mp = 938272.029e3;          % Proton mass eV
