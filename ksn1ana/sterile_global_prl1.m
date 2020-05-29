@@ -130,15 +130,13 @@ s1=subplot(4,1,[1 2]);
 % 
 % % Sterile Branch somehow
 % YS = YI_N-YI+bkg;
-YI_N = YIs; bkg = YI_N(length(YI_N));
-YI_N = (YI_N-bkg).*(YI(1)/YI_N(1)) + bkg;
 
 % Plot
 %plot(qUc,YI,'DisplayName','No Sterile','color',prlB,'LineWidth',3,'LineStyle','-')
 pfit = plot(D.RunData.qU(D.exclDataStart:end)-E0,...
     D.RunData.TBDIS(D.exclDataStart:end)./...
     (D.ModelObj.qUfrac(D.exclDataStart:end)*D.ModelObj.TimeSec),...
-    'DisplayName','No Sterile','color',prlB,'LineWidth',3,'LineStyle','-')
+    'DisplayName','No Sterile','color',prlB,'LineWidth',3,'LineStyle','-');
 hold on
 %plot(qUc,YI_N,'--','DisplayName','With Sterile','color',prlB,'LineWidth',3,'LineStyle','-')
 %hold on
@@ -158,6 +156,10 @@ yl1 = ylabel('Count rate (cps)');
 legend([pdata,pfit],{sprintf('KATRIN data with 1 \\sigma error bars \\times 50'),'3-\nu model'},'Location','northeast','box','off');
 lgd=legend;
 lgd.FontSize = LocalFontSize-2;
+
+YI_N = YIs;
+bkg = YI_N(length(YI_N));
+YI_N = (YI_N-bkg).*(YI(1)/YI_N(1)) + bkg;
 
 xlim([min(qUc-5) max(qUc+5)]);
 ylim([0.18 2*max(YI_N)]);

@@ -20,7 +20,7 @@ switch Mode
         elseif range==65
             RandMC = [1:654,868:931,1219:1500];
         elseif range==40
-            RandMC = [1:411,500:583,629:914];
+            RandMC = [1:423,489:593,628:927,990:1000];
         end
 end
 %% init
