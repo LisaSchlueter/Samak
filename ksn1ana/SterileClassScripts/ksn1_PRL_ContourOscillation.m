@@ -60,29 +60,9 @@ S.SysEffect='all';
 S.LoadGridFile('CheckSmallerN','ON','CheckLargerN','ON'); % if CheckSmallerN also look for grid with more/less nGridSteps
 S.InterpMode = 'spline'; % waring: if contour is closed, spline interp sometimes sensitive to artefacts! Switch to "lin" in this case
 S.Interp1Grid('RecomputeFlag','ON');% interpolate chi2 map -> nicer appearance of all plots. some
-S.ContourPlot('BestFit','OFF','SavePlot','OFF','CL',[95],'HoldOn','OFF');
-
-S.RunAnaObj.SysBudget = 24;
-S.SysEffect='all';
-S.RunAnaObj.ELossFlag = 'KatrinT2';
-S.LoadGridFile('CheckSmallerN','ON','CheckLargerN','ON'); % if CheckSmallerN also look for grid with more/less nGridSteps
-S.InterpMode = 'spline'; % waring: if contour is closed, spline interp sometimes sensitive to artefacts! Switch to "lin" in this case
-S.Interp1Grid('RecomputeFlag','ON');% interpolate chi2 map -> nicer appearance of all plots. some
-S.ContourPlot('BestFit','OFF','SavePlot','OFF','CL',[95],'HoldOn','ON','LineStyle','-.','Color',rgb('Orange'));
-%xlim([1e-03 0.5])
-%title(sprintf('%s - %.0f%% C.L.',S.GetPlotTitle,CL),'FontWeight','normal','FontSize',get(gca,'FontSize'));
-          
-%% 4. grid plot with contour and best fit
-S.GridPlot('BestFit','OFF','Contour','ON')
 
 %% 5. contour plot in oscillation parameter space (you can switch on/off foreign contours, all on by default
-S.ContourPlotOsci();
- 
-%% comparisonw ith fitrium (works only for 65 eV & 95 range)
-if S.range==95 && strcmp(S.RunAnaObj.DataType,'Real')
-    S.InterpMode = 'lin';
-else
-      S.InterpMode = 'spline';
-end
-%S.PlotFitriumSamak;
+Arg = {'SavePlot','ON','BestFit','OFF'};
+S.ContourPlotOsci(Arg{:});
+
 

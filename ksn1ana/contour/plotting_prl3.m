@@ -75,7 +75,7 @@ p_m     =       plot ((d_mainz.SinSquare2Theta_X), (d_mainz.DmSquare41_Y),...
                     '-.','color',rgb('Salmon'),'LineWidth',2);
 hold on
 p_t     =      plot ((d_troitsk.SinSquare2Theta_X), (d_troitsk.DmSquare41_Y),...
-                    ':','color',rgb('DarkSlateGrey'),'LineWidth',2);
+                    '--','color',rgb('DarkSlateGrey'),'LineWidth',2);
 %   RAA
 hold on
 p_raa95 =       plot (raa95x,raa95y,...
@@ -144,7 +144,7 @@ PRLFormat;
 % Axis 
 set(gca, 'XScale', 'log');
 set(gca, 'YScale', 'log');
-axis([0.02 1 0.1 6800])
+axis([0.02 1 0.1 2000])
 axis square
 
 % Save Files

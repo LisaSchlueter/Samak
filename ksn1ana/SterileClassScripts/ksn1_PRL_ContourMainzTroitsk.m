@@ -35,7 +35,27 @@ SterileArg = {'RunAnaObj',T,... % Mother Object: defines RunList, Column Density
     'range',40};
 
 S = SterileAnalysis(SterileArg{:});
+%% 4. grid plot with contour and best fit
+%% 2 load a chi2 map and find the best fit
+S.RunAnaObj.DataType = 'Real';
+S.range = 40;
+S.LoadGridFile('CheckSmallerN','ON','CheckLargerN','ON'); % if CheckSmallerN also look for grid with more/less nGridSteps
+S.InterpMode = 'lin'; % waring: if contour is closed, spline interp sometimes sensitive to artefacts! Switch to "lin" in this case
+S.Interp1Grid('RecomputeFlag','ON');% interpolate chi2 map -> nicer appearance of all plots. some
+S.FindBestFit;
+S.CompareBestFitNull;
+
+%% 3. contour plot for some confidence levels
+
+S.RunAnaObj.SysBudget = 24;
+S.RunAnaObj.ELossFlag = 'KatrinT2';
+S.SysEffect='all';
+S.LoadGridFile('CheckSmallerN','ON','CheckLargerN','ON'); % if CheckSmallerN also look for grid with more/less nGridSteps
+S.InterpMode = 'spline'; % waring: if contour is closed, spline interp sometimes sensitive to artefacts! Switch to "lin" in this case
+S.Interp1Grid('RecomputeFlag','ON');% interpolate chi2 map -> nicer appearance of all plots. some
+S.ContourPlot('BestFit','OFF','SavePlot','OFF','CL',[95],'HoldOn','OFF');
 
 %% S.InterpMode = 'lin'; %'spline' sometimes causes weird artefacts, but looks smoother than 'lin'
 Arg = {'SavePlot','ON','BestFit','OFF','Style','PRL'};
 S.PlotPRL1(Arg{:});
+
