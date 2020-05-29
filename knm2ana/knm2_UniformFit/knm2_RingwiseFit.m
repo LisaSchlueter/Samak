@@ -2,7 +2,7 @@ function [PlasmaDrifts, Err_PlasmaDrifts, Offsets, Err_Offsets] = knm2_RingwiseF
     p = inputParser;
     p.addParameter('saveplot','OFF',@(x)ismember(x,{'ON','OFF'}));
     p.addParameter('QAplots','OFF',@(x)ismember(x,{'ON','OFF'}));
-    p.addParameter('ROI','14keV',@(x)ismember(x,{'14keV','Default'}));
+    p.addParameter('ROI','Default',@(x)ismember(x,{'14keV','Default'}));
     p.parse(varargin{:});
     saveplot = p.Results.saveplot;
     QAplots  = p.Results.QAplots;
@@ -44,18 +44,22 @@ function [PlasmaDrifts, Err_PlasmaDrifts, Offsets, Err_Offsets] = knm2_RingwiseF
             Err_MeanRate = std(DataPSR_RWn.MultiObj(i).SingleRunData.TBDIS_RM./(DataPSR_RWn.MultiObj(i).SingleRunData.qUfrac_RM.*DataPSR_RWn.MultiObj(i).SingleRunData.TimeSec));
             %Slope_RateTime = par(1)/MeanRate;
             %Err_Slope_RateTime = err(1)/MeanRate;
-            DataPSR_RWn.MultiObj(i).SingleRunData.TBDIS_RM = -((Rate - ReferenceRate./numel(DataPSR_RWn.MultiObj(1).PixList).*numel(DataPSR_RWn.MultiObj(i).PixList))./737.8 * 1e3 * 117 / numel(DataPSR_RWn.MultiObj(i).PixList))...
+            DataPSR_RWn.MultiObj(i).SingleRunData.TBDIS_RM = -(Rate./737.8 * 1e3 * 117 / numel(DataPSR_RWn.MultiObj(i).PixList))...
                 .*(DataPSR_RWn.MultiObj(i).SingleRunData.qUfrac_RM.*DataPSR_RWn.MultiObj(i).SingleRunData.TimeSec);
             [~,par,err,~,~] = DataPSR_RWn.MultiObj(i).PlotFitRunListCorr('Parameterx','time','Parametery','rate300','Fit','ON','saveplot',saveplot,'pixlist',sprintf('ring%i',i));
+            NbxRunsPeriod = [121 95 92];
             
-            Offsets(i,j) = mean((Rate - ReferenceRate./numel(DataPSR_RWn.MultiObj(1).PixList).*numel(DataPSR_RWn.MultiObj(i).PixList))./737.8 * 1e3 * 117 / numel(DataPSR_RWn.MultiObj(i).PixList));
-            Err_Offsets(i,j) = mean(Err_Rate)./737.8 * 1e3 * 117 / numel(DataPSR_RWn.MultiObj(i).PixList);
+            Offsets(i,j) = mean(Rate./737.8 * 1e3 * 117 / numel(DataPSR_RWn.MultiObj(i).PixList));
+            Err_Offsets(i,j) = mean(Err_Rate./737.8 * 1e3 * 117 / numel(DataPSR_RWn.MultiObj(i).PixList))./NbxRunsPeriod(j);
             PlasmaDrifts(i,j) = par(1)*24;
             Err_PlasmaDrifts(i,j) = err(1)*24;
             %PlasmaDrifts(i,j) = Slope_RateTime/Slope_RateqU*numel(DataPSR_RWn.MultiObj(i).PixList)/117*24;
             %Err_PlasmaDrifts(i,j) = sqrt((Err_Slope_RateTime)^2*Slope_RateqU^-2+Err_Slope_RateqU^2*((Slope_RateTime)^2/(Slope_RateqU)^4))*numel(DataPSR_RWn.MultiObj(i).PixList)/117*24;
         end
     end
+    
+    Offsets = -(Offsets-mean(mean(Offsets)));
+    
     fig88 = figure('Renderer','painters');
     set(fig88,'units','normalized','pos',[0.1, 0.1,1,0.6]);
     PlotStyle = { '-o','MarkerSize',8,'MarkerFaceColor',rgb('SkyBlue'),'LineWidth',2};
@@ -79,7 +83,7 @@ function [PlasmaDrifts, Err_PlasmaDrifts, Offsets, Err_Offsets] = knm2_RingwiseF
     xlabel(sprintf('Pseudoring'));
     ylabel(sprintf('mV'));
     leg = legend('RW1','RW2','RW3');
-    title(leg,sprintf('Offsets from RW1, Ring1'));
+    title(leg,sprintf('Offsets from baseline mean'));
     leg.Location = 'best';
     PrettyFigureFormat;
     if strcmp(saveplot,'ON')
