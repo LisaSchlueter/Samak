@@ -35,7 +35,7 @@ SterileArg = {'RunAnaObj',T,... % Mother Object: defines RunList, Column Density
     'range',40};
 
 S = SterileAnalysis(SterileArg{:});
-%% 4. grid plot with contour and best fit
+
 %% 2 load a chi2 map and find the best fit
 S.RunAnaObj.DataType = 'Real';
 S.range = 40;
@@ -45,8 +45,8 @@ S.Interp1Grid('RecomputeFlag','ON');% interpolate chi2 map -> nicer appearance o
 S.FindBestFit;
 S.CompareBestFitNull;
 
-%% S.InterpMode = 'lin'; %'spline' sometimes causes weird artefacts, but looks smoother than 'lin'
-Arg = {'SavePlot','ON','BestFit','OFF','Style','PRL','FinalSensitivity','ON'};
+% S.InterpMode = 'lin'; %'spline' sometimes causes weird artefacts, but looks smoother than 'lin'
+Arg = {'SavePlot','ON','BestFit','OFF','Style','PRL','FinalSensitivity','OFF'};
 S.PlotPRL1(Arg{:});
 
 

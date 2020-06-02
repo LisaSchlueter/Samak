@@ -111,6 +111,8 @@ classdef SterileAnalysis < handle
                 end
             elseif obj.range==40 && strcmp(obj.RunAnaObj.DataType,'Real')
                 Maxm4Sq =  36^2;%(obj.range-3)^2;
+            elseif obj.range==40 && strcmp(obj.RunAnaObj.DataType,'Fake')
+                 Maxm4Sq =  (obj.range-3.3)^2;
             else
                 Maxm4Sq =  (obj.range-5)^2;
             end
@@ -485,7 +487,7 @@ classdef SterileAnalysis < handle
                 obj.LoadGridFile('CheckSmallerN','ON');
                 obj.Interp1Grid('RecomputeFlag','ON');
                 
-                PlotArg = {'LineWidth',2.5,'LineStyle',myLineStyle,'LineColor',rgb('Navy')};
+                PlotArg = {'LineWidth',2,'LineStyle',':','LineColor',rgb('SteelBlue')};
                 [DeltamNu41Sq,sin2T4Sq] = obj.Convert2Osci;
                 [~,legHandle{numel(legHandle)+1}]= contour(sin2T4Sq,DeltamNu41Sq,obj.chi2-obj.chi2_ref,...
                     [obj.DeltaChi2 obj.DeltaChi2],...

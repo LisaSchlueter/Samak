@@ -13,7 +13,7 @@ switch Mode
     case 'Old'
         RandMC = [1:151,500:643]*1e3;
         SysBudget =22;
-    case 'New'
+    case 'New'1
           SysBudget =24;
         if range== 95      
             RandMC = 1:1500;
