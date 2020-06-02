@@ -358,6 +358,7 @@ classdef SterileAnalysis < handle
             p.addParameter('DANSS','ON',@(x) ismember(x,{'ON','OFF'}));
             p.addParameter('Stereo','ON',@(x) ismember(x,{'ON','OFF'}));
             p.addParameter('Style','Reg',@(x) ismember(x,{'Reg','PRL'}));
+            p.addParameter('FinalSensitivity','OFF',@(x) ismember(x,{'ON','OFF'}));
             
             p.parse(varargin{:});  
             CL          = p.Results.CL;      % also works with vector
@@ -373,6 +374,7 @@ classdef SterileAnalysis < handle
             DANSS       = p.Results.DANSS;
             Stereo      = p.Results.Stereo;
             Style       = p.Results.Style;
+            FinalSensitivity = p.Results.FinalSensitivity;
             
             [DeltamNu41Sq,sin2T4Sq] = obj.Convert2Osci;
             
@@ -462,13 +464,45 @@ classdef SterileAnalysis < handle
             [~,legHandle{numel(legHandle)+1}]= contour(sin2T4Sq,DeltamNu41Sq,obj.chi2-obj.chi2_ref,...
                 [obj.DeltaChi2 obj.DeltaChi2],...
                 PlotArg{:});
-            
+             legStr = [legStr,{sprintf('KATRIN KSN1 %.0f%% C.L. (%s)',obj.ConfLevel,obj.GetPlotTitle('Mode','chi2'))}];
+             %% final sensitivity
+            if strcmp(FinalSensitivity,'ON')
+                DataType_i = obj.RunAnaObj.DataType;
+                AngTF = obj.RunAnaObj.AngularTFFlag;
+                ElossFlag = obj.RunAnaObj.ELossFlag;
+                Budget = obj.RunAnaObj.SysBudget;
+                FakeInitFile = @ref_KSNX_KATRIN_Final;
+                obj.RunAnaObj.DataType = 'Fake';
+                obj.RunAnaObj.DataSet = 'Knm2';
+                
+                obj.RunAnaObj.FakeInitFile = FakeInitFile;
+                obj.RunAnaObj.fixPar = 'E0 Norm Bkg';
+                obj.RunAnaObj.InitFitPar;
+                obj.RunAnaObj.pullFlag = 99;
+                obj.RunAnaObj.AngularTFFlag = 'ON';
+                obj.RunAnaObj.ELossFlag = 'KatrinT2A20';
+                obj.RunAnaObj.SysBudget = 66;
+                obj.LoadGridFile('CheckSmallerN','ON');
+                obj.Interp1Grid('RecomputeFlag','ON');
+                
+                PlotArg = {'LineWidth',2.5,'LineStyle',myLineStyle,'LineColor',rgb('Navy')};
+                [DeltamNu41Sq,sin2T4Sq] = obj.Convert2Osci;
+                [~,legHandle{numel(legHandle)+1}]= contour(sin2T4Sq,DeltamNu41Sq,obj.chi2-obj.chi2_ref,...
+                    [obj.DeltaChi2 obj.DeltaChi2],...
+                    PlotArg{:});
+               
+                obj.RunAnaObj.DataType= DataType_i ;
+                obj.RunAnaObj.DataSet = 'Knm1';
+                obj.RunAnaObj.AngularTFFlag = AngTF;
+                obj.RunAnaObj.ELossFlag = ElossFlag;
+                obj.RunAnaObj.SysBudget = Budget;
+                legStr = [legStr,sprintf('KATRIN Final %.0f%% C.L. (%s)',obj.ConfLevel,obj.GetPlotTitle('Mode','chi2'))];
+            end
             %% leg + appearance
             set(gca,'YScale','log');
             set(gca,'XScale','log');
             xlabel(sprintf('{sin}^2(2\\theta_{ee})'));
             ylabel(sprintf('\\Delta{\\itm}_{41}^2 (eV^2)'));    
-            legStr = [legStr,{sprintf('KATRIN KSN1 %.0f%% C.L. (%s)',obj.ConfLevel,obj.GetPlotTitle('Mode','chi2'))}];
             leg = legend([legHandle{:}],legStr{:},'EdgeColor','none','Location','northoutside');
             
             if strcmp(Style,'Reg')
@@ -494,12 +528,19 @@ classdef SterileAnalysis < handle
               leg.NumColumns = 2;
           end
           
+          if strcmp(FinalSensitivity,'ON')
+              xlim([6e-03 1]);
+              extraStr = '_FinalSensitivity';
+          else
+              extraStr = '';
+          end
+          
           if ~strcmp(SavePlot,'OFF')
               if strcmp(SavePlot,'ON')
-                  plotname = sprintf('%s_OsciContour_%.2gCL.pdf',obj.DefPlotName,obj.ConfLevel);
+                  plotname = sprintf('%s_OsciContour_%.2gCL%s.pdf',obj.DefPlotName,obj.ConfLevel,extraStr);
                   export_fig(gcf,plotname);
               elseif strcmp(SavePlot,'png')
-                  plotname = sprintf('%s_OsciContour_%.2gCL.png',obj.DefPlotName,obj.ConfLevel);
+                  plotname = sprintf('%s_OsciContour_%.2gCL%s.png',obj.DefPlotName,obj.ConfLevel,extraStr);
                   print(gcf,plotname,'-dpng','-r450');
               end
               fprintf('save plot to %s \n',plotname);
@@ -1015,6 +1056,7 @@ classdef SterileAnalysis < handle
             p.addParameter('Mainz','ON',@(x)ismember(x,{'ON','OFF'}));  
             p.addParameter('Troitsk','ON',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('Style','Reg',@(x)ismember(x,{'Reg','PRL'}));
+            p.addParameter('FinalSensitivity','OFF',@(x)ismember(x,{'OFF','ON'}))
             
             p.parse(varargin{:});
             BestFit  = p.Results.BestFit;
@@ -1022,6 +1064,7 @@ classdef SterileAnalysis < handle
             Troitsk  = p.Results.Troitsk;
             Mainz    = p.Results.Mainz;
             Style    = p.Results.Style;
+            FinalSensitivity = p.Results.FinalSensitivity;
             
             fixPar_i = obj.RunAnaObj.fixPar;
             pull_i = obj.RunAnaObj.pullFlag;
@@ -1069,10 +1112,41 @@ classdef SterileAnalysis < handle
 
             legHandle{numel(legHandle)+1} = pPull;
             
-            %% appearance + legend
             legStr = [legStr,{sprintf('KATRIN KSN1 %.0f%% C.L. - {\\itm}_\\nu^2 = 0 eV^2',obj.ConfLevel),...
                 sprintf('KATRIN KSN1 %.0f%% C.L. - {\\itm}_\\nu^2 free - \\sigma({\\itm}_\\nu^2) = 1.94 eV^2',obj.ConfLevel)}];
-           leg =  legend([legHandle{:}],legStr{:},...
+          
+            %% final sensitivity
+            if strcmp(FinalSensitivity,'ON')
+                DataType_i = obj.RunAnaObj.DataType;
+                AngTF = obj.RunAnaObj.AngularTFFlag;
+                ElossFlag = obj.RunAnaObj.ELossFlag;
+                Budget = obj.RunAnaObj.SysBudget;
+                FakeInitFile = @ref_KSNX_KATRIN_Final;
+                obj.RunAnaObj.DataType = 'Fake';
+                obj.RunAnaObj.DataSet = 'Knm2';
+                
+                obj.RunAnaObj.FakeInitFile = FakeInitFile;
+                obj.RunAnaObj.fixPar = 'E0 Norm Bkg';
+                obj.RunAnaObj.InitFitPar;
+                obj.RunAnaObj.pullFlag = 99;
+                obj.RunAnaObj.AngularTFFlag = 'ON';
+                obj.RunAnaObj.ELossFlag = 'KatrinT2A20';
+                obj.RunAnaObj.SysBudget = 66;
+                obj.LoadGridFile('CheckSmallerN','ON');
+                obj.Interp1Grid('RecomputeFlag','ON');
+                pFull = obj.ContourPlot('CL',obj.ConfLevel,'HoldOn','ON',...
+                    'Color',rgb('LightGreen'),'LineStyle','-','BestFit',BestFit);
+                
+                legHandle{numel(legHandle)+1} = pFull;
+                obj.RunAnaObj.DataType= DataType_i ;
+                obj.RunAnaObj.DataSet = 'Knm1';
+                obj.RunAnaObj.AngularTFFlag = AngTF;
+                obj.RunAnaObj.ELossFlag = ElossFlag;
+                obj.RunAnaObj.SysBudget = Budget;
+                  legStr = [legStr,sprintf('KATRIN Final %.0f%% C.L. - {\\itm}_\\nu^2 = 0 eV^2)',obj.ConfLevel)];
+            end
+            %% appearance + legend
+            leg =  legend([legHandle{:}],legStr{:},...
                 'EdgeColor',rgb('Silver'),'Location','southwest');
             set(leg.BoxFace, 'ColorType','truecoloralpha', 'ColorData',uint8(255*[1;1;1;0.8]));
             
@@ -1098,9 +1172,16 @@ classdef SterileAnalysis < handle
             end
             title('');%remove title
             %grid on
+            
+            if strcmp(FinalSensitivity,'ON')
+                xlim([1e-03 0.5]);
+            end
             %% save
             if ~strcmp(SavePlot,'OFF')
                 name_i = strrep(obj.DefPlotName,'_mNuE0BkgNorm','');
+                if strcmp(FinalSensitivity,'ON')
+                    name_i = [name_i,'_FinalSensi'];
+                end
                 if strcmp(SavePlot,'ON')
                     plotname = sprintf('%s_PRL1_%.2gCL.pdf',name_i,obj.ConfLevel);
                     export_fig(gcf,plotname);
@@ -1301,13 +1382,19 @@ classdef SterileAnalysis < handle
             % get runlist-name
             RunList = extractBefore(obj.RunAnaObj.RunData.RunName,'_E0');
             if isempty(RunList)
-                RunList = obj.RunAnaObj.RunData.RunName;  
+                RunList = obj.RunAnaObj.RunData.RunName;
             end
             
             freeParStr =  ConvertFixPar('freePar',obj.RunAnaObj.fixPar,'Mode','Reverse');
-            filename = sprintf('%sKSN1_GridSearch_%s_%s_%s_%.0feVrange_%s_%.0fnGrid%s.mat',...
-                savedir,RunList,obj.RunAnaObj.DataType,strrep(freeParStr,' ',''),...
-                obj.range,obj.RunAnaObj.chi2,obj.nGridSteps,extraStr);
+            if strcmp(obj.RunAnaObj.DataType,'Fake')
+                filename = sprintf('%sKSNX_GridSearch_%s_%s_%s_%.0feVrange_%s_%.0fnGrid%s.mat',...
+                    savedir,func2str(obj.RunAnaObj.FakeInitFile),obj.RunAnaObj.DataType,strrep(freeParStr,' ',''),...
+                    obj.range,obj.RunAnaObj.chi2,obj.nGridSteps,extraStr);
+            else
+                filename = sprintf('%sKSN1_GridSearch_%s_%s_%s_%.0feVrange_%s_%.0fnGrid%s.mat',...
+                    savedir,RunList,obj.RunAnaObj.DataType,strrep(freeParStr,' ',''),...
+                    obj.range,obj.RunAnaObj.chi2,obj.nGridSteps,extraStr);
+            end
   
         end  
         function plotname = DefPlotName(obj)

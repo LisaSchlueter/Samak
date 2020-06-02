@@ -61,8 +61,8 @@ S.LoadGridFile('CheckSmallerN','ON','CheckLargerN','ON'); % if CheckSmallerN als
 S.InterpMode = 'spline'; % waring: if contour is closed, spline interp sometimes sensitive to artefacts! Switch to "lin" in this case
 S.Interp1Grid('RecomputeFlag','ON');% interpolate chi2 map -> nicer appearance of all plots. some
 
-%% 5. contour plot in oscillation parameter space (you can switch on/off foreign contours, all on by default
-Arg = {'SavePlot','ON','BestFit','OFF'};
+% 5. contour plot in oscillation parameter space (you can switch on/off foreign contours, all on by default
+Arg = {'SavePlot','png','BestFit','OFF','FinalSensitivity','ON'};
 S.ContourPlotOsci(Arg{:});
 
 

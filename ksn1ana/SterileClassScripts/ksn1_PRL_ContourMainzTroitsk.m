@@ -8,7 +8,7 @@
 DataType = 'Real';
 %%
 RunAnaArg = {'RunList','KNM1',...
-    'fixPar','mNu E0 Norm Bkg',...
+    'fixPar','E0 Norm Bkg',...
     'DataType',DataType,...
     'FSDFlag','SibilleFull',...
     'ELossFlag','KatrinT2',...
@@ -45,17 +45,10 @@ S.Interp1Grid('RecomputeFlag','ON');% interpolate chi2 map -> nicer appearance o
 S.FindBestFit;
 S.CompareBestFitNull;
 
-%% 3. contour plot for some confidence levels
-
-S.RunAnaObj.SysBudget = 24;
-S.RunAnaObj.ELossFlag = 'KatrinT2';
-S.SysEffect='all';
-S.LoadGridFile('CheckSmallerN','ON','CheckLargerN','ON'); % if CheckSmallerN also look for grid with more/less nGridSteps
-S.InterpMode = 'spline'; % waring: if contour is closed, spline interp sometimes sensitive to artefacts! Switch to "lin" in this case
-S.Interp1Grid('RecomputeFlag','ON');% interpolate chi2 map -> nicer appearance of all plots. some
-S.ContourPlot('BestFit','OFF','SavePlot','OFF','CL',[95],'HoldOn','OFF');
-
 %% S.InterpMode = 'lin'; %'spline' sometimes causes weird artefacts, but looks smoother than 'lin'
-Arg = {'SavePlot','ON','BestFit','OFF','Style','PRL'};
+Arg = {'SavePlot','ON','BestFit','OFF','Style','PRL','FinalSensitivity','ON'};
 S.PlotPRL1(Arg{:});
+
+
+
 

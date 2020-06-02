@@ -31,7 +31,7 @@ ELossFlag     = p.Results.ELossFlag;
 AngularTFFlag = p.Results.AngularTFFlag;
 
 if strcmp(chi2,'chi2CMShape')
-    NonPoissonScaleFactor=1.064;
+    NonPoissonScaleFactor=1;
 else
     NonPoissonScaleFactor=1;
 end
@@ -136,8 +136,8 @@ else
     FitResults_Null = T.FitResult;
     
     %% define msq4 - sin2t4 grid
-    sin2T4      = logspace(-4,log10(0.5),nGridSteps); %linspace(0.001,0.5,nGridSteps)
-    mnu4Sq      = logspace(0,log10((range+5)^2),nGridSteps)';
+    sin2T4      = logspace(log10(4e-04),log10(0.5),nGridSteps); %linspace(0.001,0.5,nGridSteps)
+    mnu4Sq      = logspace(-1,log10((range+5)^2),nGridSteps)';
     mnu4Sq      = repmat(mnu4Sq,1,nGridSteps);
     sin2T4      = repmat(sin2T4,nGridSteps,1);
     %% make copy of model for parallel computing
