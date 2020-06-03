@@ -168,7 +168,7 @@ else
             T.ModelObj.ComputeTBDDS;
             T.ModelObj.ComputeTBDIS;
             TBDIS_i = T.ModelObj.TBDIS';
-            T.SimulateStackedRuns;
+            T.SimulateStackRuns;
         else
             T.ModelObj.ComputeTBDDS;
             T.ModelObj.ComputeTBDIS;
