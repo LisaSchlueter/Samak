@@ -1916,9 +1916,9 @@ classdef RunSensitivity < handle
             legend boxoff;
             
             % axis style etc.
-            PrettyFigureFormat('FontSize',LocalFontSize);
-          % PRLFormat;
-           %set(gca,'FontSize',LocalFontSize)
+           % PrettyFigureFormat('FontSize',LocalFontSize);
+           PRLFormat;
+           set(gca,'FontSize',LocalFontSize)
             %%
             if ~strcmp(SavePlot,'OFF')
                 savedir = [getenv('SamakPath'),'/tritium-data/FC/plots/'];

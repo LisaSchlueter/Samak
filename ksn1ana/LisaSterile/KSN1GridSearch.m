@@ -17,6 +17,9 @@ p.addParameter('pullFlag',99,@(x)isfloat(x)); % if above 12 --> no pull
 p.addParameter('SysBudget',22,@(x)isfloat(x));
 p.addParameter('ELossFlag','KatrinT2',@(x)ischar(x));
 p.addParameter('AngularTFFlag','OFF',@(x)ismember(x,{'ON','OFF'})); 
+p.addParameter('Twin_mNu4Sq',0,@(x)isfloat(x));
+p.addParameter('Twin_sin2T4',0,@(x)isfloat(x));
+ 
 p.parse(varargin{:});
 
 range         = p.Results.range;
@@ -33,6 +36,8 @@ pullFlag      = p.Results.pullFlag;
 SysBudget     = p.Results.SysBudget;
 ELossFlag     = p.Results.ELossFlag;
 AngularTFFlag = p.Results.AngularTFFlag;
+Twin_mNu4Sq   = p.Results.Twin_mNu4Sq;
+Twin_sin2T4   = p.Results.Twin_sin2T4;
 
 if strcmp(chi2,'chi2CMShape')
     NonPoissonScaleFactor=1.064;
@@ -59,7 +64,16 @@ if ~strcmp(ELossFlag,'KatrinT2')
 end
 
 if ~strcmp(AngularTFFlag,'OFF')
-     extraStr = [extraStr,'_AngTF'];
+    extraStr = [extraStr,'_AngTF'];
+end
+
+if Twin_sin2T4~=0
+    extraStr = [extraStr,sprintf('_sinT4Sq%.3g',Twin_sin2T4)];
+end
+
+
+if Twin_mNu4Sq~=0
+    extraStr = [extraStr,sprintf('_mNu4Sq%.1g',Twin_mNu4Sq)];
 end
 
 if isfloat(RandMC) && strcmp(DataType,'Twin')
@@ -119,7 +133,7 @@ else
     
     T = MultiRunAnalysis(RunAnaArg{:});
     T.exclDataStart = T.GetexclDataStart(range);
-    
+     
     if strcmp(T.chi2,'chi2CMShape') && ~strcmp(SysEffect,'all')
         if strcmp(SysEffect,'Bkg')
             T.ComputeCM('SysEffect',struct('FSD','OFF'),'BkgCM','ON');
@@ -147,13 +161,25 @@ else
     if isfloat(RandMC) && strcmp(DataType,'Twin')
         % change to randomized MC data
         T.InitModelObj_Norm_BKG('RecomputeFlag','ON');
-        T.ModelObj.ComputeTBDDS;
-        T.ModelObj.ComputeTBDIS;
-        TBDIS_mc = mvnrnd(T.RunData.TBDIS',T.FitCMShape,1)';
+        if Twin_mNu4Sq~=0 || Twin_sin2T4~=0
+            T.ModelObj.BKG_RateSec_i = T.ModelObj.BKG_RateSec;
+            T.ModelObj.normFit_i = T.ModelObj.normFit;         
+            T.ModelObj.SetFitBiasSterile(Twin_mNu4Sq,Twin_sin2T4);
+            T.ModelObj.ComputeTBDDS;
+            T.ModelObj.ComputeTBDIS;
+            TBDIS_i = T.ModelObj.TBDIS';
+            T.SimulateStackedRuns;
+        else
+            T.ModelObj.ComputeTBDDS;
+            T.ModelObj.ComputeTBDIS;
+            TBDIS_i = T.RunData.TBDIS';
+        end
+        
+        TBDIS_mc = mvnrnd(TBDIS_i,T.FitCMShape,1)';
         T.RunData.TBDIS = TBDIS_mc;
-        T.RunData.TBDISE = sqrt(TBDIS_mc); 
+        T.RunData.TBDISE = sqrt(TBDIS_mc);
     end
-    
+ 
     %% null hypothesis : no steriles
     T.Fit;
     FitResults_Null = T.FitResult;

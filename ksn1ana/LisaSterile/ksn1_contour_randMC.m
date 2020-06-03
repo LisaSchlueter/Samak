@@ -8,20 +8,26 @@ DataType = 'Twin';
 freePar = 'E0 Bkg Norm';
 RunList = 'KNM1';
 SmartGrid = 'OFF';
-Mode = 'New';
+Mode = 'New_Sterile';
+Twin_mNu4Sq   = 1e2;
+Twin_sin2T4   = 0.06;
+
 switch Mode
     case 'Old'
         RandMC = [1:151,500:643]*1e3;
         SysBudget =22;
-    case 'New'1
+    case 'New'
           SysBudget =24;
         if range== 95      
             RandMC = 1:1500;
         elseif range==65
             RandMC = [1:654,868:931,1219:1500];
         elseif range==40
-            RandMC = [1:1428,1498:2000];
+            RandMC = [1:2000];
         end
+    case 'New_Sterile'
+        SysBudget =24;    
+        RandMC = [1:1000];      
 end
 %% init
 nContours = numel(RandMC);
@@ -50,7 +56,9 @@ for i=RandMC
         'SmartGrid',SmartGrid,...
         'RecomputeFlag','OFF',...
         'RandMC',i,...
-        'SysBudget',SysBudget);
+        'SysBudget',SysBudget,...
+        'Twin_mNu4Sq',Twin_mNu4Sq,...
+        'Twin_sin2T4',Twin_sin2T4);
     
     chi2tmp   = chi2{i};
 
