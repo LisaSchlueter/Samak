@@ -27,7 +27,7 @@ switch Mode
         end
     case 'New_Sterile'
         SysBudget =24;    
-        RandMC = [1:1000];      
+        RandMC = [1:92,149:290,396:403];      
 end
 %% init
 nContours = numel(RandMC);

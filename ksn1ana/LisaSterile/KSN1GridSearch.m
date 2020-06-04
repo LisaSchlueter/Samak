@@ -167,8 +167,7 @@ else
             T.ModelObj.SetFitBiasSterile(Twin_mNu4Sq,Twin_sin2T4);
             T.ModelObj.ComputeTBDDS;
             T.ModelObj.ComputeTBDIS;
-            TBDIS_i = T.ModelObj.TBDIS';
-            T.SimulateStackRuns;
+            TBDIS_i = T.ModelObj.TBDIS'; 
         else
             T.ModelObj.ComputeTBDDS;
             T.ModelObj.ComputeTBDIS;
@@ -179,11 +178,15 @@ else
         T.RunData.TBDIS = TBDIS_mc;
         T.RunData.TBDISE = sqrt(TBDIS_mc);
     end
- 
+    
     %% null hypothesis : no steriles
     T.Fit;
     FitResults_Null = T.FitResult;
-  
+    if isfloat(RandMC) && strcmp(DataType,'Twin')
+        if Twin_mNu4Sq~=0 || Twin_sin2T4~=0
+            T.SimulateStackRuns;
+        end
+    end
     %% reference fit to find global minimum (if this fails, chi2min is found by grid search)
     % stop doing this -> makes the grid search too slow
     % do it later, in cases needed
