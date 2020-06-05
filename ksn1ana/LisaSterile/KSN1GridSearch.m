@@ -83,7 +83,7 @@ else
     savedir = [getenv('SamakPath'),'ksn1ana/LisaSterile/results/'];
 end
 
-if pullFlag<=12
+if pullFlag<=14
       extraStr = sprintf('%s_pull%.0f',extraStr,pullFlag);
 end
 MakeDir(savedir);

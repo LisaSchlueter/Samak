@@ -936,10 +936,11 @@ classdef SterileAnalysis < handle
                    end
                elseif obj.range==40
                      if strcmp(PlotStat,'ON')
-                       pF_bfStat = plot(3.676e-02, 7.218e+01,'o','MarkerSize',8,'Color',pFStat.Color,'LineWidth',pFStat.LineWidth);
-                   end
+                      % pF_bfStat = plot(3.676e-02, 7.218e+01,'o','MarkerSize',8,'Color',pFStat.Color,'LineWidth',pFStat.LineWidth);
+                       pF_bfStat = plot(0.036, 73.3,'o','MarkerSize',8,'Color',pFStat.Color,'LineWidth',pFStat.LineWidth);
+                     end
                    if strcmp(PlotTot,'ON')
-                       pF_bfSys = plot(3.247e-02, 7.218e+01,'o','MarkerSize',8,'Color',pFSys.Color,'LineWidth',pFSys.LineWidth);
+                       pF_bfSys = plot(0.034, 74.3,'o','MarkerSize',8,'Color',pFSys.Color,'LineWidth',pFSys.LineWidth);
                    end
                end
            end

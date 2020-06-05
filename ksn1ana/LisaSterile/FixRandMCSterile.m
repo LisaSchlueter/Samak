@@ -11,7 +11,7 @@ Twin_mNu4Sq   = 1e2;
 Twin_sin2T4   = 0.06;
 
 SysBudget =24;
-RandMC = [1:94,148:292,394:405];
+RandMC = [3:94,148:292,394:405];
 
 if range<=40
     FSDFlag = 'Sibille0p5eV';
@@ -39,9 +39,8 @@ T = MultiRunAnalysis(RunAnaArg{:});
 T.exclDataStart = T.GetexclDataStart(range);
 
 D  = repmat(T,numel(RandMC),1);
-
-parfor i=RandMC
-    progressbar(i/nContours)
+%%
+for i=1:numel(RandMC)
     [~,~,~,~,savefile_tmp] = KSN1GridSearch('range',range,...
         'nGridSteps',nGridSteps,...
         'chi2',chi2Str,...
@@ -50,7 +49,7 @@ parfor i=RandMC
         'RunList',RunList,...
         'SmartGrid',SmartGrid,...
         'RecomputeFlag','OFF',...
-        'RandMC',i,...
+        'RandMC',RandMC(i),...
         'SysBudget',SysBudget,...
         'Twin_mNu4Sq',Twin_mNu4Sq,...
         'Twin_sin2T4',Twin_sin2T4);
@@ -69,5 +68,6 @@ parfor i=RandMC
     
     FitResults_NoSterile = d.FitResults_Null;
     FitResults_Null = D(i).FitResult;
-    parsaveSterile(savefile_tmp,FitResults_Null,FitResults_NoSterile,chi2_ref);
+    %parsaveSterile(savefile_tmp,FitResults_Null,FitResults_NoSterile,chi2_ref);
+    save(savefile_tmp,'FitResults_Null','FitResults_NoSterile','chi2_ref','-append');
 end

@@ -27,7 +27,7 @@ switch Mode
         end
     case 'New_Sterile'
         SysBudget =24;    
-        RandMC = [1:92,149:290,396:403];      
+        RandMC = [1:344,394:456,550:672,728:849];      
 end
 %% init
 nContours = numel(RandMC);
@@ -69,7 +69,7 @@ for i=RandMC
     [row, col] = find(chi2tmp == min(chi2tmp(:)));
     mnu4Sq_bf(i) =  mnu4Sqtmp(col,row);
     sin2T4_bf(i)  = sin2T4tmp(col,row);
-    chi2min_bf(i) =min(chi2tmp(:));
+    chi2min_bf(i) = min(chi2tmp(:));
     chi2min_null(i) = FitResults_Null.chi2min;
     DeltaChi2(i) = chi2min_null(i)-min(min(chi2tmp));
 end

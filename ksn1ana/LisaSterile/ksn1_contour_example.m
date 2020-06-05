@@ -2,18 +2,18 @@
 
 %% settings
 CL =95;
-range = 95;%65
+range = 40;%65
 nGridSteps = 25;
 chi2Str = 'chi2CMShape';
-mySysEffect = 'RF_RX';
-SysBudget = 252; %254
-DataType = 'Twin';
-freePar = 'E0 Bkg Norm';
+mySysEffect = 'all';
+SysBudget = 24; %254
+DataType = 'Real';
+freePar = 'mNu E0 Bkg Norm';
 RunList = 'KNM1';
 SmartGrid = 'OFF';
 ELossFlag = 'KatrinT2';
 AngularTFFlag = 'OFF'; % OFF
-pullFlag = 99;
+pullFlag = 13;
 %% plot options
 PlotContour = 'OFF';
 PlotGrid    = 'OFF';

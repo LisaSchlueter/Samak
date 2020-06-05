@@ -40,7 +40,7 @@ switch S.RunAnaObj.DataType
         S.InterpMode = 'spline';
     case 'Twin'
          Arg = {'SavePlot','ON'};
-           S.InterpMode = 'spline';
+       S.InterpMode = 'spline';
 end
 S.PlotFitriumSamak(Arg{:},'PlotStat','ON');
  

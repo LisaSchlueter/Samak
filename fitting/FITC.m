@@ -434,6 +434,16 @@ classdef FITC < handle
                 mNuSqtol_MT =  1.94; % eV^2
                 PullTerm = PullTerm + (par(1)-0)^2/mNuSqtol_MT^2;
             end
+            
+            if  any(ismember(obj.pullFlag,13)) % nu-mass pull: mainz&troitzk
+                E0tol1eV =  1; % eV
+                PullTerm = PullTerm + (par(2)-0)^2/E0tol1eV^2;
+            end
+            
+            if  any(ismember(obj.pullFlag,13)) % nu-mass pull: mainz&troitzk
+                E0tol2eV =  2; % eV
+                PullTerm = PullTerm + (par(2)-0)^2/E0tol2eV^2;
+            end
         end
         function chi2 = chi2function(obj,par)
             
