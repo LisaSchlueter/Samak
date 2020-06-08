@@ -44,9 +44,9 @@ S.InterpMode = 'lin'; % waring: if contour is closed, spline interp sometimes se
 S.Interp1Grid('RecomputeFlag','ON');% interpolate chi2 map -> nicer appearance of all plots. some
 S.FindBestFit;
 S.CompareBestFitNull;
-
-% S.InterpMode = 'lin'; %'spline' sometimes causes weird artefacts, but looks smoother than 'lin'
-Arg = {'SavePlot','ON','BestFit','OFF','Style','PRL','FinalSensitivity','OFF'};
+%%
+S.InterpMode = 'lin'; %'spline' sometimes causes weird artefacts, but looks smoother than 'lin'
+Arg = {'SavePlot','OFF','BestFit','OFF','Style','PRL','FinalSensitivity','OFF','FreemNuSq','OFF'};
 S.PlotPRL1(Arg{:});
 
 

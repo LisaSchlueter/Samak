@@ -23,11 +23,11 @@ switch Mode
         elseif range==65
             RandMC = [1:654,868:931,1219:1500];
         elseif range==40
-            RandMC = [1:2000];
+            RandMC = 1:2000;
         end
     case 'New_Sterile'
         SysBudget =24;    
-        RandMC = [1:344,394:456,550:672,728:849];      
+        RandMC = 1:1000;      
 end
 %% init
 nContours = numel(RandMC);

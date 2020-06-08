@@ -3795,7 +3795,7 @@ end
             if strcmp(obj.SysEffect.RF_EL,'ON') && strcmp(obj.SysEffect.RF_BF,'ON') && strcmp(obj.SysEffect.RF_RX,'ON') % all RF Effects ON
                 %all 'ON'
                 obj.ComputeCM_RF;
-                CovMatFracCombi = obj.MultiCovMatFrac.CM_RF;
+                CovMatFracCombi = obj.MultiCovMatFrac.CM_RF(1:obj.StudyObject.nqU,1:obj.StudyObject.nqU);
                 if strcmp(PlotSaveCM,'ON')
                     obj.PlotCM('PlotEffect','Response Function (all)','savePlot','ON','savename',SysBudget_Label);
                 end

@@ -2,11 +2,11 @@
 
 %% settings
 CL =95;
-range = 40;%65
-nGridSteps = 25;
+range = 40;
+nGridSteps = 50;
 chi2Str = 'chi2CMShape';
 mySysEffect = 'all';
-SysBudget = 24; %254
+SysBudget = 24; 
 DataType = 'Real';
 freePar = 'mNu E0 Bkg Norm';
 RunList = 'KNM1';

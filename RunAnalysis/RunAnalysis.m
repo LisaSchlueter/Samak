@@ -2059,7 +2059,8 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             p.addParameter('qUDisp','Rel',@(x)ismember(x,{'Rel','Abs'}));
             p.addParameter('ring',1,@(x)isfloat(x));
             p.addParameter('MaxBkgRange',40,@(x)isfloat(x)); %(eV) maximum range of bkg points shown
-            
+            p.addParameter('TickDir','In',@(x)ismember(x,{'In','Out'}));
+
             p.parse(varargin{:});
             saveplot       = p.Results.saveplot;
             ResidualsFlag  = p.Results.ResidualsFlag;
@@ -2074,6 +2075,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             ring           = p.Results.ring;
             DisplayMTD     = p.Results.DisplayMTD;
             MaxBkgRange    = p.Results.MaxBkgRange;
+            TickDir        = p.Results.TickDir;
             obj.ErrorBarScaling= p.Results.ErrorBarScaling;
             
            BkgEnd = find(obj.RunData.qU(:,1)>=obj.ModelObj.Q+MaxBkgRange,1);
@@ -2257,7 +2259,12 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                  ax.XAxis.Exponent = 0;
              end
              
-               ax1 = gca;
+             ax1 = gca;
+             
+             if strcmp(TickDir,'Out')
+                 set(gca,'TickDir','out');
+                 ax1.Position = [ax1.Position(1) ax1.Position(2)+0.01, ax1.Position(3:4)];
+             end
              %% residuals
              switch ResidualsFlag
                  case 'Norm' %normalized Residuals
@@ -2403,10 +2410,14 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                     set(gca,'TickLength',[0.01 0.01]);
                     set(gca,'FontSize',LocalFontSize);
              end
+             
              if strcmp(qUDisp,'Abs')
                  xticks(myxticks);
                  ax = gca;
                  ax.XAxis.Exponent = 0;
+             end
+             if strcmp(TickDir,'Out')
+                 set(gca,'TickDir','out');
              end
              
              if strcmp(qUDisp,'Rel')
@@ -2423,8 +2434,9 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
              ax = gca; ax2 = gca;
              mypos = ax.Position;
              ax.Position = [mypos(1)+0.05 mypos(2)+0.01 mypos(3:4)];
+             
              linkaxes([s1,s2],'x');
-               if ~isempty(XLims)
+             if ~isempty(XLims)
                     xlim([min(XLims),max(XLims)])
                 end
              if strcmp(DisplayStyle,'PRL')  || strcmp(DisplayMTD,'ON')
@@ -2464,10 +2476,13 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                     xlim([min(XLims),max(XLims)])
                 end
                % linkaxes([s1,s2,s3],'x'); 
-                mylim = ylim; 
-              %  text(-57,mean(mylim),'c)','FontSize',get(gca,'FontSize')+4,'FontName',get(gca,'FontName'));
-              %    text( textx,max(mylim)*0.8,'c)','FontSize',get(gca,'FontSize')+4,...
+               mylim = ylim;
+               %  text(-57,mean(mylim),'c)','FontSize',get(gca,'FontSize')+4,'FontName',get(gca,'FontName'));
+               %    text( textx,max(mylim)*0.8,'c)','FontSize',get(gca,'FontSize')+4,...
                %       'FontName',get(gca,'FontName'),'FontWeight',get(gca,'FontWeight'));
+               if strcmp(TickDir,'Out')
+                   set(gca,'TickDir','out');
+               end
              else
                  xlabel(xstr);
              end

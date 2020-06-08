@@ -1060,6 +1060,7 @@ classdef SterileAnalysis < handle
             p.addParameter('Troitsk','ON',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('Style','Reg',@(x)ismember(x,{'Reg','PRL'}));
             p.addParameter('FinalSensitivity','OFF',@(x)ismember(x,{'OFF','ON'}))
+            p.addParameter('FreemNuSq','OFF',@(x)ismember(x,{'OFF','ON'})) % without pull
             
             p.parse(varargin{:});
             BestFit  = p.Results.BestFit;
@@ -1068,6 +1069,7 @@ classdef SterileAnalysis < handle
             Mainz    = p.Results.Mainz;
             Style    = p.Results.Style;
             FinalSensitivity = p.Results.FinalSensitivity;
+            FreemNuSq = p.Results.FreemNuSq;
             
             fixPar_i = obj.RunAnaObj.fixPar;
             pull_i = obj.RunAnaObj.pullFlag;
@@ -1148,6 +1150,22 @@ classdef SterileAnalysis < handle
                 obj.RunAnaObj.SysBudget = Budget;
                   legStr = [legStr,sprintf('KATRIN Final %.0f%% C.L. - {\\itm}_\\nu^2 = 0 eV^2)',obj.ConfLevel)];
             end
+            
+            if strcmp(FreemNuSq,'ON')
+                obj.RunAnaObj.fixPar = 'mNu E0 Norm Bkg'; obj.RunAnaObj.InitFitPar;
+                obj.RunAnaObj.pullFlag = 99;
+                obj.LoadGridFile('CheckSmallerN','ON');
+                obj.Interp1Grid('RecomputeFlag','ON');
+                pfree = obj.ContourPlot('CL',obj.ConfLevel,'HoldOn','ON',...
+                    'Color',rgb('Silver'),'LineStyle','-','BestFit',BestFit);
+                
+                legHandle{numel(legHandle)+1} = pfree;
+                
+                legStr = [legStr,{...
+                    sprintf('KATRIN KSN1 %.0f%% C.L. - {\\itm}_\\nu^2 free',obj.ConfLevel)}];
+                
+            end
+            
             %% appearance + legend
             leg =  legend([legHandle{:}],legStr{:},...
                 'EdgeColor',rgb('Silver'),'Location','southwest');
@@ -1375,7 +1393,7 @@ classdef SterileAnalysis < handle
                      extraStr = [extraStr,'_AngTF'];
                  end
                  
-                 if obj.RunAnaObj.pullFlag<=12
+                 if obj.RunAnaObj.pullFlag<=14
                      extraStr = sprintf('%s_pull%.0f',extraStr,obj.RunAnaObj.pullFlag);
                  end
                  
