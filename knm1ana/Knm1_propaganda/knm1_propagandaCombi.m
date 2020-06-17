@@ -1,106 +1,78 @@
 
-%% Load Data
-[mBetaSquared , mBetaSquaredPDG]  = mBetaSquaredExperiments();
 
-%% Plot
-LocalFontSize = 18;
-MarkerSize = 8;
-
-savefile=sprintf('plots/m2resultsVsyear2019.png');
-fig1 = figure('Units','normalized','Position',[0.1,0.1,0.4,1.2]);
+fcombi = figure('Units','normalized','Position',[0.1,0.1,0.5,1]);
 s1 = subplot(3,1,1);
+[leg1,ax1,zoomBox] = m2resultsVsyear2019('Combi','ON','LegPos','northoutside','SavePlot','OFF','LegOpt','Short');
 
-[pdg1 pdg2]= boundedline([mBetaSquared(1).Year-1 mBetaSquared(end).Year+1],[-0.6 -0.6],1.9,'alpha','cmap',rgb('CadetBlue'));
-hold on
-for i=1:12
-    hz(i)=errorbar(mBetaSquared(i).Year, mBetaSquared(i).mBetaSquared,mBetaSquared(i).Tot,...
-    'Marker',mBetaSquared(i).Marker,'MarkerSize',MarkerSize,'LineWidth',1,'Color','Black',...
-    'MarkerEdgeColor',mBetaSquared(i).Color,'MarkerFaceColor',mBetaSquared(i).Color);
-    hz(i).CapSize = 0; hz(i).LineStyle= 'none';hz(i).LineWidth= 3;
-end
+mypos1 = ax1.Position;
+%ax1.Position = [mypos1(1) mypos1(2)-0.12 mypos1(3) mypos1(4)+0.15];
+ax1.XTickLabel = '';
+ax1.XLabel.String = '';%(' ');
 
+%%
+s2 = subplot(3,1,2);
+m2sysVsyear2019('Combi','ON','SavePlot','OFF')
+ax2 = gca;
+mypos2 = ax2.Position;
+xticklabels('');
+xlabel('');
+ylabel({sprintf('{\\itm}_\\nu^2 systematic');sprintf(' uncertainty (eV^2)')});
+set(gca,'TickDir','out');
 
-ylabel(sprintf('{\\itm}_\\nu^2 (eV^2)'));%c^4 grid on
-
-PRLFormat
-set(gca,'FontSize',LocalFontSize);
-set(get(gca,'XLabel'),'FontSize',LocalFontSize+4);
-set(get(gca,'YLabel'),'FontSize',LocalFontSize+4);
-set(gca,'XMinorTick','off');
-xticklabels('')
-box on;
-ylim([-250 110])
-xlim([mBetaSquared(1).Year-1 mBetaSquared(12).Year+1]);
-l=legend([hz(10) hz(11)  hz(12) pdg2],...
-    [mBetaSquared(10).Experiment ' '],...
-    [mBetaSquared(11).Experiment ' '],...
-    [mBetaSquared(12).Experiment ' '],...
-    [mBetaSquaredPDG.Label ' '],...
-    'FontSize',LocalFontSize-7,'Location','northoutside');
-l.NumColumns=2;
-legend boxoff;
-
-% Zoom
-hold on
-
-z = axes(gcf,'position',[0.44 0.73 .45 .1],'FontSize',LocalFontSize-4,'XAxisLocation', 'top');
-box on 
-[pdg1 pdg2]=boundedline([mBetaSquared(1).Year-1 mBetaSquared(end).Year+1],[-0.6 -0.6],1.9,'alpha','cmap',rgb('CadetBlue'));
-hold on;
-for i=10:13
-    hz(i)=errorbar(mBetaSquared(i).Year, mBetaSquared(i).mBetaSquared,mBetaSquared(i).Tot,...
-    'Marker',mBetaSquared(i).Marker,'MarkerSize',MarkerSize,'LineWidth',1,'Color','Black',...
-    'MarkerEdgeColor',mBetaSquared(i).Color,'MarkerFaceColor',mBetaSquared(i).Color);
-    hz(i).MarkerSize = 16; hz(i).CapSize = 0; %z.FontSize= 20;
-    hz(i).LineStyle= 'none';hz(i).LineWidth= 5;legend hide
-    xlim([2004 2021])
-hold on
-end
-xticks([2005 2011 mBetaSquared(12).Year-0.5]);
-yticks([-3 -2 -1 0 1 2 ]);
-ylim([-3.2 2])
-set(gca,'XAxisLocation', 'top')
-grid off
-ylabel(sprintf('{\\it m}_\\nu^2 (eV^2)'));%c^4 
-
-ylim([-4.5 2.8])
-PRLFormat
-set(gca,'FontSize',LocalFontSize);
-set(gca,'XMinorTick','off');
-set(get(gca,'XLabel'),'FontSize',LocalFontSize+2);
-set(get(gca,'YLabel'),'FontSize',LocalFontSize+2);
-% % export_fig(gcf,savefile,'-r300');
-% % export_fig(gcf,strrep(savefile,'.png','.pdf'));
-
-%% subplot 2 
-% Load Data
-[mBetaSquared , mBetaSquaredPDG]  = mBetaSquaredExperiments();
-
-subplot(3,1,2);
-
-stem([mBetaSquared.Year], [mBetaSquared.Sys],'LineStyle','--','Color','Black','LineWidth',2,'Marker','none');
-hold on
-for i=1:12
-    hz(i)=errorbar(mBetaSquared(i).Year, mBetaSquared(i).Sys,mBetaSquared(i).Sys*0,'Marker',mBetaSquared(i).Marker,'MarkerSize',MarkerSize,'LineWidth',1,'Color','Black',...
-     'MarkerEdgeColor',mBetaSquared(i).Color,'MarkerFaceColor',mBetaSquared(i).Color);
-     hz(i).CapSize = 0; hz(i).LineStyle= 'none';hz(i).LineWidth= 3;
-    hold on
-end
-
-xlabel('Year');
-ylabel(sprintf('{\\itm}_\\nu^2 systematic uncertainty (eV^2)'));
-
-grid on
-
-PRLFormat
-set(gca,'FontSize',LocalFontSize);
-set(get(gca,'XLabel'),'FontSize',LocalFontSize+4);
-set(get(gca,'YLabel'),'FontSize',LocalFontSize+4)
-set(gca,'XMinorTick','off');
-set(gca,'YScale','log');
-box on;
-xlim([mBetaSquared(1).Year-1 mBetaSquared(12).Year+1]);
-ylim([1e-1 3.3*max([mBetaSquared.Sys])])
-
-
+grid off;
 %% subplot 3
+s3 = subplot(3,1,3);
+m2statVsyear2019('Combi','ON','SavePlot','OFF')
+ax3 = gca;
+mypos3 = ax3.Position;
+grid off;
+ylabel({sprintf('{\\itm}_\\nu^2 statistical');sprintf(' uncertainty (eV^2)')});
+set(gca,'TickDir','out');
+%% shift plots: make space for legend and reduce white space
+ax1.Position = [mypos1(1)+0.05 mypos1(2)-0.125 mypos1(3) mypos1(4)+0.2];
+ax2.Position = [mypos2(1)+0.05 mypos2(2)-0.072 mypos2(3) mypos2(4)+0.023];
+ax3.Position = [mypos3(1)+0.05 mypos3(2)-0.02 mypos3(3) mypos3(4)+0.023];
+
+zoomBox.Position = [0.542 0.605 .393 .16];% [0.542 0.58 .393 .16];
+
+zoomBox.Legend.delete
+zoomBox.YLim= [-4.5 3.5];
+zoomBox.YTick = [-2 0 2];
+zoomBox.XTick = [2005 2011 2019];
+zoomBox.FontSize = 22;
+ax1.YLabel.FontSize = 24.5;
+ax2.YLabel.FontSize = 24.5;
+ax3.YLabel.FontSize = 24.5;
+ax3.XLabel.FontSize = 24.5;
+
+zoomBox.XAxis.FontSize = ax1.XAxis.FontSize;
+zoomBox.YAxis.FontSize = ax1.YAxis.FontSize;
+zoomBox.YLabel.FontSize = ax1.YLabel.FontSize;
+ax2.XTick = [];
+ax2.YTick= [ 1 10 1e2];
+ax3.YTick= [ 1 10 1e2];
+ax2.YLabel.Position(1) = 1.9867e+03;
+ax2.YLabel.Position(2) = 5.5;
+ax3.YLabel.Position(1) = 1.9867e+03;
+ax1.YLabel.Position(1) = 1.986e+03;
+linkaxes([s1,s2,s3],'x')
+ax1.XLim = [1.98951e3 2021];
+ax1.YLim = [-240 70];
+ax2.YLim = [0.1 500];
+ax3.YLim = [0.1 500];
+zoomBox.XLim = [2004.2 2020.2];
+set(gca,'TickDir','out');
+
+leg1.FontSize = 15.4;
+leg1.Position = [0.122   0.91    0.88    0.0916];%.895
+%% text abc)
+text(1990,1.9e11,'a)','FontSize',get(gca,'FontSize')+4,'FontName',get(gca,'FontName'));   
+text(1990,1.2e6,'b)','FontSize',get(gca,'FontSize')+4,'FontName',get(gca,'FontName'));            
+text(1990,230,'c)','FontSize',get(gca,'FontSize')+4,'FontName',get(gca,'FontName'));            
+
+%%
+savedir = [getenv('SamakPath'),'knm1ana/Knm1_propaganda/plots/'];
+MakeDir(savedir);
+savename = sprintf('%sknm1_m2Vsyear2019Combi',savedir);
+print(gcf,[savename,'.png'],'-dpng','-r300');
+export_fig(gcf,[savename,'.pdf']);

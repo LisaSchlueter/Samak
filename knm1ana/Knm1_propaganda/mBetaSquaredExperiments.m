@@ -57,7 +57,7 @@ mBetaSquared(4).Tot=sqrt(mBetaSquared(4).Stat^2+mBetaSquared(4).Sys^2);
 mBetaSquared(4).Marker='d';
 mBetaSquared(4).Color=rgb('CadetBlue');
 
-mBetaSquared(5).Experiment='China';
+mBetaSquared(5).Experiment='Beijing';
 mBetaSquared(5).Label='Sun 1993';
 mBetaSquared(5).Year=1993.5;
 mBetaSquared(5).Reference='Chin.J.Nucl.Phys. 15 (1993) 261';
@@ -68,7 +68,7 @@ mBetaSquared(5).Tot=sqrt(mBetaSquared(5).Stat^2+mBetaSquared(5).Sys^2);
 mBetaSquared(5).Marker='v';
 mBetaSquared(5).Color=rgb('Gold');
 
-mBetaSquared(6).Experiment='LLNL';
+mBetaSquared(6).Experiment='Livermore';
 mBetaSquared(6).Label='Stoeffl 1995';
 mBetaSquared(6).Year=1994.5;
 mBetaSquared(6).Reference='Phys.Rev.Lett. 75 (1995) 3237-3240';

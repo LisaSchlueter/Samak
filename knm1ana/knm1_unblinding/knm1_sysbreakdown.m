@@ -1,4 +1,4 @@
-DataType = 'Real';
+DataType = 'Twin';
 filedir = [getenv('SamakPath'),'tritium-data/sensitivity/Knm1/'];
 twinFile =  sprintf('%sSensitivitySys_Asimov_KNM1_40eV_TCFSDTASRRF_ELRF_BFRF_RXStackFPDeffBkg_chi2CMShape_budget22_MatlabFit_Twin.mat',filedir);
 dataFile =  sprintf('%sSensitivitySys_Asimov_KNM1_40eV_TCFSDTASRRF_ELRF_BFRF_RXStackFPDeffBkg_chi2CMShape_budget22_MatlabFit_Real.mat',filedir);
@@ -46,7 +46,7 @@ f55 = figure('Name','MultiBarPlot','Renderer','painters');
 set(f55, 'Units', 'normalized', 'Position', [0.1, 0.1, 0.7, 0.8]);
 
 leg_str = {'Background rate', SysEffectLeg{:}};
-LocalFontSize = 25;
+LocalFontSize = 27;
 [y,ia] = sort(y,'descend');
 leg_str = leg_str(ia);
 
@@ -73,7 +73,7 @@ for i=1:numel(SingleBarY_twin)
     t{i}= text(0.46,SingleBarX(i),tstr,...
         'HorizontalAlignment','right','FontSize',LocalFontSize-2,...
         'Interpreter','tex',...
-        'FontName','Helvetica');%Times New Roman');
+        'FontName','Times New Roman');
 end
 
 % axis options
@@ -82,15 +82,16 @@ ylim([min(SingleBarX)-0.9 max(SingleBarX)+0.9])
 cl = 0.683;
 
 if strcmp(DataType,'Real')
-xlabel(sprintf('{\\itm}^2_\\nu uncertainty at %.0f%% C.L. (eV^{ 2})',cl*100));
+    xlabel(sprintf('1 \\sigma uncertainty on {\\itm}^2_\\nu at %.0f%% C.L. (eV^{ 2})',cl*100));
 else
-    xlabel(sprintf('{\\itm}^2_\\nu sensitivity at %.0f%% C.L. (eV^{ 2})',cl*100));
+    xlabel(sprintf('1 \\sigma sensitivity on {\\itm}^2_\\nu at %.0f%% C.L. (eV^{ 2})',cl*100));
 end
 
-PrettyFigureFormat;%    PRLFormat;
+PRLFormat;
 set(gca,'FontSize',LocalFontSize);
 % no y-ticks
 set(gca,'YMinorTick','off');
+ set(gca,'TickDir','out');
 h = gca;
 h.YRuler.TickLength = [0,0];
 set(gca,'XScale','log');

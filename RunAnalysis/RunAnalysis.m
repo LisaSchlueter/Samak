@@ -875,12 +875,15 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             p.addParameter('RunLabel',numel(obj.RunList));
             p.addParameter('ErrorBarScaling',50,@(x)isfloat(x)); % limits for norm. residuals
             p.addParameter('Style','PRD',@(x)ismember(x,{'Reg','PRD'}));
+            p.addParameter('TickDir','Out',@(x)ismember(x,{'In','Out'}));
+
             p.parse(varargin{:});
-            saveplot = p.Results.saveplot;
-            scale = p.Results.scale;
-            RunLabel = p.Results.RunLabel;
-            Style    = p.Results.Style;
-            obj.ErrorBarScaling= p.Results.ErrorBarScaling;
+            saveplot            = p.Results.saveplot;
+            scale               = p.Results.scale;
+            RunLabel            = p.Results.RunLabel;
+            Style               = p.Results.Style;
+            TickDir             = p.Results.TickDir;
+            obj.ErrorBarScaling = p.Results.ErrorBarScaling;
 
             switch obj.chi2
                 case {'chi2Stat','chi2P'}
@@ -895,35 +898,37 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             fig6 = figure(6);
             set(fig6, 'Units', 'normalized', 'Position', [0., 0.1, 0.75 , 0.8]);
            
-            AxisLabelFontSize = 32;
+            AxisLabelFontSize = 35;
             LocalFontSize = 27;
             
            % best fit
-            [lmodel, ~]= boundedline(obj.ModelObj.qU-obj.ModelObj.Q_i,...
-                obj.ModelObj.TBDIS./obj.ModelObj.qUfrac./obj.ModelObj.TimeSec,...
-                sqrt(diag(PlotCM))./obj.ModelObj.qUfrac./obj.ModelObj.TimeSec,...
+            [lmodel, ~]= boundedline(obj.ModelObj.qU(obj.exclDataStart:end)-obj.ModelObj.Q_i,...
+                obj.ModelObj.TBDIS(obj.exclDataStart:end)./obj.ModelObj.qUfrac(obj.exclDataStart:end)./obj.ModelObj.TimeSec,...
+                sqrt(diag(PlotCM((obj.exclDataStart:end),(obj.exclDataStart:end))))...
+                ./obj.ModelObj.qUfrac(obj.exclDataStart:end)./obj.ModelObj.TimeSec,...
                 'alpha','cmap',rgb('DodgerBlue'));
             lmodel.LineWidth= 3;
             lmodel.LineStyle='-'; %legend hide
             hold on;
 
              % Background Line
-            [lbkg, ~]= boundedline(obj.ModelObj.qU-obj.ModelObj.Q_i,...
-                obj.ModelObj.BKG_RateSec./obj.ModelObj.qUfrac.*obj.ModelObj.qUfrac,...
-                obj.FitResult.err(3)./obj.ModelObj.qUfrac.*obj.ModelObj.qUfrac,...
+            [lbkg, ~]= boundedline(obj.ModelObj.qU(obj.exclDataStart:end)-obj.ModelObj.Q_i,...
+                obj.ModelObj.BKG_RateSec./obj.ModelObj.qUfrac(obj.exclDataStart:end).*obj.ModelObj.qUfrac(obj.exclDataStart:end),...
+                obj.FitResult.err(3)./obj.ModelObj.qUfrac(obj.exclDataStart:end).*obj.ModelObj.qUfrac(obj.exclDataStart:end),...
                 'alpha','cmap',rgb('IndianRed')); lbkg.LineWidth= 3;
             lbkg.LineStyle='-.'; legend hide
       
             % Tritium
-            [lsignal, ~]= boundedline(obj.ModelObj.qU-obj.ModelObj.Q_i,...
-                obj.ModelObj.TBDIS./obj.ModelObj.qUfrac./obj.ModelObj.TimeSec-obj.ModelObj.BKG_RateSec./obj.ModelObj.qUfrac.*obj.ModelObj.qUfrac,...
-                0./obj.ModelObj.qUfrac.*obj.ModelObj.qUfrac,...
+            [lsignal, ~]= boundedline(obj.ModelObj.qU(obj.exclDataStart:end)-obj.ModelObj.Q_i,...
+                obj.ModelObj.TBDIS(obj.exclDataStart:end)./obj.ModelObj.qUfrac(obj.exclDataStart:end)./obj.ModelObj.TimeSec-...
+                obj.ModelObj.BKG_RateSec./obj.ModelObj.qUfrac(obj.exclDataStart:end).*obj.ModelObj.qUfrac(obj.exclDataStart:end),...
+                0./obj.ModelObj.qUfrac(obj.exclDataStart:end).*obj.ModelObj.qUfrac(obj.exclDataStart:end),...
                 'alpha','cmap',rgb('Orange')); lsignal.LineWidth= 3;
             lsignal.LineStyle=':'; legend hide
             
-            pdata =errorbar(obj.RunData.qU-obj.ModelObj.Q_i,...
-                obj.RunData.TBDIS./obj.ModelObj.qUfrac./obj.ModelObj.TimeSec,...
-                obj.RunData.TBDISE./obj.ModelObj.qUfrac./obj.ModelObj.TimeSec,...
+            pdata =errorbar(obj.RunData.qU(obj.exclDataStart:end)-obj.ModelObj.Q_i,...
+                obj.RunData.TBDIS(obj.exclDataStart:end)./obj.ModelObj.qUfrac(obj.exclDataStart:end)./obj.ModelObj.TimeSec,...
+                obj.RunData.TBDISE(obj.exclDataStart:end)./obj.ModelObj.qUfrac(obj.exclDataStart:end)./obj.ModelObj.TimeSec,...
                 '.','MarkerSize',27,'MarkerEdgeColor' , rgb('Black'),'MarkerFaceColor' , rgb('Black'));
             pdata.Color =rgb('Black') ; pdata.CapSize = 0;pdata.LineStyle= 'none';pdata.LineWidth= 3;legend hide
 
@@ -937,8 +942,13 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                 end
             end
             
-            l1 = sprintf('KATRIN data with 1\\sigma error bars');
-            l2 = sprintf('Fit result with 1\\sigma uncertaintes (stat. only)');
+            l1 = sprintf(' KATRIN data with 1\\sigma error bars');
+            switch obj.chi2
+                case 'chi2Stat'
+                    l2 = sprintf(' Fit result with 1\\sigma uncertaintes (stat. only)');
+                otherwise
+                    l2 = sprintf(' Fit result with 1\\sigma uncertaintes (stat. and syst.)');
+            end
             axis([1.1*min(obj.ModelObj.qU-obj.ModelObj.Q) 1.1*max(obj.ModelObj.qU-obj.ModelObj.Q)  obj.ModelObj.BKG_RateSec/2 max(obj.RunData.TBDIS./obj.ModelObj.qUfrac./obj.ModelObj.TimeSec)*1.1 ]);
             set(gca, 'YScale', scale);
             
@@ -949,15 +959,18 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             set(get(gca,'XLabel'),'FontSize',AxisLabelFontSize);
             set(get(gca,'YLabel'),'FontSize',AxisLabelFontSize)
             %xlim([-100,+51]); ylim([0.1,1000]);
-            legend([pdata lmodel lbkg lsignal],l1,l2,'Background','Tritium signal','Location','northwest','Box','off'); %a.String=a.String(1:2);
+            legend([pdata lmodel lbkg lsignal],l1,l2,' Background',' Tritium signal','Location','northwest','Box','off'); %a.String=a.String(1:2);
             % set(a,'Color',rgb('White'),'Box', 'on');
             xlim([-40 50]);
             ylim([0.2 100]) %ylim([0.2 30]);
             grid off;
             hold off;
             
+            if strcmp(TickDir,'Out')
+                set(gca,'TickDir','out');
+            end
             % zoomPlot to highlight a portion of the major plot
-                [~,~] = zoomPlotError(obj.RunData.qU-obj.ModelObj.Q,...
+                [~,~] = zoomPlotError(obj.RunData.qU-obj.ModelObj.Q_i,...
                 obj.RunData.TBDIS./obj.ModelObj.qUfrac./obj.ModelObj.TimeSec,...
                 obj.RunData.TBDISE./obj.ModelObj.qUfrac./obj.ModelObj.TimeSec,...
                [-25 5],[0.4 0.33 0.45 0.45],[]);%[-25 5],[0.5 0.35 0.35 0.5],[]);
@@ -989,12 +1002,14 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             set(gca,'TickLength',[0.01 0.01]);
             set(gca,'YTick',[0.1, 0.5, 1, 2, 3, 4, 5]);
             set(gca,'YAxisLocation','right');
-            %aZ.Title.String = ' Zoom on m_{\beta} ROI'; 
+            %aZ.Title.String = ' Zoom on m_{\beta} ROI';
             set(gca,'FontSize',LocalFontSize);
- 
-            if strcmp(saveplot,'ON') 
+            if strcmp(TickDir,'Out')
+                set(gca,'TickDir','out');
+            end
+            if strcmp(saveplot,'ON')
                 save_name = sprintf('./plots/KNM1_DataModel%s_%s-excl%u.png',num2str(obj.RunNr),obj.chi2,obj.exclDataStart);
-                export_fig(fig6,save_name,'-q101','-m3');
+                %export_fig(fig6,save_name,'-q101','-m3');
                 export_fig(fig6,strrep(save_name,'.png','.pdf'));
             end
            
@@ -2237,7 +2252,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                  myleg.FontSize = get(gca,'FontSize')+4;
                  mylim = ylim;
                  %    text(-57,log(mean(mylim)),'a)','FontSize',get(gca,'FontSize')+4,'FontName',get(gca,'FontName'));
-                 %text(textx,max(mylim)*0.7,'a)','FontSize',get(gca,'FontSize')+4,'FontName',get(gca,'FontName'));
+                 text(textx,max(mylim)*0.7,'a)','FontSize',get(gca,'FontSize')+4,'FontName',get(gca,'FontName'));
              elseif contains(obj.DataSet,'FirstTritium')
                  FTpaperFormat;
                  set(gca,'FontSize',LocalFontSize);
@@ -2442,7 +2457,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
              if strcmp(DisplayStyle,'PRL')  || strcmp(DisplayMTD,'ON')
                  mylim = ylim;
                  %  text(-57,mean(mylim),'b)','FontSize',get(gca,'FontSize')+4,'FontName',get(gca,'FontName'));
-                %text(textx,max(mylim)*0.65,'b)','FontSize',get(gca,'FontSize')+4,'FontName',get(gca,'FontName'));
+                text(textx,max(mylim)*0.65,'b)','FontSize',get(gca,'FontSize')+4,'FontName',get(gca,'FontName'));
                    
                  s3= subplot(4,1,4);
                  b1 = bar(qU,obj.RunData.qUfrac(obj.exclDataStart:BkgEnd,ring).*obj.RunData.TimeSec(ring)./(60*60));
@@ -2478,8 +2493,8 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                % linkaxes([s1,s2,s3],'x'); 
                mylim = ylim;
                %  text(-57,mean(mylim),'c)','FontSize',get(gca,'FontSize')+4,'FontName',get(gca,'FontName'));
-               %    text( textx,max(mylim)*0.8,'c)','FontSize',get(gca,'FontSize')+4,...
-               %       'FontName',get(gca,'FontName'),'FontWeight',get(gca,'FontWeight'));
+                   text( textx,max(mylim)*0.8,'c)','FontSize',get(gca,'FontSize')+4,...
+                      'FontName',get(gca,'FontName'),'FontWeight',get(gca,'FontWeight'));
                if strcmp(TickDir,'Out')
                    set(gca,'TickDir','out');
                end

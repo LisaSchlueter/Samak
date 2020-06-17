@@ -19,6 +19,8 @@ p.addParameter('ELossFlag','KatrinT2',@(x)ischar(x));
 p.addParameter('AngularTFFlag','OFF',@(x)ismember(x,{'ON','OFF'})); 
 p.addParameter('Twin_mNu4Sq',0,@(x)isfloat(x));
 p.addParameter('Twin_sin2T4',0,@(x)isfloat(x));
+p.addParameter('Negsin2T4','OFF',@(x)ismember(x,{'ON','OFF'}));
+p.addParameter('NegmNu4Sq','OFF',@(x)ismember(x,{'ON','OFF'}));
  
 p.parse(varargin{:});
 
@@ -38,6 +40,8 @@ ELossFlag     = p.Results.ELossFlag;
 AngularTFFlag = p.Results.AngularTFFlag;
 Twin_mNu4Sq   = p.Results.Twin_mNu4Sq;
 Twin_sin2T4   = p.Results.Twin_sin2T4;
+Negsin2T4     = p.Results.Negsin2T4;
+NegmNu4Sq     = p.Results.NegmNu4Sq;
 
 if strcmp(chi2,'chi2CMShape')
     NonPoissonScaleFactor=1.064;
@@ -84,7 +88,15 @@ else
 end
 
 if pullFlag<=14
-      extraStr = sprintf('%s_pull%.0f',extraStr,pullFlag);
+    extraStr = sprintf('%s_pull%.0f',extraStr,pullFlag);
+end
+
+if strcmp(NegmNu4Sq,'ON')
+    extraStr = [extraStr,'_NegmNu4Sq'];
+end
+
+if strcmp(Negsin2T4,'ON')
+      extraStr = [extraStr,'_Negsin2T4'];
 end
 MakeDir(savedir);
 
@@ -222,6 +234,16 @@ else
     FitResultsGrid = cell(nGridSteps*nGridSteps,1);
     mnu4Sq_Grid    = reshape(mnu4Sq',nGridSteps*nGridSteps,1);
     sin2T4_Grid    = reshape(sin2T4',nGridSteps*nGridSteps,1);
+    
+    if strcmp(NegmNu4Sq,'ON')
+        mnu4Sq_Grid = -mnu4Sq_Grid;
+        mnu4Sq = - mnu4Sq;
+    end
+    
+    if strcmp(Negsin2T4,'ON')
+        sin2T4_Grid = -sin2T4_Grid;
+        sin2T4 = -sin2T4;
+    end
     
     parfor i= 1:(nGridSteps*nGridSteps)
         D(i).SimulateStackRuns;

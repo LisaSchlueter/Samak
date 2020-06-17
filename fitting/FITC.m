@@ -445,19 +445,50 @@ classdef FITC < handle
                 PullTerm = PullTerm + (par(2)-0)^2/E0tol2eV^2;
             end
             
-            if any(ismember(obj.pullFlag,15)) % nu-mass pull: mainz&troitzk
+            if any(ismember(obj.pullFlag,15)) % nu-mass pull: 1 eV^2
                 mNuSqtol =  1; % eV^2
                 PullTerm = PullTerm + (par(1)-0)^2/mNuSqtol^2;
             end
             
-            if any(ismember(obj.pullFlag,16)) % nu-mass pull: mainz&troitzk
+            if any(ismember(obj.pullFlag,16)) % nu-mass pull: 2 eV^2
                 mNuSqtol =  2; % eV^2
                 PullTerm = PullTerm + (par(1)-0)^2/mNuSqtol^2;
             end
             
-            if any(ismember(obj.pullFlag,17)) % nu-mass pull: mainz&troitzk
+            if any(ismember(obj.pullFlag,17)) % nu-mass pull: 3 eV^2
                 mNuSqtol =  3; % eV^2
                 PullTerm = PullTerm + (par(1)-0)^2/mNuSqtol^2;
+            end
+            
+            if any(ismember(obj.pullFlag,18)) % nu-mass pull: 3 eV^2
+                mNuSqtol =  0.5; % eV^2
+                PullTerm = PullTerm + (par(1)-0)^2/mNuSqtol^2;
+            end
+            
+            if any(ismember(obj.pullFlag,19)) % non-sense sterile pull
+                sin4Up = 0.125;
+                m4Up   = 10;
+                PullTerm = PullTerm + ...
+                    exp(1e2*(par(4*obj.SO.nPixels+12)-(sin4Up+1e-02))) + ...  % sin2t4 upper bound
+                    exp(-1e2*(par(4*obj.SO.nPixels+12)+1e-02)) + ...          % sin2t4 lower bound -> 0
+                    exp(1e2*(par(4*obj.SO.nPixels+11)-m4Up-0.1)) + ...        % mSq4 lower bound
+                    exp(-1e2*(par(4*obj.SO.nPixels+11)+0.1));                % mSq4 upper bound
+            end
+            
+            if any(ismember(obj.pullFlag,20)) % non-sense sterile pull II
+                sin4Central = 0; sin4Tol = 0.125;
+                m4Central = 0;   m4Tol   = 10;
+                PullTerm = PullTerm + ...
+                    (par(4*obj.SO.nPixels+12)-sin4Central).^2./sin4Tol^2+...  % sin2t4
+                    (par(4*obj.SO.nPixels+11)-m4Central).^2./m4Tol^2;         % m4
+            end
+            
+            if any(ismember(obj.pullFlag,21)) % Neutrino 4 sterile pull
+                sin4Central = 0.38; sin4Tol = 0.11;
+                m4Central   = 7.26; m4Tol   = 0.7;
+                PullTerm = PullTerm + ...
+                    (par(4*obj.SO.nPixels+12)-sin4Central).^2./sin4Tol^2+...  % sin2t4
+                    (par(4*obj.SO.nPixels+11)-m4Central).^2./m4Tol^2;         % m4
             end
         end
         function chi2 = chi2function(obj,par)

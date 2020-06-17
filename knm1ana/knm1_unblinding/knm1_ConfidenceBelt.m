@@ -3,7 +3,7 @@
 % calculation and plotting takes place in RunSensitivity class
 % Lisa Schlüter, 2019
 %% settings
-Mode        = 'FC';  % FC = Feldman Cousin, LT = Lokov Tkachov
+Mode        = 'LT';  % FC = Feldman Cousin, LT = Lokov Tkachov
 Sensitivity = 'OFF'; % OFF= show best fit, ON = show sensitivity only
 SavePlot    = 'ON';
 
@@ -38,9 +38,9 @@ switch Mode
         S.PlotFCBelt('Lokov','ON','Sensitivity',Sensitivity,'SavePlot',SavePlot);
 end
 %% plot likelihood function
-S.PlotFC_DeltaChi2('PDF','Central','SavePlot','ON','mNuSq_t',0); % probability density function with best fit probability
-S.PlotFC_DeltaChi2('PDF','1sigma','SavePlot','ON','mNuSq_t',0);  % probability density function with 1 sigma boundaries
-S.PlotFC_DeltaChi2('PDF','OFF','SavePlot','ON','mNuSq_t',0.2);   % Delta chi2 curve
+% S.PlotFC_DeltaChi2('PDF','Central','SavePlot','ON','mNuSq_t',0); % probability density function with best fit probability
+% S.PlotFC_DeltaChi2('PDF','1sigma','SavePlot','ON','mNuSq_t',0);  % probability density function with 1 sigma boundaries
+% S.PlotFC_DeltaChi2('PDF','OFF','SavePlot','ON','mNuSq_t',0.2);   % Delta chi2 curve
 
 %S.PlotFC_PDF('KNM1Central','OFF','mNuSq_t',0);
 

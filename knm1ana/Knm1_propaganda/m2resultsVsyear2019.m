@@ -45,6 +45,7 @@ for i=1:12
     'MarkerEdgeColor',mBetaSquared(i).Color,'MarkerFaceColor',mBetaSquared(i).Color);
     h(i).CapSize = 0; h(i).LineStyle= 'none';h(i).LineWidth= 2;
 end
+set(gca,'TickDir','out');
 % Zoom KATRIN
 % zoomPlot to highlight a portion of the major plot
 switch LegOpt
@@ -147,6 +148,7 @@ set(gca,'FontSize',LocalFontSize);
 set(gca,'XMinorTick','off');
 set(get(gca,'XLabel'),'FontSize',LocalFontSize+2);
 set(get(gca,'YLabel'),'FontSize',LocalFontSize+2);
+set(gca,'TickDir','out');
 if strcmp(SavePlot,'ON')
 export_fig(gcf,savefile,'-r300');
 export_fig(gcf,strrep(savefile,'.png','.pdf'));

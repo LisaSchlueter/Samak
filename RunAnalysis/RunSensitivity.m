@@ -1919,6 +1919,7 @@ classdef RunSensitivity < handle
            % PrettyFigureFormat('FontSize',LocalFontSize);
            PRLFormat;
            set(gca,'FontSize',LocalFontSize)
+           set(gca,'TickDir','out');
             %%
             if ~strcmp(SavePlot,'OFF')
                 savedir = [getenv('SamakPath'),'/tritium-data/FC/plots/'];

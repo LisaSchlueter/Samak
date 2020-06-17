@@ -8,12 +8,14 @@ chi2Str = 'chi2CMShape';
 mySysEffect = 'all';
 SysBudget = 24; 
 DataType = 'Real';
-freePar = 'mNu E0 Bkg Norm';
+freePar = 'E0 Bkg Norm';
 RunList = 'KNM1';
 SmartGrid = 'OFF';
 ELossFlag = 'KatrinT2';
 AngularTFFlag = 'OFF'; % OFF
-pullFlag = 13;
+pullFlag = 99;
+NegmNu4Sq = 'ON';
+Negsin2T4 = 'OFF';
 %% plot options
 PlotContour = 'OFF';
 PlotGrid    = 'OFF';
@@ -41,7 +43,9 @@ titleStr = sprintf('%s (%s) %.0f eV range',DataLabel,chi2Label,range);
     'SysBudget',SysBudget,...
     'SysEffect',mySysEffect,...
     'ELossFlag',ELossFlag,...
-    'AngularTFFlag',AngularTFFlag);
+    'AngularTFFlag',AngularTFFlag,...
+    'Negsin2T4',Negsin2T4,...
+    'NegmNu4Sq',NegmNu4Sq);
 
 %% find best fit
 d = importdata(savefile);
