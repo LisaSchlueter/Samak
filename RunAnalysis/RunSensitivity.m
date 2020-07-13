@@ -1920,11 +1920,18 @@ classdef RunSensitivity < handle
            PRLFormat;
            set(gca,'FontSize',LocalFontSize)
            set(gca,'TickDir','out');
+           % remove top and right ticks
+           a = gca;
+           set(a,'box','off','color','none')% set box property to off and remove background color
+           b = axes('Position',a.Position,...
+               'box','on','xtick',[],'ytick',[],'LineWidth',1.5);% create new, empty axes with box but without ticks
+           axes(a)% set original axes as active
+           linkaxes([a b]) % link axes in case of zooming
             %%
             if ~strcmp(SavePlot,'OFF')
                 savedir = [getenv('SamakPath'),'/tritium-data/FC/plots/'];
                 obj.CreateDir(savedir);
-                savefile = [savedir,sprintf('%s_FCbelt_%s%s_%.2fCL.pdf',obj.RunAnaObj.DataSet,savestr,obj.RunAnaObj.chi2,obj.ConfLevel*100)];
+                savefile = [savedir,sprintf('%s_FCbelt_%s%s_%.0fCL.pdf',obj.RunAnaObj.DataSet,savestr,obj.RunAnaObj.chi2,obj.ConfLevel*100)];
                 if strcmp(Lokov,'ON')
                     leg.FontSize = get(gca,'FontSize')-6;
                     savefile = [savedir,sprintf('%s_Lokovbelt_%s%s_%.0fCL.pdf',obj.RunAnaObj.DataSet,savestr,obj.RunAnaObj.chi2,obj.ConfLevel*100)];

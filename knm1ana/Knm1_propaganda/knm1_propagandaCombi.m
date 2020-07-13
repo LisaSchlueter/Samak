@@ -1,14 +1,14 @@
 
 
 fcombi = figure('Units','normalized','Position',[0.1,0.1,0.5,1]);
+
 s1 = subplot(3,1,1);
-[leg1,ax1,zoomBox] = m2resultsVsyear2019('Combi','ON','LegPos','northoutside','SavePlot','OFF','LegOpt','Short');
+[leg1,ax1,zoomBox,b1] = m2resultsVsyear2019('Combi','ON','LegPos','northoutside','SavePlot','OFF','LegOpt','Short');
 
 mypos1 = ax1.Position;
 %ax1.Position = [mypos1(1) mypos1(2)-0.12 mypos1(3) mypos1(4)+0.15];
 ax1.XTickLabel = '';
 ax1.XLabel.String = '';%(' ');
-
 %%
 s2 = subplot(3,1,2);
 m2sysVsyear2019('Combi','ON','SavePlot','OFF')
@@ -20,6 +20,15 @@ ylabel({sprintf('{\\itm}_\\nu^2 systematic');sprintf(' uncertainty (eV^2)')});
 set(gca,'TickDir','out');
 
 grid off;
+
+% remove top and right ticks
+a = gca;
+set(a,'box','off','color','none')% set box property to off and remove background color
+b = axes('Position',[mypos2(1)+0.05 mypos2(2)-0.072 mypos2(3) mypos2(4)+0.023],...
+    'box','on','xtick',[],'ytick',[],'LineWidth',ax2.LineWidth);% create new, empty axes with box but without ticks
+axes(a)% set original axes as active
+linkaxes([a b]) % link axes in case of zooming
+
 %% subplot 3
 s3 = subplot(3,1,3);
 m2statVsyear2019('Combi','ON','SavePlot','OFF')
@@ -28,10 +37,19 @@ mypos3 = ax3.Position;
 grid off;
 ylabel({sprintf('{\\itm}_\\nu^2 statistical');sprintf(' uncertainty (eV^2)')});
 set(gca,'TickDir','out');
+
+% remove top and right ticks
+a = gca;
+set(a,'box','off','color','none')% set box property to off and remove background color
+b = axes('Position',[mypos3(1)+0.05 mypos3(2)-0.02 mypos3(3) mypos3(4)+0.023],...
+    'box','on','xtick',[],'ytick',[],'LineWidth',1.5);% create new, empty axes with box but without ticks
+axes(a)% set original axes as active
+linkaxes([a b]) % link axes in case of zooming
 %% shift plots: make space for legend and reduce white space
 ax1.Position = [mypos1(1)+0.05 mypos1(2)-0.125 mypos1(3) mypos1(4)+0.2];
 ax2.Position = [mypos2(1)+0.05 mypos2(2)-0.072 mypos2(3) mypos2(4)+0.023];
 ax3.Position = [mypos3(1)+0.05 mypos3(2)-0.02 mypos3(3) mypos3(4)+0.023];
+b1.Position = [mypos1(1)+0.05 mypos1(2)-0.125 mypos1(3) mypos1(4)+0.2];
 
 zoomBox.Position = [0.542 0.605 .393 .16];% [0.542 0.58 .393 .16];
 
@@ -63,14 +81,16 @@ ax3.YLim = [0.1 500];
 zoomBox.XLim = [2004.2 2020.2];
 set(gca,'TickDir','out');
 
-leg1.FontSize = 15.4;
-leg1.Position = [0.122   0.91    0.88    0.0916];%.895
+leg1.FontSize = 19.8;%ax1.FontSize;%15.4;
+leg1.Position = [0.034  0.9    0.88    0.0916]; %[0.122   0.91    0.88    0.0916];%.895
+
 %% text abc)
-text(1990,1.9e11,'a)','FontSize',get(gca,'FontSize')+4,'FontName',get(gca,'FontName'));   
-text(1990,1.2e6,'b)','FontSize',get(gca,'FontSize')+4,'FontName',get(gca,'FontName'));            
+text(1990,1.1e11,'a)','FontSize',get(gca,'FontSize')+4,'FontName',get(gca,'FontName'));   
+text(1990,1.6e6,'b)','FontSize',get(gca,'FontSize')+4,'FontName',get(gca,'FontName'));            
 text(1990,230,'c)','FontSize',get(gca,'FontSize')+4,'FontName',get(gca,'FontName'));            
 
 %%
+
 savedir = [getenv('SamakPath'),'knm1ana/Knm1_propaganda/plots/'];
 MakeDir(savedir);
 savename = sprintf('%sknm1_m2Vsyear2019Combi',savedir);

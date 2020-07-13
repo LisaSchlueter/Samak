@@ -23,4 +23,5 @@ Real.chi2='chi2CMShape';%'; % shape-only mode
 Real.ComputeCM('BkgMode','SlopeFit','nTrials',1000);%('SysEffect',struct('FSD','ON','TASR','ON','Stacking','ON'),'BkgCM','ON');
 Real.Fit;
 %%
+close all
 Real.PlotDataModel_KNM1('TickDir','Out');

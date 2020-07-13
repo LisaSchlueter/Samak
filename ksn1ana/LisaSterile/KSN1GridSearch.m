@@ -21,7 +21,8 @@ p.addParameter('Twin_mNu4Sq',0,@(x)isfloat(x));
 p.addParameter('Twin_sin2T4',0,@(x)isfloat(x));
 p.addParameter('Negsin2T4','OFF',@(x)ismember(x,{'ON','OFF'}));
 p.addParameter('NegmNu4Sq','OFF',@(x)ismember(x,{'ON','OFF'}));
- 
+p.addParameter('Extsin2T4','OFF',@(x)ismember(x,{'ON','OFF'})); %extended sin2T2 (up to 1)
+
 p.parse(varargin{:});
 
 range         = p.Results.range;
@@ -42,6 +43,7 @@ Twin_mNu4Sq   = p.Results.Twin_mNu4Sq;
 Twin_sin2T4   = p.Results.Twin_sin2T4;
 Negsin2T4     = p.Results.Negsin2T4;
 NegmNu4Sq     = p.Results.NegmNu4Sq;
+Extsin2T4     = p.Results.Extsin2T4;
 
 if strcmp(chi2,'chi2CMShape')
     NonPoissonScaleFactor=1.064;
@@ -97,6 +99,10 @@ end
 
 if strcmp(Negsin2T4,'ON')
       extraStr = [extraStr,'_Negsin2T4'];
+end
+
+if strcmp(Extsin2T4,'ON')
+    extraStr = [extraStr,'_Extsin2T4']; 
 end
 MakeDir(savedir);
 
@@ -216,7 +222,12 @@ else
     %% define msq4 - sin2t4 grid
     switch SmartGrid
         case 'OFF'
-            sin2T4      = logspace(-3,log10(0.5),nGridSteps); %linspace(0.001,0.5,nGridSteps)
+            if strcmp(Extsin2T4,'ON')
+                sin2T4Max = 1;
+            else
+                sin2T4Max = 0.5;
+            end
+            sin2T4      = logspace(-3,log10(sin2T4Max),nGridSteps); %linspace(0.001,0.5,nGridSteps)
             mnu4Sq      = logspace(0,log10((range+5)^2),nGridSteps)';
             mnu4Sq      = repmat(mnu4Sq,1,nGridSteps);
             sin2T4      = repmat(sin2T4,nGridSteps,1);

@@ -902,7 +902,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             LocalFontSize = 27;
             
            % best fit
-            [lmodel, ~]= boundedline(obj.ModelObj.qU(obj.exclDataStart:end)-obj.ModelObj.Q_i,...
+            [lmodel, ~]= boundedline(obj.ModelObj.qU(obj.exclDataStart:end),...
                 obj.ModelObj.TBDIS(obj.exclDataStart:end)./obj.ModelObj.qUfrac(obj.exclDataStart:end)./obj.ModelObj.TimeSec,...
                 sqrt(diag(PlotCM((obj.exclDataStart:end),(obj.exclDataStart:end))))...
                 ./obj.ModelObj.qUfrac(obj.exclDataStart:end)./obj.ModelObj.TimeSec,...
@@ -912,21 +912,21 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             hold on;
 
              % Background Line
-            [lbkg, ~]= boundedline(obj.ModelObj.qU(obj.exclDataStart:end)-obj.ModelObj.Q_i,...
+            [lbkg, ~]= boundedline(obj.ModelObj.qU(obj.exclDataStart:end),...
                 obj.ModelObj.BKG_RateSec./obj.ModelObj.qUfrac(obj.exclDataStart:end).*obj.ModelObj.qUfrac(obj.exclDataStart:end),...
                 obj.FitResult.err(3)./obj.ModelObj.qUfrac(obj.exclDataStart:end).*obj.ModelObj.qUfrac(obj.exclDataStart:end),...
                 'alpha','cmap',rgb('IndianRed')); lbkg.LineWidth= 3;
             lbkg.LineStyle='-.'; legend hide
       
             % Tritium
-            [lsignal, ~]= boundedline(obj.ModelObj.qU(obj.exclDataStart:end)-obj.ModelObj.Q_i,...
+            [lsignal, ~]= boundedline(obj.ModelObj.qU(obj.exclDataStart:end),...
                 obj.ModelObj.TBDIS(obj.exclDataStart:end)./obj.ModelObj.qUfrac(obj.exclDataStart:end)./obj.ModelObj.TimeSec-...
                 obj.ModelObj.BKG_RateSec./obj.ModelObj.qUfrac(obj.exclDataStart:end).*obj.ModelObj.qUfrac(obj.exclDataStart:end),...
                 0./obj.ModelObj.qUfrac(obj.exclDataStart:end).*obj.ModelObj.qUfrac(obj.exclDataStart:end),...
                 'alpha','cmap',rgb('Orange')); lsignal.LineWidth= 3;
             lsignal.LineStyle=':'; legend hide
             
-            pdata =errorbar(obj.RunData.qU(obj.exclDataStart:end)-obj.ModelObj.Q_i,...
+            pdata =errorbar(obj.RunData.qU(obj.exclDataStart:end),...
                 obj.RunData.TBDIS(obj.exclDataStart:end)./obj.ModelObj.qUfrac(obj.exclDataStart:end)./obj.ModelObj.TimeSec,...
                 obj.RunData.TBDISE(obj.exclDataStart:end)./obj.ModelObj.qUfrac(obj.exclDataStart:end)./obj.ModelObj.TimeSec,...
                 '.','MarkerSize',27,'MarkerEdgeColor' , rgb('Black'),'MarkerFaceColor' , rgb('Black'));
@@ -949,11 +949,10 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                 otherwise
                     l2 = sprintf(' Fit result with 1\\sigma uncertaintes (stat. and syst.)');
             end
-            axis([1.1*min(obj.ModelObj.qU-obj.ModelObj.Q) 1.1*max(obj.ModelObj.qU-obj.ModelObj.Q)  obj.ModelObj.BKG_RateSec/2 max(obj.RunData.TBDIS./obj.ModelObj.qUfrac./obj.ModelObj.TimeSec)*1.1 ]);
-            set(gca, 'YScale', scale);
+             set(gca, 'YScale', scale);
             
             PRLFormat;
-            xlabel(sprintf('Retarding energy - %.1f (eV)',obj.ModelObj.Q_i));
+            xlabel(sprintf('Retarding energy (eV)'));
             ylabel('Rate (cps)');
             set(gca,'FontSize',LocalFontSize);
             set(get(gca,'XLabel'),'FontSize',AxisLabelFontSize);
@@ -961,30 +960,42 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             %xlim([-100,+51]); ylim([0.1,1000]);
             legend([pdata lmodel lbkg lsignal],l1,l2,' Background',' Tritium signal','Location','northwest','Box','off'); %a.String=a.String(1:2);
             % set(a,'Color',rgb('White'),'Box', 'on');
-            xlim([-40 50]);
-            ylim([0.2 100]) %ylim([0.2 30]);
+          
             grid off;
             hold off;
             
             if strcmp(TickDir,'Out')
                 set(gca,'TickDir','out');
+%               remove top and right ticks
+                a = gca;
+                set(a,'box','off','color','none')% set box property to off and remove background color
+                b = axes('Position',a.Position,...
+                    'box','on','xtick',[],'ytick',[],'LineWidth',1.5);% create new, empty axes with box but without ticks
+                axes(a)% set original axes as active
+                linkaxes([a b]) % link axes in case of zooming
             end
+             axis([0.9999*obj.ModelObj.qU(obj.exclDataStart) 1.0001*max(obj.ModelObj.qU)  obj.ModelObj.BKG_RateSec/2 max(obj.RunData.TBDIS./obj.ModelObj.qUfrac./obj.ModelObj.TimeSec)*1.1 ]);
+            ax = gca;
+            ax.XAxis.Exponent = 0;
+                 
+            %xlim([-40 50]);
+            ylim([0.2 100]) %ylim([0.2 30]);
             % zoomPlot to highlight a portion of the major plot
-                [~,~] = zoomPlotError(obj.RunData.qU-obj.ModelObj.Q_i,...
+            [~,~] = zoomPlotError(obj.RunData.qU,...
                 obj.RunData.TBDIS./obj.ModelObj.qUfrac./obj.ModelObj.TimeSec,...
                 obj.RunData.TBDISE./obj.ModelObj.qUfrac./obj.ModelObj.TimeSec,...
-               [-25 5],[0.4 0.33 0.45 0.45],[]);%[-25 5],[0.5 0.35 0.35 0.5],[]);
+               [obj.ModelObj.Q_i-25 obj.ModelObj.Q_i+5],[0.4 0.33 0.45 0.45],[]);%[-25 5],[0.5 0.35 0.35 0.5],[]);
           
             hold on;
             % best fit
-            [lzoomBestFit,~] = boundedline(obj.ModelObj.qU-obj.ModelObj.Q_i,...
+            [lzoomBestFit,~] = boundedline(obj.ModelObj.qU,...
                 obj.ModelObj.TBDIS./obj.ModelObj.qUfrac./obj.ModelObj.TimeSec,...
                 diag(sqrt(PlotCM))./obj.ModelObj.qUfrac./obj.ModelObj.TimeSec.*1,...
                 'alpha','cmap',rgb('DodgerBlue'));
             lzoomBestFit.LineWidth = lmodel.LineWidth;
             hold on
             % data
-            zoomData=errorbar(obj.RunData.qU-obj.ModelObj.Q_i,...
+            zoomData=errorbar(obj.RunData.qU,...
                 obj.RunData.TBDIS./obj.ModelObj.qUfrac./obj.ModelObj.TimeSec,...
                 obj.RunData.TBDISE./obj.ModelObj.qUfrac./obj.ModelObj.TimeSec*obj.ErrorBarScaling,...
                 '.','MarkerSize',pdata.MarkerSize,'Color',pdata.Color);
@@ -1006,13 +1017,22 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             set(gca,'FontSize',LocalFontSize);
             if strcmp(TickDir,'Out')
                 set(gca,'TickDir','out');
+%                remove top and right ticks
+                a = gca;
+                set(a,'box','off','color','none')% set box property to off and remove background color
+                b = axes('Position',a.Position,...
+                    'box','on','xtick',[],'ytick',[],'LineWidth',1.5);% create new, empty axes with box but without ticks
+                axes(a)% set original axes as active
+               % linkaxes([a b]) % link axes in case of zooming
             end
+             ax = gca;
+            ax.XAxis.Exponent = 0;
             if strcmp(saveplot,'ON')
                 save_name = sprintf('./plots/KNM1_DataModel%s_%s-excl%u.png',num2str(obj.RunNr),obj.chi2,obj.exclDataStart);
                 %export_fig(fig6,save_name,'-q101','-m3');
                 export_fig(fig6,strrep(save_name,'.png','.pdf'));
+                fprintf('save to %s \n',save_name);
             end
-           
           end
         function PlotDataModel_KSN1(obj,varargin)
             % Plot overlaying Data and Model - Dedicated to KSN1
@@ -2279,6 +2299,13 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
              if strcmp(TickDir,'Out')
                  set(gca,'TickDir','out');
                  ax1.Position = [ax1.Position(1) ax1.Position(2)+0.01, ax1.Position(3:4)];
+                 % remove top and right ticks
+                 a = gca;
+                 set(a,'box','off','color','none')% set box property to off and remove background color
+                 b = axes('Position',[ax1.Position(1) ax1.Position(2)+0.01, ax1.Position(3:4)],...
+                     'box','on','xtick',[],'ytick',[],'LineWidth',1.5);% create new, empty axes with box but without ticks
+                 axes(a)% set original axes as active
+                % linkaxes([a b]) % link axes in case of zooming
              end
              %% residuals
              switch ResidualsFlag
@@ -2431,9 +2458,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                  ax = gca;
                  ax.XAxis.Exponent = 0;
              end
-             if strcmp(TickDir,'Out')
-                 set(gca,'TickDir','out');
-             end
+            
              
              if strcmp(qUDisp,'Rel')
                  xlim([min(qU)*1.04 max(qU)*1.04]);
@@ -2448,7 +2473,17 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
              set(get(gca,'YLabel'),'Position',[tmp.Position(1),tmp2.Position(2),tmp2.Position(3)]);
              ax = gca; ax2 = gca;
              mypos = ax.Position;
-             ax.Position = [mypos(1)+0.05 mypos(2)+0.01 mypos(3:4)];
+             ax.Position = [mypos(1)+0.05 mypos(2)+0.015 mypos(3:4)];
+             
+              if strcmp(TickDir,'Out')
+                 set(gca,'TickDir','out');
+                 % remove top and right ticks
+                 a = gca;
+                 set(a,'box','off','color','none')% set box property to off and remove background color
+                 b = axes('Position',ax.Position,...
+                     'box','on','xtick',[],'ytick',[],'LineWidth',1.5);% create new, empty axes with box but without ticks
+                 axes(a)% set original axes as active
+              end
              
              linkaxes([s1,s2],'x');
              if ~isempty(XLims)
@@ -2490,14 +2525,22 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                 if ~isempty(XLims)
                     xlim([min(XLims),max(XLims)])
                 end
-               % linkaxes([s1,s2,s3],'x'); 
-               mylim = ylim;
-               %  text(-57,mean(mylim),'c)','FontSize',get(gca,'FontSize')+4,'FontName',get(gca,'FontName'));
-                   text( textx,max(mylim)*0.8,'c)','FontSize',get(gca,'FontSize')+4,...
-                      'FontName',get(gca,'FontName'),'FontWeight',get(gca,'FontWeight'));
-               if strcmp(TickDir,'Out')
-                   set(gca,'TickDir','out');
-               end
+                % linkaxes([s1,s2,s3],'x');
+                mylim = ylim;
+                %  text(-57,mean(mylim),'c)','FontSize',get(gca,'FontSize')+4,'FontName',get(gca,'FontName'));
+                text( textx,max(mylim)*0.8,'c)','FontSize',get(gca,'FontSize')+4,...
+                    'FontName',get(gca,'FontName'),'FontWeight',get(gca,'FontWeight'));
+                if strcmp(TickDir,'Out')
+                    set(gca,'TickDir','out');
+                    
+                    ax1.Position = [ax1.Position(1) ax1.Position(2)+0.01, ax1.Position(3:4)];
+                    % remove top and right ticks
+                    a = gca;
+                    set(a,'box','off','color','none')% set box property to off and remove background color
+                    b = axes('Position',a.Position,...
+                        'box','on','xtick',[],'ytick',[],'LineWidth',1.5);% create new, empty axes with box but without ticks
+                    axes(a)% set original axes as active
+                end
              else
                  xlabel(xstr);
              end

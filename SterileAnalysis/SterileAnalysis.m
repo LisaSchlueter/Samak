@@ -780,7 +780,7 @@ classdef SterileAnalysis < handle
             obj.RunAnaObj.pullFlag = 99;
             obj.LoadGridFile('CheckSmallerN','ON');
             obj.Interp1Grid('RecomputeFlag','ON');
-            pFix1 = obj.ContourPlot('CL',95,'HoldOn','ON',...
+            pFix1 = obj.ContourPlot('CL',95,'HoldOn','OFF',...
                 'Color',rgb('Orange'),'LineStyle','-.','BestFit',BestFit);
             
             %% 95CL - Wilks Theorem Corrected wia MC simulation
@@ -788,13 +788,22 @@ classdef SterileAnalysis < handle
             obj.RunAnaObj.pullFlag = 99;
             obj.LoadGridFile('CheckSmallerN','ON');
             obj.Interp1Grid('RecomputeFlag','ON');
-            pFix2 = obj.ContourPlot('CL',96.45,'HoldOn','ON',...
+            
+            if obj.range==95
+                CL_coverage = 96.45;
+            elseif obj.range==65   
+                CL_coverage = 95.7;
+            elseif obj.range==40   
+                CL_coverage = 94.82;
+            end
+            DeltaChi2Crit = GetDeltaChi2(CL_coverage,2);
+            pFix2 = obj.ContourPlot('CL',CL_coverage,'HoldOn','ON',...
                 'Color',rgb('DodgerBlue'),'LineStyle',':','BestFit',BestFit);
             
             PrettyFigureFormat('FontSize',22);
                 legend([pFix1,pFix2],...
                     sprintf('Fixed {\\itm}_\\nu^2 = 0 eV^2 - \\Delta\\chi^2 = 5.99'),...
-                    sprintf('Fixed {\\itm}_\\nu^2 = 0 eV^2 - \\Delta\\chi^2 = 6.68'),...
+                    sprintf('Fixed {\\itm}_\\nu^2 = 0 eV^2 - \\Delta\\chi^2 = %.2f',DeltaChi2Crit),...
                     'EdgeColor',rgb('Silver'),'Location','southwest');
                 obj.RunAnaObj.fixPar = fixPar_i;
                 obj.RunAnaObj.pullFlag = pull_i ;
@@ -802,6 +811,12 @@ classdef SterileAnalysis < handle
                 if obj.range==65
                     ylim([1 6e3]);
                     xlim([2e-03 0.5]);
+                elseif obj.range==95
+                    ylim([1 1e4]);
+                    xlim([1e-03 0.5]);
+                elseif obj.range==40
+                    ylim([1 2e3]);
+                    xlim([1e-02 0.5]);
                 end
                 %% save
                 if ~strcmp(SavePlot,'OFF')
@@ -1115,7 +1130,7 @@ classdef SterileAnalysis < handle
                 obj.LoadGridFile('CheckSmallerN','ON');
                 obj.Interp1Grid('RecomputeFlag','ON');
                 pFixSensi = obj.ContourPlot('CL',obj.ConfLevel,'HoldOn','ON',...
-                    'Color',rgb('Silver'),'LineStyle','-','BestFit',BestFit);
+                    'Color',rgb('Silver'),'LineStyle','-','BestFit','OFF');
                 pFixSensi.LineWidth = 2;
                 legHandle{numel(legHandle)+1} = pFixSensi;
                 legStr = [legStr,{sprintf('KATRIN KSN1 Sensitivity %.0f%% C.L. - {\\itm}_\\nu^2 = 0 eV^2',obj.ConfLevel)}];

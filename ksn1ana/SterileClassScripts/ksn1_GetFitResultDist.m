@@ -34,7 +34,7 @@ SterileArg = {'RunAnaObj',T,... % Mother Object: defines RunList, Column Density
 
 S = SterileAnalysis(SterileArg{:});
 %%
-S.RunAnaObj.pullFlag = 99;
+S.RunAnaObj.pullFlag = 12;
 f = S.LoadGridFile;
 mNuSq_2d = cellfun(@(x) x.par(1),f.FitResults)';
 E0_2d    = cellfun(@(x) x.par(2),f.FitResults)';
@@ -54,7 +54,7 @@ mNuSq_2d_plot(mNuSq_2d_plot>10)=11;
 [C,h] = contourf(S.sin2T4,S.mNu4Sq,mNuSq_2d_plot,[-10 -2 -1 -0.5 0 1 3 10],...
     'Color',rgb('Black'),'LineWidth',1.5,'ShowText','ON');
 clabel(C,h,'Color',rgb('Black'),'FontSize',12,...
-    'FontSmoothing','on','FontWeight','bold','LabelSpacing',400,'Margin',1)
+    'FontSmoothing','on','FontWeight','bold','LabelSpacing',120,'Margin',1)
 PrettyFigureFormat('FontSize',24);
 view([0 0 1])
 set(gca,'XScale','log');
@@ -84,7 +84,7 @@ elseif  S.RunAnaObj.pullFlag == 15
         'FontWeight','normal','FontSize',get(gca,'FontSize')-2);
 end
 
-filename = sprintf('%smNuDistGrid%s_%.0feV_pull%.0f.png',...
+filename = sprintf('%smNuDistGrid_%.0feV_pull%.0f.png',...
     savedir,S.range,S.RunAnaObj.pullFlag);
 print(gcf,filename,'-dpng','-r400');
 

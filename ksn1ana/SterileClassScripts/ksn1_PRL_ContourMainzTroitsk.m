@@ -45,7 +45,9 @@ S.Interp1Grid('RecomputeFlag','ON');% interpolate chi2 map -> nicer appearance o
 S.FindBestFit;
 S.CompareBestFitNull;
 %%
-S.InterpMode = 'spline'; %'spline' sometimes causes weird artefacts, but looks smoother than 'lin'
+
+
+S.InterpMode = 'spline';%spline'; %'spline' sometimes causes weird artefacts, but looks smoother than 'lin'
 Arg = {'SavePlot','png','BestFit','OFF','Style','PRL','FinalSensitivity','OFF','FreemNuSq','ON','Sensitivity','ON','AddPull',15};
 S.PlotPRL1(Arg{:});
 

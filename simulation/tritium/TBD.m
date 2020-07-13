@@ -1988,7 +1988,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
         end
         
         % Plots / Display
-        function          PlotTBDDS(obj,varargin)
+        function           h  = PlotTBDDS(obj,varargin)
             
             p = inputParser;
             p.addParameter('fign',999,@(x)isfloat(x) && x>0);

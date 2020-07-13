@@ -1,4 +1,4 @@
-function [leg,ax1,z] = m2resultsVsyear2019(varargin)
+function [leg,ax1,z,b1] = m2resultsVsyear2019(varargin)
 p=inputParser;
 p.addParameter('Combi','OFF',@(x)ismember(x,{'ON','OFF'}));
 p.addParameter('LegPos','north',@(x)ischar(x));
@@ -46,8 +46,15 @@ for i=1:12
     h(i).CapSize = 0; h(i).LineStyle= 'none';h(i).LineWidth= 2;
 end
 set(gca,'TickDir','out');
-% Zoom KATRIN
-% zoomPlot to highlight a portion of the major plot
+% remove top and right ticks
+ax1 = gca;
+mypos1 = ax1.Position;
+set(ax1,'box','off','color','none')% set box property to off and remove background color
+b1 = axes('Position',[mypos1(1) mypos1(2) mypos1(3) mypos1(4)],...
+    'box','on','xtick',[],'ytick',[],'LineWidth',1.5);% create new, empty axes with box but without ticks
+axes(ax1)% set original axes as active
+linkaxes([ax1 b1]) % link axes in case of zooming
+
 switch LegOpt
     case 'Full'
         leg=legend(h,[mBetaSquared(1).Experiment ' ' mBetaSquared(2).Reference],...
@@ -64,18 +71,18 @@ switch LegOpt
             [mBetaSquared(12).Experiment ' ' mBetaSquared(12).Reference],...
             'FontSize',13.5,'Location',LegPos);
     case 'Short'
-        leg=legend(h,[mBetaSquared(1).Experiment ' ' sprintf('(%.0f)',ceil(mBetaSquared(1).Year))],...
-            [mBetaSquared(2).Experiment ' ' sprintf('(%.0f)',ceil(mBetaSquared(2).Year))],...
-            [mBetaSquared(3).Experiment ' ' sprintf('(%.0f)',ceil(mBetaSquared(3).Year))],...
-            [mBetaSquared(4).Experiment ' ' sprintf('(%.0f)',ceil(mBetaSquared(4).Year))],...
-            [mBetaSquared(5).Experiment ' ' sprintf('(%.0f)',ceil(mBetaSquared(5).Year))],...
-            [mBetaSquared(6).Experiment ' ' sprintf('(%.0f)',ceil(mBetaSquared(6).Year))],...
-            [mBetaSquared(7).Experiment ' ' sprintf('(%.0f)',ceil(mBetaSquared(7).Year))],...
-            [mBetaSquared(8).Experiment ' ' sprintf('(%.0f)',ceil(mBetaSquared(8).Year))],...
-            [mBetaSquared(9).Experiment ' ' sprintf('(%.0f)',ceil(mBetaSquared(9).Year))],...
-            [mBetaSquared(10).Experiment ' ' sprintf('(%.0f)',ceil(mBetaSquared(10).Year))],...
-            [mBetaSquared(11).Experiment ' ' sprintf('(%.0f)',ceil(mBetaSquared(11).Year))],...
-            ['KATRIN' ' ' sprintf('(%.0f)',ceil(mBetaSquared(12).Year))],...
+        leg=legend(h,[mBetaSquared(1).Experiment ' ' sprintf('(%.0f)',mBetaSquared(1).Year)],...
+            [mBetaSquared(2).Experiment ' ' sprintf('(%.0f)',mBetaSquared(2).Year)],...
+            [mBetaSquared(3).Experiment ' ' sprintf('(%.0f)',mBetaSquared(3).Year)],...
+            [mBetaSquared(4).Experiment ' ' sprintf('(%.0f)',mBetaSquared(4).Year)],...
+            [mBetaSquared(5).Experiment ' ' sprintf('(%.0f)',mBetaSquared(5).Year)],...
+            [mBetaSquared(6).Experiment ' ' sprintf('(%.0f)',mBetaSquared(6).Year)],...
+            [mBetaSquared(7).Experiment ' ' sprintf('(%.0f)',mBetaSquared(7).Year)],...
+            [mBetaSquared(8).Experiment ' ' sprintf('(%.0f)',mBetaSquared(8).Year)],...
+            [mBetaSquared(9).Experiment ' ' sprintf('(%.0f)',mBetaSquared(9).Year)],...
+            [mBetaSquared(10).Experiment ' ' sprintf('(%.0f)',mBetaSquared(10).Year)],...
+            [mBetaSquared(11).Experiment ' ' sprintf('(%.0f)',mBetaSquared(11).Year)],...
+            ['KATRIN' ' ' sprintf('(%.0f)',mBetaSquared(12).Year)],...
             'FontSize',13.5,'Location',LegPos);
 end
 
@@ -89,6 +96,7 @@ legend('boxoff');
 xlabel('Year');
 ylabel(sprintf('{\\itm}_\\nu^2 (eV^2)'));%c^4 grid on
 ax1 = gca;
+xticks([]);
 %FontName = 'Arial';
 
 %set(gca,'FontName',FontName,'FontSize',FontSize);
@@ -99,15 +107,19 @@ ax1 = gca;
 %set(gca,'YMinorTick','on');
 
 PRLFormat
+box off
 set(gca,'FontSize',LocalFontSize);
 set(get(gca,'XLabel'),'FontSize',LocalFontSize+4);
 set(get(gca,'YLabel'),'FontSize',LocalFontSize+4);
 set(gca,'XMinorTick','off');
-box on;
+%box on;
 ylim([-250 110])
 xlim([mBetaSquared(1).Year-1 mBetaSquared(12).Year+1]);
 % Zoom
 hold on
+
+% Zoom KATRIN
+% zoomPlot to highlight a portion of the major plot
 %rectangle('Position',[2000 -225 15 175]);
 if strcmp(Combi,'OFF')
     z = axes(gcf,'position',[0.37 0.17 .52 .41],'FontSize',LocalFontSize,'XAxisLocation', 'top');
@@ -149,6 +161,8 @@ set(gca,'XMinorTick','off');
 set(get(gca,'XLabel'),'FontSize',LocalFontSize+2);
 set(get(gca,'YLabel'),'FontSize',LocalFontSize+2);
 set(gca,'TickDir','out');
+
+
 if strcmp(SavePlot,'ON')
 export_fig(gcf,savefile,'-r300');
 export_fig(gcf,strrep(savefile,'.png','.pdf'));

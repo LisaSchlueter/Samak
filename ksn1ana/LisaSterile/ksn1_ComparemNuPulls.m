@@ -6,7 +6,7 @@
 % nuissance parameter + 2 eV^2 mnu pull
 % nuissance parameter + 3 eV^2 mnu pull
 %% settings for runanalysis
-DataType = 'Real';
+DataType = 'Twin';
 %%
 RunAnaArg = {'RunList','KNM1',...
     'fixPar','mNu E0 Norm Bkg',...
@@ -119,3 +119,5 @@ title(sprintf('%.0f eV range',S.range))
 plotname = strrep(S.DefPlotName,'_pull17',sprintf('_ComparemNuPulls_%s.png',S.RunAnaObj.DataType));
 print(gcf,plotname,'-dpng','-r300');
 fprintf('save plot to %s \n',plotname);
+
+export_fig(gcf,strrep(plotname,'.png','.pdf'));

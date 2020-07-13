@@ -16,6 +16,7 @@ AngularTFFlag = 'OFF'; % OFF
 pullFlag = 99;
 NegmNu4Sq = 'ON';
 Negsin2T4 = 'OFF';
+Extsin2T4 = 'ON';
 %% plot options
 PlotContour = 'OFF';
 PlotGrid    = 'OFF';
@@ -45,7 +46,8 @@ titleStr = sprintf('%s (%s) %.0f eV range',DataLabel,chi2Label,range);
     'ELossFlag',ELossFlag,...
     'AngularTFFlag',AngularTFFlag,...
     'Negsin2T4',Negsin2T4,...
-    'NegmNu4Sq',NegmNu4Sq);
+    'NegmNu4Sq',NegmNu4Sq,...
+    'Extsin2T4',Extsin2T4);
 
 %% find best fit
 d = importdata(savefile);

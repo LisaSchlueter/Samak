@@ -8,7 +8,7 @@ MTD = importdata('DR30.mat');
 % ---------------------------------------------------------------------- %
 % WGTS
 p = inputParser;
-p.addParameter('WGTS_CD_MolPerCm2',5*1e17,@(x)isfloat(x) && x>0);
+p.addParameter('WGTS_CD_MolPerCm2',5e17,@(x)isfloat(x) && x>0);
 p.addParameter('WGTS_CD_MolPerCm2_SubRun','',@(x)isfloat(x));
 p.addParameter('WGTS_MolFrac_TT',0.95,@(x)isfloat(x) && x>0);
 p.addParameter('WGTS_MolFrac_TT_SubRun','');
@@ -20,9 +20,9 @@ p.addParameter('WGTS_B_T',2.52,@(x)isfloat(x) && x>0);
 
 % Theory
 p.addParameter('ISCS','Edep',@(x)ismember(x,{'Aseev','Theory','Edep'}));
-p.addParameter('DTFSD','BlindingKNM2',@(x)ismember(x,{'OFF','DOSS','BlindingKNM1','SibilleFull','Sibille0p5eV','BlindingKNM2'}));
-p.addParameter('HTFSD','BlindingKNM2',@(x)ismember(x,{'OFF','SAENZ','BlindingKNM1','SibilleFull','Sibille0p5eV','BlindingKNM2'}));
-p.addParameter('TTFSD','BlindingKNM2',@(x)ismember(x,{'OFF','DOSS','SAENZ','BlindingKNM1','SibilleFull','Sibille0p5eV','BlindingKNM2'}));
+p.addParameter('DTFSD','DOSS',@(x)ismember(x,{'OFF','DOSS','BlindingKNM1','SibilleFull','Sibille0p5eV','BlindingKNM2'}));
+p.addParameter('HTFSD','SAENZ',@(x)ismember(x,{'OFF','SAENZ','BlindingKNM1','SibilleFull','Sibille0p5eV','BlindingKNM2'}));
+p.addParameter('TTFSD','SAENZ',@(x)ismember(x,{'OFF','DOSS','SAENZ','BlindingKNM1','SibilleFull','Sibille0p5eV','BlindingKNM2'}));
 p.addParameter('ELossFlag','KatrinT2A20',@(x)ismember(x,{'Aseev','Abdurashitov','CW_GLT','KatrinD2','KatrinT2','KatrinT2A20'}));
 p.addParameter('DopplerEffectFlag','FSD',@(x)ismember(x,{'OFF','FSD'}));
 p.addParameter('AngularTFFlag','ON',@(x)ismember(x,{'OFF','ON'}));
@@ -46,7 +46,7 @@ p.addParameter('mnuSq_i',0,@(x)isfloat(x));
 p.addParameter('Q_i',18573.7,@(x)isfloat(x));
 
 % FPD
-p.addParameter('FPD_MeanEff',0.95,@(x)isfloat(x) && x>0);
+p.addParameter('FPD_MeanEff',0.90,@(x)isfloat(x) && x>0);
 p.addParameter('FPD_ROIlow',14,@(x)isfloat(x) && x>0);
 p.addParameter('FPD_ROIEff','OFF',@(x)ismember(x,{'ON','OFF'}));
 p.addParameter('FPD_PileUpEff','OFF',@(x)ismember(x,{'ON','OFF'}));
@@ -56,7 +56,7 @@ p.addParameter('BKG_RateAllFPDSec',0.210);
 p.addParameter('BKG_RatePixelSec',''); 
 p.addParameter('BKG_RateRingSec','');
 p.addParameter('FPD_Segmentation','OFF',@(x) ismember(x,{'OFF','SINGLEPIXEL','MULTIPIXEL','RING'}));
-p.addParameter('PixList',1:124);
+p.addParameter('PixList',1:148);
 p.addParameter('RingList',1:12);
 
 p.parse(varargin{:});
