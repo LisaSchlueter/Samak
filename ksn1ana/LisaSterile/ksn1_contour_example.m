@@ -17,7 +17,7 @@ pullFlag = 99;
 NegmNu4Sq = 'OFF';
 Negsin2T4 = 'OFF';
 Extsin2T4 = 'OFF';
-FixmNuSq = -1;
+FixmNuSq = -0.98;
 %% plot options
 PlotContour = 'OFF';
 PlotGrid    = 'OFF';
