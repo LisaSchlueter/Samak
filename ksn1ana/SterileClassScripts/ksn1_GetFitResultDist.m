@@ -34,7 +34,7 @@ SterileArg = {'RunAnaObj',T,... % Mother Object: defines RunList, Column Density
 
 S = SterileAnalysis(SterileArg{:});
 %%
-S.RunAnaObj.pullFlag = 12;
+S.RunAnaObj.pullFlag = 17;
 f = S.LoadGridFile;
 mNuSq_2d = cellfun(@(x) x.par(1),f.FitResults)';
 E0_2d    = cellfun(@(x) x.par(2),f.FitResults)';
@@ -52,7 +52,7 @@ mNuSq_2d_plot(mNuSq_2d_plot<-5)=-5.5;
 mNuSq_2d_plot(mNuSq_2d_plot>10)=11;
 
 [C,h] = contourf(S.sin2T4,S.mNu4Sq,mNuSq_2d_plot,[-10 -2 -1 -0.5 0 1 3 10],...
-    'Color',rgb('Black'),'LineWidth',1.5,'ShowText','ON');
+    'Color',rgb('Black'),'LineWidth',1,'ShowText','ON');
 clabel(C,h,'Color',rgb('Black'),'FontSize',12,...
     'FontSmoothing','on','FontWeight','bold','LabelSpacing',120,'Margin',1)
 PrettyFigureFormat('FontSize',24);
@@ -77,11 +77,18 @@ elseif S.RunAnaObj.pullFlag==99
     title(sprintf('%.0f eV range - {\\itm}_\\nu^2 free (unconstrained)',S.range),...
         'FontWeight','normal','FontSize',get(gca,'FontSize')-2);
 elseif S.RunAnaObj.pullFlag == 13
-     title(sprintf('%.0f eV range - {\\itm}_\\nu^2 free -  \\sigma({\\itE}_0) = 1 eV',S.range),...
-        'FontWeight','normal','FontSize',get(gca,'FontSize')-2); 
-elseif  S.RunAnaObj.pullFlag == 15
-       title(sprintf('%.0f eV range - \\sigma({\\itm}_\\nu^2) = 1 eV^2',S.range),...
+    title(sprintf('%.0f eV range - {\\itm}_\\nu^2 free -  \\sigma({\\itE}_0) = 1 eV',S.range),...
         'FontWeight','normal','FontSize',get(gca,'FontSize')-2);
+elseif  S.RunAnaObj.pullFlag == 15
+    title(sprintf('%.0f eV range - \\sigma({\\itm}_\\nu^2) = 1 eV^2',S.range),...
+        'FontWeight','normal','FontSize',get(gca,'FontSize')-2);
+elseif  S.RunAnaObj.pullFlag == 16
+    title(sprintf('%.0f eV range - \\sigma({\\itm}_\\nu^2) = 2 eV^2',S.range),...
+        'FontWeight','normal','FontSize',get(gca,'FontSize')-2);
+elseif  S.RunAnaObj.pullFlag == 17
+    title(sprintf('%.0f eV range - \\sigma({\\itm}_\\nu^2) = 3 eV^2',S.range),...
+        'FontWeight','normal','FontSize',get(gca,'FontSize')-2);
+    
 end
 
 filename = sprintf('%smNuDistGrid_%.0feV_pull%.0f.png',...

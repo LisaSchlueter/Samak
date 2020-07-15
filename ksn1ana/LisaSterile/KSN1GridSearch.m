@@ -22,7 +22,7 @@ p.addParameter('Twin_sin2T4',0,@(x)isfloat(x));
 p.addParameter('Negsin2T4','OFF',@(x)ismember(x,{'ON','OFF'}));
 p.addParameter('NegmNu4Sq','OFF',@(x)ismember(x,{'ON','OFF'}));
 p.addParameter('Extsin2T4','OFF',@(x)ismember(x,{'ON','OFF'})); %extended sin2T2 (up to 1)
-
+p.addParameter('FixmNuSq',0,@(x)isfloat(x)); % if light nu-mass fixed (eV^2)
 p.parse(varargin{:});
 
 range         = p.Results.range;
@@ -44,6 +44,7 @@ Twin_sin2T4   = p.Results.Twin_sin2T4;
 Negsin2T4     = p.Results.Negsin2T4;
 NegmNu4Sq     = p.Results.NegmNu4Sq;
 Extsin2T4     = p.Results.Extsin2T4;
+FixmNuSq      = p.Results.FixmNuSq;
 
 if strcmp(chi2,'chi2CMShape')
     NonPoissonScaleFactor=1.064;
@@ -103,6 +104,10 @@ end
 
 if strcmp(Extsin2T4,'ON')
     extraStr = [extraStr,'_Extsin2T4']; 
+end
+
+if FixmNuSq~=0 && ~contains(freePar,'mNu')
+      extraStr = [extraStr,sprintf('_FixmNuSq%.2feV2',FixmNuSq)]; 
 end
 MakeDir(savedir);
 
@@ -197,6 +202,10 @@ else
         T.RunData.TBDISE = sqrt(TBDIS_mc);
     end
     
+    if FixmNuSq~=0 && ~contains(freePar,'mNu')
+        % if light nu-mass is fixed and shall not be fixed to 0 eV^2
+        T.ModelObj.mnuSq_i = FixmNuSq;
+    end
     %% null hypothesis : no steriles
     T.Fit;
     FitResults_Null = T.FitResult;
@@ -204,7 +213,7 @@ else
         if Twin_mNu4Sq~=0 || Twin_sin2T4~=0
             T.SimulateStackRuns;
         end
-    end
+    end    
     %% reference fit to find global minimum (if this fails, chi2min is found by grid search)
     % stop doing this -> makes the grid search too slow
     % do it later, in cases needed
@@ -258,6 +267,10 @@ else
     
     parfor i= 1:(nGridSteps*nGridSteps)
         D(i).SimulateStackRuns;
+        if FixmNuSq~=0 && ~contains(freePar,'mNu')
+            % if light nu-mass is fixed and shall not be fixed to 0 eV^2
+            D(i).ModelObj.mnuSq_i = FixmNuSq;
+        end
         D(i).ModelObj.SetFitBiasSterile(mnu4Sq_Grid(i),sin2T4_Grid(i));
         D(i).Fit
         chi2Grid(i) = D(i).FitResult.chi2min;

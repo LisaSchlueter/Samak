@@ -85,14 +85,21 @@ S.LoadGridFile('CheckSmallerN','ON','CheckLargerN','ON'); % if CheckSmallerN als
 S.Interp1Grid('RecomputeFlag','ON');% interpolate chi2 map -> nicer appearance of all plots. some
 p3eV = S.ContourPlot('HoldOn','ON','Color',rgb('LimeGreen'),'LineStyle',':');
 
+% S.InterpMode = 'lin';
+% S.RunAnaObj.pullFlag = 13;
+% S.LoadGridFile('CheckSmallerN','ON','CheckLargerN','ON'); % if CheckSmallerN also look for grid with more/less nGridSteps
+% S.Interp1Grid('RecomputeFlag','ON');% interpolate chi2 map -> nicer appearance of all plots. some
+% pE0 = S.ContourPlot('HoldOn','ON','Color',rgb('Silver'),'LineStyle','--');
 
-leg = legend([pfix,p0p5eV,p1eV,p2eV,p3eV,pfree],...
+leg = legend([pfix,p0p5eV,p1eV,p2eV,p3eV,pfree,pE0],...
     sprintf('Fixed {\\itm}_\\nu^2 = 0 eV^2'),...
     sprintf('Free  {\\itm}_\\nu^2 - \\sigma({\\itm}_\\nu^2) = 0.5  eV^2'),...
     sprintf('Free  {\\itm}_\\nu^2 - \\sigma({\\itm}_\\nu^2) = 1  eV^2'),...
     sprintf('Free  {\\itm}_\\nu^2 - \\sigma({\\itm}_\\nu^2) = 2 eV^2'),...
     sprintf('Free  {\\itm}_\\nu^2 - \\sigma({\\itm}_\\nu^2) = 3 eV^2'),...
-     sprintf('Free  {\\itm}_\\nu^2 - unconstrained'));
+    sprintf('Free  {\\itm}_\\nu^2 - unconstrained'));%,...
+   % sprintf('Free  {\\itm}_\\nu^2 - unconstrained - \\sigma({\\itE}_0) = 1 eV'));
+
  
  switch S.RunAnaObj.DataType
      case 'Real'
@@ -114,10 +121,10 @@ t.FontSize = 18;
 xlim([6e-03 0.4])
 ylim([1 2e3])
 
-title(sprintf('%.0f eV range',S.range))
+title(sprintf('%s - %.0f eV range',leg.Title.String,S.range))
+leg.Title.String = '';
 %% save
 plotname = strrep(S.DefPlotName,'_pull17',sprintf('_ComparemNuPulls_%s.png',S.RunAnaObj.DataType));
 print(gcf,plotname,'-dpng','-r300');
 fprintf('save plot to %s \n',plotname);
-
-export_fig(gcf,strrep(plotname,'.png','.pdf'));
+export_fig(gcf,[plotname,'.pdf']);

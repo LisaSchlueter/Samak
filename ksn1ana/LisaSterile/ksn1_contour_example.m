@@ -14,9 +14,10 @@ SmartGrid = 'OFF';
 ELossFlag = 'KatrinT2';
 AngularTFFlag = 'OFF'; % OFF
 pullFlag = 99;
-NegmNu4Sq = 'ON';
+NegmNu4Sq = 'OFF';
 Negsin2T4 = 'OFF';
-Extsin2T4 = 'ON';
+Extsin2T4 = 'OFF';
+FixmNuSq = -1;
 %% plot options
 PlotContour = 'OFF';
 PlotGrid    = 'OFF';
@@ -47,7 +48,8 @@ titleStr = sprintf('%s (%s) %.0f eV range',DataLabel,chi2Label,range);
     'AngularTFFlag',AngularTFFlag,...
     'Negsin2T4',Negsin2T4,...
     'NegmNu4Sq',NegmNu4Sq,...
-    'Extsin2T4',Extsin2T4);
+    'Extsin2T4',Extsin2T4,...
+    'FixmNuSq',FixmNuSq);
 
 %% find best fit
 d = importdata(savefile);

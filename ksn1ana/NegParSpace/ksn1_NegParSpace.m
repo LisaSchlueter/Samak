@@ -1,7 +1,7 @@
 
 
 DataType = 'Real';
-freePar = 'E0 Bkg Norm';
+freePar = 'mNu E0 Bkg Norm';
 range = 40;
 
 
@@ -11,10 +11,10 @@ savedir = sprintf('%sSterileAnalysis/GridSearchFiles/%s/%s/',...
 f1 = sprintf('%sKSN1_GridSearch_%s_%s_%s_%.0feVrange_%s_%.0fnGrid_Budget24%s.mat',...
     savedir,'KNM1',DataType,strrep(freePar,' ',''),range,'chi2CMShape',50,'_Negsin2T4');
 f2 = sprintf('%sKSN1_GridSearch_%s_%s_%s_%.0feVrange_%s_%.0fnGrid_Budget24%s.mat',...
-    savedir,'KNM1',DataType,strrep(freePar,' ',''),range,'chi2CMShape',50,'_NegmNu4Sq');
+    savedir,'KNM1',DataType,strrep(freePar,' ',''),range,'chi2CMShape',50,'_NegmNu4Sq_Extsin2T4');
 f3 = sprintf('%sKSN1_GridSearch_%s_%s_%s_%.0feVrange_%s_%.0fnGrid_Budget24%s.mat',...
     savedir,'KNM1',DataType,strrep(freePar,' ',''),range,'chi2CMShape',50,'_NegmNu4Sq_Negsin2T4');
-f4 = sprintf('%sKSN1_GridSearch_%s_%s_%s_%.0feVrange_%s_%.0fnGrid_Budget24%s.mat',...
+f4 = sprintf('%sKSN1_GridSearch_%s_%s_%s_%.0feVrange_%s_%.0fnGrid_Budget24%s_Extsin2T4.mat',...
     savedir,'KNM1',DataType,strrep(freePar,' ',''),range,'chi2CMShape',50,'');
 d1 = importdata(f1);
 d2 = importdata(f2);
@@ -35,24 +35,29 @@ chi2tmp = d1.chi2';
 mNu4Sq_bf1 =   d1.mnu4Sq(row,col);%obj.mNu4Sq(col,row);
 sin2T4_bf1 = d1.sin2T4(row,col);
 chi2_bf1   =   min(min(chi2tmp));
-            
+fprintf('best fit NW: chi2min = %.2f , m4^2 = %.2f eV^2 , sint4^2 = %.2f \n',chi2_bf1,mNu4Sq_bf1,sin2T4_bf1);
+
 chi2tmp = d2.chi2';
 [row, col]    = find(chi2tmp == min(chi2tmp(:)));
 mNu4Sq_bf2 =   d2.mnu4Sq(row,col);%obj.mNu4Sq(col,row);
 sin2T4_bf2 = d2.sin2T4(row,col);
 chi2_bf2  =   min(min(chi2tmp));
+fprintf('best fit SE: chi2min = %.2f , m4^2 = %.2f eV^2 , sint4^2 = %.2f \n',chi2_bf2,mNu4Sq_bf2,sin2T4_bf2);
 
 chi2tmp = d3.chi2';
 [row, col]    = find(chi2tmp == min(chi2tmp(:)));
 mNu4Sq_bf3 =   d3.mnu4Sq(row,col);%obj.mNu4Sq(col,row);
 sin2T4_bf3 = d3.sin2T4(row,col);
 chi2_bf3   =   min(min(chi2tmp));
+fprintf('best fit SW: chi2min = %.2f , m4^2 = %.2f eV^2 , sint4^2 = %.2f \n',chi2_bf3,mNu4Sq_bf3,sin2T4_bf3);
 
 chi2tmp = d4.chi2';
 [row, col]    = find(chi2tmp == min(chi2tmp(:)));
 mNu4Sq_bf4 =   d4.mnu4Sq(row,col);%obj.mNu4Sq(col,row);
 sin2T4_bf4 = d4.sin2T4(row,col);
 chi2_bf4   =   min(min(chi2tmp));
+fprintf('best fit NE: chi2min = %.2f , m4^2 = %.2f eV^2 , sint4^2 = %.2f \n',chi2_bf4,mNu4Sq_bf4,sin2T4_bf4);
+
 %% prepare plot
 
 zlimMax = DeltaChi2;
@@ -91,10 +96,10 @@ set(gca,'YScale','log');
 xlim([0 0.5])
 PrettyFigureFormat('FontSize',20);
 grid off;
-xlim([1e-03 0.6])
+xlim([1e-03 1]);
 ylim([1 ymax])
 yticks([1 10 1e2 1e3]);
-xticks([0.001 0.01 0.1])
+xticks([0.001 0.01 0.1 1])
 yticklabels('');
 xticklabels('');
 ax2 = gca;
@@ -114,12 +119,12 @@ view(2);
 set(gca,'XScale','log');
  set(gca,'YScale','log');
 view(0,-90);
-xlim([1e-03 0.6]);
+xlim([1e-03 1]);
 ylim([1 ymax])
 PrettyFigureFormat('FontSize',20);
 grid off;
 yticks([1 10 1e2 1e3]);
-xticks([0.001 0.01 0.1])
+xticks([0.001 0.01 0.1 1])
 yticklabels({''});
 ax3 = gca;
 c =colorbar;

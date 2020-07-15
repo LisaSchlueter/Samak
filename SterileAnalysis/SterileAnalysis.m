@@ -254,6 +254,7 @@ classdef SterileAnalysis < handle
             p.addParameter('LineStyle',obj.PlotLines{1},@(x) ischar(x));
             p.addParameter('PlotSplines','OFF',@(x) ismember(x,{'ON','OFF'}));
             p.addParameter('SavePlot','OFF',@(x)ismember(x,{'ON','OFF','png'}));
+            p.addParameter('RasterScan','OFF',@(x) ismember(x,{'ON','OFF'})); % 1 par instead of 2 par
             
             p.parse(varargin{:});  
             CL          = p.Results.CL;      % also works with vector
@@ -263,6 +264,7 @@ classdef SterileAnalysis < handle
             BestFit     = p.Results.BestFit;
             PlotSplines = p.Results.PlotSplines;
             SavePlot    = p.Results.SavePlot;
+            RasterScan  = p.Results.RasterScan;
             
             if strcmp(HoldOn,'ON')
                 hold on;
@@ -270,7 +272,15 @@ classdef SterileAnalysis < handle
                 GetFigure;
             end
             
-            obj.DeltaChi2 = GetDeltaChi2(CL,2);
+             chi2_ref_local = obj.chi2_ref;
+            if strcmp(RasterScan,'ON')
+                obj.DeltaChi2 = GetDeltaChi2(CL,1);
+                if strcmp(obj.RunAnaObj.DataType,'Real')
+                    chi2_ref_local = min(obj.chi2); % minimum for each m4^2
+                end
+            else
+                obj.DeltaChi2 = GetDeltaChi2(CL,2);
+            end
             
              % contour plot
             PlotArg = {'LineWidth',2.5,'LineStyle',myLineStyle};
@@ -278,7 +288,7 @@ classdef SterileAnalysis < handle
                 PlotArg = [PlotArg,{'LineColor',myColor}];
             end
             
-            [M,pHandle]= contour(obj.sin2T4,obj.mNu4Sq,obj.chi2-obj.chi2_ref,...
+            [M,pHandle]= contour(obj.sin2T4,obj.mNu4Sq,obj.chi2-chi2_ref_local,...
                 [obj.DeltaChi2 obj.DeltaChi2],...
                 PlotArg{:});
             
