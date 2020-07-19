@@ -11,13 +11,13 @@ DataType = 'Real';
 freePar = 'E0 Bkg Norm';
 RunList = 'KNM1';
 SmartGrid = 'OFF';
-ELossFlag = 'KatrinT2';
+ELossFlag = 'KatrinT2A20';
 AngularTFFlag = 'OFF'; % OFF
 pullFlag = 99;
 NegmNu4Sq = 'OFF';
 Negsin2T4 = 'OFF';
 Extsin2T4 = 'OFF';
-FixmNuSq = -0.98;
+FixmNuSq = 0;%-0.98;
 %% plot options
 PlotContour = 'OFF';
 PlotGrid    = 'OFF';
