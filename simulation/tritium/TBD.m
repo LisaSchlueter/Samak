@@ -107,6 +107,10 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
         sin2T4;sin2T4_i;  % sin2Theta14 mixing (forget the 2x2theta)
         mTSq; mTSq_i       %--> tachyonic neutrino mass sigma^2 (1 per ring, innermost ring is fixed to 0)
         
+        % relic neutrinos
+        eta_i;eta;ToggleRelic;
+        ToggleES;
+        
         % Phase Space Correction for Negative Mass Squared
         PS_Wein93;
         PS_Wein93Coeff;
@@ -114,8 +118,10 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
         % Beta Spectrum - Differential
         PhaseSpace;      % Primitive Beta Spectrum
         TBDDS;           % Differential Beta Spectrum
+        TBDDS_R;
         TBDDSE;          % Error on Differential Beta Spectrum
         NormFactorTBDDS; % Normalization Factor
+        NormFactorTBDDS_R;
         mate;            % Migration Matrix For E Fast Resolution
         
         % Beta Spectrum - Integral
@@ -166,18 +172,24 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
         TTNormES;TTNormES_i;
         TTexE_G; TTexP_G;
         TTexE_E; TTexP_E;
+        TTexE_R; TTexP_R;
+        TTGSTh_R;
         
         % FSD D-T
         DTNormGS;DTNormGS_i;
         DTNormES;DTNormES_i;
         DTexE_G; DTexP_G;
         DTexE_E; DTexP_E;
+        DTexE_R; DTexP_R;
+        DTGSTh_R;
         
         % FSD H-T
         HTNormGS;HTNormGS_i;
         HTNormES;HTNormES_i;
         HTexE_G; HTexP_G;
         HTexE_E; HTexP_E;
+        HTexE_R; HTexP_R;
+        HTGSTh_R;
         
         % FSD T minus ion
         TmNormGS;TmNormGS_i;
@@ -214,6 +226,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
         qUOffset_bias;    % 1 value per spectrum (1 per ring, innermost ring is fixed to 0)
         mTSq_bias; % --> sigma^2 (1 per ring, innermost ring is fixed to 0)
         FracTm_bias; % fraction of T- ions
+        eta_bias;
         
         % Integration method
         IStype; % SIMPSFAST is the only one that works right now
@@ -246,6 +259,9 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
             p.addParameter('i_qUOffset','',@(x)isfloat(x));
             p.addParameter('Binning','Default',@(x)ismember(x,{'Default','NoB'}));
             p.addParameter('BinningSteps',0.1,@(x)isfloat(x));
+            p.addParameter('eta_i',1,@(x)isfloat(x));
+            p.addParameter('ToggleRelic','ON',@(x)ismember(x,{'ON','OFF'}));
+            p.addParameter('ToggleES','OFF',@(x)ismember(x,{'ON','OFF'}));
 
             % TBD: Flag for Theoretical Corrections
             p.addParameter('ScreeningFlag','OFF',@(x)ismember(x,{'OFF','ON'}));
@@ -309,6 +325,9 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
             obj.normFitallPixels_i  = p.Results.normFitallPixels_i;
             obj.Q_i                 = p.Results.Q_i;
             obj.i_qUOffset          = p.Results.i_qUOffset;
+            obj.eta_i               = p.Results.eta_i;
+            obj.ToggleRelic         = p.Results.ToggleRelic;
+            obj.ToggleES            = p.Results.ToggleES;
             
             % TBD: Flag Theoretical Corrections
             obj.ScreeningFlag       = p.Results.ScreeningFlag;
@@ -372,7 +391,12 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
             % Load FSD Properties
             ComputeTritiumPurity(obj);
             ComputeIsotropologActivityWeight(obj);
-            LoadFSD(obj);
+            if ~((strcmp(obj.TTFSD,'OFF')) ...
+                    || (strcmp(obj.DTFSD,'OFF')) ...
+                    || (strcmp(obj.HTFSD,'OFF')))
+                
+                LoadFSD(obj);
+            end
             
             % Backgrounds
             InitializeDetectorEfficiency(obj);
@@ -581,8 +605,16 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                     squeeze(Sigma(1,:,:)),...
                     FSDConvArg{:},'SanityPlot',SanityPlot,'ZoomPlot',ZoomPlot,...
                     'filename',ttfsdfilename);
+                [obj.TTexE_R,obj.TTexP_R] = FSD_Convfun_relic(obj.TTexE,obj.TTexP,...
+                    squeeze(Sigma(1,:,:)),'mnu',sqrt(obj.mnuSq_i),'BinVec',obj.Te-obj.Q_i,...
+                    'SanityPlot',SanityPlot,'ZoomPlot',ZoomPlot,...
+                    'filename',ttfsdfilename);
             end
             obj.TTGSTh = obj.GetFSDTh(obj.TTexE);          % Limit ground / excited states
+            switch 'ToggleES'
+                case 'ON'
+                    obj.TTGSTh_R = obj.GetFSDTh(flip(-1.*obj.TTexE_R));
+            end
             obj.TTNormGS_i = sum(obj.TTexP(:,1:obj.TTGSTh),2);
             obj.TTNormES_i = sum(obj.TTexP(:,obj.TTGSTh:end),2);
             
@@ -622,8 +654,16 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
             if ~isempty(Sigma)  %broaden FSDs
                 [obj.DTexE,obj.DTexP] = FSD_Convfun(obj.DTexE,obj.DTexP,squeeze(Sigma(2,:,:)),...
                                                   FSDConvArg{:},'filename',dtfsdfilename);
+                [obj.DTexE_R,obj.DTexP_R] = FSD_Convfun_relic(obj.DTexE,obj.DTexP,...
+                    squeeze(Sigma(1,:,:)),'mnu',sqrt(obj.mnuSq_i),'BinVec',obj.Te-obj.Q_i,...
+                    'SanityPlot',SanityPlot,'ZoomPlot',ZoomPlot,...
+                    'filename',ttfsdfilename);
             end
             obj.DTGSTh = obj.GetFSDTh(obj.DTexE); % Limit ground / excited states
+            switch 'ToggleES'
+                case 'ON'
+                    obj.DTGSTh_R = obj.GetFSDTh(flip(-1.*obj.DTexE_R));
+            end
             obj.DTNormGS_i = sum(obj.DTexP(:,1:obj.DTGSTh),2);
             obj.DTNormES_i = sum(obj.DTexP(:,obj.DTGSTh:end),2);
             
@@ -659,8 +699,16 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
             if ~isempty(Sigma)  %broaden FSDs
                 [obj.HTexE,obj.HTexP] = FSD_Convfun(obj.HTexE,obj.HTexP,squeeze(Sigma(3,:,:)),...
                                        FSDConvArg{:},'filename',htfsdfilename);
+                [obj.HTexE_R,obj.HTexP_R] = FSD_Convfun_relic(obj.HTexE,obj.HTexP,...
+                    squeeze(Sigma(1,:,:)),'mnu',sqrt(obj.mnuSq_i),'BinVec',obj.Te-obj.Q_i,...
+                    'SanityPlot',SanityPlot,'ZoomPlot',ZoomPlot,...
+                    'filename',ttfsdfilename);
             end
             obj.HTGSTh = obj.GetFSDTh(obj.HTexE);   % Limit ground / excited states
+            switch 'ToggleES'
+                case 'ON'
+                    obj.HTGSTh_R = obj.GetFSDTh(flip(-1.*obj.HTexE_R));
+            end
             obj.HTNormGS_i = sum(obj.HTexP(:,1:obj.HTGSTh),2);
             obj.HTNormES_i = sum(obj.HTexP(:,obj.HTGSTh:end),2);
            %% T minus ion
@@ -692,21 +740,38 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
             end
             Threshold = ceil(mean(Threshold));
         end
-        function [GES,TexE,TexP] = ComputeFSD_GSES(obj,TexE,TexP,TGSTh,state)
+        function [GES,TexE,TexP] = ComputeFSD_GSES(obj,TexE,TexP,TGSTh,state,mode)
+            if strcmp(mode,'capture')
+                TGSTh = numel(TexP)-TGSTh;
+            end
+            
             % Normalization Factors Ground/Excited States
             switch state
                 case 'ground'
-                    TexE  = TexE(:,1:TGSTh);        %TGSTh = limit ground state-excited states
-                    TNorm_i = sum(TexP(:,1:TGSTh),2); % initial Normalization
-                    TexP  = TexP(:,1:TGSTh)./TNorm_i;  %normalize to GS to 1
+                    switch mode
+                        case 'beta'
+                            TexE  = TexE(:,1:TGSTh);
+                            TexP  = TexP(:,1:TGSTh); %TGSTh = limit ground state-excited states
+                        case 'capture'
+                            TexP(1:TGSTh) = 0;
+                    end
+                    TNorm_i = sum(TexP,2); % initial Normalization
+                    TexP  = TexP./TNorm_i;  %normalize to GS to 1
                 case 'excited'
-                    TexE  = TexE(:,TGSTh+1:end);
-                    TNorm_i = sum(TexP(:,TGSTh+1:end),2); % initial Normalization
-                    TexP  = TexP(:,TGSTh+1:end)./TNorm_i; %normalize ES to 1
+                    switch mode
+                        case 'beta'
+                            TexE  = TexE(:,TGSTh+1:end);
+                            TexP  = TexP(:,TGSTh+1:end);
+                        case 'capture'
+                            TexP(TGSTh+1:end) = 0;
+                    end
+                    TNorm_i = sum(TexP,2); % initial Normalization
+                    TexP  = TexP./TNorm_i; %normalize ES to 1
             end
             
             mNuSq_local = obj.mnuSq-2.*obj.mTSq;
             Q_local = obj.Q;
+            %Sigma = sqrt(obj.FSD_Sigma.^2+obj.DE_sigma.^2);
             
             if sum(obj.mTSq)==0
                 mNuSq_local = obj.mnuSq;
@@ -721,6 +786,8 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                 sin2T4_M = squeeze(obj.sin2T4.*ones([obj.nTe,size(TexP')]));
                 mnuSq_M  = squeeze(mNuSq_local'.*ones([obj.nTe,size(TexP')]));
                 mnu4Sq_M = squeeze(obj.mnu4Sq.*ones([obj.nTe,size(TexP')]));
+                %Eta = permute(obj.eta.*ones(obj.nPixels,obj.nTe,numel(TexP)),[2 3 1]);
+                %pdf_relic = pdf('Normal',obj.Te-obj.Q,mNuSq_local-TexE_M,Sigma);
             else
                 % Ground/Excited State
                 TexP_M = repmat(TexP,obj.nTe,1); % probability
@@ -733,25 +800,35 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                 sin2T4_M = obj.sin2T4*ones(obj.nTe,numel(TexP));
                 mnuSq_M = permute(mNuSq_local'.*ones(obj.nPixels,obj.nTe,numel(TexP)),[2 3 1]);
                 mnu4Sq_M = obj.mnu4Sq*ones(obj.nTe,numel(TexP));
+                %Eta = permute(obj.eta.*ones(obj.nPixels,obj.nTe,numel(TexP)),[2 3 1]);
+                %pdf_relic = pdf('Normal',obj.Te-obj.Q,mNuSq_local-TexE_M,Sigma);
+                
             end
-            % normal phase space formula, but
-            % actual energy of the electron =: initial energy of electron - excitation energy of daughter molecule
-            % 1 differential spectrum per excitation energy of the daughter molecule (1 phase space per FSD state)
-            % Combination: weight by the exciation probability and sum (weighted mean)
-            %              GES = squeeze(real(0 + sum(...
-            %                  ((Q_M-Te_M-TexE_M)>=0)...% if (energy of electron - excitation energy of daughter molecule) < Endpoint (Q)
-            %                  .*pe_M.*(Te_M+me_M).*(Q_M-TexE_M-Te_M).*(((ones(obj.nTe,numel(TexP))-sin2T4_M)....
-            %                  .*(((Q_M-Te_M-TexE_M).^2-mnuSq_M)>=0)...
-            %                  .*((Q_M-TexE_M-Te_M).^2-mnuSq_M).^.5) ...
-            %                  + sin2T4_M.*(((Q_M-Te_M-TexE_M).^2-mnu4Sq_M)>=0)...
-            %                  .*((Q_M-TexE_M-Te_M).^2-mnu4Sq_M).^.5).*TexP_M,2)));
-            GES = squeeze(real(0 + sum(...
-                ((Q_M-Te_M-TexE_M)>=0)...% if (energy of electron - excitation energy of daughter molecule) < Endpoint (Q)
-                .*pe_M.*(Te_M+me_M).*(Q_M-TexE_M-Te_M).*(((ones([obj.nTe,size(TexP')])-sin2T4_M)....
-                .*(((Q_M-Te_M-TexE_M).^2-mnuSq_M)>=0)...
-                .*((Q_M-TexE_M-Te_M).^2-mnuSq_M).^.5) ...
-                + sin2T4_M.*(((Q_M-Te_M-TexE_M).^2-mnu4Sq_M)>=0)...
-                .*((Q_M-TexE_M-Te_M).^2-mnu4Sq_M).^.5).*TexP_M,2)));
+            
+            switch mode
+                case 'beta'
+                    % normal phase space formula, but
+                    % actual energy of the electron =: initial energy of electron - excitation energy of daughter molecule
+                    % 1 differential spectrum per excitation energy of the daughter molecule (1 phase space per FSD state)
+                    % Combination: weight by the exciation probability and sum (weighted mean)
+                    %              GES = squeeze(real(0 + sum(...
+                    %                  ((Q_M-Te_M-TexE_M)>=0)...% if (energy of electron - excitation energy of daughter molecule) < Endpoint (Q)
+                    %                  .*pe_M.*(Te_M+me_M).*(Q_M-TexE_M-Te_M).*(((ones(obj.nTe,numel(TexP))-sin2T4_M)....
+                    %                  .*(((Q_M-Te_M-TexE_M).^2-mnuSq_M)>=0)...
+                    %                  .*((Q_M-TexE_M-Te_M).^2-mnuSq_M).^.5) ...
+                    %                  + sin2T4_M.*(((Q_M-Te_M-TexE_M).^2-mnu4Sq_M)>=0)...
+                    %                  .*((Q_M-TexE_M-Te_M).^2-mnu4Sq_M).^.5).*TexP_M,2)));
+                    GES = squeeze(real(0 + sum(...
+                         ((Q_M-Te_M-TexE_M)>=0)... %if (energy of electron - excitation energy of daughter molecule) < Endpoint (Q)
+                          .*pe_M.*(Te_M+me_M).*(Q_M-TexE_M-Te_M).*(((ones([obj.nTe,size(TexP')])-sin2T4_M)...
+                          .*(((Q_M-Te_M-TexE_M).^2-mnuSq_M)>=0)...
+                          .*((Q_M-TexE_M-Te_M).^2-mnuSq_M).^.5) ...
+                          + sin2T4_M.*(((Q_M-Te_M-TexE_M).^2-mnu4Sq_M)>=0)...
+                          .*((Q_M-TexE_M-Te_M).^2-mnu4Sq_M).^.5).*TexP_M,2)));
+                          %+Eta.*pdf_relic.*TexP_M,2))); % relic neutrino PS
+                case 'capture'
+                    GES = squeeze(real(0 +TexP))'; %relic neutrino PS
+            end
         end
         
         % Kinematics / Binning
@@ -1002,6 +1079,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                 obj.qUOffset    = obj.i_qUOffset + obj.qUOffset_bias;             
                 obj.mTSq = obj.mTSq_i + obj.mTSq_bias;
                 obj.WGTS_MolFrac_Tm =  obj.WGTS_MolFrac_Tm_i + obj.FracTm_bias;
+                obj.eta         = obj.eta_i      + obj.eta_bias;
                 % if ( (strcmp(obj.TTFSD,'SAENZNOEE')) || (strcmp(obj.TTFSD,'DOSSNOEE')) )
                 %    obj.TTNormES = 0;
                 % end
@@ -1038,7 +1116,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
             obj.SetFitBias(0);
         end
         % Spectrum Computation - 1 pixel Equivalent
-        function          ComputePhaseSpace(obj)
+        function          ComputePhaseSpace(obj,Process)
             % ----------------------------------------------------------
             % Beta Decay Differential Spectrum: Phase Space Factor
             % With or without Final State Distributions for
@@ -1069,14 +1147,18 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
             if ((strcmp(obj.TTFSD,'OFF')) ...
                     && (strcmp(obj.DTFSD,'OFF')) ...
                     && (strcmp(obj.HTFSD,'OFF')))
-                
-                obj.PhaseSpace = real(0 + ((Q_local-obj.Te)>=0).*...
-                    (obj.pe.*(obj.Te+obj.me).*(Q_local-obj.Te).*((1-obj.sin2T4)...
-                    .*(((Q_local-obj.Te).^2-mNuSq_local) >= 0)...
-                    .*((Q_local-obj.Te).^2-mNuSq_local).^0.5)...
-                    + obj.sin2T4.*(((Q_local-obj.Te).^2-obj.mnu4Sq)>=0)... % sterile neutrino
-                    .*((Q_local-obj.Te).^2-obj.mnu4Sq).^0.5));
-                obj.PhaseSpace(isnan(obj.PhaseSpace)) = 0;
+                switch Process
+                    case 'BetaDecay'
+                        obj.PhaseSpace = real(0 + ((Q_local-obj.Te)>=0)...
+                            .*(obj.pe.*(obj.Te+obj.me).*(Q_local-obj.Te).*((1-obj.sin2T4)...
+                            .*(((Q_local-obj.Te).^2-mNuSq_local) >= 0)...
+                            .*((Q_local-obj.Te).^2-mNuSq_local).^0.5)...
+                            + obj.sin2T4.*(((Q_local-obj.Te).^2-obj.mnu4Sq)>=0)... % sterile neutrino
+                            .*((Q_local-obj.Te).^2-obj.mnu4Sq).^0.5));
+                        obj.PhaseSpace(isnan(obj.PhaseSpace)) = 0;
+                    case 'NuCapture'
+                        obj.PhaseSpace = obj.TTNormGS.*pdf('Normal',obj.Te-obj.Q,mNuSq_local,obj.DE_sigma);
+                end
                 
             else
                 
@@ -1084,12 +1166,24 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                     switch obj.TTFSD
                         case {'DOSS','SAENZ','SAENZNOEE','ROLL','BlindingKNM1','WGTS100K','Sibille','Sibille0p5eV','SibilleFull','BlindingKNM2'}
                             % Ground State
-                            [GS,obj.TTexE_G,obj.TTexP_G] = ...
-                                obj.ComputeFSD_GSES(obj.TTexE,obj.TTexP,obj.TTGSTh,'ground');
+                            switch Process
+                                case 'BetaDecay'
+                                    [GS,obj.TTexE_G,obj.TTexP_G] = ...
+                                        obj.ComputeFSD_GSES(obj.TTexE,obj.TTexP,obj.TTGSTh,'ground','beta');
+                                case 'NuCapture'
+                                    [GS,obj.TTexE_G,obj.TTexP_G] = ...
+                                        obj.ComputeFSD_GSES(obj.TTexE_R,obj.TTexP_R,obj.TTGSTh_R,'ground','capture');
+                            end
                             
                             % Exited States
-                            [ES,obj.TTexE_E,obj.TTexP_E] = ...
-                                obj.ComputeFSD_GSES(obj.TTexE,obj.TTexP,obj.TTGSTh,'excited');
+                            switch Process
+                                case 'BetaDecay'
+                                    [ES,obj.TTexE_E,obj.TTexP_E] = ...
+                                        obj.ComputeFSD_GSES(obj.TTexE,obj.TTexP,obj.TTGSTh,'excited','beta');
+                                case 'NuCapture'
+                                    [ES,obj.TTexE_E,obj.TTexP_E] = ...
+                                        obj.ComputeFSD_GSES(obj.TTexE_R,obj.TTexP_R,obj.TTGSTh_R,'excited','capture');
+                            end
                             
                             % Build Ground + Exited States
                             if ( (strcmp(obj.TTFSD,'SAENZNOEE')) || (strcmp(obj.TTFSD,'DOSSNOEE')) )
@@ -1109,12 +1203,24 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                     switch obj.DTFSD
                         case {'DOSS','HTFSD','TTFSD','BlindingKNM1','WGTS100K','Sibille','Sibille0p5eV','SibilleFull','BlindingKNM2'}
                             % Ground State
-                            [GS,obj.DTexE_G,obj.DTexP_G] = ...
-                                obj.ComputeFSD_GSES(obj.DTexE,obj.DTexP,obj.DTGSTh,'ground');
+                            switch Process
+                                case 'BetaDecay'
+                                    [GS,obj.DTexE_G,obj.DTexP_G] = ...
+                                        obj.ComputeFSD_GSES(obj.DTexE,obj.DTexP,obj.DTGSTh,'ground','beta');
+                                case 'NuCapture'
+                                    [GS,obj.DTexE_G,obj.DTexP_G] = ...
+                                        obj.ComputeFSD_GSES(obj.DTexE_R,obj.DTexP_R,obj.DTGSTh_R,'ground','capture');
+                            end
                             
                             % Exited States
-                            [ES,obj.DTexE_E,obj.DTexP_E] = ...
-                                obj.ComputeFSD_GSES(obj.DTexE,obj.DTexP,obj.DTGSTh ,'excited');
+                            switch Process
+                                case 'BetaDecay'
+                                    [ES,obj.DTexE_E,obj.DTexP_E] = ...
+                                        obj.ComputeFSD_GSES(obj.DTexE,obj.DTexP,obj.DTGSTh ,'excited','beta');
+                                case 'NuCapture'
+                                    [ES,obj.DTexE_E,obj.DTexP_E] = ...
+                                        obj.ComputeFSD_GSES(obj.DTexE_R,obj.DTexP_R,obj.DTGSTh_R,'excited','capture');
+                            end
                             
                             % Build Ground + Exited States
                             %obj.DTNormES = 0;
@@ -1128,12 +1234,24 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                         case {'SAENZ','BlindingKNM1','WGTS100K','Sibille','Sibille0p5eV','SibilleFull','BlindingKNM2'}
                             
                             % Ground State
-                            [GS,obj.HTexE_G,obj.HTexP_G] = ...
-                                obj.ComputeFSD_GSES(obj.HTexE,obj.HTexP,obj.HTGSTh,'ground');
+                            switch Process
+                                case 'BetaDecay'
+                                    [GS,obj.HTexE_G,obj.HTexP_G] = ...
+                                        obj.ComputeFSD_GSES(obj.HTexE,obj.HTexP,obj.HTGSTh,'ground','beta');
+                                case 'NuCapture'
+                                    [GS,obj.HTexE_G,obj.HTexP_G] = ...
+                                        obj.ComputeFSD_GSES(obj.HTexE_R,obj.HTexP_R,obj.HTGSTh_R,'ground','capture');
+                            end
                             
                             % Exited States
-                            [ES,obj.HTexE_E,obj.HTexP_E] = ...
-                                obj.ComputeFSD_GSES(obj.HTexE,obj.HTexP,obj.HTGSTh,'excited');
+                            switch Process
+                                case 'BetaDecay'
+                                    [ES,obj.HTexE_E,obj.HTexP_E] = ...
+                                        obj.ComputeFSD_GSES(obj.HTexE,obj.HTexP,obj.HTGSTh,'excited','beta');
+                                case 'NuCapture'
+                                    [ES,obj.HTexE_E,obj.HTexP_E] = ...
+                                        obj.ComputeFSD_GSES(obj.HTexE_R,obj.HTexP_R,obj.HTGSTh_R,'excited','capture');
+                            end
                             
                             % Build Ground + Exited States
                             HTps = obj.HTNormGS' .* GS + obj.HTNormES' .* ES;
@@ -1152,14 +1270,19 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                     if obj.WGTS_MolFrac_Tm~=0
                         % Ground State
                         [GS,obj.TmexE_G,obj.TmexP_G] = ...
-                            obj.ComputeFSD_GSES(obj.TmexE,obj.TmexP,obj.TmGSTh,'ground');
+                            obj.ComputeFSD_GSES(obj.TmexE,obj.TmexP,obj.TmGSTh,'ground','beta');
+                        [GS_R,obj.TmexE_G_R,obj.TmexP_G_R] = ...
+                                obj.ComputeFSD_GSES(obj.TmexE_R,obj.TmexP_R,obj.TmGSTh,'ground','capture');
                         
                         % Exited States
                         [ES,obj.TmexE_E,obj.TmexP_E] = ...
-                            obj.ComputeFSD_GSES(obj.TmexE,obj.TmexP,obj.TmGSTh,'excited');
+                            obj.ComputeFSD_GSES(obj.TmexE,obj.TmexP,obj.TmGSTh,'excited','beta');
+                        [ES_R,obj.TmexE_E_R,obj.TmexP_E_R] = ...
+                                obj.ComputeFSD_GSES(obj.TmexE_R,obj.TmexP_R,obj.TTGSTh,'excited','capture');
                         
                         % Build Ground + Exited States
-                        Tmps = obj.TmNormGS .* GS + obj.TmNormES .* ES;
+                        Tmps = obj.TmNormGS .* GS + obj.TmNormES .* ES...
+                                +(obj.TmNormGS_R)'.*GS_R + (obj.TmNomrES)'.*ES_R;
                         obj.PhaseSpace = obj.PhaseSpace + obj.WGTS_MolFrac_Tm.*Tmps;
                     end
             end
@@ -1339,11 +1462,11 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                     case {'DOSS','HTFSD','TTFSD'}
                         % Ground State
                         [GS,obj.TTexE_G,obj.TTexP_G] = ...
-                            obj.ComputeFSD_GSES(obj.TTexE,obj.TTexP,obj.TTGSTh,'ground');
+                            obj.ComputeFSD_GSES(obj.TTexE,obj.TTexP,obj.TTGSTh,'ground','beta');
                         
                         % Exited States
                         [ES,obj.TTexE_E,obj.TTexP_E] = ...
-                            obj.ComputeFSD_GSES(obj.TTexE,obj.TTexP,obj.TTGSTh,'excited');
+                            obj.ComputeFSD_GSES(obj.TTexE,obj.TTexP,obj.TTGSTh,'excited','beta');
                         
                         % Build Ground + Exited States
                         DTps = obj.DTNormGS .* GS + obj.DTNormES .* ES;
@@ -1354,11 +1477,11 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                     case {'SAENZ','Sibille','Sibille0p5eV','SibilleFull'}
                         % Ground State
                         [GS,obj.HTexE_G,obj.HTexP_G] = ...
-                            obj.ComputeFSD_GSES(obj.HTexE,obj.HTexP,obj.HTGSTh,'ground');
+                            obj.ComputeFSD_GSES(obj.HTexE,obj.HTexP,obj.HTGSTh,'ground','beta');
                         
                         % Exited States
                         [ES,obj.HTexE_E,obj.HTexP_E] = ...
-                            obj.ComputeFSD_GSES(obj.HTexE,obj.HTexP,obj.HTGSTh,'excited');
+                            obj.ComputeFSD_GSES(obj.HTexE,obj.HTexP,obj.HTGSTh,'excited','beta');
                         
                         % Build Ground + Exited States
                         HTps = obj.HTNormGS .* GS + obj.HTNormES .* ES;
@@ -1533,12 +1656,19 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
             p.addParameter('DTES_bias',0.,@(x)isfloat(x));
             p.addParameter('HTGS_bias',0.,@(x)isfloat(x));
             p.addParameter('HTES_bias',0.,@(x)isfloat(x));
+            p.addParameter('TTGS_bias_R',0,@(x)isfloat(x));
+            p.addParameter('TTES_bias_R',0,@(x)isfloat(x));
+            p.addParameter('DTGS_bias_R',0,@(x)isfloat(x));
+            p.addParameter('DTES_bias_R',0,@(x)isfloat(x));
+            p.addParameter('HTGS_bias_R',0,@(x)isfloat(x));
+            p.addParameter('HTES_bias_R',0,@(x)isfloat(x));
             p.addParameter('mnu4Sq_Bias',0.,@(x)isfloat(x));
             p.addParameter('sin2T4_Bias',0.,@(x)isfloat(x));
             p.addParameter('qUOffset_bias',zeros(1,obj.nPixels),@(x)isfloat(x));  
             p.addParameter('mTSq_bias',zeros(1,obj.nPixels),@(x)isfloat(x));  
             p.addParameter('NormFlag','ON',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('FracTm_bias',0,@(x)isfloat(x)); %fraction of T- ions
+            p.addParameter('eta_bias',0,@(x)isfloat(x));
             p.parse(varargin{:});
             obj.mnuSq_Bias       = p.Results.mSq_bias;
             obj.E0_bias          = p.Results.E0_bias;
@@ -1557,6 +1687,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
             obj.qUOffset_bias    = p.Results.qUOffset_bias;
             obj.FracTm_bias      = p.Results.FracTm_bias;
             obj.mTSq_bias        = p.Results.mTSq_bias;
+            obj.eta_bias         = p.Results.eta_bias;
             NormFlag             = p.Results.NormFlag;
                         
             % Save previous values of parameters
@@ -1632,58 +1763,122 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                 end
               
                 % Phase Space - Negative Mass Squared....
+                TBDDS_beta = zeros(numel(obj.Te),1);
+                TBDDS_Capture = zeros(numel(obj.Te),1);
                 switch obj.PS_Wein93
                     case 'ON'
                         obj.ComputePhaseSpaceWei93();
                     case 'OFF'
-                        obj.ComputePhaseSpace();
+                        obj.ComputePhaseSpace('BetaDecay');
+                        TBDDS_beta = obj.PhaseSpace;
+                        switch obj.ToggleRelic
+                            case 'ON'
+                                switch obj.ToggleES
+                                    case 'OFF'
+                                        mNuSq_local = obj.mnuSq-2.*obj.mTSq;
+                                        obj.PhaseSpace = pdf('Normal',obj.Te-obj.Q,mNuSq_local-1.766,sqrt(obj.DE_sigma^2+0.345^2));  %obj.Q.*obj.me./(obj.me+obj.MH3+obj.MHe3),
+                                    case 'ON'
+                                        obj.ComputePhaseSpace('NuCapture');
+                                end
+
+                                TBDDS_Capture = obj.PhaseSpace;
+                        end
                 end
                 
                 % Apply Fermi Function
-                obj.TBDDS =  obj.PhaseSpace .* obj.ComputeFermiCorr();
+                TBDDS_beta =  TBDDS_beta .* obj.ComputeFermiCorr();
                 
                 % Corrections to the allowed diff. beta spectrum
                 switch obj.RadiativeFlag
                     case 'ON'
-                        obj.TBDDS = obj.TBDDS .* real(obj.ComputeRadiativeCorr());
+                        TBDDS_beta = TBDDS_beta .* real(obj.ComputeRadiativeCorr());
                 end
                 switch obj.RecoilWmVmAFlag
                     case 'ON'
-                        obj.TBDDS = obj.TBDDS .* obj.ComputeRecoilWmVmACorr() ;
+                        TBDDS_beta = TBDDS_beta .* obj.ComputeRecoilWmVmACorr() ;
                 end
                 switch obj.FiniteExtChargeFlag
                     case 'ON'
-                        obj.TBDDS = obj.TBDDS .* obj.ComputeFiniteExtChargeCorr() ;
+                        TBDDS_beta = TBDDS_beta .* obj.ComputeFiniteExtChargeCorr() ;
                 end
                 switch obj.EEexchangeFlag
                     case 'ON'
-                        obj.TBDDS = obj.TBDDS .* obj.ComputeEEexchangeCorr(2) ;
+                        TBDDS_beta = TBDDS_beta .* obj.ComputeEEexchangeCorr(2) ;
                 end
                 switch obj.ScreeningFlag
                     case 'ON'
-                        obj.TBDDS = obj.TBDDS .* obj.ComputeScreeningCorr();
+                        TBDDS_beta = TBDDS_beta .* obj.ComputeScreeningCorr();
                 end
                 switch obj.WintFiniteSizeFlag
                     case 'ON'
-                        obj.TBDDS = obj.TBDDS .* obj.ComputeWintFiniteSizeCorr() ;
+                        TBDDS_beta = TBDDS_beta .* obj.ComputeWintFiniteSizeCorr() ;
                 end
                 switch obj.RecoilCoulombFlag
                     case 'ON'
-                        obj.TBDDS = obj.TBDDS .* obj.ComputeRecoilCoulombCorr() ;
+                        TBDDS_beta = TBDDS_beta .* obj.ComputeRecoilCoulombCorr() ;
                 end
-                
                 switch obj.DopplerEffectFlag
                     case {'matConv','numConv'}
-                        obj.TBDDS = obj.KernelSpectrumConv(obj.TBDDS);
-                        obj.TBDDS = obj.restoreSpectrum(obj.TBDDS);
+                        TBDDS_beta = obj.KernelSpectrumConv(TBDDS_beta);
+                        TBDDS_beta = obj.restoreSpectrum(TBDDS_beta);
+                end
+
+                
+                switch obj.ToggleRelic
+                    case 'ON'
+                        switch obj.RadiativeFlag
+                            case 'ON'
+                                TBDDS_Capture = TBDDS_Capture .* real(obj.ComputeRadiativeCorr());
+                        end
+                        switch obj.RecoilWmVmAFlag
+                            case 'ON'
+                                TBDDS_Capture = TBDDS_Capture .* obj.ComputeRecoilWmVmACorr() ;
+                        end
+                        switch obj.FiniteExtChargeFlag
+                            case 'ON'
+                                TBDDS_Capture = TBDDS_Capture .* obj.ComputeFiniteExtChargeCorr() ;
+                        end
+                        switch obj.EEexchangeFlag
+                            case 'ON'
+                                TBDDS_Capture = TBDDS_Capture .* obj.ComputeEEexchangeCorr(2) ;
+                        end
+                        switch obj.ScreeningFlag
+                            case 'ON'
+                                TBDDS_Capture = TBDDS_Capture .* obj.ComputeScreeningCorr();
+                        end
+                        switch obj.WintFiniteSizeFlag
+                            case 'ON'
+                                TBDDS_Capture = TBDDS_Capture .* obj.ComputeWintFiniteSizeCorr() ;
+                        end
+                        switch obj.RecoilCoulombFlag
+                            case 'ON'
+                                TBDDS_Capture = TBDDS_Capture .* obj.ComputeRecoilCoulombCorr() ;
+                        end
+                        switch obj.DopplerEffectFlag
+                            case {'matConv','numConv'}
+                                TBDDS_Capture = obj.KernelSpectrumConv(TBDDS_Capture);
+                                TBDDS_Capture = obj.restoreSpectrum(TBDDS_Capture);
+                        end
+
                 end
             end
             
             if strcmp(NormFlag,'ON')
-                obj.TBDDS  = (1+obj.normFit).*(obj.TBDDS./simpsons(obj.Te,obj.TBDDS)).*obj.NormFactorTBDDS;
+                TBDDS_beta  = (1+obj.normFit).*(TBDDS_beta./simpsons(obj.Te,TBDDS_beta)).*obj.NormFactorTBDDS;
+                switch obj.ToggleRelic
+                    case 'ON'
+                        TBDDS_Capture = (1+obj.normFit).*(TBDDS_Capture./simpsons(obj.Te,TBDDS_Capture)).*obj.NormFactorTBDDS_R;
+                        switch obj.ToggleES
+                            case'OFF'
+                                TBDDS_Capture = TBDDS_Capture.*obj.TTNormGS;
+                        end
+                end
             end
             
-            if any(obj.qUOffset~=0) 
+            obj.TBDDS_R = TBDDS_Capture;
+            obj.TBDDS = TBDDS_beta + TBDDS_Capture;
+            
+            if any(obj.qUOffset~=0)
                 % shift differential spectrum in case qUOffset changed in fit
                 TBDDStmp =  obj.TBDDS; % init
                 for r=1:obj.nRings
@@ -1891,10 +2086,10 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
 %                     CorrectionRhoD = CorrectionRhoD./CorrectionRhoD;
                     CorrectionRhoD=1;
                     obj.NormFactorTBDDS = obj.TdecayC ...
-                        .*(2*pi*obj.WGTS_FTR_cm^2*obj.WGTS_CD_MolPerCm2.*CorrectionRhoD) ...% mol tritium atoms
-                        .*0.5*(1-cos(asin(sqrt(obj.WGTS_B_T./obj.MACE_Bmax_T)))) ...
-                        .*(obj.FPD_MeanEff*obj.FPD_Coverage)...
-                        .*obj.CumFrac*obj.WGTS_epsT .* numel(obj.FPD_PixList)/148;
+                        .*(2*pi*obj.WGTS_FTR_cm^2*obj.WGTS_CD_MolPerCm2.*CorrectionRhoD)... % mol tritium atoms
+                        ...%.*0.5*(1-cos(asin(sqrt(obj.WGTS_B_T./obj.MACE_Bmax_T)))) ...
+                        ...%.*(obj.FPD_MeanEff*obj.FPD_Coverage)...
+                        .*obj.CumFrac;%*obj.WGTS_epsT .* numel(obj.FPD_PixList)/148;
 %                        .*obj.qUEfficiencyCorrectionFactor(obj.Te)...
 %fprintf(2,'\n \n RhoD Fit %.3f \n\n',obj.WGTS_CD_MolPerCm2);
                 case 'RING'
@@ -1915,6 +2110,29 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                         .*(obj.FPD_Eff_pix'.*obj.FPD_Coverage) ...
                         .*obj.CumFrac.*obj.WGTS_epsT);
 %                        .*obj.qUEfficiencyCorrectionFactor(obj.Te)...
+            end
+            
+            if strcmp(obj.ToggleRelic,'ON')
+                % Init
+                temin=18.573; % keV
+                temax=18.58; % keV
+
+                nte   = 1000;
+                tex   = obj.TimeSec./(365.242*24*3600); % year
+                eres  = 0.01e-3; % keV
+                Tmass = pi*obj.WGTS_FTR_cm^2*obj.WGTS_CD_MolPerCm2*obj.M*1e3*obj.WGTS_epsT;
+
+                % KATRIN : tritium mass 
+                com_opt = {...
+                    'tex',tex,'RNS_nTnu',1000,...
+                    'nTe',nte,'Temin',temin,...
+                    'Temax',temax,'Tmass',Tmass,'energy_resol',...
+                    eres,'mnu',obj.mnuSq_i,'Eta',obj.eta};
+                A   = TritiumRelicNu(com_opt{:});
+                obj.NormFactorTBDDS_R = A.RateCaptureT_KATRIN(1)...
+                        .*0.5*(1-cos(asin(sqrt(obj.WGTS_B_T./obj.MACE_Bmax_T)))) ...    %angle of acceptance
+                        .*(obj.FPD_MeanEff*obj.FPD_Coverage)...                         %detector efficiency and coverage
+                        .*numel(obj.FPD_PixList)/148;                  %Tritium purity and number of pixels
             end
         end
         
@@ -1987,6 +2205,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
             end
         end
         
+        
         % Plots / Display
         function          PlotTBDDS(obj,varargin)
             
@@ -2008,7 +2227,8 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
             
             f1 = figure(fign);
             set(f1,'Units','normalized','Position',[0.1,0.1,0.5,0.5]);
-             h = plot(te,tbdds,'-','LineWidth',3,'Color',rgb('DodgerBlue'));
+            h = plot(te,tbdds,'-','LineWidth',3,'Color',rgb('DodgerBlue'));
+            %h = plot(te,tbdds,'-',te,obj.PhaseSpace,':');
             switch type
                 case 'lin'
                     set(gca, 'YScale', 'lin');
