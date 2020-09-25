@@ -17,7 +17,7 @@ SavePlot = p.Results.SavePlot;
 % Previous: results from the more recent experiments in Mainz and Troitsk
 % New: results from KATRIN KNM1
 if strcmp(Combi,'OFF')
-    LocalFontSize = 32;
+    LocalFontSize = 24;%32;
     MarkerSize = 12;
 else
     LocalFontSize = 20;
@@ -69,7 +69,7 @@ switch LegOpt
             [mBetaSquared(10).Experiment ' ' mBetaSquared(10).Reference],...
             [mBetaSquared(11).Experiment ' ' mBetaSquared(11).Reference],...
             [mBetaSquared(12).Experiment ' ' mBetaSquared(12).Reference],...
-            'FontSize',13.5,'Location',LegPos);
+            'FontSize',12,'Location',LegPos);%13.5
     case 'Short'
         leg=legend(h,[mBetaSquared(1).Experiment ' ' sprintf('(%.0f)',mBetaSquared(1).Year)],...
             [mBetaSquared(2).Experiment ' ' sprintf('(%.0f)',mBetaSquared(2).Year)],...
@@ -106,9 +106,11 @@ xticks([]);
 %%set(gcf,'Color','w');
 %set(gca,'YMinorTick','on');
 
-PRLFormat
+%PRLFormat
 box off
-set(gca,'FontSize',LocalFontSize);
+
+PrettyFigureFormat('FontSize',LocalFontSize);
+%set(gca,'FontSize',LocalFontSize);
 set(get(gca,'XLabel'),'FontSize',LocalFontSize+4);
 set(get(gca,'YLabel'),'FontSize',LocalFontSize+4);
 set(gca,'XMinorTick','off');
@@ -140,7 +142,7 @@ for i=10:13
     xlim([2004 2021])
 hold on
 end
-xticks([2005 2011 mBetaSquared(12).Year-0.5]);
+xticks([2005 2011 floor(mBetaSquared(12).Year)]);
 yticks([-3 -2 -1 0 1 2 ]);
 ylim([-3.2 2])
 set(gca,'XAxisLocation', 'top')
@@ -155,8 +157,9 @@ l2=legend([ hz(10) hz(11)  hz(12) pdg2],...
 l2.NumColumns=2;
 legend boxoff;
 ylim([-4.5 2.8])
-PRLFormat
-set(gca,'FontSize',LocalFontSize);
+%PRLFormat
+PrettyFigureFormat('FontSize',LocalFontSize);
+%set(gca,'FontSize',LocalFontSize);
 set(gca,'XMinorTick','off');
 set(get(gca,'XLabel'),'FontSize',LocalFontSize+2);
 set(get(gca,'YLabel'),'FontSize',LocalFontSize+2);
@@ -166,4 +169,5 @@ set(gca,'TickDir','out');
 if strcmp(SavePlot,'ON')
 export_fig(gcf,savefile,'-r300');
 export_fig(gcf,strrep(savefile,'.png','.pdf'));
+fprintf('save plot to %s',savefile)
 end

@@ -1,9 +1,6 @@
-% KNM2 Figure skating twins
-
-%MR.ComputeCM('SysEffect',struct('LongPlasma','ON'),'InitNormFit','OFF')
 range = 40;
 Chi2Scan = 'OFF';
-chi2 = 'chi2Stat';%CMShape';
+chi2 = 'chi2Stat';
 
 RunAnaArg = {'RunList','KNM2_Prompt',...
     'chi2','chi2Stat',...

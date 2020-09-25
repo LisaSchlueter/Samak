@@ -8,9 +8,9 @@ DataType = 'Twin';
 freePar = 'E0 Bkg Norm';
 RunList = 'KNM1';
 SmartGrid = 'OFF';
-Mode = 'New_Sterile';
-Twin_mNu4Sq   = 1e2;
-Twin_sin2T4   = 0.06;
+Mode = 'New';%_Sterile';
+Twin_mNu4Sq   = 0;%1e2;
+Twin_sin2T4   = 0;%0.06;
 
 extraStr = '';
 switch Mode

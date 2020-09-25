@@ -1,14 +1,8 @@
-% Test SterileAnalysis class
-% Lisa, May2020
-% plot with neutrino mass as
-% nuissance parameter free
-% nuissance parameter + pull
-% fixed parameter
-%% settings for runanalysis
 DataType = 'Real';
 %%
+freePar = 'mNu E0 Norm Bkg';
 RunAnaArg = {'RunList','KNM1',...
-    'fixPar','E0 Norm Bkg',...
+    'fixPar',freePar,...
     'DataType',DataType,...
     'FSDFlag','SibilleFull',...
     'ELossFlag','KatrinT2',...
@@ -35,21 +29,18 @@ SterileArg = {'RunAnaObj',T,... % Mother Object: defines RunList, Column Density
     'range',40};
 
 S = SterileAnalysis(SterileArg{:});
-
-%% 2 load a chi2 map and find the best fit
-S.RunAnaObj.DataType = 'Real';
-S.range = 40;
 S.LoadGridFile('CheckSmallerN','ON','CheckLargerN','ON'); % if CheckSmallerN also look for grid with more/less nGridSteps
-S.InterpMode = 'spline'; % waring: if contour is closed, spline interp sometimes sensitive to artefacts! Switch to "lin" in this case
+if contains(freePar,'mNu')
+    S.InterpMode = 'lin'; % waring: if contour is closed, spline interp sometimes sensitive to artefacts! Switch to "lin" in this case
+else
+    S.InterpMode = 'spline'; % waring: if contour is closed, spline interp sometimes sensitive to artefacts! Switch to "lin" in this case
+    
+end
 S.Interp1Grid('RecomputeFlag','ON');% interpolate chi2 map -> nicer appearance of all plots. some
+
+
+
 S.FindBestFit;
 S.CompareBestFitNull;
-%%
-
-S.InterpMode = 'spline';%spline'; %'spline' sometimes causes weird artefacts, but looks smoother than 'lin'
-Arg = {'SavePlot','ON','BestFit','OFF','Style','PRL','FinalSensitivity','OFF','FreemNuSq','ON','Sensitivity','ON','AddPull',15};
-S.PlotPRL1(Arg{:});
-
-
 
 
