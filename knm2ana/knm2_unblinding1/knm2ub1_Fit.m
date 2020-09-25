@@ -1,14 +1,15 @@
 range   = 40;
 freePar = 'mNu E0 Bkg Norm';
-chi2    = 'chi2Stat';
-SysBudget = 36;
+chi2    = 'chi2CMShape';
+SysBudget = 38;
+DataType = 'Real';
 
 savedir = [getenv('SamakPath'),'knm2ana/knm2_unblinding1/results/'];
-savename = sprintf('%sknm2ub1_Fit_%.0feV_%s_%s.mat',...
-    savedir,range,strrep(freePar,' ',''),chi2);
+savename = sprintf('%sknm2ub1_Fit_%s_%.0feV_%s_%s.mat',...
+    savedir,DataType,range,strrep(freePar,' ',''),chi2);
 
 if ~strcmp(chi2,'chi2Stat')
-    savename = strrep(savename,'.mat',sprintf('_SysBudget%s.mat',SysBudget));
+    savename = strrep(savename,'.mat',sprintf('_SysBudget%.0f.mat',SysBudget));
 end
 
 if exist(savename,'file')
@@ -18,7 +19,7 @@ else
     
     RunAnaArg = {'RunList','KNM2_Prompt',...
         'chi2','chi2Stat',...
-        'DataType','Real',...
+        'DataType',DataType,...
         'fixPar',freePar,...
         'RadiativeFlag','ON',...
         'minuitOpt','min ; minos',...

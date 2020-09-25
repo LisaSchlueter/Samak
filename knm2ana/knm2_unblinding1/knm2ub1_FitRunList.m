@@ -34,7 +34,6 @@ else
         'TwinBias_Q',18573.7,...
         'NonPoissonScaleFactor',1.112};
     A = MultiRunAnalysis(RunAnaArg{:});
-    %%
     A.exclDataStart = A.GetexclDataStart(range);
 
     FitResult = A.FitRunList;

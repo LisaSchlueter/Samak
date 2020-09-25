@@ -113,7 +113,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
         TwinBias_mnuSq;             % absolute value for neutrino mass
         TwinBias_Q;                 % absolute value for endpoint or 'Fit' -> take fit value      
         FitNBFlag;                  % use normlization and background from fit
-        
+        TwinBias_FSDSigma;          % broadening of fsd in eV
         TwinFakeLabel;               % for labeling twin or fake runs with extra info: e.g. qU-bias,...
          
         %Fake MC option
@@ -178,6 +178,8 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             p.addParameter('TwinBias_mnuSq',0,@(x)isfloat(x));                 % absolute (eV^2)
             p.addParameter('TwinBias_Q',18573.73,@(x)isfloat(x) || ismember(x,{'Fit'}));  % absolute (eV)
             p.addParameter('FitNBFlag','ON',@(x)ismember(x,{'ON','OFF','NormOnly'}));
+            p.addParameter('TwinBias_FSDSigma',0,@(x)isfloat(x));                 % absolute (eV)
+           
             %fake MC option
             p.addParameter('FakeInitFile','',@(x)isa(x,'function_handle') || isempty(x));
             % Efficiency Correction Applied to Data 
@@ -241,7 +243,8 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             obj.FitNBFlag                   = p.Results.FitNBFlag;
             obj.TwinBias_mnuSq              = p.Results.TwinBias_mnuSq;
             obj.TwinBias_Q                  = p.Results.TwinBias_Q;
-           
+            obj.TwinBias_FSDSigma           = p.Results.TwinBias_FSDSigma;
+            
            if isempty(obj.TwinBias_qU) && strcmp(obj.AnaFlag,'Ring')
                 obj.TwinBias_qU = zeros(1,numel(obj.RingList));
                 obj.TwinBias_qUfrac = zeros(1,numel(obj.RingList));
@@ -2007,7 +2010,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             switch Parameter
                 case 'mNu'
                     xstr = sprintf('{{\\it m}_\\nu}^2');
-                    xUnit = sprintf('eV^2');
+                    xUnit = sprintf('eV^{ 2}');
                     ParIndex = 1;
                 case 'E0'
                     xstr = sprintf('{\\it E}_0');
@@ -2029,15 +2032,21 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             else
                 PlotStyle = {'-.','LineWidth',3,'Color',rgb('SkyBlue')};
             end
+            
+            if strcmp(obj.DataType,'Real')
+                plot(FitResult.par(ParIndex).*ones(100,1),linspace(0,1e2,1e2),':','LineWidth',2.5,'Color',rgb('Gray'))
+                hold on;
+            end
             pchi2 = plot(mypar,mychi2min,PlotStyle{:});
             hold on;
-            p1 =plot(FitResult.par(ParIndex)+ScanResult.AsymErr(1).*ones(100,1),linspace(0,1,100),...
-                ':','LineWidth',3,'Color',rgb('GoldenRod'));
-            p2 =plot(FitResult.par(ParIndex)+ScanResult.AsymErr(2).*ones(100,1),linspace(0,1,100),...
-                ':','LineWidth',3,'Color',rgb('GoldenRod'));
-            p3 = plot(linspace(ScanResult.AsymErr(2)+FitResult.par(ParIndex),...
-                ScanResult.AsymErr(1)+FitResult.par(ParIndex),100),ones(1,100),...
-                ':','LineWidth',3,'Color',rgb('GoldenRod'));
+            p1 =plot(FitResult.par(ParIndex)+ScanResult.AsymErr(1).*ones(100,1),linspace(0,100,100),...
+                ':','LineWidth',2,'Color',rgb('Gray'));
+            p2 =plot(FitResult.par(ParIndex)+ScanResult.AsymErr(2).*ones(100,1),linspace(0,100,100),...
+                ':','LineWidth',2,'Color',rgb('Gray'));
+         %   p3 = plot(linspace(ScanResult.AsymErr(2)+FitResult.par(ParIndex),...
+         %       ScanResult.AsymErr(1)+FitResult.par(ParIndex),100),FitResult.chi2min+ones(1,100),...
+         %       ':','LineWidth',2,'Color',rgb('Gray'));
+           
             PrettyFigureFormat('FontSize',24);
             xlabel(sprintf(' %s (%s)',xstr,xUnit));
             ylabel(sprintf('\\chi^2 (%.0f dof)',ScanResult.dof(1,1) - 1 ));
@@ -2052,9 +2061,11 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                 ScanResult.AsymErr(2),ScanResult.AsymErr(1),xUnit));
             leg.EdgeColor = rgb('Silver');
             leg.Location = 'northwest';
-            xlim([min(ScanResult.ParScan(:,2)),max(ScanResult.ParScan(:,1))]);
-            
-            out = {pchi2,p1,p2,p3};
+             xlim([min(ScanResult.ParScan(:,2)),max(ScanResult.ParScan(:,1))]);
+            if strcmp(obj.DataType,'Real')
+                ylim([FitResult.chi2min-1 max(max(ScanResult.chi2min))])
+            end
+            out = {pchi2,p1,p2};
         end
         function GetPlotColor(obj)
             % Real / Twin Color Flag
@@ -3993,6 +4004,9 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                 else
                     % if nothing of the above: do not specify name further
                 end
+                 if obj.TwinBias_FSDSigma~=0
+                    str_bias = [str_bias,sprintf('_FSDsigma%.3geV',obj.TwinBias_FSDSigma)];
+                 end
                 
                 if ~strcmp(obj.KTFFlag,'WGTSMACE')
                     str_bias = [str_bias,'_',obj.KTFFlag];
@@ -4023,6 +4037,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                     str_Timebias = sprintf('_%.0fs-Time',obj.TwinBias_Time); %when all the same
                     filename = [filename,str_Timebias]; 
                 end
+                
                 
                 obj.TwinFakeLabel = filename;
             else

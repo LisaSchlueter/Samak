@@ -1,55 +1,52 @@
-range = 40;
-Chi2Scan = 'OFF';
-chi2 = 'chi2Stat';
+range        = 40;
+PlotChi2Scan = 'ON';
+chi2         = 'chi2Stat';
+freePar      = 'mNu E0 Bkg Norm';
+SysBudget     = 36;
+DataType      = 'Real';
 
-RunAnaArg = {'RunList','KNM2_Prompt',...
-    'chi2','chi2Stat',...
-    'DataType','Real',...
-    'fixPar','mNu E0 Bkg Norm',...
-    'RadiativeFlag','ON',...
-    'minuitOpt','min ; minos',...
-    'FSDFlag','BlindingKNM2',...
-    'ELossFlag','KatrinT2A20',...
-    'SysBudget',36,...
-    'AnaFlag','Ring',...
-    'RingMerge','Full',...
-    'chi2','chi2Stat',...
-    'pullFlag',99,...
-    'TwinBias_Q',18573.7,...
-    'NonPoissonScaleFactor',1.112};
-
-%% build object of MultiRunAnalysis class
-MR = MultiRunAnalysis(RunAnaArg{:});
-MR.exclDataStart = MR.GetexclDataStart(range);
-
+savedir = [getenv('SamakPath'),'knm2ana/knm2_unblinding1/results/'];
+savename = sprintf('%sknm2ub1_Chi2Curve_%s_%.0feV_%s_%s.mat',...
+    savedir,DataType,range,strrep(freePar,' ',''),chi2);
 if ~strcmp(chi2,'chi2Stat')
-    MR.NonPoissonScaleFactor = 1.112;
-    MR.SetNPfactor; % convert to right dimension (if multiring)
-    MR.chi2 = chi2;
-    MR.ComputeCM;
+    savename = strrep(savename,'.mat',sprintf('_SysBudget%s.mat',SysBudget));
 end
 
-%%
-MR.Fit;
-%MR.PlotFit
-
-%% Chi2 - scan
-if strcmp(Chi2Scan,'ON')
-    savedir = [getenv('SamakPath'),'knm2ana/knm2_FigureSkating2/results/'];
+if exist(savename,'file')
+    load(savename,'ScanResult','FitResult','A')
+else
+    SigmaSq =  0.0124+0.0025;
+    
+    RunAnaArg = {'RunList','KNM2_Prompt',...
+        'chi2',chi2,...
+        'DataType',DataType,...
+        'fixPar',freePar,...
+        'RadiativeFlag','ON',...
+        'minuitOpt','min ; minos',...
+        'FSDFlag','BlindingKNM2',...
+        'ELossFlag','KatrinT2A20',...
+        'SysBudget',SysBudget,...
+        'AnaFlag','StackPixel',...
+        'RingMerge','Full',...
+        'chi2',chi2,...
+        'pullFlag',99,...
+        'TwinBias_Q',18573.7,...
+        'NonPoissonScaleFactor',1.112};
+    %% build object of MultiRunAnalysis class
+    A = MultiRunAnalysis(RunAnaArg{:});
+    A.exclDataStart = A.GetexclDataStart(range);
+    A.ModelObj.FSD_Sigma = sqrt(SigmaSq);
+    A.ModelObj.LoadFSD;
+    
+    %% Chi2 - scan
+    A.Fit;
+    FitResult = A.FitResult;
+    ScanResult = A.GetAsymFitError('Mode','Uniform');
     MakeDir(savedir);
-    savename = sprintf('%sknm2FS2_ComputeTwinScanResults_%s_%.0feV_MultiRing.mat',savedir,MR.chi2,range);
-    
-    if exist(savename,'file')
-        load(savename,'ScanResult','FitResult')
-    else
-        FitResult = MR.FitResult;
-        
-        ScanResult = MR.GetAsymFitError('Mode','Uniform');
-        %  ScanResult2 = MR.GetAsymFitError('Mode','Uniform','ParScanMax',0.1,'nFitMax',10);
-        
-        save(savename,'ScanResult','FitResult')
-    end
-    
-    MR.PlotChi2Curve('Parameter','mNu','ScanResult',ScanResult,'FitResult',MR.FitResult);
+    save(savename,'FitResult','RunAnaArg','A','SigmaSq','ScanResult')
+end
+
+if strcmp(PlotChi2Scan,'ON')
+    A.PlotChi2Curve('Parameter','mNu','ScanResult',ScanResult,'FitResult',A.FitResult);
     % A.PlotChi2Curve('Parameter','mNu','ScanResult',ScanResult2,'FitResult',A.FitResult);
 end

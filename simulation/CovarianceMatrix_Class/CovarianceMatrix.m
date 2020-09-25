@@ -3321,16 +3321,18 @@ function ComputeCM_LongPlasma(obj,varargin)
     % effectively described by e-loss shift and variance
     p=inputParser;
     p.addParameter('CorrCoeff',0,@(x)isfloat(x));
-    p.addParameter('NegSigma','Troitsk',@(x)ismember(x,{'Abs','Troitsk'}));
+    p.addParameter('NegSigma','Troitsk+',@(x)ismember(x,{'Abs','Troitsk','Troitsk+'}));
     p.addParameter('SanityPlot','OFF');
     p.parse(varargin{:});
     CorrCoeff  = p.Results.CorrCoeff;
     NegSigma   = p.Results.NegSigma;    % how to deal with negative sigmas
     SanityPlot = p.Results.SanityPlot;
-
+    
     switch NegSigma
         case 'Troitsk'
             NegSigmaStr = '_Troitsk'; % troitsk formula
+        case 'Troitsk+'
+            NegSigmaStr = '_Troitsk+'; % troitsk formula
         case 'Abs'
             NegSigmaStr = '';         % absolute value of sigma
     end
@@ -3378,16 +3380,25 @@ function ComputeCM_LongPlasma(obj,varargin)
         obj.StudyObject.AngularTFFlag = 'OFF';
         obj.StudyObject.recomputeRF   = 'OFF';
         
-        % longi plasma uncertainty
-        PlasmaErr =  [obj.MACE_VarErr,obj.is_EOffsetErr];
-        PlasmaCovMat      = PlasmaErr.*[1,CorrCoeff;CorrCoeff,1].*PlasmaErr';
-        
-        % randomize longi plasma parameters
-        PlasmaPar_expected = [MACE_Sigma_i.^2,is_EOffset_i];
-        PlasmaPar =  mvnrnd(PlasmaPar_expected,PlasmaCovMat,obj.nTrials);
+        %% randomize broadening + shift
+        switch NegSigma
+            case 'Troitsk'
+                % longi plasma uncertainty
+                PlasmaErr =  [obj.MACE_VarErr,obj.is_EOffsetErr];
+                PlasmaCovMat      = PlasmaErr.*[1,CorrCoeff;CorrCoeff,1].*PlasmaErr';
+                
+                % randomize longi plasma parameters
+                PlasmaPar_expected = [MACE_Sigma_i.^2,is_EOffset_i];
+                PlasmaPar =  mvnrnd(PlasmaPar_expected,PlasmaCovMat,obj.nTrials);
+            case 'Troitsk+'
+                PlasmaPar      = zeros(obj.nTrials,2);
+                PlasmaPar(:,1) = randn(obj.nTrials,1).*obj.MACE_VarErr+MACE_Sigma_i.^2; % broadening
+                DeltaMax       = sqrt(abs(PlasmaPar(:,1)))./1.3;
+                PlasmaPar(:,2) = rand(obj.nTrials,1).*2.*DeltaMax-DeltaMax;
+        end
         
         MACE_Var_v = PlasmaPar(:,1);                 % negative broadenings dealt with later
-        MACE_Var_v(sqrt(abs(MACE_Var_v))<1e-3) = 0;  % too small to resolve anyway -> saves from time
+        MACE_Var_v(sqrt(abs(MACE_Var_v))<1e-3) = 0;  % too small to resolve anyway -> saves some time
         is_EOffset_v  = PlasmaPar(:,2);
         
         % e-loss shift:
@@ -3747,7 +3758,8 @@ end
             
             fprintf('--------------------------------------------------------------------------\n')
             cprintf('blue','CovarianceMatrix:ComputeCM: Compute Combi Covariance Matrix  \n')
-           %  obj.nTrials = 5000;
+             nTrials = 5000;
+             obj.nTrials = nTrials;
             %Labeling
             combi_path= [getenv('SamakPath'),sprintf('/inputs/CovMat/Combi/')];
             effects_logic = structfun(@(x)strcmp(x,'ON'),obj.SysEffect);
@@ -3791,7 +3803,7 @@ end
             
             %Load / Compute CM of SysEffects
             %% Response Function
-           % obj.nTrials = 1000;
+            obj.nTrials = nTrials/5;
             if strcmp(obj.SysEffect.RF_EL,'ON') && strcmp(obj.SysEffect.RF_BF,'ON') && strcmp(obj.SysEffect.RF_RX,'ON') % all RF Effects ON
                 %all 'ON'
                 obj.ComputeCM_RF;
@@ -3821,7 +3833,7 @@ end
                 end
             end
             
-          %   obj.nTrials = 5000;
+            obj.nTrials = nTrials;
             %% FSD   
             if strcmp(obj.SysEffect.FSD,'ON')
                 obj.ComputeCM_FSD;
