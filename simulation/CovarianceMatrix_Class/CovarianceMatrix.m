@@ -2138,7 +2138,7 @@ function ComputeCM_Background(obj,varargin)
     p.addParameter('BkgRange',-5,@(x)isfloat(x));  % defines, which points are used to constrain slope. In eV with respect to endpoint
     p.addParameter('RingCorrCoeff',0,@(x)isfloat(x));  % ring to ring correlation, can also be a matrix
     p.addParameter('ScalingOpt',2,@(x)isfloat(x));
-    p.addParameter('Mode','SlopeFit',@(x)ismember(x,{'SlopeFit','Gauss'}));
+    p.addParameter('Mode','Gauss',@(x)ismember(x,{'SlopeFit','Gauss'}));
     
     p.parse(varargin{:});
     Display          = p.Results.Display;

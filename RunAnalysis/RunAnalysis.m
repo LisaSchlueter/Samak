@@ -31,6 +31,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
         KTFFlag;
         DopplerEffectFlag; 
         FSDFlag         % final state distributions: Sibille, Sibille0p5eV, BlindingKNM1, OFF ...
+        FSD_Sigma;
         SynchrotronFlag;
         AngularTFFlag;
         ROIFlag;        % region of interest
@@ -130,6 +131,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             p.addParameter('AnaFlag','StackPixel',@(x)ismember(x,{'StackPixel', 'SinglePixel', 'MultiPixel', 'Ring'}));
             p.addParameter('ELossFlag','',@(x)ismember(x,{'Aseev','Abdurashitov','CW_GLT','CW_G2LT','KatrinD2','KatrinT2','KatrinT2A20'}));%default given later
             p.addParameter('FSDFlag','Sibille0p5eV',@(x)ismember(x,{'SAENZ','BlindingKNM1','Sibille','Sibille0p5eV','OFF','SibilleFull','BlindingKNM2'}));
+            p.addParameter('FSD_Sigma',0,@(x)isfloat(x));
             p.addParameter('DopplerEffectFlag','',@(x)ismember(x,{'OFF','FSD','FSD_Knm1'}));%default given later
             p.addParameter('ROIFlag','Default',@(x)ismember(x,{'Default','14keV'})); % default->default counts in RS, 14kev->[14,32]keV ROI
             p.addParameter('MosCorrFlag','OFF',@(x)ismember(x,{'ON','OFF'}));
@@ -197,6 +199,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             obj.chi2              = p.Results.chi2;
             obj.ELossFlag         = p.Results.ELossFlag;
             obj.FSDFlag           = p.Results.FSDFlag;
+            obj.FSD_Sigma         = p.Results.FSD_Sigma;
             obj.DopplerEffectFlag = p.Results.DopplerEffectFlag;
             obj.ROIFlag           = p.Results.ROIFlag;
             obj.MosCorrFlag       = p.Results.MosCorrFlag;
@@ -735,7 +738,8 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                 'KTFFlag',obj.KTFFlag,...
                 'NIS',NIS,...
                 'SynchrotronFlag',obj.SynchrotronFlag,...
-                'AngularTFFlag',obj.AngularTFFlag};
+                'AngularTFFlag',obj.AngularTFFlag,...
+                'FSD_Sigma',obj.FSD_Sigma};
             
             if ~isempty(qU)
                 TBDarg = {TBDarg{:},'qU',qU};

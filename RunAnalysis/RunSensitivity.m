@@ -2484,7 +2484,7 @@ classdef RunSensitivity < handle
             
             switch obj.RunAnaObj.DataSet
                 case 'Knm2'
-                    Default
+                    %Default
                     obj.SysEffectsAll   = {'TCoff_OTHER','FSD','TASR','RF_EL','RF_BF','RF_RX','Stack','LongPlasma','FPDeff','NP','Bkg'}; %Bkg has to be last
                     obj.SysEffectLeg    = {'Theoretical corrections';'Final-state distribution';...
                         'Tritium activity fluctuations';'Energy-loss function';...
