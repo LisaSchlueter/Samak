@@ -32,14 +32,13 @@ else
         'chi2',chi2,...
         'pullFlag',99,...
         'TwinBias_Q',18573.7,...
-        'NonPoissonScaleFactor',1};
+        'NonPoissonScaleFactor',1,...
+        'FSD_Sigma',sqrt(SigmaSq)};
 
     %% build object of MultiRunAnalysis class
     A = MultiRunAnalysis(RunAnaArg{:});
     A.exclDataStart = A.GetexclDataStart(range);
-    A.ModelObj.FSD_Sigma = sqrt(SigmaSq);
-    A.ModelObj.LoadFSD;
-    
+
     if ~strcmp(chi2,'chi2Stat')
         A.NonPoissonScaleFactor = 1.112;
         A.SetNPfactor; % convert to right dimension (if multiring)

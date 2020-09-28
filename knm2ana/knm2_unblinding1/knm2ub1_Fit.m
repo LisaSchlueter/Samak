@@ -12,7 +12,7 @@ if ~strcmp(chi2,'chi2Stat')
     savename = strrep(savename,'.mat',sprintf('_SysBudget%.0f.mat',SysBudget));
 end
 
-if exist(savename,'file')
+if exist(savename,'file') && 1==2
     load(savename,'FitResult','RunAnaArg','A');
 else
     SigmaSq =  0.0124+0.0025;
@@ -31,12 +31,12 @@ else
         'chi2',chi2,...
         'pullFlag',99,...
         'TwinBias_Q',18573.7,...
-        'NonPoissonScaleFactor',1.112};
+        'NonPoissonScaleFactor',1.112,...
+        'FSD_Sigma',sqrt(SigmaSq)};
     A = MultiRunAnalysis(RunAnaArg{:});
     %%
     A.exclDataStart = A.GetexclDataStart(range);
-    A.ModelObj.FSD_Sigma = sqrt(SigmaSq);
-    A.ModelObj.LoadFSD;
+    
     
     A.Fit;
     FitResult = A.FitResult;

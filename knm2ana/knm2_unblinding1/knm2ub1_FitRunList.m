@@ -16,8 +16,7 @@ end
 
 if exist(savename,'file')
     load(savename,'FitResult','RunAnaArg','A');
-else
-    
+else   
     RunAnaArg = {'RunList','KNM2_Prompt',...
         'chi2','chi2Stat',...
         'DataType','Real',...
@@ -32,7 +31,7 @@ else
         'chi2',chi2,...
         'pullFlag',99,...
         'TwinBias_Q',18573.7,...
-        'NonPoissonScaleFactor',1.112};
+        'NonPoissonScaleFactor',1};
     A = MultiRunAnalysis(RunAnaArg{:});
     A.exclDataStart = A.GetexclDataStart(range);
 
@@ -62,3 +61,28 @@ fprintf('<pval> = %.2f     , std = %.2f   \n ',mean(p),std(p));
 fprintf('--------------------------------------\n')
 
 close all
+
+%% single period
+Period = 2;
+
+switch Period
+    case 1
+        nRuns = 171;
+        Start = 1;
+        Stop = nRuns;
+    case 2
+        nRuns = 97;
+        Start = 172;
+        Stop = Start+nRuns-1;
+    case 3
+        nRuns = 93;
+        Start = 268;
+        Stop = 360;
+end
+fprintf('--------------------------------------\n')
+fprintf('Run list Period: %.0f (%.0f runs) \n',Period,nRuns)
+fprintf('<E0> = %.3f eV , std = %.3f eV \n',mean(E0(Start:Stop)),std(E0(Start:Stop)));
+fprintf('<B>  = %.1f mcps , std = %.1f mcps \n',1e3.*mean(B(Start:Stop)),1e3.*std(B(Start:Stop)));
+fprintf('<N>  = %.3f       , std = %.3f  \n',1+mean(N(Start:Stop)),std(N(Start:Stop)));
+fprintf('<pval> = %.2f     , std = %.2f   \n ',mean(p(Start:Stop)),std(p(Start:Stop)));
+fprintf('--------------------------------------\n')

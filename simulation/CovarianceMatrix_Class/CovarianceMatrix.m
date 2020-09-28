@@ -3328,11 +3328,15 @@ function ComputeCM_LongPlasma(obj,varargin)
     NegSigma   = p.Results.NegSigma;    % how to deal with negative sigmas
     SanityPlot = p.Results.SanityPlot;
     
+    if obj.is_EOffsetErr==0 && strcmp(NegSigma,'Troitsk+')
+        NegSigma = 'Troitsk';
+    end
+    
     switch NegSigma
         case 'Troitsk'
             NegSigmaStr = '_Troitsk'; % troitsk formula
         case 'Troitsk+'
-            NegSigmaStr = '_Troitsk+'; % troitsk formula
+            NegSigmaStr = '_Troitsk+'; % couple: troitsk formula + coupling of eloss and sigma
         case 'Abs'
             NegSigmaStr = '';         % absolute value of sigma
     end
@@ -3340,7 +3344,11 @@ function ComputeCM_LongPlasma(obj,varargin)
     
     % initial longi plasma parameters
     is_EOffset_i = obj.StudyObject.is_EOffset;
-    MACE_Sigma_i = mean(obj.StudyObject.MACE_Sigma);
+    MACE_Sigma_i = mean(obj.StudyObject.FSD_Sigma);
+    
+    if isnan(MACE_Sigma_i)
+        MACE_Sigma_i = 0;
+    end
     
     obj.GetTDlabel;
     covmat_path =[getenv('SamakPath'),sprintf('inputs/CovMat/LongPlasma/CM/')];
@@ -3442,7 +3450,7 @@ function ComputeCM_LongPlasma(obj,varargin)
             obj.StudyObject.ComputeTBDIS;
             TBDIS_V(:,i,:) = obj.StudyObject.TBDIS;
             
-            if strcmp(NegSigma,'Troitsk') % Use Troitsk formula
+            if ismember(NegSigma,{'Troitsk','Troitsk+'}) % Use Troitsk formula
                 % TBDIS(sigma<0) = 2*(sigma=0)-(abs(sigma))
                 if MACE_Var_v(i)<0
                     obj.StudyObject.LoadFSD; % sigma = 0
