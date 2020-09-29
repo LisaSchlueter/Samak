@@ -1315,7 +1315,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             p.addParameter('Mode','MC',@(x)ismember(x,{'MC','Fit'}));
             p.parse(varargin{:});
             ActivityCorrection = p.Results.ActivityCorrection;
-            qUCorrection       = p.Results.ActivityCorrection;
+            qUCorrection       = p.Results.qUCorrection;
             KNM1correction     = p.Results.KNM1correction;
             saveplot           = p.Results.saveplot;
             pixlist            = p.Results.pixlist;
@@ -3327,6 +3327,9 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             elseif contains(ListName,'KNM2')
                 % KNM2
                 RunList = obj.GetKNM2RunList(ListName);
+            elseif contains(ListName,'KNM3')
+                %KNM3
+                RunList = obj.GetKNM3RunList(ListName);
             else
                 % miscellaneous
                 switch ListName
@@ -3543,6 +3546,34 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                 nRunsHalf = ceil(numel(RunList)/2);           % take only half of all runs
                 RunList   = RunList(RandIndex(1:nRunsHalf));
             end
+        end
+        function RunList = GetKNM3RunList(obj,ListName)
+            % KNM3 run lists
+            
+             if contains(ListName,'KNM3a')
+                Version = 'RunSummary-Prompt6c-fpd00';
+                FirstRun = 62784; LastRun  = 62957;
+             elseif contains(ListName,'KNM3b')
+                Version = 'RunSummary-Prompt6e-fpd00';
+                FirstRun = 63308; LastRun  = 63469;
+             else
+                fprintf('Run List not known \n');
+                return
+             end
+            
+             % Read All KNM3 HD5 File
+            tmp = dir([getenv('SamakPath'), '/tritium-data/hdf5/',GetDataSet(FirstRun), '/*.h5']);
+            h5list = arrayfun(@(x) x.name,tmp,'UniformOutput',0);
+            h5list =  extractBefore(h5list,'.h5');
+            h5list = str2double(extractAfter(h5list,Version));
+            h5list(isnan(h5list)) = []; % %delete everything that has a different version
+            
+            % Truncate to exclude Runs from RunExcList:
+            h5list(h5list<FirstRun)=[];
+            h5list(h5list>LastRun)=[];
+            HDF5readallruns('h5runlist',h5list,'reConvert','OFF','DataSet',GetDataSet(FirstRun)); %looks for unconverted runs and converts if needed
+            
+            RunList=sort(h5list);
         end
         function RunList = GetFakeRunList(obj)
                 

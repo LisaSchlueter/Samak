@@ -59,6 +59,10 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
         TdecayC = 1.78283e-09;      % s^-1
         Z = 2;                      % 3He
         
+        % Neutrino Capture on Tritium
+        SigmaV = 7.84e-45;          % cm^2 crosssection
+        R_Capture = 4.2e-25;        % capture rate on one Tritium atom [yr^-1] at eta=1
+        
         % Properties of the broadening kernel of the Doppler effect
         E_cms = 18573.7;              % eV Energy center of mass
         e_vel = 8.0833265115e+07;  % [m/s] velocity of the electron at E_0
@@ -127,6 +131,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
         % Beta Spectrum - Integral
         TBDIS;           % Integral Beta Spectrum
         TBDISE;          % Error on Integral Beta Spectrum
+        TBDIS_R;         % Integral Capture Spectrum
         qUOffset; i_qUOffset;
         
         % Screening Correction (electron)
@@ -261,7 +266,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
             p.addParameter('BinningSteps',0.1,@(x)isfloat(x));
             p.addParameter('eta_i',1,@(x)isfloat(x));
             p.addParameter('ToggleRelic','ON',@(x)ismember(x,{'ON','OFF'}));
-            p.addParameter('ToggleES','OFF',@(x)ismember(x,{'ON','OFF'}));
+            p.addParameter('ToggleES','ON',@(x)ismember(x,{'ON','OFF'}));
 
             % TBD: Flag for Theoretical Corrections
             p.addParameter('ScreeningFlag','OFF',@(x)ismember(x,{'OFF','ON'}));
@@ -1629,6 +1634,38 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
             he3rec = (aR.*obj.dhWw - bR./obj.dhWw)/cR;
             he3rec = 1+ (1+obj.RecCorrBias).* he3rec;
         end
+        
+        function FitFSDGroundState(obj)
+            if strcmp(obj.ToggleES,'OFF')
+                obj.ComputeTBDDS;
+            end
+            %GSFrac = simpsons(obj.TBDDS_R(170:end))/simpsons(obj.TBDDS_R);
+            NormDist = 'a/sqrt(2*pi*b^2)*exp(-(x-c)^2/(2*b^2))';
+            Spectrum = obj.TBDDS_R;
+            Spectrum(1:200) = 0;
+            pd0 = fit(obj.Te-obj.Q,Spectrum,NormDist,'Start',[5.2e-6 0.36 -1.71]);
+
+            hT0 = plot((obj.Te-obj.Q),obj.TBDDS_R,'LineWidth',2,'Color','Black','LineStyle','-');
+            hold on;
+            hPd = plot(pd0);
+            xlim([-5,0]);
+            grid on;
+            xlabel('E-E_0 (eV)','FontSize',12);
+            str = sprintf('dN/dE (arbitrary scaling)');
+            ylabel(str,'FontSize',14);
+            strT1 = sprintf('sigma of fit: %1g',pd0.b);
+            lh1 = legend([hPd],strT1);
+            %legend(lh1,'box','off');
+            set(lh1,'FontSize',12);
+            %axis([-1 2 1e-2 10000])
+            title('Gaussian fit of relic neutrino capture ground state peak','FontSize',14);
+            PrettyFigureFormat;
+            hold off;
+            savename = sprintf('RelicNuBkg/FSDwidths/FSDGroundStateWidth_%s%s%s.mat',obj.TTFSD,obj.DTFSD,obj.HTFSD);
+            FSDwidth = pd0.b;
+            Position = pd0.c;
+            save(savename,'FSDwidth','Position');
+        end
 
         function          ComputeTBDDS(obj,varargin)
             % ----------------------------------------------------------
@@ -1775,8 +1812,14 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                             case 'ON'
                                 switch obj.ToggleES
                                     case 'OFF'
-                                        mNuSq_local = obj.mnuSq-2.*obj.mTSq;
-                                        obj.PhaseSpace = pdf('Normal',obj.Te-obj.Q,mNuSq_local-1.766,sqrt(obj.DE_sigma^2+0.345^2));  %obj.Q.*obj.me./(obj.me+obj.MH3+obj.MHe3),
+                                        savename = sprintf('RelicNuBkg/FSDwidths/FSDGroundStateWidth_%s%s%s.mat',obj.TTFSD,obj.DTFSD,obj.HTFSD);
+                                        if exist(savename,'file')
+                                            load(savename,'FSDwidth','Position');
+                                            obj.PhaseSpace = pdf('Normal',obj.Te-obj.Q,Position+obj.mnuSq,sqrt(obj.DE_sigma^2+FSDwidth^2));  %obj.Q.*obj.me./(obj.me+obj.MH3+obj.MHe3),
+                                        else
+                                            sprintf('FSD ground state not yet fitted! Use obj.FitFSDGroundState to generate necessary file! Excited states will be switched on.')
+                                            obj.ToggleES = 'ON';
+                                        end
                                     case 'ON'
                                         obj.ComputePhaseSpace('NuCapture');
                                 end
@@ -1867,10 +1910,16 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                 TBDDS_beta  = (1+obj.normFit).*(TBDDS_beta./simpsons(obj.Te,TBDDS_beta)).*obj.NormFactorTBDDS;
                 switch obj.ToggleRelic
                     case 'ON'
+                        EnergyRange = obj.Te-obj.Q;
+                        lowerbound=find(abs(EnergyRange+10-obj.mnuSq)<abs(EnergyRange(2)-EnergyRange(1))/2);
+                        GSFrac = simpsons(TBDDS_Capture(lowerbound:end))/simpsons(TBDDS_Capture);
+                        NormGS = obj.WGTS_MolFrac_TT*obj.TTNormGS+obj.WGTS_MolFrac_DT*obj.DTNormGS+obj.WGTS_MolFrac_HT*obj.HTNormGS;
                         TBDDS_Capture = (1+obj.normFit).*(TBDDS_Capture./simpsons(obj.Te,TBDDS_Capture)).*obj.NormFactorTBDDS_R;
                         switch obj.ToggleES
+                            case 'ON'
+                                TBDDS_Capture = TBDDS_Capture.*NormGS/GSFrac;       %fraction of captures happening inside the considered energy range
                             case'OFF'
-                                TBDDS_Capture = TBDDS_Capture.*obj.TTNormGS;
+                                TBDDS_Capture = TBDDS_Capture.*NormGS;
                         end
                 end
             end
@@ -1910,6 +1959,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                             TBDDSandRF = permute(repmat(obj.TBDDS,1,1,obj.nqU),[1,3,2]).*obj.RF;
                         else
                             TBDDSandRF = repmat(obj.TBDDS,1,obj.nqU).*obj.RF;
+                            TBDDSandRF_R = repmat(obj.TBDDS_R,1,obj.nqU).*obj.RF;
                         end
                         %                    if strcmp(obj.FPD_Segmentation,'OFF')
                         TBDISwithoutBCK = squeeze(simpsons(obj.Te,TBDDSandRF));
@@ -1917,6 +1967,11 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                         BKG =  (obj.BKG_Slope.*(obj.qU-18574))+repmat(abs(obj.BKG_RateSec),obj.nqU,1);
                         
                         obj.TBDIS = (TBDISwithoutBCK + BKG).*obj.TimeSec.*obj.qUfrac;
+                        
+                        TBDISwithoutBCK = squeeze(simpsons(obj.Te,TBDDSandRF_R));
+                        if isrow(TBDISwithoutBCK); TBDISwithoutBCK = TBDISwithoutBCK'; end
+                        
+                        obj.TBDIS_R = (TBDISwithoutBCK).*obj.TimeSec.*obj.qUfrac;
                         
                         % CAUTION: Absolute background above! Beware!
                         
@@ -2087,9 +2142,9 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                     CorrectionRhoD=1;
                     obj.NormFactorTBDDS = obj.TdecayC ...
                         .*(2*pi*obj.WGTS_FTR_cm^2*obj.WGTS_CD_MolPerCm2.*CorrectionRhoD)... % mol tritium atoms
-                        ...%.*0.5*(1-cos(asin(sqrt(obj.WGTS_B_T./obj.MACE_Bmax_T)))) ...
-                        ...%.*(obj.FPD_MeanEff*obj.FPD_Coverage)...
-                        .*obj.CumFrac;%*obj.WGTS_epsT .* numel(obj.FPD_PixList)/148;
+                        .*0.5*(1-cos(asin(sqrt(obj.WGTS_B_T./obj.MACE_Bmax_T)))) ...
+                        .*(obj.FPD_MeanEff*obj.FPD_Coverage)...
+                        .*obj.CumFrac*obj.WGTS_epsT .* numel(obj.FPD_PixList)/148;
 %                        .*obj.qUEfficiencyCorrectionFactor(obj.Te)...
 %fprintf(2,'\n \n RhoD Fit %.3f \n\n',obj.WGTS_CD_MolPerCm2);
                 case 'RING'
@@ -2114,25 +2169,28 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
             
             if strcmp(obj.ToggleRelic,'ON')
                 % Init
-                temin=18.573; % keV
-                temax=18.58; % keV
+                %temin=18.573; % keV
+                %temax=18.58; % keV
 
-                nte   = 1000;
-                tex   = obj.TimeSec./(365.242*24*3600); % year
-                eres  = 0.01e-3; % keV
-                Tmass = pi*obj.WGTS_FTR_cm^2*obj.WGTS_CD_MolPerCm2*obj.M*1e3*obj.WGTS_epsT;
+                %nte   = 1000;
+                %tex   = obj.TimeSec./(365.242*24*3600); % year
+                %eres  = 0.01e-3; % keV
+                %Tmass = pi*obj.WGTS_FTR_cm^2*obj.WGTS_CD_MolPerCm2*obj.M*1e3*obj.WGTS_epsT;
 
                 % KATRIN : tritium mass 
-                com_opt = {...
-                    'tex',tex,'RNS_nTnu',1000,...
-                    'nTe',nte,'Temin',temin,...
-                    'Temax',temax,'Tmass',Tmass,'energy_resol',...
-                    eres,'mnu',obj.mnuSq_i,'Eta',obj.eta};
-                A   = TritiumRelicNu(com_opt{:});
-                obj.NormFactorTBDDS_R = A.RateCaptureT_KATRIN(1)...
+                %com_opt = {...
+                %    'tex',tex,'RNS_nTnu',1000,...
+                %    'nTe',nte,'Temin',temin,...
+                %    'Temax',temax,'Tmass',Tmass,'energy_resol',...
+                %    eres,'mnu',obj.mnuSq_i,'Eta',obj.eta};
+                %A   = TritiumRelicNu(com_opt{:});
+                
+                %RateCaptureT = obj.eta .* 2.85e-2 .* obj.SigmaV ./ (1e-45*obj.NA); % per year per atom
+                RateCaptureT_KATRIN = obj.eta .* obj.R_Capture .* pi*obj.WGTS_FTR_cm^2*2*obj.WGTS_CD_MolPerCm2*obj.WGTS_epsT .* 1./(365.242*24*3600);
+                obj.NormFactorTBDDS_R = RateCaptureT_KATRIN...
                         .*0.5*(1-cos(asin(sqrt(obj.WGTS_B_T./obj.MACE_Bmax_T)))) ...    %angle of acceptance
                         .*(obj.FPD_MeanEff*obj.FPD_Coverage)...                         %detector efficiency and coverage
-                        .*numel(obj.FPD_PixList)/148;                  %Tritium purity and number of pixels
+                        .*numel(obj.FPD_PixList)/148;                                   %Tritium purity and number of pixels
             end
         end
         

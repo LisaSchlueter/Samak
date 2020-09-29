@@ -299,8 +299,12 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             switch obj.DoRunAnalysisConstructor
                 case 'ON'
                     obj.ReadData;
-                    obj.SetROI; 
-                    obj.SimulateRun;
+                    obj.SetROI;
+                    if strcmp(obj.DataType,'Fake')
+                        obj.SimulateFakeRun;
+                    else
+                        obj.SimulateRun;
+                    end
                     obj.InitFitPar;
                     obj.SetNPfactor;
                     
@@ -763,6 +767,30 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                     obj.ModelObj = ref_func(TBDarg{:},'FPD_Segmentation','MULTIPIXEL','nTeBinningFactor',5);
                 case 'Ring'
                     obj.ModelObj =  ref_func(TBDarg{:},'FPD_Segmentation','RING');
+                    %                 case 'Ring'
+                    %                     obj.ModelObj = ref_func(TBDarg{:},'FPD_Segmentation','RING','FPD_Ring',obj.RingList,...
+                    %                         'nTeBinningFactor',20);
+                    %                     if size(obj.RunData.TBDIS,2) > 1
+                    %                         obj.RunData.TBDIS = sum(obj.RunData.TBDIS(:,obj.ModelObj.ring{obj.ring}),2);
+                    %                         obj.RunData.qU = mean(obj.RunData.qU(:,obj.ModelObj.ring{obj.ring}),2);
+                    %                     end
+            end
+            
+            obj.ModelObj.ComputeTBDDS;
+            obj.ModelObj.ComputeTBDIS;
+        end
+        function SimulateFakeRun(obj,varargin)
+            ref_func = obj.FakeInitFile;
+            
+            switch obj.AnaFlag
+                case 'StackPixel'
+                    obj.ModelObj =  ref_func('FPD_Segmentation','OFF');
+                case 'SinglePixel'
+                    obj.ModelObj = ref_func('FPD_Segmentation','SINGLEPIXEL');
+                case 'MultiPixel'
+                    obj.ModelObj = ref_func('FPD_Segmentation','MULTIPIXEL','nTeBinningFactor',5);
+                case 'Ring'
+                    obj.ModelObj =  ref_func('FPD_Segmentation','RING');
                     %                 case 'Ring'
                     %                     obj.ModelObj = ref_func(TBDarg{:},'FPD_Segmentation','RING','FPD_Ring',obj.RingList,...
                     %                         'nTeBinningFactor',20);

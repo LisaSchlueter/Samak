@@ -1,10 +1,10 @@
-function TritiumObject = ref_RelicNuBkg_DesignReport(varargin)
+function TritiumObject = ref_RelicNuBkg_Formaggio(varargin)
 
 
 TDMode = 'DataTBD';
-FSDMode = 'BlindingKNM2';
+%FSDMode = 'BlindingKNM2';
 % use MTD from Design report for 30 eV
-MTD = importdata('DR30.mat');
+MTD = importdata('DRFO.mat');
 
 % ---------------------------------------------------------------------- %
 % WGTS
@@ -12,7 +12,7 @@ p = inputParser;
 p.addParameter('eta_i',1);
 p.addParameter('ToggleRelic','ON');
 p.addParameter('FSD_Sigma',0.0001,@(x)isfloat(x) || isempty(x));
-p.addParameter('ToggleES','ON',@(x)ismember(x,{'ON','OFF'}));
+p.addParameter('ToggleES','OFF',@(x)ismember(x,{'ON','OFF'}));
 
 p.addParameter('WGTS_CD_MolPerCm2',5e17,@(x)isfloat(x) && x>0);
 p.addParameter('WGTS_CD_MolPerCm2_SubRun','',@(x)isfloat(x));
@@ -31,8 +31,8 @@ p.addParameter('HTFSD','SAENZ',@(x)ismember(x,{'OFF','SAENZ','BlindingKNM1','Sib
 p.addParameter('TTFSD','SAENZ',@(x)ismember(x,{'OFF','DOSS','SAENZ','BlindingKNM1','SibilleFull','Sibille0p5eV','BlindingKNM2'}));
 p.addParameter('ELossFlag','KatrinT2A20',@(x)ismember(x,{'Aseev','Abdurashitov','CW_GLT','KatrinD2','KatrinT2','KatrinT2A20'}));
 p.addParameter('DopplerEffectFlag','FSD',@(x)ismember(x,{'OFF','FSD'}));
-p.addParameter('AngularTFFlag','ON',@(x)ismember(x,{'OFF','ON'}));
-p.addParameter('SynchrotronFlag','ON',@(x)ismember(x,{'OFF','ON'}));
+p.addParameter('AngularTFFlag','OFF',@(x)ismember(x,{'OFF','ON'}));
+p.addParameter('SynchrotronFlag','OFF',@(x)ismember(x,{'OFF','ON'}));
 
 % Binning
 p.addParameter('nTeBinningFactor',100,@(x)isfloat(x) && x>0);
@@ -41,7 +41,7 @@ p.addParameter('qUfrac',mean(MTD.qUfrac,2),@(x)isfloat(x));
 
 % MACE
 p.addParameter('MACE_Bmax_T',6,@(x)isfloat(x) && x>0);   %4.23
-p.addParameter('MACE_Ba_T',6.3*1e-04,@(x)isfloat(x) && x>0);
+p.addParameter('MACE_Ba_T',3*1e-04,@(x)isfloat(x) && x>0);                    %6.3
 p.addParameter('KTFFlag','WGTSMACE',@(x)ismember(x,{'OFF','MACE','WGTSMACE'}));
 p.addParameter('recomputeRF','OFF',@(x)ismember(x,{'ON','OFF'}));
 p.addParameter('UseParallelRF','ON',@(x)ismember(x,{'OFF','ON'}));
@@ -58,7 +58,7 @@ p.addParameter('FPD_ROIEff','OFF',@(x)ismember(x,{'ON','OFF'}));
 p.addParameter('FPD_PileUpEff','OFF',@(x)ismember(x,{'ON','OFF'}));
 p.addParameter('BKG_Flag','ON',@(x)ismember(x,{'ON','OFF','XmasData'}));
 p.addParameter('BKG_Type','FLAT',@(x)ismember(x,{'FLAT','SLOPE'}));
-p.addParameter('BKG_RateAllFPDSec',0.210);
+p.addParameter('BKG_RateAllFPDSec',0.01);
 p.addParameter('BKG_RatePixelSec',''); 
 p.addParameter('BKG_RateRingSec','');
 p.addParameter('FPD_Segmentation','OFF',@(x) ismember(x,{'OFF','SINGLEPIXEL','MULTIPIXEL','RING'}));

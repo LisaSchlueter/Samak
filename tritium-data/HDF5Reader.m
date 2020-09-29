@@ -52,7 +52,7 @@ EffCorr(EffCorr==0) = 1;
 TBDIS       = double(TBDISuncorr)./double(EffCorr).*TimeBias;
 TBDISE      = sqrt(TBDIS./EffCorr); % statstical uncertainty
 
-if strcmp(DataSet,'Knm2') && strcmp(Fitter,'Samak')
+if (strcmp(DataSet,'Knm2') || strcmp(DataSet,'Knm3a') || strcmp(DataSet,'Knm3b'))  && strcmp(Fitter,'Samak')
     if contains(Version,'Durable')
         TBDIS1133 = h5read([h5path,h5name],'/RunSummary/Counts1133')'; % for compute TBDISE
         TBDIS2232 = h5read([h5path,h5name],'/RunSummary/Counts2232')'; % for compute TBDISE
@@ -219,7 +219,7 @@ switch DataSet
         qUfrac_RM                   = 0;
         TBDIS_RM                    = 0;
         TimeperSubRunperPixel_RM    = 0;
-    case {'Knm2','Knm1'}%{'Knm1','Twin_Fitrium_Knm1','Twin_Kafit_Knm1','Knm2'}
+    case {'Knm2','Knm1','Knm3a','Knm3b'}%{'Knm1','Twin_Fitrium_Knm1','Twin_Kafit_Knm1','Knm2'}
         qU_RM                       = qU(1,:)';
         qUfrac_RM                   = qUfrac(1,:)';
         TBDIS_RM                    = TBDIS(1,:)';

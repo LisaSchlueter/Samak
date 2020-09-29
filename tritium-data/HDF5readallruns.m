@@ -22,6 +22,10 @@ switch DataSet
         version = 'MCRunSummary_Run00';
     case 'Knm2'
         version = 'RunSummary-Durable5d-fpd00';
+    case 'Knm3a'
+        version = 'RunSummary-Prompt6c-fpd00';
+    case'Knm3b'
+        version = 'RunSummary-Prompt6e-fpd00';
 end
 
 if isempty(h5runlist)
@@ -61,7 +65,7 @@ end
 for ii = 1:length(runn)
     try
         switch DataSet
-            case {'Knm1','FirstTritium.katrin','Knm2'}
+            case {'Knm1','FirstTritium.katrin','Knm2','Knm3a','Knm3b'}
                 HDF5Reader('RunNr',runn(ii),'version',version);
             case 'Twin_Fitrium_Knm1'
                 HDF5Reader('RunNr',runn(ii),'Fitter','Fitrium','version',version);

@@ -16,8 +16,12 @@ elseif all(~isletter(RunNr)) % Single Run
         DataSet = 'FirstTritium.katrin';
     elseif all(RunNr <= 51936)
         DataSet = 'Knm1';
-    else
+    elseif all(RunNr <= 57136)
         DataSet = 'Knm2';
+    elseif all(RunNr <= 62957)
+        DataSet = 'Knm3a';
+    else
+        DataSet = 'Knm3b';
     end
     
     %MultiRuns
