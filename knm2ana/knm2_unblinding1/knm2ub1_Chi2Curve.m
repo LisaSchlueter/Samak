@@ -1,9 +1,9 @@
 range        = 40;
 PlotChi2Scan = 'ON';
-chi2         = 'chi2Stat';%CMShape';
+chi2         = 'chi2CMShape';%Stat';
 freePar      = 'mNu E0 Bkg Norm';
 SysBudget     = 38;
-DataType      = 'Real';
+DataType      = 'Twin';
 AnaFlag       = 'StackPixel';
 
 savedir = [getenv('SamakPath'),'knm2ana/knm2_unblinding1/results/'];
@@ -14,7 +14,7 @@ if ~strcmp(chi2,'chi2Stat')
     savename = strrep(savename,'.mat',sprintf('_SysBudget%.0f.mat',SysBudget));
 end
 
-if exist(savename,'file')
+if exist(savename,'file') 
     load(savename,'ScanResult','FitResult','A')
 else
     SigmaSq =  0.0124+0.0025;
@@ -33,12 +33,17 @@ else
         'pullFlag',99,...
         'TwinBias_Q',18573.7,...
         'NonPoissonScaleFactor',1,...
-        'FSD_Sigma',sqrt(SigmaSq)};
-
+        'FSD_Sigma',sqrt(SigmaSq),...
+        'TwinBias_FSDSigma',sqrt(SigmaSq)};
+    
     %% build object of MultiRunAnalysis class
     A = MultiRunAnalysis(RunAnaArg{:});
     A.exclDataStart = A.GetexclDataStart(range);
-
+    if strcmp(DataType,'Twin')
+        A.ModelObj.RFBinStep = 0.01;
+        A.ModelObj.InitializeRF;
+    end
+    
     if ~strcmp(chi2,'chi2Stat')
         A.NonPoissonScaleFactor = 1.112;
         A.SetNPfactor; % convert to right dimension (if multiring)

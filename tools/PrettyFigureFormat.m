@@ -15,6 +15,6 @@ set(gca,'XMinorTick','on');
 set(gca,'YMinorTick','on');
 set(gcf,'Color','w');
 box on;
-set(gca,'LineWidth',2);
+set(gca,'LineWidth',1.5);
 set(gca,'Layer','top');
 end

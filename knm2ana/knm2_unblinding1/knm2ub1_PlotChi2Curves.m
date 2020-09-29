@@ -1,23 +1,19 @@
 %% load or calc
 range = 40;
-AuxLines = 'OFF';
-ShowResults = 'OFF';
+AuxLines = 'ON';
+ShowResults = 'ON';
 SavePlot = 'ON';
-AnaMode = 'Uniform';%MultiRing';
+AnaFlag = 'StackPixel';%MultiRing';
 SysBudget = 38;
-DataType = 'Real';
-if ~strcmp(AnaMode,'MultiRing')
-    AnaStr= '';
-else
-    AnaStr = '_MultiRing';
-end
+DataType = 'Twin';
+
 %%
 savedir = [getenv('SamakPath'),'knm2ana/knm2_unblinding1/results/'];
 
-savenameStat = sprintf('%sknm2ub1_Chi2Curve_%s_%.0feV_%s_chi2Stat.mat',...
-    savedir,DataType,range,strrep(freePar,' ',''));
-savenameCM = sprintf('%sknm2ub1_Chi2Curve_%s_%.0feV_%s_chi2CMShape_SysBudget%.0f.mat',...
-    savedir,DataType,range,strrep(freePar,' ',''),SysBudget);
+savenameStat = sprintf('%sknm2ub1_Chi2Curve_%s_%.0feV_%s_chi2Stat_%s.mat',...
+    savedir,DataType,range,strrep(freePar,' ',''),AnaFlag);
+savenameCM = sprintf('%sknm2ub1_Chi2Curve_%s_%.0feV_%s_chi2CMShape_%s_SysBudget%.0f.mat',...
+    savedir,DataType,range,strrep(freePar,' ',''),AnaFlag,SysBudget);
 try
 dStat = importdata(savenameStat);
 dCM = importdata(savenameCM);
@@ -57,17 +53,19 @@ pStat = plot(mNuSqStat,mychi2minStat,'-.','LineWidth',3,'Color',rgb('SkyBlue'));
 
 
 if strcmp(AuxLines,'ON')
-p1 =plot(FitResultStat.par(1)+ScanResultStat.AsymErr(1).*ones(100,1),linspace(0,1,100),...
-    ':','LineWidth',3,'Color',rgb('GoldenRod'));
-p2 =plot(FitResultStat.par(1)+ScanResultStat.AsymErr(2).*ones(100,1),linspace(0,1,100),...
-    ':','LineWidth',3,'Color',rgb('GoldenRod'));
-p3 = plot(linspace(ScanResultStat.AsymErr(2)+FitResultStat.par(1),...
-    ScanResultStat.AsymErr(1)+FitResultStat.par(1),100),ones(1,100),...
-    ':','LineWidth',3,'Color',rgb('GoldenRod'));
+% p1 =plot(FitResultStat.par(1)+ScanResultStat.AsymErr(1).*ones(100,1),linspace(0,1,100),...
+%     ':','LineWidth',3,'Color',rgb('GoldenRod'));
+% p2 =plot(FitResultStat.par(1)+ScanResultStat.AsymErr(2).*ones(100,1),linspace(0,1,100),...
+%     ':','LineWidth',3,'Color',rgb('GoldenRod'));
+% p3 = plot(linspace(ScanResultStat.AsymErr(2)+FitResultStat.par(1),...
+%     ScanResultStat.AsymErr(1)+FitResultStat.par(1),100),ones(1,100),...
+%     ':','LineWidth',3,'Color',rgb('GoldenRod'));
+plot(dStat.FitResult.par(1).*ones(100,1),linspace(0,1e2,1e2),':','LineWidth',2.5,'Color',rgb('SkyBlue'))
+plot(dCM.FitResult.par(1).*ones(100,1),linspace(0,1e2,1e2),':','LineWidth',2.5,'Color',rgb('DodgerBlue'))
 end
 
-xstr = sprintf('{{\\itm}_\\nu}^2');
-xUnit = sprintf('eV^2');
+xstr = sprintf('{{\\itm}_\\nu}^{2}');
+xUnit = sprintf('eV^{ 2}');
 PrettyFigureFormat('FontSize',24);
 
 xlabel(sprintf('%s (%s)',xstr,xUnit),'Interpreter','tex');
@@ -87,24 +85,35 @@ else
 end
 leg.EdgeColor = rgb('Silver');
 leg.Location = 'northwest';
-xlim([-0.8,0.8]);
+xlim([-1.15,0.78]);
+if strcmp(DataType,'Real')
+    ylim([dCM.FitResult.chi2min-1 1+max(max(dCM.ScanResult.chi2min))])
+end
+
+
+if strcmp(AnaFlag,'StackPixel')
+    AnaStr = 'Uniform';
+else
+    AnaStr = 'Multi-Ring (4)';
+end
+
 switch DataType
     case 'Twin'
-t = title('KNM2 twins','FontWeight','normal','FontSize',get(gca,'FontSize'));
+        t = title(sprintf('KNM2 twins - %s',AnaStr),'FontWeight','normal','FontSize',get(gca,'FontSize'));
     case 'Real'
-        t = title(sprintf('KNM2 data'),'FontWeight','normal','FontSize',get(gca,'FontSize'));
+        t = title(sprintf('KNM2 data - %s',AnaStr),'FontWeight','normal','FontSize',get(gca,'FontSize'));
 end
 %% save
 if strcmp(SavePlot,'ON')
 plotdir = strrep(savedir,'results','plots');
 MakeDir(plotdir);
-plotname = sprintf('%sknm2FS2_Chi2CurveStatSyst%s.pdf',plotdir,AnaStr);
+plotname = sprintf('%sknm2FS2_Chi2CurveStatSyst_%s.pdf',plotdir,AnaFlag);
 fprintf('save plot to %s \n',plotname);
 export_fig(gcf,plotname);
 end
 
 %% 
-fprintf('--------%s----------------------------------\n',AnaMode)
+fprintf('--------%s----------------------------------\n',AnaFlag)
 fprintf('stat. only mnu^2 = %.3f (-%.3f + %.3f) eV^2 \n',FitResultStat.par(1),-FitResultStat.errNeg(1),FitResultStat.errPos(1));
 fprintf('syst. only mnu^2 = %.3f (-%.3f + %.3f) eV^2 \n',FitResultCM.par(1),sqrt(FitResultCM.errNeg(1)^2-FitResultStat.errNeg(1)^2),sqrt(FitResultCM.errPos(1)^2-FitResultStat.errPos(1)^2));
 fprintf('total      mnu^2 = %.3f (-%.3f + %.3f) eV^2 \n',FitResultCM.par(1),-FitResultCM.errNeg(1),FitResultCM.errPos(1));
