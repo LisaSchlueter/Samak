@@ -2,26 +2,8 @@ range   = 40;
 freePar = 'mNu E0 Bkg Norm';
 chi2    = 'chi2CMShape';
 SysBudget = 38;
-DataType = 'Real';
-AnaFlag = 'StackPixel';
-savedir = [getenv('SamakPath'),'knm2ana/knm2_unblinding1/results/'];
-savename = sprintf('%sknm2ub1_Fit_%s_%.0feV_%s_%s_%s.mat',...
-    savedir,DataType,range,strrep(freePar,' ',''),chi2,AnaFlag);
+DataType = 'Twin';
 
-if strcmp(chi2,'chi2Stat+')
-    NonPoissonScaleFactor = 1.112;
-    chi2 = 'chi2Stat';
-else
-     NonPoissonScaleFactor = 1;
-end
-
-if ~strcmp(chi2,'chi2Stat') 
-    savename = strrep(savename,'.mat',sprintf('_SysBudget%.0f.mat',SysBudget));
-end
-
-if exist(savename,'file') 
-    load(savename,'FitResult','RunAnaArg','A');
-else
     SigmaSq =  0.0124+0.0025;
     
     RunAnaArg = {'RunList','KNM2_Prompt',...
@@ -33,13 +15,12 @@ else
         'FSDFlag','BlindingKNM2',...
         'ELossFlag','KatrinT2A20',...
         'SysBudget',SysBudget,...
-        'AnaFlag',AnaFlag,...
+        'AnaFlag','StackPixel',...
         'chi2',chi2,...
         'TwinBias_Q',18573.7,...
         'NonPoissonScaleFactor',NonPoissonScaleFactor,...
         'FSD_Sigma',sqrt(SigmaSq),...
-        'TwinBias_FSDSigma',sqrt(SigmaSq),...
-        'RingMerge','Full'};
+        'TwinBias_FSDSigma',sqrt(SigmaSq)};
     A = MultiRunAnalysis(RunAnaArg{:});
     %%
     A.exclDataStart = A.GetexclDataStart(range);
@@ -54,11 +35,22 @@ else
         A.ModelObj.InitializeRF;
     end
     
+    mNuSqErr2    = zeros(5,1);
+    mNuSqErrSym2 = zeros(5,1);
+    
+    for i=1:5
+    A.ComputeCM;
     A.Fit;
     FitResult = A.FitResult;
-    MakeDir(savedir);
-    save(savename,'FitResult','RunAnaArg','A','SigmaSq')
-end
+    mNuSqErr2(i)    = (FitResult.errPos(1)-FitResult.errNeg(1))/2;
+    mNuSqErrSym2(i) = FitResult.err(1);
+    end
+%%
+
+plot(mNuSqErr2-mean(mNuSqErr2))
+%hold on;
+
+%plot(mNuSqErrSym2-mean(mNuSqErrSym2),'--')
 %%
 %A.PlotFit;
 fprintf('m_nu^2 = %.3f + %.3f %.3f eV^2       , ',FitResult.par(1),FitResult.errPos(1),FitResult.errNeg(1))

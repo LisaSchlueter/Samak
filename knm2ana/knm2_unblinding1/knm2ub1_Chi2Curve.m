@@ -1,9 +1,9 @@
 range        = 40;
 PlotChi2Scan = 'ON';
-chi2         = 'chi2CMShape';%Stat';
+chi2         = 'chi2CMShape';
 freePar      = 'mNu E0 Bkg Norm';
 SysBudget     = 38;
-DataType      = 'Twin';
+DataType      = 'Real';
 AnaFlag       = 'StackPixel';
 
 savedir = [getenv('SamakPath'),'knm2ana/knm2_unblinding1/results/'];

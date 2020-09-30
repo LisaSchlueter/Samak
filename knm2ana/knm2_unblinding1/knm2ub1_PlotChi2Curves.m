@@ -5,8 +5,8 @@ ShowResults = 'ON';
 SavePlot = 'ON';
 AnaFlag = 'StackPixel';%MultiRing';
 SysBudget = 38;
-DataType = 'Twin';
-
+DataType = 'Real';
+freePar = 'mNu E0 Bkg Norm';
 %%
 savedir = [getenv('SamakPath'),'knm2ana/knm2_unblinding1/results/'];
 
@@ -85,11 +85,6 @@ else
 end
 leg.EdgeColor = rgb('Silver');
 leg.Location = 'northwest';
-xlim([-1.15,0.78]);
-if strcmp(DataType,'Real')
-    ylim([dCM.FitResult.chi2min-1 1+max(max(dCM.ScanResult.chi2min))])
-end
-
 
 if strcmp(AnaFlag,'StackPixel')
     AnaStr = 'Uniform';
@@ -99,8 +94,12 @@ end
 
 switch DataType
     case 'Twin'
+         xlim([-1,1]);
+         ylim([]);
         t = title(sprintf('KNM2 twins - %s',AnaStr),'FontWeight','normal','FontSize',get(gca,'FontSize'));
     case 'Real'
+        xlim([-1.15,0.78]);
+         ylim([dCM.FitResult.chi2min-1 1+max(max(dCM.ScanResult.chi2min))])
         t = title(sprintf('KNM2 data - %s',AnaStr),'FontWeight','normal','FontSize',get(gca,'FontSize'));
 end
 %% save

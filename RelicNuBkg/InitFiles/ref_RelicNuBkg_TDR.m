@@ -19,14 +19,14 @@ p.addParameter('WGTS_MolFrac_HT_SubRun','');
 p.addParameter('WGTS_B_T',3.6,@(x)isfloat(x) && x>0);
 
 % Theory
-p.addParameter('ISCS','Edep',@(x)ismember(x,{'Aseev','Theory','Edep'}));
+p.addParameter('ISCS','Aseev',@(x)ismember(x,{'Aseev','Theory','Edep'}));
 p.addParameter('DTFSD','DOSS',@(x)ismember(x,{'OFF','DOSS','BlindingKNM1','SibilleFull','Sibille0p5eV','BlindingKNM2'}));
 p.addParameter('HTFSD','SAENZ',@(x)ismember(x,{'OFF','SAENZ','BlindingKNM1','SibilleFull','Sibille0p5eV','BlindingKNM2'}));
 p.addParameter('TTFSD','SAENZ',@(x)ismember(x,{'OFF','DOSS','SAENZ','BlindingKNM1','SibilleFull','Sibille0p5eV','BlindingKNM2'}));
-p.addParameter('ELossFlag','KatrinT2A20',@(x)ismember(x,{'Aseev','Abdurashitov','CW_GLT','KatrinD2','KatrinT2','KatrinT2A20'}));
+p.addParameter('ELossFlag','Aseev',@(x)ismember(x,{'Aseev','Abdurashitov','CW_GLT','KatrinD2','KatrinT2','KatrinT2A20'}));
 p.addParameter('DopplerEffectFlag','FSD',@(x)ismember(x,{'OFF','FSD'}));
-p.addParameter('AngularTFFlag','ON',@(x)ismember(x,{'OFF','ON'}));
-p.addParameter('SynchrotronFlag','ON',@(x)ismember(x,{'OFF','ON'}));
+p.addParameter('AngularTFFlag','OFF',@(x)ismember(x,{'OFF','ON'}));
+p.addParameter('SynchrotronFlag','OFF',@(x)ismember(x,{'OFF','ON'}));
 
 % Binning
 p.addParameter('nTeBinningFactor',100,@(x)isfloat(x) && x>0);

@@ -961,7 +961,7 @@ classdef CovarianceMatrix < handle
             CM = TBDIS_NoBKG.*CovMatFrac_local.*TBDIS_NoBKG';
             
             %Draw from multivariate distribution
-            TBDIS_Sample       = mvnrnd(TBDIS_NoBKG,CM,obj.nTrials*5);
+            TBDIS_Sample       = mvnrnd(TBDIS_NoBKG,CM,25e4);
             
              % Model TBDIS: reshape back if FPD segmented
             if strcmp(obj.StudyObject.FPD_Segmentation,'RING')
