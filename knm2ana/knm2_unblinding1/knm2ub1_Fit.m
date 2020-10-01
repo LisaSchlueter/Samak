@@ -1,6 +1,6 @@
 range   = 40;
 freePar = 'mNu E0 Bkg Norm';
-chi2    = 'chi2CMShape';
+chi2    = 'chi2CMShape';%CMShape';
 SysBudget = 38;
 DataType = 'Real';
 AnaFlag = 'Ring';%StackPixel';
@@ -19,7 +19,7 @@ if ~strcmp(chi2,'chi2Stat')
     savename = strrep(savename,'.mat',sprintf('_SysBudget%.0f.mat',SysBudget));
 end
 
-if exist(savename,'file') &&1==2
+if exist(savename,'file')
     load(savename,'FitResult','RunAnaArg','A');
 else
     SigmaSq =  0.0124+0.0025;
@@ -57,7 +57,7 @@ else
     A.Fit;
     FitResult = A.FitResult;
     MakeDir(savedir);
-  %  save(savename,'FitResult','RunAnaArg','A','SigmaSq')
+   save(savename,'FitResult','RunAnaArg','A','SigmaSq')
 end
 %%
 %A.PlotFit;
