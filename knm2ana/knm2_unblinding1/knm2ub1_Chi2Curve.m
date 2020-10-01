@@ -6,7 +6,7 @@ SysBudget     = 38;
 DataType      = 'Real';
 AnaFlag       = 'StackPixel';
 
-savedir = [getenv('SamakPath'),'knm2ana/knm2_unblinding1/results/'];
+savedir = [getenv('SamakPath'),'knm2ana/knm2_unblinding1/results/Chi2Curve/'];
 
 savename = sprintf('%sknm2ub1_Chi2Curve_%s_%.0feV_%s_%s_%s.mat',...
     savedir,DataType,range,strrep(freePar,' ',''),chi2,AnaFlag);

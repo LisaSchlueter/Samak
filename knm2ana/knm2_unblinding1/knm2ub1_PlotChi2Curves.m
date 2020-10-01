@@ -8,7 +8,7 @@ SysBudget = 38;
 DataType = 'Real';
 freePar = 'mNu E0 Bkg Norm';
 %%
-savedir = [getenv('SamakPath'),'knm2ana/knm2_unblinding1/results/'];
+savedir = [getenv('SamakPath'),'knm2ana/knm2_unblinding1/results/Chi2Curve/'];
 
 savenameStat = sprintf('%sknm2ub1_Chi2Curve_%s_%.0feV_%s_chi2Stat_%s.mat',...
     savedir,DataType,range,strrep(freePar,' ',''),AnaFlag);
@@ -78,8 +78,8 @@ else
 end
 if strcmp(ShowResults,'ON')
 leg = legend([pStat,pCM],...
-   sprintf('Stat. only:        %s = %.3f (%.3f +%.3f) %s',xstr,FitResultStat.par(1), ScanResultStat.AsymErr(2),ScanResultStat.AsymErr(1),xUnit),...
-   sprintf('Stat. and syst: %s = %.3f (%.3f +%.3f) %s',xstr,FitResultCM.par(1), ScanResultCM.AsymErr(2),ScanResultCM.AsymErr(1),xUnit));
+   sprintf('Stat. only:        %s = %.3f (+%.3f %.3f) %s',xstr,FitResultStat.par(1),FitResultStat.errPos(1),FitResultStat.errNeg(1),xUnit),...
+   sprintf('Stat. and syst: %s = %.3f (+%.3f %.3f) %s',xstr,FitResultCM.par(1),FitResultCM.errPos(1),FitResultCM.errNeg(1),xUnit));
 else
     leg = legend([pStat,pCM],'Stat. only','Stat. and syst.');
 end
@@ -95,18 +95,18 @@ end
 switch DataType
     case 'Twin'
          xlim([-1,1]);
-         ylim([]);
+         ylim([0 11]);
         t = title(sprintf('KNM2 twins - %s',AnaStr),'FontWeight','normal','FontSize',get(gca,'FontSize'));
     case 'Real'
         xlim([-1.15,0.78]);
-         ylim([dCM.FitResult.chi2min-1 1+max(max(dCM.ScanResult.chi2min))])
+        ylim([dCM.FitResult.chi2min-1 1+max(max(dCM.ScanResult.chi2min))])
         t = title(sprintf('KNM2 data - %s',AnaStr),'FontWeight','normal','FontSize',get(gca,'FontSize'));
 end
 %% save
 if strcmp(SavePlot,'ON')
 plotdir = strrep(savedir,'results','plots');
 MakeDir(plotdir);
-plotname = sprintf('%sknm2FS2_Chi2CurveStatSyst_%s.pdf',plotdir,AnaFlag);
+plotname = sprintf('%sknm2ub1_Chi2CurveStatSyst_%s.pdf',plotdir,AnaFlag);
 fprintf('save plot to %s \n',plotname);
 export_fig(gcf,plotname);
 end

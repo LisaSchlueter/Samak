@@ -328,7 +328,7 @@ classdef FITC < handle
             Normtol=0.0017;        % normalization tolerance from ring to ring
             qUOffsettol = 10;     % qUOffset absolute tolerance (eV)
             qUmeanOffsettol = 0.5;  % qUOffset tolerance from ring to ring (eV)
-            BkgSlopetol = 5*1e-6; % background slope constrain (cps/eV)
+            BkgSlopetol = 4.74.*1e-06;%5*1e-6; % background slope constrain (cps/eV)
             mNuSqtol = 1;         % neutrino mass pull tolerance (eV^2)
             mTSqtol = 1;          % tachyonic neutrino mass (nu-mass offset) from ring to ring (eV^2)
             sin2T4tol = 0.5;

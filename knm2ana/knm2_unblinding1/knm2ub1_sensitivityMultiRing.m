@@ -1,6 +1,6 @@
 % Calculte and/or plot systematics breakdown for KNM2 unblinding 1
 range = 40;
-DataType = 'Twin';
+DataType = 'Real';
 SigmaSq =  0.0124+0.0025;
 
 RunAnaArg = {'RunList','KNM2_Prompt',... % all KNM2 golden runs

@@ -3,8 +3,8 @@ freePar = 'mNu E0 Bkg Norm';
 chi2    = 'chi2CMShape';
 SysBudget = 38;
 DataType = 'Real';
-AnaFlag = 'StackPixel';
-savedir = [getenv('SamakPath'),'knm2ana/knm2_unblinding1/results/'];
+AnaFlag = 'Ring';%StackPixel';
+savedir = [getenv('SamakPath'),'knm2ana/knm2_unblinding1/results/BestFit/'];
 savename = sprintf('%sknm2ub1_Fit_%s_%.0feV_%s_%s_%s.mat',...
     savedir,DataType,range,strrep(freePar,' ',''),chi2,AnaFlag);
 
@@ -19,7 +19,7 @@ if ~strcmp(chi2,'chi2Stat')
     savename = strrep(savename,'.mat',sprintf('_SysBudget%.0f.mat',SysBudget));
 end
 
-if exist(savename,'file') 
+if exist(savename,'file') &&1==2
     load(savename,'FitResult','RunAnaArg','A');
 else
     SigmaSq =  0.0124+0.0025;
@@ -57,9 +57,20 @@ else
     A.Fit;
     FitResult = A.FitResult;
     MakeDir(savedir);
-    save(savename,'FitResult','RunAnaArg','A','SigmaSq')
+  %  save(savename,'FitResult','RunAnaArg','A','SigmaSq')
 end
 %%
 %A.PlotFit;
 fprintf('m_nu^2 = %.3f + %.3f %.3f eV^2       , ',FitResult.par(1),FitResult.errPos(1),FitResult.errNeg(1))
 fprintf('mean err = %.3f eV^2 \n',(FitResult.errPos(1)-FitResult.errNeg(1))/2)
+
+%%
+A.PlotFit('LabelFlag','FinalKNM1',...
+    'saveplot','pdf',...
+    'ErrorBarScaling',50,...
+    'YLimRes',[-2.2,2.9],...
+    'Colors','RGB',...
+    'DisplayStyle','PRL',...
+    'FitResultsFlag','OFF',...
+    'qUDisp','Abs',...
+    'TickDir','Out');
