@@ -2,10 +2,11 @@
 % random half of all golden runs
 % March 2020, Lisa
 
-nFits = 500;
-freePar = 'E0 Bkg Norm';
+nFits = 1e3;
+freePar = 'mNu E0 Bkg Norm';
 DataType = 'Real';
 range = 40;               % fit range in eV below endpoint
+%savedir = [getenv('SamakPath'),'knm2ana/knm2_AltRunPixLists/results/'];
 savedir = [getenv('SamakPath'),'knm2ana/knm2_AltRunPixLists/results/'];
 savename = sprintf('%sknm2_RunListRandHalf_%s_%s_%.0feV_%.0ffits.mat',...
             savedir,DataType,strrep(freePar,' ',''),range,nFits);
@@ -14,21 +15,23 @@ savename = sprintf('%sknm2_RunListRandHalf_%s_%s_%.0feV_%.0ffits.mat',...
 if exist(savename,'file')
     load(savename,'RunList','FitResult','RunAnaArg')
 else
-    
+    SigmaSq =  0.0124+0.0025;
     RunList = cell(nFits,1);
     FitResult = cell(nFits,1);
     RunAnaArg = {'RunList','KNM2_RandHalf',...  % define run number -> see GetRunList
         'fixPar',freePar,...         % free Parameter !!
         'DataType',DataType,...              % Real, Twin or Fake
         'FSDFlag','BlindingKNM2',...       % final state distribution (theoretical calculation)
-        'ELossFlag','KatrinT2',...         % energy loss function     ( different parametrizations available)
+        'ELossFlag','KatrinT2A20',...         % energy loss function     ( different parametrizations available)
         'AnaFlag','StackPixel',...         % FPD segmentations -> pixel combination
         'chi2','chi2Stat',...              % statistics only
-        'NonPoissonScaleFactor',1,...
+        'NonPoissonScaleFactor',1.112,...
         'MosCorrFlag','OFF',...
         'TwinBias_Q',18573.7,...
         'ROIFlag','14keV',...
-        'DopplerEffectFlag','FSD'};%,...
+        'DopplerEffectFlag','FSD',...
+        'FSD_Sigma',sqrt(SigmaSq),...
+        'TwinBias_FSDSigma',sqrt(SigmaSq)};%,...
     %'Twin_SameqUFlag','ON'};
     
     for i=1:nFits

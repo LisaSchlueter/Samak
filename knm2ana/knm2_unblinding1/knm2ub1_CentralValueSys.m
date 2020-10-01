@@ -1,4 +1,5 @@
 dir = [getenv('SamakPath'),'tritium-data/sensitivity/Knm2/'];
+Blinding = 'OFF';
 
 SysEffectsAll   = {'FSD','RF_BF','RF_RX','LongPlasma','FPDeff','NP','Bkg'}; %Bkg has to be last
 mNuSq    = zeros(numel(SysEffectsAll)+2,1);
@@ -22,7 +23,14 @@ dpull    = importdata(namePull);
 mNuSq(end) = dpull.FitResult.par(1);
 mNuSqErr(end) = (-dpull.FitResult.errNeg(1)+dpull.FitResult.errPos(1))/2;
 
-rndNum = randn(1);
+switch Blinding
+    case 'ON'
+        rndNum = randn(1);
+        ystr = '+ random number';
+    case 'OFF'
+        rndNum = 0;
+        ystr = '';
+end
 f1 = figure('Units','normalized','Position',[0.1,0.1,0.5,0.45]);
 x = 1:numel(SysEffectsAll)+2;
 pcov = plot(x,mNuSq+rndNum,'.:','MarkerSize',26,'LineWidth',1.5,'Color',rgb('DodgerBlue'));
@@ -32,9 +40,13 @@ ppull = plot(x(end),mNuSq(end)+rndNum,'.','MarkerSize',26,'LineWidth',1.5,'Color
 xticks(x); xlim([min(x)-0.5 max(x)+0.5]);
 PrettyFigureFormat;
 xticklabels({'Stat.','FSD','B-fields',sprintf('\\rhod\\sigma'),'Plasma',sprintf('\\epsilon_{FPD}'),sprintf('B_{NP}'),sprintf('B_{slope}'),sprintf('B_{slope}')});
-ylabel(sprintf('{\\itm}_\\nu^2 + random number (eV^{ 2})'));
+ylabel(sprintf('{\\itm}_\\nu^2 %s (eV^{ 2})',ystr));
 ylim([min(mNuSq(end)+rndNum)-0.01,max(mNuSq(1)+rndNum)+0.01])
 legend([pstat,pcov,ppull],'stat. only','stat. and cov. mat.','stat. and pull term','Location','southwest','EdgeColor',rgb('Silver'));
 %%
 plotname = sprintf('%sknm2ana/knm2_unblinding1/plots/Fit_BslopePull_Real_StackedPixel_Stat.png',getenv('SamakPath'));
+if strcmp(Blinding,'ON')
+   plotname =  strrep(plotname,'.png','_Blinding.png');
+end
 print(plotname,'-dpng','-r350');
+fprintf('save plot to %s \n',plotname)

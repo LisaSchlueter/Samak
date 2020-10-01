@@ -417,7 +417,7 @@ classdef FITC < handle
                     (par(1)-0)^2/1^2;                                      % nu-mass
             end
             
-            if any(ismember(obj.pullFlag,10))
+            if any(ismember(obj.pullFlag,10))   %  background slope constrain with variable sigma
                 PullTerm = PullTerm + par(3*obj.SO.nPixels+9)^2/obj.pulls.^2;
             end
             
