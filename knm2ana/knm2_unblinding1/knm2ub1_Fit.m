@@ -2,7 +2,7 @@ range   = 40;
 freePar = 'mNu E0 Bkg Norm';
 chi2    = 'chi2CMShape';
 DataType = 'Real';
-AnaFlag = 'StackPixel';
+AnaFlag = 'Ring';%StackPixel';
 
 if strcmp(AnaFlag,'Ring')
     SysBudget = 39;

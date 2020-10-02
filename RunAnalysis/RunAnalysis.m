@@ -4316,7 +4316,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                 case 'Norm'
                     y    = obj.FitResult.par(3+obj.nRings:3+2*obj.nRings-1)+1;
                     yErr = obj.FitResult.err(3+obj.nRings:3+2*obj.nRings-1);
-                    ystr = 'Signal normalization factor';
+                    ystr = sprintf('N_{sig}');%'Signal normalization factor';
                     legPos = 'northeast';
                 case 'mTSq'
                     if strcmp(Blind,'ON')
@@ -4357,12 +4357,13 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             % set nice limits
             xlim([min(obj.RingList)-0.2,max(obj.RingList)+0.2]);
             ymin = min(y-yErr);
-            if ymin<0
-                ylim([ymin*1.2,max(y+yErr)*1.5]);
-            else
-                ylim([ymin*0.8,max(y+yErr)*1.5]);
+            if ~ismember(PlotPar,{'Norm','Bkg'})
+                if ymin<0
+                    ylim([ymin*1.2,max(y+yErr)*1.5]);
+                else
+                    ylim([ymin*0.8,max(y+yErr)*1.5]);
+                end
             end
-          
             % linear fit (optional)
             if strcmp(linFitFlag,'ON')
                 % test start
@@ -4385,7 +4386,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                   else
                       resultsleg = '';  
                   end
-                leg = legend(e1,[sprintf(' \\chi^2 = %.1g (%.0f dof) \n',...
+                leg = legend(e1,[sprintf(' \\chi^2 = %.1f (%.0f dof) \n',...
                     obj.FitResult.chi2min,obj.FitResult.dof),resultsleg]);
                 leg.Title.String = sprintf('%s Multi-ring fit (%s)',upper(obj.DataSet),d.chi2);
                 leg.Location = legPos;
@@ -4394,13 +4395,14 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                 leg.EdgeColor = rgb('Silver');
                 leg.Location = 'northwest';
             
+                leg.delete;
             if strcmp(savePlot,'ON')
                 %grid on
                 plotdir = [getenv('SamakPath'),sprintf('tritium-data/plots/%s/MultiRingFit/',obj.DataSet)];
                 MakeDir(plotdir);
                  freePar = ConvertFixPar('freePar',obj.fixPar,'nPar',obj.nPar,'nPixels',numel(obj.RunData.MACE_Ba_T),'Mode','Reverse');
-                plotname = [plotdir,sprintf('MultiRing%s_%s_%s_freePar%s_%s%s.pdf',...
-                    obj.RingMerge,obj.RunData.RunName,obj.chi2,freePar,PlotPar,saveStr)];
+                plotname = [plotdir,sprintf('MultiRing%s_%s_%s_freePar%s_%s.pdf',...
+                    obj.RingMerge,obj.RunData.RunName,obj.chi2,freePar,PlotPar)];
                 export_fig(fig1,plotname,'-painters');
                 fprintf('Plot saved to %s \n',plotname)
             end

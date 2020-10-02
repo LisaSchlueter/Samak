@@ -3,7 +3,7 @@ range = 40;
 AuxLines = 'ON';
 ShowResults = 'ON';
 SavePlot = 'ON';
-AnaFlag = 'StackPixel';
+AnaFlag = 'Ring';%StackPixel';
 
 if strcmp(AnaFlag,'Ring')
     SysBudget = 39;
@@ -134,6 +134,17 @@ end
 
 %% 
 fprintf('--------%s----------------------------------\n',AnaFlag)
-fprintf('stat. only mnu^2 = %.3f (-%.3f + %.3f) eV^2 \n',FitResultStat.par(1),-FitResultStat.errNeg(1),FitResultStat.errPos(1));
+%fprintf('stat. only mnu^2 = %.3f (-%.3f + %.3f) eV^2 \n',FitResultStat.par(1),-FitResultStat.errNeg(1),FitResultStat.errPos(1));
+fprintf('stat. only  \n mnu^2 = %.3f (-%.3f + %.3f) eV^2 \n E0     = %.3f eV +- %.3f \n chi2 = %.2f (%.0f dof), p-value = %.2f\n',...
+    FitResultStat.par(1),-FitResultStat.errNeg(1),FitResultStat.errPos(1),...
+    FitResultStat.par(2)+dCM.A.ModelObj.Q_i,FitResultStat.err(2),...
+    FitResultStat.chi2min,FitResultStat.dof,1-chi2cdf(FitResultStat.chi2min,FitResultStat.dof));
+
 fprintf('syst. only mnu^2 = %.3f (-%.3f + %.3f) eV^2 \n',FitResultCM.par(1),sqrt(FitResultCM.errNeg(1)^2-FitResultStat.errNeg(1)^2),sqrt(FitResultCM.errPos(1)^2-FitResultStat.errPos(1)^2));
-fprintf('total      mnu^2 = %.3f (-%.3f + %.3f) eV^2 \n',FitResultCM.par(1),-FitResultCM.errNeg(1),FitResultCM.errPos(1));
+fprintf('total  \n mnu^2 = %.3f (-%.3f + %.3f) eV^2 \n E0     = %.3f eV +- %.3f \n chi2 = %.2f (%.0f dof), p-value = %.2f\n',...
+    FitResultCM.par(1),-FitResultCM.errNeg(1),FitResultCM.errPos(1),...
+    FitResultCM.par(2)+dCM.A.ModelObj.Q_i,FitResultCM.err(2),...
+    FitResultCM.chi2min,FitResultCM.dof,1-chi2cdf(FitResultCM.chi2min,FitResultCM.dof));
+%%
+%dCM.A.PlotFitMultiRing('PlotPar','Norm','Blind','ON','savePlot','ON');%,'Bkg'
+dCM.A.PlotFitMultiRing('PlotPar','Bkg','Blind','ON','savePlot','ON');%,'Bkg'
