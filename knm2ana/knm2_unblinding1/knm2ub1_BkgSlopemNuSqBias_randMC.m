@@ -1,3 +1,8 @@
+%% randomized MC study
+% stat + NP, 40 eV 
+% 1. fit (stat + NP) with fixed bkg slope
+% 2. fit (stat + NP + bkgslope cm) with fixed bkg slope
+% compare results in scatter plot
 range   = 40;
 nSamples = 1e3;
 
@@ -76,3 +81,23 @@ else
     
     save(savename,'mNuSq','mNuSqErr','FitResults','mNuSqCM','mNuSqErrCM','FitResultsCM','RunAnaArg');
 end
+
+%% plot
+% p = scatterhist(mNuSq,mNuSqCM,'Direction','out',...);%,'HistogramDisplayStyle','bar',...
+%     'Location','Northeast','Color',rgb('DodgerBlue'));
+GetFigure
+h1 = histogram(mNuSq-mNuSqCM,'Normalization','probability',...
+    'FaceColor',rgb('SkyBlue'),'FaceAlpha',1,'EdgeColor',rgb('PowderBlue'));
+PrettyFigureFormat('FontSize',22);
+xlabel(sprintf('\\Delta{\\itm}_\\nu^2 (eV^{ 2})'));
+ylabel('Frequency')
+title(sprintf('stat. only - stat. and {\\itB}^{slope} syst. , %.0f samples',nSamples),'FontWeight','normal','FontSize',get(gca,'FontSize')-2);
+leg = legend(sprintf(' \\mu = %.3f eV , \\sigma = %.3f eV ',mean(mNuSq-mNuSqCM),std(mNuSq-mNuSqCM)));
+leg.EdgeColor = rgb('Silver'); 
+leg.Location='northwest';
+
+xlim([-0.1 0.1]);
+plotdir = [getenv('SamakPath'),'knm2ana/knm2_unblinding1/plots/'];
+plotname = sprintf('%sknm2ub1_BkgSlopeFreeVsFixmNuSqBiasRandMC_%.0feV_%.0fsamples.png',plotdir,range,nSamples);
+print(plotname,'-dpng','-r350');
+

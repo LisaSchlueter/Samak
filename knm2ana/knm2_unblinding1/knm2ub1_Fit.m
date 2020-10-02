@@ -1,31 +1,38 @@
 range   = 40;
 freePar = 'mNu E0 Bkg Norm';
-chi2    = 'chi2Stat';%CMShape';
-SysBudget = 38;
+chi2    = 'chi2CMShape';
 DataType = 'Real';
-AnaFlag = 'Ring';%StackPixel';
+AnaFlag = 'StackPixel';
+
+if strcmp(AnaFlag,'Ring')
+    SysBudget = 39;
+else
+    SysBudget = 38;
+end
 savedir = [getenv('SamakPath'),'knm2ana/knm2_unblinding1/results/BestFit/'];
 savename = sprintf('%sknm2ub1_Fit_%s_%.0feV_%s_%s_%s.mat',...
     savedir,DataType,range,strrep(freePar,' ',''),chi2,AnaFlag);
 
-if strcmp(chi2,'chi2Stat+')
+
+if strcmp(chi2,'chi2Stat')
+    NonPoissonScaleFactor = 1;
+elseif  strcmp(chi2,'chi2CMShape')
+    NonPoissonScaleFactor = 1.112;
+elseif strcmp(chi2,'chi2Stat+')
     NonPoissonScaleFactor = 1.112;
     chi2 = 'chi2Stat';
-else
-     NonPoissonScaleFactor = 1;
 end
 
 if ~strcmp(chi2,'chi2Stat') 
     savename = strrep(savename,'.mat',sprintf('_SysBudget%.0f.mat',SysBudget));
 end
 
-if exist(savename,'file')
+if exist(savename,'file') 
     load(savename,'FitResult','RunAnaArg','A');
 else
     SigmaSq =  0.0124+0.0025;
     
     RunAnaArg = {'RunList','KNM2_Prompt',...
-        'chi2','chi2Stat',...
         'DataType',DataType,...
         'fixPar',freePar,...
         'RadiativeFlag','ON',...
@@ -43,12 +50,7 @@ else
     A = MultiRunAnalysis(RunAnaArg{:});
     %%
     A.exclDataStart = A.GetexclDataStart(range);
-   
-    if ~strcmp(chi2,'chi2Stat')
-        A.NonPoissonScaleFactor = 1.112;
-        A.SetNPfactor;
-    end
-    
+
     if strcmp(DataType,'Twin')
         A.ModelObj.RFBinStep = 0.01;
         A.ModelObj.InitializeRF;
@@ -57,13 +59,14 @@ else
     A.Fit;
     FitResult = A.FitResult;
     MakeDir(savedir);
-   save(savename,'FitResult','RunAnaArg','A','SigmaSq')
+   %save(savename,'FitResult','RunAnaArg','A','SigmaSq')
 end
 %%
 %A.PlotFit;
 fprintf('m_nu^2 = %.3f + %.3f %.3f eV^2       , ',FitResult.par(1),FitResult.errPos(1),FitResult.errNeg(1))
 fprintf('mean err = %.3f eV^2 \n',(FitResult.errPos(1)-FitResult.errNeg(1))/2)
-
+fprintf('E_0 = %.3f + %.3f eV  \n',FitResult.par(2)+A.ModelObj.Q_i,FitResult.err(2))
+fprintf('chi2 = %.3f (%.0f dof), p = %.3f  \n',FitResult.chi2min,FitResult.dof,1-chi2cdf(FitResult.chi2min,FitResult.dof))
 %%
 % A.PlotFit('LabelFlag','FinalKNM1',...
 %     'saveplot','pdf',...
