@@ -698,8 +698,13 @@ classdef RunSensitivity < handle
             % label
             fix_str = ConvertFixPar('freePar',obj.RunAnaObj.fixPar,'Mode','Reverse');%strrep(strrep(strrep(obj.RunAnaObj.fixPar,'fix ',''),' ;',' '),' ','');
             savedir = [getenv('SamakPath'),'tritium-data/FC/DeltaChi2LookupTable/'];
+            if strcmp(obj.RunAnaObj.chi2,'chi2Stat')
+                chiStr = sprintf('%s',obj.RunAnaObj.chi2);
+            else
+                 chiStr = sprintf('%s_SysBudget%.0f',obj.RunAnaObj.chi2,obj.RunAnaObj.SysBudget);
+            end
             save_str = sprintf('AsimovDeltaChi2_mNuSq%.3geV2_%s_%s_%.0fbE0_freePar%s_%.0fsamples.mat',...
-                mNuSq_t,obj.RunAnaObj.RunData.RunName,obj.RunAnaObj.chi2,obj.GetRange,fix_str,nSamples);
+                mNuSq_t,obj.RunAnaObj.RunData.RunName,chiStr,obj.GetRange,fix_str,nSamples);
             
             if strcmp(obj.RunAnaObj.AnaFlag,'Ring')
                 save_str = strrep(save_str,'.mat',sprintf('_Ring%s.mat',obj.RunAnaObj.RingMerge));
