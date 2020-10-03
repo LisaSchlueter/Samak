@@ -1899,9 +1899,9 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
 %fprintf(2,'\n \n RhoD Fit %.3f \n\n',obj.WGTS_CD_MolPerCm2);
                 case 'RING'
                     nPix = cell2mat(cellfun(@(x) numel(x),obj.FPD_RingPixList,'UniformOutput',false)');
-                    if strcmp(obj.FPD_RingMerge,'None')
-                        nPix(~ismember(obj.FPD_RingPixList))=[];
-                    end
+%                     if strcmp(obj.FPD_RingMerge,'None')
+%                         nPix(~ismember(obj.FPD_RingPixList))=[];
+%                     end
                         obj.NormFactorTBDDS = obj.TdecayC ...
                         .*(2*pi*obj.WGTS_FTR_cm^2*obj.WGTS_CD_MolPerCm2) ...% mol tritium atoms
                         .*0.5*(1-cos(asin(sqrt(obj.WGTS_B_T./obj.MACE_Bmax_T)))) ...
