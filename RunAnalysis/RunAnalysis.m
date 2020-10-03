@@ -484,7 +484,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                         %Set time to average per ring
                         obj.RunData.TimeperSubRun = cell2mat(cellfun(@(x) mean(obj.RunData.TimeperSubRunperPixel(:,x),2),obj.RingPixList,'UniformOutput',false)');
                         if strcmp(obj.RingMerge,'None')
-                            obj.RunData.TimeperSubRun(:,~ismember(1:13,obj.RingList)) = []; %truncate
+                            %obj.RunData.TimeperSubRun(:,~ismember(1:13,obj.RingList)) = []; %truncate
                         end
                         obj.RunData.TimeSec       = sum(obj.RunData.TimeperSubRun);
                         obj.RunData.qUfrac        = obj.RunData.TimeperSubRun./obj.RunData.TimeSec;% warning -> should not be 1, because of RM point
@@ -505,12 +505,12 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                         
                         % delete not used rings (otherwise problems with NaN)
                         if strcmp(obj.RingMerge,'None')
-                            obj.RunData.qU(:,~ismember(1:13,obj.RingList)) = [];
-                            obj.RunData.EffCorr(:,~ismember(1:13,obj.RingList)) = [];
-                            obj.RunData.TBDIS(:,~ismember(1:13,obj.RingList)) = [];
-                            obj.RunData.TBDISE(:,~ismember(1:13,obj.RingList)) = [];
-                            obj.RunData.MACE_Ba_T(~ismember(1:13,obj.RingList)) = [];
-                            obj.RunData.MACE_Bmax_T(~ismember(1:13,obj.RingList)) = [];
+%                             obj.RunData.qU(:,~ismember(1:13,obj.RingList)) = [];
+%                             obj.RunData.EffCorr(:,~ismember(1:13,obj.RingList)) = [];
+%                             obj.RunData.TBDIS(:,~ismember(1:13,obj.RingList)) = [];
+%                             obj.RunData.TBDISE(:,~ismember(1:13,obj.RingList)) = [];
+%                             obj.RunData.MACE_Ba_T(~ismember(1:13,obj.RingList)) = [];
+%                             obj.RunData.MACE_Bmax_T(~ismember(1:13,obj.RingList)) = [];
                         end
                         
                         if isfield(obj.RunData,'TBDIS_V')
@@ -3546,14 +3546,15 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             end
             
             for i=fitPar
+              
                 yErr = flip(errqU(i,:));
                 if i==1
                     y = flip(parqU(i,:));
                     if strcmp(RelFlag,'ON')
                         y = y-wmean(y,1./yErr.^2);
-                        ystr = sprintf('{\\itm}^2 - \\langle{\\itm}^2\\rangle (eV^{ 2})');
+                        ystr = sprintf('{\\itm}_\\nu^2 - \\langle{\\itm}_\\nu^2\\rangle (eV^{ 2})');
                     else
-                        ystr = sprintf('{\\itm}^2 (eV^{ 2})');
+                        ystr = sprintf('{\\itm}_\\nu^2 (eV^{ 2})');
                     end
                 elseif i==2
                     y = flip(parqU(i,:));%obj.ModelObj.Q_i-18574;
@@ -3622,15 +3623,15 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                         ColorArg = {'MarkerFaceColor',rgb('CadetBlue'),'Color',rgb('DarkCyan')};
                     else
                         hold on;
-                        ColorArg = {'MarkerFaceColor',obj.PlotColorLight,'Color',obj.PlotColorLight};
-                       % ColorArg = {'MarkerFaceColor',rgb('GoldenRod'),'Color',rgb('DarkGoldenRod')};
+                         ColorArg = {'MarkerFaceColor',obj.PlotColorLight,'Color',obj.PlotColorLight};
+                       % ColorArg = {'MarkerFaceColor',rgb('Orange'),'Color',rgb('Orange')};
                         x = x+0.5;
                     end
                     
                     
-                    if i~=5 && strcmp(CorrMean,'ON')
+                    if i~=5 && strcmp(CorrMean,'ON') && ~strcmp(HoldOn,'ON')
                         pref = plot(linspace(min(x)-3,max(x)+3,numel(x)),...
-                            Mean.*ones(numel(x),1),':','Color',rgb('Silver'),'LineWidth',3);
+                            Mean.*ones(numel(x),1),':','Color',obj.PlotColor,'LineWidth',3); %rgb('Silver')
                         hold on
                     elseif ~strcmp(RefLine,'OFF')
                         % reference line with respect to certain range
@@ -3680,7 +3681,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                         legstr ='Fit (Stat only)';
                     end
                     
-                    if i~=5 && strcmp(CorrMean,'ON')
+                    if i~=5 && strcmp(CorrMean,'ON') && ~strcmp(HoldOn,'ON')
                         leg = legend([e1,pref],legstr,'correlated weighted mean');
                     elseif ~strcmp(RefLine,'OFF')
                          leg = legend([e1,pref],legstr,sprintf('%.0f eV range',x(RefIndex)));

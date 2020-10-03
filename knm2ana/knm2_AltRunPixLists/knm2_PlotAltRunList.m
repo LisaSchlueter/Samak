@@ -3,10 +3,11 @@
 % KNM2, stacked uniform 40 eV range
 AltRunLists = {'KNM2_Up','KNM2_Down'};       % defines alternative pixel list
 nAltRunLists = numel(AltRunLists);
-freePar = 'E0 Bkg Norm';
+freePar = 'mNu E0 Bkg Norm';
 DataType = 'Real';
 range = 40;               % fit range in eV below endpoint
-Parameter = 2;            % 1 = numass, 2= endpoint
+Parameter = 1;            % 1 = numass, 2= endpoint
+Mode = 'Rel';
 %% load random half run lists fit results
 nFits = 500;
 savedir = [getenv('SamakPath'),'knm2ana/knm2_AltRunPixLists/results/'];
@@ -26,7 +27,11 @@ switch Parameter
         Unit = sprintf('eV');
 end
 
-meanParRand = wmean(ParRand,1./ErrRand.^2);
+% if strcmp(Mode,'Abs')
+%     meanParRand =0;
+% else
+meanParRand = mean(ParRand);%wmean(ParRand,1./ErrRand.^2);
+%end
 %% load alternative runs lists
 ParAlt  = zeros(nAltRunLists,1);
 nRunsAlt = zeros(nAltRunLists,1);
@@ -45,15 +50,15 @@ end
 
 %% plot random half
 f1 = figure('Units','normalized','Position',[0.1,0.1,0.5,0.5]);
-h1 =histogram(ParRand-meanParRand,'FaceColor',rgb('LightGray'),'FaceAlpha',1);
+h1 =histogram(ParRand-meanParRand,'FaceColor',rgb('LightGray'),'FaceAlpha',1,'Normalization','probability');
 xlabel(sprintf('%s - \\langle%s\\rangle (%s)',xStr,xStr,Unit));
-ylabel('Occurrence');
-PrettyFigureFormat('FontSize',22)
-titleStr = sprintf('\\langle%s\\rangle = %.2f %s , \\sigma =  %.3f %s',...
+ylabel('Frequency');
+PrettyFigureFormat('FontSize',20)
+titleStr = sprintf('\\langle%s\\rangle = %.2f %s , \\sigma =  %.2f %s',...
     xStr,meanParRand,Unit,std(ParRand),Unit);
-t = title(sprintf('Uniform fit - %s',titleStr),...
-    'FontWeight','normal');
-legStrRand = sprintf('Random %.0f runs',numel(dRand.RunList{1}));
+t = title(sprintf('%s',titleStr),...
+    'FontWeight','normal','FontSize',get(gca,'FontSize')-1);
+legStrRand = sprintf('Random %.0f runs (%.0f samples)',numel(dRand.RunList{1}),nFits);
 hold on;
 yLimits = ylim;
 
@@ -65,11 +70,11 @@ Sigma = zeros(nAltRunLists,1);
 for i=1:numel(AltRunLists)
     
     if strcmp(AltRunLists{i},'KNM2_Up')
-        legStr = [legStr,sprintf('Up scans (%.0f runs)',nRunsAlt(i))];
+        legStr = [legStr,sprintf('Up scans, %.0f runs:      {\\itm}_\\nu^2 - \\langle{\\itm}_\\nu^2\\rangle = %.2f eV^2',nRunsAlt(i),ParAlt(i))];
         PlotArg = {'LineWidth',3,'Color',rgb('Orange')};
         LineStyle = {'-'};
     elseif strcmp(AltRunLists{i},'KNM2_Down')
-        legStr = [legStr,sprintf('Down scans (%.0f runs)',nRunsAlt(i))];
+        legStr = [legStr,sprintf('Down scans, %.0f runs:  {\\itm}_\\nu^2 - \\langle{\\itm}_\\nu^2\\rangle = %.2f eV^2',nRunsAlt(i),ParAlt(i))];
         PlotArg = {'LineWidth',3,'Color',rgb('Crimson')};
         LineStyle = {':'};
     end
@@ -80,7 +85,9 @@ end
 
 leg = legend(legStr{:},'Location','northwest');
 leg.EdgeColor = rgb('Silver');
-ylim(yLimits);
+leg.FontSize = get(gca,'FontSize');
+set(leg.BoxFace, 'ColorType','truecoloralpha', 'ColorData',uint8(255*[1;1;1;0.85])); 
+ylim([yLimits(1),yLimits(2)+0.06]);
 
 plotname = strrep(strrep(savenameRand,'results','plots'),'.mat','_PlotRandAlt.pdf');
 export_fig(f1,plotname);

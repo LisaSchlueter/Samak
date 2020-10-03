@@ -172,10 +172,10 @@ classdef RingAnalysis < handle
                 end
             end
             
-            if any(yErr<1e-3) && PlotPar==2
+            if any(yErr<1e-2) && PlotPar==2
                 % temporary solution for plot:
                 % scale weird error up to average error (for lin fit)
-                Index = yErr<1e-3;
+                Index = yErr<1e-2;
                 meanYerr = mean(yErr(~Index));
                 yErr(Index) = meanYerr;
             end
@@ -224,8 +224,11 @@ classdef RingAnalysis < handle
                 'LineWidth',2,'LineStyle','none','MarkerSize',8,'Color',obj.RunAnaObj.PlotColor,'MarkerFaceColor',obj.RunAnaObj.PlotColor);
             end
             e.CapSize = 0;
-             PrettyFigureFormat('FontSize',24);
+            PrettyFigureFormat('FontSize',22);
            
+            if strcmp(obj.RunAnaObj.RunData.RunName,'KNM2_Prompt')
+                obj.RunAnaObj.RunData.RunName = 'KNM2 data';
+            end
             if strcmp(linFitFlag,'ON') && PlotPar ~= 3 
 
                 runname = strrep(obj.RunAnaObj.RunData.RunName,'_',' ');
@@ -243,7 +246,7 @@ classdef RingAnalysis < handle
                     end
                 else
                     if PlotPar==1
-                        linFitleg =  sprintf('Linear fit %.2f \\pm %.2f eV^2/ring , p-value = %.2f ',linFitpar(1),linFiterr(1),1-chi2cdf(linFitchi2min,linFitdof));
+                        linFitleg =  sprintf('Linear fit %.2f \\pm %.2f eV^{ 2}/ring , p-value = %.2f ',linFitpar(1),linFiterr(1),1-chi2cdf(linFitchi2min,linFitdof));
                   
                     elseif PlotPar==2
                         linFitleg =  sprintf('Linear fit %.2f \\pm %.2f eV/ring , p-value = %.2f',linFitpar(1),linFiterr(1),1-chi2cdf(linFitchi2min,linFitdof));

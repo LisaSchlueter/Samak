@@ -36,6 +36,19 @@ D.exclDataStart = D.GetexclDataStart(range); % find correct data, where to cut s
 %else
 %    saveStr = '';
 %end
-%%
-D.qUScan('qURange',[90 12],'RecomputeFlag','OFF',...
-        'saveplot','ON','ErrorBarScaling',1,'saveStr',saveStr);
+%% 
+% plotting
+D.chi2 = 'chi2CMShape';
+D.NonPoissonScaleFactor = 1.112;
+[parqUCM, errqUCM, chi2qUCM, dofqUCM,eCM] = D.qUScan('qURange',[90 22],'RecomputeFlag','OFF',...
+        'saveplot','ON','ErrorBarScaling',1,'saveStr',saveStr,'HoldOn','ON1','CorrMean','OFF');
+    
+D.chi2 = 'chi2Stat';
+D.NonPoissonScaleFactor = 1;
+[parqU, errqU, chi2qU, dofqU,e1] = D.qUScan('qURange',[90 22],'RecomputeFlag','OFF',...
+        'saveplot','ON','ErrorBarScaling',1,'saveStr',saveStr,'HoldOn','ON');
+   
+leg = legend([e1,eCM],'Stat. only','Stat. and syst.',...
+    'EdgeColor',rgb('Silver'),'Location','southwest','FontSize',get(gca,'FontSize'));
+plotname = [getenv('SamakPath'),'knm2ana/knm2_qUScan/plots/knm2_qUScanStatSyst_mNuSq.png'];
+print(plotname,'-dpng','-r350');

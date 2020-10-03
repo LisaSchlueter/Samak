@@ -1757,15 +1757,21 @@ classdef RunSensitivity < handle
             p.addParameter('HoldOn','OFF',@(x)ismember(x,{'ON','OFF'})); % plot 90 and 95% at the same time
             p.addParameter('Lokov','OFF',@(x)ismember(x,{'ON','OFF'})); % plot Lokov belt instead
             p.addParameter('Sensitivity','OFF',@(x)ismember(x,{'ON','OFF'})); % show sensitivity instead of upper limit
+            p.addParameter('Style','PRL',@(x)ismember(x,{'PRL','Pretty'}));
             p.addParameter('XLim',[-3,3],@(x)isfloat(x));
             p.parse(varargin{:});
             SavePlot = p.Results.SavePlot;
             HoldOn   = p.Results.HoldOn;
             Lokov    = p.Results.Lokov;
             Sensitivity = p.Results.Sensitivity;
+            Style       = p.Results.Style;
             XLim = p.Results.XLim;
             
-            LocalFontSize = 32;
+            if strcmp(Style,'PRL')
+                LocalFontSize = 30;
+            else
+                LocalFontSize = 26;
+            end
             
             if isempty(obj.FC_x1)
                 fprintf('No FC belt computed \n');
@@ -1823,6 +1829,7 @@ classdef RunSensitivity < handle
                   EdgeIndex2 = max(find(obj.FC_x1<0));
                   EdgeX2 = obj.FC_x2(EdgeIndex2);
                   IndexEdgeX21= find(plotX2>=EdgeX2,1);
+                  
                   % plot second part x2
                   EdgeX2 = obj.FC_x2(EdgeIndex2+1);
                   IndexEdgeX22 = find(plotX2>=EdgeX2,1);
@@ -1863,11 +1870,13 @@ classdef RunSensitivity < handle
 %                   % smooth edges
 %                   xedge1_tmp = x21_tmp(ploty2_edge<=SensitivityLimit);
 %                   yedge1_tmp = ploty2_edge(ploty2_edge<=SensitivityLimit);
-%                   
+%
 %                   xSmoothEdge1 = [xedge1_tmp(end-1:end),xtmp(1:3)];
 %                   YSmoothEdge1 = [yedge1_tmp(end-1:end),SensitivityLimit.*ones(1,3)];
 %                   plot(xSmoothEdge1,smooth(YSmoothEdge1,100));
+                  legStr = 'LT';
               else
+                  legStr = 'FC';
                   p1 =plot(plotX1,smooth(plotY1,100),'-',LineArg{:});
                   p2 =plot(plotX2,smooth(plotY2,100),'-',LineArg{:});
               end
@@ -1892,7 +1901,13 @@ classdef RunSensitivity < handle
                 mNuMeasured = 0;
                 savestr = 'sensitivity_';
             else
-                mNuMeasured = -0.98;
+                if strcmp(obj.RunAnaObj.DataSet,'Knm1')
+                    mNuMeasured = -0.98;
+                elseif strcmp(obj.RunAnaObj.DataSet,'Knm2')
+                    mNuMeasured = -0.26;
+                else
+                    mNuMeasured = 0;
+                end
                 savestr = '';
             end
             x1 = obj.FC_x1(~isnan(obj.FC_x1));
@@ -1912,19 +1927,23 @@ classdef RunSensitivity < handle
             end
             
             if strcmp(Sensitivity,'ON')
-                leg = legend([p2,plimit],[sprintf(' %.4g%% C.L. ',obj.ConfLevel*100),chi2str],...
-                    sprintf(' Sensitivity: {\\itm}^2_\\nu \\leq %.2f eV^2 \n               \\rightarrow {\\itm}_\\nu  \\leq %.2f eV',mNuLimit,sqrt(mNuLimit)),'Location','northwest');
+                leg = legend([p2,plimit],[sprintf('%s confidence belt at %.4g%% C.L. ',legStr,obj.ConfLevel*100),chi2str],...
+                    sprintf(' Sensitivity: {\\itm}^2_\\nu \\leq %.2f eV^2 \n              \\rightarrow {\\itm}_\\nu  \\leq %.2f eV',mNuLimit,sqrt(mNuLimit)),'Location','northwest');
             else
-                leg = legend([p2,plimit],[sprintf(' %.4g%% C.L. ',obj.ConfLevel*100),chi2str],...
+                leg = legend([p2,plimit],[sprintf('%s confidence belt at %.4g%% C.L. ',legStr,obj.ConfLevel*100),chi2str],...
                     sprintf('     {\\itm}^2_\\nu \\leq %.1f eV^{ 2} \n\\rightarrow {\\itm}_\\nu  \\leq %.1f eV',mNuLimit,sqrt(mNuLimit)),'Location','northwest');
             end
-            legend boxoff;
-            
+           %legend boxoff;
+            leg.EdgeColor = rgb('Silver');
             % axis style etc.
-           % PrettyFigureFormat('FontSize',LocalFontSize);
-           PRLFormat;
-           set(gca,'FontSize',LocalFontSize)
-           set(gca,'TickDir','out');
+            % PrettyFigureFormat('FontSize',LocalFontSize);
+            if strcmp(Style,'PRL')
+                PRLFormat;
+                set(gca,'FontSize',LocalFontSize)
+                set(gca,'TickDir','out');
+            else
+                PrettyFigureFormat('FontSize',LocalFontSize);
+            end
            % remove top and right ticks
            a = gca;
            set(a,'box','off','color','none')% set box property to off and remove background color

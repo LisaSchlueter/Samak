@@ -18,7 +18,9 @@ InputArg = [...
 %     ...
 %     ...
 %     ];
-
+%%
+knm2_SingleRingFit(InputArg{4,:})
+%%
 for i=1:size(InputArg,1)
     knm2_SingleRingFit(InputArg{i,:},'RecomputeFlag',RecomputeFlag)
 end

@@ -2,7 +2,7 @@
 % random half of all golden runs
 % March 2020, Lisa
 
-nFits = 1e3;
+nFits = 500;
 freePar = 'mNu E0 Bkg Norm';
 DataType = 'Real';
 range = 40;               % fit range in eV below endpoint

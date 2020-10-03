@@ -26,7 +26,7 @@ MosCorrFlag   = p.Results.MosCorrFlag;
 
 %% settings
  SigmaSq =  0.0124+0.0025;
- if strmp(chi2,'chi2Stat')
+ if strcmp(chi2,'chi2Stat')
      NP = 1;
  else
      NP = 1.112;
@@ -66,6 +66,12 @@ R.FitRings('SaveResult','ON',...
 R.PlotFits('SavePlot','ON',...
           'Blind','ON',...       % show relative or absolute values
           'PlotPar',2,...        % 1 == neutrino mass, 2 == E0
-          'YLim',[-0.2,0.15],... % force y-axis to good limits
+          'YLim',[-0.18,0.18],... % force y-axis to good limits
           'linFit','ON');        % show linear fit
+  
+      R.PlotFits('SavePlot','ON',...
+          'Blind','ON',...       % show relative or absolute values
+          'PlotPar',1,...        % 1 == neutrino mass, 2 == E0
+          'YLim',[-3,3],... % force y-axis to good limits
+          'linFit','ON');  
 end

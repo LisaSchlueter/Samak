@@ -1,17 +1,24 @@
 range   = 40;
 freePar = 'mNu E0 Bkg Norm';
-chi2    = 'chi2CMShape';
+chi2    = 'chi2Stat';%CMShape';
 DataType = 'Real';
 AnaFlag = 'Ring';%StackPixel';
+RingMerge = 'None';
 
 if strcmp(AnaFlag,'Ring')
     SysBudget = 39;
+    if strcmp(RingMerge,'Full')
+        AnaStr = AnaFlag;
+    else
+        AnaStr = sprintf('Ring%s',RingMerge);
+    end
 else
     SysBudget = 38;
+    AnaStr = AnaFlag;
 end
 savedir = [getenv('SamakPath'),'knm2ana/knm2_unblinding1/results/BestFit/'];
 savename = sprintf('%sknm2ub1_Fit_%s_%.0feV_%s_%s_%s.mat',...
-    savedir,DataType,range,strrep(freePar,' ',''),chi2,AnaFlag);
+    savedir,DataType,range,strrep(freePar,' ',''),chi2,AnaStr);
 
 
 if strcmp(chi2,'chi2Stat')
@@ -46,7 +53,7 @@ else
         'NonPoissonScaleFactor',NonPoissonScaleFactor,...
         'FSD_Sigma',sqrt(SigmaSq),...
         'TwinBias_FSDSigma',sqrt(SigmaSq),...
-        'RingMerge','Full'};
+        'RingMerge',RingMerge};
     A = MultiRunAnalysis(RunAnaArg{:});
     %%
     A.exclDataStart = A.GetexclDataStart(range);

@@ -209,7 +209,7 @@ end
 if isempty(BKG_RateRingSec) && strcmp(FPD_Segmentation,'RING')
     nPixperRing = cellfun(@(x) numel(x),RingPixList); % number per pixels in ring
     if strcmp(RingMerge,'None')
-        nPixperRing(~ismember(1:13,RingList)) = [];
+%        nPixperRing(~ismember(1:13,RingList)) = [];
     end
     BKG_RateRingSec = (nPixperRing./148)'.*GetBackground('MACE_Ba_T',MACE_Ba_T,...
         'WGTS_B_T',WGTS_B_T,...
