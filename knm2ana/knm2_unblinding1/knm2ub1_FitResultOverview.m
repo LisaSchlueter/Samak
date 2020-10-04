@@ -1,6 +1,6 @@
 Uniform = 'ON';
 MR4 = 'ON';
-MR12 = 'OFF';
+MR12 = 'ON';
 range = 40;
 freePar = 'mNu E0 Bkg Norm';
 savedir = [getenv('SamakPath'),'knm2ana/knm2_unblinding1/results/BestFit/'];
@@ -22,11 +22,11 @@ if strcmp(MR4,'ON')
     dMR4cm   = importdata(filecm);
     x = [x,dMR4stat.FitResult.par(1),dMR4cm.FitResult.par(1)];
 end
-
+%%
 if strcmp(MR12,'ON')
-    fileStat = [CommonStrStat,'RingNone.mat'];
+    fileStat = [CommonStrStat,'_RingNone.mat'];
     dMR12stat = importdata(fileStat);
-    x = [x,dMR12stat.FitResult.par(1),dMR12cm.FitResult.par(1)];
+    x = [x,dMR12stat.FitResult.par(1),dMR12stat.FitResult.par(1)];
 end
 
 %% plot
@@ -41,8 +41,10 @@ if strcmp(Uniform,'ON')
         '.',CommonPlotArg{:},'Color',rgb('Orange'),'MarkerSize',30);
     eUcm = errorbar(dUcm.FitResult.par(1),y(2),0,0,dUcm.FitResult.errNeg(1),dUcm.FitResult.errPos(1),...
         '.',CommonPlotArg{:},'Color',rgb('DodgerBlue'),'MarkerSize',30);
+    legStr = {'Uniform'};
 else
     y = 0;
+    legStr = '';
 end
 
 if strcmp(MR4,'ON')
@@ -53,6 +55,14 @@ if strcmp(MR4,'ON')
     hold on;
     eUcm = errorbar(dMR4cm.FitResult.par(1),y(end),0,0,dMR4cm.FitResult.errNeg(1),dMR4cm.FitResult.errPos(1),...
         'd',CommonPlotArg{:},'Color',rgb('DodgerBlue'),'MarkerSize',8,'MarkerFaceColor',rgb('DodgerBlue'));
+    legStr = {legStr{:},'MR-4'};
+end
+
+if strcmp(MR12,'ON')
+    y(end+1) = y(end)+0.25; y(end+1) = y(end)+0.1;
+    eUStat = errorbar(dMR12stat.FitResult.par(1),y(end-1),0,0,dMR12stat.FitResult.errNeg(1),dMR12stat.FitResult.errPos(1),...
+        'd',CommonPlotArg{:},'Color',rgb('Orange'),'MarkerSize',8,'MarkerFaceColor',rgb('Orange'));
+    legStr = {legStr{:},'MR-12'};
 end
 
 % tweak plot for legend
@@ -60,8 +70,12 @@ pcm   = plot(0,1e2,'LineWidth',2,'Color',rgb('DodgerBlue'));
 pstat =  plot(0,1e2,'LineWidth',2,'Color',rgb('Orange'));
 %%
 PrettyFigureFormat('FontSize',22)
-ylim([y(1)-0.1,y(end)+0.18]);
-yticks([y(1)+0.1,y(3)+0.1]); set(gca,'YMinorTick','off');
-yticklabels({'Uniform','MR-4'});
+ylim([y(1)-0.1,y(end)+0.1]);%+0.18]);
+yticks([y(1)+0.1,y(3)+0.1,y(5)]); set(gca,'YMinorTick','off');
+yticklabels(legStr);
 xlabel(sprintf('{\\itm}_\\nu^2 (eV^2)'));
 leg = legend([pstat,pcm],'Stat. only','Stat. and syst.','EdgeColor',rgb('Silver'),'Location','north');
+ 
+plotdir = strrep(savedir,'results/BestFit','plots');
+plotname = sprintf('%sknm2ub1_FitResultOverview_mNuSq.png',plotdir);
+print(plotname,'-dpng','-r350');

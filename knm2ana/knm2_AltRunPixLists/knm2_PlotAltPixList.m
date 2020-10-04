@@ -1,8 +1,8 @@
 % plot alternative pixel list results
 nFits = 500;
 freePar = 'mNu E0 Bkg Norm';
-DataType = 'Twin';%'Real';
-Parameter = 'E0';
+DataType = 'Real';%'Real';
+Parameter = 'mNuSq';
 RunList = 'KNM2_Prompt';
 range = 40;                % fit range in eV below endpoint
 AltPixLists = {'Half','AziHalfEW','AziHalfNS'};
@@ -20,6 +20,7 @@ end
 %% load Alt run lists
 ParAlt = cell(numel(AltPixLists),1);
 nSeg   = zeros(numel(AltPixLists),1);
+nPixel = zeros(numel(AltPixLists),2);
 
 for i=1:numel(AltPixLists)
     savename = sprintf('%sknm2_PixListAlt_%s_%s_%s_%.0feV.mat',...
@@ -34,6 +35,7 @@ for i=1:numel(AltPixLists)
                 ParAlt{i} = d.E0;
         end
         nSeg(i) = numel(d.E0);
+        nPixel(i,:) = cellfun(@(x) numel(x),d.PixList)';
     else
         fprintf('alternative pix list %s not computed yet \n',AltPixLists{i})
     end
@@ -52,15 +54,15 @@ switch Parameter
         Unit = sprintf('eV');
 end
 %% plot random half
-f1 = figure('Units','normalized','Position',[0.1,0.1,0.5,0.5]);
-meanY =wmean(y,1./yErr.^2);
-h1 =histogram(y-meanY,'FaceColor',rgb('LightGray'),'FaceAlpha',1);
+f1 = figure('Units','normalized','Position',[0.1,0.1,0.6,0.5]);
+meanY =mean(y);%wmean(y,1./yErr.^2);
+h1 =histogram(y-meanY,'FaceColor',rgb('LightGray'),'FaceAlpha',1,'Normalization','probability');
 xlabel(sprintf('%s - \\langle%s\\rangle (%s)',xStr,xStr,Unit));
-ylabel('Occurrence');
+ylabel('Frequency');
 PrettyFigureFormat('FontSize',22)
 titleStr = sprintf('\\langle%s\\rangle = %.2f %s , \\sigma =  %.3f %s',xStr,meanY,Unit,std(y),Unit);
 t = title(sprintf('%.0f stacked runs - %s',numel(RunList),titleStr),...
-    'FontWeight','normal');
+    'FontWeight','normal','FontSize',get(gca,'FontSize')-2);
 legStrRand = sprintf('Random %.0f pixels',size(PixList,2));
 hold on;
 yLimits = ylim;
@@ -70,9 +72,14 @@ legStr = {legStrRand};
 Sigma = cell(numel(AltPixLists),1);
 
 for i=1:numel(AltPixLists)
+     AltY = ParAlt{i};
+  
+    
+    Sigma{i} = (AltY-meanY)./std(y);
     
     if strcmp(AltPixLists{i},'Half')
-        legStr = [legStr,'Inner','Outer'];
+        legStr = [legStr,sprintf('Inner, %.0f pixel: %s - \\langle%s\\rangle   = %.2f eV^{ 2}',nPixel(i,1),xStr,xStr,AltY(1)-meanY),...
+           sprintf('Outer, %.0f pixel: %s - \\langle%s\\rangle  = %.2f eV^{ 2}',nPixel(i,2),xStr,xStr,AltY(2)-meanY)];
         PlotArg = {'LineWidth',3,'Color',rgb('Orange')};
         LineStyle = {'-',':'};
     elseif strcmp(AltPixLists{i},'Azi')
@@ -81,31 +88,34 @@ for i=1:numel(AltPixLists)
         LineStyle = {'-','-.','--',':'};
     elseif strcmp(AltPixLists{i},'AziHalfEW')
         strcmp(AltPixLists{i},'Half')
-        legStr = [legStr,'East','West'];
+        legStr = [legStr,...
+            sprintf('East, %.0f pixel: %s - \\langle%s\\rangle    = %.2f eV^{ 2}',nPixel(i,1),xStr,xStr,AltY(1)-meanY),...
+            sprintf('West, %.0f pixel: %s - \\langle%s\\rangle   = %.2f eV^{ 2}',nPixel(i,2),xStr,xStr,AltY(2)-meanY)];
         PlotArg = {'LineWidth',3,'Color',rgb('MediumSeaGreen')};
         LineStyle = {'-',':'};
     elseif strcmp(AltPixLists{i},'AziHalfNS')
         strcmp(AltPixLists{i},'Half')
-        legStr = [legStr,'North','South'];
+        legStr = [legStr,...
+            sprintf('North, %.0f pixel: %s - \\langle%s\\rangle  = %.2f eV^{ 2}',nPixel(i,1),xStr,xStr,AltY(1)-meanY),...
+            sprintf('South, %.0f pixel: %s - \\langle%s\\rangle  = %.2f eV^{ 2}',nPixel(i,2),xStr,xStr,AltY(2)-meanY)];
         PlotArg = {'LineWidth',3,'Color',rgb('DodgerBlue')};
         LineStyle = {'-',':'};
     end
     
-    AltY = ParAlt{i};
-    for n=1:nSeg(i)
+     for n=1:nSeg(i)
         plot(AltY(n).*ones(20,1)-meanY,yplot,LineStyle{n},PlotArg{:})
     end
-    
-    Sigma{i} = (AltY-meanY)./std(y);
 end
 
 leg = legend(legStr{:},'Location','northwest');
 leg.EdgeColor = rgb('Silver');
-ylim(yLimits);
+leg.NumColumns = 2;
+ylim([0,yLimits(2)+0.1]);
+set(leg.BoxFace, 'ColorType','truecoloralpha', 'ColorData',uint8(255*[1;1;1;0.9])); 
 
 xmin = (min(cell2mat(ParAlt))-meanY);
 xmax = (max(cell2mat(ParAlt))-meanY);
-xlim(1.5.*[xmin,xmax])
+xlim(1.5*[xmin,xmax])
 
 plotname = strrep(strrep(savenameRand,'results','plots'),'.mat','_PlotRandAlt.pdf');
 export_fig(f1,plotname);

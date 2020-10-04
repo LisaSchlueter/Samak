@@ -74,9 +74,8 @@ end
 %A.PlotFit;
 fprintf('m_nu^2 = %.3f + %.3f %.3f eV^2       , ',FitResult.par(1),FitResult.errPos(1),FitResult.errNeg(1))
 fprintf('mean err = %.3f eV^2 \n',(FitResult.errPos(1)-FitResult.errNeg(1))/2)
-
-
 fprintf('B slope = %.3f +- %.3f mcps/keV --> %.2f sigma \n ',FitResult.par(12)*1e6,FitResult.err(12)*1e6,FitResult.par(12)/FitResult.err(12))
+fprintf('chi2min = %.3f (%.2f dof), p = %.3f \n ',FitResult.chi2min,FitResult.dof,1-chi2cdf(FitResult.chi2min,FitResult.dof));
 
 %%
 % A.PlotFit('LabelFlag','FinalKNM1',...

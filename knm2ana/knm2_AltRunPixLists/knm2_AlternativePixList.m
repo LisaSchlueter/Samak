@@ -4,7 +4,7 @@ freePar = 'mNu E0 Bkg Norm';
 DataType = 'Real';
 RunList = 'KNM2_Prompt';
 range = 40;                % fit range in eV below endpoint
-AltPixList = 'Half';%'AziHalfEW';  % defines alternative pixel list
+AltPixList ='AziHalfNS';%'Half';%'AziHalfEW';  % defines alternative pixel list
 RecomputeFlag = 'OFF';
 
 % label

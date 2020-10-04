@@ -399,7 +399,7 @@ classdef CovarianceMatrix < handle
             p.addParameter('ConvergenceTest','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('PlotEffect','',@(x)ischar(x));     % only in title
             p.addParameter('Mode','Frac',@(x)ismember(x,{'CM','Frac','Shape'}));
-            p.addParameter('qUWindowIndexMin',90,@(x)isfloat(x)); % start display cm below endpoint (eV)
+            p.addParameter('qUWindowIndexMin',40,@(x)isfloat(x)); % start display cm below endpoint (eV)
             p.addParameter('qUWindowIndexMax',10,@(x)isfloat(x)); % stop display cm below endpoint   (eV)
             p.addParameter('CovMatInput','',@(x)isfloat(x)); % plot covmt from outside (optinal)
             
@@ -675,7 +675,8 @@ classdef CovarianceMatrix < handle
                 CovMatDisp = CM(qUWindowIndexMin:qUWindowIndexMax,qUWindowIndexMin:qUWindowIndexMax);
             end
             
-            [~, ~, c ] = corplot(CovMatDisp);
+            [h, ~, c ] = corplot(CovMatDisp);
+            h.EdgeColor = 'none';
             colormap(parula);
             c.Label.String = sprintf('Correlation coefficient');
             pbaspect([1 1 1])

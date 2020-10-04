@@ -1,9 +1,9 @@
 range   = 40;
 freePar = 'mNu E0 Bkg Norm';
-chi2    = 'chi2Stat';%CMShape';
-DataType = 'Real';
-AnaFlag = 'Ring';%StackPixel';
-RingMerge = 'None';
+chi2    = 'chi2CMShape';%CMShape';
+DataType = 'Real';%Real';
+AnaFlag = 'StackPixel';%Ring';
+RingMerge = 'Full';%'None';
 
 if strcmp(AnaFlag,'Ring')
     SysBudget = 39;
@@ -84,3 +84,10 @@ fprintf('chi2 = %.3f (%.0f dof), p = %.3f  \n',FitResult.chi2min,FitResult.dof,1
 %     'FitResultsFlag','OFF',...
 %     'qUDisp','Abs',...
 %     'TickDir','Out');
+%
+%  A.FitCM_Obj.PlotCM('qUWindowIndexMax',10,'qUWindowIndexMin',40,'saveplot',...
+%         'ON','Convergence','OFF','CovMatInput',A.FitCMFracShape,'PlotEffect','total',...
+% %         'savename','KNM2_UB1_MultiRingFull');
+% A.FitCM_Obj.PlotCorr('qUWindowIndexMax',10,'qUWindowIndexMin',90,'saveplot',...
+% 'ON','CovMatInput',A.FitCMFracShape,...
+% 'savename',sprintf('KNM2_UB1_%s',AnaFlag));

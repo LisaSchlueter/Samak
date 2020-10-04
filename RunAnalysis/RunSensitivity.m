@@ -930,10 +930,17 @@ classdef RunSensitivity < handle
                 % find acceptance region
                 [CumProb,ia,~] = unique(CumProb_tmp);
                 obj.FC_x1(i) = interp1(CumProb,mNuSq(ia),(1-obj.ConfLevel)/2,'spline');
+                if i~=1
+                    if obj.FC_x1(i)-obj.FC_x1(i-1)<0
+                        % should always be more positive! try piecewise
+                        % cubic interpolation instead
+                         obj.FC_x1(i) = interp1(CumProb,mNuSq(ia),(1-obj.ConfLevel)/2,'pchip');
+                    end
+                end
                 
-                if obj.FC_x1(i)>0
+                if obj.FC_x1(i)>0  % --> twosided
                    obj.FC_x2(i)= interp1(CumProb,mNuSq(ia),(1+obj.ConfLevel)/2,'spline');
-                elseif obj.FC_x1(i)<0
+                elseif obj.FC_x1(i)<0 % --> one-sided
                     obj.FC_x2(i) = interp1(CumProb,mNuSq(ia),obj.ConfLevel,'spline');
                 end 
 
@@ -1770,7 +1777,7 @@ classdef RunSensitivity < handle
             if strcmp(Style,'PRL')
                 LocalFontSize = 30;
             else
-                LocalFontSize = 26;
+                LocalFontSize = 28;
             end
             
             if isempty(obj.FC_x1)
@@ -1839,9 +1846,13 @@ classdef RunSensitivity < handle
                 
                   % connection to upper part
                   x22_tmp = linspace(plotX2(IndexEdgeX22-50),plotX2(IndexEdgeX22+5),1000);
-                  ploty22_edge = interp1(plotX2(IndexEdgeX22:IndexEdgeX22+5),plotY2(IndexEdgeX22:IndexEdgeX22+5),x22_tmp,'lin','extrap');   
-                  xtmp = linspace(max(x21_tmp(ploty2_edge<=SensitivityLimit-0.01)),min(x22_tmp(ploty22_edge>=SensitivityLimit+0.008)),100);
-                   
+                   if strcmp(obj.RunAnaObj.DataSet,'Knm1')
+                      ploty22_edge = interp1(plotX2(IndexEdgeX22:IndexEdgeX22+5),plotY2(IndexEdgeX22:IndexEdgeX22+5),x22_tmp,'lin','extrap');
+                      xtmp = linspace(max(x21_tmp(ploty2_edge<=SensitivityLimit-0.01)),min(x22_tmp(ploty22_edge>=SensitivityLimit+0.008)),100);
+                   else
+                      ploty22_edge = interp1(plotX2(IndexEdgeX22:IndexEdgeX22+4),plotY2(IndexEdgeX22:IndexEdgeX22+4),x22_tmp,'lin','extrap');
+                      xtmp = linspace(max(x21_tmp(ploty2_edge<=SensitivityLimit)),min(x22_tmp(ploty22_edge>=SensitivityLimit+0.002)),100);
+                  end
                   % correct area
                   plotX2_new = [plotX2(1:IndexEdgeX21-5)',xtmp,plotX2(IndexEdgeX22:end)'];
                   ploty2_new = [plotY2(1:IndexEdgeX21-5)',SensitivityLimit.*ones(100,1)',plotY2(IndexEdgeX22:end)'];

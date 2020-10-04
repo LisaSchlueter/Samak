@@ -1065,6 +1065,8 @@ classdef FITC < handle
             AllParameters = 1:nFitPar;
             if nFitPar    == 14  % Uniform - m2,E0,N,B
             AllLabels     = {'m^2 (eV^2)' ,'E_0 (eV)' ,'B (cps)' ,'N','Pgs_{DT}','Pes_{DT}','Pgs_{HT}','Pes_{HT}','Pgs_{TT}','Pes_{TT}','qUoffset','12','13','14'};
+            elseif nFitPar    == 16  % Uniform - m2,E0,N,B
+            AllLabels     = {'m^2 (eV^2)' ,'E_0 (eV)' ,'B (cps)' ,'N','Pgs_{DT}','Pes_{DT}','Pgs_{HT}','Pes_{HT}','Pgs_{TT}','Pes_{TT}','qUoffset','12','13','14','m_4^2 (eV^2)','sint4^2'};
             elseif nFitPar== 18  % MultiRing 4 - m2,E0,N,B
             AllLabels     = {'m^2 (eV^2)' ,'E_0 (eV)', 'B1 (cps)', 'B2 (cps)' , 'N1', 'N2', 'Pgs_{DT}','Pes_{DT}','Pgs_{HT}','Pes_{HT}','Pgs_{TT}','Pes_{TT}','qUoffset1','qUoffset2','Bslope','mTSq1','mTSq2','T-'};
             elseif nFitPar== 26  % MultiRing 4 - m2,E0,N,B
@@ -1531,7 +1533,7 @@ classdef FITC < handle
                 s(counter)=subplot(numel(obj.MaskFreeFitPar),1,counter);
                 %                p=plot([round(obj.DATA(obj.exclDataStart:end,1)-obj.SO.Q_i,1)],diffxi(counter,:)+BestFitCoeff(k),...
                 %                    's:','MarkerSize',10,'LineWidth',2,'MarkerFaceColor',rgb('Amethyst'));
-                p=plot(round(obj.qUdata(exclIndex)-obj.SO.Q_i,1),diffxi(counter,:)+BestFitCoeff(k),'s:','MarkerSize',10,'LineWidth',2,'MarkerFaceColor',rgb('Amethyst'));
+                p=plot(round(obj.qUdata(exclIndex)-obj.SO.Q_i,1),diffxi(counter,:)+BestFitCoeff(k),'.:','MarkerSize',20,'LineWidth',2);
                 hold on
 %                 l=line([ min(round(obj.DATA(obj.exclDataStart:end,1)-obj.SO.Q_i,1)) max(round(obj.DATA(obj.exclDataStart:end,1)-obj.SO.Q_i,1))],...
 %                     [BestFitCoeff(k),BestFitCoeff(k)],...
