@@ -3,7 +3,7 @@ range = 40;
 AuxLines = 'ON';
 ShowResults = 'ON';
 SavePlot = 'ON';
-AnaFlag = 'Ring';%StackPixel';
+AnaFlag = 'StackPixel';%StackPixel';
 
 if strcmp(AnaFlag,'Ring')
     SysBudget = 39;
@@ -127,7 +127,7 @@ end
 if strcmp(SavePlot,'ON')
 plotdir = strrep(savedir,'results','plots');
 MakeDir(plotdir);
-plotname = sprintf('%sknm2ub1_Chi2CurveStatSyst_%s.pdf',plotdir,AnaFlag);
+plotname = sprintf('%sknm2ub1_Chi2CurveStatSyst_%s_%s.pdf',plotdir,strrep(freePar,' ',''),AnaFlag);
 fprintf('save plot to %s \n',plotname);
 export_fig(gcf,plotname);
 end
@@ -147,4 +147,4 @@ fprintf('total  \n mnu^2 = %.3f (-%.3f + %.3f) eV^2 \n E0     = %.3f eV +- %.3f 
     FitResultCM.chi2min,FitResultCM.dof,1-chi2cdf(FitResultCM.chi2min,FitResultCM.dof));
 %%
 %dCM.A.PlotFitMultiRing('PlotPar','Norm','Blind','ON','savePlot','ON');%,'Bkg'
-dCM.A.PlotFitMultiRing('PlotPar','Bkg','Blind','ON','savePlot','ON');%,'Bkg'
+%dCM.A.PlotFitMultiRing('PlotPar','Bkg','Blind','ON','savePlot','ON');%,'Bkg'

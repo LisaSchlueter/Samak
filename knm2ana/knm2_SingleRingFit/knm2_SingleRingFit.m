@@ -14,11 +14,11 @@ p.addParameter('MosCorrFlag','OFF',@(x)ismember(x,{'ON','OFF'}));
 
 p.parse(varargin{:});
 
-RunList   = p.Results.RunList;
-freePar   = p.Results.freePar;
-Range     = p.Results.Range;
-ROIFlag      = p.Results.ROIFlag;
-chi2         = p.Results.chi2;
+RunList       = p.Results.RunList;
+freePar       = p.Results.freePar;
+Range         = p.Results.Range;
+ROIFlag       = p.Results.ROIFlag;
+chi2          = p.Results.chi2;
 RingMerge     = p.Results.RingMerge;
 RecomputeFlag = p.Results.RecomputeFlag;
 MosCorrFlag   = p.Results.MosCorrFlag;
@@ -55,7 +55,8 @@ A = MultiRunAnalysis(RunAnaArg{:}); % object of class MultiRunAnalysis
 A.exclDataStart = A.GetexclDataStart(Range);
 
 %% start ringwise analysis
-R = RingAnalysis('RunAnaObj',A,'RingList',1:4); % object of class RingAnalysis
+
+R = RingAnalysis('RunAnaObj',A,'RingList',A.RingList); % object of class RingAnalysis
 
 %% fit every ring - one after the other
 R.FitRings('SaveResult','ON',...  
@@ -63,15 +64,17 @@ R.FitRings('SaveResult','ON',...
           'AsymErr','OFF');                 % asymmetric from scan and more correct uncertainties -> only for mNuSq
 
 %% display
+  R.PlotFits('SavePlot','ON',...
+          'Blind','ON',...       % show relative or absolute values
+          'PlotPar',1,...        % 1 == neutrino mass, 2 == E0
+          'YLim',[-3,3],... % force y-axis to good limits
+          'linFit','ON');
+      
 R.PlotFits('SavePlot','ON',...
           'Blind','ON',...       % show relative or absolute values
           'PlotPar',2,...        % 1 == neutrino mass, 2 == E0
           'YLim',[-0.18,0.18],... % force y-axis to good limits
           'linFit','ON');        % show linear fit
   
-      R.PlotFits('SavePlot','ON',...
-          'Blind','ON',...       % show relative or absolute values
-          'PlotPar',1,...        % 1 == neutrino mass, 2 == E0
-          'YLim',[-3,3],... % force y-axis to good limits
-          'linFit','ON');  
+      
 end

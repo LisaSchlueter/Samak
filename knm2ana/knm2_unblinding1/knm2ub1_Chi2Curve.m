@@ -1,10 +1,10 @@
 range        = 40;
 PlotChi2Scan = 'ON';
 chi2         = 'chi2CMShape';
-freePar      = 'mNu E0 Bkg Norm';
+freePar      = 'mNu E0 Bkg Norm qU';
 SysBudget     = 38;
 DataType      = 'Real';
-AnaFlag       = 'StackPixel';
+AnaFlag       = 'Ring';%StackPixel';
 
 if strcmp(chi2,'chi2Stat')
     NonPoissonScaleFactor = 1;

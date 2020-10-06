@@ -1,8 +1,9 @@
+% calculate CPU time for knm-2 fit
 range   = 40;
-freePar = 'mNu E0 Bkg Norm qU';
+freePar = 'mNu E0 Bkg Norm';
 chi2    = 'chi2CMShape';%CMShape';
 DataType = 'Real';%Real';
-AnaFlag = 'Ring';%Ring';
+AnaFlag = 'StackPixel';%Ring';
 RingMerge = 'Full';%'None';
 
 if strcmp(AnaFlag,'Ring')
@@ -16,8 +17,8 @@ else
     SysBudget = 38;
     AnaStr = AnaFlag;
 end
-savedir = [getenv('SamakPath'),'knm2ana/knm2_unblinding1/results/BestFit/'];
-savename = sprintf('%sknm2ub1_Fit_%s_%.0feV_%s_%s_%s.mat',...
+savedir = [getenv('SamakPath'),'knm2ana/knm2_unblinding1/results/CPUtime/'];
+savename = sprintf('%sknm2ub1_Fit_CPUtime_%s_%.0feV_%s_%s_%s.mat',...
     savedir,DataType,range,strrep(freePar,' ',''),chi2,AnaStr);
 
 
@@ -37,6 +38,7 @@ end
 if exist(savename,'file') 
     load(savename,'FitResult','RunAnaArg','A');
 else
+    tStart = cputime;
     SigmaSq =  0.0124+0.0025;
     
     RunAnaArg = {'RunList','KNM2_Prompt',...
@@ -65,8 +67,10 @@ else
     
     A.Fit;
     FitResult = A.FitResult;
+    tStop = cputime;
+    CPUtimeHours = (tStop-tStart)./(60*60);
     MakeDir(savedir);
-    save(savename,'FitResult','RunAnaArg','A','SigmaSq')
+    save(savename,'tStart','tStop','CPUtimeHours','FitResult','RunAnaArg','A','SigmaSq')
 end
 %%
 %A.PlotFit;
@@ -74,20 +78,4 @@ fprintf('m_nu^2 = %.3f + %.3f %.3f eV^2       , ',FitResult.par(1),FitResult.err
 fprintf('mean err = %.3f eV^2 \n',(FitResult.errPos(1)-FitResult.errNeg(1))/2)
 fprintf('E_0 = %.3f + %.3f eV  \n',FitResult.par(2)+A.ModelObj.Q_i,FitResult.err(2))
 fprintf('chi2 = %.3f (%.0f dof), p = %.3f  \n',FitResult.chi2min,FitResult.dof,1-chi2cdf(FitResult.chi2min,FitResult.dof))
-%%
-% A.PlotFit('LabelFlag','FinalKNM1',...
-%     'saveplot','pdf',...
-%     'ErrorBarScaling',50,...
-%     'YLimRes',[-2.2,2.9],...
-%     'Colors','RGB',...
-%     'DisplayStyle','PRL',...
-%     'FitResultsFlag','OFF',...
-%     'qUDisp','Abs',...
-%     'TickDir','Out');
-%
-%  A.FitCM_Obj.PlotCM('qUWindowIndexMax',10,'qUWindowIndexMin',40,'saveplot',...
-%         'ON','Convergence','OFF','CovMatInput',A.FitCMFracShape,'PlotEffect','total',...
-% %         'savename','KNM2_UB1_MultiRingFull');
-% A.FitCM_Obj.PlotCorr('qUWindowIndexMax',10,'qUWindowIndexMin',90,'saveplot',...
-% 'ON','CovMatInput',A.FitCMFracShape,...
-% 'savename',sprintf('KNM2_UB1_%s',AnaFlag));
+fprintf('CPU time  = %.3f hours \n',CPUtimeHours)

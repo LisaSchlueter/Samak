@@ -2709,12 +2709,14 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                 lstat.LineStyle= '--'; lstat.Color = rgb('DarkSlateGray'); lstat.LineWidth=LocalLineWidth;
                 pstat.FaceColor = obj.PlotColorLight;
                 
-            elseif ~strcmp(obj.chi2,'chi2Stat') && numel(hdata)==1
+            elseif ~strcmp(obj.chi2,'chi2Stat') %&& numel(hdata)==1
                 DataSys = [qU,zeros(numel(qU),1), ones(numel(qU),1)];
                 [l,p] = boundedline(DataSys(:,1),DataSys(:,2),DataSys(:,3),...
                     '-b*',DataStat(:,1),DataStat(:,2),DataStat(:,3),'--ro');
                 lsys = l(1);  lstat = l(2);
                 psys = p(1);  pstat = p(2);
+                
+                pstat.FaceColor = rgb('PowderBlue');
                 if strcmp(Colors,'RGB')
                     psys.FaceColor =obj.PlotColor; %psys.FaceAlpha=0.3;
                     lstat.Color = rgb('Silver');
@@ -2726,6 +2728,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                 lsys.LineStyle= 'none';
                 lstat.LineStyle= '--';  lstat.LineWidth=LocalLineWidth;
                 lstat.Marker = 'none'; lsys.Marker = 'none';
+                 leg.FontSize = get(gca,'FontSize')+4;
             end
             
             yres = (obj.RunData.TBDIS(obj.exclDataStart:BkgEnd,r)-obj.ModelObj.TBDIS(obj.exclDataStart:BkgEnd,r))...
@@ -2736,14 +2739,20 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                 zeros(numel(qU),1),...
                 ResStyleArg{:});
             pRes.CapSize = 0;
+            
+            pleg = plot(0,0,'Color',rgb('White'));
+            
             if ~strcmp(obj.chi2,'chi2Stat')
-                leg = legend([pstat psys],sprintf('ring %0.f Stat.',r),sprintf('ring %0.f Stat. and syst.',r),'Location','Northeast'); %hsyst
+                leg = legend([pleg,pstat psys],sprintf('Pseudo-Ring %0.f',r),'Stat.',sprintf('Stat. and syst.'),'Location','Northeast'); %hsyst
             elseif strcmp(obj.chi2,'chi2Stat')
-                leg = legend(pstat,sprintf('ring %0.f Stat.',r),'Location','Northeast'); %hsyst
+                leg = legend(pleg,pstat,sprintf('Pseudo-Ring %0.f Stat.',r),'Location','Northeast'); %hsyst
             end
             legend('boxoff');
+           %leg.EdgeColor = 'none';
+           % set(leg.BoxFace, 'ColorType','truecoloralpha', 'ColorData',uint8(255*[1;1;1;0.5])); 
+
+            leg.NumColumns = 3;
             
-            leg.NumColumns = 2;
             hold off;
             % xlabel(sprintf('retarding energy - %.1f (eV)',obj.ModelObj.Q_i),'FontSize',LocalFontSize);
             if strcmp(DisplayStyle,'PRL') || strcmp(DisplayMTD,'ON')
@@ -2753,7 +2762,6 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                 else
                     PrettyFigureFormat
                 end
-                leg.FontSize = get(gca,'FontSize')+4;
                 %pstat.delete; psys.delete;
                 lstat.Color = rgb('DarkGray');
             else
@@ -2763,16 +2771,17 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                 end
             end
             
+            %leg.FontSize = 16;%get(gca,'FontSize')-2;
             ylabel(sprintf('Res. (\\sigma)'));
             if strcmp(qUDisp,'Rel')
-                xlim([floor(min(qU)) max(qU)*1.04]);
+                xlim([floor(min(qU))-4 max(qU)*1.04]);
             elseif strcmp(qUDisp,'Abs')
                 xlim([min(qU)*0.9999 max(qU)*1.0001]);
             end
             ymin = 1.1*min(yres);
-            ymax = 1.1*max(yres);
+            ymax = 1.8*max(yres);
             if ymin<=-1 || ymax<=1
-                ylim([ymin,ymax]);%ylim([-2 2])
+               ylim([-2.5 2.5]);% ylim([ymin,ymax]);%ylim([-2 2])
             else
                 ylim([ymin,ymax]);
             end
@@ -2870,6 +2879,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             end
             
             if ~strcmp(saveplot,'OFF')
+                d = obj.GetPlotDescription;
                 if strcmp(Colors,'BW')
                     savename = [d.savename,'_PSRresiduals_BW'];
                 else
@@ -4359,8 +4369,10 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             xlim([min(obj.RingList)-0.2,max(obj.RingList)+0.2]);
             ymin = min(y-yErr);
             if ~ismember(PlotPar,{'Norm','Bkg'})
-                if ymin<0
+                if ymin<0 && ~strcmp(PlotPar,'qU')
                     ylim([ymin*1.2,max(y+yErr)*1.5]);
+                elseif strcmp(PlotPar,'qU')
+                    ylim([-0.02,max(y+yErr)*1.1]);
                 else
                     ylim([ymin*0.8,max(y+yErr)*1.5]);
                 end

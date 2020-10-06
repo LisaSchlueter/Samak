@@ -13,7 +13,7 @@ mixing_angle = 0.01;                                  % sin2(th4)
 range = 40;
 ErrorBarScaling = 50;
 SavePlot = 'ON';
-Subplot2 = 'Residuals'; % Ratio or Residuals
+Subplot2 = 'Ratio'; % Ratio or Residuals
 %% Data
 datafile = sprintf('%sksn1_sterile_global_datafit_%.0feV.mat',savedirFile,range);
 if exist(datafile,'file') 
