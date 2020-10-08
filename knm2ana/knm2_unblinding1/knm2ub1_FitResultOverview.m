@@ -1,5 +1,6 @@
 Uniform = 'ON';
 MR4 = 'ON';
+MR4qU = 'ON';
 MR12 = 'ON';
 range = 40;
 freePar = 'mNu E0 Bkg Norm';
@@ -21,6 +22,14 @@ if strcmp(MR4,'ON')
     dMR4stat = importdata(fileStat);
     dMR4cm   = importdata(filecm);
     x = [x,dMR4stat.FitResult.par(1),dMR4cm.FitResult.par(1)];
+end
+
+if strcmp(MR4qU,'ON')
+    fileStat = strrep([CommonStrStat,'_Ring.mat'],strrep(freePar,' ',''),[strrep(freePar,' ',''),'qU']);
+    filecm   = strrep([CommonStrCM,'_Ring_SysBudget39.mat'],strrep(freePar,' ',''),[strrep(freePar,' ',''),'qU']);
+    dMR4qUstat = importdata(fileStat);
+    dMR4qUcm   = importdata(filecm);
+    x = [x,dMR4qUstat.FitResult.par(1),dMR4qUcm.FitResult.par(1)];
 end
 %%
 if strcmp(MR12,'ON')
@@ -47,9 +56,19 @@ else
     legStr = '';
 end
 
-if strcmp(MR4,'ON')
+if strcmp(MR4qU,'ON')
     y(end+1) = y(end)+0.25; y(end+1) = y(end)+0.1;
     
+    eUStat = errorbar(dMR4qUstat.FitResult.par(1),y(end-1),0,0,dMR4qUstat.FitResult.errNeg(1),dMR4qUstat.FitResult.errPos(1),...
+        's',CommonPlotArg{:},'Color',rgb('Orange'),'MarkerSize',8,'MarkerFaceColor',rgb('Orange'));
+    hold on;
+    eUcm = errorbar(dMR4qUcm.FitResult.par(1),y(end),0,0,dMR4qUcm.FitResult.errNeg(1),dMR4qUcm.FitResult.errPos(1),...
+        's',CommonPlotArg{:},'Color',rgb('DodgerBlue'),'MarkerSize',8,'MarkerFaceColor',rgb('DodgerBlue'));
+    legStr = {legStr{:},sprintf('MR-4 (\\DeltaqU)')};
+end
+
+if strcmp(MR4,'ON')
+    y(end+1) = y(end)+0.25; y(end+1) = y(end)+0.1;    
     eUStat = errorbar(dMR4stat.FitResult.par(1),y(end-1),0,0,dMR4stat.FitResult.errNeg(1),dMR4stat.FitResult.errPos(1),...
         'd',CommonPlotArg{:},'Color',rgb('Orange'),'MarkerSize',8,'MarkerFaceColor',rgb('Orange'));
     hold on;
@@ -58,23 +77,24 @@ if strcmp(MR4,'ON')
     legStr = {legStr{:},'MR-4'};
 end
 
+
 if strcmp(MR12,'ON')
-    y(end+1) = y(end)+0.25; y(end+1) = y(end)+0.1;
-    eUStat = errorbar(dMR12stat.FitResult.par(1),y(end-1),0,0,dMR12stat.FitResult.errNeg(1),dMR12stat.FitResult.errPos(1),...
-        'd',CommonPlotArg{:},'Color',rgb('Orange'),'MarkerSize',8,'MarkerFaceColor',rgb('Orange'));
+    y(end+1) = y(end)+0.25;% y(end+1) = y(end)+0.1;
+    eUStat = errorbar(dMR12stat.FitResult.par(1),y(end),0,0,dMR12stat.FitResult.errNeg(1),dMR12stat.FitResult.errPos(1),...
+        '*',CommonPlotArg{:},'Color',rgb('Orange'),'MarkerSize',8,'MarkerFaceColor',rgb('Orange'));
     legStr = {legStr{:},'MR-12'};
 end
 
 % tweak plot for legend
 pcm   = plot(0,1e2,'LineWidth',2,'Color',rgb('DodgerBlue'));
 pstat =  plot(0,1e2,'LineWidth',2,'Color',rgb('Orange'));
-%%
+%
 PrettyFigureFormat('FontSize',22)
-ylim([y(1)-0.1,y(end)+0.1]);%+0.18]);
-yticks([y(1)+0.1,y(3)+0.1,y(5)]); set(gca,'YMinorTick','off');
+ylim([y(1)-0.1,y(end)+0.22]);%+0.18]);
+yticks([y(1)+0.05,y(3)+0.05,y(5)+0.05,y(end)]); set(gca,'YMinorTick','off');
 yticklabels(legStr);
 xlabel(sprintf('{\\itm}_\\nu^2 (eV^2)'));
-leg = legend([pstat,pcm],'Stat. only','Stat. and syst.','EdgeColor',rgb('Silver'),'Location','north');
+leg = legend([pstat,pcm],'Stat. only','Stat. and syst.','EdgeColor',rgb('Silver'),'Location','northwest');
  
 plotdir = strrep(savedir,'results/BestFit','plots');
 plotname = sprintf('%sknm2ub1_FitResultOverview_mNuSq.png',plotdir);

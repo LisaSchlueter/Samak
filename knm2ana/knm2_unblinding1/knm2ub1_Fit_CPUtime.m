@@ -36,7 +36,7 @@ if ~strcmp(chi2,'chi2Stat')
 end
 
 if exist(savename,'file') 
-    load(savename,'FitResult','RunAnaArg','A');
+    load(savename,'tStart','tStop','CPUtimeHours');
 else
     tStart = cputime;
     SigmaSq =  0.0124+0.0025;
@@ -74,8 +74,4 @@ else
 end
 %%
 %A.PlotFit;
-fprintf('m_nu^2 = %.3f + %.3f %.3f eV^2       , ',FitResult.par(1),FitResult.errPos(1),FitResult.errNeg(1))
-fprintf('mean err = %.3f eV^2 \n',(FitResult.errPos(1)-FitResult.errNeg(1))/2)
-fprintf('E_0 = %.3f + %.3f eV  \n',FitResult.par(2)+A.ModelObj.Q_i,FitResult.err(2))
-fprintf('chi2 = %.3f (%.0f dof), p = %.3f  \n',FitResult.chi2min,FitResult.dof,1-chi2cdf(FitResult.chi2min,FitResult.dof))
 fprintf('CPU time  = %.3f hours \n',CPUtimeHours)

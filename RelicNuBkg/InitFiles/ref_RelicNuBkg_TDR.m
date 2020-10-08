@@ -57,7 +57,7 @@ p.addParameter('BKG_RatePixelSec','');
 p.addParameter('BKG_RateRingSec','');
 p.addParameter('FPD_Segmentation','OFF',@(x) ismember(x,{'OFF','SINGLEPIXEL','MULTIPIXEL','RING'}));
 p.addParameter('PixList',1:148);
-p.addParameter('RingList',1:12);
+p.addParameter('RingList',1:14);
 
 p.parse(varargin{:});
 

@@ -2300,7 +2300,12 @@ classdef RunSensitivity < handle
             end
             
             if strcmp(obj.RunAnaObj.AnaFlag,'Ring')
-                savefile = strrep(savefile,'.mat',sprintf('_Ring%s.mat',obj.RunAnaObj.RingMerge));
+                if ~contains(obj.RunAnaObj.fixPar,sprintf('fix %.0f',2*obj.RunAnaObj.nRings+10))
+                    % free qU-Offsets
+                     savefile = strrep(savefile,'.mat',sprintf('_Ring%s_qUOffsets.mat',obj.RunAnaObj.RingMerge));
+                else
+                    savefile = strrep(savefile,'.mat',sprintf('_Ring%s.mat',obj.RunAnaObj.RingMerge));
+                end
             end
             % load or save file
             out = 1;

@@ -1,10 +1,10 @@
 % Calculte and/or plot systematics breakdown for KNM2 unblinding 1
 range = 40;
-DataType = 'Twin';
+DataType = 'Real';
 SigmaSq =  0.0124+0.0025;
 
 RunAnaArg = {'RunList','KNM2_Prompt',... % all KNM2 golden runs
-    'fixPar','mNu E0 Bkg Norm',...           % free Parameter !!
+    'fixPar','mNu E0 Bkg Norm qU',...           % free Parameter !!
     'DataType',DataType,...              
     'FSDFlag','BlindingKNM2',...       % final state distribution (theoretical calculation)
     'ELossFlag','KatrinT2A20',...         % energy loss function     ( different parametrizations available)

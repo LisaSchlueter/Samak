@@ -1,9 +1,9 @@
 range   = 40;
-freePar = 'mNu E0 Bkg Norm qU';
-chi2    = 'chi2CMShape';%CMShape';
+freePar = 'mNu E0 Bkg Norm';
+chi2    = 'chi2Stat';%CMShape';
 DataType = 'Real';%Real';
-AnaFlag = 'Ring';%Ring';
-RingMerge = 'Full';%'None';
+AnaFlag = 'StackPixel';%Ring';
+RingMerge = 'None';%'None';
 
 if strcmp(AnaFlag,'Ring')
     SysBudget = 39;

@@ -278,25 +278,27 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             end
             
             % select pixels according to selected rings
-            switch obj.RingMerge
-                case 'Default'
-                    [obj.PixList,obj.RingPixList] = Ring2PixelDefCombi(obj.RingList,obj.PixList);
-                     obj.RingList = 1:10;
-                case 'None'
-                    [obj.PixList,obj.RingPixList] = Ring2Pixel(obj.RingList,obj.PixList);
-                     obj.RingList = 1:12;
-                case 'Full'
-                    [obj.PixList,obj.RingPixList] = Ring2PixelCombi(obj.RingList,obj.PixList);
-                    obj.RingList = 1:4;%1:numel();
-                case 'Half'
-                    [obj.PixList,obj.RingPixList] = Ring2PixelHalfCombi(obj.RingList,obj.PixList);
-                    obj.RingList = 1:2;
-                case 'Azi'
-                    [obj.PixList,obj.RingPixList] = AziPatch2PixelCombi(obj.RingList,obj.PixList);
-                    obj.RingList = 1:5;
-                case {'AziHalfNS','AziHalfEW'}
-                    [obj.PixList,obj.RingPixList] = AziHalfPatch2PixelCombi(obj.RingList,obj.PixList,obj.RingMerge);
-                    obj.RingList = 1:2;
+            if strcmp(obj.AnaFlag,'Ring')
+                switch obj.RingMerge
+                    case 'Default'
+                        [obj.PixList,obj.RingPixList] = Ring2PixelDefCombi(obj.RingList,obj.PixList);
+                        obj.RingList = 1:10;
+                    case 'None'
+                        [obj.PixList,obj.RingPixList] = Ring2Pixel(obj.RingList,obj.PixList);
+                        obj.RingList = 1:12;
+                    case 'Full'
+                        [obj.PixList,obj.RingPixList] = Ring2PixelCombi(obj.RingList,obj.PixList);
+                        obj.RingList = 1:4;%1:numel();
+                    case 'Half'
+                        [obj.PixList,obj.RingPixList] = Ring2PixelHalfCombi(obj.RingList,obj.PixList);
+                        obj.RingList = 1:2;
+                    case 'Azi'
+                        [obj.PixList,obj.RingPixList] = AziPatch2PixelCombi(obj.RingList,obj.PixList);
+                        obj.RingList = 1:5;
+                    case {'AziHalfNS','AziHalfEW'}
+                        [obj.PixList,obj.RingPixList] = AziHalfPatch2PixelCombi(obj.RingList,obj.PixList,obj.RingMerge);
+                        obj.RingList = 1:2;
+                end
             end
             
             obj.nRings = numel(obj.RingPixList);
