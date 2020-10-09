@@ -1,4 +1,4 @@
-function TritiumObject = ref_RelicNuBkg_DesignReport(varargin)
+function TritiumObject = ref_RelicNuBkg_SensitivityLimit(varargin)
 
 
 TDMode = 'DataTBD';
@@ -9,7 +9,7 @@ MTD = importdata('DR30.mat');
 % ---------------------------------------------------------------------- %
 % WGTS
 p = inputParser;
-p.addParameter('eta_i',0);
+p.addParameter('eta_i',8.08594e9);
 p.addParameter('ToggleRelic','ON');
 p.addParameter('FSD_Sigma',0.0001,@(x)isfloat(x) || isempty(x));
 p.addParameter('ToggleES','OFF',@(x)ismember(x,{'ON','OFF'}));

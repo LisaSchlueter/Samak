@@ -830,7 +830,6 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                           .*((Q_M-TexE_M-Te_M).^2-mnuSq_M).^.5) ...
                           + sin2T4_M.*(((Q_M-Te_M-TexE_M).^2-mnu4Sq_M)>=0)...
                           .*((Q_M-TexE_M-Te_M).^2-mnu4Sq_M).^.5).*TexP_M,2)));
-                          %+Eta.*pdf_relic.*TexP_M,2))); % relic neutrino PS
                 case 'capture'
                     GES = squeeze(real(0 +TexP))'; %relic neutrino PS
             end
@@ -1162,7 +1161,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                             .*((Q_local-obj.Te).^2-obj.mnu4Sq).^0.5));
                         obj.PhaseSpace(isnan(obj.PhaseSpace)) = 0;
                     case 'NuCapture'
-                        obj.PhaseSpace = obj.TTNormGS.*pdf('Normal',obj.Te-obj.Q,mNuSq_local,obj.DE_sigma);
+                        obj.PhaseSpace = pdf('Normal',obj.Te-obj.Q,mNuSq_local,obj.DE_sigma);
                 end
                 
             else
@@ -1819,6 +1818,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                                         else
                                             sprintf('FSD ground state not yet fitted! Use obj.FitFSDGroundState to generate necessary file! Excited states will be switched on.')
                                             obj.ToggleES = 'ON';
+                                            obj.ComputePhaseSpace('NuCapture');
                                         end
                                     case 'ON'
                                         obj.ComputePhaseSpace('NuCapture');
@@ -1910,13 +1910,13 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                 TBDDS_beta  = (1+obj.normFit).*(TBDDS_beta./simpsons(obj.Te,TBDDS_beta)).*obj.NormFactorTBDDS;
                 switch obj.ToggleRelic
                     case 'ON'
-                        EnergyRange = obj.Te-obj.Q;
-                        lowerbound=find(abs(EnergyRange+10-obj.mnuSq)<abs(EnergyRange(2)-EnergyRange(1))/2);
-                        GSFrac = simpsons(TBDDS_Capture(lowerbound:end))/simpsons(TBDDS_Capture);
                         NormGS = obj.WGTS_MolFrac_TT*obj.TTNormGS+obj.WGTS_MolFrac_DT*obj.DTNormGS+obj.WGTS_MolFrac_HT*obj.HTNormGS;
                         TBDDS_Capture = (1+obj.normFit).*(TBDDS_Capture./simpsons(obj.Te,TBDDS_Capture)).*obj.NormFactorTBDDS_R;
                         switch obj.ToggleES
                             case 'ON'
+                                EnergyRange = obj.Te-obj.Q;
+                                lowerbound=find(abs(EnergyRange+10-obj.mnuSq)<abs(EnergyRange(2)-EnergyRange(1))/2);
+                                GSFrac = simpsons(TBDDS_Capture(lowerbound:end))/simpsons(TBDDS_Capture);
                                 TBDDS_Capture = TBDDS_Capture.*NormGS/GSFrac;       %fraction of captures happening inside the considered energy range
                             case'OFF'
                                 TBDDS_Capture = TBDDS_Capture.*NormGS;
@@ -2190,7 +2190,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                 obj.NormFactorTBDDS_R = RateCaptureT_KATRIN...
                         .*0.5*(1-cos(asin(sqrt(obj.WGTS_B_T./obj.MACE_Bmax_T)))) ...    %angle of acceptance
                         .*(obj.FPD_MeanEff*obj.FPD_Coverage)...                         %detector efficiency and coverage
-                        .*numel(obj.FPD_PixList)/148;                                   %Tritium purity and number of pixels
+                        .*numel(obj.FPD_PixList)/148;                                   %number of pixels
             end
         end
         

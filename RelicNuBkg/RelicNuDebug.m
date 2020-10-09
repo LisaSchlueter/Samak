@@ -4,12 +4,11 @@ classdef RelicNuDebug < handle
     
    properties
        Params;      %parameters of modelobj
-       R;           %differential spectrum with relic peak
-       B;           %differential spectrum without relic peak
+       R;           %TBD obj
        ToggleES;    %whether to use excited states in the neutrino capture spectrum
    end
    
-   methods
+   methods %constructor
        function obj = RelicNuDebug(varargin)
            p = inputParser;
            p.addParameter('R','',@(x)isa(x,'TBD'));
@@ -34,7 +33,7 @@ classdef RelicNuDebug < handle
             obj.R.ComputeTBDIS;
        end
    end
-   methods
+   methods %Modify settings
        function SetRhoDmnu2TimeEta(obj,varargin)                 %set variable parameters
            p = inputParser;
            p.addParameter('RhoD',5e17,@(x)isfloat(x) && x>0);   %column density [molecules/cm^2]
@@ -56,7 +55,8 @@ classdef RelicNuDebug < handle
                    RhoD = RhoD./((pi*obj.R.WGTS_FTR_cm^2*obj.R.M*1e3*obj.R.WGTS_epsT)...
                        .*0.5*(1-cos(asin(sqrt(obj.R.WGTS_B_T./obj.R.MACE_Bmax_T)))) ...    %angle of acceptance
                         .*(obj.R.FPD_MeanEff*obj.R.FPD_Coverage)...                         %detector efficiency and coverage
-                        .*numel(obj.R.FPD_PixList)/148);                  %Tritium purity and number of pixels
+                        .*(numel(obj.R.FPD_PixList)/148)...                                 %number of pixels
+                        .*0.3983);                                                          %zero scattering prob.
            end
            
            if strcmp(obj.Params,'TDR')
@@ -73,7 +73,7 @@ classdef RelicNuDebug < handle
        end
    end
    
-   methods
+   methods %Diff and Int Spec.
        function TotalCountsStudy(obj,varargin)
            p = inputParser;
            p.addParameter('Plot','ON',@(x)ismember(x,{'ON','OFF'}));
@@ -169,6 +169,156 @@ classdef RelicNuDebug < handle
            set(lh1,'FontSize',12);
            PrettyFigureFormat;
            hold off;
+       end
+   end
+   
+   methods %Chi2 scans
+       function Chi2Scan(~,varargin)
+           p=inputParser;
+           p.addParameter('RunNr',1,@(x)isfloat(x));
+           p.addParameter('Netabins',10,@(x)isfloat(x));
+           p.addParameter('etarange',10,@(x)isfloat(x));
+           p.addParameter('etafactor',1.5,@(x)isfloat(x));
+           p.addParameter('mode','SCAN',@(x)ismember(x,{'SCAN','SEARCH'}));
+           p.parse(varargin{:});
+           RunNr=p.Results.RunNr;
+           Netabins=p.Results.Netabins;
+           etarange=p.Results.etarange;
+           etafactor=p.Results.etafactor;
+           mode=p.Results.mode;
+           
+           initfile=@ref_RelicNuBkg_DesignReport;
+
+            U = RunAnalysis('RunNr',RunNr,...             
+                'FakeInitFile',initfile,...
+                'chi2','chi2Stat',...                 % uncertainties: statistical or stat + systematic uncertainties
+                'DataType','Fake',...                 % can be 'Real' or 'Twin' -> Monte Carlo
+                'RingList',1:14,...
+                'TwinBias_Q',18575,...
+                'fixPar','mNu E0 Norm Bkg',...        % free Parameter!!
+                'NonPoissonScaleFactor',1,...         % background uncertainty are enhanced
+                'minuitOpt','min ; minos',...         % technical fitting options (minuit)
+                'FSDFlag','Sibille0p5eV',...          % final state distribution                        !!check ob initfile hier überschrieben wird
+                'ELossFlag','KatrinT2',...            % energy loss function
+                'SysBudget',22,...                    % defines syst. uncertainties -> in GetSysErr.m;
+                'DopplerEffectFlag','FSD',...
+                'SynchrotronFlag','OFF',...
+                'AngularTFFlag','OFF');
+
+            U.exclDataStart = 1; % set region of interest
+
+            %R.InitModelObj_Norm_BKG('Recompute','ON');
+
+            if strcmp(mode,'SCAN')
+                Chi2 = 1:Netabins;
+                mnu  = 1:Netabins;
+                E0   = 1:Netabins;
+                Bkg  = 1:Netabins;
+
+                for i=1:Netabins
+                   U.ModelObj.eta_i = (i-1)*((etafactor*10^(etarange))/(Netabins-1));
+                   U.ModelObj.eta   = (i-1)*((etafactor*10^(etarange))/(Netabins-1));
+                   U.ModelObj.ComputeNormFactorTBDDS;
+                   U.ModelObj.ComputeTBDDS;
+                   U.ModelObj.ComputeTBDIS;
+                   %% Fit
+                   U.Fit;
+            %        TBDIS_R = U.ModelObj.TBDIS./U.ModelObj.qUfrac./U.ModelObj.TimeSec;
+            %        TBDIS_B = (U.ModelObj.TBDIS-U.ModelObj.TBDIS_R)./U.ModelObj.qUfrac./U.ModelObj.TimeSec;
+            %            
+            %        e1 = U.ModelObj.qU(U.ModelObj.qU(:,1)>(U.ModelObj.Q-310),:)-18575;
+            %        tmpis1 = TBDIS_B(U.ModelObj.qU(:,1)>(U.ModelObj.Q-310),:);
+            %        tmpis2 = TBDIS_R(U.ModelObj.qU(:,1)>(U.ModelObj.Q-310),:);
+            % 
+            %        semilogy((e1),tmpis1,'-s','LineWidth',2,'Color','Black','LineStyle','-');
+            %        hold on;
+            %        semilogy((e1),tmpis2,'-s','LineWidth',2,'Color','Blue','LineStyle','-');
+                   %R.PlotFit;
+                   Chi2(i)=U.FitResult.chi2min;
+                   mnu(i)=U.ModelObj.mnuSq_i+U.FitResult.par(1);
+                   E0(i)=U.ModelObj.Q_i+U.FitResult.par(2);
+                   Bkg(i)=U.ModelObj.BKG_RateSec_i+U.FitResult.par(3);
+                end
+
+                save('RelicChi2Scan_TDR4.mat','Chi2','Netabins','etafactor','etarange','mnu','E0','Bkg');
+            end
+
+            if strcmp(mode,'SEARCH')
+
+                F = RunAnalysis('RunNr',RunNr,... % runlist defines which runs are analysed -> set MultiRunAnalysis.m -> function: GetRunList()
+                    'FakeInitFile',initfile,...
+                    'chi2','chi2Stat',...                 % uncertainties: statistical or stat + systematic uncertainties
+                    'DataType','Fake',...                 % can be 'Real' or 'Twin' -> Monte Carlo
+                    'RingList',1:14,...
+                    'TwinBias_Q',18575,...
+                    'fixPar','mNu E0 Norm Bkg',...        % free Parameter!!
+                    'NonPoissonScaleFactor',1,...         % background uncertainty are enhanced
+                    'minuitOpt','min ; minos',...         % technical fitting options (minuit)
+                    'FSDFlag','Sibille0p5eV',...          % final state distribution                        !!check ob initfile hier überschrieben wird
+                    'ELossFlag','KatrinT2',...            % energy loss function
+                    'SysBudget',22,...                    % defines syst. uncertainties -> in GetSysErr.m;
+                    'DopplerEffectFlag','FSD',...
+                    'SynchrotronFlag','OFF',...
+                    'AngularTFFlag','OFF');
+
+                F.exclDataStart = 1; % set region of interest
+
+                etaupper = 1.5e10;
+                etalower = 0;
+                delta = 0.1e9;
+                eta=etaupper;
+                F.ModelObj.eta_i=etalower;
+                F.ModelObj.eta=etalower;
+                U.ModelObj.eta_i=etaupper;
+                U.ModelObj.eta=etaupper;
+                U.ModelObj.ComputeNormFactorTBDDS;
+                U.ModelObj.ComputeTBDDS;
+                U.ModelObj.ComputeTBDIS;
+                U.Fit;
+                chi2 = U.FitResult.chi2min;
+                if chi2<2.71
+                    sprintf('chi^2 too small! Set larger initial eta.')
+                elseif chi2>50
+                    sprintf('Minos failed! Vary initial eta.')
+                else
+                    while abs(chi2-2.71)>0.01
+                        if chi2>2.71
+                            etaupper=eta;
+                            eta=(etaupper+etalower)./2;
+                            U.ModelObj.eta_i=eta;
+                            U.ModelObj.eta=eta;
+                            U.ModelObj.ComputeNormFactorTBDDS;
+                            U.ModelObj.ComputeTBDDS;
+                            U.ModelObj.ComputeTBDIS;
+                            U.Fit;
+                            if U.FitResult.chi2min>50
+                                sprintf('Fit failed! Retrying...')
+                                etaupper = etaupper + delta;
+                                eta=etaupper;
+                            else
+                                chi2=U.FitResult.chi2min;
+                            end
+                        else
+                            etalower=eta;
+                            eta=(etaupper+etalower)./2;
+                            F.ModelObj.eta_i=eta;
+                            F.ModelObj.eta=eta;
+                            F.ModelObj.ComputeNormFactorTBDDS;
+                            F.ModelObj.ComputeTBDDS;
+                            F.ModelObj.ComputeTBDIS;
+                            F.Fit;
+                            if F.FitResult.chi2min>50
+                                sprintf('Fit failed! Retrying...')
+                                etalower = etalower - delta;
+                                eta = etalower;
+                            else
+                                chi2=F.FitResult.chi2min;
+                            end
+                        end
+                    end
+                    sprintf('Final Result: eta = %g',eta)
+                end
+            end 
        end
    end
     
