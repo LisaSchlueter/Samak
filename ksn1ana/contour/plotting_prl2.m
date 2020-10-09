@@ -4,7 +4,7 @@
 %% L.Schlueter / N. Le Guennic / T. Lasserre / 
 
 % Range
-Range        = '65';
+Range        = '40';
 
 % Plot Real = Data or Twin
 RealTwinFlag = 'Real';
@@ -52,7 +52,7 @@ switch RealTwinFlag
         BFm24       = 0; 
         
         % KATRIN KSN1 free nu mass - stat+sys + pull - 40eV
-        file_B      = 'SamakContour_Real_40eV_chi2CMShape_E0BkgNorm.mat';
+        file_B      = 'SamakContour_Real_40eV_chi2CMShape_mNuE0BkgNorm_pull12.mat';
         BFsin2theta_mfree = 0;
         BFm24_mfree       = 0; % eV^2
         
@@ -152,7 +152,7 @@ switch MainzTroitsk
         % hold on
         troitskSinTheta2 = 0.5 * (1-sqrt(1-d_troitsk.SinSquare2Theta_X));
         p_t     =      plot ((troitskSinTheta2), ((d_troitsk.DmSquare41_Y)),...
-            '-.','color',rgb('DarkSlateGrey'),'LineWidth',2);
+            '--','color',rgb('DarkSlateGrey'),'LineWidth',2);
 end
 
 %% Plot Parameters
@@ -192,7 +192,7 @@ PRLFormat;
 set(gca, 'XScale', 'log');
 set(gca, 'YScale', 'log');
 
-axis([0.005 0.5 1 5000])
+axis([0.005 0.5 1 2000])
 axis square
 
 fileString = sprintf('./plots/%sksn1_exlimit_%sCL_m4sinSqT_%seVrange.pdf',TwinLabel,CLflag,Range);

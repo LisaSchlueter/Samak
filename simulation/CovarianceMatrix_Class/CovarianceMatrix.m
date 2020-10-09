@@ -399,7 +399,7 @@ classdef CovarianceMatrix < handle
             p.addParameter('ConvergenceTest','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('PlotEffect','',@(x)ischar(x));     % only in title
             p.addParameter('Mode','Frac',@(x)ismember(x,{'CM','Frac','Shape'}));
-            p.addParameter('qUWindowIndexMin',90,@(x)isfloat(x)); % start display cm below endpoint (eV)
+            p.addParameter('qUWindowIndexMin',40,@(x)isfloat(x)); % start display cm below endpoint (eV)
             p.addParameter('qUWindowIndexMax',10,@(x)isfloat(x)); % stop display cm below endpoint   (eV)
             p.addParameter('CovMatInput','',@(x)isfloat(x)); % plot covmt from outside (optinal)
             
@@ -675,7 +675,8 @@ classdef CovarianceMatrix < handle
                 CovMatDisp = CM(qUWindowIndexMin:qUWindowIndexMax,qUWindowIndexMin:qUWindowIndexMax);
             end
             
-            [~, ~, c ] = corplot(CovMatDisp);
+            [h, ~, c ] = corplot(CovMatDisp);
+            h.EdgeColor = 'none';
             colormap(parula);
             c.Label.String = sprintf('Correlation coefficient');
             pbaspect([1 1 1])
@@ -961,7 +962,7 @@ classdef CovarianceMatrix < handle
             CM = TBDIS_NoBKG.*CovMatFrac_local.*TBDIS_NoBKG';
             
             %Draw from multivariate distribution
-            TBDIS_Sample       = mvnrnd(TBDIS_NoBKG,CM,obj.nTrials*5);
+            TBDIS_Sample       = mvnrnd(TBDIS_NoBKG,CM,25e4);
             
              % Model TBDIS: reshape back if FPD segmented
             if strcmp(obj.StudyObject.FPD_Segmentation,'RING')
@@ -2138,7 +2139,7 @@ function ComputeCM_Background(obj,varargin)
     p.addParameter('BkgRange',-5,@(x)isfloat(x));  % defines, which points are used to constrain slope. In eV with respect to endpoint
     p.addParameter('RingCorrCoeff',0,@(x)isfloat(x));  % ring to ring correlation, can also be a matrix
     p.addParameter('ScalingOpt',2,@(x)isfloat(x));
-    p.addParameter('Mode','SlopeFit',@(x)ismember(x,{'SlopeFit','Gauss'}));
+    p.addParameter('Mode','Gauss',@(x)ismember(x,{'SlopeFit','Gauss'}));
     
     p.parse(varargin{:});
     Display          = p.Results.Display;
@@ -3321,16 +3322,22 @@ function ComputeCM_LongPlasma(obj,varargin)
     % effectively described by e-loss shift and variance
     p=inputParser;
     p.addParameter('CorrCoeff',0,@(x)isfloat(x));
-    p.addParameter('NegSigma','Troitsk',@(x)ismember(x,{'Abs','Troitsk'}));
+    p.addParameter('NegSigma','Troitsk+',@(x)ismember(x,{'Abs','Troitsk','Troitsk+'}));
     p.addParameter('SanityPlot','OFF');
     p.parse(varargin{:});
     CorrCoeff  = p.Results.CorrCoeff;
     NegSigma   = p.Results.NegSigma;    % how to deal with negative sigmas
     SanityPlot = p.Results.SanityPlot;
-
+    
+    if obj.is_EOffsetErr==0 && strcmp(NegSigma,'Troitsk+')
+        NegSigma = 'Troitsk';
+    end
+    
     switch NegSigma
         case 'Troitsk'
             NegSigmaStr = '_Troitsk'; % troitsk formula
+        case 'Troitsk+'
+            NegSigmaStr = '_Troitsk+'; % couple: troitsk formula + coupling of eloss and sigma
         case 'Abs'
             NegSigmaStr = '';         % absolute value of sigma
     end
@@ -3338,7 +3345,11 @@ function ComputeCM_LongPlasma(obj,varargin)
     
     % initial longi plasma parameters
     is_EOffset_i = obj.StudyObject.is_EOffset;
-    MACE_Sigma_i = mean(obj.StudyObject.MACE_Sigma);
+    MACE_Sigma_i = mean(obj.StudyObject.FSD_Sigma);
+    
+    if isnan(MACE_Sigma_i)
+        MACE_Sigma_i = 0;
+    end
     
     obj.GetTDlabel;
     covmat_path =[getenv('SamakPath'),sprintf('inputs/CovMat/LongPlasma/CM/')];
@@ -3378,16 +3389,25 @@ function ComputeCM_LongPlasma(obj,varargin)
         obj.StudyObject.AngularTFFlag = 'OFF';
         obj.StudyObject.recomputeRF   = 'OFF';
         
-        % longi plasma uncertainty
-        PlasmaErr =  [obj.MACE_VarErr,obj.is_EOffsetErr];
-        PlasmaCovMat      = PlasmaErr.*[1,CorrCoeff;CorrCoeff,1].*PlasmaErr';
-        
-        % randomize longi plasma parameters
-        PlasmaPar_expected = [MACE_Sigma_i.^2,is_EOffset_i];
-        PlasmaPar =  mvnrnd(PlasmaPar_expected,PlasmaCovMat,obj.nTrials);
+        %% randomize broadening + shift
+        switch NegSigma
+            case 'Troitsk'
+                % longi plasma uncertainty
+                PlasmaErr =  [obj.MACE_VarErr,obj.is_EOffsetErr];
+                PlasmaCovMat      = PlasmaErr.*[1,CorrCoeff;CorrCoeff,1].*PlasmaErr';
+                
+                % randomize longi plasma parameters
+                PlasmaPar_expected = [MACE_Sigma_i.^2,is_EOffset_i];
+                PlasmaPar =  mvnrnd(PlasmaPar_expected,PlasmaCovMat,obj.nTrials);
+            case 'Troitsk+'
+                PlasmaPar      = zeros(obj.nTrials,2);
+                PlasmaPar(:,1) = randn(obj.nTrials,1).*obj.MACE_VarErr+MACE_Sigma_i.^2; % broadening
+                DeltaMax       = sqrt(abs(PlasmaPar(:,1)))./1.3;
+                PlasmaPar(:,2) = rand(obj.nTrials,1).*2.*DeltaMax-DeltaMax;
+        end
         
         MACE_Var_v = PlasmaPar(:,1);                 % negative broadenings dealt with later
-        MACE_Var_v(sqrt(abs(MACE_Var_v))<1e-3) = 0;  % too small to resolve anyway -> saves from time
+        MACE_Var_v(sqrt(abs(MACE_Var_v))<1e-3) = 0;  % too small to resolve anyway -> saves some time
         is_EOffset_v  = PlasmaPar(:,2);
         
         % e-loss shift:
@@ -3431,7 +3451,7 @@ function ComputeCM_LongPlasma(obj,varargin)
             obj.StudyObject.ComputeTBDIS;
             TBDIS_V(:,i,:) = obj.StudyObject.TBDIS;
             
-            if strcmp(NegSigma,'Troitsk') % Use Troitsk formula
+            if ismember(NegSigma,{'Troitsk','Troitsk+'}) % Use Troitsk formula
                 % TBDIS(sigma<0) = 2*(sigma=0)-(abs(sigma))
                 if MACE_Var_v(i)<0
                     obj.StudyObject.LoadFSD; % sigma = 0
@@ -3747,7 +3767,8 @@ end
             
             fprintf('--------------------------------------------------------------------------\n')
             cprintf('blue','CovarianceMatrix:ComputeCM: Compute Combi Covariance Matrix  \n')
-           %  obj.nTrials = 5000;
+             nTrials = 5000;
+             obj.nTrials = nTrials;
             %Labeling
             combi_path= [getenv('SamakPath'),sprintf('/inputs/CovMat/Combi/')];
             effects_logic = structfun(@(x)strcmp(x,'ON'),obj.SysEffect);
@@ -3791,11 +3812,11 @@ end
             
             %Load / Compute CM of SysEffects
             %% Response Function
-           % obj.nTrials = 1000;
+            obj.nTrials = nTrials/5;
             if strcmp(obj.SysEffect.RF_EL,'ON') && strcmp(obj.SysEffect.RF_BF,'ON') && strcmp(obj.SysEffect.RF_RX,'ON') % all RF Effects ON
                 %all 'ON'
                 obj.ComputeCM_RF;
-                CovMatFracCombi = obj.MultiCovMatFrac.CM_RF;
+                CovMatFracCombi = obj.MultiCovMatFrac.CM_RF;%(1:obj.StudyObject.nqU,1:obj.StudyObject.nqU);
                 if strcmp(PlotSaveCM,'ON')
                     obj.PlotCM('PlotEffect','Response Function (all)','savePlot','ON','savename',SysBudget_Label);
                 end
@@ -3821,7 +3842,7 @@ end
                 end
             end
             
-          %   obj.nTrials = 5000;
+            obj.nTrials = nTrials;
             %% FSD   
             if strcmp(obj.SysEffect.FSD,'ON')
                 obj.ComputeCM_FSD;

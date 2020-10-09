@@ -1,10 +1,10 @@
 % Fit KNM2 alternative runlist
 
 freePar = 'mNu E0 Bkg Norm';
-DataType = 'Twin';
+DataType = 'Real';
 RunList = 'KNM2_Prompt';
 range = 40;                % fit range in eV below endpoint
-AltPixList = 'Half';%'AziHalfEW';  % defines alternative pixel list
+AltPixList ='AziHalfNS';%'Half';%'AziHalfEW';  % defines alternative pixel list
 RecomputeFlag = 'OFF';
 
 % label
@@ -16,19 +16,22 @@ if exist(savename,'file') && strcmp(RecomputeFlag,'OFF')
     load(savename);
 else
     E0 = knm2FS_GetE0Twins('SanityPlot','OFF');
+        SigmaSq =  0.0124+0.0025;
     RunAnaArg = {'RunList',RunList,...     % define run number -> see GetRunList
         'fixPar',freePar,...               % free Parameter !!
         'DataType',DataType,...            % Real, Twin or Fake
         'FSDFlag','BlindingKNM2',...       % final state distribution (theoretical calculation)
-        'ELossFlag','KatrinT2',...         % energy loss function     ( different parametrizations available)
+        'ELossFlag','KatrinT2A20',...         % energy loss function     ( different parametrizations available)
         'AnaFlag','StackPixel',...         % FPD segmentations -> pixel combination
         'chi2','chi2Stat',...              % statistics only
-        'NonPoissonScaleFactor',1,...
+        'NonPoissonScaleFactor',1.112,...
         'MosCorrFlag','OFF',...
-        'TwinBias_Q',E0,...
-        'ROIFlag','14keV',...
+          ...% 'TwinBias_Q',E0,...
+        ...%'ROIFlag','14keV',...
         'DopplerEffectFlag','FSD',...
-        'RingMerge',AltPixList};
+        'RingMerge',AltPixList,...
+        'FSD_Sigma',sqrt(SigmaSq),...
+        'TwinBias_FSDSigma',sqrt(SigmaSq)};
     
     M = MultiRunAnalysis(RunAnaArg{:});          % init model, read data
     M.exclDataStart = M.GetexclDataStart(range); % set fit range

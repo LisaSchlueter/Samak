@@ -328,7 +328,7 @@ classdef FITC < handle
             Normtol=0.0017;        % normalization tolerance from ring to ring
             qUOffsettol = 10;     % qUOffset absolute tolerance (eV)
             qUmeanOffsettol = 0.5;  % qUOffset tolerance from ring to ring (eV)
-            BkgSlopetol = 5*1e-6; % background slope constrain (cps/eV)
+            BkgSlopetol = 4.74.*1e-06;%5*1e-6; % background slope constrain (cps/eV)
             mNuSqtol = 1;         % neutrino mass pull tolerance (eV^2)
             mTSqtol = 1;          % tachyonic neutrino mass (nu-mass offset) from ring to ring (eV^2)
             sin2T4tol = 0.5;
@@ -417,7 +417,7 @@ classdef FITC < handle
                     (par(1)-0)^2/1^2;                                      % nu-mass
             end
             
-            if any(ismember(obj.pullFlag,10))
+            if any(ismember(obj.pullFlag,10))   %  background slope constrain with variable sigma
                 PullTerm = PullTerm + par(3*obj.SO.nPixels+9)^2/obj.pulls.^2;
             end
             
@@ -433,6 +433,62 @@ classdef FITC < handle
             if any(ismember(obj.pullFlag,12)) % nu-mass pull: mainz&troitzk
                 mNuSqtol_MT =  1.94; % eV^2
                 PullTerm = PullTerm + (par(1)-0)^2/mNuSqtol_MT^2;
+            end
+            
+            if  any(ismember(obj.pullFlag,13)) % E0 pull: 1 eV
+                E0tol1eV =  1; % eV
+                PullTerm = PullTerm + (par(2)-0)^2/E0tol1eV^2;
+            end
+            
+            if  any(ismember(obj.pullFlag,14)) % E0 pull: 2 eV
+                E0tol2eV =  2; % eV
+                PullTerm = PullTerm + (par(2)-0)^2/E0tol2eV^2;
+            end
+            
+            if any(ismember(obj.pullFlag,15)) % nu-mass pull: 1 eV^2
+                mNuSqtol =  1; % eV^2
+                PullTerm = PullTerm + (par(1)-0)^2/mNuSqtol^2;
+            end
+            
+            if any(ismember(obj.pullFlag,16)) % nu-mass pull: 2 eV^2
+                mNuSqtol =  2; % eV^2
+                PullTerm = PullTerm + (par(1)-0)^2/mNuSqtol^2;
+            end
+            
+            if any(ismember(obj.pullFlag,17)) % nu-mass pull: 3 eV^2
+                mNuSqtol =  3; % eV^2
+                PullTerm = PullTerm + (par(1)-0)^2/mNuSqtol^2;
+            end
+            
+            if any(ismember(obj.pullFlag,18)) % nu-mass pull: 3 eV^2
+                mNuSqtol =  0.5; % eV^2
+                PullTerm = PullTerm + (par(1)-0)^2/mNuSqtol^2;
+            end
+            
+            if any(ismember(obj.pullFlag,19)) % non-sense sterile pull
+                sin4Up = 0.125;
+                m4Up   = 10;
+                PullTerm = PullTerm + ...
+                    exp(1e2*(par(4*obj.SO.nPixels+12)-(sin4Up+1e-02))) + ...  % sin2t4 upper bound
+                    exp(-1e2*(par(4*obj.SO.nPixels+12)+1e-02)) + ...          % sin2t4 lower bound -> 0
+                    exp(1e2*(par(4*obj.SO.nPixels+11)-m4Up-0.1)) + ...        % mSq4 lower bound
+                    exp(-1e2*(par(4*obj.SO.nPixels+11)+0.1));                % mSq4 upper bound
+            end
+            
+            if any(ismember(obj.pullFlag,20)) % non-sense sterile pull II
+                sin4Central = 0; sin4Tol = 0.125;
+                m4Central = 0;   m4Tol   = 10;
+                PullTerm = PullTerm + ...
+                    (par(4*obj.SO.nPixels+12)-sin4Central).^2./sin4Tol^2+...  % sin2t4
+                    (par(4*obj.SO.nPixels+11)-m4Central).^2./m4Tol^2;         % m4
+            end
+            
+            if any(ismember(obj.pullFlag,21)) % Neutrino 4 sterile pull
+                sin4Central = 0.38; sin4Tol = 0.11;
+                m4Central   = 7.26; m4Tol   = 0.7;
+                PullTerm = PullTerm + ...
+                    (par(4*obj.SO.nPixels+12)-sin4Central).^2./sin4Tol^2+...  % sin2t4
+                    (par(4*obj.SO.nPixels+11)-m4Central).^2./m4Tol^2;         % m4
             end
         end
         function chi2 = chi2function(obj,par)
@@ -1009,6 +1065,8 @@ classdef FITC < handle
             AllParameters = 1:nFitPar;
             if nFitPar    == 14  % Uniform - m2,E0,N,B
             AllLabels     = {'m^2 (eV^2)' ,'E_0 (eV)' ,'B (cps)' ,'N','Pgs_{DT}','Pes_{DT}','Pgs_{HT}','Pes_{HT}','Pgs_{TT}','Pes_{TT}','qUoffset','12','13','14'};
+            elseif nFitPar    == 16  % Uniform - m2,E0,N,B
+            AllLabels     = {'m^2 (eV^2)' ,'E_0 (eV)' ,'B (cps)' ,'N','Pgs_{DT}','Pes_{DT}','Pgs_{HT}','Pes_{HT}','Pgs_{TT}','Pes_{TT}','qUoffset','12','13','14','m_4^2 (eV^2)','sint4^2'};
             elseif nFitPar== 18  % MultiRing 4 - m2,E0,N,B
             AllLabels     = {'m^2 (eV^2)' ,'E_0 (eV)', 'B1 (cps)', 'B2 (cps)' , 'N1', 'N2', 'Pgs_{DT}','Pes_{DT}','Pgs_{HT}','Pes_{HT}','Pgs_{TT}','Pes_{TT}','qUoffset1','qUoffset2','Bslope','mTSq1','mTSq2','T-'};
             elseif nFitPar== 26  % MultiRing 4 - m2,E0,N,B
@@ -1475,7 +1533,7 @@ classdef FITC < handle
                 s(counter)=subplot(numel(obj.MaskFreeFitPar),1,counter);
                 %                p=plot([round(obj.DATA(obj.exclDataStart:end,1)-obj.SO.Q_i,1)],diffxi(counter,:)+BestFitCoeff(k),...
                 %                    's:','MarkerSize',10,'LineWidth',2,'MarkerFaceColor',rgb('Amethyst'));
-                p=plot(round(obj.qUdata(exclIndex)-obj.SO.Q_i,1),diffxi(counter,:)+BestFitCoeff(k),'s:','MarkerSize',10,'LineWidth',2,'MarkerFaceColor',rgb('Amethyst'));
+                p=plot(round(obj.qUdata(exclIndex)-obj.SO.Q_i,1),diffxi(counter,:)+BestFitCoeff(k),'.:','MarkerSize',20,'LineWidth',2);
                 hold on
 %                 l=line([ min(round(obj.DATA(obj.exclDataStart:end,1)-obj.SO.Q_i,1)) max(round(obj.DATA(obj.exclDataStart:end,1)-obj.SO.Q_i,1))],...
 %                     [BestFitCoeff(k),BestFitCoeff(k)],...

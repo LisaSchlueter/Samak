@@ -576,7 +576,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
             obj.TTexE = obj.TTexE';
             obj.TTexP = (ttfsdfile(TTexE_index,2))';
             
-            if ~isempty(Sigma)   %broaden FSDs
+            if ~isempty(Sigma)   % broaden FSDs
                 [obj.TTexE,obj.TTexP] = FSD_Convfun(obj.TTexE,obj.TTexP,...
                     squeeze(Sigma(1,:,:)),...
                     FSDConvArg{:},'SanityPlot',SanityPlot,'ZoomPlot',ZoomPlot,...
@@ -1891,7 +1891,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
 %                     CorrectionRhoD = CorrectionRhoD./CorrectionRhoD;
                     CorrectionRhoD=1;
                     obj.NormFactorTBDDS = obj.TdecayC ...
-                        .*(2*pi*obj.WGTS_FTR_cm^2*obj.WGTS_CD_MolPerCm2.*CorrectionRhoD) ...% mol tritium atoms
+                        .*(pi*obj.WGTS_FTR_cm^2*2*obj.WGTS_CD_MolPerCm2.*CorrectionRhoD) ...% mol tritium atoms
                         .*0.5*(1-cos(asin(sqrt(obj.WGTS_B_T./obj.MACE_Bmax_T)))) ...
                         .*(obj.FPD_MeanEff*obj.FPD_Coverage)...
                         .*obj.CumFrac*obj.WGTS_epsT .* numel(obj.FPD_PixList)/148;
@@ -1899,9 +1899,9 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
 %fprintf(2,'\n \n RhoD Fit %.3f \n\n',obj.WGTS_CD_MolPerCm2);
                 case 'RING'
                     nPix = cell2mat(cellfun(@(x) numel(x),obj.FPD_RingPixList,'UniformOutput',false)');
-                    if strcmp(obj.FPD_RingMerge,'None')
-                        nPix(~ismember(obj.FPD_RingPixList))=[];
-                    end
+%                     if strcmp(obj.FPD_RingMerge,'None')
+%                         nPix(~ismember(obj.FPD_RingPixList))=[];
+%                     end
                         obj.NormFactorTBDDS = obj.TdecayC ...
                         .*(2*pi*obj.WGTS_FTR_cm^2*obj.WGTS_CD_MolPerCm2) ...% mol tritium atoms
                         .*0.5*(1-cos(asin(sqrt(obj.WGTS_B_T./obj.MACE_Bmax_T)))) ...
@@ -1988,7 +1988,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
         end
         
         % Plots / Display
-        function          PlotTBDDS(obj,varargin)
+        function           h  = PlotTBDDS(obj,varargin)
             
             p = inputParser;
             p.addParameter('fign',999,@(x)isfloat(x) && x>0);

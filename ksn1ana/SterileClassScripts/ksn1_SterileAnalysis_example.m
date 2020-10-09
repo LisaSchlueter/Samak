@@ -84,5 +84,5 @@ if S.range==95 && strcmp(S.RunAnaObj.DataType,'Real')
 else
       S.InterpMode = 'spline';
 end
-S.PlotFitriumSamak;
+%S.PlotFitriumSamak;
 

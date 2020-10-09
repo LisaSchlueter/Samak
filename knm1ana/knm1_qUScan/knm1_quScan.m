@@ -1,12 +1,12 @@
 qURange  = [95,20];
 RunList = 'KNM1';
 DataType = 'Real';
-chi2 = 'chi2Stat';
+chi2 = 'chi2CMShape';
 SysBudet = 22;
 fixPar = 'mNu E0 Norm Bkg';% free par
 FSDFlag       = 'SibilleFull';
-ELossFlag     = 'KatrinT2';
-AngularTFFlag = 'OFF';
+ELossFlag     = 'KatrinT2A20';
+AngularTFFlag = 'ON';
 
 M = MultiRunAnalysis('RunList',RunList,...
     'chi2','chi2Stat',...

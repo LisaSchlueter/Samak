@@ -1,11 +1,8 @@
 % plot script for KSN1 sterile contour plot
 % Lisa, April 2020
 %% settings
-%Nathan = 'OFF'; % compare with nathan
 Fitrium = 'ON';
-% Giunti = 'OFF';
-% Troitsk = 'OFF';
-CL = [95];%, 95 99];
+CL = [95];
 SavePlot = 'ON';
 PlotSplines = 'ON'; % plot smooth spline instead of points -> fails for closed contours
 range = 95;%
@@ -145,31 +142,3 @@ if strcmp(SavePlot,'ON')
     fprintf('save plot to %s \n',plotname);
 end
 
-
-%% 
-% giunti
-% if strcmp(Giunti,'ON')
-%     legStr = [legStr,{'Giunti'}];
-%     giuntifile = sprintf('%sOthers/coord_Giunti.mat',savedir);
-%     try
-%         dG = importdata(giuntifile);
-%         hold on;
-%         pGiunti = plot(dG.sith4_X.^2,dG.m4_Y.^2,'-.','LineWidth',2);
-%     catch
-%         fprintf('giunti file %s not available \n',giuntifile)
-%     end
-% end
-% 
-% % troitsk
-% if strcmp(Troitsk,'ON')
-%     legStr = [legStr,{'Troitsk'}];
-%     troitskfile = sprintf('%sOthers/coord_troitsk.mat',savedir);
-%     try
-%         dT = importdata(troitskfile);
-%         hold on;
-%         pT = plot(dT.sith4_X.^2,dT.m4_Y.^2,'--','LineWidth',2);
-%     catch
-%         fprintf('trotsk file %s not available \n',nathanfile)
-%     end
-%     
-% end

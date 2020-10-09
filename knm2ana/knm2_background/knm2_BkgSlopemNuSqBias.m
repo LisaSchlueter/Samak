@@ -3,7 +3,7 @@
 range = 40;
 NonPoissonScaleFactor = 1.112;
 MC_BkgSlope = [0,5,10,15,20].*1e-06;
-SigmaBkgSlope = 14.3*1e-06;
+SigmaBkgSlope = 14.3*1e-06;%4.74.*1e-06;%
 SavePlot = 'ON';
 
 %% init
@@ -22,7 +22,7 @@ MakeDir(savedir);
 
 for i=1:numel(MC_BkgSlope)
     progressbar(i/numel(MC_BkgSlope));
-    savename = sprintf('%sknm2_BkgSlopemNuSqBias_Bslope%.0fmcpsKeV_NPfactor%.2f_%.0feV.mat',savedir,MC_BkgSlope(i)*1e6,NonPoissonScaleFactor,range);
+    savename = sprintf('%sknm2_BkgSlopemNuSqBias_Bslope%.0fmcpsKeV_NPfactor%.2f_%.0feV_BkgSlopeSigma%.1f.mat',savedir,MC_BkgSlope(i)*1e6,NonPoissonScaleFactor,range,1e6*SigmaBkgSlope);
     if exist(savename,'file')
         d = importdata(savename);
         mNuSqStat(i)        = d.FitResults_mNuSqBkgFixStat.par(1);
@@ -107,7 +107,7 @@ for i=1:numel(MC_BkgSlope)
         mNuSqErrStat(i)        = 0.5*(-FitResults_mNuSqBkgFixStat.errNeg(1)+FitResults_mNuSqBkgFixStat.errPos(1));
         mNuSqErrBkgFree(i)     = 0.5*(-FitResults_mNuSqBkgFree.errNeg(1)+FitResults_mNuSqBkgFree.errPos(1));
         mNuSqErrBkgFreePull(i) = 0.5*(-FitResults_mNuSqBkgFreePull.errNeg(1)+FitResults_mNuSqBkgFreePull.errPos(1));
-        mNuSqErrBkgFixCM(i)    = 0.5*(-FitResults_mNuSqBkgFixCM.errNeg(1)+FitResults_mNuSqBkgFixCM.errPos(1));
+        mNuSqErrBkgFixCM(i)    = 0.5*(-FitResults_BkgFixCM.errNeg(1)+FitResults_BkgFixCM.errPos(1));
     end
 end
 
@@ -139,7 +139,7 @@ if strcmp(SavePlot,'ON')
     MakeDir(plotdir)
     plotname = sprintf('%sknm2_BkgSlopemNuSqBias.pdf',plotdir);
     export_fig(plotname);
-    plotnamePNG = sprintf('%sknm2_BkgSlopemNuSqBias.png',plotdir);
+    plotnamePNG = sprintf('%sknm2_BkgSlopemNuSqBias_BkgSlopeSigma%.1f.png',plotdir,BkgPullSigma*1e6);
     print(plotnamePNG,'-dpng','-r500')
     fprintf('save plot to %s \n',plotname)
 end
@@ -171,7 +171,7 @@ if strcmp(SavePlot,'ON')
     MakeDir(plotdir)
     plotname2 = sprintf('%sknm2_BkgSlopemNuSqBias_Sensitivity.pdf',plotdir);
     export_fig(plotname2);
-    plotname2PNG = sprintf('%sknm2_BkgSlopemNuSqBias_Sensitivity.png',plotdir);
+    plotname2PNG = sprintf('%sknm2_BkgSlopemNuSqBias_Sensitivity_BkgSlopeSigma%.1f.png',plotdir,BkgPullSigma*1e6);
     print(plotname2PNG,'-dpng','-r500')
     fprintf('save plot to %s \n',plotname)
 end

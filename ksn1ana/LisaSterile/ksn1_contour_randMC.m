@@ -8,7 +8,11 @@ DataType = 'Twin';
 freePar = 'E0 Bkg Norm';
 RunList = 'KNM1';
 SmartGrid = 'OFF';
-Mode = 'New';
+Mode = 'New';%_Sterile';
+Twin_mNu4Sq   = 0;%1e2;
+Twin_sin2T4   = 0;%0.06;
+
+extraStr = '';
 switch Mode
     case 'Old'
         RandMC = [1:151,500:643]*1e3;
@@ -20,8 +24,12 @@ switch Mode
         elseif range==65
             RandMC = [1:654,868:931,1219:1500];
         elseif range==40
-            RandMC = [1:411,500:583,629:914];
+            RandMC = 1:2000;
         end
+    case 'New_Sterile'
+        SysBudget =24;    
+        RandMC = 1:1000;  
+        extraStr = sprintf('_m4Sq%.0feV2_sin2t4%.2f',Twin_mNu4Sq,Twin_sin2T4);
 end
 %% init
 nContours = numel(RandMC);
@@ -50,7 +58,9 @@ for i=RandMC
         'SmartGrid',SmartGrid,...
         'RecomputeFlag','OFF',...
         'RandMC',i,...
-        'SysBudget',SysBudget);
+        'SysBudget',SysBudget,...
+        'Twin_mNu4Sq',Twin_mNu4Sq,...
+        'Twin_sin2T4',Twin_sin2T4);
     
     chi2tmp   = chi2{i};
 
@@ -61,7 +71,7 @@ for i=RandMC
     [row, col] = find(chi2tmp == min(chi2tmp(:)));
     mnu4Sq_bf(i) =  mnu4Sqtmp(col,row);
     sin2T4_bf(i)  = sin2T4tmp(col,row);
-    chi2min_bf(i) =min(chi2tmp(:));
+    chi2min_bf(i) = min(chi2tmp(:));
     chi2min_null(i) = FitResults_Null.chi2min;
     DeltaChi2(i) = chi2min_null(i)-min(min(chi2tmp));
 end
@@ -135,7 +145,7 @@ title(sprintf('Significant best fits (%.2f \\pm %.2f)%% ',...
     'FontSize',get(gca,'FontSize'));
 plotdir = strrep(extractBefore(savefile{200},'KSN1'),'results','plots');
 MakeDir(plotdir);
-plotname = sprintf('%sRandMC_BestFits_%.0feV_%.0fsamples.png',plotdir,range,numel(RandMC));
+plotname = sprintf('%sRandMC_BestFits_%.0feV%s_%.0fsamples.png',plotdir,range,extraStr,numel(RandMC));
 print(gcf,plotname,'-dpng','-r450');
 fprintf('save plot to %s \n',plotname);
 export_fig(gcf,strrep(plotname,'.png','.pdf'));
@@ -159,7 +169,7 @@ legend([pTheo,pEmp],sprintf(' \\chi^2 distribution with %.0f dof',dof),...
     sprintf(' Empirical distribution (%.0f samples)',numel(chi2min)),...
     'EdgeColor',rgb('Silver'),'Location','southeast');
 ylim([-0.05 1.05])
-plotnameChi2KS = sprintf('%sRandMC_Chi2DistKSTest_%.0feV_%.0fsamples.png',plotdir,range,numel(RandMC));
+plotnameChi2KS = sprintf('%sRandMC_Chi2DistKSTest_%.0feV%s_%.0fsamples.png',plotdir,range,extraStr,numel(RandMC));
 print(gcf,plotnameChi2KS,'-dpng','-r450');
 fprintf('save plot to %s \n',plotnameChi2KS);
 export_fig(gcf,strrep(plotnameChi2KS,'.png','.pdf'));
@@ -179,7 +189,7 @@ leg = legend([hchi2,pchi2],sprintf('%.0f pseudo-experiments',numel(chi2min_bf)),
                  sprintf('\\chi^2 distribution for %.0f dof',dof),...
                  'EdgeColor',rgb('Silver'));
 xlim([0 70]);
-plotnameChi2 = sprintf('%sRandMC_BestFitsChi2Dist_%.0feV_%.0fsamples.png',plotdir,range,numel(RandMC));
+plotnameChi2 = sprintf('%sRandMC_BestFitsChi2Dist_%.0feV%s_%.0fsamples.png',plotdir,range,extraStr,numel(RandMC));
 print(gcf,plotnameChi2,'-dpng','-r450');
 fprintf('save plot to %s \n',plotnameChi2);
 export_fig(gcf,strrep(plotnameChi2,'.png','.pdf'));
@@ -213,7 +223,7 @@ legend([p95,pchi2Theo,pchi2,],sprintf('95%% quantile'),...
 t = title(sprintf('\\Delta\\chi^2 = \\chi^2_{null} - \\chi^2_{min} '),'FontWeight','normal','FontSize',get(gca,'FontSize'));
 set(gca,'XMinorTick','on');
 set(gca,'YMinorTick','on');
-plotnameChi2crit = sprintf('%sRandMC_DeltaChi2Crit_%.0feV_%.0fsamples.png',plotdir,range,numel(RandMC));
+plotnameChi2crit = sprintf('%sRandMC_DeltaChi2Crit_%.0feV%s_%.0fsamples.png',plotdir,range,extraStr,numel(RandMC));
 print(gcf,plotnameChi2crit,'-dpng','-r450');
 fprintf('save plot to %s \n',plotnameChi2crit);
 export_fig(gcf,strrep(plotnameChi2crit,'.png','.pdf'));

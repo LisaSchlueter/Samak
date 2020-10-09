@@ -31,6 +31,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
         KTFFlag;
         DopplerEffectFlag; 
         FSDFlag         % final state distributions: Sibille, Sibille0p5eV, BlindingKNM1, OFF ...
+        FSD_Sigma;
         SynchrotronFlag;
         AngularTFFlag;
         ROIFlag;        % region of interest
@@ -113,7 +114,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
         TwinBias_mnuSq;             % absolute value for neutrino mass
         TwinBias_Q;                 % absolute value for endpoint or 'Fit' -> take fit value      
         FitNBFlag;                  % use normlization and background from fit
-        
+        TwinBias_FSDSigma;          % broadening of fsd in eV
         TwinFakeLabel;               % for labeling twin or fake runs with extra info: e.g. qU-bias,...
          
         %Fake MC option
@@ -130,6 +131,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             p.addParameter('AnaFlag','StackPixel',@(x)ismember(x,{'StackPixel', 'SinglePixel', 'MultiPixel', 'Ring'}));
             p.addParameter('ELossFlag','',@(x)ismember(x,{'Aseev','Abdurashitov','CW_GLT','CW_G2LT','KatrinD2','KatrinT2','KatrinT2A20'}));%default given later
             p.addParameter('FSDFlag','Sibille0p5eV',@(x)ismember(x,{'SAENZ','BlindingKNM1','Sibille','Sibille0p5eV','OFF','SibilleFull','BlindingKNM2'}));
+            p.addParameter('FSD_Sigma',0,@(x)isfloat(x));
             p.addParameter('DopplerEffectFlag','',@(x)ismember(x,{'OFF','FSD','FSD_Knm1'}));%default given later
             p.addParameter('ROIFlag','Default',@(x)ismember(x,{'Default','14keV'})); % default->default counts in RS, 14kev->[14,32]keV ROI
             p.addParameter('MosCorrFlag','OFF',@(x)ismember(x,{'ON','OFF'}));
@@ -178,6 +180,8 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             p.addParameter('TwinBias_mnuSq',0,@(x)isfloat(x));                 % absolute (eV^2)
             p.addParameter('TwinBias_Q',18573.73,@(x)isfloat(x) || ismember(x,{'Fit'}));  % absolute (eV)
             p.addParameter('FitNBFlag','ON',@(x)ismember(x,{'ON','OFF','NormOnly'}));
+            p.addParameter('TwinBias_FSDSigma',0,@(x)isfloat(x));                 % absolute (eV)
+           
             %fake MC option
             p.addParameter('FakeInitFile','',@(x)isa(x,'function_handle') || isempty(x));
             % Efficiency Correction Applied to Data 
@@ -195,6 +199,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             obj.chi2              = p.Results.chi2;
             obj.ELossFlag         = p.Results.ELossFlag;
             obj.FSDFlag           = p.Results.FSDFlag;
+            obj.FSD_Sigma         = p.Results.FSD_Sigma;
             obj.DopplerEffectFlag = p.Results.DopplerEffectFlag;
             obj.ROIFlag           = p.Results.ROIFlag;
             obj.MosCorrFlag       = p.Results.MosCorrFlag;
@@ -241,7 +246,8 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             obj.FitNBFlag                   = p.Results.FitNBFlag;
             obj.TwinBias_mnuSq              = p.Results.TwinBias_mnuSq;
             obj.TwinBias_Q                  = p.Results.TwinBias_Q;
-           
+            obj.TwinBias_FSDSigma           = p.Results.TwinBias_FSDSigma;
+            
            if isempty(obj.TwinBias_qU) && strcmp(obj.AnaFlag,'Ring')
                 obj.TwinBias_qU = zeros(1,numel(obj.RingList));
                 obj.TwinBias_qUfrac = zeros(1,numel(obj.RingList));
@@ -272,25 +278,27 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             end
             
             % select pixels according to selected rings
-            switch obj.RingMerge
-                case 'Default'
-                    [obj.PixList,obj.RingPixList] = Ring2PixelDefCombi(obj.RingList,obj.PixList);
-                     obj.RingList = 1:10;
-                case 'None'
-                    [obj.PixList,obj.RingPixList] = Ring2Pixel(obj.RingList,obj.PixList);
-                     obj.RingList = 1:12;
-                case 'Full'
-                    [obj.PixList,obj.RingPixList] = Ring2PixelCombi(obj.RingList,obj.PixList);
-                    obj.RingList = 1:4;%1:numel();
-                case 'Half'
-                    [obj.PixList,obj.RingPixList] = Ring2PixelHalfCombi(obj.RingList,obj.PixList);
-                    obj.RingList = 1:2;
-                case 'Azi'
-                    [obj.PixList,obj.RingPixList] = AziPatch2PixelCombi(obj.RingList,obj.PixList);
-                    obj.RingList = 1:5;
-                case {'AziHalfNS','AziHalfEW'}
-                    [obj.PixList,obj.RingPixList] = AziHalfPatch2PixelCombi(obj.RingList,obj.PixList,obj.RingMerge);
-                    obj.RingList = 1:2;
+            if strcmp(obj.AnaFlag,'Ring')
+                switch obj.RingMerge
+                    case 'Default'
+                        [obj.PixList,obj.RingPixList] = Ring2PixelDefCombi(obj.RingList,obj.PixList);
+                        obj.RingList = 1:10;
+                    case 'None'
+                        [obj.PixList,obj.RingPixList] = Ring2Pixel(obj.RingList,obj.PixList);
+                        obj.RingList = 1:12;
+                    case 'Full'
+                        [obj.PixList,obj.RingPixList] = Ring2PixelCombi(obj.RingList,obj.PixList);
+                        obj.RingList = 1:4;%1:numel();
+                    case 'Half'
+                        [obj.PixList,obj.RingPixList] = Ring2PixelHalfCombi(obj.RingList,obj.PixList);
+                        obj.RingList = 1:2;
+                    case 'Azi'
+                        [obj.PixList,obj.RingPixList] = AziPatch2PixelCombi(obj.RingList,obj.PixList);
+                        obj.RingList = 1:5;
+                    case {'AziHalfNS','AziHalfEW'}
+                        [obj.PixList,obj.RingPixList] = AziHalfPatch2PixelCombi(obj.RingList,obj.PixList,obj.RingMerge);
+                        obj.RingList = 1:2;
+                end
             end
             
             obj.nRings = numel(obj.RingPixList);
@@ -478,7 +486,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                         %Set time to average per ring
                         obj.RunData.TimeperSubRun = cell2mat(cellfun(@(x) mean(obj.RunData.TimeperSubRunperPixel(:,x),2),obj.RingPixList,'UniformOutput',false)');
                         if strcmp(obj.RingMerge,'None')
-                            obj.RunData.TimeperSubRun(:,~ismember(1:13,obj.RingList)) = []; %truncate
+                            %obj.RunData.TimeperSubRun(:,~ismember(1:13,obj.RingList)) = []; %truncate
                         end
                         obj.RunData.TimeSec       = sum(obj.RunData.TimeperSubRun);
                         obj.RunData.qUfrac        = obj.RunData.TimeperSubRun./obj.RunData.TimeSec;% warning -> should not be 1, because of RM point
@@ -499,12 +507,12 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                         
                         % delete not used rings (otherwise problems with NaN)
                         if strcmp(obj.RingMerge,'None')
-                            obj.RunData.qU(:,~ismember(1:13,obj.RingList)) = [];
-                            obj.RunData.EffCorr(:,~ismember(1:13,obj.RingList)) = [];
-                            obj.RunData.TBDIS(:,~ismember(1:13,obj.RingList)) = [];
-                            obj.RunData.TBDISE(:,~ismember(1:13,obj.RingList)) = [];
-                            obj.RunData.MACE_Ba_T(~ismember(1:13,obj.RingList)) = [];
-                            obj.RunData.MACE_Bmax_T(~ismember(1:13,obj.RingList)) = [];
+%                             obj.RunData.qU(:,~ismember(1:13,obj.RingList)) = [];
+%                             obj.RunData.EffCorr(:,~ismember(1:13,obj.RingList)) = [];
+%                             obj.RunData.TBDIS(:,~ismember(1:13,obj.RingList)) = [];
+%                             obj.RunData.TBDISE(:,~ismember(1:13,obj.RingList)) = [];
+%                             obj.RunData.MACE_Ba_T(~ismember(1:13,obj.RingList)) = [];
+%                             obj.RunData.MACE_Bmax_T(~ismember(1:13,obj.RingList)) = [];
                         end
                         
                         if isfield(obj.RunData,'TBDIS_V')
@@ -732,7 +740,8 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                 'KTFFlag',obj.KTFFlag,...
                 'NIS',NIS,...
                 'SynchrotronFlag',obj.SynchrotronFlag,...
-                'AngularTFFlag',obj.AngularTFFlag};
+                'AngularTFFlag',obj.AngularTFFlag,...
+                'FSD_Sigma',obj.FSD_Sigma};
             
             if ~isempty(qU)
                 TBDarg = {TBDarg{:},'qU',qU};
@@ -875,12 +884,15 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             p.addParameter('RunLabel',numel(obj.RunList));
             p.addParameter('ErrorBarScaling',50,@(x)isfloat(x)); % limits for norm. residuals
             p.addParameter('Style','PRD',@(x)ismember(x,{'Reg','PRD'}));
+            p.addParameter('TickDir','Out',@(x)ismember(x,{'In','Out'}));
+
             p.parse(varargin{:});
-            saveplot = p.Results.saveplot;
-            scale = p.Results.scale;
-            RunLabel = p.Results.RunLabel;
-            Style    = p.Results.Style;
-            obj.ErrorBarScaling= p.Results.ErrorBarScaling;
+            saveplot            = p.Results.saveplot;
+            scale               = p.Results.scale;
+            RunLabel            = p.Results.RunLabel;
+            Style               = p.Results.Style;
+            TickDir             = p.Results.TickDir;
+            obj.ErrorBarScaling = p.Results.ErrorBarScaling;
 
             switch obj.chi2
                 case {'chi2Stat','chi2P'}
@@ -895,35 +907,37 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             fig6 = figure(6);
             set(fig6, 'Units', 'normalized', 'Position', [0., 0.1, 0.75 , 0.8]);
            
-            AxisLabelFontSize = 32;
+            AxisLabelFontSize = 35;
             LocalFontSize = 27;
             
            % best fit
-            [lmodel, ~]= boundedline(obj.ModelObj.qU-obj.ModelObj.Q_i,...
-                obj.ModelObj.TBDIS./obj.ModelObj.qUfrac./obj.ModelObj.TimeSec,...
-                sqrt(diag(PlotCM))./obj.ModelObj.qUfrac./obj.ModelObj.TimeSec,...
+            [lmodel, ~]= boundedline(obj.ModelObj.qU(obj.exclDataStart:end),...
+                obj.ModelObj.TBDIS(obj.exclDataStart:end)./obj.ModelObj.qUfrac(obj.exclDataStart:end)./obj.ModelObj.TimeSec,...
+                sqrt(diag(PlotCM((obj.exclDataStart:end),(obj.exclDataStart:end))))...
+                ./obj.ModelObj.qUfrac(obj.exclDataStart:end)./obj.ModelObj.TimeSec,...
                 'alpha','cmap',rgb('DodgerBlue'));
             lmodel.LineWidth= 3;
             lmodel.LineStyle='-'; %legend hide
             hold on;
 
              % Background Line
-            [lbkg, ~]= boundedline(obj.ModelObj.qU-obj.ModelObj.Q_i,...
-                obj.ModelObj.BKG_RateSec./obj.ModelObj.qUfrac.*obj.ModelObj.qUfrac,...
-                obj.FitResult.err(3)./obj.ModelObj.qUfrac.*obj.ModelObj.qUfrac,...
+            [lbkg, ~]= boundedline(obj.ModelObj.qU(obj.exclDataStart:end),...
+                obj.ModelObj.BKG_RateSec./obj.ModelObj.qUfrac(obj.exclDataStart:end).*obj.ModelObj.qUfrac(obj.exclDataStart:end),...
+                obj.FitResult.err(3)./obj.ModelObj.qUfrac(obj.exclDataStart:end).*obj.ModelObj.qUfrac(obj.exclDataStart:end),...
                 'alpha','cmap',rgb('IndianRed')); lbkg.LineWidth= 3;
             lbkg.LineStyle='-.'; legend hide
       
             % Tritium
-            [lsignal, ~]= boundedline(obj.ModelObj.qU-obj.ModelObj.Q_i,...
-                obj.ModelObj.TBDIS./obj.ModelObj.qUfrac./obj.ModelObj.TimeSec-obj.ModelObj.BKG_RateSec./obj.ModelObj.qUfrac.*obj.ModelObj.qUfrac,...
-                0./obj.ModelObj.qUfrac.*obj.ModelObj.qUfrac,...
+            [lsignal, ~]= boundedline(obj.ModelObj.qU(obj.exclDataStart:end),...
+                obj.ModelObj.TBDIS(obj.exclDataStart:end)./obj.ModelObj.qUfrac(obj.exclDataStart:end)./obj.ModelObj.TimeSec-...
+                obj.ModelObj.BKG_RateSec./obj.ModelObj.qUfrac(obj.exclDataStart:end).*obj.ModelObj.qUfrac(obj.exclDataStart:end),...
+                0./obj.ModelObj.qUfrac(obj.exclDataStart:end).*obj.ModelObj.qUfrac(obj.exclDataStart:end),...
                 'alpha','cmap',rgb('Orange')); lsignal.LineWidth= 3;
             lsignal.LineStyle=':'; legend hide
             
-            pdata =errorbar(obj.RunData.qU-obj.ModelObj.Q_i,...
-                obj.RunData.TBDIS./obj.ModelObj.qUfrac./obj.ModelObj.TimeSec,...
-                obj.RunData.TBDISE./obj.ModelObj.qUfrac./obj.ModelObj.TimeSec,...
+            pdata =errorbar(obj.RunData.qU(obj.exclDataStart:end),...
+                obj.RunData.TBDIS(obj.exclDataStart:end)./obj.ModelObj.qUfrac(obj.exclDataStart:end)./obj.ModelObj.TimeSec,...
+                obj.RunData.TBDISE(obj.exclDataStart:end)./obj.ModelObj.qUfrac(obj.exclDataStart:end)./obj.ModelObj.TimeSec,...
                 '.','MarkerSize',27,'MarkerEdgeColor' , rgb('Black'),'MarkerFaceColor' , rgb('Black'));
             pdata.Color =rgb('Black') ; pdata.CapSize = 0;pdata.LineStyle= 'none';pdata.LineWidth= 3;legend hide
 
@@ -937,41 +951,60 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                 end
             end
             
-            l1 = sprintf('KATRIN data with 1\\sigma error bars');
-            l2 = sprintf('Fit result with 1\\sigma uncertaintes (stat. only)');
-            axis([1.1*min(obj.ModelObj.qU-obj.ModelObj.Q) 1.1*max(obj.ModelObj.qU-obj.ModelObj.Q)  obj.ModelObj.BKG_RateSec/2 max(obj.RunData.TBDIS./obj.ModelObj.qUfrac./obj.ModelObj.TimeSec)*1.1 ]);
-            set(gca, 'YScale', scale);
+            l1 = sprintf(' KATRIN data with 1\\sigma error bars');
+            switch obj.chi2
+                case 'chi2Stat'
+                    l2 = sprintf(' Fit result with 1\\sigma uncertaintes (stat. only)');
+                otherwise
+                    l2 = sprintf(' Fit result with 1\\sigma uncertaintes (stat. and syst.)');
+            end
+             set(gca, 'YScale', scale);
             
             PRLFormat;
-            xlabel(sprintf('Retarding energy - %.1f (eV)',obj.ModelObj.Q_i));
+            xlabel(sprintf('Retarding energy (eV)'));
             ylabel('Rate (cps)');
             set(gca,'FontSize',LocalFontSize);
             set(get(gca,'XLabel'),'FontSize',AxisLabelFontSize);
             set(get(gca,'YLabel'),'FontSize',AxisLabelFontSize)
             %xlim([-100,+51]); ylim([0.1,1000]);
-            legend([pdata lmodel lbkg lsignal],l1,l2,'Background','Tritium signal','Location','northwest','Box','off'); %a.String=a.String(1:2);
+            legend([pdata lmodel lbkg lsignal],l1,l2,' Background',' Tritium signal','Location','northwest','Box','off'); %a.String=a.String(1:2);
             % set(a,'Color',rgb('White'),'Box', 'on');
-            xlim([-40 50]);
-            ylim([0.2 100]) %ylim([0.2 30]);
+          
             grid off;
             hold off;
             
+            if strcmp(TickDir,'Out')
+                set(gca,'TickDir','out');
+%               remove top and right ticks
+                a = gca;
+                set(a,'box','off','color','none')% set box property to off and remove background color
+                b = axes('Position',a.Position,...
+                    'box','on','xtick',[],'ytick',[],'LineWidth',1.5);% create new, empty axes with box but without ticks
+                axes(a)% set original axes as active
+                linkaxes([a b]) % link axes in case of zooming
+            end
+             axis([0.9999*obj.ModelObj.qU(obj.exclDataStart) 1.0001*max(obj.ModelObj.qU)  obj.ModelObj.BKG_RateSec/2 max(obj.RunData.TBDIS./obj.ModelObj.qUfrac./obj.ModelObj.TimeSec)*1.1 ]);
+            ax = gca;
+            ax.XAxis.Exponent = 0;
+                 
+            %xlim([-40 50]);
+            ylim([0.2 100]) %ylim([0.2 30]);
             % zoomPlot to highlight a portion of the major plot
-                [~,~] = zoomPlotError(obj.RunData.qU-obj.ModelObj.Q,...
+            [~,~] = zoomPlotError(obj.RunData.qU,...
                 obj.RunData.TBDIS./obj.ModelObj.qUfrac./obj.ModelObj.TimeSec,...
                 obj.RunData.TBDISE./obj.ModelObj.qUfrac./obj.ModelObj.TimeSec,...
-               [-25 5],[0.4 0.33 0.45 0.45],[]);%[-25 5],[0.5 0.35 0.35 0.5],[]);
+               [obj.ModelObj.Q_i-25 obj.ModelObj.Q_i+5],[0.4 0.33 0.45 0.45],[]);%[-25 5],[0.5 0.35 0.35 0.5],[]);
           
             hold on;
             % best fit
-            [lzoomBestFit,~] = boundedline(obj.ModelObj.qU-obj.ModelObj.Q_i,...
+            [lzoomBestFit,~] = boundedline(obj.ModelObj.qU,...
                 obj.ModelObj.TBDIS./obj.ModelObj.qUfrac./obj.ModelObj.TimeSec,...
                 diag(sqrt(PlotCM))./obj.ModelObj.qUfrac./obj.ModelObj.TimeSec.*1,...
                 'alpha','cmap',rgb('DodgerBlue'));
             lzoomBestFit.LineWidth = lmodel.LineWidth;
             hold on
             % data
-            zoomData=errorbar(obj.RunData.qU-obj.ModelObj.Q_i,...
+            zoomData=errorbar(obj.RunData.qU,...
                 obj.RunData.TBDIS./obj.ModelObj.qUfrac./obj.ModelObj.TimeSec,...
                 obj.RunData.TBDISE./obj.ModelObj.qUfrac./obj.ModelObj.TimeSec*obj.ErrorBarScaling,...
                 '.','MarkerSize',pdata.MarkerSize,'Color',pdata.Color);
@@ -989,15 +1022,26 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             set(gca,'TickLength',[0.01 0.01]);
             set(gca,'YTick',[0.1, 0.5, 1, 2, 3, 4, 5]);
             set(gca,'YAxisLocation','right');
-            %aZ.Title.String = ' Zoom on m_{\beta} ROI'; 
+            %aZ.Title.String = ' Zoom on m_{\beta} ROI';
             set(gca,'FontSize',LocalFontSize);
- 
-            if strcmp(saveplot,'ON') 
-                save_name = sprintf('./plots/KNM1_DataModel%s_%s-excl%u.png',num2str(obj.RunNr),obj.chi2,obj.exclDataStart);
-                export_fig(fig6,save_name,'-q101','-m3');
-                export_fig(fig6,strrep(save_name,'.png','.pdf'));
+            if strcmp(TickDir,'Out')
+                set(gca,'TickDir','out');
+%                remove top and right ticks
+                a = gca;
+                set(a,'box','off','color','none')% set box property to off and remove background color
+                b = axes('Position',a.Position,...
+                    'box','on','xtick',[],'ytick',[],'LineWidth',1.5);% create new, empty axes with box but without ticks
+                axes(a)% set original axes as active
+               % linkaxes([a b]) % link axes in case of zooming
             end
-           
+             ax = gca;
+            ax.XAxis.Exponent = 0;
+            if strcmp(saveplot,'ON')
+                save_name = sprintf('./plots/KNM1_DataModel%s_%s-excl%u.png',num2str(obj.RunNr),obj.chi2,obj.exclDataStart);
+                %export_fig(fig6,save_name,'-q101','-m3');
+                export_fig(fig6,strrep(save_name,'.png','.pdf'));
+                fprintf('save to %s \n',save_name);
+            end
           end
         function PlotDataModel_KSN1(obj,varargin)
             % Plot overlaying Data and Model - Dedicated to KSN1
@@ -1972,7 +2016,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             switch Parameter
                 case 'mNu'
                     xstr = sprintf('{{\\it m}_\\nu}^2');
-                    xUnit = sprintf('eV^2');
+                    xUnit = sprintf('eV^{ 2}');
                     ParIndex = 1;
                 case 'E0'
                     xstr = sprintf('{\\it E}_0');
@@ -1994,15 +2038,21 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             else
                 PlotStyle = {'-.','LineWidth',3,'Color',rgb('SkyBlue')};
             end
+            
+            if strcmp(obj.DataType,'Real')
+                plot(FitResult.par(ParIndex).*ones(100,1),linspace(0,1e2,1e2),':','LineWidth',2.5,'Color',rgb('Gray'))
+                hold on;
+            end
             pchi2 = plot(mypar,mychi2min,PlotStyle{:});
             hold on;
-            p1 =plot(FitResult.par(ParIndex)+ScanResult.AsymErr(1).*ones(100,1),linspace(0,1,100),...
-                ':','LineWidth',3,'Color',rgb('GoldenRod'));
-            p2 =plot(FitResult.par(ParIndex)+ScanResult.AsymErr(2).*ones(100,1),linspace(0,1,100),...
-                ':','LineWidth',3,'Color',rgb('GoldenRod'));
-            p3 = plot(linspace(ScanResult.AsymErr(2)+FitResult.par(ParIndex),...
-                ScanResult.AsymErr(1)+FitResult.par(ParIndex),100),ones(1,100),...
-                ':','LineWidth',3,'Color',rgb('GoldenRod'));
+            p1 =plot(FitResult.par(ParIndex)+ScanResult.AsymErr(1).*ones(100,1),linspace(0,100,100),...
+                ':','LineWidth',2,'Color',rgb('Gray'));
+            p2 =plot(FitResult.par(ParIndex)+ScanResult.AsymErr(2).*ones(100,1),linspace(0,100,100),...
+                ':','LineWidth',2,'Color',rgb('Gray'));
+         %   p3 = plot(linspace(ScanResult.AsymErr(2)+FitResult.par(ParIndex),...
+         %       ScanResult.AsymErr(1)+FitResult.par(ParIndex),100),FitResult.chi2min+ones(1,100),...
+         %       ':','LineWidth',2,'Color',rgb('Gray'));
+           
             PrettyFigureFormat('FontSize',24);
             xlabel(sprintf(' %s (%s)',xstr,xUnit));
             ylabel(sprintf('\\chi^2 (%.0f dof)',ScanResult.dof(1,1) - 1 ));
@@ -2017,9 +2067,11 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                 ScanResult.AsymErr(2),ScanResult.AsymErr(1),xUnit));
             leg.EdgeColor = rgb('Silver');
             leg.Location = 'northwest';
-            xlim([min(ScanResult.ParScan(:,2)),max(ScanResult.ParScan(:,1))]);
-            
-            out = {pchi2,p1,p2,p3};
+             xlim([min(ScanResult.ParScan(:,2)),max(ScanResult.ParScan(:,1))]);
+            if strcmp(obj.DataType,'Real')
+                ylim([FitResult.chi2min-1 max(max(ScanResult.chi2min))])
+            end
+            out = {pchi2,p1,p2};
         end
         function GetPlotColor(obj)
             % Real / Twin Color Flag
@@ -2059,7 +2111,8 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             p.addParameter('qUDisp','Rel',@(x)ismember(x,{'Rel','Abs'}));
             p.addParameter('ring',1,@(x)isfloat(x));
             p.addParameter('MaxBkgRange',40,@(x)isfloat(x)); %(eV) maximum range of bkg points shown
-            
+            p.addParameter('TickDir','In',@(x)ismember(x,{'In','Out'}));
+
             p.parse(varargin{:});
             saveplot       = p.Results.saveplot;
             ResidualsFlag  = p.Results.ResidualsFlag;
@@ -2074,6 +2127,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             ring           = p.Results.ring;
             DisplayMTD     = p.Results.DisplayMTD;
             MaxBkgRange    = p.Results.MaxBkgRange;
+            TickDir        = p.Results.TickDir;
             obj.ErrorBarScaling= p.Results.ErrorBarScaling;
             
            BkgEnd = find(obj.RunData.qU(:,1)>=obj.ModelObj.Q+MaxBkgRange,1);
@@ -2235,7 +2289,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                  myleg.FontSize = get(gca,'FontSize')+4;
                  mylim = ylim;
                  %    text(-57,log(mean(mylim)),'a)','FontSize',get(gca,'FontSize')+4,'FontName',get(gca,'FontName'));
-                 %text(textx,max(mylim)*0.7,'a)','FontSize',get(gca,'FontSize')+4,'FontName',get(gca,'FontName'));
+                 text(textx,max(mylim)*0.7,'a)','FontSize',get(gca,'FontSize')+4,'FontName',get(gca,'FontName'));
              elseif contains(obj.DataSet,'FirstTritium')
                  FTpaperFormat;
                  set(gca,'FontSize',LocalFontSize);
@@ -2257,7 +2311,19 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                  ax.XAxis.Exponent = 0;
              end
              
-               ax1 = gca;
+             ax1 = gca;
+             
+             if strcmp(TickDir,'Out')
+                 set(gca,'TickDir','out');
+                 ax1.Position = [ax1.Position(1) ax1.Position(2)+0.01, ax1.Position(3:4)];
+                 % remove top and right ticks
+                 a = gca;
+                 set(a,'box','off','color','none')% set box property to off and remove background color
+                 b = axes('Position',[ax1.Position(1) ax1.Position(2)+0.01, ax1.Position(3:4)],...
+                     'box','on','xtick',[],'ytick',[],'LineWidth',1.5);% create new, empty axes with box but without ticks
+                 axes(a)% set original axes as active
+                % linkaxes([a b]) % link axes in case of zooming
+             end
              %% residuals
              switch ResidualsFlag
                  case 'Norm' %normalized Residuals
@@ -2403,11 +2469,13 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                     set(gca,'TickLength',[0.01 0.01]);
                     set(gca,'FontSize',LocalFontSize);
              end
+             
              if strcmp(qUDisp,'Abs')
                  xticks(myxticks);
                  ax = gca;
                  ax.XAxis.Exponent = 0;
              end
+            
              
              if strcmp(qUDisp,'Rel')
                  xlim([min(qU)*1.04 max(qU)*1.04]);
@@ -2422,15 +2490,26 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
              set(get(gca,'YLabel'),'Position',[tmp.Position(1),tmp2.Position(2),tmp2.Position(3)]);
              ax = gca; ax2 = gca;
              mypos = ax.Position;
-             ax.Position = [mypos(1)+0.05 mypos(2)+0.01 mypos(3:4)];
+             ax.Position = [mypos(1)+0.05 mypos(2)+0.015 mypos(3:4)];
+             
+              if strcmp(TickDir,'Out')
+                 set(gca,'TickDir','out');
+                 % remove top and right ticks
+                 a = gca;
+                 set(a,'box','off','color','none')% set box property to off and remove background color
+                 b = axes('Position',ax.Position,...
+                     'box','on','xtick',[],'ytick',[],'LineWidth',1.5);% create new, empty axes with box but without ticks
+                 axes(a)% set original axes as active
+              end
+             
              linkaxes([s1,s2],'x');
-               if ~isempty(XLims)
+             if ~isempty(XLims)
                     xlim([min(XLims),max(XLims)])
                 end
              if strcmp(DisplayStyle,'PRL')  || strcmp(DisplayMTD,'ON')
                  mylim = ylim;
                  %  text(-57,mean(mylim),'b)','FontSize',get(gca,'FontSize')+4,'FontName',get(gca,'FontName'));
-                %text(textx,max(mylim)*0.65,'b)','FontSize',get(gca,'FontSize')+4,'FontName',get(gca,'FontName'));
+                text(textx,max(mylim)*0.65,'b)','FontSize',get(gca,'FontSize')+4,'FontName',get(gca,'FontName'));
                    
                  s3= subplot(4,1,4);
                  b1 = bar(qU,obj.RunData.qUfrac(obj.exclDataStart:BkgEnd,ring).*obj.RunData.TimeSec(ring)./(60*60));
@@ -2463,11 +2542,22 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                 if ~isempty(XLims)
                     xlim([min(XLims),max(XLims)])
                 end
-               % linkaxes([s1,s2,s3],'x'); 
-                mylim = ylim; 
-              %  text(-57,mean(mylim),'c)','FontSize',get(gca,'FontSize')+4,'FontName',get(gca,'FontName'));
-              %    text( textx,max(mylim)*0.8,'c)','FontSize',get(gca,'FontSize')+4,...
-               %       'FontName',get(gca,'FontName'),'FontWeight',get(gca,'FontWeight'));
+                % linkaxes([s1,s2,s3],'x');
+                mylim = ylim;
+                %  text(-57,mean(mylim),'c)','FontSize',get(gca,'FontSize')+4,'FontName',get(gca,'FontName'));
+                text( textx,max(mylim)*0.8,'c)','FontSize',get(gca,'FontSize')+4,...
+                    'FontName',get(gca,'FontName'),'FontWeight',get(gca,'FontWeight'));
+                if strcmp(TickDir,'Out')
+                    set(gca,'TickDir','out');
+                    
+                    ax1.Position = [ax1.Position(1) ax1.Position(2)+0.01, ax1.Position(3:4)];
+                    % remove top and right ticks
+                    a = gca;
+                    set(a,'box','off','color','none')% set box property to off and remove background color
+                    b = axes('Position',a.Position,...
+                        'box','on','xtick',[],'ytick',[],'LineWidth',1.5);% create new, empty axes with box but without ticks
+                    axes(a)% set original axes as active
+                end
              else
                  xlabel(xstr);
              end
@@ -2621,12 +2711,14 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                 lstat.LineStyle= '--'; lstat.Color = rgb('DarkSlateGray'); lstat.LineWidth=LocalLineWidth;
                 pstat.FaceColor = obj.PlotColorLight;
                 
-            elseif ~strcmp(obj.chi2,'chi2Stat') && numel(hdata)==1
+            elseif ~strcmp(obj.chi2,'chi2Stat') %&& numel(hdata)==1
                 DataSys = [qU,zeros(numel(qU),1), ones(numel(qU),1)];
                 [l,p] = boundedline(DataSys(:,1),DataSys(:,2),DataSys(:,3),...
                     '-b*',DataStat(:,1),DataStat(:,2),DataStat(:,3),'--ro');
                 lsys = l(1);  lstat = l(2);
                 psys = p(1);  pstat = p(2);
+                
+                pstat.FaceColor = rgb('PowderBlue');
                 if strcmp(Colors,'RGB')
                     psys.FaceColor =obj.PlotColor; %psys.FaceAlpha=0.3;
                     lstat.Color = rgb('Silver');
@@ -2638,6 +2730,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                 lsys.LineStyle= 'none';
                 lstat.LineStyle= '--';  lstat.LineWidth=LocalLineWidth;
                 lstat.Marker = 'none'; lsys.Marker = 'none';
+                 leg.FontSize = get(gca,'FontSize')+4;
             end
             
             yres = (obj.RunData.TBDIS(obj.exclDataStart:BkgEnd,r)-obj.ModelObj.TBDIS(obj.exclDataStart:BkgEnd,r))...
@@ -2648,14 +2741,20 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                 zeros(numel(qU),1),...
                 ResStyleArg{:});
             pRes.CapSize = 0;
+            
+            pleg = plot(0,0,'Color',rgb('White'));
+            
             if ~strcmp(obj.chi2,'chi2Stat')
-                leg = legend([pstat psys],sprintf('ring %0.f Stat.',r),sprintf('ring %0.f Stat. and syst.',r),'Location','Northeast'); %hsyst
+                leg = legend([pleg,pstat psys],sprintf('Pseudo-Ring %0.f',r),'Stat.',sprintf('Stat. and syst.'),'Location','Northeast'); %hsyst
             elseif strcmp(obj.chi2,'chi2Stat')
-                leg = legend(pstat,sprintf('ring %0.f Stat.',r),'Location','Northeast'); %hsyst
+                leg = legend(pleg,pstat,sprintf('Pseudo-Ring %0.f Stat.',r),'Location','Northeast'); %hsyst
             end
             legend('boxoff');
+           %leg.EdgeColor = 'none';
+           % set(leg.BoxFace, 'ColorType','truecoloralpha', 'ColorData',uint8(255*[1;1;1;0.5])); 
+
+            leg.NumColumns = 3;
             
-            leg.NumColumns = 2;
             hold off;
             % xlabel(sprintf('retarding energy - %.1f (eV)',obj.ModelObj.Q_i),'FontSize',LocalFontSize);
             if strcmp(DisplayStyle,'PRL') || strcmp(DisplayMTD,'ON')
@@ -2665,7 +2764,6 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                 else
                     PrettyFigureFormat
                 end
-                leg.FontSize = get(gca,'FontSize')+4;
                 %pstat.delete; psys.delete;
                 lstat.Color = rgb('DarkGray');
             else
@@ -2675,16 +2773,17 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                 end
             end
             
+            %leg.FontSize = 16;%get(gca,'FontSize')-2;
             ylabel(sprintf('Res. (\\sigma)'));
             if strcmp(qUDisp,'Rel')
-                xlim([floor(min(qU)) max(qU)*1.04]);
+                xlim([floor(min(qU))-4 max(qU)*1.04]);
             elseif strcmp(qUDisp,'Abs')
                 xlim([min(qU)*0.9999 max(qU)*1.0001]);
             end
             ymin = 1.1*min(yres);
-            ymax = 1.1*max(yres);
+            ymax = 1.8*max(yres);
             if ymin<=-1 || ymax<=1
-                ylim([ymin,ymax]);%ylim([-2 2])
+               ylim([-2.5 2.5]);% ylim([ymin,ymax]);%ylim([-2 2])
             else
                 ylim([ymin,ymax]);
             end
@@ -2782,6 +2881,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             end
             
             if ~strcmp(saveplot,'OFF')
+                d = obj.GetPlotDescription;
                 if strcmp(Colors,'BW')
                     savename = [d.savename,'_PSRresiduals_BW'];
                 else
@@ -3458,14 +3558,15 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             end
             
             for i=fitPar
+              
                 yErr = flip(errqU(i,:));
                 if i==1
                     y = flip(parqU(i,:));
                     if strcmp(RelFlag,'ON')
                         y = y-wmean(y,1./yErr.^2);
-                        ystr = sprintf('{\\itm}^2 - \\langle{\\itm}^2\\rangle (eV^{ 2})');
+                        ystr = sprintf('{\\itm}_\\nu^2 - \\langle{\\itm}_\\nu^2\\rangle (eV^{ 2})');
                     else
-                        ystr = sprintf('{\\itm}^2 (eV^{ 2})');
+                        ystr = sprintf('{\\itm}_\\nu^2 (eV^{ 2})');
                     end
                 elseif i==2
                     y = flip(parqU(i,:));%obj.ModelObj.Q_i-18574;
@@ -3534,15 +3635,15 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                         ColorArg = {'MarkerFaceColor',rgb('CadetBlue'),'Color',rgb('DarkCyan')};
                     else
                         hold on;
-                        ColorArg = {'MarkerFaceColor',obj.PlotColorLight,'Color',obj.PlotColorLight};
-                       % ColorArg = {'MarkerFaceColor',rgb('GoldenRod'),'Color',rgb('DarkGoldenRod')};
+                         ColorArg = {'MarkerFaceColor',obj.PlotColorLight,'Color',obj.PlotColorLight};
+                       % ColorArg = {'MarkerFaceColor',rgb('Orange'),'Color',rgb('Orange')};
                         x = x+0.5;
                     end
                     
                     
-                    if i~=5 && strcmp(CorrMean,'ON')
+                    if i~=5 && strcmp(CorrMean,'ON') && ~strcmp(HoldOn,'ON')
                         pref = plot(linspace(min(x)-3,max(x)+3,numel(x)),...
-                            Mean.*ones(numel(x),1),':','Color',rgb('Silver'),'LineWidth',3);
+                            Mean.*ones(numel(x),1),':','Color',obj.PlotColor,'LineWidth',3); %rgb('Silver')
                         hold on
                     elseif ~strcmp(RefLine,'OFF')
                         % reference line with respect to certain range
@@ -3592,7 +3693,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                         legstr ='Fit (Stat only)';
                     end
                     
-                    if i~=5 && strcmp(CorrMean,'ON')
+                    if i~=5 && strcmp(CorrMean,'ON') && ~strcmp(HoldOn,'ON')
                         leg = legend([e1,pref],legstr,'correlated weighted mean');
                     elseif ~strcmp(RefLine,'OFF')
                          leg = legend([e1,pref],legstr,sprintf('%.0f eV range',x(RefIndex)));
@@ -3920,6 +4021,9 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                 else
                     % if nothing of the above: do not specify name further
                 end
+                 if obj.TwinBias_FSDSigma~=0
+                    str_bias = [str_bias,sprintf('_FSDsigma%.3geV',obj.TwinBias_FSDSigma)];
+                 end
                 
                 if ~strcmp(obj.KTFFlag,'WGTSMACE')
                     str_bias = [str_bias,'_',obj.KTFFlag];
@@ -3950,6 +4054,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                     str_Timebias = sprintf('_%.0fs-Time',obj.TwinBias_Time); %when all the same
                     filename = [filename,str_Timebias]; 
                 end
+                
                 
                 obj.TwinFakeLabel = filename;
             else
@@ -4011,7 +4116,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
         function [TTFSD,DTFSD,HTFSD] = SetDefaultFSD(obj)
             
             % KNM2 blinding: force blind FSDs for all KNM2 analysis
-            if strcmp(obj.DataSet,'Knm2')
+            if strcmp(obj.DataSet,'Knm2') && ~strcmp(obj.DataType,'Fake')
                 obj.FSDFlag =  'BlindingKNM2';
             end
             
@@ -4224,7 +4329,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                 case 'Norm'
                     y    = obj.FitResult.par(3+obj.nRings:3+2*obj.nRings-1)+1;
                     yErr = obj.FitResult.err(3+obj.nRings:3+2*obj.nRings-1);
-                    ystr = 'Signal normalization factor';
+                    ystr = sprintf('N_{sig}');%'Signal normalization factor';
                     legPos = 'northeast';
                 case 'mTSq'
                     if strcmp(Blind,'ON')
@@ -4265,12 +4370,15 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             % set nice limits
             xlim([min(obj.RingList)-0.2,max(obj.RingList)+0.2]);
             ymin = min(y-yErr);
-            if ymin<0
-                ylim([ymin*1.2,max(y+yErr)*1.5]);
-            else
-                ylim([ymin*0.8,max(y+yErr)*1.5]);
+            if ~ismember(PlotPar,{'Norm','Bkg'})
+                if ymin<0 && ~strcmp(PlotPar,'qU')
+                    ylim([ymin*1.2,max(y+yErr)*1.5]);
+                elseif strcmp(PlotPar,'qU')
+                    ylim([-0.02,max(y+yErr)*1.1]);
+                else
+                    ylim([ymin*0.8,max(y+yErr)*1.5]);
+                end
             end
-          
             % linear fit (optional)
             if strcmp(linFitFlag,'ON')
                 % test start
@@ -4293,7 +4401,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                   else
                       resultsleg = '';  
                   end
-                leg = legend(e1,[sprintf(' \\chi^2 = %.1g (%.0f dof) \n',...
+                leg = legend(e1,[sprintf(' \\chi^2 = %.1f (%.0f dof) \n',...
                     obj.FitResult.chi2min,obj.FitResult.dof),resultsleg]);
                 leg.Title.String = sprintf('%s Multi-ring fit (%s)',upper(obj.DataSet),d.chi2);
                 leg.Location = legPos;
@@ -4302,13 +4410,14 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                 leg.EdgeColor = rgb('Silver');
                 leg.Location = 'northwest';
             
+                leg.delete;
             if strcmp(savePlot,'ON')
                 %grid on
                 plotdir = [getenv('SamakPath'),sprintf('tritium-data/plots/%s/MultiRingFit/',obj.DataSet)];
                 MakeDir(plotdir);
                  freePar = ConvertFixPar('freePar',obj.fixPar,'nPar',obj.nPar,'nPixels',numel(obj.RunData.MACE_Ba_T),'Mode','Reverse');
-                plotname = [plotdir,sprintf('MultiRing%s_%s_%s_freePar%s_%s%s.pdf',...
-                    obj.RingMerge,obj.RunData.RunName,obj.chi2,freePar,PlotPar,saveStr)];
+                plotname = [plotdir,sprintf('MultiRing%s_%s_%s_freePar%s_%s.pdf',...
+                    obj.RingMerge,obj.RunData.RunName,obj.chi2,freePar,PlotPar)];
                 export_fig(fig1,plotname,'-painters');
                 fprintf('Plot saved to %s \n',plotname)
             end

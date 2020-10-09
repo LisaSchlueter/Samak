@@ -143,23 +143,24 @@ savenameplot1 = strrep(strrep(savename,'results','plots'),'.mat','_Hist.pdf');
 export_fig(f1,savenameplot1,'-painters');
 %% histogram difference
 f2 = figure('Units','normalized','Position',[0.1,0.1,0.5,0.5]);
-hDiff = histogram(par_U(1,:)-par_MR(1,:));
-hDiff.FaceAlpha = 0.8;
-hDiff.FaceColor = rgb('DodgerBlue');
-hDiff.EdgeColor = rgb('SteelBlue');
+hDiff = histogram(par_U(1,:)-par_MR(1,:),'Normalization','probability',...
+    'FaceColor',rgb('SkyBlue'),'FaceAlpha',1,'EdgeColor',rgb('PowderBlue'));
 thiYlim = ylim;
 MeanDiff = mean(par_U(1,:)-par_MR(1,:));
+StdDiff = std(par_U(1,:)-par_MR(1,:));
 hold on;
-pMean = plot(MeanDiff.*ones(2,1),[0,max(thiYlim)],'Color','k','LineWidth',2);
+%pMean = plot(MeanDiff.*ones(2,1),[0,max(thiYlim)],'Color','k','LineWidth',2);
 %plot(mean(par_MR(1,:)).*ones(2,1),[0,max(thiYlim)],'Color',hMR.FaceColor,'LineWidth',2);
-leg = legend([hDiff,pMean],sprintf('\\DeltaFit result (U - MR)'),sprintf('Mean = %.3f eV^2',MeanDiff));
-legend boxoff;
+%leg = legend([hDiff,pMean],sprintf('\\DeltaFit result (U - MR)'),sprintf('Mean = %.3f eV^2',MeanDiff));
+leg = legend(hDiff,sprintf('\\mu = %.3f eV^{ 2} \\sigma = %.3f eV^{ 2}',MeanDiff,StdDiff));
+
+leg.EdgeColor = rgb('Silver');
 leg.Location = 'northwest';
-PrettyFigureFormat('FontSize',24);
+PrettyFigureFormat('FontSize',22);
 xstr = sprintf('\\Delta{\\itm}_\\nu^2 (eV^2)');
 xlabel(xstr);
 ylabel('Events');
-
+title('Uniform - Multi-Ring(4)','FontWeight','normal','FontSize',18)
 savedirplot = strrep(savedir,'results','plots');
 MakeDir(savedirplot);
 savenameplot2 = strrep(strrep(savename,'results','plots'),'.mat','_HistDiff.pdf');
