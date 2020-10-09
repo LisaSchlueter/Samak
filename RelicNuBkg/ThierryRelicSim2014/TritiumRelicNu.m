@@ -39,7 +39,7 @@ classdef TritiumRelicNu
         
         % Tritium Decay
         Z=2;                       % 3He
-        Q=18.574;                  % Tritium Q-value, keV, Regular
+        Q=18.575;                  % Tritium Q-value, keV, Regular
         tau=12.32*86400*365.25;    % Tritium Tau in Sec
         TritiumDecayConst=1.78283e-09; % s^1
         TritiumActivity_perMol  = 1.0736e+15; % Decay per Sec per Mol
@@ -50,7 +50,6 @@ classdef TritiumRelicNu
     end
     
     properties (Access=public)
-        Eta;     % relic neutrino overdensity
         tex;     % Experiment time in s
         Ee0;     % End point expressed in total neutrino energy
         nE;      % number of energy bins
@@ -79,11 +78,11 @@ classdef TritiumRelicNu
         RNS_Tnu = 1.67e-7; % RNS Temperature (1.9 K - 1.67e-7 KeV)
         
         % Relic Neutrinos: Electron Capture
-        RNS_Pe ;     % neutrino capture : electron momentum
+        RNS_Pe ;     % neutrino captue  : electron momentum
         RNS_Ee;      % neutrino capture : electron energy
         RNS_EeError; % neutrino capture : electron energy Error
-        RNS_beta ;   % neutrino capture : beta factor
-        RNS_F;       % neutrino capture : Fermi Function
+        RNS_beta ;   % neutrino captue  : beta factor
+        RNS_F;       % neutrino captue  : Fermi Function
         RNS_EeFluct; % neutrino capture : electron energy fluct
         RNS_EeFluctError; % neutrino capture : electron energy fluct error
         SigmaV;      % cross Section times Velocity
@@ -116,7 +115,6 @@ classdef TritiumRelicNu
              p.addParameter('NormType','TMASS',@(x)ismember(x,{'TMASS','COUNTS'}));
              p.addParameter('Tmass',40,@(x)isfloat(x) && x>0);
              p.addParameter('TotalCounts',1e9,@(x)isfloat(x) && x>-1);
-             p.addParameter('Eta',1,@(x)isfloat(x));
              p.addParameter('activity',1,@(x)isfloat(x) && x>0);
              p.addParameter('tex',1,@(x)isfloat(x) && x>0);
              p.addParameter('RNS_EnuMin',-9,@(x)isfloat(x) && x>0);
@@ -134,7 +132,6 @@ classdef TritiumRelicNu
              obj.NormType=p.Results.NormType;
              obj.Tmass=p.Results.Tmass;
              obj.TotalCounts=p.Results.TotalCounts;
-             obj.Eta = p.Results.Eta;
              obj.tex=p.Results.tex;% *365.25*86400;
              obj.mnu=p.Results.mnu;
              
@@ -195,7 +192,7 @@ classdef TritiumRelicNu
                      obj.RateCaptureT_KATRIN = obj.TotalCounts;
                  case 'TMASS'
                      obj.NormRNS = 1;
-                     obj.RateCaptureT = obj.Eta .* 2.85e-2 .* obj.SigmaV ./ 1e-45; % per year per mol
+                     obj.RateCaptureT = 2.85e-2 .* obj.SigmaV ./ 1e-45; % per year per mol
                      obj.Tmol = obj.Tmass / 3.0160492;
                      obj.RateCaptureT_KATRIN = obj.RateCaptureT .* obj.Tmol .* obj.tex;
              end

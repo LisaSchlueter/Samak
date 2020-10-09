@@ -69,6 +69,8 @@ p.addParameter('FPD_Segmentation','OFF',@(x) ismember(x,{'OFF','SINGLEPIXEL','MU
 p.addParameter('PixList',1:148,@(x)isfloat(x));
 p.addParameter('RingList',1:12,@(x)isfloat(x));
 p.addParameter('RingMerge','Default',@(x)ismember(x,{'Default','None','Full','Half','Azi','AziHalfNS','AziHalfEW'}));
+p.addParameter('FSD_Sigma','',@(x)isfloat(x) || isempty(x)); % std of gaussian or width of rectangle
+           
 p.parse(varargin{:});
 
 %KATRIN General
@@ -116,6 +118,7 @@ DopplerEffectFlag        = p.Results.DopplerEffectFlag;
 DTFSD                    = p.Results.DTFSD;                 % TBD: Flag FSD's
 HTFSD                    = p.Results.HTFSD;
 TTFSD                    = p.Results.TTFSD;
+FSD_Sigma                = p.Results.FSD_Sigma;
 ISCS                     = p.Results.ISCS;
 ELossFlag                = p.Results.ELossFlag;
 RadiativeFlag            = p.Results.RadiativeFlag;
@@ -206,7 +209,7 @@ end
 if isempty(BKG_RateRingSec) && strcmp(FPD_Segmentation,'RING')
     nPixperRing = cellfun(@(x) numel(x),RingPixList); % number per pixels in ring
     if strcmp(RingMerge,'None')
-        nPixperRing(~ismember(1:13,RingList)) = [];
+%        nPixperRing(~ismember(1:13,RingList)) = [];
     end
     BKG_RateRingSec = (nPixperRing./148)'.*GetBackground('MACE_Ba_T',MACE_Ba_T,...
         'WGTS_B_T',WGTS_B_T,...
@@ -242,7 +245,8 @@ opt_bkg = {...
 opt_fsd= {...
     'TTFSD',TTFSD,...
     'DTFSD',DTFSD,...
-    'HTFSD',HTFSD};
+    'HTFSD',HTFSD,...
+    'FSD_Sigma',FSD_Sigma};
 
 opt_doppler = {'DopplerEffectFlag',DopplerEffectFlag};
 

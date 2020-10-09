@@ -17,6 +17,12 @@ p.addParameter('pullFlag',99,@(x)isfloat(x)); % if above 12 --> no pull
 p.addParameter('SysBudget',22,@(x)isfloat(x));
 p.addParameter('ELossFlag','KatrinT2',@(x)ischar(x));
 p.addParameter('AngularTFFlag','OFF',@(x)ismember(x,{'ON','OFF'})); 
+p.addParameter('Twin_mNu4Sq',0,@(x)isfloat(x));
+p.addParameter('Twin_sin2T4',0,@(x)isfloat(x));
+p.addParameter('Negsin2T4','OFF',@(x)ismember(x,{'ON','OFF'}));
+p.addParameter('NegmNu4Sq','OFF',@(x)ismember(x,{'ON','OFF'}));
+p.addParameter('Extsin2T4','OFF',@(x)ismember(x,{'ON','OFF'})); %extended sin2T2 (up to 1)
+p.addParameter('FixmNuSq',0,@(x)isfloat(x)); % if light nu-mass fixed (eV^2)
 p.parse(varargin{:});
 
 range         = p.Results.range;
@@ -33,6 +39,12 @@ pullFlag      = p.Results.pullFlag;
 SysBudget     = p.Results.SysBudget;
 ELossFlag     = p.Results.ELossFlag;
 AngularTFFlag = p.Results.AngularTFFlag;
+Twin_mNu4Sq   = p.Results.Twin_mNu4Sq;
+Twin_sin2T4   = p.Results.Twin_sin2T4;
+Negsin2T4     = p.Results.Negsin2T4;
+NegmNu4Sq     = p.Results.NegmNu4Sq;
+Extsin2T4     = p.Results.Extsin2T4;
+FixmNuSq      = p.Results.FixmNuSq;
 
 if strcmp(chi2,'chi2CMShape')
     NonPoissonScaleFactor=1.064;
@@ -59,7 +71,16 @@ if ~strcmp(ELossFlag,'KatrinT2')
 end
 
 if ~strcmp(AngularTFFlag,'OFF')
-     extraStr = [extraStr,'_AngTF'];
+    extraStr = [extraStr,'_AngTF'];
+end
+
+if Twin_sin2T4~=0
+    extraStr = [extraStr,sprintf('_sinT4Sq%.3g',Twin_sin2T4)];
+end
+
+
+if Twin_mNu4Sq~=0
+    extraStr = [extraStr,sprintf('_mNu4Sq%.1g',Twin_mNu4Sq)];
 end
 
 if isfloat(RandMC) && strcmp(DataType,'Twin')
@@ -69,8 +90,24 @@ else
     savedir = [getenv('SamakPath'),'ksn1ana/LisaSterile/results/'];
 end
 
-if pullFlag<=12
-      extraStr = sprintf('%s_pull%.0f',extraStr,pullFlag);
+if pullFlag<=14
+    extraStr = sprintf('%s_pull%.0f',extraStr,pullFlag);
+end
+
+if strcmp(NegmNu4Sq,'ON')
+    extraStr = [extraStr,'_NegmNu4Sq'];
+end
+
+if strcmp(Negsin2T4,'ON')
+      extraStr = [extraStr,'_Negsin2T4'];
+end
+
+if strcmp(Extsin2T4,'ON')
+    extraStr = [extraStr,'_Extsin2T4']; 
+end
+
+if FixmNuSq~=0 && ~contains(freePar,'mNu')
+      extraStr = [extraStr,sprintf('_FixmNuSq%.2feV2',FixmNuSq)]; 
 end
 MakeDir(savedir);
 
@@ -119,7 +156,7 @@ else
     
     T = MultiRunAnalysis(RunAnaArg{:});
     T.exclDataStart = T.GetexclDataStart(range);
-    
+     
     if strcmp(T.chi2,'chi2CMShape') && ~strcmp(SysEffect,'all')
         if strcmp(SysEffect,'Bkg')
             T.ComputeCM('SysEffect',struct('FSD','OFF'),'BkgCM','ON');
@@ -147,17 +184,36 @@ else
     if isfloat(RandMC) && strcmp(DataType,'Twin')
         % change to randomized MC data
         T.InitModelObj_Norm_BKG('RecomputeFlag','ON');
-        T.ModelObj.ComputeTBDDS;
-        T.ModelObj.ComputeTBDIS;
-        TBDIS_mc = mvnrnd(T.RunData.TBDIS',T.FitCMShape,1)';
+        if Twin_mNu4Sq~=0 || Twin_sin2T4~=0
+            T.ModelObj.BKG_RateSec_i = T.ModelObj.BKG_RateSec;
+            T.ModelObj.normFit_i = T.ModelObj.normFit;         
+            T.ModelObj.SetFitBiasSterile(Twin_mNu4Sq,Twin_sin2T4);
+            T.ModelObj.ComputeTBDDS;
+            T.ModelObj.ComputeTBDIS;
+            TBDIS_i = T.ModelObj.TBDIS'; 
+        else
+            T.ModelObj.ComputeTBDDS;
+            T.ModelObj.ComputeTBDIS;
+            TBDIS_i = T.RunData.TBDIS';
+        end
+        
+        TBDIS_mc = mvnrnd(TBDIS_i,T.FitCMShape,1)';
         T.RunData.TBDIS = TBDIS_mc;
-        T.RunData.TBDISE = sqrt(TBDIS_mc); 
+        T.RunData.TBDISE = sqrt(TBDIS_mc);
     end
     
+    if FixmNuSq~=0 && ~contains(freePar,'mNu')
+        % if light nu-mass is fixed and shall not be fixed to 0 eV^2
+        T.ModelObj.mnuSq_i = FixmNuSq;
+    end
     %% null hypothesis : no steriles
     T.Fit;
     FitResults_Null = T.FitResult;
-  
+    if isfloat(RandMC) && strcmp(DataType,'Twin')
+        if Twin_mNu4Sq~=0 || Twin_sin2T4~=0
+            T.SimulateStackRuns;
+        end
+    end    
     %% reference fit to find global minimum (if this fails, chi2min is found by grid search)
     % stop doing this -> makes the grid search too slow
     % do it later, in cases needed
@@ -175,7 +231,12 @@ else
     %% define msq4 - sin2t4 grid
     switch SmartGrid
         case 'OFF'
-            sin2T4      = logspace(-3,log10(0.5),nGridSteps); %linspace(0.001,0.5,nGridSteps)
+            if strcmp(Extsin2T4,'ON')
+                sin2T4Max = 1;
+            else
+                sin2T4Max = 0.5;
+            end
+            sin2T4      = logspace(-3,log10(sin2T4Max),nGridSteps); %linspace(0.001,0.5,nGridSteps)
             mnu4Sq      = logspace(0,log10((range+5)^2),nGridSteps)';
             mnu4Sq      = repmat(mnu4Sq,1,nGridSteps);
             sin2T4      = repmat(sin2T4,nGridSteps,1);
@@ -194,8 +255,22 @@ else
     mnu4Sq_Grid    = reshape(mnu4Sq',nGridSteps*nGridSteps,1);
     sin2T4_Grid    = reshape(sin2T4',nGridSteps*nGridSteps,1);
     
+    if strcmp(NegmNu4Sq,'ON')
+        mnu4Sq_Grid = -mnu4Sq_Grid;
+        mnu4Sq = - mnu4Sq;
+    end
+    
+    if strcmp(Negsin2T4,'ON')
+        sin2T4_Grid = -sin2T4_Grid;
+        sin2T4 = -sin2T4;
+    end
+    
     parfor i= 1:(nGridSteps*nGridSteps)
         D(i).SimulateStackRuns;
+        if FixmNuSq~=0 && ~contains(freePar,'mNu')
+            % if light nu-mass is fixed and shall not be fixed to 0 eV^2
+            D(i).ModelObj.mnuSq_i = FixmNuSq;
+        end
         D(i).ModelObj.SetFitBiasSterile(mnu4Sq_Grid(i),sin2T4_Grid(i));
         D(i).Fit
         chi2Grid(i) = D(i).FitResult.chi2min;

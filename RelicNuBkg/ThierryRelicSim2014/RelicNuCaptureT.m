@@ -5,14 +5,14 @@
 addpath('../nukev')
 
 % Call Class
-clc ; clf ; 
+clc ; clf ; clear all; 
 
 % Init
 temin=18.573; % keV
 temax=18.58; % keV
 
 nte=1000;
-tex=1; % year
+tex=5; % year
 eres = 0.01e-3; % keV
 mnu = 1e-3; % 1 eV
 %mnu = 7; % keV
@@ -38,7 +38,7 @@ grid on;
 xlabel('Kinetic Energy (keV)','FontSize',12);
 str = sprintf('dN/dE (per %.1s keV)',A1.TeStep);
 ylabel(str,'FontSize',14);
-clear str1, clear str10, clear str100;
+clear str1, clear str10, clear srt100;
 str1 = sprintf('E-capture: Res.=%.1s eV , %.0f gT, %.0f evts',A1.sigma_E*1e3,100, A1.RateCaptureT_KATRIN(1));
 str10 = sprintf('E-capture: Res.=%.1s eV , %.0f gT, %.0f evts',A10.sigma_E*1e3,1000,A10.RateCaptureT_KATRIN(1));
 str100 = sprintf('E-capture: Res.=%.1s eV , %.0f gT, %.0f evts',A100.sigma_E*1e3,10000,A100.RateCaptureT_KATRIN(1));
@@ -64,10 +64,13 @@ global com_opt2 ; com_opt2 = {...
     'energy_resol',1e-4
     };
 clear T; 
-T1 = ref_RelicNuBkg_TDR('ToggleRelic','ON');
-T1.ComputeTBDDS;
+T1=TritiumSpectrum(com_opt2{:},'Tmass',100);
+T10=TritiumSpectrum(com_opt2{:},'Tmass',1000);
+T100=TritiumSpectrum(com_opt2{:},'Tmass',10000);
 
-hT1 = semilogy((T1.Te-T1.Q),T1.TBDDS,'LineWidth',2,'Color','Black','LineStyle','-');
+hT1 = semilogy((T1.Te-A1.Q)*1000,T1.Spectrum,'LineWidth',2,'Color','Black','LineStyle','-');
+hT10 = semilogy((T1.Te-A1.Q)*1000,T10.Spectrum,'LineWidth',2,'Color','Blue','LineStyle','-.');
+hT100 = semilogy((T1.Te-A1.Q)*1000,T100.Spectrum,'LineWidth',2,'Color','Red','LineStyle','--');
 grid on;
 xlabel('E-E_0 (eV)','FontSize',12);
 str = sprintf('dN/dE (per %.1s eV)',A1.TeStep*1000);

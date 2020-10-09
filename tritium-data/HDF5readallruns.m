@@ -21,7 +21,7 @@ switch DataSet
     case  'Twin_Kafit_Knm1'
         version = 'MCRunSummary_Run00';
     case 'Knm2'
-        version = 'RunSummary-Durable5d-fpd00';
+        version = 'RunSummary-Durable5i-fpd00';
     case 'Knm3a'
         version = 'RunSummary-Prompt6c-fpd00';
     case'Knm3b'

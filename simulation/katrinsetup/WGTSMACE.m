@@ -598,7 +598,11 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             
             if strcmp(saveFile,'ON')
                 if strcmp(obj.ISCS,'Edep')
-                    Estep = Energy(2)-Energy(1);
+                    if numel(Energy)>1
+                        Estep = Energy(2)-Energy(1);
+                    else
+                        Estep = 99;
+                    end
                     IsXstr  = sprintf('Edep-Xsection-max%.0feV_Xstep%.1feV',max(Energy)-18575,Estep);
                 else
                     IsXstr = sprintf('%.5g-Xsection',ISXsection_local(E));
