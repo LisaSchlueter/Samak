@@ -21,7 +21,7 @@
 %
 % Detector Corrections
 %  - Energy resolution
-%  - Flat background
+%  - Flat 
 %  - MAC-E Filter Transmission Function
 %
 % Option:

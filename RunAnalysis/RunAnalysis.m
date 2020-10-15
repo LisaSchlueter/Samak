@@ -119,6 +119,8 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
          
         %Fake MC option
         FakeInitFile %name of study -> Init file
+        RecomputeFakeRun;
+        Init_Opt;
         % 
     end
     methods % Constructor
@@ -174,7 +176,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             p.addParameter('TwinBias_WGTS_MolFrac_HT',1,@(x)isfloat(x));       % relative (%)
             p.addParameter('TwinBias_WGTS_MolFrac_DT',1,@(x)isfloat(x));       % relative (%)
             p.addParameter('TwinBias_qU','',@(x)isfloat(x));                   % absolute shift (eV)
-            p.addParameter('TwinBias_qUfrac','',@(x)isfloat(x));               % absolute (eV)
+            p.addParameter('TwinBias_qUfrac','',@(x)isfloat(x));               % absolute (eV)h
             p.addParameter('TwinBias_Time','',@(x)all(isfloat(x)));           % absolute 
             p.addParameter('TwinBias_Bkg',1,@(x)isfloat(x));                   % absolute (eV)
             p.addParameter('TwinBias_mnuSq',0,@(x)isfloat(x));                 % absolute (eV^2)
@@ -184,6 +186,8 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
            
             %fake MC option
             p.addParameter('FakeInitFile','',@(x)isa(x,'function_handle') || isempty(x));
+            p.addParameter('RecomputeFakeRun','OFF',@(x)ismember(x,{'ON','OFF'}));
+            p.addParameter('Init_Opt','',@(x)iscell(x) || isempty(x));
             % Efficiency Correction Applied to Data 
             p.addParameter('DataEffCorr','RunSummary',@(x)ismember(x,{'OFF', 'ROI', 'PileUp','ROI+PileUp','RunSummary'}));
  
@@ -257,6 +261,8 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             end
                         
             obj.FakeInitFile             = p.Results.FakeInitFile;
+            obj.Init_Opt                 = p.Results.Init_Opt;
+            obj.RecomputeFakeRun         = p.Results.RecomputeFakeRun;
             
             obj.DoRunAnalysisConstructor = p.Results.DoRunAnalysisConstructor;
             
@@ -392,6 +398,9 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                     
                     if ~exist(filename,'file')
                         obj.RunData.matFilePath = matFilePath;
+                        obj.ComputeTwinRun;
+                    elseif strcmp(obj.RecomputeFakeRun,'ON')
+                        obj.RunData. matFilePath = matFilePath;
                         obj.ComputeTwinRun;
                     end
                     obj.RunData = load(filename);
@@ -624,7 +633,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             
             StatFluct              = p.Results.StatFluct;
 
-            MC = McRunGenerator('RunObj',obj);
+            MC = McRunGenerator('RunObj',obj,'Init_Opt',obj.Init_Opt);
             switch obj.DataType
                 case 'Twin'
                     MC.ComputeTwinRun;
@@ -791,22 +800,43 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
         function SimulateFakeRun(obj,varargin)
             ref_func = obj.FakeInitFile;
             
-            switch obj.AnaFlag
-                case 'StackPixel'
-                    obj.ModelObj =  ref_func('FPD_Segmentation','OFF');
-                case 'SinglePixel'
-                    obj.ModelObj = ref_func('FPD_Segmentation','SINGLEPIXEL');
-                case 'MultiPixel'
-                    obj.ModelObj = ref_func('FPD_Segmentation','MULTIPIXEL','nTeBinningFactor',5);
-                case 'Ring'
-                    obj.ModelObj =  ref_func('FPD_Segmentation','RING');
-                    %                 case 'Ring'
-                    %                     obj.ModelObj = ref_func(TBDarg{:},'FPD_Segmentation','RING','FPD_Ring',obj.RingList,...
-                    %                         'nTeBinningFactor',20);
-                    %                     if size(obj.RunData.TBDIS,2) > 1
-                    %                         obj.RunData.TBDIS = sum(obj.RunData.TBDIS(:,obj.ModelObj.ring{obj.ring}),2);
-                    %                         obj.RunData.qU = mean(obj.RunData.qU(:,obj.ModelObj.ring{obj.ring}),2);
-                    %                     end
+            if isempty(obj.Init_Opt)
+                switch obj.AnaFlag
+                    case 'StackPixel'
+                        obj.ModelObj =  ref_func('FPD_Segmentation','OFF');
+                    case 'SinglePixel'
+                        obj.ModelObj = ref_func('FPD_Segmentation','SINGLEPIXEL');
+                    case 'MultiPixel'
+                        obj.ModelObj = ref_func('FPD_Segmentation','MULTIPIXEL','nTeBinningFactor',5);
+                    case 'Ring'
+                        obj.ModelObj =  ref_func('FPD_Segmentation','RING');
+                        %                 case 'Ring'
+                        %                     obj.ModelObj = ref_func(TBDarg{:},'FPD_Segmentation','RING','FPD_Ring',obj.RingList,...
+                        %                         'nTeBinningFactor',20);
+                        %                     if size(obj.RunData.TBDIS,2) > 1
+                        %                         obj.RunData.TBDIS = sum(obj.RunData.TBDIS(:,obj.ModelObj.ring{obj.ring}),2);
+                        %                         obj.RunData.qU = mean(obj.RunData.qU(:,obj.ModelObj.ring{obj.ring}),2);
+                        %                     end
+                end
+
+            else
+                switch obj.AnaFlag
+                    case 'StackPixel'
+                        obj.ModelObj =  ref_func('FPD_Segmentation','OFF',obj.Init_Opt{:});
+                    case 'SinglePixel'
+                        obj.ModelObj = ref_func('FPD_Segmentation','SINGLEPIXEL',obj.Init_Opt{:});
+                    case 'MultiPixel'
+                        obj.ModelObj = ref_func('FPD_Segmentation','MULTIPIXEL','nTeBinningFactor',5,obj.Init_Opt{:});
+                    case 'Ring'
+                        obj.ModelObj =  ref_func('FPD_Segmentation','RING',obj.Init_Opt{:});
+                        %                 case 'Ring'
+                        %                     obj.ModelObj = ref_func(TBDarg{:},'FPD_Segmentation','RING','FPD_Ring',obj.RingList,...
+                        %                         'nTeBinningFactor',20);
+                        %                     if size(obj.RunData.TBDIS,2) > 1
+                        %                         obj.RunData.TBDIS = sum(obj.RunData.TBDIS(:,obj.ModelObj.ring{obj.ring}),2);
+                        %                         obj.RunData.qU = mean(obj.RunData.qU(:,obj.ModelObj.ring{obj.ring}),2);
+                        %                     end
+                end
             end
             
             obj.ModelObj.ComputeTBDDS;

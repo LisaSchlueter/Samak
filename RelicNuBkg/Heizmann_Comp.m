@@ -26,11 +26,11 @@ T1.ComputeTBDDS;
 T2.ComputeTBDDS;
 T3.ComputeTBDDS;
 T4.ComputeTBDDS;
-TBDDS_0 = T0.TBDDS.*0.008077/5e17./(0.5*(1-cos(asin(sqrt(T0.WGTS_B_T./T0.MACE_Bmax_T)))).*(T0.FPD_MeanEff*T0.FPD_Coverage) .* numel(T0.FPD_PixList)/148);
-TBDDS_R_1 = T1.TBDDS_R.*0.008077/5e17./(0.5*(1-cos(asin(sqrt(T1.WGTS_B_T./T1.MACE_Bmax_T)))).*(T1.FPD_MeanEff*T1.FPD_Coverage) .* numel(T1.FPD_PixList)/148);
-TBDDS_R_2 = T2.TBDDS_R.*0.008077/5e17./(0.5*(1-cos(asin(sqrt(T2.WGTS_B_T./T2.MACE_Bmax_T)))).*(T2.FPD_MeanEff*T2.FPD_Coverage) .* numel(T2.FPD_PixList)/148);
-TBDDS_R_3 = T3.TBDDS_R.*0.008077/5e17./(0.5*(1-cos(asin(sqrt(T3.WGTS_B_T./T3.MACE_Bmax_T)))).*(T3.FPD_MeanEff*T3.FPD_Coverage) .* numel(T3.FPD_PixList)/148);
-TBDDS_R_4 = T4.TBDDS_R.*0.008077/5e17./(0.5*(1-cos(asin(sqrt(T4.WGTS_B_T./T4.MACE_Bmax_T)))).*(T4.FPD_MeanEff*T4.FPD_Coverage) .* numel(T4.FPD_PixList)/148);
+TBDDS_0 = T0.TBDDS.*0.009683/5e17./(0.5*(1-cos(asin(sqrt(T0.WGTS_B_T./T0.MACE_Bmax_T)))).*(T0.FPD_MeanEff*T0.FPD_Coverage) .* numel(T0.FPD_PixList)/148);
+TBDDS_R_1 = T1.TBDDS_R.*0.009683/5e17./(0.5*(1-cos(asin(sqrt(T1.WGTS_B_T./T1.MACE_Bmax_T)))).*(T1.FPD_MeanEff*T1.FPD_Coverage) .* numel(T1.FPD_PixList)/148);
+TBDDS_R_2 = T2.TBDDS_R.*0.009683/5e17./(0.5*(1-cos(asin(sqrt(T2.WGTS_B_T./T2.MACE_Bmax_T)))).*(T2.FPD_MeanEff*T2.FPD_Coverage) .* numel(T2.FPD_PixList)/148);
+TBDDS_R_3 = T3.TBDDS_R.*0.009683/5e17./(0.5*(1-cos(asin(sqrt(T3.WGTS_B_T./T3.MACE_Bmax_T)))).*(T3.FPD_MeanEff*T3.FPD_Coverage) .* numel(T3.FPD_PixList)/148);
+TBDDS_R_4 = T4.TBDDS_R.*0.009683/5e17./(0.5*(1-cos(asin(sqrt(T4.WGTS_B_T./T4.MACE_Bmax_T)))).*(T4.FPD_MeanEff*T4.FPD_Coverage) .* numel(T4.FPD_PixList)/148);
 
 hT1 = semilogy((T1.Te-T1.Q),TBDDS_R_1,'LineWidth',2,'Color','Black','LineStyle','-');
 hT2 = semilogy((T1.Te-T1.Q),TBDDS_R_2,'LineWidth',2,'Color','Red','LineStyle','-');

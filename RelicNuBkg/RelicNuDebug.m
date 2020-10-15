@@ -11,26 +11,28 @@ classdef RelicNuDebug < handle
    methods %constructor
        function obj = RelicNuDebug(varargin)
            p = inputParser;
-           p.addParameter('R','',@(x)isa(x,'TBD'));
+           p.addParameter('R','',@(x)isa(x,'TBD') || isempty(x));
            p.addParameter('Params','TDR',@(x)ismember(x,{'TDR','KNM1','KNM2','Formaggio'}));
-           p.addParameter('ToggleES','ON',@(x)ismember(x,{'ON','OFF'}));
+           p.addParameter('ToggleES','OFF',@(x)ismember(x,{'ON','OFF'}));
            p.parse(varargin{:})
            obj.R        = p.Results.R;
            obj.Params   = p.Results.Params;
            obj.ToggleES = p.Results.ToggleES;
            
-            if strcmp(obj.Params,'TDR')
-                obj.R = ref_RelicNuBkg_DesignReport('ToggleES',obj.ToggleES);
-            elseif strcmp(obj.Params,'KNM1')
-                obj.R = ref_RelicNuBkg_TDR('ToggleES',obj.ToggleES);
-            elseif strcmp(obj.Params,'Formaggio')
-                obj.R = ref_RelicNuBkg_Formaggio('ToggleES',obj.ToggleES);
-            else
-                sprintf('Params input not known!');
-            end
+           if isempty(obj.R)
+                if strcmp(obj.Params,'TDR')
+                    obj.R = ref_RelicNuBkg_DesignReport('ToggleES',obj.ToggleES);
+                elseif strcmp(obj.Params,'KNM1')
+                    obj.R = ref_RelicNuBkg_KNM1('ToggleES',obj.ToggleES);
+                elseif strcmp(obj.Params,'Formaggio')
+                    obj.R = ref_RelicNuBkg_Formaggio('ToggleES',obj.ToggleES);
+                else
+                    sprintf('Params input not known!');
+                end
+           end
             
-            obj.R.ComputeTBDDS;
-            obj.R.ComputeTBDIS;
+           obj.R.ComputeTBDDS;
+           obj.R.ComputeTBDIS;
        end
    end
    methods %Modify settings
@@ -173,79 +175,41 @@ classdef RelicNuDebug < handle
    end
    
    methods %Chi2 scans
-       function Chi2Scan(~,varargin)
-           p=inputParser;
-           p.addParameter('RunNr',1,@(x)isfloat(x));
-           p.addParameter('Netabins',10,@(x)isfloat(x));
-           p.addParameter('etarange',10,@(x)isfloat(x));
-           p.addParameter('etafactor',1.5,@(x)isfloat(x));
-           p.addParameter('mode','SCAN',@(x)ismember(x,{'SCAN','SEARCH'}));
-           p.parse(varargin{:});
-           RunNr=p.Results.RunNr;
-           Netabins=p.Results.Netabins;
-           etarange=p.Results.etarange;
-           etafactor=p.Results.etafactor;
-           mode=p.Results.mode;
-           
-           initfile=@ref_RelicNuBkg_DesignReport;
-
-            U = RunAnalysis('RunNr',RunNr,...             
-                'FakeInitFile',initfile,...
-                'chi2','chi2Stat',...                 % uncertainties: statistical or stat + systematic uncertainties
-                'DataType','Fake',...                 % can be 'Real' or 'Twin' -> Monte Carlo
-                'RingList',1:14,...
-                'TwinBias_Q',18575,...
-                'fixPar','mNu E0 Norm Bkg',...        % free Parameter!!
-                'NonPoissonScaleFactor',1,...         % background uncertainty are enhanced
-                'minuitOpt','min ; minos',...         % technical fitting options (minuit)
-                'FSDFlag','Sibille0p5eV',...          % final state distribution                        !!check ob initfile hier überschrieben wird
-                'ELossFlag','KatrinT2',...            % energy loss function
-                'SysBudget',22,...                    % defines syst. uncertainties -> in GetSysErr.m;
-                'DopplerEffectFlag','FSD',...
-                'SynchrotronFlag','OFF',...
-                'AngularTFFlag','OFF');
-
-            U.exclDataStart = 1; % set region of interest
-
-            %R.InitModelObj_Norm_BKG('Recompute','ON');
-
-            if strcmp(mode,'SCAN')
-                Chi2 = 1:Netabins;
-                mnu  = 1:Netabins;
-                E0   = 1:Netabins;
-                Bkg  = 1:Netabins;
-
-                for i=1:Netabins
-                   U.ModelObj.eta_i = (i-1)*((etafactor*10^(etarange))/(Netabins-1));
-                   U.ModelObj.eta   = (i-1)*((etafactor*10^(etarange))/(Netabins-1));
-                   U.ModelObj.ComputeNormFactorTBDDS;
-                   U.ModelObj.ComputeTBDDS;
-                   U.ModelObj.ComputeTBDIS;
-                   %% Fit
-                   U.Fit;
-            %        TBDIS_R = U.ModelObj.TBDIS./U.ModelObj.qUfrac./U.ModelObj.TimeSec;
-            %        TBDIS_B = (U.ModelObj.TBDIS-U.ModelObj.TBDIS_R)./U.ModelObj.qUfrac./U.ModelObj.TimeSec;
-            %            
-            %        e1 = U.ModelObj.qU(U.ModelObj.qU(:,1)>(U.ModelObj.Q-310),:)-18575;
-            %        tmpis1 = TBDIS_B(U.ModelObj.qU(:,1)>(U.ModelObj.Q-310),:);
-            %        tmpis2 = TBDIS_R(U.ModelObj.qU(:,1)>(U.ModelObj.Q-310),:);
-            % 
-            %        semilogy((e1),tmpis1,'-s','LineWidth',2,'Color','Black','LineStyle','-');
-            %        hold on;
-            %        semilogy((e1),tmpis2,'-s','LineWidth',2,'Color','Blue','LineStyle','-');
-                   %R.PlotFit;
-                   Chi2(i)=U.FitResult.chi2min;
-                   mnu(i)=U.ModelObj.mnuSq_i+U.FitResult.par(1);
-                   E0(i)=U.ModelObj.Q_i+U.FitResult.par(2);
-                   Bkg(i)=U.ModelObj.BKG_RateSec_i+U.FitResult.par(3);
-                end
-
-                save('RelicChi2Scan_TDR4.mat','Chi2','Netabins','etafactor','etarange','mnu','E0','Bkg');
+        function Chi2Scan(obj,varargin)
+            p=inputParser;
+            p.addParameter('Recompute',@(x)ismember(x,{'ON','OFF'}));
+            p.addParameter('RunNr',1,@(x)isfloat(x));                          % 1 for default setings from initfile, 10 if you want to modify settings
+            p.addParameter('Init_Opt','',@(x)iscell(x) || isempty(x));         % cell array containing options to change in initfile (only relevant if RunNr==10)
+            p.addParameter('Netabins',10,@(x)isfloat(x));
+            p.addParameter('etarange',10,@(x)isfloat(x));
+            p.addParameter('etafactor',1.5,@(x)isfloat(x));                    % max(eta)=etafactor*10^etarange
+            p.addParameter('mode','SCAN',@(x)ismember(x,{'SCAN','SEARCH'}));
+            %% =========== SEARCH mode settings =============
+            p.addParameter('etalower',0,@(x)isfloat(x));
+            p.addParameter('etaupper',1.5e10,@(x)isfloat(x));                  % initial upper and lower search bounds
+            p.addParameter('delta',0.1e9,@(x)isfloat(x));                      % amount by which to shift eta if fit fails
+            p.parse(varargin{:});
+            Recompute =p.Results.Recompute;
+            RunNr     =p.Results.RunNr;
+            Init_Opt  =p.Results.Init_Opt;
+            Netabins  =p.Results.Netabins;
+            etarange  =p.Results.etarange;
+            etafactor =p.Results.etafactor;
+            mode      =p.Results.mode;
+            etalower  =p.Results.etalower;
+            etaupper  =p.Results.etaupper;
+            delta     =p.Results.delta;
+            
+            if strcmp(obj.Params,'TDR')
+                initfile=@ref_RelicNuBkg_DesignReport;
+            elseif strcmp(obj.Params,'Formaggio')
+                initfile=@ref_RelicNuBkg_Formaggio;
+            elseif strcmp(obj.Params,'KNM1')
+                initfile=@ref_RelicNuBkg_KNM1;
             end
 
-            if strcmp(mode,'SEARCH')
-
-                F = RunAnalysis('RunNr',RunNr,... % runlist defines which runs are analysed -> set MultiRunAnalysis.m -> function: GetRunList()
+            if RunNr==1
+                U = RunAnalysis('RunNr',RunNr,...             
                     'FakeInitFile',initfile,...
                     'chi2','chi2Stat',...                 % uncertainties: statistical or stat + systematic uncertainties
                     'DataType','Fake',...                 % can be 'Real' or 'Twin' -> Monte Carlo
@@ -260,65 +224,224 @@ classdef RelicNuDebug < handle
                     'DopplerEffectFlag','FSD',...
                     'SynchrotronFlag','OFF',...
                     'AngularTFFlag','OFF');
+            elseif RunNr==10
+                U = RunAnalysis('RunNr',RunNr,...             
+                    'FakeInitFile',initfile,...
+                    'Init_Opt',Init_Opt,...
+                    'RecomputeFakeRun','ON',...
+                    'chi2','chi2Stat',...                 % uncertainties: statistical or stat + systematic uncertainties
+                    'DataType','Fake',...                 % can be 'Real' or 'Twin' -> Monte Carlo
+                    'RingList',1:14,...
+                    'TwinBias_Q',18575,...
+                    'fixPar','mNu E0 Norm Bkg',...        % free Parameter!!
+                    'NonPoissonScaleFactor',1,...         % background uncertainty are enhanced
+                    'minuitOpt','min ; minos',...         % technical fitting options (minuit)
+                    'FSDFlag','Sibille0p5eV',...          % final state distribution                        !!check ob initfile hier überschrieben wird
+                    'ELossFlag','KatrinT2',...            % energy loss function
+                    'SysBudget',22,...                    % defines syst. uncertainties -> in GetSysErr.m;
+                    'DopplerEffectFlag','FSD',...
+                    'SynchrotronFlag','OFF',...
+                    'AngularTFFlag','OFF');
+            end
 
-                F.exclDataStart = 1; % set region of interest
-
-                etaupper = 1.5e10;
-                etalower = 0;
-                delta = 0.1e9;
-                eta=etaupper;
-                F.ModelObj.eta_i=etalower;
-                F.ModelObj.eta=etalower;
-                U.ModelObj.eta_i=etaupper;
-                U.ModelObj.eta=etaupper;
-                U.ModelObj.ComputeNormFactorTBDDS;
-                U.ModelObj.ComputeTBDDS;
-                U.ModelObj.ComputeTBDIS;
-                U.Fit;
-                chi2 = U.FitResult.chi2min;
-                if chi2<2.71
-                    sprintf('chi^2 too small! Set larger initial eta.')
-                elseif chi2>50
-                    sprintf('Minos failed! Vary initial eta.')
+            U.exclDataStart = 1; % set region of interest
+            
+            if RunNr==10
+                U.InitModelObj_Norm_BKG('Recompute','ON');
+            end
+            
+            if strcmp(mode,'SCAN')
+                Chi2      = 1:Netabins;
+                mnuSq     = 1:Netabins;
+                mnuSq_err = 1:Netabins;
+                E0        = 1:Netabins;
+                E0_err    = 1:Netabins;
+                Bkg       = 1:Netabins;
+                Bkg_err   = 1:Netabins;
+                Norm      = 1:Netabins;
+                Norm_err  = 1:Netabins;
+                matFilePath = [getenv('SamakPath'),sprintf('RelicNuBkg/Chi2Scans/')];
+                if RunNr==1
+                    savename=[matFilePath,sprintf('RelicChi2Scan_Fake_NoSyst_%s_[0 %g].mat',obj.Params,etafactor*10^etarange)];
                 else
-                    while abs(chi2-2.71)>0.01
-                        if chi2>2.71
-                            etaupper=eta;
-                            eta=(etaupper+etalower)./2;
-                            U.ModelObj.eta_i=eta;
-                            U.ModelObj.eta=eta;
-                            U.ModelObj.ComputeNormFactorTBDDS;
-                            U.ModelObj.ComputeTBDDS;
-                            U.ModelObj.ComputeTBDIS;
-                            U.Fit;
-                            if U.FitResult.chi2min>50
-                                sprintf('Fit failed! Retrying...')
-                                etaupper = etaupper + delta;
-                                eta=etaupper;
-                            else
-                                chi2=U.FitResult.chi2min;
-                            end
-                        else
-                            etalower=eta;
-                            eta=(etaupper+etalower)./2;
-                            F.ModelObj.eta_i=eta;
-                            F.ModelObj.eta=eta;
-                            F.ModelObj.ComputeNormFactorTBDDS;
-                            F.ModelObj.ComputeTBDDS;
-                            F.ModelObj.ComputeTBDIS;
-                            F.Fit;
-                            if F.FitResult.chi2min>50
-                                sprintf('Fit failed! Retrying...')
-                                etalower = etalower - delta;
-                                eta = etalower;
-                            else
-                                chi2=F.FitResult.chi2min;
-                            end
+                    SaveStr='';
+                    for i=1:numel(Init_Opt)
+                        if ischar(Init_Opt{i})
+                            SaveStr=[SaveStr,sprintf('_%s',Init_Opt{i})];
+                        elseif isfloat(Init_Opt{i})
+                            SaveStr=[SaveStr,sprintf('_%f',Init_Opt{i})];
                         end
                     end
-                    sprintf('Final Result: eta = %g',eta)
+                savename=[matFilePath,sprintf('RelicChi2Scan_Fake_NoSyst_%s_[0 %g]%s.mat',obj.Params,etafactor*10^etarange,SaveStr)];
                 end
-            end 
+                
+                if exist(savename,'file') && strcmp(Recompute,'OFF')
+                    plotchi2scan(savename);
+                else
+                    for i=1:Netabins
+                       U.ModelObj.eta_i = (i-1)*((etafactor*10^(etarange))/(Netabins-1));
+                       U.ModelObj.eta   = (i-1)*((etafactor*10^(etarange))/(Netabins-1));
+                       U.ModelObj.ComputeNormFactorTBDDS;
+                       U.ModelObj.ComputeTBDDS;
+                       U.ModelObj.ComputeTBDIS;
+                       %% Fit
+                       U.Fit;
+                %        TBDIS_R = U.ModelObj.TBDIS./U.ModelObj.qUfrac./U.ModelObj.TimeSec;
+                %        TBDIS_B = (U.ModelObj.TBDIS-U.ModelObj.TBDIS_R)./U.ModelObj.qUfrac./U.ModelObj.TimeSec;
+                %            
+                %        e1 = U.ModelObj.qU(U.ModelObj.qU(:,1)>(U.ModelObj.Q-310),:)-18575;
+                %        tmpis1 = TBDIS_B(U.ModelObj.qU(:,1)>(U.ModelObj.Q-310),:);
+                %        tmpis2 = TBDIS_R(U.ModelObj.qU(:,1)>(U.ModelObj.Q-310),:);
+                % 
+                %        semilogy((e1),tmpis1,'-s','LineWidth',2,'Color','Black','LineStyle','-');
+                %        hold on;
+                %        semilogy((e1),tmpis2,'-s','LineWidth',2,'Color','Blue','LineStyle','-');
+                       %U.PlotFit;
+                       Chi2(i)      = U.FitResult.chi2min;
+                       mnuSq(i)     = U.ModelObj.mnuSq_i+U.FitResult.par(1);
+                       mnuSq_err(i) = U.FitResult.err(1);
+                       E0(i)        = U.ModelObj.Q_i+U.FitResult.par(2);
+                       E0_err(i)    = U.FitResult.err(2);
+                       Bkg(i)       = U.ModelObj.BKG_RateSec_i+U.FitResult.par(3);
+                       Bkg_err(i)   = U.FitResult.err(3);
+                       Norm(i)      = U.FitResult.par(3+U.ModelObj.nPixels:3+2*U.ModelObj.nPixels-1) + 1;
+                       Norm_err(i)  = U.FitResult.err(3+U.ModelObj.nPixels:3+2*U.ModelObj.nPixels-1);
+                    end
+
+                    save(savename,'Chi2','Netabins','etafactor','etarange','mnuSq','mnuSq_err','E0','E0_err','Bkg','Bkg_err','Norm','Norm_err');
+                    plotchi2scan(savename);
+                end
+            end
+
+            if strcmp(mode,'SEARCH')
+                
+                matFilePath = [getenv('SamakPath'),sprintf('RelicNuBkg/UpperLimits/')];
+                if RunNr==1
+                    savename=[matFilePath,sprintf('RelicLimit_Fake_NoSyst_%s.mat',obj.Params)];
+                else
+                    SaveStr='';
+                    for i=1:numel(Init_Opt)
+                        if ischar(Init_Opt{i})
+                            SaveStr=[SaveStr,sprintf('_%s',Init_Opt{i})];
+                        elseif isfloat(Init_Opt{i})
+                            SaveStr=[SaveStr,sprintf('_%f',Init_Opt{i})];
+                        end
+                    end
+                savename=[matFilePath,sprintf('RelicLimit_Fake_NoSyst_%s%s.mat',obj.Params,SaveStr)];
+                end
+                
+                if exist(savename,'file') && strcmp(Recompute,'OFF')
+                    load(savename,'eta');
+                    switch RunNr
+                        case 1
+                            relic_global('eta',eta,'Params',obj.Params);
+                        case 10
+                            relic_global('eta',eta,'Params',obj.Params,'Init_Opt',Init_Opt);
+                    end
+                else
+                    if RunNr==1
+                        F = RunAnalysis('RunNr',RunNr,...             
+                            'FakeInitFile',initfile,...
+                            'chi2','chi2Stat',...                 % uncertainties: statistical or stat + systematic uncertainties
+                            'DataType','Fake',...                 % can be 'Real' or 'Twin' -> Monte Carlo
+                            'RingList',1:14,...
+                            'TwinBias_Q',18575,...
+                            'fixPar','mNu E0 Norm Bkg',...        % free Parameter!!
+                            'NonPoissonScaleFactor',1,...         % background uncertainty are enhanced
+                            'minuitOpt','min ; minos',...         % technical fitting options (minuit)
+                            'FSDFlag','Sibille0p5eV',...          % final state distribution                        !!check ob initfile hier überschrieben wird
+                            'ELossFlag','KatrinT2',...            % energy loss function
+                            'SysBudget',22,...                    % defines syst. uncertainties -> in GetSysErr.m;
+                            'DopplerEffectFlag','FSD',...
+                            'SynchrotronFlag','OFF',...
+                            'AngularTFFlag','OFF');
+                    elseif RunNr==10
+                        F = RunAnalysis('RunNr',RunNr,...             
+                            'FakeInitFile',initfile,...
+                            'Init_Opt',Init_Opt,...
+                            'RecomputeFakeRun','ON',...
+                            'chi2','chi2Stat',...                 % uncertainties: statistical or stat + systematic uncertainties
+                            'DataType','Fake',...                 % can be 'Real' or 'Twin' -> Monte Carlo
+                            'RingList',1:14,...
+                            'TwinBias_Q',18575,...
+                            'fixPar','mNu E0 Norm Bkg',...        % free Parameter!!
+                            'NonPoissonScaleFactor',1,...         % background uncertainty are enhanced
+                            'minuitOpt','min ; minos',...         % technical fitting options (minuit)
+                            'FSDFlag','Sibille0p5eV',...          % final state distribution                        !!check ob initfile hier überschrieben wird
+                            'ELossFlag','KatrinT2',...            % energy loss function
+                            'SysBudget',22,...                    % defines syst. uncertainties -> in GetSysErr.m;
+                            'DopplerEffectFlag','FSD',...
+                            'SynchrotronFlag','OFF',...
+                            'AngularTFFlag','OFF');
+                    end
+
+                    F.exclDataStart = 1; % set region of interest
+                    
+                    if RunNr==10
+                        U.InitModelObj_Norm_BKG('Recompute','ON');
+                    end
+
+                    eta=etaupper;
+                    F.ModelObj.eta_i=etalower;
+                    F.ModelObj.eta=etalower;
+                    U.ModelObj.eta_i=etaupper;
+                    U.ModelObj.eta=etaupper;
+                    U.ModelObj.ComputeNormFactorTBDDS;
+                    U.ModelObj.ComputeTBDDS;
+                    U.ModelObj.ComputeTBDIS;
+                    U.Fit;
+                    chi2 = U.FitResult.chi2min;
+                    if chi2<2.71
+                        sprintf('chi^2 too small! Set larger initial eta.')
+                    elseif chi2>50
+                        sprintf('Minos failed! Vary initial eta.')
+                    else
+                        while abs(chi2-2.71)>0.01
+                            if chi2>2.71
+                                etaupper=eta;
+                                eta=(etaupper+etalower)./2;
+                                U.ModelObj.eta_i=eta;
+                                U.ModelObj.eta=eta;
+                                U.ModelObj.ComputeNormFactorTBDDS;
+                                U.ModelObj.ComputeTBDDS;
+                                U.ModelObj.ComputeTBDIS;
+                                U.Fit;
+                                if U.FitResult.chi2min>50
+                                    sprintf('Fit failed! Retrying...')
+                                    etaupper = etaupper + delta;
+                                    eta=etaupper;
+                                else
+                                    chi2=U.FitResult.chi2min;
+                                end
+                            else
+                                etalower=eta;
+                                eta=(etaupper+etalower)./2;
+                                F.ModelObj.eta_i=eta;
+                                F.ModelObj.eta=eta;
+                                F.ModelObj.ComputeNormFactorTBDDS;
+                                F.ModelObj.ComputeTBDDS;
+                                F.ModelObj.ComputeTBDIS;
+                                F.Fit;
+                                if F.FitResult.chi2min>50
+                                    sprintf('Fit failed! Retrying...')
+                                    etalower = etalower - delta;
+                                    eta = etalower;
+                                else
+                                    chi2=F.FitResult.chi2min;
+                                end
+                            end
+                        end
+                        switch RunNr
+                            case 1
+                                relic_global('eta',eta,'Params',obj.Params);
+                            case 10
+                                relic_global('eta',eta,'Params',obj.Params,'Init_Opt',Init_Opt);
+                        end
+                        save(savename,'eta');
+                        sprintf('Final Result: eta = %g',eta)
+                    end
+                end
+            end
        end
    end
     

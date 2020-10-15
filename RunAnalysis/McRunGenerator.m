@@ -21,6 +21,7 @@ classdef McRunGenerator < handle
         
         %fake run properties
         InitFile;
+        Init_Opt;
     end
     methods
         function obj = McRunGenerator(varargin)
@@ -28,11 +29,13 @@ classdef McRunGenerator < handle
             p.addParameter('MCFlag','Twin',@(x)ismember(x,{'Twin','Fake'})); %later more features
             p.addParameter('RunObj','',@(x)isa(x,'RunAnalysis'));
             p.addParameter('InitFile','',@(x)isa(x,'function_handle'));
+            p.addParameter('Init_Opt','',@(x)iscell(x) || isempty(x));
             p.parse(varargin{:});
             
             obj.MCFlag    = p.Results.MCFlag;
             obj.RunObj    = p.Results.RunObj;
             obj.InitFile  = p.Results.InitFile;
+            obj.Init_Opt  = p.Results.Init_Opt;
             
             if strcmp(obj.MCFlag,'Twin') && isempty(obj.RunObj)
                 fprintf(2,'Error: give a RunAnalysis object for MCFlag "Twin" \n');
@@ -496,7 +499,12 @@ classdef McRunGenerator < handle
                 if ~isempty(obj.RunObj.TwinBias_Time)
                     obj.TwinObj = obj.InitFile(TBDArg{:},'TimeSec',obj.RunObj.TwinBias_Time);
                 else
-                    obj.TwinObj = obj.InitFile(TBDArg{:});
+                    if isempty(obj.Init_Opt)
+                       obj.TwinObj = obj.InitFile(TBDArg{:}); 
+                    else
+                        obj.TwinObj = obj.InitFile(TBDArg{:},...
+                            obj.Init_Opt{:});
+                    end
                 end
                 %% Calculate Asimov pixel-wise spectra
                 obj.TwinObj.ComputeTBDDS;
