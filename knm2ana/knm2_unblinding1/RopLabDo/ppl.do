@@ -1,3 +1,0 @@
-rpd
-ppl
-exit
