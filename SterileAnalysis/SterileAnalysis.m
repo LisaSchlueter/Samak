@@ -1267,7 +1267,7 @@ classdef SterileAnalysis < handle
             legStr = [legStr,{sprintf('KATRIN %.0f%% C.L. :  {\\itm}_\\nu^2 = 0 eV^2',obj.ConfLevel)}];
          
             
-                    %% free unconstrained nu mass
+           %% free unconstrained nu mass
             if strcmp(FreemNuSq,'ON')
                 obj.InterpMode = 'lin';
                 obj.RunAnaObj.fixPar = 'mNu E0 Norm Bkg'; obj.RunAnaObj.InitFitPar;

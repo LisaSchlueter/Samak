@@ -4116,9 +4116,9 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
         function [TTFSD,DTFSD,HTFSD] = SetDefaultFSD(obj)
             
             % KNM2 blinding: force blind FSDs for all KNM2 analysis
-            if strcmp(obj.DataSet,'Knm2') && ~strcmp(obj.DataType,'Fake')
-                obj.FSDFlag =  'BlindingKNM2';
-            end
+%             if strcmp(obj.DataSet,'Knm2') && ~strcmp(obj.DataType,'Fake')
+%                % obj.FSDFlag =  'BlindingKNM2';
+%             end
             
             switch obj.FSDFlag
                 case 'Sibille'

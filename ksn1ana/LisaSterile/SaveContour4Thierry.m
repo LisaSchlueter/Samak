@@ -32,7 +32,6 @@ mnu4Sq_contour_95 = logspace(log10(min(mnu4Sq_tmp95{1})),log10(max(mnu4Sq_tmp95{
 sin2T4_contour_95 = interp1(mnu4Sq_tmp95{1},sin2T4_tmp95{1},mnu4Sq_contour_95,'lin');
 
 
-
 GetFigure
 plot(sin2T4_contour_90,mnu4Sq_contour_90,'LineStyle','-');
 hold on;
