@@ -2,10 +2,14 @@
 range = 40;
 DataType = 'Real';
 SigmaSq =  0.0124+0.0025;
-
+PullFlag = 99;
+freePar = 'mNu E0 Bkg Norm qU';
+if contains(freePar,'qU')
+    PullFlag = 6;
+end
 RunAnaArg = {'RunList','KNM2_Prompt',... % all KNM2 golden runs
-    'fixPar','mNu E0 Bkg Norm qU',...           % free Parameter !!
-    'DataType',DataType,...              
+    'fixPar',freePar,...           % free Parameter !!
+    'DataType',DataType,...
     'FSDFlag','Sibille0p5eV',...       % final state distribution (theoretical calculation)
     'ELossFlag','KatrinT2A20',...         % energy loss function     ( different parametrizations available)
     'AnaFlag','Ring',...
@@ -16,7 +20,8 @@ RunAnaArg = {'RunList','KNM2_Prompt',... % all KNM2 golden runs
     'SysBudget',39,...
     'chi2','chi2Stat',...
     'TwinBias_FSDSigma',sqrt(SigmaSq),...
-    'FSD_Sigma',sqrt(SigmaSq)};
+    'FSD_Sigma',sqrt(SigmaSq),...
+    'PullFlag',PullFlag};
 
 MC = MultiRunAnalysis(RunAnaArg{:});
 MC.exclDataStart = MC.GetexclDataStart(range);

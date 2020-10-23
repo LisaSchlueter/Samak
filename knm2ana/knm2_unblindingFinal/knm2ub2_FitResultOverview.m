@@ -1,7 +1,7 @@
 Uniform = 'ON';
 MR4 = 'ON';
 MR4qU = 'ON';
-MR12 = 'ON';
+MR12 = 'OFF';
 range = 40;
 freePar = 'mNu E0 Bkg Norm';
 savedir = [getenv('SamakPath'),'knm2ana/knm2_unblindingFinal/results/BestFit/'];
@@ -97,5 +97,6 @@ xlabel(sprintf('{\\itm}_\\nu^2 (eV^2)'));
 leg = legend([pstat,pcm],'Stat. only','Stat. and syst.','EdgeColor',rgb('Silver'),'Location','northwest');
  
 plotdir = strrep(savedir,'results/BestFit','plots');
+MakeDir(plotdir);
 plotname = sprintf('%sknm2ub1_FitResultOverview_mNuSq.png',plotdir);
 print(plotname,'-dpng','-r350');

@@ -13,7 +13,7 @@ elseif  strcmp(chi2,'chi2CMShape')
 end
 savedir = [getenv('SamakPath'),'knm2ana/knm2_unblindingFinal/results/Chi2Curve/'];
 
-savename = sprintf('%sknm2ub1_Chi2Curve_%s_%.0feV_%s_%s_%s.mat',...
+savename = sprintf('%sknm2ub2_Chi2Curve_%s_%.0feV_%s_%s_%s.mat',...
     savedir,DataType,range,strrep(freePar,' ',''),chi2,AnaFlag);
 if ~strcmp(chi2,'chi2Stat')
     savename = strrep(savename,'.mat',sprintf('_SysBudget%.0f.mat',SysBudget));

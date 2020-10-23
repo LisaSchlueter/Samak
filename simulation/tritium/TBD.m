@@ -1688,8 +1688,12 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                 TBDDStmp =  obj.TBDDS; % init
                 for r=1:obj.nRings
                     if obj.qUOffset(r)~=0
-                        %fprintf('Ring %.0f: qUOffset = %.2g eV \n',r,obj.qUOffset(r))
-                        TBDDStmp(:,r) = interp1(obj.Te,obj.TBDDS(:,r),obj.Te+obj.qUOffset(r),'spline','extrap'); 
+                        fprintf('Ring %.0f: qUOffset = %.2g eV \n',r,obj.qUOffset(r))
+                        %try
+                            TBDDStmp(:,r) = interp1(obj.Te,obj.TBDDS(:,r),obj.Te+obj.qUOffset(r),'lin','extrap');
+                        %catch
+                        %    a=1;
+                        %end
                     end
                 end
                 obj.TBDDS = TBDDStmp;
@@ -1839,7 +1843,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                     sprintf('HT%0.5g_Tm%0.5g',obj.WGTS_MolFrac_HT,obj.WGTS_MolFrac_Tm));
             end
             
-            if exist(FullDSIntName,'file') == 2
+            if exist(FullDSIntName,'file') == 2 &&1==2
                 TempStructFullDS = load(FullDSIntName);
                 FullDSInt = TempStructFullDS.FullDSInt;
             else % if not, calculate it
@@ -1855,8 +1859,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                     stepsizeCF = 2;
                 end
                 
-                saveTe = obj.Te;
-                
+                saveTe = obj.Te; 
                 obj.Te = (0.01:stepsizeCF:obj.qUmax)';
                 obj.nTe = length(obj.Te);
                 obj.SetKinVariables();

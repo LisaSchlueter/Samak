@@ -326,6 +326,7 @@ classdef FITC < handle
             % PULLS TOLERANCE:
             FSDtol=1e-03;         % final state distribution PGS-PES
             Normtol=0.0017;        % normalization tolerance from ring to ring
+            NormAbstol =  2;      % asbolute ringwise normalization tolerance (deviation from 0)
             qUOffsettol = 10;     % qUOffset absolute tolerance (eV)
             qUmeanOffsettol = 0.5;  % qUOffset tolerance from ring to ring (eV)
             BkgSlopetol = 4.74.*1e-06;%5*1e-6; % background slope constrain (cps/eV)
@@ -372,7 +373,7 @@ classdef FITC < handle
                 %sum((ParqUOffset-zeros(1,length(ParqUOffset))).^2  ./qUOffsettol^2);
             end
             
-              % 6: qU Offsets: small absolute qU Offset 
+            % 6: qU Offsets: small absolute qU Offset
             if any(ismember(obj.pullFlag,6))
                 ParqUOffset = par(2*obj.SO.nPixels+9:3*obj.SO.nPixels+8);
                 PullTerm =  PullTerm + sum(ParqUOffset.^2./qUOffsettol.^2);
@@ -489,6 +490,17 @@ classdef FITC < handle
                 PullTerm = PullTerm + ...
                     (par(4*obj.SO.nPixels+12)-sin4Central).^2./sin4Tol^2+...  % sin2t4
                     (par(4*obj.SO.nPixels+11)-m4Central).^2./m4Tol^2;         % m4
+            end
+            
+            %22: Normalization: small abs deviation from 0
+            if any(ismember(obj.pullFlag,22))
+                ParNorm = par(3+obj.SO.nPixels:3+2*obj.SO.nPixels-1); % -> ringwise normalizations
+                PullTerm = PullTerm + sum((ParNorm).^2./NormAbstol^2);
+            end
+            
+            if any(ismember(obj.pullFlag,23)) % loose nu-mass pull
+                mNuSqtol_Loose =  100; % eV^2
+                PullTerm = PullTerm + (par(1)-0)^2/mNuSqtol_Loose^2;
             end
         end
         function chi2 = chi2function(obj,par)
