@@ -1,121 +1,81 @@
-function relic_global(varargin)
+function CheckTwins(varargin)
 
     %% Settings
     p=inputParser;
-    p.addParameter('eta',2.8e9,@(x)isfloat(x));
-    p.addParameter('Params','TDR',@(x)ismember(x,{'TDR','Formaggio','KNM1','KNM2'}));
+    p.addParameter('RunList','KNM1',@(x)ismember(x,{'KNM1','KNM2'}));
     p.addParameter('fitPar','mNu E0 Norm Bkg',@(x)ischar(x));
-    p.addParameter('Init_Opt','',@(x)iscell(x) || isempty(x));
-    p.addParameter('E0',18575,@(x)isfloat(x));                                         % Endpoint in eV
+    p.addParameter('E0',18573.73,@(x)isfloat(x));                                         % Endpoint in eV
     p.addParameter('range',40,@(x)isfloat(x));
     p.parse(varargin{:});
-    eta      =p.Results.eta;
-    Params   =p.Results.Params;
+    RunList  =p.Results.RunList;
     fitPar   =p.Results.fitPar;
-    Init_Opt =p.Results.Init_Opt;
     E0       =p.Results.E0;
     range    =p.Results.range;
     
-    switch Params
-        case 'TDR'
-            initfile=@ref_RelicNuBkg_DesignReport;
-        case 'Formaggio'
-            initfile=@ref_RelicNuBkg_Formaggio;
-        case 'KNM1'
-            initfile=@ref_RelicNuBkg_KNM1;
-    end
 
     %% Data
-    D = RunAnalysis('RunNr',100,...
-        'RecomputeFakeRun','ON',...
-        'Init_Opt',[Init_Opt,{'eta_i',eta}],...
-        'FakeInitFile',initfile,...
+    D = MultiRunAnalysis('RunList',RunList,...
         'chi2','chi2Stat',...                 % uncertainties: statistical or stat + systematic uncertainties
-        'DataType','Fake',...                 % can be 'Real' or 'Twin' -> Monte Carlo
-        'TwinBias_Q',E0,...
-        'RingList',1:14,...
+        'DataType','Real',...                 % can be 'Real' or 'Twin' -> Monte Carlo
         'fixPar',fitPar,...                   % free Parameter!!
-        'NonPoissonScaleFactor',1,...         % background uncertainty are enhanced
+        'RadiativeFlag','ON',...              % theoretical radiative corrections applied in model
+        'NonPoissonScaleFactor',1.064,...     % background uncertainty are enhanced
+        'fitter','minuit',...                 % minuit standard, matlab to be tried
         'minuitOpt','min ; minos',...         % technical fitting options (minuit)
-        'FSDFlag','Sibille0p5eV',...          % final state distribution                        !!check ob initfile hier überschrieben wird
+        'FSDFlag','SibilleFull',...           % final state distribution
         'ELossFlag','KatrinT2',...            % energy loss function
         'SysBudget',22,...                    % defines syst. uncertainties -> in GetSysErr.m;
         'DopplerEffectFlag','FSD',...
-        'SynchrotronFlag','OFF',...
+        'Twin_SameCDFlag','OFF',...
+        'Twin_SameIsotopFlag','OFF',...
+        'SynchrotronFlag','ON',...
         'AngularTFFlag','OFF');
-    
-    %D.InitModelObj_Norm_BKG('RecomputeFlag','ON');
 
     D.exclDataStart = D.GetexclDataStart(range);
-    %% No relics
+    D.InitModelObj_Norm_BKG('RecomputeFlag','ON');
 
-    if isempty(Init_Opt)
-        R = RunAnalysis('RunNr',1,...
-            'FakeInitFile',initfile,...
-            'chi2','chi2Stat',...                 % uncertainties: statistical or stat + systematic uncertainties
-            'DataType','Fake',...                 % can be 'Real' or 'Twin' -> Monte Carlo
-            'TwinBias_Q',E0,...
-            'RingList',1:14,...
-            'fixPar',fitPar,...                   % free Parameter!!
-            'NonPoissonScaleFactor',1,...         % background uncertainty are enhanced
-            'minuitOpt','min ; minos',...         % technical fitting options (minuit)
-            'FSDFlag','Sibille0p5eV',...          % final state distribution                        !!check ob initfile hier überschrieben wird
-            'ELossFlag','KatrinT2',...            % energy loss function
-            'SysBudget',22,...                    % defines syst. uncertainties -> in GetSysErr.m;
-            'DopplerEffectFlag','FSD',...
-            'SynchrotronFlag','OFF',...
-            'AngularTFFlag','OFF');
-    else
-        R = RunAnalysis('RunNr',10,...
-            'FakeInitFile',initfile,...
-            'Init_Opt',Init_Opt,...
-            'RecomputeFakeRun','ON',...
-            'chi2','chi2Stat',...                 % uncertainties: statistical or stat + systematic uncertainties
-            'DataType','Fake',...                 % can be 'Real' or 'Twin' -> Monte Carlo
-            'TwinBias_Q',E0,...
-            'RingList',1:14,...
-            'fixPar',fitPar,...                   % free Parameter!!
-            'NonPoissonScaleFactor',1,...         % background uncertainty are enhanced
-            'minuitOpt','min ; minos',...         % technical fitting options (minuit)
-            'FSDFlag','Sibille0p5eV',...          % final state distribution                        !!check ob initfile hier überschrieben wird
-            'ELossFlag','KatrinT2',...            % energy loss function
-            'SysBudget',22,...                    % defines syst. uncertainties -> in GetSysErr.m;
-            'DopplerEffectFlag','FSD',...
-            'SynchrotronFlag','OFF',...
-            'AngularTFFlag','OFF');
-    end
-    R.exclDataStart = R.GetexclDataStart(range);
     
-    if ~isempty(Init_Opt)
-        R.InitModelObj_Norm_BKG('RecomputeFlag','ON');
-    end
+
+    %% Twins
+   
+    R = MultiRunAnalysis('RunList',RunList,... % runlist defines which runs are analysed -> set MultiRunAnalysis.m -> function: GetRunList()
+        'chi2','chi2Stat',...                 % uncertainties: statistical or stat + systematic uncertainties
+        'DataType','Twin',...                 % can be 'Real' or 'Twin' -> Monte Carlo
+        'fixPar',fitPar,...                   % free Parameter!!
+        'RadiativeFlag','ON',...              % theoretical radiative corrections applied in model
+        'NonPoissonScaleFactor',1.064,...     % background uncertainty are enhanced
+        'fitter','minuit',...
+        'minuitOpt','min ; minos',...         % technical fitting options (minuit)
+        'FSDFlag','SibilleFull',...           % final state distribution
+        'ELossFlag','KatrinT2',...            % energy loss function
+        'SysBudget',22,...                    % defines syst. uncertainties -> in GetSysErr.m;
+        'DopplerEffectFlag','FSD',...
+        'Twin_SameCDFlag','OFF',...
+        'Twin_SameIsotopFlag','OFF',...
+        'SynchrotronFlag','ON',...
+        'AngularTFFlag','OFF',...
+        'TwinBias_Q',18573.73);
+    
+    R.exclDataStart = R.GetexclDataStart(range);
+    R.InitModelObj_Norm_BKG('RecomputeFlag','ON');
 
     %% Global variables
     times = R.ModelObj.qUfrac*R.ModelObj.TimeSec;
     qU    = R.ModelObj.qU; qU    = qU-E0; % Energy axis
 
-    % % Spectrum
-    % R.ModelObj.ComputeTBDDS(); 
-    % YD = R.ModelObj.TBDDS;
-    % R.ModelObj.ComputeTBDIS(); 
-    % YI = R.ModelObj.TBDIS; 
-    % YI = YI./times;
-
-    % Spectrum relics
-    D.Fit;
-    %D.ModelObj.ComputeTBDDS(); 
-    YDs = D.ModelObj.TBDDS;
-    %D.ModelObj.ComputeTBDIS(); 
-    IS  = D.ModelObj.TBDIS; 
-    YIs = IS./times;
-
-    % Spectrum no relics
+    % twins
     R.Fit;
-    %R.ModelObj.ComputeTBDDS(); 
     YD = R.ModelObj.TBDDS;
-    %R.ModelObj.ComputeTBDIS(); 
     YI = R.ModelObj.TBDIS; 
     YI = YI./times;
+    
+    % data
+    D.ModelObj.ComputeTBDDS;
+    D.ModelObj.ComputeTBDIS;
+    D.Fit; 
+    YDs = D.ModelObj.TBDDS;
+    IS  = D.ModelObj.TBDIS;
+    YIs = IS./times;
 
     %% relic "data"
 
@@ -123,7 +83,7 @@ function relic_global(varargin)
     % Error - stat - 
     % err  = sqrt(YIsd) ;
     % Error - stat +syst
-    err  = (diag(sqrt(D.FitCMShape))) ;
+    err  = (diag(sqrt(R.FitCMShape))) ;
 
     % Fluctuations (data sim)
     %YIsd = YIsd + err.*randn(length(YIsd),1);
@@ -165,16 +125,16 @@ function relic_global(varargin)
     pfit = plot(R.RunData.qU(R.exclDataStart:end)-E0,...
         R.RunData.TBDIS(R.exclDataStart:end)./...
         (R.ModelObj.qUfrac(R.exclDataStart:end)*R.ModelObj.TimeSec),...
-        'DisplayName','No Relics','color',prlB,'LineWidth',3,'LineStyle','-')
+        'DisplayName','Twins','color',prlB,'LineWidth',3,'LineStyle','-')
     hold on
 
     pdata = errorbar(D.RunData.qU(D.exclDataStart:end)-E0,...
-        D.RunData.TBDIS(D.exclDataStart:end)./...
+        (D.RunData.TBDIS(D.exclDataStart:end))./...
         (D.ModelObj.qUfrac(D.exclDataStart:end)*D.ModelObj.TimeSec),...
         sqrt(D.RunData.TBDIS(D.exclDataStart:end))./(D.ModelObj.qUfrac(D.exclDataStart:end)*D.ModelObj.TimeSec)*50,FitStyleArg{:},'CapSize',0)
 
     yl1 = ylabel('Count rate (cps)');
-    legend([pdata,pfit],{sprintf('Asimov data with \\eta = %.2g (error bars \\times 50)',D.ModelObj.eta),'\beta-decay model'},'Location','northeast','box','off');
+    legend([pdata,pfit],{sprintf('Data (error bars \\times 50)'),'Twins'},'Location','northeast','box','off');
     lgd=legend;
     lgd.FontSize = LocalFontSize-2;
 
@@ -214,9 +174,8 @@ function relic_global(varargin)
     % Plot style
     %ylabel('Ratio \nu_4/\nu_{\beta}');
     ylabel('Ratio');
-    katrinsim   = sprintf('Simulation for \\eta = %.2g',D.ModelObj.eta);
-    sterilemod  = sprintf('\\beta-decay + C\\nuB model');
-    hl=legend([hr2 hr1 pnone hr3],{'\beta-decay model',sterilemod,'',katrinsim},'Location','southwest','box','off');
+    katrinsim   = sprintf('Data');
+    hl=legend([hr2 hr1 pnone hr3],{'Twins','Data best fit','',katrinsim},'Location','southwest','box','off');
     hl.NumColumns=2;
     hl.FontSize = LocalFontSize-2;
 

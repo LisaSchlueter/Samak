@@ -266,7 +266,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
             p.addParameter('BinningSteps',0.1,@(x)isfloat(x));
             p.addParameter('eta_i',1,@(x)isfloat(x));
             p.addParameter('ToggleRelic','ON',@(x)ismember(x,{'ON','OFF'}));
-            p.addParameter('ToggleES','ON',@(x)ismember(x,{'ON','OFF'}));
+            p.addParameter('ToggleES','OFF',@(x)ismember(x,{'ON','OFF'}));
 
             % TBD: Flag for Theoretical Corrections
             p.addParameter('ScreeningFlag','OFF',@(x)ismember(x,{'OFF','ON'}));
@@ -1642,7 +1642,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
             NormDist = 'a/sqrt(2*pi*b^2)*exp(-(x-c)^2/(2*b^2))';
             Spectrum = obj.TBDDS_R;
             Spectrum(1:200) = 0;
-            pd0 = fit(obj.Te-obj.Q,Spectrum,NormDist,'Start',[5.2e-6 0.36 -1.71]);
+            pd0 = fit(obj.Te-obj.Q,Spectrum,NormDist,'Start',[1.4358e-14 0.41 -0.666]);
 
             hT0 = plot((obj.Te-obj.Q),obj.TBDDS_R,'LineWidth',2,'Color','Black','LineStyle','-');
             hold on;
@@ -1916,8 +1916,10 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                             case 'ON'
                                 EnergyRange = obj.Te-obj.Q;
                                 lowerbound=find(abs(EnergyRange+10-obj.mnuSq)<abs(EnergyRange(2)-EnergyRange(1))/2);
-                                GSFrac = simpsons(TBDDS_Capture(lowerbound:end))/simpsons(TBDDS_Capture);
-                                TBDDS_Capture = TBDDS_Capture.*NormGS/GSFrac;       %fraction of captures happening inside the considered energy range
+                                if simpsons(TBDDS_Capture)~=0
+                                    GSFrac = simpsons(TBDDS_Capture(lowerbound:end))/simpsons(TBDDS_Capture);
+                                    TBDDS_Capture = TBDDS_Capture.*NormGS/GSFrac;       %fraction of captures happening inside the considered energy range
+                                end
                             case'OFF'
                                 TBDDS_Capture = TBDDS_Capture.*NormGS;
                         end
@@ -2074,6 +2076,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
             else
                FSDlabel = '';
             end
+            toggleback=0;
             
             % Check if integral of full spectrum under these conditions
             % already exists, if yes, load it
@@ -2094,7 +2097,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                 FullDSInt = TempStructFullDS.FullDSInt;
             else % if not, calculate it
                 if obj.Q - obj.qUmin < 50
-                    stepsizeCF = 0.1;
+                    stepsizeCF = 0.2;
                 elseif obj.Q - obj.qUmin < 101
                     stepsizeCF = 0.2;
                 elseif obj.Q - obj.qUmin < 1001
@@ -2110,6 +2113,10 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                 obj.Te = (0.01:stepsizeCF:obj.qUmax)';
                 obj.nTe = length(obj.Te);
                 obj.SetKinVariables();
+                if strcmp(obj.ToggleRelic,'ON')
+                    toggleback=1;
+                    obj.ToggleRelic='OFF';
+                end
                 obj.ComputeTBDDS('NormFlag','OFF');
                 
                 FullDSInt = simpsons(obj.Te,obj.TBDDS);
@@ -2128,6 +2135,10 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
             measuredDSInt = simpsons(obj.Te,obj.TBDDS);
             
             obj.CumFrac = measuredDSInt/FullDSInt;
+            
+            if ~exist(FullDSIntName,'file') == 2 && toggleback==1
+                obj.ToggleRelic='ON';
+            end
                   
         end
         

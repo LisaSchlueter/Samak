@@ -1,18 +1,19 @@
 %% settings
-range = 30; % eV below the endpoint
-Netabins = 11;
-etarange = 10;
-etafactor = 2; %max(eta) = etafactor*10^(etarange)
+range = 40; % eV below the endpoint
+Netabins = 10;
+etarange = 11;
+etafactor = 3; %max(eta) = etafactor*10^(etarange)
 %% create MultiRunAnalysis object
 
 R = MultiRunAnalysis('RunList','KNM1',... % runlist defines which runs are analysed -> set MultiRunAnalysis.m -> function: GetRunList()
     'chi2','chi2Stat',...                 % uncertainties: statistical or stat + systematic uncertainties
     'DataType','Twin',...                 % can be 'Real' or 'Twin' -> Monte Carlo
-    'fixPar','mnu E0 Norm Bkg',...        % free Parameter!!
+    'fixPar','mNu E0 Norm Bkg',...        % free Parameter!!
     'RadiativeFlag','ON',...              % theoretical radiative corrections applied in model
     'NonPoissonScaleFactor',1.064,...     % background uncertainty are enhanced
+    'fitter','minuit',...                 % minuit standard, matlab to be tried
     'minuitOpt','min ; minos',...         % technical fitting options (minuit)
-    'FSDFlag','Sibille0p5eV',...          % final state distribution
+    'FSDFlag','SibilleFull',...           % final state distribution
     'ELossFlag','KatrinT2',...            % energy loss function
     'SysBudget',22,...                    % defines syst. uncertainties -> in GetSysErr.m;
     'DopplerEffectFlag','FSD',...
@@ -32,7 +33,8 @@ E0   = 1:Netabins;
 Bkg  = 1:Netabins;
 
 for i=1:Netabins
-   R.ModelObj.eta = (i-1)*((etafactor*10^(etarange))/(Netabins-1));
+   R.ModelObj.eta_i = (i-1)*((etafactor*10^(etarange))/(Netabins-1));
+   R.ModelObj.eta   = (i-1)*((etafactor*10^(etarange))/(Netabins-1));
    R.ModelObj.ComputeNormFactorTBDDS;
    R.ModelObj.ComputeTBDDS;
    R.ModelObj.ComputeTBDIS;

@@ -43,7 +43,7 @@ function plotchi2scan(savename)
     fitobject = fit(permute(eta,[2 1]),permute(Bkg,[2 1]),'poly1');
     plot(fitobject,eta,Bkg);
     xlabel('\eta','FontSize',12);
-    ylabel('E_{0} (eV)','FontSize',12);
+    ylabel('Background (cps)','FontSize',12);
     xlim([eta(1)-0.1*eta(end) eta(end)+0.1*eta(end)]);
     lgd=legend([pB],{'Bkg rate with linear trend'},'Location','northeast','box','off');
     lgd.FontSize = 12;

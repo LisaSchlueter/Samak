@@ -1,26 +1,22 @@
-function relic_global(varargin)
+function relic_global_twin(varargin)
 
     %% Settings
     p=inputParser;
     p.addParameter('eta',2.8e9,@(x)isfloat(x));
-    p.addParameter('Params','TDR',@(x)ismember(x,{'TDR','Formaggio','KNM1','KNM2'}));
+    p.addParameter('RunList','KNM1',@(x)ismember(x,{'KNM1','KNM2'}));
     p.addParameter('fitPar','mNu E0 Norm Bkg',@(x)ischar(x));
-    p.addParameter('Init_Opt','',@(x)iscell(x) || isempty(x));
-    p.addParameter('E0',18575,@(x)isfloat(x));                                         % Endpoint in eV
+    p.addParameter('E0',18573.73,@(x)isfloat(x));                                         % Endpoint in eV
     p.addParameter('range',40,@(x)isfloat(x));
     p.parse(varargin{:});
     eta      =p.Results.eta;
-    Params   =p.Results.Params;
+    RunList  =p.Results.RunList;
     fitPar   =p.Results.fitPar;
-    Init_Opt =p.Results.Init_Opt;
     E0       =p.Results.E0;
     range    =p.Results.range;
     
-    switch Params
-        case 'TDR'
-            initfile=@ref_RelicNuBkg_DesignReport;
-        case 'Formaggio'
-            initfile=@ref_RelicNuBkg_Formaggio;
+    switch RunList
+        case 'KNM2'
+            initfile=@ref_RelicNuBkg_KNM2;
         case 'KNM1'
             initfile=@ref_RelicNuBkg_KNM1;
     end
@@ -28,20 +24,19 @@ function relic_global(varargin)
     %% Data
     D = RunAnalysis('RunNr',100,...
         'RecomputeFakeRun','ON',...
-        'Init_Opt',[Init_Opt,{'eta_i',eta}],...
+        'Init_Opt',{'eta_i',eta},...
         'FakeInitFile',initfile,...
         'chi2','chi2Stat',...                 % uncertainties: statistical or stat + systematic uncertainties
         'DataType','Fake',...                 % can be 'Real' or 'Twin' -> Monte Carlo
         'TwinBias_Q',E0,...
-        'RingList',1:14,...
         'fixPar',fitPar,...                   % free Parameter!!
-        'NonPoissonScaleFactor',1,...         % background uncertainty are enhanced
+        'NonPoissonScaleFactor',1.064,...     % background uncertainty are enhanced
         'minuitOpt','min ; minos',...         % technical fitting options (minuit)
-        'FSDFlag','Sibille0p5eV',...          % final state distribution                        !!check ob initfile hier überschrieben wird
+        'FSDFlag','SibilleFull',...           % final state distribution                        !!check ob initfile hier überschrieben wird
         'ELossFlag','KatrinT2',...            % energy loss function
         'SysBudget',22,...                    % defines syst. uncertainties -> in GetSysErr.m;
         'DopplerEffectFlag','FSD',...
-        'SynchrotronFlag','OFF',...
+        'SynchrotronFlag','ON',...
         'AngularTFFlag','OFF');
     
     %D.InitModelObj_Norm_BKG('RecomputeFlag','ON');
@@ -49,73 +44,60 @@ function relic_global(varargin)
     D.exclDataStart = D.GetexclDataStart(range);
     %% No relics
 
-    if isempty(Init_Opt)
-        R = RunAnalysis('RunNr',1,...
-            'FakeInitFile',initfile,...
+    if strcmp(RunList,'KNM1')
+        R = MultiRunAnalysis('RunList',RunList,... % runlist defines which runs are analysed -> set MultiRunAnalysis.m -> function: GetRunList()
             'chi2','chi2Stat',...                 % uncertainties: statistical or stat + systematic uncertainties
-            'DataType','Fake',...                 % can be 'Real' or 'Twin' -> Monte Carlo
-            'TwinBias_Q',E0,...
-            'RingList',1:14,...
+            'DataType','Twin',...                 % can be 'Real' or 'Twin' -> Monte Carlo
             'fixPar',fitPar,...                   % free Parameter!!
-            'NonPoissonScaleFactor',1,...         % background uncertainty are enhanced
+            'RadiativeFlag','ON',...              % theoretical radiative corrections applied in model
+            'NonPoissonScaleFactor',1.064,...     % background uncertainty are enhanced
             'minuitOpt','min ; minos',...         % technical fitting options (minuit)
-            'FSDFlag','Sibille0p5eV',...          % final state distribution                        !!check ob initfile hier überschrieben wird
+            'FSDFlag','SibilleFull',...           % final state distribution
             'ELossFlag','KatrinT2',...            % energy loss function
             'SysBudget',22,...                    % defines syst. uncertainties -> in GetSysErr.m;
             'DopplerEffectFlag','FSD',...
-            'SynchrotronFlag','OFF',...
-            'AngularTFFlag','OFF');
-    else
-        R = RunAnalysis('RunNr',10,...
-            'FakeInitFile',initfile,...
-            'Init_Opt',Init_Opt,...
-            'RecomputeFakeRun','ON',...
+            'Twin_SameCDFlag','OFF',...
+            'Twin_SameIsotopFlag','OFF',...
+            'SynchrotronFlag','ON',...
+            'AngularTFFlag','OFF',...
+            'TwinBias_Q',18573.73);
+    elseif strcmp(RunList,'KNM2')
+        R = MultiRunAnalysis('RunList',RunList,... % runlist defines which runs are analysed -> set MultiRunAnalysis.m -> function: GetRunList()
             'chi2','chi2Stat',...                 % uncertainties: statistical or stat + systematic uncertainties
-            'DataType','Fake',...                 % can be 'Real' or 'Twin' -> Monte Carlo
-            'TwinBias_Q',E0,...
-            'RingList',1:14,...
+            'DataType','Twin',...                 % can be 'Real' or 'Twin' -> Monte Carlo
             'fixPar',fitPar,...                   % free Parameter!!
-            'NonPoissonScaleFactor',1,...         % background uncertainty are enhanced
+            'RadiativeFlag','ON',...              % theoretical radiative corrections applied in model
+            'NonPoissonScaleFactor',1.064,...     % background uncertainty are enhanced
             'minuitOpt','min ; minos',...         % technical fitting options (minuit)
-            'FSDFlag','Sibille0p5eV',...          % final state distribution                        !!check ob initfile hier überschrieben wird
+            'FSDFlag','SibilleFull',...           % final state distribution
             'ELossFlag','KatrinT2',...            % energy loss function
             'SysBudget',22,...                    % defines syst. uncertainties -> in GetSysErr.m;
             'DopplerEffectFlag','FSD',...
-            'SynchrotronFlag','OFF',...
-            'AngularTFFlag','OFF');
+            'Twin_SameCDFlag','OFF',...
+            'Twin_SameIsotopFlag','OFF',...
+            'SynchrotronFlag','ON',...
+            'AngularTFFlag','OFF',...
+            'TwinBias_Q',18573.73);
     end
     R.exclDataStart = R.GetexclDataStart(range);
-    
-    if ~isempty(Init_Opt)
-        R.InitModelObj_Norm_BKG('RecomputeFlag','ON');
-    end
 
     %% Global variables
     times = R.ModelObj.qUfrac*R.ModelObj.TimeSec;
     qU    = R.ModelObj.qU; qU    = qU-E0; % Energy axis
 
-    % % Spectrum
-    % R.ModelObj.ComputeTBDDS(); 
-    % YD = R.ModelObj.TBDDS;
-    % R.ModelObj.ComputeTBDIS(); 
-    % YI = R.ModelObj.TBDIS; 
-    % YI = YI./times;
-
-    % Spectrum relics
-    D.Fit;
-    %D.ModelObj.ComputeTBDDS(); 
-    YDs = D.ModelObj.TBDDS;
-    %D.ModelObj.ComputeTBDIS(); 
-    IS  = D.ModelObj.TBDIS; 
-    YIs = IS./times;
-
     % Spectrum no relics
     R.Fit;
-    %R.ModelObj.ComputeTBDDS(); 
     YD = R.ModelObj.TBDDS;
-    %R.ModelObj.ComputeTBDIS(); 
     YI = R.ModelObj.TBDIS; 
     YI = YI./times;
+    
+    % Spectrum relics
+    D.ModelObj.NormFactorTBDDS=(R.FitResult.par(3+R.ModelObj.nPixels:3+2*R.ModelObj.nPixels-1) + 1).*R.ModelObj.NormFactorTBDDS;
+    D.ModelObj.ComputeTBDDS(); 
+    YDs = D.ModelObj.TBDDS;
+    D.ModelObj.ComputeTBDIS(); 
+    IS  = D.ModelObj.TBDIS;
+    YIs = IS./times;
 
     %% relic "data"
 
@@ -123,7 +105,7 @@ function relic_global(varargin)
     % Error - stat - 
     % err  = sqrt(YIsd) ;
     % Error - stat +syst
-    err  = (diag(sqrt(D.FitCMShape))) ;
+    err  = (diag(sqrt(R.FitCMShape))) ;
 
     % Fluctuations (data sim)
     %YIsd = YIsd + err.*randn(length(YIsd),1);
@@ -169,7 +151,7 @@ function relic_global(varargin)
     hold on
 
     pdata = errorbar(D.RunData.qU(D.exclDataStart:end)-E0,...
-        D.RunData.TBDIS(D.exclDataStart:end)./...
+        (D.ModelObj.TBDIS(D.exclDataStart:end))./...
         (D.ModelObj.qUfrac(D.exclDataStart:end)*D.ModelObj.TimeSec),...
         sqrt(D.RunData.TBDIS(D.exclDataStart:end))./(D.ModelObj.qUfrac(D.exclDataStart:end)*D.ModelObj.TimeSec)*50,FitStyleArg{:},'CapSize',0)
 
