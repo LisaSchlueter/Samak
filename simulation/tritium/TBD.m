@@ -2097,7 +2097,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                 FullDSInt = TempStructFullDS.FullDSInt;
             else % if not, calculate it
                 if obj.Q - obj.qUmin < 50
-                    stepsizeCF = 0.2;
+                    stepsizeCF = 0.1;
                 elseif obj.Q - obj.qUmin < 101
                     stepsizeCF = 0.2;
                 elseif obj.Q - obj.qUmin < 1001

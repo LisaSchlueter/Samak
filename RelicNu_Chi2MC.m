@@ -6,7 +6,7 @@ etafactor = 3; %max(eta) = etafactor*10^(etarange)
 %% create MultiRunAnalysis object
 
 R = MultiRunAnalysis('RunList','KNM1',... % runlist defines which runs are analysed -> set MultiRunAnalysis.m -> function: GetRunList()
-    'chi2','chi2Stat',...                 % uncertainties: statistical or stat + systematic uncertainties
+    'chi2','chi2CMShape',...                 % uncertainties: statistical or stat + systematic uncertainties
     'DataType','Twin',...                 % can be 'Real' or 'Twin' -> Monte Carlo
     'fixPar','mNu E0 Norm Bkg',...        % free Parameter!!
     'RadiativeFlag','ON',...              % theoretical radiative corrections applied in model
@@ -21,7 +21,8 @@ R = MultiRunAnalysis('RunList','KNM1',... % runlist defines which runs are analy
     'Twin_SameIsotopFlag','OFF',...
     'SynchrotronFlag','ON',...
     'AngularTFFlag','OFF',...
-    'TwinBias_Q',18573.73);
+    'TwinBias_Q',18573.73,...
+    'TwinBias_mnuSq',1);
 
 R.exclDataStart = R.GetexclDataStart(range); % set region of interest
 

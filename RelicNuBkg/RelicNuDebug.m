@@ -181,6 +181,7 @@ classdef RelicNuDebug < handle
             p.addParameter('RunNr',1,@(x)isfloat(x));                          % 1 for default setings from initfile, 10 if you want to modify settings
             p.addParameter('Init_Opt','',@(x)iscell(x) || isempty(x));         % cell array containing options to change in initfile (only relevant if RunNr==10)
             p.addParameter('fitPar','mNu E0 Norm Bck',@(x)ischar(x));
+            p.addParameter('Syst','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('Netabins',10,@(x)isfloat(x));
             p.addParameter('etarange',10,@(x)isfloat(x));
             p.addParameter('etafactor',1.5,@(x)isfloat(x));                    % max(eta)=etafactor*10^etarange
@@ -195,6 +196,7 @@ classdef RelicNuDebug < handle
             range     = p.Results.range;
             Init_Opt  = p.Results.Init_Opt;
             fitPar    = p.Results.fitPar;
+            Syst      = p.Results.Syst;
             Netabins  = p.Results.Netabins;
             etarange  = p.Results.etarange;
             etafactor = p.Results.etafactor;
@@ -216,11 +218,17 @@ classdef RelicNuDebug < handle
                 TwinBias_Q=18573.73;
                 RingList=1:12;
             end
+            
+            if strcmp(Syst,'ON')
+                Chi2opt='chi2CMShape';
+            else
+                Chi2opt='chi2Stat';
+            end
 
             if RunNr==1
                 U = RunAnalysis('RunNr',RunNr,...             
                     'FakeInitFile',initfile,...
-                    'chi2','chi2Stat',...                 % uncertainties: statistical or stat + systematic uncertainties
+                    'chi2',Chi2opt,...                 % uncertainties: statistical or stat + systematic uncertainties
                     'DataType','Fake',...                 % can be 'Real' or 'Twin' -> Monte Carlo
                     'RingList',RingList,...
                     'TwinBias_Q',TwinBias_Q,...
@@ -238,7 +246,7 @@ classdef RelicNuDebug < handle
                     'FakeInitFile',initfile,...
                     'Init_Opt',Init_Opt,...
                     'RecomputeFakeRun','ON',...
-                    'chi2','chi2Stat',...                 % uncertainties: statistical or stat + systematic uncertainties
+                    'chi2',Chi2opt,...                 % uncertainties: statistical or stat + systematic uncertainties
                     'DataType','Fake',...                 % can be 'Real' or 'Twin' -> Monte Carlo
                     'RingList',RingList,...
                     'TwinBias_Q',TwinBias_Q,...
@@ -271,7 +279,7 @@ classdef RelicNuDebug < handle
                 Norm_err  = 1:Netabins;
                 matFilePath = [getenv('SamakPath'),sprintf('RelicNuBkg/Chi2Scans/')];
                 if RunNr==1
-                    savename=[matFilePath,sprintf('RelicChi2Scan_Fake_NoSyst_%s_[0 %g]_%s.mat',obj.Params,etafactor*10^etarange,fitPar)];
+                    savename=[matFilePath,sprintf('RelicChi2Scan_Fake_Syst%s_range%g_%s_[0 %g]_%s.mat',Syst,range,obj.Params,etafactor*10^etarange,fitPar)];
                 else
                     SaveStr='';
                     for i=1:numel(Init_Opt)
@@ -281,7 +289,7 @@ classdef RelicNuDebug < handle
                             SaveStr=[SaveStr,sprintf('_%f',Init_Opt{i})];
                         end
                     end
-                savename=[matFilePath,sprintf('RelicChi2Scan_Fake_NoSyst_%s_[0 %g]%s_%s.mat',obj.Params,etafactor*10^etarange,SaveStr,fitPar)];
+                savename=[matFilePath,sprintf('RelicChi2Scan_Fake_Syst%s_range%g_%s_[0 %g]%s_%s.mat',Syst,range,obj.Params,etafactor*10^etarange,SaveStr,fitPar)];
                 end
                 
                 if exist(savename,'file') && strcmp(Recompute,'OFF')
@@ -326,7 +334,7 @@ classdef RelicNuDebug < handle
                 
                 matFilePath = [getenv('SamakPath'),sprintf('RelicNuBkg/UpperLimits/')];
                 if RunNr==1
-                    savename=[matFilePath,sprintf('RelicLimit_Fake_NoSyst_%s_%s.mat',obj.Params,fitPar)];
+                    savename=[matFilePath,sprintf('RelicLimit_Fake_Syst%s_range%g_%s_%s.mat',Syst,range,obj.Params,fitPar)];
                 else
                     SaveStr='';
                     for i=1:numel(Init_Opt)
@@ -336,7 +344,7 @@ classdef RelicNuDebug < handle
                             SaveStr=[SaveStr,sprintf('_%f',Init_Opt{i})];
                         end
                     end
-                    savename=[matFilePath,sprintf('RelicLimit_Fake_NoSyst_%s%s_%s.mat',obj.Params,SaveStr,fitPar)];
+                    savename=[matFilePath,sprintf('RelicLimit_Fake_Syst%s_range%g_%s%s_%s.mat',Syst,range,obj.Params,SaveStr,fitPar)];
                 end
                 
                 if exist(savename,'file') && strcmp(Recompute,'OFF')
@@ -352,7 +360,7 @@ classdef RelicNuDebug < handle
                     if RunNr==1
                         F = RunAnalysis('RunNr',RunNr,...             
                             'FakeInitFile',initfile,...
-                            'chi2','chi2Stat',...                 % uncertainties: statistical or stat + systematic uncertainties
+                            'chi2',Chi2opt,...                 % uncertainties: statistical or stat + systematic uncertainties
                             'DataType','Fake',...                 % can be 'Real' or 'Twin' -> Monte Carlo
                             'RingList',RingList,...
                             'TwinBias_Q',TwinBias_Q,...
@@ -370,7 +378,7 @@ classdef RelicNuDebug < handle
                             'FakeInitFile',initfile,...
                             'Init_Opt',Init_Opt,...
                             'RecomputeFakeRun','ON',...
-                            'chi2','chi2Stat',...                 % uncertainties: statistical or stat + systematic uncertainties
+                            'chi2',Chi2opt,...                 % uncertainties: statistical or stat + systematic uncertainties
                             'DataType','Fake',...                 % can be 'Real' or 'Twin' -> Monte Carlo
                             'RingList',RingList,...
                             'TwinBias_Q',TwinBias_Q,...
@@ -468,6 +476,8 @@ classdef RelicNuDebug < handle
             p.addParameter('Recompute',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('RunList','KNM1',@(x)ischar(x));                          % KNM1 or KNM2
             p.addParameter('fitPar','mNu E0 Norm Bck',@(x)ischar(x));
+            p.addParameter('Syst','OFF',@(x)ismember(x,{'ON','OFF'}));
+            p.addParameter('TwinBias_mnuSq',0,@(x)isfloat(x));
             p.addParameter('range',30,@(x)isfloat(x));
             p.addParameter('Netabins',10,@(x)isfloat(x));
             p.addParameter('etarange',10,@(x)isfloat(x));
@@ -478,22 +488,30 @@ classdef RelicNuDebug < handle
             p.addParameter('etaupper',1.5e10,@(x)isfloat(x));                  % initial upper and lower search bounds
             p.addParameter('delta',0.1e9,@(x)isfloat(x));                      % amount by which to shift eta if fit fails
             p.parse(varargin{:});
-            Recompute = p.Results.Recompute;
-            RunList   = p.Results.RunList;
-            fitPar    = p.Results.fitPar;
-            range     = p.Results.range;
-            Netabins  = p.Results.Netabins;
-            etarange  = p.Results.etarange;
-            etafactor = p.Results.etafactor;
-            mode      = p.Results.mode;
-            etalower  = p.Results.etalower;
-            etaupper  = p.Results.etaupper;
-            delta     = p.Results.delta;
+            Recompute      = p.Results.Recompute;
+            RunList        = p.Results.RunList;
+            fitPar         = p.Results.fitPar;
+            Syst           = p.Results.Syst;
+            TwinBias_mnuSq = p.Results.TwinBias_mnuSq;
+            range          = p.Results.range;
+            Netabins       = p.Results.Netabins;
+            etarange       = p.Results.etarange;
+            etafactor      = p.Results.etafactor;
+            mode           = p.Results.mode;
+            etalower       = p.Results.etalower;
+            etaupper       = p.Results.etaupper;
+            delta          = p.Results.delta;
+            
+            if strcmp(Syst,'ON')
+                Chi2opt='chi2CMShape';
+            else
+                Chi2opt='chi2Stat';
+            end
             
 
             if strcmp(RunList,'KNM1')
                 U = MultiRunAnalysis('RunList',RunList,... % runlist defines which runs are analysed -> set MultiRunAnalysis.m -> function: GetRunList()
-                    'chi2','chi2Stat',...                 % uncertainties: statistical or stat + systematic uncertainties
+                    'chi2',Chi2opt,...                 % uncertainties: statistical or stat + systematic uncertainties
                     'DataType','Twin',...                 % can be 'Real' or 'Twin' -> Monte Carlo
                     'fixPar',fitPar,...                   % free Parameter!!
                     'RadiativeFlag','ON',...              % theoretical radiative corrections applied in model
@@ -507,10 +525,11 @@ classdef RelicNuDebug < handle
                     'Twin_SameIsotopFlag','OFF',...
                     'SynchrotronFlag','ON',...
                     'AngularTFFlag','OFF',...
-                    'TwinBias_Q',18573.73);
+                    'TwinBias_Q',18573.73,...
+                    'TwinBias_mnuSq',TwinBias_mnuSq);
             elseif strcmp(RunList,'KNM2')
                 U = MultiRunAnalysis('RunList',RunList,... % runlist defines which runs are analysed -> set MultiRunAnalysis.m -> function: GetRunList()
-                    'chi2','chi2Stat',...                 % uncertainties: statistical or stat + systematic uncertainties
+                    'chi2',Chi2opt,...                 % uncertainties: statistical or stat + systematic uncertainties
                     'DataType','Twin',...                 % can be 'Real' or 'Twin' -> Monte Carlo
                     'fixPar',fitPar,...                   % free Parameter!!
                     'RadiativeFlag','ON',...              % theoretical radiative corrections applied in model
@@ -524,7 +543,8 @@ classdef RelicNuDebug < handle
                     'Twin_SameIsotopFlag','OFF',...
                     'SynchrotronFlag','ON',...
                     'AngularTFFlag','OFF',...
-                    'TwinBias_Q',18573.73);
+                    'TwinBias_Q',18573.73,...
+                    'TwinBias_mnuSq',TwinBias_mnuSq);
             end
 
             U.exclDataStart = U.GetexclDataStart(range); % set region of interest
@@ -542,7 +562,7 @@ classdef RelicNuDebug < handle
                 Norm_err  = 1:Netabins;
                 
                 matFilePath = [getenv('SamakPath'),sprintf('RelicNuBkg/Chi2Scans/')];
-                savename=[matFilePath,sprintf('RelicChi2Scan_Twin_%s_[0 %g]_%s.mat',obj.Params,etafactor*10^etarange,fitPar)];
+                savename=[matFilePath,sprintf('RelicChi2Scan_Twin_BiasmnuSq%g_Syst%s_range%g_%s_[0 %g]_%s.mat',TwinBias_mnuSq,Syst,range,obj.Params,etafactor*10^etarange,fitPar)];
                 
                 if exist(savename,'file') && strcmp(Recompute,'OFF')
                     plotchi2scan(savename);
@@ -585,7 +605,7 @@ classdef RelicNuDebug < handle
             if strcmp(mode,'SEARCH')
                 
                 matFilePath = [getenv('SamakPath'),sprintf('RelicNuBkg/UpperLimits/')];
-                savename=[matFilePath,sprintf('RelicLimit_Twin_%s_%s.mat',obj.Params,fitPar)];
+                savename=[matFilePath,sprintf('RelicLimit_Twin_BiasmnuSq%g_Syst%s_range%g_%s_%s.mat',TwinBias_mnuSq,Syst,range,obj.Params,fitPar)];
                 
                 if exist(savename,'file') && strcmp(Recompute,'OFF')
                     load(savename,'eta');
@@ -594,7 +614,7 @@ classdef RelicNuDebug < handle
                 else
                     if strcmp(RunList,'KNM1')
                         F = MultiRunAnalysis('RunList',RunList,... % runlist defines which runs are analysed -> set MultiRunAnalysis.m -> function: GetRunList()
-                             'chi2','chi2Stat',...                 % uncertainties: statistical or stat + systematic uncertainties
+                             'chi2',Chi2opt,...                 % uncertainties: statistical or stat + systematic uncertainties
                              'DataType','Twin',...                 % can be 'Real' or 'Twin' -> Monte Carlo
                              'fixPar',fitPar,...                   % free Parameter!!
                              'RadiativeFlag','ON',...              % theoretical radiative corrections applied in model
@@ -608,10 +628,11 @@ classdef RelicNuDebug < handle
                              'Twin_SameIsotopFlag','OFF',...
                              'SynchrotronFlag','ON',...
                              'AngularTFFlag','OFF',...
-                             'TwinBias_Q',18573.73);
+                             'TwinBias_Q',18573.73,...
+                             'TwinBias_mnuSq',TwinBias_mnuSq);
                     elseif strcmp(RunList,'KNM2')
                         F = MultiRunAnalysis('RunList',RunList,... % runlist defines which runs are analysed -> set MultiRunAnalysis.m -> function: GetRunList()
-                             'chi2','chi2Stat',...                 % uncertainties: statistical or stat + systematic uncertainties
+                             'chi2',Chi2opt,...                 % uncertainties: statistical or stat + systematic uncertainties
                              'DataType','Twin',...                 % can be 'Real' or 'Twin' -> Monte Carlo
                              'fixPar',fitPar,...                   % free Parameter!!
                              'RadiativeFlag','ON',...              % theoretical radiative corrections applied in model
@@ -625,7 +646,8 @@ classdef RelicNuDebug < handle
                              'Twin_SameIsotopFlag','OFF',...
                              'SynchrotronFlag','ON',...
                              'AngularTFFlag','OFF',...
-                             'TwinBias_Q',18573.73);
+                             'TwinBias_Q',18573.73,...
+                             'TwinBias_mnuSq',TwinBias_mnuSq);
                     end
 
                     F.exclDataStart = F.GetexclDataStart(range); % set region of interest
