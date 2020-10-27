@@ -2,8 +2,8 @@
 Params='KNM1';
 range=40;
 fitPar='mNu E0 Norm Bkg';
-Syst='OFF';
-TwinBias_mnuSq=0;
+Syst='ON';
+TwinBias_mnuSq=1;
 NetaBins=10;
 etarange=11;
 etafactor=5;

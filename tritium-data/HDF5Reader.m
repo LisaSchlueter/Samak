@@ -59,8 +59,8 @@ if (strcmp(DataSet,'Knm2') || strcmp(DataSet,'Knm3a') || strcmp(DataSet,'Knm3b')
         TBDIS14keV = zeros(size(TBDIS));
     else
         TBDIS14keV = h5read([h5path,h5name],'/RunSummary/CountsKNM1')'; % for compute TBDISE
-         TBDIS1133 = zeros(size(TBDIS));
-         TBDIS2232 = zeros(size(TBDIS));
+        TBDIS1133 = zeros(size(TBDIS));
+        TBDIS2232 = zeros(size(TBDIS));
     end
 else
     TBDIS14keV = zeros(size(TBDIS));
