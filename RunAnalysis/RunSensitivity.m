@@ -1765,6 +1765,7 @@ classdef RunSensitivity < handle
             p.addParameter('Lokov','OFF',@(x)ismember(x,{'ON','OFF'})); % plot Lokov belt instead
             p.addParameter('Sensitivity','OFF',@(x)ismember(x,{'ON','OFF'})); % show sensitivity instead of upper limit
             p.addParameter('Style','PRL',@(x)ismember(x,{'PRL','Pretty'}));
+            p.addParameter('mNuSq_bf','',@(x)isfloat(x));
             p.addParameter('XLim',[-3,3],@(x)isfloat(x));
             p.parse(varargin{:});
             SavePlot = p.Results.SavePlot;
@@ -1773,6 +1774,7 @@ classdef RunSensitivity < handle
             Sensitivity = p.Results.Sensitivity;
             Style       = p.Results.Style;
             XLim = p.Results.XLim;
+            mNuSq_bf = p.Results.mNuSq_bf;
             
             if strcmp(Style,'PRL')
                 LocalFontSize = 30;
@@ -1912,20 +1914,25 @@ classdef RunSensitivity < handle
                 mNuMeasured = 0;
                 savestr = 'sensitivity_';
             else
-                if strcmp(obj.RunAnaObj.DataSet,'Knm1')
-                    mNuMeasured = -0.98;
-                elseif strcmp(obj.RunAnaObj.DataSet,'Knm2')
-                    mNuMeasured = -0.26;
+                if isempty(mNuSq_bf)
+                    if strcmp(obj.RunAnaObj.DataSet,'Knm1')
+                        mNuMeasured = -0.98;
+                    elseif strcmp(obj.RunAnaObj.DataSet,'Knm2')
+                        mNuMeasured = 0.19;
+                    else
+                        mNuMeasured = 0;
+                    end
+                     savestr = '';
                 else
-                    mNuMeasured = 0;
+                    mNuMeasured = mNuSq_bf;
+                    savestr = sprintf('_bf%.2feV2',mNuSq_bf);
                 end
-                savestr = '';
+               
             end
             x1 = obj.FC_x1(~isnan(obj.FC_x1));
             yticks(0:0.2:max(obj.FC_mNuSqTrue))
             mNuLimit = interp1(x1,obj.FC_mNuSqTrue(~isnan(obj.FC_x1)),mNuMeasured,'spline');
-            switch Lokov
-                case 'ON'
+            if strcmp(Lokov,'ON') && mNuMeasured<0
                     mNuLimit = SensitivityLimit;
             end
                 
@@ -1942,7 +1949,7 @@ classdef RunSensitivity < handle
                     sprintf(' Sensitivity: {\\itm}^2_\\nu \\leq %.2f eV^2 \n              \\rightarrow {\\itm}_\\nu  \\leq %.2f eV',mNuLimit,sqrt(mNuLimit)),'Location','northwest');
             else
                 leg = legend([p2,plimit],[sprintf('%s confidence belt at %.4g%% C.L. ',legStr,obj.ConfLevel*100),chi2str],...
-                    sprintf('     {\\itm}^2_\\nu \\leq %.1f eV^{ 2} \n\\rightarrow {\\itm}_\\nu  \\leq %.1f eV',mNuLimit,sqrt(mNuLimit)),'Location','northwest');
+                    sprintf('     {\\itm}^2_\\nu \\leq %.2f eV^{ 2} \n\\rightarrow {\\itm}_\\nu  \\leq %.2f eV',mNuLimit,sqrt(mNuLimit)),'Location','northwest');
             end
            %legend boxoff;
             leg.EdgeColor = rgb('Silver');

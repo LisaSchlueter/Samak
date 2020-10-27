@@ -361,7 +361,7 @@ classdef SterileAnalysis < handle
              end
              
         end
-        function pHandle = ContourPlotOsci(obj,varargin)
+        function [legHandle,legStr] = ContourPlotOsci(obj,varargin)
             % contour plot in osicllation parameter space
             p = inputParser;
             p.addParameter('BestFit','OFF',@(x) ismember(x,{'ON','OFF'}));
@@ -401,7 +401,7 @@ classdef SterileAnalysis < handle
             if strcmp(HoldOn,'ON')
                 hold on;
             elseif strcmp(HoldOn,'OFF')
-                figure('Units','normalized','Position',[0.1,0.1,0.382,0.66]);%0.618]);
+               pHandle =  figure('Units','normalized','Position',[0.1,0.1,0.382,0.66]);%0.618]);
             end
             
             obj.DeltaChi2 = GetDeltaChi2(CL,2);

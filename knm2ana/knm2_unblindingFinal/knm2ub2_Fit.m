@@ -3,8 +3,9 @@ range     = 40;
 freePar   = 'mNu E0 Bkg Norm';
 chi2      = 'chi2Stat';%CMShape';
 DataType  = 'Real';%Real';
-AnaFlag   = 'Ring';
+AnaFlag   = 'StackPixel';
 RingMerge = 'Full';%'None';
+FSDFlag = 'KNM2';
 
 if strcmp(AnaFlag,'Ring')
     SysBudget = 39;
@@ -17,12 +18,13 @@ else
     SysBudget = 38;
     AnaStr = AnaFlag;
 end
+
 savedir = [getenv('SamakPath'),'knm2ana/knm2_unblindingFinal/results/BestFit/'];
-savename = sprintf('%sknm2ub2_Fit_%s_%.0feV_%s_%s_%s.mat',...
-    savedir,DataType,range,strrep(freePar,' ',''),chi2,AnaStr);
+savename = sprintf('%sknm2ub2_Fit_%s_%.0feV_%s_%s_%s_%s.mat',...
+    savedir,DataType,range,strrep(freePar,' ',''),chi2,AnaStr,FSDFlag);
 
 
-if strcmp(chi2,'chi2Stat')
+if strcmp(chi2,'chi2Stat') 
     NonPoissonScaleFactor = 1;
 elseif  strcmp(chi2,'chi2CMShape')
     NonPoissonScaleFactor = 1.112;
@@ -45,7 +47,7 @@ else
         'fixPar',freePar,...
         'RadiativeFlag','ON',...
         'minuitOpt','min ; minos',...
-        'FSDFlag','SibilleFull',...
+        'FSDFlag','KNM2',...
         'ELossFlag','KatrinT2A20',...
         'SysBudget',SysBudget,...
         'AnaFlag',AnaFlag,...

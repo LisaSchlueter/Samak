@@ -47,14 +47,14 @@ S.ConfLevel = 0.9; % confidence level (0==1 sigma)
 switch Mode
     case 'FC'
         S.ComputeFC_Asimov('mNuSq_t',mNuSq,'nSamplesAsimov',300);
-        S.PlotFCBelt('HoldOn','OFF','Sensitivity',Sensitivity,...
+        S.PlotFCBelt('HoldOn','OFF','Sensitivity','OFF',...%Sensitivity,...
             'SavePlot','ON','XLim',[-1.5,1.5],...
-            'Style','Pretty');
+            'Style','Pretty','mNuSq_bf',0.190);
     case 'LT'
         mNuSq(mNuSq==0.8) = [];
         S.ComputeLokhov_Asimov('mNuSq_t',mNuSq);
-        S.PlotFCBelt('Lokov','ON','Sensitivity',Sensitivity,'SavePlot',SavePlot,...
-            'Style','Pretty','XLim',[-1.5,1.5]);
+        S.PlotFCBelt('Lokov','ON','Sensitivity','OFF','SavePlot',SavePlot,...
+            'Style','Pretty','XLim',[-1.5,1.5],'mNuSq_bf',0.190);
 end
 %% plot likelihood function
 %S.PlotFC_DeltaChi2('PDF','1sigma','SavePlot','ON','mNuSq_t',0);  % probability density function with 1 sigma boundaries
