@@ -7,6 +7,7 @@ function relic_global(varargin)
     p.addParameter('fitPar','mNu E0 Norm Bkg',@(x)ischar(x));
     p.addParameter('Init_Opt','',@(x)iscell(x) || isempty(x));
     p.addParameter('E0',18575,@(x)isfloat(x));                                         % Endpoint in eV
+    p.addParameter('Syst','OFF',@(x)ismember(x,{'ON','OFF'}));
     p.addParameter('range',40,@(x)isfloat(x));
     p.parse(varargin{:});
     eta      =p.Results.eta;
@@ -14,7 +15,14 @@ function relic_global(varargin)
     fitPar   =p.Results.fitPar;
     Init_Opt =p.Results.Init_Opt;
     E0       =p.Results.E0;
+    Syst     =p.Results.Syst;
     range    =p.Results.range;
+    
+    if strcmp(Syst,'ON')
+        Chi2opt='chi2CMShape';
+    else
+        Chi2opt='chi2Stat';
+    end
     
     switch Params
         case 'TDR'
@@ -30,7 +38,7 @@ function relic_global(varargin)
         'RecomputeFakeRun','ON',...
         'Init_Opt',[Init_Opt,{'eta_i',eta}],...
         'FakeInitFile',initfile,...
-        'chi2','chi2Stat',...                 % uncertainties: statistical or stat + systematic uncertainties
+        'chi2',Chi2opt,...                 % uncertainties: statistical or stat + systematic uncertainties
         'DataType','Fake',...                 % can be 'Real' or 'Twin' -> Monte Carlo
         'TwinBias_Q',E0,...
         'RingList',1:14,...
@@ -52,7 +60,7 @@ function relic_global(varargin)
     if isempty(Init_Opt)
         R = RunAnalysis('RunNr',1,...
             'FakeInitFile',initfile,...
-            'chi2','chi2Stat',...                 % uncertainties: statistical or stat + systematic uncertainties
+            'chi2',Chi2opt,...                 % uncertainties: statistical or stat + systematic uncertainties
             'DataType','Fake',...                 % can be 'Real' or 'Twin' -> Monte Carlo
             'TwinBias_Q',E0,...
             'RingList',1:14,...
@@ -70,7 +78,7 @@ function relic_global(varargin)
             'FakeInitFile',initfile,...
             'Init_Opt',Init_Opt,...
             'RecomputeFakeRun','ON',...
-            'chi2','chi2Stat',...                 % uncertainties: statistical or stat + systematic uncertainties
+            'chi2',Chi2opt,...                 % uncertainties: statistical or stat + systematic uncertainties
             'DataType','Fake',...                 % can be 'Real' or 'Twin' -> Monte Carlo
             'TwinBias_Q',E0,...
             'RingList',1:14,...

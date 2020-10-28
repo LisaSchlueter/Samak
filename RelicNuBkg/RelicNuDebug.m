@@ -303,17 +303,6 @@ classdef RelicNuDebug < handle
                        U.ModelObj.ComputeTBDIS;
                        %% Fit
                        U.Fit;
-                %        TBDIS_R = U.ModelObj.TBDIS./U.ModelObj.qUfrac./U.ModelObj.TimeSec;
-                %        TBDIS_B = (U.ModelObj.TBDIS-U.ModelObj.TBDIS_R)./U.ModelObj.qUfrac./U.ModelObj.TimeSec;
-                %            
-                %        e1 = U.ModelObj.qU(U.ModelObj.qU(:,1)>(U.ModelObj.Q-310),:)-18575;
-                %        tmpis1 = TBDIS_B(U.ModelObj.qU(:,1)>(U.ModelObj.Q-310),:);
-                %        tmpis2 = TBDIS_R(U.ModelObj.qU(:,1)>(U.ModelObj.Q-310),:);
-                % 
-                %        semilogy((e1),tmpis1,'-s','LineWidth',2,'Color','Black','LineStyle','-');
-                %        hold on;
-                %        semilogy((e1),tmpis2,'-s','LineWidth',2,'Color','Blue','LineStyle','-');
-                       %U.PlotFit;
                        Chi2(i)      = U.FitResult.chi2min;
                        mnuSq(i)     = U.ModelObj.mnuSq_i+U.FitResult.par(1);
                        mnuSq_err(i) = U.FitResult.err(1);
@@ -351,9 +340,9 @@ classdef RelicNuDebug < handle
                     load(savename,'eta');
                     switch RunNr
                         case 1
-                            relic_global('eta',eta,'Params',obj.Params);
+                            relic_global('eta',eta,'Params',obj.Params,'Syst',Syst);
                         case 10
-                            relic_global('eta',eta,'Params',obj.Params,'Init_Opt',Init_Opt);
+                            relic_global('eta',eta,'Params',obj.Params,'Init_Opt',Init_Opt,'Syst',Syst);
                     end
                     sprintf('Final Result: eta = %g',eta)
                 else
@@ -461,9 +450,9 @@ classdef RelicNuDebug < handle
                         save(savename,'eta');
                         switch RunNr
                             case 1
-                                relic_global('eta',eta,'Params',obj.Params,'fitPar',fitPar,'E0',TwinBias_Q);
+                                relic_global('eta',eta,'Params',obj.Params,'fitPar',fitPar,'E0',TwinBias_Q,'Syst',Syst);
                             case 10
-                                relic_global('eta',eta,'Params',obj.Params,'fitPar',fitPar,'Init_Opt',Init_Opt,'E0',TwinBias_Q);
+                                relic_global('eta',eta,'Params',obj.Params,'fitPar',fitPar,'Init_Opt',Init_Opt,'E0',TwinBias_Q,'Syst',Syst);
                         end
                         sprintf('Final Result: eta = %g',eta)
                     end
@@ -575,17 +564,6 @@ classdef RelicNuDebug < handle
                        U.ModelObj.ComputeTBDIS;
                        %% Fit
                        U.Fit;
-                %        TBDIS_R = U.ModelObj.TBDIS./U.ModelObj.qUfrac./U.ModelObj.TimeSec;
-                %        TBDIS_B = (U.ModelObj.TBDIS-U.ModelObj.TBDIS_R)./U.ModelObj.qUfrac./U.ModelObj.TimeSec;
-                %            
-                %        e1 = U.ModelObj.qU(U.ModelObj.qU(:,1)>(U.ModelObj.Q-310),:)-18575;
-                %        tmpis1 = TBDIS_B(U.ModelObj.qU(:,1)>(U.ModelObj.Q-310),:);
-                %        tmpis2 = TBDIS_R(U.ModelObj.qU(:,1)>(U.ModelObj.Q-310),:);
-                % 
-                %        semilogy((e1),tmpis1,'-s','LineWidth',2,'Color','Black','LineStyle','-');
-                %        hold on;
-                %        semilogy((e1),tmpis2,'-s','LineWidth',2,'Color','Blue','LineStyle','-');
-                       %U.PlotFit;
                        Chi2(i)      = U.FitResult.chi2min;
                        mnuSq(i)     = U.ModelObj.mnuSq_i+U.FitResult.par(1);
                        mnuSq_err(i) = U.FitResult.err(1);
@@ -609,7 +587,7 @@ classdef RelicNuDebug < handle
                 
                 if exist(savename,'file') && strcmp(Recompute,'OFF')
                     load(savename,'eta');
-                    relic_global_twin('eta',eta,'RunList',obj.Params,'fitPar',fitPar,'E0',U.TwinBias_Q);
+                    relic_global_twin('eta',eta,'RunList',obj.Params,'fitPar',fitPar,'E0',U.TwinBias_Q,'mnuSq',U.TwinBias_mnuSq,'Syst',Syst);
                     sprintf('Final Result: eta = %g',eta)
                 else
                     if strcmp(RunList,'KNM1')
@@ -712,7 +690,7 @@ classdef RelicNuDebug < handle
                             end
                         end
                         save(savename,'eta');
-                        relic_global_twin('eta',eta,'RunList',obj.Params,'fitPar',fitPar,'E0',U.TwinBias_Q);
+                        relic_global_twin('eta',eta,'RunList',obj.Params,'fitPar',fitPar,'E0',U.TwinBias_Q,'mnuSq',U.TwinBias_mnuSq,'Syst',Syst);
                         sprintf('Final Result: eta = %g',eta)
                     end
                 end

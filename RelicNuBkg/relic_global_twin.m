@@ -6,13 +6,23 @@ function relic_global_twin(varargin)
     p.addParameter('RunList','KNM1',@(x)ismember(x,{'KNM1','KNM2'}));
     p.addParameter('fitPar','mNu E0 Norm Bkg',@(x)ischar(x));
     p.addParameter('E0',18573.73,@(x)isfloat(x));                                         % Endpoint in eV
+    p.addParameter('mnuSq',0,@(x)isfloat(x));
+    p.addParameter('Syst','OFF',@(x)ismember(x,{'ON','OFF'}));
     p.addParameter('range',40,@(x)isfloat(x));
     p.parse(varargin{:});
     eta      =p.Results.eta;
     RunList  =p.Results.RunList;
     fitPar   =p.Results.fitPar;
     E0       =p.Results.E0;
+    mnuSq    =p.Results.mnuSq;
+    Syst     =p.Results.Syst;
     range    =p.Results.range;
+    
+    if strcmp(Syst,'ON')
+        Chi2opt='chi2CMShape';
+    else
+        Chi2opt='chi2Stat';
+    end
     
     switch RunList
         case 'KNM2'
@@ -26,7 +36,7 @@ function relic_global_twin(varargin)
         'RecomputeFakeRun','ON',...
         'Init_Opt',{'eta_i',eta},...
         'FakeInitFile',initfile,...
-        'chi2','chi2Stat',...                 % uncertainties: statistical or stat + systematic uncertainties
+        'chi2',Chi2opt,...                 % uncertainties: statistical or stat + systematic uncertainties
         'DataType','Fake',...                 % can be 'Real' or 'Twin' -> Monte Carlo
         'TwinBias_Q',E0,...
         'fixPar',fitPar,...                   % free Parameter!!
@@ -46,7 +56,7 @@ function relic_global_twin(varargin)
 
     if strcmp(RunList,'KNM1')
         R = MultiRunAnalysis('RunList',RunList,... % runlist defines which runs are analysed -> set MultiRunAnalysis.m -> function: GetRunList()
-            'chi2','chi2Stat',...                 % uncertainties: statistical or stat + systematic uncertainties
+            'chi2',Chi2opt,...                 % uncertainties: statistical or stat + systematic uncertainties
             'DataType','Twin',...                 % can be 'Real' or 'Twin' -> Monte Carlo
             'fixPar',fitPar,...                   % free Parameter!!
             'RadiativeFlag','ON',...              % theoretical radiative corrections applied in model
@@ -60,10 +70,11 @@ function relic_global_twin(varargin)
             'Twin_SameIsotopFlag','OFF',...
             'SynchrotronFlag','ON',...
             'AngularTFFlag','OFF',...
-            'TwinBias_Q',18573.73);
+            'TwinBias_Q',18573.73,...
+            'TwinBias_mnuSq',mnuSq);
     elseif strcmp(RunList,'KNM2')
         R = MultiRunAnalysis('RunList',RunList,... % runlist defines which runs are analysed -> set MultiRunAnalysis.m -> function: GetRunList()
-            'chi2','chi2Stat',...                 % uncertainties: statistical or stat + systematic uncertainties
+            'chi2',Chi2opt,...                 % uncertainties: statistical or stat + systematic uncertainties
             'DataType','Twin',...                 % can be 'Real' or 'Twin' -> Monte Carlo
             'fixPar',fitPar,...                   % free Parameter!!
             'RadiativeFlag','ON',...              % theoretical radiative corrections applied in model
@@ -77,7 +88,8 @@ function relic_global_twin(varargin)
             'Twin_SameIsotopFlag','OFF',...
             'SynchrotronFlag','ON',...
             'AngularTFFlag','OFF',...
-            'TwinBias_Q',18573.73);
+            'TwinBias_Q',18573.73,...
+            'TwinBias_mnuSq',mnuSq);
     end
     R.exclDataStart = R.GetexclDataStart(range);
 
