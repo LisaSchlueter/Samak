@@ -6,9 +6,10 @@ freePar = 'mNu E0 Bkg Norm';
 DataType = 'Real';
 RunList = 'KNM2_Prompt';
 range = 40;               % fit range in eV below endpoint
+FSDFlag = 'KNM2';
 savedir = [getenv('SamakPath'),'knm2ana/knm2_AltRunPixLists/results/'];
-savename = sprintf('%sknm2_PixListRandHalf_%s_%s_%.0feV_%.0ffits.mat',...
-            savedir,DataType,strrep(freePar,' ',''),range,nFits);
+savename = sprintf('%sknm2_PixListRandHalf_%s_%s_%.0feV_%.0ffits_%s.mat',...
+            savedir,DataType,strrep(freePar,' ',''),range,nFits,FSDFlag);
 % draw random pixels
 PixList_def = GetPixList('Knm2');
 nPix = numel(PixList_def);
@@ -19,11 +20,11 @@ else
   SigmaSq =  0.0124+0.0025;
     PixList = cell(nFits,1);
     FitResult = cell(nFits,1);
-   % E0 = knm2FS_GetE0Twins('SanityPlot','OFF');
+ 
     RunAnaArg = {'RunList',RunList,...  % define run number -> see GetRunList
         'fixPar',freePar,...         % free Parameter !!
         'DataType',DataType,...              % Real, Twin or Fake
-        'FSDFlag','BlindingKNM2',...       % final state distribution (theoretical calculation)
+        'FSDFlag',FSDFlag,...       % final state distribution (theoretical calculation)
         'ELossFlag','KatrinT2A20',...         % energy loss function     ( different parametrizations available)
         'AnaFlag','StackPixel',...         % FPD segmentations -> pixel combination
         'chi2','chi2Stat',...              % statistics only
@@ -39,14 +40,7 @@ else
         PixList{i}   = PixList_def(RandIndex(1:nPixHalf));
         
         %% build object of MultiRunAnalysis class
-        D = MultiRunAnalysis(RunAnaArg{:},'PixList',PixList{i});
-        
-%         if strcmp(DataType,'Twin')
-%             Sigma = std(E0);
-%             FSDArg = {'SanityPlot','OFF','Sigma',Sigma};
-%             D.ModelObj.LoadFSD(FSDArg{:});
-%             D.ModelObj.ComputeTBDDS; D.ModelObj.ComputeTBDIS;
-%         end   
+        D = MultiRunAnalysis(RunAnaArg{:},'PixList',PixList{i});    
         D.exclDataStart = D.GetexclDataStart(range); % find correct data, where to cut spectrum     
         %% Fit -> fit results are in property: A.FitResult
         D.InitModelObj_Norm_BKG('RecomputeFlag','ON');

@@ -2279,17 +2279,22 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
              elseif strcmp(qUDisp,'Abs')
                  xlim([min(min(qU))*0.9999 max(max(qU))*1.0001]);
              end
-
-                 ax = gca;
-                 mypos = ax.Position;
-                 ax.Position = [mypos(1)+0.05 mypos(2) mypos(3:4)];
+             
+             ax = gca;
+             mypos = ax.Position;
+             ax.Position = [mypos(1)+0.05 mypos(2) mypos(3:4)];
              if strcmp(DisplayStyle,'PRL')
-                 ylim([0.18 2*max(obj.ModelObj.TBDIS(obj.exclDataStart:BkgEnd)./obj.ModelObj.qUfrac(obj.exclDataStart:BkgEnd)./obj.ModelObj.TimeSec)]);
+                 if strcmp(obj.AnaFlag,'Ring')
+                     ylim([0.02 2*max(max(obj.ModelObj.TBDIS(obj.exclDataStart:BkgEnd,ring)./obj.ModelObj.qUfrac(obj.exclDataStart:BkgEnd,ring)./obj.ModelObj.TimeSec(ring)))]);
+                 else
+                     ylim([0.1 2*max(max(obj.ModelObj.TBDIS(obj.exclDataStart:BkgEnd,ring)./obj.ModelObj.qUfrac(obj.exclDataStart:BkgEnd,ring)./obj.ModelObj.TimeSec(ring)))]);
+                     
+                 end
                  PRLFormat;
                  myleg.FontSize = get(gca,'FontSize')+4;
                  mylim = ylim;
                  %    text(-57,log(mean(mylim)),'a)','FontSize',get(gca,'FontSize')+4,'FontName',get(gca,'FontName'));
-                 text(textx,max(mylim)*0.7,'a)','FontSize',get(gca,'FontSize')+4,'FontName',get(gca,'FontName'));
+                 text(textx(1),max(mylim)*0.7,'a)','FontSize',get(gca,'FontSize')+4,'FontName',get(gca,'FontName'));
              elseif contains(obj.DataSet,'FirstTritium')
                  FTpaperFormat;
                  set(gca,'FontSize',LocalFontSize);
@@ -2322,7 +2327,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                  b = axes('Position',[ax1.Position(1) ax1.Position(2)+0.01, ax1.Position(3:4)],...
                      'box','on','xtick',[],'ytick',[],'LineWidth',1.5);% create new, empty axes with box but without ticks
                  axes(a)% set original axes as active
-                % linkaxes([a b]) % link axes in case of zooming
+                 % linkaxes([a b]) % link axes in case of zooming
              end
              %% residuals
              switch ResidualsFlag
@@ -2332,7 +2337,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                      else
                          s2= subplot(3,1,3);
                      end
- 
+                     
                      DataStat = [qU,zeros(size(qU)),sqrt(StatErr(obj.exclDataStart:BkgEnd)./PlotErr(obj.exclDataStart:BkgEnd))];
                      
                      if strcmp(obj.chi2,'chi2Stat')
@@ -2509,7 +2514,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
              if strcmp(DisplayStyle,'PRL')  || strcmp(DisplayMTD,'ON')
                  mylim = ylim;
                  %  text(-57,mean(mylim),'b)','FontSize',get(gca,'FontSize')+4,'FontName',get(gca,'FontName'));
-                text(textx,max(mylim)*0.65,'b)','FontSize',get(gca,'FontSize')+4,'FontName',get(gca,'FontName'));
+                text(textx(1),max(mylim)*0.65,'b)','FontSize',get(gca,'FontSize')+4,'FontName',get(gca,'FontName'));
                    
                  s3= subplot(4,1,4);
                  b1 = bar(qU,obj.RunData.qUfrac(obj.exclDataStart:BkgEnd,ring).*obj.RunData.TimeSec(ring)./(60*60));
@@ -2545,7 +2550,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                 % linkaxes([s1,s2,s3],'x');
                 mylim = ylim;
                 %  text(-57,mean(mylim),'c)','FontSize',get(gca,'FontSize')+4,'FontName',get(gca,'FontName'));
-                text( textx,max(mylim)*0.8,'c)','FontSize',get(gca,'FontSize')+4,...
+                text( textx(1),max(mylim)*0.8,'c)','FontSize',get(gca,'FontSize')+4,...
                     'FontName',get(gca,'FontName'),'FontWeight',get(gca,'FontWeight'));
                 if strcmp(TickDir,'Out')
                     set(gca,'TickDir','out');
@@ -2633,7 +2638,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             
             MarkerSize     = 4;
             LocalFontSize  = 17;
-            LocalLineWidth = 3;
+            LocalLineWidth = 2;
             
             if ~strcmp(obj.AnaFlag,'Ring') 
                 fprintf(2,'PlotResidualsMultiRing: not available for Uniform Fits');
@@ -2747,7 +2752,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             if ~strcmp(obj.chi2,'chi2Stat')
                 leg = legend([pleg,pstat psys],sprintf('Pseudo-Ring %0.f',r),'Stat.',sprintf('Stat. and syst.'),'Location','Northeast'); %hsyst
             elseif strcmp(obj.chi2,'chi2Stat')
-                leg = legend(pleg,pstat,sprintf('Pseudo-Ring %0.f Stat.',r),'Location','Northeast'); %hsyst
+                leg = legend([pleg,pstat],sprintf('Pseudo-Ring %0.f Stat.',r),'Location','Northeast'); %hsyst
             end
             legend('boxoff');
            %leg.EdgeColor = 'none';

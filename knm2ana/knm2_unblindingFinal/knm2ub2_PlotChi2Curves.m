@@ -118,7 +118,7 @@ switch DataType
             xlim([-1.15,0.7]);
             ylim([dCM.FitResult.chi2min-1 1+max(max(dStat.ScanResult.chi2min))])
         else
-            xlim([-1.15,0.78]);
+            xlim([-0.6,1]);
             ylim([dCM.FitResult.chi2min-1 1+max(max(dCM.ScanResult.chi2min))])
         end
         t = title(sprintf('KNM2 data - %s',AnaStr),'FontWeight','normal','FontSize',get(gca,'FontSize'));

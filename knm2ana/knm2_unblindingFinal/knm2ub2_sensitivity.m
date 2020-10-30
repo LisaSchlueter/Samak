@@ -6,7 +6,7 @@ SigmaSq =  0.0124+0.0025;
 RunAnaArg = {'RunList','KNM2_Prompt',... % all KNM2 golden runs
     'fixPar','mNu E0 Bkg Norm',...           % free Parameter !!
     'DataType',DataType,...
-    'FSDFlag','Sibille0p5eV',...       % final state distribution (theoretical calculation)
+    'FSDFlag','KNM2',...       % final state distribution (theoretical calculation)
     'ELossFlag','KatrinT2A20',...         % energy loss function     ( different parametrizations available)
     'AnaFlag','StackPixel',...         % FPD segmentations -> pixel combination
     'chi2','chi2Stat',...              % statistics only

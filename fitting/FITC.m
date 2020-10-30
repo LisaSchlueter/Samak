@@ -1577,6 +1577,46 @@ classdef FITC < handle
                 publish_figurePDF(fig,savefile);
             end
             
+            %% plot only mnu
+            fnew = figure('Units','normalized','Position',[0.1,0.1,0.6,0.5]);
+            counter = 1; k=1;
+            l=line([min(round(obj.qUdata(exclIndex)-18574,1))-5 5+max(round(obj.qUdata(exclIndex)-18574,1))],...
+                [BestFitCoeff(k),BestFitCoeff(k)],...
+                'LineStyle','-','LineWidth',1.5,'Color',rgb('Black'));
+            hold on;
+            p=plot(round(obj.qUdata(exclIndex)-18574,1),diffxi(counter,:)+BestFitCoeff(k),...
+                '.-.','MarkerSize',20,'LineWidth',2,'Color',rgb('DodgerBlue'));
+            hold off 
+            ylabel(sprintf('{\\itm}_\\nu^{ 2} (eV^{ 2})'));
+            xlabel('Retarding potential - 18574 (eV)');
+            xlim([min(round(obj.qUdata(exclIndex)-18574,1))-4 4+max(round(obj.qUdata(exclIndex)-18574,1)) ])
+            PrettyFigureFormat;
+            set(gca,'FontSize',18);
+            grid on;
+            
+            if strcmp(savePlot,'ON')
+                publish_figurePDF(fnew,strrep(savefile,'.pdf','_mnu.pdf'));
+            end
+            %% plot only E0 
+             fnew2 = figure('Units','normalized','Position',[0.1,0.1,0.6,0.5]);
+            counter = 2; k=2;
+            l=line([min(round(obj.qUdata(exclIndex)-18574,1))-5 5+max(round(obj.qUdata(exclIndex)-18574,1))],...
+                [0,0],...
+                'LineStyle','-','LineWidth',1.5,'Color',rgb('Black'));
+            hold on;
+            p=plot(round(obj.qUdata(exclIndex)-18574,1),diffxi(counter,:),...
+                '.-.','MarkerSize',20,'LineWidth',2,'Color',rgb('DodgerBlue'));
+            hold off 
+            ylabel(sprintf('{\\itE}_0^{fit} - {\\itE}_0^{bf} (eV)'));
+            xlabel('Retarding potential - 18574 (eV)');
+            xlim([min(round(obj.qUdata(exclIndex)-18574,1))-4 4+max(round(obj.qUdata(exclIndex)-18574,1)) ])
+            PrettyFigureFormat;
+            set(gca,'FontSize',18);
+            grid on;
+            
+            if strcmp(savePlot,'ON')
+                publish_figurePDF(fnew2,strrep(savefile,'.pdf','_E0.pdf'));
+            end
         end
         
         function Samakcats_DMSE(obj,varargin)

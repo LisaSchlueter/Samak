@@ -1,6 +1,6 @@
 dir = [getenv('SamakPath'),'tritium-data/sensitivity/Knm2/'];
 Blinding = 'OFF';
-AnaFlag = 'Ring';
+AnaFlag = 'StackPixel';
 SysEffectsAll   = {'FSD','RF_BF','RF_RX','LongPlasma','FPDeff','NP','Bkg'}; %Bkg has to be last
 mNuSq    = zeros(numel(SysEffectsAll)+2,1);
 mNuSqErr = zeros(numel(SysEffectsAll)+2,1);
@@ -28,17 +28,19 @@ end
 
 %% pull term: fit with bkg slope as nuissance parameter with pull term
 if ~strcmp(AnaFlag,'Ring')
-    namePull = sprintf('%sknm2ana/knm2_unblinding1/results/Fit_BslopePull_Real_StackedPixel_Stat.mat',getenv('SamakPath'));
+   % namePull = sprintf('%sknm2ana/knm2_unblindingFinal/results/BestFit/knm2ub2_FitBkgSlope_Real_40eV_mNuE0BkgNormBkgSlope_chi2CMShape_StackPixel_BkgPull10_4.74mcpskeV_SysBudget38.mat',getenv('SamakPath'));
+    namePull = sprintf('%sknm2ana/knm2_unblindingFinal/results/BestFit/knm2ub2_FitBkgSlope_Real_40eV_mNuE0BkgNormBkgSlope_chi2Stat_StackPixel_BkgPull10_4.74mcpskeV.mat',getenv('SamakPath'));
+  
     dpull    = importdata(namePull);
     mNuSq(end) = dpull.FitResult.par(1);
     mNuSqErr(end) = (-dpull.FitResult.errNeg(1)+dpull.FitResult.errPos(1))/2;
     x = 1:numel(SysEffectsAll)+2;
-    plotname = sprintf('%sknm2ana/knm2_unblinding1/plots/Fit_BslopePull_Real_StackedPixel_Stat.png',getenv('SamakPath'));
+    plotname = sprintf('%sknm2ana/knm2_unblindingFinal/plots/Fit_BslopePull_Real_StackedPixel_Stat.png',getenv('SamakPath'));
 else
     mNuSq(end) = [];
     mNuSqErr(end) = [];
     x = 1:numel(SysEffectsAll)+1;
-    plotname = sprintf('%sknm2ana/knm2_unblinding1/plots/Fit_BslopePull_Real_StackedPixel_Stat_MultiRing.png',getenv('SamakPath'));
+    plotname = sprintf('%sknm2ana/knm2_unblindingFinal/plots/Fit_BslopePull_Real_StackedPixel_Stat_MultiRing.png',getenv('SamakPath'));
 end
 
 switch Blinding

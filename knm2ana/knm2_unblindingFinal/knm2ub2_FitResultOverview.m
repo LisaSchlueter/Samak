@@ -1,39 +1,40 @@
 Uniform = 'ON';
 MR4 = 'ON';
 MR4qU = 'ON';
-MR12 = 'OFF';
+MR12 = 'ON';
 range = 40;
 freePar = 'mNu E0 Bkg Norm';
+FSDFlag= 'KNM2';
 savedir = [getenv('SamakPath'),'knm2ana/knm2_unblindingFinal/results/BestFit/'];
 CommonStrStat =  sprintf('%sknm2ub2_Fit_Real_%.0feV_%s_%s',savedir,range,strrep(freePar,' ',''),'chi2Stat');
 CommonStrCM =  sprintf('%sknm2ub2_Fit_Real_%.0feV_%s_%s',savedir,range,strrep(freePar,' ',''),'chi2CMShape');
 
 if strcmp(Uniform,'ON')
-    fileStat = [CommonStrStat,'_StackPixel.mat'];
-    filecm   = [CommonStrCM,'_StackPixel_SysBudget38.mat'];
+    fileStat = [CommonStrStat,sprintf('_StackPixel_%s.mat',FSDFlag)];
+    filecm   = [CommonStrCM,sprintf('_StackPixel_%s_SysBudget38.mat',FSDFlag)];
     dUstat    = importdata(fileStat);
     dUcm      = importdata(filecm);
     x = [dUstat.FitResult.par(1),dUcm.FitResult.par(1)];
 end
 
 if strcmp(MR4,'ON')
-    fileStat = [CommonStrStat,'_Ring.mat'];
-    filecm   = [CommonStrCM,'_Ring_SysBudget39.mat'];
+    fileStat = [CommonStrStat,sprintf('_Ring_%s.mat',FSDFlag)];
+    filecm   = [CommonStrCM,sprintf('_Ring_%s_SysBudget39.mat',FSDFlag)];
     dMR4stat = importdata(fileStat);
     dMR4cm   = importdata(filecm);
     x = [x,dMR4stat.FitResult.par(1),dMR4cm.FitResult.par(1)];
 end
 
 if strcmp(MR4qU,'ON')
-    fileStat = strrep([CommonStrStat,'_Ring.mat'],strrep(freePar,' ',''),[strrep(freePar,' ',''),'qU']);
-    filecm   = strrep([CommonStrCM,'_Ring_SysBudget39.mat'],strrep(freePar,' ',''),[strrep(freePar,' ',''),'qU']);
+    fileStat = strrep([CommonStrStat,sprintf('_Ring_%s.mat',FSDFlag)],strrep(freePar,' ',''),[strrep(freePar,' ',''),'qU']);
+    filecm   = strrep([CommonStrCM,sprintf('_Ring_%s_SysBudget39.mat',FSDFlag)],strrep(freePar,' ',''),[strrep(freePar,' ',''),'qU']);
     dMR4qUstat = importdata(fileStat);
     dMR4qUcm   = importdata(filecm);
     x = [x,dMR4qUstat.FitResult.par(1),dMR4qUcm.FitResult.par(1)];
 end
 %%
 if strcmp(MR12,'ON')
-    fileStat = [CommonStrStat,'_RingNone.mat'];
+    fileStat = [CommonStrStat,sprintf('_RingNone_%s.mat',FSDFlag)];
     dMR12stat = importdata(fileStat);
     x = [x,dMR12stat.FitResult.par(1),dMR12stat.FitResult.par(1)];
 end
@@ -95,8 +96,9 @@ yticks([y(1)+0.05,y(3)+0.05,y(5)+0.05,y(end)]); set(gca,'YMinorTick','off');
 yticklabels(legStr);
 xlabel(sprintf('{\\itm}_\\nu^2 (eV^2)'));
 leg = legend([pstat,pcm],'Stat. only','Stat. and syst.','EdgeColor',rgb('Silver'),'Location','northwest');
- 
+ %% save
 plotdir = strrep(savedir,'results/BestFit','plots');
 MakeDir(plotdir);
-plotname = sprintf('%sknm2ub1_FitResultOverview_mNuSq.png',plotdir);
+plotname = sprintf('%sknm2ub2_FitResultOverview_mNuSq_%s.png',plotdir,FSDFlag);
 print(plotname,'-dpng','-r350');
+fprintf('save plot to %s \n',plotname)

@@ -194,8 +194,12 @@ classdef RingAnalysis < handle
             range = round(abs(obj.RunAnaObj.ModelObj.qU(obj.RunAnaObj.exclDataStart)-obj.RunAnaObj.ModelObj.Q_i),0);
             %% plot fit result
             fig2 = figure('Renderer','painters');
-            set(fig2,'units','normalized','pos',[0.1, 0.1,0.5,0.5]);  
-            plot(linspace(0.5,12.5,obj.nRings),zeros(obj.nRings,1),':','Color',rgb('SlateGrey'),'LineWidth',2);
+            set(fig2,'units','normalized','pos',[0.1, 0.1,0.5,0.5]);
+            if strcmp(PlotMode,'Rel')
+                plot(linspace(0.5,12.5,obj.nRings),zeros(obj.nRings,1),':','Color',rgb('SlateGrey'),'LineWidth',2);
+            else
+                plot(linspace(0.5,12.5,obj.nRings),mean(y).*ones(obj.nRings,1),':','Color',rgb('SlateGrey'),'LineWidth',2);
+            end
             hold on;
             if PlotPar==3
                 ScaleFactor  = cell2mat(arrayfun(@(x) numel(x.PixList),obj.MultiObj,'UniformOutput',0))'; %number of pixels per ring
@@ -303,8 +307,8 @@ classdef RingAnalysis < handle
             meanPar =wmean(y,1./yErr.^2);
             if PlotPar==1
                 AnaType = 'm2';
-                t =title(sprintf('%.0f stacked runs (%.0f - %.0f) - %.0f pixels - %.0f eV range - \\langle{\\itm}^2\\rangle = %.3f eV^2 ',...
-                    numel(obj.RunAnaObj.StackedRuns),obj.RunAnaObj.RunList(1),obj.RunAnaObj.RunList(end),numel(obj.RunAnaObj.PixList),range, meanPar));
+                t =title(sprintf('%.0f stacked runs (%.0f - %.0f) - %.0f pixels - %.0f eV range - \\langle{\\itm}_\\nu^2\\rangle = %.2f eV^2 ',...
+                    numel(obj.RunAnaObj.StackedRuns),obj.RunAnaObj.RunList(1),obj.RunAnaObj.RunList(end),numel(obj.RunAnaObj.PixList),range, mean(y)));
             elseif PlotPar==2
                t = title(sprintf('%.0f stacked runs (%.0f - %.0f) - %.0f pixels - %.0f eV range - \\langle{\\itE}_0^{fit}\\rangle = %.2f eV',...
                    numel(obj.RunAnaObj.StackedRuns),obj.RunAnaObj.RunList(1),obj.RunAnaObj.RunList(end),numel(obj.RunAnaObj.PixList),range, meanPar + obj.RunAnaObj.ModelObj.Q_i));

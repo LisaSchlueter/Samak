@@ -80,7 +80,7 @@ elseif SysBudget ==21
     SysErr.is_EOffsetErr = 0;
     SysErr.MACE_VarErr = 0;
     SysErr.MaxSlopeCpsPereV = 15*1e-06;
-elseif SysBudget ==22 % default Knm1
+elseif SysBudget == 22 % default Knm1
     SysErr.WGTS_TASR_RelErr = 5e-4;
     SysErr.FSDNorm_RelErr=  0.01;
     SysErr.FSDShapeGS_RelErr= 0.04;
@@ -110,7 +110,7 @@ elseif SysBudget ==23 % with martins FSd onset Knm1
     SysErr.is_EOffsetErr = 0;
     SysErr.MACE_VarErr = 0;
     SysErr.MaxSlopeCpsPereV = 5.2*1e-06; % warning: changed 02.May 2020 from 15e-6
-elseif SysBudget ==24 % new default Knm1
+elseif SysBudget == 24 % new default Knm1
     SysErr.WGTS_TASR_RelErr = 5e-4;
     SysErr.FSDNorm_RelErr=  0.01;
     SysErr.FSDShapeGS_RelErr= 0.04;
@@ -124,7 +124,7 @@ elseif SysBudget ==24 % new default Knm1
     SysErr.FPDeff_RelErr = 1e-4;
     SysErr.is_EOffsetErr = 0;
     SysErr.MACE_VarErr = 0;
-    SysErr.MaxSlopeCpsPereV = 5.2*1e-06; % warning: changed 02.May 2020 from 15e-6
+    SysErr.MaxSlopeCpsPereV = 5.2*1e-06; % warning: changed 02. May 2020 from 15e-6
 elseif SysBudget == 241 % test: KNM1, but only FSD onset
     SysErr.FSDNorm_RelErr=  0.01;
     SysErr.FSDShapeGS_RelErr= 0;
@@ -463,7 +463,7 @@ elseif SysBudget == 66 %TDR-like
     SysErr.MACE_Bmax_T_RelErr = 0.002;
     SysErr.WGTS_B_T_RelErr    = 0.002;
     SysErr.WGTS_CD_MolPerCm2_RelErr= 0.001;
-    SysErr.ISXsection_RelErr = 0; %use rhod sigma together as uncertainty
+    SysErr.ISXsection_RelErr  = 0; %use rhod sigma together as uncertainty
     SysErr.DataDriven = 'OFF';
     SysErr.FPDeff_RelErr = 0;
     SysErr.is_EOffsetErr = 0;
