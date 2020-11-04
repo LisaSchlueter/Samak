@@ -1,12 +1,12 @@
 %% Settings
 Params='KNM1';
-range=40;
-RunNr=1;
+range=50;
+RunNr=10;
 NetaBins=10;
 etarange=11;
-etafactor=5;
+etafactor=1;
 fitPar='mNu E0 Norm Bkg';
-Init_Opt={'mNuSq_i',1};        % use these options by switching to RunNr 10
+Init_Opt={'BKG_RateAllFPDSec',0.4,'mNuSq_i',1,'TimeSec',365.242*24*3*3600};        % use these options by switching to RunNr 10
 Syst='OFF';
 Recompute='OFF';
 
@@ -34,7 +34,7 @@ elseif RunNr==10
             SaveStr=[SaveStr,sprintf('_%f',Init_Opt{i})];
         end
     end
-    savename=[matFilePath,sprintf('RelicChi2Scan_Fake_Syst%s_range%g_%s_[0 %g]%s_%s.mat',Syst,range,obj.Params,etafactor*10^etarange,SaveStr,fitPar)];
+    savename=[matFilePath,sprintf('RelicChi2Scan_Fake_Syst%s_range%g_%s_[0 %g]%s_%s.mat',Syst,range,Params,etafactor*10^etarange,SaveStr,fitPar)];
 end
                 
 load(savename);

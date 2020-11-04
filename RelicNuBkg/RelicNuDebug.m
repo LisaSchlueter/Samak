@@ -6,6 +6,7 @@ classdef RelicNuDebug < handle
        Params;      %parameters of modelobj
        R;           %TBD obj
        ToggleES;    %whether to use excited states in the neutrino capture spectrum
+       etaSensitivity;
    end
    
    methods %constructor
@@ -14,10 +15,12 @@ classdef RelicNuDebug < handle
            p.addParameter('R','',@(x)isa(x,'TBD') || isempty(x));
            p.addParameter('Params','TDR',@(x)ismember(x,{'TDR','KNM1','KNM2','Formaggio'}));
            p.addParameter('ToggleES','OFF',@(x)ismember(x,{'ON','OFF'}));
+           p.addParameter('etaSensitivity','',@(x)isfloat(x) || isempty(x));
            p.parse(varargin{:})
-           obj.R        = p.Results.R;
-           obj.Params   = p.Results.Params;
-           obj.ToggleES = p.Results.ToggleES;
+           obj.R              = p.Results.R;
+           obj.Params         = p.Results.Params;
+           obj.ToggleES       = p.Results.ToggleES;
+           obj.etaSensitivity = p.Results.etaSensitivity;
            
            if isempty(obj.R)
                 if strcmp(obj.Params,'TDR')
@@ -345,6 +348,7 @@ classdef RelicNuDebug < handle
                             relic_global('eta',eta,'Params',obj.Params,'Init_Opt',Init_Opt,'Syst',Syst);
                     end
                     sprintf('Final Result: eta = %g',eta)
+                    obj.etaSensitivity = eta;
                 else
                     if RunNr==1
                         F = RunAnalysis('RunNr',RunNr,...             
@@ -455,6 +459,7 @@ classdef RelicNuDebug < handle
                                 relic_global('eta',eta,'Params',obj.Params,'fitPar',fitPar,'Init_Opt',Init_Opt,'E0',TwinBias_Q,'Syst',Syst);
                         end
                         sprintf('Final Result: eta = %g',eta)
+                        obj.etaSensitivity = eta;
                     end
                 end
             end
@@ -466,6 +471,7 @@ classdef RelicNuDebug < handle
             p.addParameter('RunList','KNM1',@(x)ischar(x));                          % KNM1 or KNM2
             p.addParameter('fitPar','mNu E0 Norm Bck',@(x)ischar(x));
             p.addParameter('Syst','OFF',@(x)ismember(x,{'ON','OFF'}));
+            p.addParameter('SystBudget',24,@(x)isfloat(x));
             p.addParameter('TwinBias_mnuSq',0,@(x)isfloat(x));
             p.addParameter('range',30,@(x)isfloat(x));
             p.addParameter('Netabins',10,@(x)isfloat(x));
@@ -481,6 +487,7 @@ classdef RelicNuDebug < handle
             RunList        = p.Results.RunList;
             fitPar         = p.Results.fitPar;
             Syst           = p.Results.Syst;
+            SystBudget     = p.Results.SystBudget;
             TwinBias_mnuSq = p.Results.TwinBias_mnuSq;
             range          = p.Results.range;
             Netabins       = p.Results.Netabins;
@@ -508,7 +515,7 @@ classdef RelicNuDebug < handle
                     'minuitOpt','min ; minos',...         % technical fitting options (minuit)
                     'FSDFlag','SibilleFull',...          % final state distribution
                     'ELossFlag','KatrinT2',...            % energy loss function
-                    'SysBudget',22,...                    % defines syst. uncertainties -> in GetSysErr.m;
+                    'SysBudget',SystBudget,...                    % defines syst. uncertainties -> in GetSysErr.m;
                     'DopplerEffectFlag','FSD',...
                     'Twin_SameCDFlag','OFF',...
                     'Twin_SameIsotopFlag','OFF',...
@@ -526,7 +533,7 @@ classdef RelicNuDebug < handle
                     'minuitOpt','min ; minos',...         % technical fitting options (minuit)
                     'FSDFlag','SibilleFull',...          % final state distribution
                     'ELossFlag','KatrinT2',...            % energy loss function
-                    'SysBudget',22,...                    % defines syst. uncertainties -> in GetSysErr.m;
+                    'SysBudget',SystBudget,...                    % defines syst. uncertainties -> in GetSysErr.m;
                     'DopplerEffectFlag','FSD',...
                     'Twin_SameCDFlag','OFF',...
                     'Twin_SameIsotopFlag','OFF',...
@@ -589,6 +596,7 @@ classdef RelicNuDebug < handle
                     load(savename,'eta');
                     relic_global_twin('eta',eta,'RunList',obj.Params,'fitPar',fitPar,'E0',U.TwinBias_Q,'mnuSq',U.TwinBias_mnuSq,'Syst',Syst);
                     sprintf('Final Result: eta = %g',eta)
+                    obj.etaSensitivity = eta;
                 else
                     if strcmp(RunList,'KNM1')
                         F = MultiRunAnalysis('RunList',RunList,... % runlist defines which runs are analysed -> set MultiRunAnalysis.m -> function: GetRunList()
@@ -600,7 +608,7 @@ classdef RelicNuDebug < handle
                              'minuitOpt','min ; minos',...         % technical fitting options (minuit)
                              'FSDFlag','SibilleFull',...          % final state distribution
                              'ELossFlag','KatrinT2',...            % energy loss function
-                             'SysBudget',22,...                    % defines syst. uncertainties -> in GetSysErr.m;
+                             'SysBudget',SystBudget,...                    % defines syst. uncertainties -> in GetSysErr.m;
                              'DopplerEffectFlag','FSD',...
                              'Twin_SameCDFlag','OFF',...
                              'Twin_SameIsotopFlag','OFF',...
@@ -618,7 +626,7 @@ classdef RelicNuDebug < handle
                              'minuitOpt','min ; minos',...         % technical fitting options (minuit)
                              'FSDFlag','SibilleFull',...          % final state distribution
                              'ELossFlag','KatrinT2',...            % energy loss function
-                             'SysBudget',22,...                    % defines syst. uncertainties -> in GetSysErr.m;
+                             'SysBudget',SystBudget,...                    % defines syst. uncertainties -> in GetSysErr.m;
                              'DopplerEffectFlag','FSD',...
                              'Twin_SameCDFlag','OFF',...
                              'Twin_SameIsotopFlag','OFF',...
@@ -692,8 +700,74 @@ classdef RelicNuDebug < handle
                         save(savename,'eta');
                         relic_global_twin('eta',eta,'RunList',obj.Params,'fitPar',fitPar,'E0',U.TwinBias_Q,'mnuSq',U.TwinBias_mnuSq,'Syst',Syst);
                         sprintf('Final Result: eta = %g',eta)
+                        obj.etaSensitivity = eta;
                     end
                 end
+            end
+        end
+   end
+   
+   methods
+       function Chi2Twin(obj,varargin)
+            p=inputParser;
+            p.addParameter('range',40,@(x)isfloat(x));
+            p.addParameter('fitPar','mNu E0 Norm Bkg',@(x)ischar(x));
+            p.addParameter('Syst','ON',@(x)ismember(x,{'ON','OFF'}));
+            p.addParameter('SystBudget',24,@(x)isfloat(x));
+            p.addParameter('TwinBias_mnuSq',1,@(x)isfloat(x));
+            p.addParameter('NetaBins',10,@(x)isfloat(x));
+            p.addParameter('etarange',11,@(x)isfloat(x));
+            p.addParameter('etafactor',5,@(x)isfloat(x));
+            p.addParameter('Recompute','OFF',@(x)ismember(x,{'ON','OFF'}));
+            p.parse(varargin{:});
+
+            range          = p.Results.range;
+            fitPar         = p.Results.fitPar;
+            Syst           = p.Results.Syst;
+            SystBudget     = p.Results.SystBudget;
+            TwinBias_mnuSq = p.Results.TwinBias_mnuSq;
+            NetaBins       = p.Results.NetaBins;
+            etarange       = p.Results.etarange;
+            etafactor      = p.Results.etafactor;
+            Recompute      = p.Results.Recompute;
+
+            
+            obj.Chi2Scan_Twin('Recompute',Recompute,...
+                'range',range,...
+                'RunList',obj.Params,...
+                'fitPar',fitPar,...
+                'Syst',Syst,...
+                'SystBudget',SystBudget,...
+                'TwinBias_mnuSq',TwinBias_mnuSq,...
+                'Netabins',NetaBins,...
+                'etarange',etarange,...
+                'etafactor',etafactor,...
+                'mode','SCAN');
+
+            matFilePath = [getenv('SamakPath'),sprintf('RelicNuBkg/Chi2Scans/')];
+            savename=[matFilePath,sprintf('RelicChi2Scan_Twin_BiasmnuSq%g_Syst%s_range%g_%s_[0 %g]_%s.mat',TwinBias_mnuSq,Syst,range,obj.Params,etafactor*10^etarange,fitPar)];
+
+            load(savename);
+
+            if Chi2(end)<2.71
+                sprintf('Increase etafactor or etarange')
+            else
+                etavalues=(0:(Netabins-1))*((etafactor*10^(etarange))/(Netabins-1));
+                m=find(Chi2<2.71);
+                n=find(Chi2>2.71);
+                etalower=etavalues(m(end));
+                etaupper=etavalues(n(1));
+
+                obj.Chi2Scan_Twin('Recompute',Recompute,...
+                    'range',range,...
+                    'RunList',obj.Params,...
+                    'fitPar',fitPar,...
+                    'Syst',Syst,...
+                    'SystBudget',SystBudget,...
+                    'TwinBias_mnuSq',TwinBias_mnuSq,...
+                    'etalower',etalower,...
+                    'etaupper',etaupper,...
+                    'mode','SEARCH');
             end
         end
    end
