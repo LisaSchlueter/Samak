@@ -3,10 +3,11 @@ mNuBins  = 10;
 mNuUpper = 2;   %eV
 
 A = RelicNuDebug('Params','KNM1');
-Sensitivities = 1:mNuBins;
+Sensitivities = 0:mNuBins;
 
-for i=0:mNuBins
-    A.Chi2Twin('TwinBias_mnuSq',mNuUpper*i/mNuBins);
+for i=1:mNuBins+1
+    A.Chi2Twin('TwinBias_mnuSq',mNuUpper*i/mNuBins,...
+    'NetaBins',2);
     Sensitivities(i) = A.etaSensitivity;
 end
 
