@@ -189,6 +189,7 @@ classdef RelicNuDebug < handle
             p.addParameter('etarange',10,@(x)isfloat(x));
             p.addParameter('etafactor',1.5,@(x)isfloat(x));                    % max(eta)=etafactor*10^etarange
             p.addParameter('mode','SCAN',@(x)ismember(x,{'SCAN','SEARCH'}));
+            p.addParameter('Plot','ON',@(x)ismember(x,{'ON','OFF'}));
             %% =========== SEARCH mode settings =============
             p.addParameter('etalower',0,@(x)isfloat(x));
             p.addParameter('etaupper',1.5e10,@(x)isfloat(x));                  % initial upper and lower search bounds
@@ -204,6 +205,7 @@ classdef RelicNuDebug < handle
             etarange  = p.Results.etarange;
             etafactor = p.Results.etafactor;
             mode      = p.Results.mode;
+            Plot      = p.Results.Plot;
             etalower  = p.Results.etalower;
             etaupper  = p.Results.etaupper;
             delta     = p.Results.delta;
@@ -295,7 +297,7 @@ classdef RelicNuDebug < handle
                 savename=[matFilePath,sprintf('RelicChi2Scan_Fake_Syst%s_range%g_%s_[0 %g]%s_%s.mat',Syst,range,obj.Params,etafactor*10^etarange,SaveStr,fitPar)];
                 end
                 
-                if exist(savename,'file') && strcmp(Recompute,'OFF')
+                if exist(savename,'file') && strcmp(Recompute,'OFF') && strcmp(Plot,'ON')
                     plotchi2scan(savename);
                 else
                     for i=1:Netabins
@@ -318,7 +320,9 @@ classdef RelicNuDebug < handle
                     end
 
                     save(savename,'Chi2','Netabins','etafactor','etarange','mnuSq','mnuSq_err','E0','E0_err','Bkg','Bkg_err','Norm','Norm_err');
-                    plotchi2scan(savename);
+                    if strcmp(Plot,'ON')
+                        plotchi2scan(savename);
+                    end
                 end
             end
 
@@ -341,11 +345,13 @@ classdef RelicNuDebug < handle
                 
                 if exist(savename,'file') && strcmp(Recompute,'OFF')
                     load(savename,'eta');
-                    switch RunNr
-                        case 1
-                            relic_global('eta',eta,'Params',obj.Params,'Syst',Syst);
-                        case 10
-                            relic_global('eta',eta,'Params',obj.Params,'Init_Opt',Init_Opt,'Syst',Syst);
+                    if strcmp(Plot,'ON')
+                        switch RunNr
+                            case 1
+                                relic_global('eta',eta,'Params',obj.Params,'Syst',Syst);
+                            case 10
+                                relic_global('eta',eta,'Params',obj.Params,'Init_Opt',Init_Opt,'Syst',Syst);
+                        end
                     end
                     sprintf('Final Result: eta = %g',eta)
                     obj.etaSensitivity = eta;
@@ -452,11 +458,13 @@ classdef RelicNuDebug < handle
                             end
                         end
                         save(savename,'eta');
-                        switch RunNr
-                            case 1
-                                relic_global('eta',eta,'Params',obj.Params,'fitPar',fitPar,'E0',TwinBias_Q,'Syst',Syst);
-                            case 10
-                                relic_global('eta',eta,'Params',obj.Params,'fitPar',fitPar,'Init_Opt',Init_Opt,'E0',TwinBias_Q,'Syst',Syst);
+                        if strcmp(Plot,'ON')
+                            switch RunNr
+                                case 1
+                                    relic_global('eta',eta,'Params',obj.Params,'fitPar',fitPar,'E0',TwinBias_Q,'Syst',Syst);
+                                case 10
+                                    relic_global('eta',eta,'Params',obj.Params,'fitPar',fitPar,'Init_Opt',Init_Opt,'E0',TwinBias_Q,'Syst',Syst);
+                            end
                         end
                         sprintf('Final Result: eta = %g',eta)
                         obj.etaSensitivity = eta;
@@ -478,6 +486,7 @@ classdef RelicNuDebug < handle
             p.addParameter('etarange',10,@(x)isfloat(x));
             p.addParameter('etafactor',1.5,@(x)isfloat(x));                    % max(eta)=etafactor*10^etarange
             p.addParameter('mode','SCAN',@(x)ismember(x,{'SCAN','SEARCH'}));
+            p.addParameter('Plot','ON',@(x)ismember(x,{'ON','OFF'}));
             %% =========== SEARCH mode settings =============
             p.addParameter('etalower',0,@(x)isfloat(x));
             p.addParameter('etaupper',1.5e10,@(x)isfloat(x));                  % initial upper and lower search bounds
@@ -494,6 +503,7 @@ classdef RelicNuDebug < handle
             etarange       = p.Results.etarange;
             etafactor      = p.Results.etafactor;
             mode           = p.Results.mode;
+            Plot           = p.Results.Plot;
             etalower       = p.Results.etalower;
             etaupper       = p.Results.etaupper;
             delta          = p.Results.delta;
@@ -560,7 +570,7 @@ classdef RelicNuDebug < handle
                 matFilePath = [getenv('SamakPath'),sprintf('RelicNuBkg/Chi2Scans/')];
                 savename=[matFilePath,sprintf('RelicChi2Scan_Twin_BiasmnuSq%g_Syst%s_range%g_%s_[0 %g]_%s.mat',TwinBias_mnuSq,Syst,range,obj.Params,etafactor*10^etarange,fitPar)];
                 
-                if exist(savename,'file') && strcmp(Recompute,'OFF')
+                if exist(savename,'file') && strcmp(Recompute,'OFF') && strcmp(Plot,'ON')
                     plotchi2scan(savename);
                 else
                     for i=1:Netabins
@@ -583,7 +593,9 @@ classdef RelicNuDebug < handle
                     end
 
                     save(savename,'Chi2','Netabins','etafactor','etarange','mnuSq','mnuSq_err','E0','E0_err','Bkg','Bkg_err','Norm','Norm_err');
-                    plotchi2scan(savename);
+                    if strcmp(Plot,'ON')
+                        plotchi2scan(savename);
+                    end
                 end
             end
 
@@ -594,7 +606,9 @@ classdef RelicNuDebug < handle
                 
                 if exist(savename,'file') && strcmp(Recompute,'OFF')
                     load(savename,'eta');
-                    relic_global_twin('eta',eta,'RunList',obj.Params,'fitPar',fitPar,'E0',U.TwinBias_Q,'mnuSq',U.TwinBias_mnuSq,'Syst',Syst);
+                    if strcmp(Plot,'ON')
+                        relic_global_twin('eta',eta,'RunList',obj.Params,'fitPar',fitPar,'E0',U.TwinBias_Q,'mnuSq',U.TwinBias_mnuSq,'Syst',Syst);
+                    end
                     sprintf('Final Result: eta = %g',eta)
                     obj.etaSensitivity = eta;
                 else
@@ -698,7 +712,9 @@ classdef RelicNuDebug < handle
                             end
                         end
                         save(savename,'eta');
-                        relic_global_twin('eta',eta,'RunList',obj.Params,'fitPar',fitPar,'E0',U.TwinBias_Q,'mnuSq',U.TwinBias_mnuSq,'Syst',Syst);
+                        if strcmp(Plot,'ON')
+                            relic_global_twin('eta',eta,'RunList',obj.Params,'fitPar',fitPar,'E0',U.TwinBias_Q,'mnuSq',U.TwinBias_mnuSq,'Syst',Syst);
+                        end
                         sprintf('Final Result: eta = %g',eta)
                         obj.etaSensitivity = eta;
                     end
@@ -719,6 +735,7 @@ classdef RelicNuDebug < handle
             p.addParameter('etarange',11,@(x)isfloat(x));
             p.addParameter('etafactor',5,@(x)isfloat(x));
             p.addParameter('Recompute','OFF',@(x)ismember(x,{'ON','OFF'}));
+            p.addParameter('Plot','ON',@(x)ismember(x,{'ON','OFF'}));
             p.parse(varargin{:});
 
             range          = p.Results.range;
@@ -730,6 +747,7 @@ classdef RelicNuDebug < handle
             etarange       = p.Results.etarange;
             etafactor      = p.Results.etafactor;
             Recompute      = p.Results.Recompute;
+            Plot           = p.Results.Plot;
 
             
             obj.Chi2Scan_Twin('Recompute',Recompute,...
@@ -742,7 +760,8 @@ classdef RelicNuDebug < handle
                 'Netabins',NetaBins,...
                 'etarange',etarange,...
                 'etafactor',etafactor,...
-                'mode','SCAN');
+                'mode','SCAN',...
+                'Plot',Plot);
 
             matFilePath = [getenv('SamakPath'),sprintf('RelicNuBkg/Chi2Scans/')];
             savename=[matFilePath,sprintf('RelicChi2Scan_Twin_BiasmnuSq%g_Syst%s_range%g_%s_[0 %g]_%s.mat',TwinBias_mnuSq,Syst,range,obj.Params,etafactor*10^etarange,fitPar)];
@@ -767,7 +786,8 @@ classdef RelicNuDebug < handle
                     'TwinBias_mnuSq',TwinBias_mnuSq,...
                     'etalower',etalower,...
                     'etaupper',etaupper,...
-                    'mode','SEARCH');
+                    'mode','SEARCH',...
+                    'Plot',Plot);
             end
         end
    end
