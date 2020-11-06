@@ -6,7 +6,7 @@ NetaBins=10;
 etarange=11;
 etafactor=1;
 fitPar='mNu E0 Norm Bkg';
-Init_Opt={'BKG_RateAllFPDSec',0.4,'mNuSq_i',1,'TimeSec',365.242*24*3*3600};        % use these options by switching to RunNr 10
+Init_Opt={'BKG_RateAllFPDSec',0.4,'mNuSq_i',1,'TimeSec',3*365.242*24*3600};        % use these options by switching to RunNr 10
 Syst='OFF';
 Recompute='OFF';
 
