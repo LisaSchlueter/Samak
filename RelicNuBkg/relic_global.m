@@ -266,5 +266,5 @@ function relic_global(varargin)
     linkaxes([s1,s2,s3],'x');
 
     % save
-    export_fig(fig,'./plots/relic_spectrum.pdf');
+    %export_fig(fig,'./plots/relic_spectrum.pdf');
 end
