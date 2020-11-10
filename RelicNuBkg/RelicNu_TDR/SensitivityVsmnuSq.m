@@ -2,10 +2,10 @@
 mNuBins  = 10;
 mNuUpper = 2;   %eV
 
-A = RelicNuDebug('Params','TDR');
+A = RelicNuDebug('Params','KNM1');
 
 matFilePath = [getenv('SamakPath'),sprintf('RelicNuBkg/')];
-savename = [matFilePath,sprintf('SensVsMnuSq_%s_[0_%g].mat',A.Params,mNuUpper)];
+savename = [matFilePath,sprintf('SensVsMnuSq_FH_[0_%g].mat',mNuUpper)];
 
 if exist(savename,'file')
     load(savename,'mNuBins','mNuUpper','Sensitivities')
@@ -16,7 +16,8 @@ else
         A.Chi2Fake('RunNr',10,...
             'Init_Opt',{'BKG_RateAllFPDSec',0.4,'mNuSq_i',mNuUpper*(i-1)/mNuBins,'TimeSec',3*365.242*24*3600},...
             'NetaBins',2,...
-            'Plot','OFF');
+            'Plot','OFF',...
+            'DeltaChi2',1);
         Sensitivities(i) = A.etaSensitivity;
     end
 

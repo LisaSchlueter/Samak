@@ -194,6 +194,7 @@ classdef RelicNuDebug < handle
             p.addParameter('etalower',0,@(x)isfloat(x));
             p.addParameter('etaupper',1.5e10,@(x)isfloat(x));                  % initial upper and lower search bounds
             p.addParameter('delta',0.1e9,@(x)isfloat(x));                      % amount by which to shift eta if fit fails
+            p.addParameter('DeltaChi2',2.71,@(x)isfloat(x));
             p.parse(varargin{:});
             Recompute = p.Results.Recompute;
             RunNr     = p.Results.RunNr;
@@ -209,6 +210,7 @@ classdef RelicNuDebug < handle
             etalower  = p.Results.etalower;
             etaupper  = p.Results.etaupper;
             delta     = p.Results.delta;
+            DeltaChi2 = p.Results.DeltaChi2;
             
             if strcmp(obj.Params,'TDR')
                 initfile=@ref_RelicNuBkg_DesignReport;
@@ -414,17 +416,17 @@ classdef RelicNuDebug < handle
                     chi2lower = F.FitResult.chi2min;
                     chi2upper = U.FitResult.chi2min;
                     chi2=chi2upper;
-                    if chi2upper<2.71
+                    if chi2upper<DeltaChi2
                         sprintf('chi^2 too small! Set larger initial eta.')
                     elseif chi2upper>50
                         sprintf('Minos failed! Vary initial eta.')
                     else
                         
-                        while abs(chi2-2.71)>0.01
-                            if chi2>2.71
+                        while abs(chi2-DeltaChi2)>0.01
+                            if chi2>DeltaChi2
                                 etaupper=eta;
                                 chi2upper=chi2;
-                                eta=((etaupper-etalower)./(chi2upper-chi2lower)).*2.71-chi2upper.*((etaupper-etalower)./(chi2upper-chi2lower))+etaupper;
+                                eta=((etaupper-etalower)./(chi2upper-chi2lower)).*DeltaChi2-chi2upper.*((etaupper-etalower)./(chi2upper-chi2lower))+etaupper;
                                 U.ModelObj.eta_i=eta;
                                 U.ModelObj.eta=eta;
                                 U.ModelObj.ComputeNormFactorTBDDS;
@@ -441,7 +443,7 @@ classdef RelicNuDebug < handle
                             else
                                 etalower=eta;
                                 chi2lower=chi2;
-                                eta=((etaupper-etalower)./(chi2upper-chi2lower)).*2.71-chi2upper.*((etaupper-etalower)./(chi2upper-chi2lower))+etaupper;
+                                eta=((etaupper-etalower)./(chi2upper-chi2lower)).*DeltaChi2-chi2upper.*((etaupper-etalower)./(chi2upper-chi2lower))+etaupper;
                                 F.ModelObj.eta_i=eta;
                                 F.ModelObj.eta=eta;
                                 F.ModelObj.ComputeNormFactorTBDDS;
@@ -491,6 +493,7 @@ classdef RelicNuDebug < handle
             p.addParameter('etalower',0,@(x)isfloat(x));
             p.addParameter('etaupper',1.5e10,@(x)isfloat(x));                  % initial upper and lower search bounds
             p.addParameter('delta',0.1e9,@(x)isfloat(x));                      % amount by which to shift eta if fit fails
+            p.addParameter('DeltaChi2',2.71,@(x)isfloat(x));
             p.parse(varargin{:});
             Recompute      = p.Results.Recompute;
             RunList        = p.Results.RunList;
@@ -507,6 +510,7 @@ classdef RelicNuDebug < handle
             etalower       = p.Results.etalower;
             etaupper       = p.Results.etaupper;
             delta          = p.Results.delta;
+            DeltaChi2      = p.Results.DeltaChi2;
             
             if strcmp(Syst,'ON')
                 Chi2opt='chi2CMShape';
@@ -669,16 +673,16 @@ classdef RelicNuDebug < handle
                     chi2upper = U.FitResult.chi2min;
                     chi2lower = F.FitResult.chi2min;
                     chi2 = chi2upper;
-                    if chi2<2.71
+                    if chi2<DeltaChi2
                         sprintf('chi^2 too small! Set larger initial eta.')
                     elseif chi2>50
                         sprintf('Minos failed! Vary initial eta.')
                     else
-                        while abs(chi2-2.71)>0.01
-                            if chi2>2.71
+                        while abs(chi2-DeltaChi2)>0.01
+                            if chi2>DeltaChi2
                                 etaupper=eta;
                                 chi2upper=chi2;
-                                eta=((etaupper-etalower)./(chi2upper-chi2lower)).*2.71-chi2upper.*((etaupper-etalower)./(chi2upper-chi2lower))+etaupper;
+                                eta=((etaupper-etalower)./(chi2upper-chi2lower)).*DeltaChi2-chi2upper.*((etaupper-etalower)./(chi2upper-chi2lower))+etaupper;
                                 U.ModelObj.eta_i=eta;
                                 U.ModelObj.eta=eta;
                                 U.ModelObj.ComputeNormFactorTBDDS;
@@ -695,7 +699,7 @@ classdef RelicNuDebug < handle
                             else
                                 etalower=eta;
                                 chi2lower=chi2;
-                                eta=((etaupper-etalower)./(chi2upper-chi2lower)).*2.71-chi2upper.*((etaupper-etalower)./(chi2upper-chi2lower))+etaupper;
+                                eta=((etaupper-etalower)./(chi2upper-chi2lower)).*DeltaChi2-chi2upper.*((etaupper-etalower)./(chi2upper-chi2lower))+etaupper;
                                 F.ModelObj.eta_i=eta;
                                 F.ModelObj.eta=eta;
                                 F.ModelObj.ComputeNormFactorTBDDS;
@@ -736,6 +740,7 @@ classdef RelicNuDebug < handle
             p.addParameter('etafactor',5,@(x)isfloat(x));
             p.addParameter('Recompute','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('Plot','ON',@(x)ismember(x,{'ON','OFF'}));
+            p.addParameter('DeltaChi2',2.71,@(x)isfloat(x));
             p.parse(varargin{:});
 
             range          = p.Results.range;
@@ -748,6 +753,7 @@ classdef RelicNuDebug < handle
             etafactor      = p.Results.etafactor;
             Recompute      = p.Results.Recompute;
             Plot           = p.Results.Plot;
+            DeltaChi2      = p.Results.DeltaChi2;
 
             
             obj.Chi2Scan_Twin('Recompute',Recompute,...
@@ -761,19 +767,20 @@ classdef RelicNuDebug < handle
                 'etarange',etarange,...
                 'etafactor',etafactor,...
                 'mode','SCAN',...
-                'Plot',Plot);
+                'Plot',Plot,...
+                'DeltaChi2',DeltaChi2);
 
             matFilePath = [getenv('SamakPath'),sprintf('RelicNuBkg/Chi2Scans/')];
             savename=[matFilePath,sprintf('RelicChi2Scan_Twin_BiasmnuSq%g_Syst%s_range%g_%s_[0 %g]_%s.mat',TwinBias_mnuSq,Syst,range,obj.Params,etafactor*10^etarange,fitPar)];
 
             load(savename);
 
-            if Chi2(end)<2.71
+            if Chi2(end)<DeltaChi2
                 sprintf('Increase etafactor or etarange')
             else
                 etavalues=(0:(Netabins-1))*((etafactor*10^(etarange))/(Netabins-1));
-                m=find(Chi2<2.71);
-                n=find(Chi2>2.71);
+                m=find(Chi2<DeltaChi2);
+                n=find(Chi2>DeltaChi2);
                 etalower=etavalues(m(end));
                 etaupper=etavalues(n(1));
 
@@ -787,7 +794,8 @@ classdef RelicNuDebug < handle
                     'etalower',etalower,...
                     'etaupper',etaupper,...
                     'mode','SEARCH',...
-                    'Plot',Plot);
+                    'Plot',Plot,...
+                    'DeltaChi2',DeltaChi2);
             end
        end
         
@@ -796,13 +804,14 @@ classdef RelicNuDebug < handle
             p.addParameter('range',50,@(x)isfloat(x));
             p.addParameter('RunNr',1,@(x)isfloat(x));
             p.addParameter('NetaBins',10,@(x)isfloat(x));
-            p.addParameter('etarange',11,@(x)isfloat(x));
-            p.addParameter('etafactor',1,@(x)isfloat(x));
+            p.addParameter('etarange',10,@(x)isfloat(x));
+            p.addParameter('etafactor',3,@(x)isfloat(x));
             p.addParameter('fitPar','mNu E0 Norm Bkg',@(x)ischar(x));
             p.addParameter('Init_Opt','',@(x)iscell(x) || isempty(x));        % use these options by switching to RunNr 10
             p.addParameter('Syst','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('Recompute','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('Plot','ON',@(x)ismember(x,{'ON','OFF'}));
+            p.addParameter('DeltaChi2',2.71,@(x)isfloat(x));
             
             p.parse(varargin{:});
             range     = p.Results.range;
@@ -815,6 +824,7 @@ classdef RelicNuDebug < handle
             Syst      = p.Results.Syst;
             Recompute = p.Results.Recompute;
             Plot      = p.Results.Plot;
+            DeltaChi2 = p.Results.DeltaChi2;
 
             obj.Chi2Scan_Fake('Recompute',Recompute,...
                 'range',range,...
@@ -826,7 +836,8 @@ classdef RelicNuDebug < handle
                 'etarange',etarange,...
                 'etafactor',etafactor,...
                 'mode','SCAN',...
-                'Plot',Plot);
+                'Plot',Plot,...
+                'DeltaChi2',DeltaChi2);
 
             matFilePath = [getenv('SamakPath'),sprintf('RelicNuBkg/Chi2Scans/')];
             if RunNr==1
@@ -845,12 +856,12 @@ classdef RelicNuDebug < handle
 
             load(savename);
 
-            if Chi2(end)<2.71
+            if Chi2(end)<DeltaChi2
                 sprintf('Increase etafactor or etarange')
             else
                 etavalues=(0:(Netabins-1))*((etafactor*10^(etarange))/(Netabins-1));
-                m=find(Chi2<2.71);
-                n=find(Chi2>2.71);
+                m=find(Chi2<DeltaChi2);
+                n=find(Chi2>DeltaChi2);
                 etalower=etavalues(m(end));
                 etaupper=etavalues(n(1));
 
@@ -863,7 +874,8 @@ classdef RelicNuDebug < handle
                     'etalower',etalower,...
                     'etaupper',etaupper,...
                     'mode','SEARCH',...
-                    'Plot',Plot);
+                    'Plot',Plot,...
+                    'DeltaChi2',DeltaChi2);
             end
        end
    end
