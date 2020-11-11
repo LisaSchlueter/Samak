@@ -879,5 +879,73 @@ classdef RelicNuDebug < handle
             end
        end
    end
+   methods
+       function SystBreakdown(obj,varargin)
+           p=inputParser;
+           p.addParameter('TwinBias_mnuSq',1,@(x)isfloat(x));
+           p.parse(varargin{:});
+           TwinBias_mnuSq = p.Results.TwinBias_mnuSq;
+           
+           matFilePath = [getenv('SamakPath'),sprintf('RelicNuBkg/')];
+           savename = [matFilePath,sprintf('SensitivityBreakdown_%s_mnuSq%g.mat',obj.Params,TwinBias_mnuSq)];
+
+           if exist(savename,'file')
+               load(savename,'X','Y');
+           else
+           
+               A = MultiRunAnalysis('RunList',obj.Params,... % runlist defines which runs are analysed -> set MultiRunAnalysis.m -> function: GetRunList()
+                        'chi2','chi2CMShape',...                 % uncertainties: statistical or stat + systematic uncertainties
+                        'DataType','Twin',...                 % can be 'Real' or 'Twin' -> Monte Carlo
+                        'fixPar','mNu E0 Norm Bkg',...                   % free Parameter!!
+                        'RadiativeFlag','ON',...              % theoretical radiative corrections applied in model
+                        'NonPoissonScaleFactor',1.064,...     % background uncertainty are enhanced
+                        'minuitOpt','min ; minos',...         % technical fitting options (minuit)
+                        'FSDFlag','SibilleFull',...          % final state distribution
+                        'ELossFlag','KatrinT2',...            % energy loss function
+                        'SysBudget',24,...                    % defines syst. uncertainties -> in GetSysErr.m;
+                        'DopplerEffectFlag','FSD',...
+                        'Twin_SameCDFlag','OFF',...
+                        'Twin_SameIsotopFlag','OFF',...
+                        'SynchrotronFlag','ON',...
+                        'AngularTFFlag','OFF',...
+                        'TwinBias_Q',18573.73,...
+                        'TwinBias_mnuSq',TwinBias_mnuSq);
+
+               A.Fit;
+               ErrTotal = A.FitResult.err(1);
+               A.ComputeCM('SysEffects',struct(),'BkgCM','OFF')
+               A.Fit;
+               ErrStat = A.FitResult.err(1);
+               A.ComputeCM('SysEffects',struct('FSD','ON'),'BkgCM','OFF');
+               A.Fit;
+               ErrFSD = sqrt(A.FitResult.err(1).^2-ErrStat.^2);
+               A.ComputeCM('SysEffects',struct('RF','ON'),'BkgCM','OFF');
+               A.Fit;
+               ErrRF = sqrt(A.FitResult.err(1).^2-ErrStat.^2);
+               A.ComputeCM('SysEffects',struct('TASR','ON'),'BkgCM','OFF');
+               A.Fit;
+               ErrTASR = sqrt(A.FitResult.err(1).^2-ErrStat.^2);
+               A.ComputeCM('SysEffects',struct('Stack','ON'),'BkgCM','OFF');
+               A.Fit;
+               ErrStack = sqrt(A.FitResult.err(1).^2-ErrStat.^2);
+               A.ComputeCM('SysEffects',struct('FPDeff','ON'),'BkgCM','OFF');
+               A.Fit;
+               ErrFPD = sqrt(A.FitResult.err(1).^2-ErrStat.^2);
+               A.ComputeCM('SysEffects',struct('TC','ON'),'BkgCM','OFF');
+               A.Fit;
+               ErrTC = sqrt(A.FitResult.err(1).^2-ErrStat.^2);
+               A.ComputeCM('BkgCM','ON');
+               A.Fit;
+               ErrBkg = sqrt(A.FitResult.err(1).^2-ErrStat.^2);
+
+               X = categorical({'Total','Stat','FSD','RF','TASR','Stack','FPD','TC','Bkg'});
+               X = reordercats(X,{'Total','Stat','FSD','RF','TASR','Stack','FPD','TC','Bkg'});
+               Y = [ErrTotal ErrStat ErrFSD ErrRF ErrTASR ErrStack ErrFPD ErrTC ErrBkg];
+               save(savename,'X','Y');
+           end
+           bar(X,Y);
+           PrettyFigureFormat;
+       end
+   end
     
 end

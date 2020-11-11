@@ -4,7 +4,7 @@ function TritiumObject = ref_RelicNuBkg_DesignReport(varargin)
 TDMode = 'DataTBD';
 %FSDMode = 'BlindingKNM2';
 % use MTD from Design report for 30 eV
-MTD = importdata('DR30.mat');
+MTD = importdata('DR50.mat');
 
 % ---------------------------------------------------------------------- %
 % WGTS
