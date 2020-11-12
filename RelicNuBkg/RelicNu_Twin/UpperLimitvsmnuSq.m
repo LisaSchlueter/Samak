@@ -7,13 +7,13 @@ A = RelicNuDebug('Params','KNM1');
 matFilePath = [getenv('SamakPath'),sprintf('RelicNuBkg/')];
 savename = [matFilePath,sprintf('SensVsMnuSq_%s_[0_%g].mat',A.Params,mNuUpper)];
 
-if exist(savename,'file')
+if ~exist(savename,'file')
     load(savename,'ScanPoints','Sensitivities')
 else
     Sensitivities = 0:mNuBins;
     ScanPoints = [(0:mNuBins)*mNuUpper./mNuBins 5];
 
-    for i=numel(ScanPoints)
+    for i=1:numel(ScanPoints)
         A.Chi2Twin('TwinBias_mnuSq',ScanPoints(i),...
             'etarange',11,...
             'etafactor',5.001,...
