@@ -883,11 +883,13 @@ classdef RelicNuDebug < handle
        function SystBreakdown(obj,varargin)
            p=inputParser;
            p.addParameter('TwinBias_mnuSq',1,@(x)isfloat(x));
+           p.addParameter('range',40,@(x)isfloat(x));
            p.parse(varargin{:});
            TwinBias_mnuSq = p.Results.TwinBias_mnuSq;
+           range          = p.Results.range;
            
            matFilePath = [getenv('SamakPath'),sprintf('RelicNuBkg/')];
-           savename = [matFilePath,sprintf('SensitivityBreakdown_%s_mnuSq%g.mat',obj.Params,TwinBias_mnuSq)];
+           savename = [matFilePath,sprintf('SensitivityBreakdown_%s_mnuSq%g_range%g.mat',obj.Params,TwinBias_mnuSq,range)];
 
            if exist(savename,'file')
                load(savename,'X','Y');
@@ -910,33 +912,44 @@ classdef RelicNuDebug < handle
                         'AngularTFFlag','OFF',...
                         'TwinBias_Q',18573.73,...
                         'TwinBias_mnuSq',TwinBias_mnuSq);
+                    
+               A.exclDataStart = A.GetexclDataStart(range);
+               A.InitModelObj_Norm_BKG('Recompute','ON');
 
                A.Fit;
                ErrTotal = A.FitResult.err(1);
+               A.ComputeCM('SysEffects',struct('FSD','ON'),'BkgCM','OFF');
+               A.Fit;
+               ErrFSD = A.FitResult.err(1);
+               A.ComputeCM('SysEffects',struct('RF','ON'),'BkgCM','OFF');
+               A.Fit;
+               ErrRF = A.FitResult.err(1);
+               A.ComputeCM('SysEffects',struct('TASR','ON'),'BkgCM','OFF');
+               A.Fit;
+               ErrTASR = A.FitResult.err(1);
+               A.ComputeCM('SysEffects',struct('Stack','ON'),'BkgCM','OFF');
+               A.Fit;
+               ErrStack = A.FitResult.err(1);
+               A.ComputeCM('SysEffects',struct('FPDeff','ON'),'BkgCM','OFF');
+               A.Fit;
+               ErrFPD = A.FitResult.err(1);
+               A.ComputeCM('SysEffects',struct('TC','ON'),'BkgCM','OFF');
+               A.Fit;
+               ErrTC = A.FitResult.err(1);
+               A.ComputeCM('BkgCM','ON');
+               A.Fit;
+               ErrBkg = A.FitResult.err(1);
+               A.NonPoissonScaleFactor = 1;
                A.ComputeCM('SysEffects',struct(),'BkgCM','OFF')
                A.Fit;
                ErrStat = A.FitResult.err(1);
-               A.ComputeCM('SysEffects',struct('FSD','ON'),'BkgCM','OFF');
-               A.Fit;
-               ErrFSD = sqrt(A.FitResult.err(1).^2-ErrStat.^2);
-               A.ComputeCM('SysEffects',struct('RF','ON'),'BkgCM','OFF');
-               A.Fit;
-               ErrRF = sqrt(A.FitResult.err(1).^2-ErrStat.^2);
-               A.ComputeCM('SysEffects',struct('TASR','ON'),'BkgCM','OFF');
-               A.Fit;
-               ErrTASR = sqrt(A.FitResult.err(1).^2-ErrStat.^2);
-               A.ComputeCM('SysEffects',struct('Stack','ON'),'BkgCM','OFF');
-               A.Fit;
-               ErrStack = sqrt(A.FitResult.err(1).^2-ErrStat.^2);
-               A.ComputeCM('SysEffects',struct('FPDeff','ON'),'BkgCM','OFF');
-               A.Fit;
-               ErrFPD = sqrt(A.FitResult.err(1).^2-ErrStat.^2);
-               A.ComputeCM('SysEffects',struct('TC','ON'),'BkgCM','OFF');
-               A.Fit;
-               ErrTC = sqrt(A.FitResult.err(1).^2-ErrStat.^2);
-               A.ComputeCM('BkgCM','ON');
-               A.Fit;
-               ErrBkg = sqrt(A.FitResult.err(1).^2-ErrStat.^2);
+               ErrFSD = sqrt(ErrFSD.^2-ErrStat.^2);
+               ErrRF = sqrt(ErrRF.^2-ErrStat.^2);
+               ErrTASR = sqrt(ErrTASR.^2-ErrStat.^2);
+               ErrStack = sqrt(ErrStack.^2-ErrStat.^2);
+               ErrFPD = sqrt(ErrFPD.^2-ErrStat.^2);
+               ErrTC = sqrt(ErrTC.^2-ErrStat.^2);
+               ErrBkg = sqrt(ErrBkg.^2-ErrStat.^2);
 
                X = categorical({'Total','Stat','FSD','RF','TASR','Stack','FPD','TC','Bkg'});
                X = reordercats(X,{'Total','Stat','FSD','RF','TASR','Stack','FPD','TC','Bkg'});
