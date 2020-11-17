@@ -514,8 +514,10 @@ classdef RelicNuDebug < handle
             
             if strcmp(Syst,'ON')
                 Chi2opt='chi2CMShape';
+                NonPoissonScaleFactor=1.064;
             else
                 Chi2opt='chi2Stat';
+                NonPoissonScaleFactor=1;
             end
             
 
@@ -525,7 +527,7 @@ classdef RelicNuDebug < handle
                     'DataType','Twin',...                 % can be 'Real' or 'Twin' -> Monte Carlo
                     'fixPar',fitPar,...                   % free Parameter!!
                     'RadiativeFlag','ON',...              % theoretical radiative corrections applied in model
-                    'NonPoissonScaleFactor',1.064,...     % background uncertainty are enhanced
+                    'NonPoissonScaleFactor',NonPoissonScaleFactor,...     % background uncertainty are enhanced
                     'minuitOpt','min ; minos',...         % technical fitting options (minuit)
                     'FSDFlag','SibilleFull',...          % final state distribution
                     'ELossFlag','KatrinT2',...            % energy loss function
@@ -543,7 +545,7 @@ classdef RelicNuDebug < handle
                     'DataType','Twin',...                 % can be 'Real' or 'Twin' -> Monte Carlo
                     'fixPar',fitPar,...                   % free Parameter!!
                     'RadiativeFlag','ON',...              % theoretical radiative corrections applied in model
-                    'NonPoissonScaleFactor',1.064,...     % background uncertainty are enhanced
+                    'NonPoissonScaleFactor',NonPoissonScaleFactor,...     % background uncertainty are enhanced
                     'minuitOpt','min ; minos',...         % technical fitting options (minuit)
                     'FSDFlag','SibilleFull',...          % final state distribution
                     'ELossFlag','KatrinT2',...            % energy loss function
@@ -622,7 +624,7 @@ classdef RelicNuDebug < handle
                              'DataType','Twin',...                 % can be 'Real' or 'Twin' -> Monte Carlo
                              'fixPar',fitPar,...                   % free Parameter!!
                              'RadiativeFlag','ON',...              % theoretical radiative corrections applied in model
-                             'NonPoissonScaleFactor',1.064,...     % background uncertainty are enhanced
+                             'NonPoissonScaleFactor',NonPoissonScaleFactor,...     % background uncertainty are enhanced
                              'minuitOpt','min ; minos',...         % technical fitting options (minuit)
                              'FSDFlag','SibilleFull',...          % final state distribution
                              'ELossFlag','KatrinT2',...            % energy loss function
@@ -640,7 +642,7 @@ classdef RelicNuDebug < handle
                              'DataType','Twin',...                 % can be 'Real' or 'Twin' -> Monte Carlo
                              'fixPar',fitPar,...                   % free Parameter!!
                              'RadiativeFlag','ON',...              % theoretical radiative corrections applied in model
-                             'NonPoissonScaleFactor',1.064,...     % background uncertainty are enhanced
+                             'NonPoissonScaleFactor',NonPoissonScaleFactor,...     % background uncertainty are enhanced
                              'minuitOpt','min ; minos',...         % technical fitting options (minuit)
                              'FSDFlag','SibilleFull',...          % final state distribution
                              'ELossFlag','KatrinT2',...            % energy loss function
