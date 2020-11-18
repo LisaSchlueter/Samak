@@ -520,6 +520,7 @@ classdef RelicNuDebug < handle
                 NonPoissonScaleFactor=1;
             end
             
+            fitter = 'minuit';
 
             if strcmp(RunList,'KNM1')
                 U = MultiRunAnalysis('RunList',RunList,... % runlist defines which runs are analysed -> set MultiRunAnalysis.m -> function: GetRunList()
@@ -528,6 +529,7 @@ classdef RelicNuDebug < handle
                     'fixPar',fitPar,...                   % free Parameter!!
                     'RadiativeFlag','ON',...              % theoretical radiative corrections applied in model
                     'NonPoissonScaleFactor',NonPoissonScaleFactor,...     % background uncertainty are enhanced
+                    'fitter',fitter,...
                     'minuitOpt','min ; minos',...         % technical fitting options (minuit)
                     'FSDFlag','SibilleFull',...          % final state distribution
                     'ELossFlag','KatrinT2',...            % energy loss function
@@ -546,6 +548,7 @@ classdef RelicNuDebug < handle
                     'fixPar',fitPar,...                   % free Parameter!!
                     'RadiativeFlag','ON',...              % theoretical radiative corrections applied in model
                     'NonPoissonScaleFactor',NonPoissonScaleFactor,...     % background uncertainty are enhanced
+                    'fitter',fitter,...
                     'minuitOpt','min ; minos',...         % technical fitting options (minuit)
                     'FSDFlag','SibilleFull',...          % final state distribution
                     'ELossFlag','KatrinT2',...            % energy loss function
@@ -625,6 +628,7 @@ classdef RelicNuDebug < handle
                              'fixPar',fitPar,...                   % free Parameter!!
                              'RadiativeFlag','ON',...              % theoretical radiative corrections applied in model
                              'NonPoissonScaleFactor',NonPoissonScaleFactor,...     % background uncertainty are enhanced
+                             'fitter',fitter,...
                              'minuitOpt','min ; minos',...         % technical fitting options (minuit)
                              'FSDFlag','SibilleFull',...          % final state distribution
                              'ELossFlag','KatrinT2',...            % energy loss function
@@ -643,6 +647,7 @@ classdef RelicNuDebug < handle
                              'fixPar',fitPar,...                   % free Parameter!!
                              'RadiativeFlag','ON',...              % theoretical radiative corrections applied in model
                              'NonPoissonScaleFactor',NonPoissonScaleFactor,...     % background uncertainty are enhanced
+                             'fitter',fitter,...
                              'minuitOpt','min ; minos',...         % technical fitting options (minuit)
                              'FSDFlag','SibilleFull',...          % final state distribution
                              'ELossFlag','KatrinT2',...            % energy loss function
@@ -725,6 +730,135 @@ classdef RelicNuDebug < handle
                         obj.etaSensitivity = eta;
                     end
                 end
+            end
+        end
+        function Chi2Scan_2D(obj,varargin)
+            p=inputParser;
+            p.addParameter('Recompute','OFF',@(x)ismember(x,{'ON','OFF'}));
+            p.addParameter('RunList','KNM1',@(x)ischar(x));                          % KNM1 or KNM2
+            p.addParameter('Syst','OFF',@(x)ismember(x,{'ON','OFF'}));
+            p.addParameter('SystBudget',24,@(x)isfloat(x));
+            p.addParameter('TwinBias_mnuSq',0,@(x)isfloat(x));
+            p.addParameter('range',40,@(x)isfloat(x));
+            p.addParameter('Netabins',20,@(x)isfloat(x));
+            p.addParameter('etalow',1.5e11,@(x)isfloat(x) && x>0);
+            p.addParameter('etahigh',3e11,@(x)isfloat(x) && x>0);
+            p.addParameter('Nmnubins',20,@(x)isfloat(x));
+            p.addParameter('mnulow',0.1,@(x)isfloat(x) && x>0);
+            p.addParameter('mnuhigh',1,@(x)isfloat(x) && x>0);
+            p.addParameter('Plot','ON',@(x)ismember(x,{'ON','OFF'}));
+            p.parse(varargin{:});
+            Recompute      = p.Results.Recompute;
+            RunList        = p.Results.RunList;
+            Syst           = p.Results.Syst;
+            SystBudget     = p.Results.SystBudget;
+            TwinBias_mnuSq = p.Results.TwinBias_mnuSq;
+            range          = p.Results.range;
+            Netabins       = p.Results.Netabins;
+            etalow         = p.Results.etalow;
+            etahigh        = p.Results.etahigh;
+            Plot           = p.Results.Plot;
+            Nmnubins       = p.Results.Nmnubins;
+            mnulow         = p.Results.mnulow;
+            mnuhigh        = p.Results.mnuhigh;
+            
+            matFilePath = [getenv('SamakPath'),sprintf('RelicNuBkg/Chi2Scans/')];
+            savename=[matFilePath,sprintf('RelicChi2Scan_Twin_BiasmnuSq%g_Syst%s_range%g_%s_2D.mat',TwinBias_mnuSq,Syst,range,obj.Params)];
+                
+            if exist(savename,'file') && strcmp(Recompute,'OFF') && strcmp(Plot,'ON')
+                plotchi2scan(savename);
+                load(savename);
+                DeltaChi2 = abs(Chi2 - 4.61);
+                GlobalChi2Min = min(min(DeltaChi2));
+                [a,b] = find(DeltaChi2==GlobalChi2Min);
+                Uppermnu = mnuScanPoints(a);
+                Uppereta = etaScanPoints(b);
+                sprintf('m_{\\nu} = %.2g \n \\eta = %.2g \n \\Delta \\chi^{2} = %.3g',Uppermnu,Uppereta,Chi2(a,b))
+                if (a==Nmnubins || b==Netabins) && Chi2(a,b)<4.61 && Chi2(a,b)==max(max(Chi2))
+                    sprintf('Upper limit out of range! Scan range should be extended!')
+                end
+            else
+            
+                if strcmp(Syst,'ON')
+                    Chi2opt='chi2CMShape';
+                    NonPoissonScaleFactor=1.064;
+                else
+                    Chi2opt='chi2Stat';
+                    NonPoissonScaleFactor=1;
+                end
+
+                fitter = 'minuit';
+
+                if strcmp(RunList,'KNM1')
+                    U = MultiRunAnalysis('RunList',RunList,... % runlist defines which runs are analysed -> set MultiRunAnalysis.m -> function: GetRunList()
+                        'chi2',Chi2opt,...                 % uncertainties: statistical or stat + systematic uncertainties
+                        'DataType','Twin',...                 % can be 'Real' or 'Twin' -> Monte Carlo
+                        'fixPar','E0 Norm Bkg',...                   % free Parameter!!
+                        'RadiativeFlag','ON',...              % theoretical radiative corrections applied in model
+                        'NonPoissonScaleFactor',NonPoissonScaleFactor,...     % background uncertainty are enhanced
+                        'fitter',fitter,...
+                        'minuitOpt','min ; minos',...         % technical fitting options (minuit)
+                        'FSDFlag','SibilleFull',...          % final state distribution
+                        'ELossFlag','KatrinT2',...            % energy loss function
+                        'SysBudget',SystBudget,...                    % defines syst. uncertainties -> in GetSysErr.m;
+                        'DopplerEffectFlag','FSD',...
+                        'Twin_SameCDFlag','OFF',...
+                        'Twin_SameIsotopFlag','OFF',...
+                        'SynchrotronFlag','ON',...
+                        'AngularTFFlag','OFF',...
+                        'TwinBias_Q',18573.73,...
+                        'TwinBias_mnuSq',TwinBias_mnuSq);
+                elseif strcmp(RunList,'KNM2')
+                    U = MultiRunAnalysis('RunList',RunList,... % runlist defines which runs are analysed -> set MultiRunAnalysis.m -> function: GetRunList()
+                        'chi2',Chi2opt,...                 % uncertainties: statistical or stat + systematic uncertainties
+                        'DataType','Twin',...                 % can be 'Real' or 'Twin' -> Monte Carlo
+                        'fixPar','E0 Norm Bkg',...                   % free Parameter!!
+                        'RadiativeFlag','ON',...              % theoretical radiative corrections applied in model
+                        'NonPoissonScaleFactor',NonPoissonScaleFactor,...     % background uncertainty are enhanced
+                        'fitter',fitter,...
+                        'minuitOpt','min ; minos',...         % technical fitting options (minuit)
+                        'FSDFlag','SibilleFull',...          % final state distribution
+                        'ELossFlag','KatrinT2',...            % energy loss function
+                        'SysBudget',SystBudget,...                    % defines syst. uncertainties -> in GetSysErr.m;
+                        'DopplerEffectFlag','FSD',...
+                        'Twin_SameCDFlag','OFF',...
+                        'Twin_SameIsotopFlag','OFF',...
+                        'SynchrotronFlag','ON',...
+                        'AngularTFFlag','OFF',...
+                        'TwinBias_Q',18573.73,...
+                        'TwinBias_mnuSq',TwinBias_mnuSq);
+                end
+
+                U.exclDataStart = U.GetexclDataStart(range); % set region of interest
+                U.InitModelObj_Norm_BKG('Recompute','ON');
+
+                mnuScanPoints = logspace(log10(mnulow),log10(mnuhigh),Nmnubins);
+                etaScanPoints = logspace(log10(etalow),log10(etahigh),Netabins);
+                Chi2 = ones(Nmnubins,Netabins);
+
+                for i=1:Nmnubins
+                    U.ModelObj.mnuSq_i = mnuScanPoints(i);
+                    for j=1:Netabins
+                        U.ModelObj.eta_i = etaScanPoints(j);
+                        U.ModelObj.eta = etaScanPoints(j);
+                        U.ModelObj.ComputeNormFactorTBDDS;
+                        U.ModelObj.ComputeTBDDS;
+                        U.ModelObj.ComputeTBDIS;
+                        U.Fit;
+                        Chi2(i,j) = U.FitResult.chi2min;
+                    end
+                end
+                save(savename,'mnuScanPoints','etaScanPoints','Chi2');
+                DeltaChi2 = abs(Chi2 - 4.61);
+                GlobalChi2Min = min(min(DeltaChi2));
+                [a,b] = find(DeltaChi2==GlobalChi2Min);
+                Uppermnu = mnuScanPoints(a);
+                Uppereta = etaScanPoints(b);
+                sprintf('m_{\\nu} = %.2g \n \\eta = %.2g \n \\Delta \\chi^{2} = %.3g',Uppermnu,Uppereta,Chi2(a,b))
+                if (a==Nmnubins || b==Netabins) && Chi2(a,b)<4.61 && Chi2(a,b)==max(max(Chi2))
+                    sprintf('Upper limit out of range! Scan range should be extended!')
+                end
+                plotchi2scan(savename);
             end
         end
    end
