@@ -1,6 +1,6 @@
 %% Settings
 mNuBins  = 20;
-mNuUpper = 5;   %eV
+mNuUpper = 10;   %eV
 
 A = RelicNuDebug('Params','KNM1');
 

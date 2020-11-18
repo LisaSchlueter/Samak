@@ -5,6 +5,7 @@ classdef RelicNuDebug < handle
    properties
        Params;      %parameters of modelobj
        R;           %TBD obj
+       M;           %(Multi)RunAnalysis object
        ToggleES;    %whether to use excited states in the neutrino capture spectrum
        etaSensitivity;
    end
@@ -13,11 +14,13 @@ classdef RelicNuDebug < handle
        function obj = RelicNuDebug(varargin)
            p = inputParser;
            p.addParameter('R','',@(x)isa(x,'TBD') || isempty(x));
+           p.addParameter('M','',@(x)isa(x,'MultiRunAnalysis') || isa(x,'RunAnalysis') || isempty(x));
            p.addParameter('Params','TDR',@(x)ismember(x,{'TDR','KNM1','KNM2','Formaggio'}));
            p.addParameter('ToggleES','OFF',@(x)ismember(x,{'ON','OFF'}));
            p.addParameter('etaSensitivity','',@(x)isfloat(x) || isempty(x));
            p.parse(varargin{:})
            obj.R              = p.Results.R;
+           obj.M              = p.Results.M;
            obj.Params         = p.Results.Params;
            obj.ToggleES       = p.Results.ToggleES;
            obj.etaSensitivity = p.Results.etaSensitivity;
@@ -74,6 +77,42 @@ classdef RelicNuDebug < handle
            obj.R.ComputeNormFactorTBDDS;
            obj.R.ComputeTBDDS;
            obj.R.ComputeTBDIS;
+       end
+       function SetParam(obj,varargin)
+          p=inputParser;
+          p.addParameter('Parameter','',@(x)ismember(x,{'mNu','E0','Norm','Bck'}));
+          p.addParameter('value',0,@(x)isfloat(x));
+          p.parse(varargin{:});
+          Parameter = p.Results.Parameter;
+          value = p.Results.value;
+          
+          if strcmp(Parameter,'mNu')
+              obj.M = MultiRunAnalysis('RunList',obj.M.RunList,... % runlist defines which runs are analysed -> set MultiRunAnalysis.m -> function: GetRunList()
+                    'chi2',obj.M.chi2,...                 % uncertainties: statistical or stat + systematic uncertainties
+                    'DataType','Twin',...                 % can be 'Real' or 'Twin' -> Monte Carlo
+                    'fixPar','E0 Norm Bck',...                   % free Parameter!!
+                    'RadiativeFlag','ON',...              % theoretical radiative corrections applied in model
+                    'NonPoissonScaleFactor',obj.M.NonPoissonScaleFactor,...     % background uncertainty are enhanced
+                    'fitter',obj.M.fitter,...
+                    'minuitOpt','min ; minos',...         % technical fitting options (minuit)
+                    'FSDFlag','SibilleFull',...          % final state distribution
+                    'ELossFlag','KatrinT2',...            % energy loss function
+                    'SysBudget',obj.M.SysBudget,...                    % defines syst. uncertainties -> in GetSysErr.m;
+                    'DopplerEffectFlag','FSD',...
+                    'Twin_SameCDFlag','OFF',...
+                    'Twin_SameIsotopFlag','OFF',...
+                    'SynchrotronFlag','ON',...
+                    'AngularTFFlag','OFF',...
+                    'TwinBias_Q',obj.M.TwinBias_Q,...
+                    'TwinBias_mnuSq',obj.M.TwinBias_mnuSq);
+              obj.M.ModelObj.mnuSq_i = value;
+          elseif strcmp(Parameter,'E0')
+              obj.M.fixPar = 'mNu Norm Bck';
+              obj.M.ModelObj.Q_i = value;
+          elseif strcmp(Parameter,'Bck')
+              obj.M.fixPar = 'mNu E0 Norm';
+              obj.M.ModelObj.BKG_RateSec_i = value;
+          end
        end
    end
    
@@ -269,6 +308,7 @@ classdef RelicNuDebug < handle
             end
 
             U.exclDataStart = U.GetexclDataStart(range); % set region of interest
+            obj.M = U;
             
             if RunNr==10
                 U.InitModelObj_Norm_BKG('Recompute','ON');
@@ -564,6 +604,7 @@ classdef RelicNuDebug < handle
 
             U.exclDataStart = U.GetexclDataStart(range); % set region of interest
             U.InitModelObj_Norm_BKG('Recompute','ON');
+            obj.M = U;
             
             if strcmp(mode,'SCAN')
                 Chi2      = 1:Netabins;
@@ -582,7 +623,7 @@ classdef RelicNuDebug < handle
                 if exist(savename,'file') && strcmp(Recompute,'OFF') && strcmp(Plot,'ON')
                     plotchi2scan(savename);
                 else
-                    for i=1:Netabins
+                    for i=2:Netabins
                        U.ModelObj.eta_i = (i-1)*((etafactor*10^(etarange))/(Netabins-1));
                        U.ModelObj.eta   = (i-1)*((etafactor*10^(etarange))/(Netabins-1));
                        U.ModelObj.ComputeNormFactorTBDDS;
@@ -593,6 +634,9 @@ classdef RelicNuDebug < handle
                        Chi2(i)      = U.FitResult.chi2min;
                        mnuSq(i)     = U.ModelObj.mnuSq_i+U.FitResult.par(1);
                        mnuSq_err(i) = U.FitResult.err(1);
+                       if mnuSq_err(i)<0.5*mnuSq_err(1)
+                           mnuSq_err(i) = obj.CorrectErr('Parameter','mNu','value',mnuSq(i),'eta',(i-1)*((etafactor*10^(etarange))/(Netabins-1)),'minchi2',Chi2(i));
+                       end
                        E0(i)        = U.ModelObj.Q_i+U.FitResult.par(2);
                        E0_err(i)    = U.FitResult.err(2);
                        Bkg(i)       = U.ModelObj.BKG_RateSec_i+U.FitResult.par(3);
@@ -1094,6 +1138,55 @@ classdef RelicNuDebug < handle
            end
            bar(X,Y);
            PrettyFigureFormat;
+       end
+       function Error = CorrectErr(obj,varargin)
+           p = inputParser;
+           p.addParameter('Parameter','',@(x)ismember(x,{'mNu','E0','Norm','Bck'}));
+           p.addParameter('value',0,@(x)isfloat(x));
+           p.addParameter('eta',0,@(x)isfloat(x));
+           p.addParameter('minchi2',0,@(x)isfloat(x));
+           p.parse(varargin{:});
+           Parameter = p.Results.Parameter;
+           value     = p.Results.value;
+           eta       = p.Results.eta;
+           minchi2   = p.Results.minchi2;
+           
+           Chi2upper  = minchi2;
+           Chi2lower  = minchi2;
+           valueupper = value;
+           valuelower = value;
+           value0     = value;
+           obj.M.ModelObj.eta_i = eta;
+           obj.M.ModelObj.eta   = eta;
+           
+           while Chi2upper-minchi2 < 1
+               Chi2lower  = Chi2upper;
+               valuelower = valueupper;
+               obj.SetParam('Parameter',Parameter,'value',value+1.1*value);
+               obj.M.ModelObj.ComputeNormFactorTBDDS;
+               obj.M.ModelObj.ComputeTBDDS;
+               obj.M.ModelObj.ComputeTBDIS;
+               obj.M.Fit;
+               Chi2upper  = obj.M.FitResult.chi2min;
+               valueupper = value+1.1*value;
+               value = valueupper;
+           end
+           while abs(Chi2upper-minchi2-1)>0.01 && abs(Chi2lower-minchi2-1)>0.01
+               obj.SetParam('Parameter',Parameter,'value',((valueupper-valuelower)./(Chi2upper-Chi2lower)).*1-Chi2upper.*((valueupper-valuelower)./(Chi2upper-Chi2lower))+valueupper);
+               value = ((valueupper-valuelower)./(Chi2upper-Chi2lower)).*1-Chi2upper.*((valueupper-valuelower)./(Chi2upper-Chi2lower))+valueupper;
+               obj.M.ModelObj.ComputeNormFactorTBDDS;
+               obj.M.ModelObj.ComputeTBDDS;
+               obj.M.ModelObj.ComputeTBDIS;
+               obj.M.Fit;
+               if obj.M.FitResult.chi2min-minchi2>1
+                   Chi2upper  = obj.M.FitResult.chi2min;
+                   valueupper = ((valueupper-valuelower)./(Chi2upper-Chi2lower)).*1-Chi2upper.*((valueupper-valuelower)./(Chi2upper-Chi2lower))+valueupper;
+               else
+                   Chi2lower  = obj.M.FitResult.chi2min;
+                   valuelower = ((valueupper-valuelower)./(Chi2upper-Chi2lower)).*1-Chi2upper.*((valueupper-valuelower)./(Chi2upper-Chi2lower))+valueupper;
+               end
+           end
+           Error = value-value0;
        end
    end
     
