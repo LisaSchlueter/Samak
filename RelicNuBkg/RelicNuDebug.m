@@ -634,9 +634,9 @@ classdef RelicNuDebug < handle
                        Chi2(i)      = U.FitResult.chi2min;
                        mnuSq(i)     = U.ModelObj.mnuSq_i+U.FitResult.par(1);
                        mnuSq_err(i) = U.FitResult.err(1);
-                       if mnuSq_err(i)<0.5*mnuSq_err(1)
-                           mnuSq_err(i) = obj.CorrectErr('Parameter','mNu','value',mnuSq(i),'eta',(i-1)*((etafactor*10^(etarange))/(Netabins-1)),'minchi2',Chi2(i));
-                       end
+                       %if mnuSq_err(i)<0.5*mnuSq_err(1)
+                       %    mnuSq_err(i) = obj.CorrectErr('Parameter','mNu','value',mnuSq(i),'eta',(i-1)*((etafactor*10^(etarange))/(Netabins-1)),'minchi2',Chi2(i));
+                       %end
                        E0(i)        = U.ModelObj.Q_i+U.FitResult.par(2);
                        E0_err(i)    = U.FitResult.err(2);
                        Bkg(i)       = U.ModelObj.BKG_RateSec_i+U.FitResult.par(3);
