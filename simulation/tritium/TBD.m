@@ -1821,6 +1821,8 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                                         if exist(savename,'file')
                                             load(savename,'FSDwidth','Position');
                                             obj.PhaseSpace = pdf('Normal',obj.Te-obj.Q,Position+obj.mnuSq,sqrt(obj.DE_sigma^2+FSDwidth^2));  %obj.Q.*obj.me./(obj.me+obj.MH3+obj.MHe3),
+                                        elseif strcmp(obj.TTFSD,'OFF') && strcmp(obj.DTFSD,'OFF') && strcmp(obj.HTFSD,'OFF')
+                                            obj.ComputePhaseSpace('NuCapture');
                                         else
                                             sprintf('FSD ground state not yet fitted! Use obj.FitFSDGroundState to generate necessary file! Excited states will be switched on.')
                                             obj.ToggleES = 'ON';
@@ -1918,16 +1920,18 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                     case 'ON'
                         NormGS = obj.WGTS_MolFrac_TT*obj.TTNormGS+obj.WGTS_MolFrac_DT*obj.DTNormGS+obj.WGTS_MolFrac_HT*obj.HTNormGS;
                         TBDDS_Capture = (1+obj.normFit).*(TBDDS_Capture./simpsons(obj.Te,TBDDS_Capture)).*obj.NormFactorTBDDS_R;
-                        switch obj.ToggleES
-                            case 'ON'
-                                EnergyRange = obj.Te-obj.Q;
-                                lowerbound=find(abs(EnergyRange+10-obj.mnuSq)<abs(EnergyRange(2)-EnergyRange(1))/2);
-                                if simpsons(TBDDS_Capture)~=0
-                                    GSFrac = simpsons(TBDDS_Capture(lowerbound:end))/simpsons(TBDDS_Capture);
-                                    TBDDS_Capture = TBDDS_Capture.*NormGS/GSFrac;       %fraction of captures happening inside the considered energy range
-                                end
-                            case'OFF'
-                                TBDDS_Capture = TBDDS_Capture.*NormGS;
+                        if ~strcmp(obj.TTFSD,'OFF') || ~strcmp(obj.DTFSD,'OFF') || ~strcmp(obj.HTFSD,'OFF')
+                            switch obj.ToggleES
+                                case 'ON'
+                                    EnergyRange = obj.Te-obj.Q;
+                                    lowerbound=find(abs(EnergyRange+10-obj.mnuSq)<abs(EnergyRange(2)-EnergyRange(1))/2);
+                                    if simpsons(TBDDS_Capture)~=0
+                                        GSFrac = simpsons(TBDDS_Capture(lowerbound:end))/simpsons(TBDDS_Capture);
+                                        TBDDS_Capture = TBDDS_Capture.*NormGS/GSFrac;       %fraction of captures happening inside the considered energy range
+                                    end
+                                case'OFF'
+                                    TBDDS_Capture = TBDDS_Capture.*NormGS;
+                            end
                         end
                 end
             end

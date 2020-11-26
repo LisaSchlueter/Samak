@@ -535,6 +535,7 @@ classdef RelicNuDebug < handle
             p.addParameter('fitPar','mNu E0 Norm Bkg',@(x)ischar(x));
             p.addParameter('Syst','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('SystBudget',24,@(x)isfloat(x));
+            p.addParameter('CheckSyst','OFF',@(x)ismember(x,{'OFF','RF','TASR','Stack','FSD','TC','FPDeff','BkgCM'}));
             p.addParameter('TwinBias_mnuSq',0,@(x)isfloat(x));
             p.addParameter('range',30,@(x)isfloat(x));
             p.addParameter('Netabins',10,@(x)isfloat(x));
@@ -542,6 +543,7 @@ classdef RelicNuDebug < handle
             p.addParameter('etafactor',1.5,@(x)isfloat(x));                    % max(eta)=etafactor*10^etarange
             p.addParameter('mode','SCAN',@(x)ismember(x,{'SCAN','SEARCH'}));
             p.addParameter('Plot','ON',@(x)ismember(x,{'ON','OFF'}));
+            p.addParameter('CheckErrors','OFF',@(x)ismember(x,{'ON','OFF'}));
             %% =========== SEARCH mode settings =============
             p.addParameter('etalower',0,@(x)isfloat(x));
             p.addParameter('etaupper',1.5e10,@(x)isfloat(x));                  % initial upper and lower search bounds
@@ -553,6 +555,7 @@ classdef RelicNuDebug < handle
             fitPar         = p.Results.fitPar;
             Syst           = p.Results.Syst;
             SystBudget     = p.Results.SystBudget;
+            CheckSyst      = p.Results.CheckSyst;
             TwinBias_mnuSq = p.Results.TwinBias_mnuSq;
             range          = p.Results.range;
             Netabins       = p.Results.Netabins;
@@ -560,6 +563,7 @@ classdef RelicNuDebug < handle
             etafactor      = p.Results.etafactor;
             mode           = p.Results.mode;
             Plot           = p.Results.Plot;
+            CheckErrors    = p.Results.CheckErrors;
             etalower       = p.Results.etalower;
             etaupper       = p.Results.etaupper;
             delta          = p.Results.delta;
@@ -617,7 +621,17 @@ classdef RelicNuDebug < handle
 
             U.exclDataStart = U.GetexclDataStart(range); % set region of interest
             U.InitModelObj_Norm_BKG('Recompute','ON');
-            obj.M = U;
+            
+            if ~strcmp(CheckSyst,'OFF')
+                if strcmp(CheckSyst,'BkgCM')
+                    obj.M.ComputeCM('BkgCM','ON');
+                else
+                    obj.M.ComputeCM('SysEffects',struct(CheckSyst,'ON'),'BkgCM','OFF');
+                end
+                U.RunData.TBDIS = U.RunData.TBDIS + sqrt(diag(obj.M.FitCM));
+            else
+                obj.M = U;
+            end
             
             if strcmp(mode,'SCAN')
                 Chi2      = 1:Netabins;
@@ -647,21 +661,17 @@ classdef RelicNuDebug < handle
                        Chi2(i)      = U.FitResult.chi2min;
                        mnuSq(i)     = U.ModelObj.mnuSq_i+U.FitResult.par(1);
                        mnuSq_err(i) = U.FitResult.err(1);
-                       if mnuSq_err(i)<0.5*mnuSq_err(1)
-                           mnuSq_err(i) = obj.CorrectErr('Parameter','mNu','value',mnuSq(i),'eta',(i-1)*((etafactor*10^(etarange))/(Netabins-1)),'minchi2',Chi2(i),'factor',mnuSq(1)/mnuSq_err(1));
-                       end
                        E0(i)        = U.ModelObj.Q_i+U.FitResult.par(2);
                        E0_err(i)    = U.FitResult.err(2);
-                       if E0_err(i)<0.5*E0_err(1)
-                           E0_err(i) = obj.CorrectErr('Parameter','E0','value',E0(i),'eta',(i-1)*((etafactor*10^(etarange))/(Netabins-1)),'minchi2',Chi2(i),'factor',E0(1)/E0_err(1));
-                       end
                        Bkg(i)       = U.ModelObj.BKG_RateSec_i+U.FitResult.par(3);
                        Bkg_err(i)   = U.FitResult.err(3);
-                       if Bkg_err(i)<0.5*Bkg_err(1)
-                           Bkg_err(i) = obj.CorrectErr('Parameter','Bkg','value',Bkg(i),'eta',(i-1)*((etafactor*10^(etarange))/(Netabins-1)),'minchi2',Chi2(i),'factor',Bkg(1)/Bkg_err(1));
-                       end
                        Norm(i)      = U.FitResult.par(3+U.ModelObj.nPixels:3+2*U.ModelObj.nPixels-1) + 1;
                        Norm_err(i)  = U.FitResult.err(3+U.ModelObj.nPixels:3+2*U.ModelObj.nPixels-1);
+                       if strcmp(CheckErrors,'ON')
+                           mnuSq_err(i) = obj.CorrectErr('Parameter','mNu','value',mnuSq(i),'eta',(i-1)*((etafactor*10^(etarange))/(Netabins-1)),'minchi2',Chi2(i),'factor',mnuSq(1)/mnuSq_err(1));
+                           E0_err(i)    = obj.CorrectErr('Parameter','E0','value',E0(i),'eta',(i-1)*((etafactor*10^(etarange))/(Netabins-1)),'minchi2',Chi2(i),'factor',E0(1)/E0_err(1));
+                           Bkg_err(i)   = obj.CorrectErr('Parameter','Bkg','value',Bkg(i),'eta',(i-1)*((etafactor*10^(etarange))/(Netabins-1)),'minchi2',Chi2(i),'factor',Bkg(1)/Bkg_err(1));
+                       end
                     end
 
                     save(savename,'Chi2','Netabins','etafactor','etarange','mnuSq','mnuSq_err','E0','E0_err','Bkg','Bkg_err','Norm','Norm_err');
@@ -674,7 +684,11 @@ classdef RelicNuDebug < handle
             if strcmp(mode,'SEARCH')
                 
                 matFilePath = [getenv('SamakPath'),sprintf('RelicNuBkg/UpperLimits/')];
-                savename=[matFilePath,sprintf('RelicLimit_Twin_BiasmnuSq%g_Syst%s_range%g_%s_%s.mat',TwinBias_mnuSq,Syst,range,obj.Params,fitPar)];
+                if strcmp(CheckSyst,'OFF')
+                    savename=[matFilePath,sprintf('RelicLimit_Twin_BiasmnuSq%g_Syst%s_range%g_%s_%s.mat',TwinBias_mnuSq,Syst,range,obj.Params,fitPar)];
+                else
+                    savename=[matFilePath,sprintf('RelicLimit_Twin_BiasmnuSq%g_Syst%s_%s_range%g_%s_%s.mat',TwinBias_mnuSq,Syst,CheckSyst,range,obj.Params,fitPar)];
+                end
                 
                 if exist(savename,'file') && strcmp(Recompute,'OFF')
                     load(savename,'eta');
@@ -726,6 +740,10 @@ classdef RelicNuDebug < handle
 
                     F.exclDataStart = F.GetexclDataStart(range); % set region of interest
                     F.InitModelObj_Norm_BKG('Recompute','ON');
+                    
+                    if ~strcmp(CheckSyst,'OFF')
+                        F.RunData.TBDIS = F.RunData.TBDIS + sqrt(diag(obj.M.FitCM));
+                    end
 
                     eta=etaupper;
                     F.ModelObj.eta_i=etalower;
@@ -742,13 +760,14 @@ classdef RelicNuDebug < handle
                     F.Fit;
                     chi2upper = U.FitResult.chi2min;
                     chi2lower = F.FitResult.chi2min;
-                    chi2 = chi2upper;
+                    minchi2   = chi2lower;
+                    chi2      = chi2upper;
                     if chi2<DeltaChi2
                         sprintf('chi^2 too small! Set larger initial eta.')
                     elseif chi2>50
                         sprintf('Minos failed! Vary initial eta.')
                     else
-                        while abs(chi2-DeltaChi2)>0.01
+                        while abs(chi2-minchi2-DeltaChi2)>0.01
                             if chi2>DeltaChi2
                                 etaupper=eta;
                                 chi2upper=chi2;
@@ -1218,6 +1237,97 @@ classdef RelicNuDebug < handle
                end
            end
            Error = value-value0;
+       end
+       function SystBias(obj,varargin)
+            p=inputParser;
+            p.addParameter('range',40,@(x)isfloat(x));
+            p.addParameter('fitPar','mNu E0 Norm Bkg',@(x)ischar(x));
+            p.addParameter('Syst','ON',@(x)ismember(x,{'ON','OFF'}));
+            p.addParameter('SystBudget',24,@(x)isfloat(x));
+            p.addParameter('TwinBias_mnuSq',1,@(x)isfloat(x));
+            p.addParameter('Recompute','ON',@(x)ismember(x,{'ON','OFF'}));
+            p.addParameter('Plot','ON',@(x)ismember(x,{'ON','OFF'}));
+            p.addParameter('DeltaChi2',2.71,@(x)isfloat(x));
+            p.parse(varargin{:});
+
+            range          = p.Results.range;
+            fitPar         = p.Results.fitPar;
+            Syst           = p.Results.Syst;
+            SystBudget     = p.Results.SystBudget;
+            TwinBias_mnuSq = p.Results.TwinBias_mnuSq;
+            Recompute      = p.Results.Recompute;
+            DeltaChi2      = p.Results.DeltaChi2;
+            
+            SystEffects = ["RF","TASR","Stack","FSD","TC","FPDeff","BkgCM"];
+            Bias = zeros(1,numel(SystEffects));
+            matFilePath = [getenv('SamakPath'),sprintf('RelicNuBkg/Misc/')];
+            savename=[matFilePath,sprintf('SystEffectOnSensitivity_%s.mat',obj.Params)];
+            
+            if exist(savename,'file')
+                load(savename);
+            else
+            
+               obj.M = MultiRunAnalysis('RunList',obj.Params,... % runlist defines which runs are analysed -> set MultiRunAnalysis.m -> function: GetRunList()
+                'chi2','chi2CMShape',...                 % uncertainties: statistical or stat + systematic uncertainties
+                'DataType','Twin',...                 % can be 'Real' or 'Twin' -> Monte Carlo
+                'fixPar',fitPar,...                   % free Parameter!!
+                'RadiativeFlag','ON',...              % theoretical radiative corrections applied in model
+                'NonPoissonScaleFactor',1.064,...     % background uncertainty are enhanced
+                'fitter','minuit',...
+                'minuitOpt','min ; minos',...         % technical fitting options (minuit)
+                'FSDFlag','SibilleFull',...          % final state distribution
+                'ELossFlag','KatrinT2',...            % energy loss function
+                'SysBudget',SystBudget,...                    % defines syst. uncertainties -> in GetSysErr.m;
+                'DopplerEffectFlag','FSD',...
+                'Twin_SameCDFlag','OFF',...
+                'Twin_SameIsotopFlag','OFF',...
+                'SynchrotronFlag','ON',...
+                'AngularTFFlag','OFF',...
+                'TwinBias_Q',18573.73,...
+                'TwinBias_mnuSq',TwinBias_mnuSq);
+            
+            obj.Chi2Scan_Twin('Recompute',Recompute,...
+                    'range',range,...
+                    'RunList',obj.Params,...
+                    'fitPar',fitPar,...
+                    'Syst','OFF',...
+                    'TwinBias_mnuSq',TwinBias_mnuSq,...
+                    'etalower',0,...
+                    'etaupper',3e11,...
+                    'mode','SEARCH',...
+                    'Plot','OFF',...
+                    'DeltaChi2',DeltaChi2);
+                matFilePath = [getenv('SamakPath'),sprintf('RelicNuBkg/UpperLimits/')];
+                   savename=[matFilePath,sprintf('RelicLimit_Twin_BiasmnuSq%g_Syst%s_range%g_%s_%s.mat',TwinBias_mnuSq,Syst,range,obj.Params,fitPar)];
+                   load(savename);
+                   etaStat = eta;
+
+                for i=1:numel(SystEffects)
+
+                   obj.Chi2Scan_Twin('Recompute',Recompute,...
+                       'CheckSyst',SystEffects(i),...
+                       'range',range,...
+                       'RunList',obj.Params,...
+                       'fitPar',fitPar,...
+                       'Syst','OFF',...
+                       'TwinBias_mnuSq',TwinBias_mnuSq,...
+                       'etalower',0,...
+                       'etaupper',3.001e11,...
+                       'mode','SEARCH',...
+                       'Plot','OFF',...
+                       'DeltaChi2',DeltaChi2);
+
+                   matFilePath = [getenv('SamakPath'),sprintf('RelicNuBkg/UpperLimits/')];
+                   savename=[matFilePath,sprintf('RelicLimit_Twin_BiasmnuSq%g_Syst%s_%s_range%g_%s_%s.mat',TwinBias_mnuSq,Syst,SystEffects(i),range,obj.Params,fitPar)];
+                   load(savename);
+                   Bias(i) = eta - etaStat;
+                end
+                save(savename,'SystEffects','Bias');
+            end
+            X = categorical({'RF','TASR','Stack','FSD','TC','FPDeff','BkgCM'});
+            X = reordercats(X,{'RF','TASR','Stack','FSD','TC','FPDeff','BkgCM'});
+            bar(X,Bias);
+            PrettyFigureFormat;
        end
    end
     

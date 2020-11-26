@@ -2,8 +2,9 @@ function plotchi2scan(savename)
     load(savename);
     
     if contains(savename,'2D')
-        s=surf(etaScanPoints,mnuScanPoints,Chi2);
-        s.FaceColor='interp';
+        [~,s]=contour(etaScanPoints,mnuScanPoints,Chi2,50);
+        %s.FaceColor='interp';
+        s.LineWidth = 2;
         xlabel('\eta','FontSize',12);
         ylabel('m_{\nu}^{2} (eV^{2})','FontSize',12);
         zlabel('\chi^2','FontSize',12);
@@ -11,7 +12,12 @@ function plotchi2scan(savename)
         set(gca, 'YScale', 'log');
         set(gca, 'XScale', 'log');
         colorbar;
+        hold on;
+        [~,t]=contour(etaScanPoints,mnuScanPoints,Chi2,[0 4.61]);
+        t.LineWidth = 2;
+        t.ShowText = 'ON';
         PrettyFigureFormat;
+        hold off;
     else
 
         eta=(0:(Netabins-1))*((etafactor*10^(etarange))/(Netabins-1));
