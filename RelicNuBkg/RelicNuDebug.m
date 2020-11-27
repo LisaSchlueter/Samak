@@ -107,6 +107,7 @@ classdef RelicNuDebug < handle
                     'NonPoissonScaleFactor',obj.M.NonPoissonScaleFactor,...     % background uncertainty are enhanced
                     'fitter',obj.M.fitter,...
                     'minuitOpt','min ; minos',...         % technical fitting options (minuit)
+                    'pullFlag',obj.M.pullFlag,...
                     'FSDFlag','SibilleFull',...          % final state distribution
                     'ELossFlag','KatrinT2',...            % energy loss function
                     'SysBudget',obj.M.SysBudget,...                    % defines syst. uncertainties -> in GetSysErr.m;
@@ -237,6 +238,7 @@ classdef RelicNuDebug < handle
             p.addParameter('Init_Opt','',@(x)iscell(x) || isempty(x));         % cell array containing options to change in initfile (only relevant if RunNr==10)
             p.addParameter('fitPar','mNu E0 Norm Bkg',@(x)ischar(x));
             p.addParameter('Syst','OFF',@(x)ismember(x,{'ON','OFF'}));
+            p.addParameter('pullFlag',3);
             p.addParameter('Netabins',10,@(x)isfloat(x));
             p.addParameter('etarange',10,@(x)isfloat(x));
             p.addParameter('etafactor',1.5,@(x)isfloat(x));                    % max(eta)=etafactor*10^etarange
@@ -254,6 +256,7 @@ classdef RelicNuDebug < handle
             Init_Opt  = p.Results.Init_Opt;
             fitPar    = p.Results.fitPar;
             Syst      = p.Results.Syst;
+            pullFlag  = p.Results.pullFlag;
             Netabins  = p.Results.Netabins;
             etarange  = p.Results.etarange;
             etafactor = p.Results.etafactor;
@@ -294,6 +297,7 @@ classdef RelicNuDebug < handle
                     'fixPar',fitPar,...                   % free Parameter!!
                     'NonPoissonScaleFactor',1,...         % background uncertainty are enhanced
                     'minuitOpt','min ; minos',...         % technical fitting options (minuit)
+                    'pullFlag',pullFlag,...
                     'FSDFlag','SibilleFull',...          % final state distribution                        !!check ob initfile hier überschrieben wird
                     'ELossFlag','KatrinT2',...            % energy loss function
                     'SysBudget',22,...                    % defines syst. uncertainties -> in GetSysErr.m;
@@ -312,6 +316,7 @@ classdef RelicNuDebug < handle
                     'fixPar',fitPar,...                   % free Parameter!!
                     'NonPoissonScaleFactor',1,...         % background uncertainty are enhanced
                     'minuitOpt','min ; minos',...         % technical fitting options (minuit)
+                    'pullFlag',pullFlag,...
                     'FSDFlag','SibilleFull',...          % final state distribution                        !!check ob initfile hier überschrieben wird
                     'ELossFlag','KatrinT2',...            % energy loss function
                     'SysBudget',22,...                    % defines syst. uncertainties -> in GetSysErr.m;
@@ -337,9 +342,10 @@ classdef RelicNuDebug < handle
                 Bkg_err   = 1:Netabins;
                 Norm      = 1:Netabins;
                 Norm_err  = 1:Netabins;
+                
                 matFilePath = [getenv('SamakPath'),sprintf('RelicNuBkg/Chi2Scans/')];
                 if RunNr==1
-                    savename=[matFilePath,sprintf('RelicChi2Scan_Fake_Syst%s_range%g_%s_[0 %g]_%s.mat',Syst,range,obj.Params,etafactor*10^etarange,fitPar)];
+                    savename=[matFilePath,sprintf('RelicChi2Scan_Fake_Syst%s_range%g_%s_[0 %g]_%s',Syst,range,obj.Params,etafactor*10^etarange,fitPar)];
                 else
                     SaveStr='';
                     for i=1:numel(Init_Opt)
@@ -349,8 +355,12 @@ classdef RelicNuDebug < handle
                             SaveStr=[SaveStr,sprintf('_%f',Init_Opt{i})];
                         end
                     end
-                savename=[matFilePath,sprintf('RelicChi2Scan_Fake_Syst%s_range%g_%s_[0 %g]%s_%s.mat',Syst,range,obj.Params,etafactor*10^etarange,SaveStr,fitPar)];
+                savename=[matFilePath,sprintf('RelicChi2Scan_Fake_Syst%s_range%g_%s_[0 %g]%s_%s',Syst,range,obj.Params,etafactor*10^etarange,SaveStr,fitPar)];
                 end
+                if any(ismember(pullFlag,1))
+                    savename = [savename,'_mnuSqPull'];
+                end
+                savename = [savename,'.mat'];
                 
                 if exist(savename,'file') && strcmp(Recompute,'OFF') && strcmp(Plot,'ON')
                     plotchi2scan(savename);
@@ -395,7 +405,11 @@ classdef RelicNuDebug < handle
                             SaveStr=[SaveStr,sprintf('_%f',Init_Opt{i})];
                         end
                     end
-                    savename=[matFilePath,sprintf('RelicLimit_Fake_Syst%s_range%g_%s%s_%s.mat',Syst,range,obj.Params,SaveStr,fitPar)];
+                    savename=[matFilePath,sprintf('RelicLimit_Fake_Syst%s_range%g_%s%s_%s',Syst,range,obj.Params,SaveStr,fitPar)];
+                    if any(ismember(pullFlag,1))
+                        savename = [savename,'_mnuSqPull'];
+                    end
+                    savename = [savename,'.mat'];
                 end
                 
                 if exist(savename,'file') && strcmp(Recompute,'OFF')
@@ -421,6 +435,7 @@ classdef RelicNuDebug < handle
                             'fixPar',fitPar,...                   % free Parameter!!
                             'NonPoissonScaleFactor',1,...         % background uncertainty are enhanced
                             'minuitOpt','min ; minos',...         % technical fitting options (minuit)
+                            'pullFlag',pullFlag,...
                             'FSDFlag','SibilleFull',...          % final state distribution                        !!check ob initfile hier überschrieben wird
                             'ELossFlag','KatrinT2',...            % energy loss function
                             'SysBudget',22,...                    % defines syst. uncertainties -> in GetSysErr.m;
@@ -439,6 +454,7 @@ classdef RelicNuDebug < handle
                             'fixPar',fitPar,...                   % free Parameter!!
                             'NonPoissonScaleFactor',1,...         % background uncertainty are enhanced
                             'minuitOpt','min ; minos',...         % technical fitting options (minuit)
+                            'pullFlag',pullFlag,...
                             'FSDFlag','SibilleFull',...          % final state distribution                        !!check ob initfile hier überschrieben wird
                             'ELossFlag','KatrinT2',...            % energy loss function
                             'SysBudget',22,...                    % defines syst. uncertainties -> in GetSysErr.m;
@@ -530,12 +546,13 @@ classdef RelicNuDebug < handle
        
         function Chi2Scan_Twin(obj,varargin)
             p=inputParser;
-            p.addParameter('Recompute',@(x)ismember(x,{'ON','OFF'}));
+            p.addParameter('Recompute','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('RunList','KNM1',@(x)ischar(x));                          % KNM1 or KNM2
             p.addParameter('fitPar','mNu E0 Norm Bkg',@(x)ischar(x));
             p.addParameter('Syst','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('SystBudget',24,@(x)isfloat(x));
-            p.addParameter('CheckSyst','OFF',@(x)ismember(x,{'OFF','RF','TASR','Stack','FSD','TC','FPDeff','BkgCM'}));
+            p.addParameter('TBDISBias','',@(x)isfloat(x) || isempty(x));
+            p.addParameter('pullFlag',3);
             p.addParameter('TwinBias_mnuSq',0,@(x)isfloat(x));
             p.addParameter('range',30,@(x)isfloat(x));
             p.addParameter('Netabins',10,@(x)isfloat(x));
@@ -555,7 +572,8 @@ classdef RelicNuDebug < handle
             fitPar         = p.Results.fitPar;
             Syst           = p.Results.Syst;
             SystBudget     = p.Results.SystBudget;
-            CheckSyst      = p.Results.CheckSyst;
+            TBDISBias      = p.Results.TBDISBias;
+            pullFlag       = p.Results.pullFlag;
             TwinBias_mnuSq = p.Results.TwinBias_mnuSq;
             range          = p.Results.range;
             Netabins       = p.Results.Netabins;
@@ -588,6 +606,7 @@ classdef RelicNuDebug < handle
                     'NonPoissonScaleFactor',NonPoissonScaleFactor,...     % background uncertainty are enhanced
                     'fitter',fitter,...
                     'minuitOpt','min ; minos',...         % technical fitting options (minuit)
+                    'pullFlag',pullFlag,...
                     'FSDFlag','SibilleFull',...          % final state distribution
                     'ELossFlag','KatrinT2',...            % energy loss function
                     'SysBudget',SystBudget,...                    % defines syst. uncertainties -> in GetSysErr.m;
@@ -607,6 +626,7 @@ classdef RelicNuDebug < handle
                     'NonPoissonScaleFactor',NonPoissonScaleFactor,...     % background uncertainty are enhanced
                     'fitter',fitter,...
                     'minuitOpt','min ; minos',...         % technical fitting options (minuit)
+                    'pullFlag',pullFlag,...
                     'FSDFlag','SibilleFull',...          % final state distribution
                     'ELossFlag','KatrinT2',...            % energy loss function
                     'SysBudget',SystBudget,...                    % defines syst. uncertainties -> in GetSysErr.m;
@@ -622,16 +642,10 @@ classdef RelicNuDebug < handle
             U.exclDataStart = U.GetexclDataStart(range); % set region of interest
             U.InitModelObj_Norm_BKG('Recompute','ON');
             
-            if ~strcmp(CheckSyst,'OFF')
-                if strcmp(CheckSyst,'BkgCM')
-                    obj.M.ComputeCM('BkgCM','ON');
-                else
-                    obj.M.ComputeCM('SysEffects',struct(CheckSyst,'ON'),'BkgCM','OFF');
-                end
-                U.RunData.TBDIS = U.RunData.TBDIS + sqrt(diag(obj.M.FitCM));
-            else
-                obj.M = U;
+            if ~isempty(TBDISBias)
+                U.RunData.TBDIS = U.RunData.TBDIS + TBDISBias;
             end
+            obj.M = U;
             
             if strcmp(mode,'SCAN')
                 Chi2      = 1:Netabins;
@@ -645,7 +659,11 @@ classdef RelicNuDebug < handle
                 Norm_err  = 1:Netabins;
                 
                 matFilePath = [getenv('SamakPath'),sprintf('RelicNuBkg/Chi2Scans/')];
-                savename=[matFilePath,sprintf('RelicChi2Scan_Twin_BiasmnuSq%g_Syst%s_range%g_%s_[0 %g]_%s.mat',TwinBias_mnuSq,Syst,range,obj.Params,etafactor*10^etarange,fitPar)];
+                savename=[matFilePath,sprintf('RelicChi2Scan_Twin_BiasmnuSq%g_Syst%s_range%g_%s_[0 %g]_%s',TwinBias_mnuSq,Syst,range,obj.Params,etafactor*10^etarange,fitPar)];
+                if any(ismember(pullFlag,1))
+                    savename = [savename,'_mnuSqPull'];
+                end
+                savename=[savename,'.mat'];
                 
                 if exist(savename,'file') && strcmp(Recompute,'OFF') && strcmp(Plot,'ON')
                     plotchi2scan(savename);
@@ -684,11 +702,15 @@ classdef RelicNuDebug < handle
             if strcmp(mode,'SEARCH')
                 
                 matFilePath = [getenv('SamakPath'),sprintf('RelicNuBkg/UpperLimits/')];
-                if strcmp(CheckSyst,'OFF')
-                    savename=[matFilePath,sprintf('RelicLimit_Twin_BiasmnuSq%g_Syst%s_range%g_%s_%s.mat',TwinBias_mnuSq,Syst,range,obj.Params,fitPar)];
+                if isempty(TBDISBias)
+                    savename=[matFilePath,sprintf('RelicLimit_Twin_BiasmnuSq%g_Syst%s_range%g_%s_%s',TwinBias_mnuSq,Syst,range,obj.Params,fitPar)];
                 else
-                    savename=[matFilePath,sprintf('RelicLimit_Twin_BiasmnuSq%g_Syst%s_%s_range%g_%s_%s.mat',TwinBias_mnuSq,Syst,CheckSyst,range,obj.Params,fitPar)];
+                    savename=[matFilePath,sprintf('RelicLimit_Twin_BiasmnuSq%g_Syst%s_%s_range%g_%s_%s',TwinBias_mnuSq,Syst,TBDISBias,range,obj.Params,fitPar)];
                 end
+                if any(ismember(pullFlag,1))
+                    savename = [savename,'_mnuSqPull'];
+                end
+                savename = [savename,'.mat'];
                 
                 if exist(savename,'file') && strcmp(Recompute,'OFF')
                     load(savename,'eta');
@@ -707,6 +729,7 @@ classdef RelicNuDebug < handle
                              'NonPoissonScaleFactor',NonPoissonScaleFactor,...     % background uncertainty are enhanced
                              'fitter',fitter,...
                              'minuitOpt','min ; minos',...         % technical fitting options (minuit)
+                             'pullFlag',pullFlag,...
                              'FSDFlag','SibilleFull',...          % final state distribution
                              'ELossFlag','KatrinT2',...            % energy loss function
                              'SysBudget',SystBudget,...                    % defines syst. uncertainties -> in GetSysErr.m;
@@ -726,6 +749,7 @@ classdef RelicNuDebug < handle
                              'NonPoissonScaleFactor',NonPoissonScaleFactor,...     % background uncertainty are enhanced
                              'fitter',fitter,...
                              'minuitOpt','min ; minos',...         % technical fitting options (minuit)
+                             'pullFlag',pullFlag,...
                              'FSDFlag','SibilleFull',...          % final state distribution
                              'ELossFlag','KatrinT2',...            % energy loss function
                              'SysBudget',SystBudget,...                    % defines syst. uncertainties -> in GetSysErr.m;
@@ -741,7 +765,7 @@ classdef RelicNuDebug < handle
                     F.exclDataStart = F.GetexclDataStart(range); % set region of interest
                     F.InitModelObj_Norm_BKG('Recompute','ON');
                     
-                    if ~strcmp(CheckSyst,'OFF')
+                    if ~strcmp(TBDISBias,'OFF')
                         F.RunData.TBDIS = F.RunData.TBDIS + sqrt(diag(obj.M.FitCM));
                     end
 
@@ -822,6 +846,7 @@ classdef RelicNuDebug < handle
             p.addParameter('SystBudget',24,@(x)isfloat(x));
             p.addParameter('TwinBias_mnuSq',0,@(x)isfloat(x));
             p.addParameter('range',40,@(x)isfloat(x));
+            p.addParameter('pullFlag',3);
             p.addParameter('Netabins',20,@(x)isfloat(x));
             p.addParameter('etalow',1.5e11,@(x)isfloat(x) && x>0);
             p.addParameter('etahigh',3e11,@(x)isfloat(x) && x>0);
@@ -836,6 +861,7 @@ classdef RelicNuDebug < handle
             SystBudget     = p.Results.SystBudget;
             TwinBias_mnuSq = p.Results.TwinBias_mnuSq;
             range          = p.Results.range;
+            pullFlag       = p.Results.pullFlag;
             Netabins       = p.Results.Netabins;
             etalow         = p.Results.etalow;
             etahigh        = p.Results.etahigh;
@@ -880,6 +906,7 @@ classdef RelicNuDebug < handle
                         'NonPoissonScaleFactor',NonPoissonScaleFactor,...     % background uncertainty are enhanced
                         'fitter',fitter,...
                         'minuitOpt','min ; minos',...         % technical fitting options (minuit)
+                        'pullFlag',pullFlag,...
                         'FSDFlag','SibilleFull',...          % final state distribution
                         'ELossFlag','KatrinT2',...            % energy loss function
                         'SysBudget',SystBudget,...                    % defines syst. uncertainties -> in GetSysErr.m;
@@ -899,6 +926,7 @@ classdef RelicNuDebug < handle
                         'NonPoissonScaleFactor',NonPoissonScaleFactor,...     % background uncertainty are enhanced
                         'fitter',fitter,...
                         'minuitOpt','min ; minos',...         % technical fitting options (minuit)
+                        'pullFlag',pullFlag,...
                         'FSDFlag','SibilleFull',...          % final state distribution
                         'ELossFlag','KatrinT2',...            % energy loss function
                         'SysBudget',SystBudget,...                    % defines syst. uncertainties -> in GetSysErr.m;
@@ -952,6 +980,7 @@ classdef RelicNuDebug < handle
             p.addParameter('fitPar','mNu E0 Norm Bkg',@(x)ischar(x));
             p.addParameter('Syst','ON',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('SystBudget',24,@(x)isfloat(x));
+            p.addParameter('pullFlag',3);
             p.addParameter('TwinBias_mnuSq',1,@(x)isfloat(x));
             p.addParameter('NetaBins',10,@(x)isfloat(x));
             p.addParameter('etarange',11,@(x)isfloat(x));
@@ -965,6 +994,7 @@ classdef RelicNuDebug < handle
             fitPar         = p.Results.fitPar;
             Syst           = p.Results.Syst;
             SystBudget     = p.Results.SystBudget;
+            pullFlag       = p.Results.pullFlag;
             TwinBias_mnuSq = p.Results.TwinBias_mnuSq;
             NetaBins       = p.Results.NetaBins;
             etarange       = p.Results.etarange;
@@ -980,6 +1010,7 @@ classdef RelicNuDebug < handle
                 'fitPar',fitPar,...
                 'Syst',Syst,...
                 'SystBudget',SystBudget,...
+                'pullFlag',pullFlag,...
                 'TwinBias_mnuSq',TwinBias_mnuSq,...
                 'Netabins',NetaBins,...
                 'etarange',etarange,...
@@ -1027,6 +1058,7 @@ classdef RelicNuDebug < handle
             p.addParameter('fitPar','mNu E0 Norm Bkg',@(x)ischar(x));
             p.addParameter('Init_Opt','',@(x)iscell(x) || isempty(x));        % use these options by switching to RunNr 10
             p.addParameter('Syst','OFF',@(x)ismember(x,{'ON','OFF'}));
+            p.addParameter('pullFlag',3);
             p.addParameter('Recompute','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('Plot','ON',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('DeltaChi2',2.71,@(x)isfloat(x));
@@ -1040,6 +1072,7 @@ classdef RelicNuDebug < handle
             fitPar    = p.Results.fitPar;
             Init_Opt  = p.Results.Init_Opt;
             Syst      = p.Results.Syst;
+            pullFlag  = p.Results.pullFlag;
             Recompute = p.Results.Recompute;
             Plot      = p.Results.Plot;
             DeltaChi2 = p.Results.DeltaChi2;
@@ -1049,6 +1082,7 @@ classdef RelicNuDebug < handle
                 'RunNr',RunNr,...
                 'fitPar',fitPar,...
                 'Syst',Syst,...
+                'pullFlag',pullFlag,...
                 'Init_Opt',Init_Opt,...
                 'Netabins',NetaBins,...
                 'etarange',etarange,...
@@ -1088,6 +1122,7 @@ classdef RelicNuDebug < handle
                     'RunNr',RunNr,...
                     'fitPar',fitPar,...
                     'Syst',Syst,...
+                    'pullFlag',pullFlag,...
                     'Init_Opt',Init_Opt,...
                     'etalower',etalower,...
                     'etaupper',etaupper,...
@@ -1245,6 +1280,7 @@ classdef RelicNuDebug < handle
             p.addParameter('Syst','ON',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('SystBudget',24,@(x)isfloat(x));
             p.addParameter('TwinBias_mnuSq',1,@(x)isfloat(x));
+            p.addParameter('pullFlag',3);
             p.addParameter('Recompute','ON',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('Plot','ON',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('DeltaChi2',2.71,@(x)isfloat(x));
@@ -1255,6 +1291,7 @@ classdef RelicNuDebug < handle
             Syst           = p.Results.Syst;
             SystBudget     = p.Results.SystBudget;
             TwinBias_mnuSq = p.Results.TwinBias_mnuSq;
+            pullFlag       = p.Results.pullFlag;
             Recompute      = p.Results.Recompute;
             DeltaChi2      = p.Results.DeltaChi2;
             
@@ -1263,7 +1300,7 @@ classdef RelicNuDebug < handle
             matFilePath = [getenv('SamakPath'),sprintf('RelicNuBkg/Misc/')];
             savename=[matFilePath,sprintf('SystEffectOnSensitivity_%s.mat',obj.Params)];
             
-            if exist(savename,'file')
+            if exist(savename,'file') && strcmp(Recompute,'OFF')
                 load(savename);
             else
             
@@ -1275,6 +1312,7 @@ classdef RelicNuDebug < handle
                 'NonPoissonScaleFactor',1.064,...     % background uncertainty are enhanced
                 'fitter','minuit',...
                 'minuitOpt','min ; minos',...         % technical fitting options (minuit)
+                'pullFlag',pullFlag,...
                 'FSDFlag','SibilleFull',...          % final state distribution
                 'ELossFlag','KatrinT2',...            % energy loss function
                 'SysBudget',SystBudget,...                    % defines syst. uncertainties -> in GetSysErr.m;
@@ -1286,12 +1324,25 @@ classdef RelicNuDebug < handle
                 'TwinBias_Q',18573.73,...
                 'TwinBias_mnuSq',TwinBias_mnuSq);
             
+            TBDISBias = zeros(numel(obj.M.RunData.qU),numel(SystEffects));
+            
+            for i=1:numel(SystEffects)
+                if ~strcmp(SystEffects(i),'Bkg')
+                    obj.M.ComputeCM('SysEffects',struct(SystEffects(i),'ON'),'BkgCM','OFF');
+                    TBDISBias(:,i) = sqrt(diag(obj.M.FitCM));
+                else
+                    obj.M.ComputeCM('BkgCm','ON');
+                    TBDISBias(:,i) = sqrt(diag(obj.M.FitCM));
+                end
+            end
+            
             obj.Chi2Scan_Twin('Recompute','OFF',...
                     'range',range,...
                     'RunList',obj.Params,...
                     'fitPar',fitPar,...
                     'Syst','OFF',...
                     'TwinBias_mnuSq',TwinBias_mnuSq,...
+                    'pullFlag',pullFlag,...
                     'etalower',0,...
                     'etaupper',3e11,...
                     'mode','SEARCH',...
@@ -1303,12 +1354,13 @@ classdef RelicNuDebug < handle
                 for i=1:numel(SystEffects)
 
                    obj.Chi2Scan_Twin('Recompute',Recompute,...
-                       'CheckSyst',SystEffects(i),...
+                       'TBDISBias',TBDISBias(:,i),...
                        'range',range,...
                        'RunList',obj.Params,...
                        'fitPar',fitPar,...
                        'Syst','OFF',...
                        'TwinBias_mnuSq',TwinBias_mnuSq,...
+                       'pullFlag',pullFlag,...
                        'etalower',0,...
                        'etaupper',3.001e11,...
                        'mode','SEARCH',...

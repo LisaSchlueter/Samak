@@ -2,15 +2,15 @@ function plotchi2scan(savename)
     load(savename);
     
     if contains(savename,'2D')
-        [~,s]=contour(etaScanPoints,mnuScanPoints,Chi2,5);
+        [~,s]=contour(etaScanPoints,mnuScanPoints,Chi2,50);
         %s.FaceColor='interp';
         s.LineWidth = 2;
         xlabel('\eta','FontSize',12);
         ylabel('m_{\nu}^{2} (eV^{2})','FontSize',12);
         zlabel('\chi^2','FontSize',12);
         PRLFormat;
-        set(gca, 'YScale', 'log');
-        set(gca, 'XScale', 'log');
+        %set(gca, 'YScale', 'log');
+        %set(gca, 'XScale', 'log');
         colorbar;
         hold on;
         [~,t]=contour(etaScanPoints,mnuScanPoints,Chi2,[0 4.61]);
