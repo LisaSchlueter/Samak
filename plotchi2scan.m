@@ -2,7 +2,7 @@ function plotchi2scan(savename)
     load(savename);
     
     if contains(savename,'2D')
-        [~,s]=contour(etaScanPoints,mnuScanPoints,Chi2,50);
+        [~,s]=contour(etaScanPoints,mnuScanPoints,Chi2,5);
         %s.FaceColor='interp';
         s.LineWidth = 2;
         xlabel('\eta','FontSize',12);
@@ -17,7 +17,7 @@ function plotchi2scan(savename)
         t.LineWidth = 2;
         t.ShowText = 'ON';
         PrettyFigureFormat;
-        hold off;
+        %hold off;
     else
 
         eta=(0:(Netabins-1))*((etafactor*10^(etarange))/(Netabins-1));

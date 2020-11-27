@@ -768,10 +768,10 @@ classdef RelicNuDebug < handle
                         sprintf('Minos failed! Vary initial eta.')
                     else
                         while abs(chi2-minchi2-DeltaChi2)>0.01
-                            if chi2>DeltaChi2
+                            if chi2>(DeltaChi2+minchi2)
                                 etaupper=eta;
                                 chi2upper=chi2;
-                                eta=((etaupper-etalower)./(chi2upper-chi2lower)).*DeltaChi2-chi2upper.*((etaupper-etalower)./(chi2upper-chi2lower))+etaupper;
+                                eta=((etaupper-etalower)./(chi2upper-chi2lower)).*(DeltaChi2+minchi2)-chi2upper.*((etaupper-etalower)./(chi2upper-chi2lower))+etaupper;
                                 U.ModelObj.eta_i=eta;
                                 U.ModelObj.eta=eta;
                                 U.ModelObj.ComputeNormFactorTBDDS;
@@ -788,7 +788,7 @@ classdef RelicNuDebug < handle
                             else
                                 etalower=eta;
                                 chi2lower=chi2;
-                                eta=((etaupper-etalower)./(chi2upper-chi2lower)).*DeltaChi2-chi2upper.*((etaupper-etalower)./(chi2upper-chi2lower))+etaupper;
+                                eta=((etaupper-etalower)./(chi2upper-chi2lower)).*(DeltaChi2+minchi2)-chi2upper.*((etaupper-etalower)./(chi2upper-chi2lower))+etaupper;
                                 F.ModelObj.eta_i=eta;
                                 F.ModelObj.eta=eta;
                                 F.ModelObj.ComputeNormFactorTBDDS;
@@ -1297,10 +1297,8 @@ classdef RelicNuDebug < handle
                     'mode','SEARCH',...
                     'Plot','OFF',...
                     'DeltaChi2',DeltaChi2);
-                matFilePath = [getenv('SamakPath'),sprintf('RelicNuBkg/UpperLimits/')];
-                   savename=[matFilePath,sprintf('RelicLimit_Twin_BiasmnuSq%g_Syst%s_range%g_%s_%s.mat',TwinBias_mnuSq,'OFF',range,obj.Params,fitPar)];
-                   load(savename);
-                   etaStat = eta;
+                
+                   etaStat = obj.etaSensitivity;
 
                 for i=1:numel(SystEffects)
 
@@ -1317,10 +1315,7 @@ classdef RelicNuDebug < handle
                        'Plot','OFF',...
                        'DeltaChi2',DeltaChi2);
 
-                   matFilePath = [getenv('SamakPath'),sprintf('RelicNuBkg/UpperLimits/')];
-                   savename=[matFilePath,sprintf('RelicLimit_Twin_BiasmnuSq%g_Syst%s_%s_range%g_%s_%s.mat',TwinBias_mnuSq,Syst,SystEffects(i),range,obj.Params,fitPar)];
-                   load(savename);
-                   Bias(i) = eta - etaStat;
+                   Bias(i) = obj.etaSensitivity - etaStat;
                 end
                 save(savename,'SystEffects','Bias');
             end
