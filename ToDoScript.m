@@ -1,5 +1,6 @@
 A=RelicNuDebug('Params','KNM1');
-A.Chi2Twin('Recompute','ON','Plot','OFF','Syst','ON','pullFlag',[1 3]);
+A.Chi2Twin('Recompute','ON','CheckErrors','ON','Plot','OFF','Syst','ON','pullFlag',[1 3]);
+%A.Chi2Twin('Recompute','OFF','Plot','OFF','Syst','ON','pullFlag',[1 3]);
 %A.Chi2Twin('Recompute','OFF','Plot','ON','Syst','OFF');
 %fig1=figure(1);
 %A.SystBreakdown('TwinBias_mnuSq',0);

@@ -665,8 +665,10 @@ classdef RelicNuDebug < handle
                 end
                 savename=[savename,'.mat'];
                 
-                if exist(savename,'file') && strcmp(Recompute,'OFF') && strcmp(Plot,'ON')
-                    plotchi2scan(savename);
+                if exist(savename,'file') && strcmp(Recompute,'OFF')
+                    if strcmp(Plot,'ON')
+                        plotchi2scan(savename);
+                    end
                 else
                     for i=1:Netabins
                        U.ModelObj.eta_i = (i-1)*((etafactor*10^(etarange))/(Netabins-1));
@@ -705,7 +707,7 @@ classdef RelicNuDebug < handle
                 if isempty(TBDISBias)
                     savename=[matFilePath,sprintf('RelicLimit_Twin_BiasmnuSq%g_Syst%s_range%g_%s_%s',TwinBias_mnuSq,Syst,range,obj.Params,fitPar)];
                 else
-                    savename=[matFilePath,sprintf('RelicLimit_Twin_BiasmnuSq%g_Syst%s_%s_range%g_%s_%s',TwinBias_mnuSq,Syst,TBDISBias,range,obj.Params,fitPar)];
+                    savename=[matFilePath,sprintf('RelicLimit_Twin_BiasmnuSq%g_Syst%s_TBDISBias_range%g_%s_%s',TwinBias_mnuSq,Syst,range,obj.Params,fitPar)];
                 end
                 if any(ismember(pullFlag,1))
                     savename = [savename,'_mnuSqPull'];
@@ -988,6 +990,7 @@ classdef RelicNuDebug < handle
             p.addParameter('Recompute','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('Plot','ON',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('DeltaChi2',2.71,@(x)isfloat(x));
+            p.addParameter('CheckErrors','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.parse(varargin{:});
 
             range          = p.Results.range;
@@ -1002,6 +1005,7 @@ classdef RelicNuDebug < handle
             Recompute      = p.Results.Recompute;
             Plot           = p.Results.Plot;
             DeltaChi2      = p.Results.DeltaChi2;
+            CheckErrors    = p.Results.CheckErrors;
 
             
             obj.Chi2Scan_Twin('Recompute',Recompute,...
@@ -1017,7 +1021,8 @@ classdef RelicNuDebug < handle
                 'etafactor',etafactor,...
                 'mode','SCAN',...
                 'Plot',Plot,...
-                'DeltaChi2',DeltaChi2);
+                'DeltaChi2',DeltaChi2,...
+                'CheckErrors',CheckErrors);
 
             matFilePath = [getenv('SamakPath'),sprintf('RelicNuBkg/Chi2Scans/')];
             savename=[matFilePath,sprintf('RelicChi2Scan_Twin_BiasmnuSq%g_Syst%s_range%g_%s_[0 %g]_%s.mat',TwinBias_mnuSq,Syst,range,obj.Params,etafactor*10^etarange,fitPar)];
@@ -1039,6 +1044,7 @@ classdef RelicNuDebug < handle
                     'fitPar',fitPar,...
                     'Syst',Syst,...
                     'SystBudget',SystBudget,...
+                    'pullFlag',pullFlag,...
                     'TwinBias_mnuSq',TwinBias_mnuSq,...
                     'etalower',etalower,...
                     'etaupper',etaupper,...
