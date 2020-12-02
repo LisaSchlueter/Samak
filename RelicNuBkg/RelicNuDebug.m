@@ -564,6 +564,7 @@ classdef RelicNuDebug < handle
             %% =========== SEARCH mode settings =============
             p.addParameter('etalower',0,@(x)isfloat(x));
             p.addParameter('etaupper',1.5e10,@(x)isfloat(x));                  % initial upper and lower search bounds
+            p.addParameter('minchi2',0,@(x)isfloat(x));
             p.addParameter('delta',0.1e9,@(x)isfloat(x));                      % amount by which to shift eta if fit fails
             p.addParameter('DeltaChi2',2.71,@(x)isfloat(x));
             p.parse(varargin{:});
@@ -584,6 +585,7 @@ classdef RelicNuDebug < handle
             CheckErrors    = p.Results.CheckErrors;
             etalower       = p.Results.etalower;
             etaupper       = p.Results.etaupper;
+            minchi2        = p.Results.minchi2;
             delta          = p.Results.delta;
             DeltaChi2      = p.Results.DeltaChi2;
             
@@ -786,7 +788,9 @@ classdef RelicNuDebug < handle
                     F.Fit;
                     chi2upper = U.FitResult.chi2min;
                     chi2lower = F.FitResult.chi2min;
-                    minchi2   = chi2lower;
+                    if etalower==0
+                        minchi2   = chi2lower;
+                    end
                     chi2      = chi2upper;
                     if chi2<DeltaChi2
                         sprintf('chi^2 too small! Set larger initial eta.')
@@ -1037,8 +1041,8 @@ classdef RelicNuDebug < handle
                 sprintf('Increase etafactor or etarange')
             else
                 etavalues=(0:(Netabins-1))*((etafactor*10^(etarange))/(Netabins-1));
-                m=find(Chi2<DeltaChi2);
-                n=find(Chi2>DeltaChi2);
+                m=find(Chi2<(DeltaChi2+Chi2(1)));
+                n=find(Chi2>(DeltaChi2+Chi2(1)));
                 etalower=etavalues(m(end));
                 etaupper=etavalues(n(1));
 
@@ -1052,6 +1056,7 @@ classdef RelicNuDebug < handle
                     'TwinBias_mnuSq',TwinBias_mnuSq,...
                     'etalower',etalower,...
                     'etaupper',etaupper,...
+                    'minchi2',Chi2(1),...
                     'mode','SEARCH',...
                     'Plot',Plot,...
                     'DeltaChi2',DeltaChi2);
