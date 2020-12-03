@@ -769,7 +769,7 @@ classdef RelicNuDebug < handle
                     F.exclDataStart = F.GetexclDataStart(range); % set region of interest
                     F.InitModelObj_Norm_BKG('Recompute','ON');
                     
-                    if ~strcmp(TBDISBias,'OFF')
+                    if ~isempty(TBDISBias)
                         F.RunData.TBDIS = F.RunData.TBDIS + sqrt(diag(obj.M.FitCM));
                     end
 
