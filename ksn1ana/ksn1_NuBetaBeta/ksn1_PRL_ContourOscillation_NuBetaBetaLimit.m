@@ -46,8 +46,10 @@ mbbexplim = 0.165;
 nGrid = 50;
 nSamples = 5e3;
 savedir = [getenv('SamakPath'),'ksn1ana/ksn1_NuBetaBeta/results/'];
-savenameNH = sprintf('%sksn1_NuBetaBeta_ToyMC_%.3feVlim_NH_Grid%.0f_Samples%.0f_New_light.mat',savedir,mbbexplim,nGrid,nSamples);
-savenameIH = sprintf('%sksn1_NuBetaBeta_ToyMC_%.3feVlim_IH_Grid%.0f_Samples%.0f_New_light.mat',savedir,mbbexplim,nGrid,nSamples);
+%savenameNH = sprintf('%sksn1_NuBetaBeta_ToyMC_%.3feVlim_NH_Grid%.0f_Samples%.0f_New_light.mat',savedir,mbbexplim,nGrid,nSamples);
+%savenameIH = sprintf('%sksn1_NuBetaBeta_ToyMC_%.3feVlim_IH_Grid%.0f_Samples%.0f_New_light.mat',savedir,mbbexplim,nGrid,nSamples);
+savenameNH = sprintf('%sksn1_NuBetaBeta_ToyMC_%.3feVlim_NH_Grid%.0f_Samples%.0f_light.mat',savedir,mbbexplim,nGrid,nSamples);
+savenameIH = sprintf('%sksn1_NuBetaBeta_ToyMC_%.3feVlim_IH_Grid%.0f_Samples%.0f_light.mat',savedir,mbbexplim,nGrid,nSamples);
 dNH = importdata(savenameNH);
 dIH = importdata(savenameIH);
 

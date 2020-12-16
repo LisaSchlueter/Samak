@@ -6,7 +6,7 @@ savedir = [getenv('SamakPath'),'ksn1ana/ksn1_NuBetaBeta/results/'];
 mbbexplim = 0.165; % eV (KamLAND-Zen 90% C.L.)
 
 % label
-savename = sprintf('%sksn1_NuBetaBeta_ToyMC_%.3feVlim_%s_Grid%.0f_Samples%.0f_New.mat',savedir,mbbexplim,Mode,nGrid,nSamples);
+savename = sprintf('%sksn1_NuBetaBeta_ToyMC_%.3feVlim_%s_Grid%.0f_Samples%.0f.mat',savedir,mbbexplim,Mode,nGrid,nSamples);
 if exist(savename,'file') 
     load(savename)
 else
