@@ -326,9 +326,10 @@ classdef FITC < handle
             % PULLS TOLERANCE:
             FSDtol=1e-03;         % final state distribution PGS-PES
             Normtol=0.0017;        % normalization tolerance from ring to ring
+            NormAbstol =  2;      % asbolute ringwise normalization tolerance (deviation from 0)
             qUOffsettol = 10;     % qUOffset absolute tolerance (eV)
             qUmeanOffsettol = 0.5;  % qUOffset tolerance from ring to ring (eV)
-            BkgSlopetol = 5*1e-6; % background slope constrain (cps/eV)
+            BkgSlopetol = 4.74.*1e-06;%5*1e-6; % background slope constrain (cps/eV)
             mNuSqtol = 1;         % neutrino mass pull tolerance (eV^2)
             mTSqtol = 1;          % tachyonic neutrino mass (nu-mass offset) from ring to ring (eV^2)
             sin2T4tol = 0.5;
@@ -372,7 +373,7 @@ classdef FITC < handle
                 %sum((ParqUOffset-zeros(1,length(ParqUOffset))).^2  ./qUOffsettol^2);
             end
             
-              % 6: qU Offsets: small absolute qU Offset 
+            % 6: qU Offsets: small absolute qU Offset
             if any(ismember(obj.pullFlag,6))
                 ParqUOffset = par(2*obj.SO.nPixels+9:3*obj.SO.nPixels+8);
                 PullTerm =  PullTerm + sum(ParqUOffset.^2./qUOffsettol.^2);
@@ -417,7 +418,7 @@ classdef FITC < handle
                     (par(1)-0)^2/1^2;                                      % nu-mass
             end
             
-            if any(ismember(obj.pullFlag,10))
+            if any(ismember(obj.pullFlag,10))   %  background slope constrain with variable sigma
                 PullTerm = PullTerm + par(3*obj.SO.nPixels+9)^2/obj.pulls.^2;
             end
             
@@ -433,6 +434,73 @@ classdef FITC < handle
             if any(ismember(obj.pullFlag,12)) % nu-mass pull: mainz&troitzk
                 mNuSqtol_MT =  1.94; % eV^2
                 PullTerm = PullTerm + (par(1)-0)^2/mNuSqtol_MT^2;
+            end
+            
+            if  any(ismember(obj.pullFlag,13)) % E0 pull: 1 eV
+                E0tol1eV =  1; % eV
+                PullTerm = PullTerm + (par(2)-0)^2/E0tol1eV^2;
+            end
+            
+            if  any(ismember(obj.pullFlag,14)) % E0 pull: 2 eV
+                E0tol2eV =  2; % eV
+                PullTerm = PullTerm + (par(2)-0)^2/E0tol2eV^2;
+            end
+            
+            if any(ismember(obj.pullFlag,15)) % nu-mass pull: 1 eV^2
+                mNuSqtol =  1; % eV^2
+                PullTerm = PullTerm + (par(1)-0)^2/mNuSqtol^2;
+            end
+            
+            if any(ismember(obj.pullFlag,16)) % nu-mass pull: 2 eV^2
+                mNuSqtol =  2; % eV^2
+                PullTerm = PullTerm + (par(1)-0)^2/mNuSqtol^2;
+            end
+            
+            if any(ismember(obj.pullFlag,17)) % nu-mass pull: 3 eV^2
+                mNuSqtol =  3; % eV^2
+                PullTerm = PullTerm + (par(1)-0)^2/mNuSqtol^2;
+            end
+            
+            if any(ismember(obj.pullFlag,18)) % nu-mass pull: 3 eV^2
+                mNuSqtol =  0.5; % eV^2
+                PullTerm = PullTerm + (par(1)-0)^2/mNuSqtol^2;
+            end
+            
+            if any(ismember(obj.pullFlag,19)) % non-sense sterile pull
+                sin4Up = 0.125;
+                m4Up   = 10;
+                PullTerm = PullTerm + ...
+                    exp(1e2*(par(4*obj.SO.nPixels+12)-(sin4Up+1e-02))) + ...  % sin2t4 upper bound
+                    exp(-1e2*(par(4*obj.SO.nPixels+12)+1e-02)) + ...          % sin2t4 lower bound -> 0
+                    exp(1e2*(par(4*obj.SO.nPixels+11)-m4Up-0.1)) + ...        % mSq4 lower bound
+                    exp(-1e2*(par(4*obj.SO.nPixels+11)+0.1));                % mSq4 upper bound
+            end
+            
+            if any(ismember(obj.pullFlag,20)) % non-sense sterile pull II
+                sin4Central = 0; sin4Tol = 0.125;
+                m4Central = 0;   m4Tol   = 10;
+                PullTerm = PullTerm + ...
+                    (par(4*obj.SO.nPixels+12)-sin4Central).^2./sin4Tol^2+...  % sin2t4
+                    (par(4*obj.SO.nPixels+11)-m4Central).^2./m4Tol^2;         % m4
+            end
+            
+            if any(ismember(obj.pullFlag,21)) % Neutrino 4 sterile pull
+                sin4Central = 0.38; sin4Tol = 0.11;
+                m4Central   = 7.26; m4Tol   = 0.7;
+                PullTerm = PullTerm + ...
+                    (par(4*obj.SO.nPixels+12)-sin4Central).^2./sin4Tol^2+...  % sin2t4
+                    (par(4*obj.SO.nPixels+11)-m4Central).^2./m4Tol^2;         % m4
+            end
+            
+            %22: Normalization: small abs deviation from 0
+            if any(ismember(obj.pullFlag,22))
+                ParNorm = par(3+obj.SO.nPixels:3+2*obj.SO.nPixels-1); % -> ringwise normalizations
+                PullTerm = PullTerm + sum((ParNorm).^2./NormAbstol^2);
+            end
+            
+            if any(ismember(obj.pullFlag,23)) % loose nu-mass pull
+                mNuSqtol_Loose =  100; % eV^2
+                PullTerm = PullTerm + (par(1)-0)^2/mNuSqtol_Loose^2;
             end
         end
         function chi2 = chi2function(obj,par)
@@ -1009,6 +1077,8 @@ classdef FITC < handle
             AllParameters = 1:nFitPar;
             if nFitPar    == 14  % Uniform - m2,E0,N,B
             AllLabels     = {'m^2 (eV^2)' ,'E_0 (eV)' ,'B (cps)' ,'N','Pgs_{DT}','Pes_{DT}','Pgs_{HT}','Pes_{HT}','Pgs_{TT}','Pes_{TT}','qUoffset','12','13','14'};
+            elseif nFitPar    == 16  % Uniform - m2,E0,N,B
+            AllLabels     = {'m^2 (eV^2)' ,'E_0 (eV)' ,'B (cps)' ,'N','Pgs_{DT}','Pes_{DT}','Pgs_{HT}','Pes_{HT}','Pgs_{TT}','Pes_{TT}','qUoffset','12','13','14','m_4^2 (eV^2)','sint4^2'};
             elseif nFitPar== 18  % MultiRing 4 - m2,E0,N,B
             AllLabels     = {'m^2 (eV^2)' ,'E_0 (eV)', 'B1 (cps)', 'B2 (cps)' , 'N1', 'N2', 'Pgs_{DT}','Pes_{DT}','Pgs_{HT}','Pes_{HT}','Pgs_{TT}','Pes_{TT}','qUoffset1','qUoffset2','Bslope','mTSq1','mTSq2','T-'};
             elseif nFitPar== 26  % MultiRing 4 - m2,E0,N,B
@@ -1475,7 +1545,7 @@ classdef FITC < handle
                 s(counter)=subplot(numel(obj.MaskFreeFitPar),1,counter);
                 %                p=plot([round(obj.DATA(obj.exclDataStart:end,1)-obj.SO.Q_i,1)],diffxi(counter,:)+BestFitCoeff(k),...
                 %                    's:','MarkerSize',10,'LineWidth',2,'MarkerFaceColor',rgb('Amethyst'));
-                p=plot(round(obj.qUdata(exclIndex)-obj.SO.Q_i,1),diffxi(counter,:)+BestFitCoeff(k),'s:','MarkerSize',10,'LineWidth',2,'MarkerFaceColor',rgb('Amethyst'));
+                p=plot(round(obj.qUdata(exclIndex)-obj.SO.Q_i,1),diffxi(counter,:)+BestFitCoeff(k),'.:','MarkerSize',20,'LineWidth',2);
                 hold on
 %                 l=line([ min(round(obj.DATA(obj.exclDataStart:end,1)-obj.SO.Q_i,1)) max(round(obj.DATA(obj.exclDataStart:end,1)-obj.SO.Q_i,1))],...
 %                     [BestFitCoeff(k),BestFitCoeff(k)],...
@@ -1507,6 +1577,46 @@ classdef FITC < handle
                 publish_figurePDF(fig,savefile);
             end
             
+            %% plot only mnu
+            fnew = figure('Units','normalized','Position',[0.1,0.1,0.6,0.5]);
+            counter = 1; k=1;
+            l=line([min(round(obj.qUdata(exclIndex)-18574,1))-5 5+max(round(obj.qUdata(exclIndex)-18574,1))],...
+                [BestFitCoeff(k),BestFitCoeff(k)],...
+                'LineStyle','-','LineWidth',1.5,'Color',rgb('Black'));
+            hold on;
+            p=plot(round(obj.qUdata(exclIndex)-18574,1),diffxi(counter,:)+BestFitCoeff(k),...
+                '.-.','MarkerSize',20,'LineWidth',2,'Color',rgb('DodgerBlue'));
+            hold off 
+            ylabel(sprintf('{\\itm}_\\nu^{ 2} (eV^{ 2})'));
+            xlabel('Retarding potential - 18574 (eV)');
+            xlim([min(round(obj.qUdata(exclIndex)-18574,1))-4 4+max(round(obj.qUdata(exclIndex)-18574,1)) ])
+            PrettyFigureFormat;
+            set(gca,'FontSize',18);
+            grid on;
+            
+            if strcmp(savePlot,'ON')
+                publish_figurePDF(fnew,strrep(savefile,'.pdf','_mnu.pdf'));
+            end
+            %% plot only E0 
+             fnew2 = figure('Units','normalized','Position',[0.1,0.1,0.6,0.5]);
+            counter = 2; k=2;
+            l=line([min(round(obj.qUdata(exclIndex)-18574,1))-5 5+max(round(obj.qUdata(exclIndex)-18574,1))],...
+                [0,0],...
+                'LineStyle','-','LineWidth',1.5,'Color',rgb('Black'));
+            hold on;
+            p=plot(round(obj.qUdata(exclIndex)-18574,1),diffxi(counter,:),...
+                '.-.','MarkerSize',20,'LineWidth',2,'Color',rgb('DodgerBlue'));
+            hold off 
+            ylabel(sprintf('{\\itE}_0^{fit} - {\\itE}_0^{bf} (eV)'));
+            xlabel('Retarding potential - 18574 (eV)');
+            xlim([min(round(obj.qUdata(exclIndex)-18574,1))-4 4+max(round(obj.qUdata(exclIndex)-18574,1)) ])
+            PrettyFigureFormat;
+            set(gca,'FontSize',18);
+            grid on;
+            
+            if strcmp(savePlot,'ON')
+                publish_figurePDF(fnew2,strrep(savefile,'.pdf','_E0.pdf'));
+            end
         end
         
         function Samakcats_DMSE(obj,varargin)

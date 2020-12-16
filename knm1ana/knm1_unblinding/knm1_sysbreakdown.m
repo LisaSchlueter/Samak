@@ -9,17 +9,16 @@ ddata = importdata(dataFile);
 %% legend
 SysEffectLeg      = {'Theoretical corrections';...
     'Final states';...
-    'Scan fluctuations: Tritium activity';...
+    'HV stacking';...%Scan fluctuations: Tritium activity';...
     sprintf('Source scattering: Energy-loss');...
     'Magnetic fields';...
-    sprintf('Source scattering: \\rho{\\itd}\\sigma');...
-    'Scan fluctuations: High voltage';...
+    sprintf('Source scattering: \\rho{\\itd}\\sigma');...%  'Scan fluctuations: High voltage';...
     'Detector efficiency';...
     'Background slope'};
 
-PlotColor = {rgb('White'),rgb('Navy'),rgb('GoldenRod'),rgb('PowderBlue'),...
+PlotColor = {rgb('White'),rgb('DodgerBlue'),rgb('GoldenRod'),rgb('PowderBlue'),...
     rgb('CadetBlue'),rgb('DarkOrange'),rgb('FireBrick'),rgb('DarkSlateGray'),...
-    rgb('YellowGreen'),rgb('DodgerBlue')};
+    rgb('YellowGreen'),rgb('Navy')};
 %% assign variables
 nSys = numel(dtwin.SysEffectsAll);
 SingleBarY_twin = zeros(1,nSys+1);
@@ -29,11 +28,16 @@ SingleBarStat_twin = dtwin.MultiLpar.Stat(1);
 PlotVarTmp_twin = struct2array(structfun(@(x)x(1),dtwin.MultiLpar,'UniformOutput',0));      
 SingleBarY_twin(1)      = sqrt(dtwin.MultiLpar.Stat(1)^2-dtwin.NPcomponent(1)^2);
 SingleBarY_twin(2:end)  = sqrt(PlotVarTmp_twin(2:end).^2-SingleBarStat_twin^2);
+SingleBarY_twin(4) = sqrt(SingleBarY_twin(4)^2+SingleBarY_twin(8)^2);
+SingleBarY_twin(8) = [];
+
 %data
 PlotVarTmp_data = struct2array(structfun(@(x)x(1),ddata.MultiLpar,'UniformOutput',0));      
 SingleBarStat_data       = ddata.MultiLpar.Stat(1);
 SingleBarY_data(1)      = sqrt(ddata.MultiLpar.Stat(1)^2-ddata.NPcomponent(1)^2);
 SingleBarY_data(2:end)  = sqrt(PlotVarTmp_data(2:end).^2-SingleBarStat_data^2);
+SingleBarY_data(4) = sqrt(SingleBarY_data(4)^2+SingleBarY_data(8)^2);
+SingleBarY_data(8) = [];
 
 if strcmp(DataType,'Twin')
     y = SingleBarY_twin;
@@ -46,7 +50,7 @@ f55 = figure('Name','MultiBarPlot','Renderer','painters');
 set(f55, 'Units', 'normalized', 'Position', [0.1, 0.1, 0.7, 0.8]);
 
 leg_str = {'Background rate', SysEffectLeg{:}};
-LocalFontSize = 25;
+LocalFontSize = 27;
 [y,ia] = sort(y,'descend');
 leg_str = leg_str(ia);
 
@@ -73,7 +77,7 @@ for i=1:numel(SingleBarY_twin)
     t{i}= text(0.46,SingleBarX(i),tstr,...
         'HorizontalAlignment','right','FontSize',LocalFontSize-2,...
         'Interpreter','tex',...
-        'FontName','Helvetica');%Times New Roman');
+        'FontName','Times New Roman');
 end
 
 % axis options
@@ -82,15 +86,17 @@ ylim([min(SingleBarX)-0.9 max(SingleBarX)+0.9])
 cl = 0.683;
 
 if strcmp(DataType,'Real')
-xlabel(sprintf('{\\itm}^2_\\nu uncertainty at %.0f%% C.L. (eV^{ 2})',cl*100));
+    xlabel(sprintf('1 \\sigma uncertainty on {\\itm}^2_\\nu at %.0f%% C.L. (eV^{ 2})',cl*100));
 else
-    xlabel(sprintf('{\\itm}^2_\\nu sensitivity at %.0f%% C.L. (eV^{ 2})',cl*100));
+    xlabel(sprintf('1 \\sigma sensitivity on {\\itm}^2_\\nu at %.0f%% C.L. (eV^{ 2})',cl*100));
 end
 
-PrettyFigureFormat;%    PRLFormat;
+PRLFormat;
 set(gca,'FontSize',LocalFontSize);
 % no y-ticks
 set(gca,'YMinorTick','off');
+set(gca,'TickDir','out');
+
 h = gca;
 h.YRuler.TickLength = [0,0];
 set(gca,'XScale','log');
@@ -99,6 +105,13 @@ yticks(flip(SingleBarX))
 yticklabels(flip(leg_str));
 
 
+%remove top and right ticks
+a = gca;
+set(a,'box','off','color','none')% set box property to off and remove background color
+b = axes('Position',a.Position,...
+    'box','on','xtick',[],'ytick',[],'LineWidth',1.5);% create new, empty axes with box but without ticks
+axes(a)% set original axes as active
+% linkaxes([a b]) % link axes in case of zooming
 
 savename = sprintf('%s/plots/KNM1_SysBreakdown_%s.pdf',filedir,DataType);
 export_fig(savename);

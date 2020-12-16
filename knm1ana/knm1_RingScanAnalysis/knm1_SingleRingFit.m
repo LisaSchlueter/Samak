@@ -1,7 +1,7 @@
 % uniform fit on knm2 stacked data
 % settings
 RunList = 'KNM1';
-fixPar = 'E0 Bkg Norm'; % free parameter
+fixPar = 'mNu E0 Bkg Norm'; % free parameter
 DataType = 'Real';
 FSDFlag = 'Sibille0p5eV';
 NonPoissonScaleFactor = 1.064;
@@ -9,6 +9,7 @@ ELossFlag = 'KatrinT2';
 AnaFlag = 'StackPixel'; % uniform FPD
 range = 40; 
 chi2 = 'chi2Stat';
+RingMerge = 'Full';%None';
 RunAnaArg = {'RunList',RunList,...
              'fixPar',fixPar,...
              'DataType',DataType,...
@@ -17,16 +18,17 @@ RunAnaArg = {'RunList',RunList,...
             'NonPoissonScaleFactor',NonPoissonScaleFactor,...
             'AnaFlag',AnaFlag,...
             'chi2',chi2,...
-            'RingMerge','None',...
+            'RingMerge',RingMerge,...
             'AngularTFFlag','OFF'};
 
 % read data and set up model
 A = MultiRunAnalysis(RunAnaArg{:});
 A.exclDataStart = A.GetexclDataStart(range);
-R = RingAnalysis('RunAnaObj',A,'RingList',1:12);
+R = RingAnalysis('RunAnaObj',A,'RingList',A.RingList);
 
 %%
-R.FitRings('SaveResult','OFF','RecomputeFlag','ON');
+R.FitRings('SaveResult','ON','RecomputeFlag','OFF');
 
 %%
-R.PlotFits('SavePlot','ON','Blind','ON','PlotPar',2,'YLim',[-0.25 0.25])
+% R.PlotFits('SavePlot','ON','Blind','ON','PlotPar',2,'YLim',[-0.5 0.4])
+% R.PlotFits('SavePlot','ON','Blind','ON','PlotPar',1,'PlotMode','Abs','YLim',[-15 15]);

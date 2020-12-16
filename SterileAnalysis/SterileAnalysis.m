@@ -14,6 +14,8 @@ classdef SterileAnalysis < handle
         mNu4Sq;
         sin2T4;   
         chi2;
+        mNuSq;
+        E0;
         
         % contour
         mNu4Sq_contour;
@@ -24,6 +26,8 @@ classdef SterileAnalysis < handle
         mNu4Sq_bf;
         sin2T4_bf; 
         chi2_bf;
+        mNuSq_bf;
+        E0_bf;
         
         % null hypothesis
         chi2_Null; 
@@ -112,7 +116,7 @@ classdef SterileAnalysis < handle
             elseif obj.range==40 && strcmp(obj.RunAnaObj.DataType,'Real')
                 Maxm4Sq =  36^2;%(obj.range-3)^2;
             elseif obj.range==40 && strcmp(obj.RunAnaObj.DataType,'Fake')
-                 Maxm4Sq =  (obj.range-3.3)^2;
+                Maxm4Sq =  (obj.range-3.3)^2;
             else
                 Maxm4Sq =  (obj.range-5)^2;
             end
@@ -122,7 +126,9 @@ classdef SterileAnalysis < handle
             obj.mNu4Sq = repmat(mNu4tmp,nInter,1);
             obj.sin2T4 = repmat(logspace(log10(min(min(obj.sin2T4))),log10(max(max(obj.sin2T4))),nInter),nInter,1)';
             obj.chi2   = reshape(interp2(X,Y,obj.chi2,obj.mNu4Sq,obj.sin2T4,obj.InterpMode),nInter,nInter);
-            
+            obj.mNuSq  = reshape(interp2(X,Y,obj.mNuSq,obj.mNu4Sq,obj.sin2T4,obj.InterpMode),nInter,nInter);
+            obj.E0  = reshape(interp2(X,Y,obj.E0,obj.mNu4Sq,obj.sin2T4,obj.InterpMode),nInter,nInter);
+          
             obj.chi2(obj.chi2<0) = NaN;
             %             if strcmp(InterpMode,'spline')
             %                 [row, col]    = find(obj.chi2 < 0);
@@ -144,8 +150,10 @@ classdef SterileAnalysis < handle
             [row, col]    = find(obj.chi2 == min(obj.chi2(:)));
             
             obj.mNu4Sq_bf =   obj.mNu4Sq(row,col);%obj.mNu4Sq(col,row);
-            obj.sin2T4_bf = obj.sin2T4(row,col);    
-            obj.chi2_bf   = obj.chi2_ref;    
+            obj.sin2T4_bf = obj.sin2T4(row,col);
+            obj.chi2_bf   = obj.chi2_ref;
+            obj.mNuSq_bf    = obj.mNuSq(row,col);
+            obj.E0_bf     = obj.E0(row,col);
         end
         function CompareBestFitNull(obj,varargin)
             if isempty(obj.chi2_bf)
@@ -254,6 +262,7 @@ classdef SterileAnalysis < handle
             p.addParameter('LineStyle',obj.PlotLines{1},@(x) ischar(x));
             p.addParameter('PlotSplines','OFF',@(x) ismember(x,{'ON','OFF'}));
             p.addParameter('SavePlot','OFF',@(x)ismember(x,{'ON','OFF','png'}));
+            p.addParameter('RasterScan','OFF',@(x) ismember(x,{'ON','OFF'})); % 1 par instead of 2 par
             
             p.parse(varargin{:});  
             CL          = p.Results.CL;      % also works with vector
@@ -263,6 +272,7 @@ classdef SterileAnalysis < handle
             BestFit     = p.Results.BestFit;
             PlotSplines = p.Results.PlotSplines;
             SavePlot    = p.Results.SavePlot;
+            RasterScan  = p.Results.RasterScan;
             
             if strcmp(HoldOn,'ON')
                 hold on;
@@ -270,7 +280,15 @@ classdef SterileAnalysis < handle
                 GetFigure;
             end
             
-            obj.DeltaChi2 = GetDeltaChi2(CL,2);
+             chi2_ref_local = obj.chi2_ref;
+            if strcmp(RasterScan,'ON')
+                obj.DeltaChi2 = GetDeltaChi2(CL,1);
+                if strcmp(obj.RunAnaObj.DataType,'Real')
+                    chi2_ref_local = min(obj.chi2); % minimum for each m4^2
+                end
+            else
+                obj.DeltaChi2 = GetDeltaChi2(CL,2);
+            end
             
              % contour plot
             PlotArg = {'LineWidth',2.5,'LineStyle',myLineStyle};
@@ -278,7 +296,7 @@ classdef SterileAnalysis < handle
                 PlotArg = [PlotArg,{'LineColor',myColor}];
             end
             
-            [M,pHandle]= contour(obj.sin2T4,obj.mNu4Sq,obj.chi2-obj.chi2_ref,...
+            [M,pHandle]= contour(obj.sin2T4,obj.mNu4Sq,obj.chi2-chi2_ref_local,...
                 [obj.DeltaChi2 obj.DeltaChi2],...
                 PlotArg{:});
             
@@ -343,7 +361,7 @@ classdef SterileAnalysis < handle
              end
              
         end
-        function pHandle = ContourPlotOsci(obj,varargin)
+        function [legHandle,legStr] = ContourPlotOsci(obj,varargin)
             % contour plot in osicllation parameter space
             p = inputParser;
             p.addParameter('BestFit','OFF',@(x) ismember(x,{'ON','OFF'}));
@@ -383,7 +401,7 @@ classdef SterileAnalysis < handle
             if strcmp(HoldOn,'ON')
                 hold on;
             elseif strcmp(HoldOn,'OFF')
-                figure('Units','normalized','Position',[0.1,0.1,0.382,0.66]);%0.618]);
+               pHandle =  figure('Units','normalized','Position',[0.1,0.1,0.382,0.66]);%0.618]);
             end
             
             obj.DeltaChi2 = GetDeltaChi2(CL,2);
@@ -466,7 +484,9 @@ classdef SterileAnalysis < handle
             [~,legHandle{numel(legHandle)+1}]= contour(sin2T4Sq,DeltamNu41Sq,obj.chi2-obj.chi2_ref,...
                 [obj.DeltaChi2 obj.DeltaChi2],...
                 PlotArg{:});
-             legStr = [legStr,{sprintf('KATRIN KSN1 %.0f%% C.L. (%s)',obj.ConfLevel,obj.GetPlotTitle('Mode','chi2'))}];
+             legStr = [legStr,{sprintf('KATRIN %.0f%% C.L.',obj.ConfLevel)}];
+             %(%s)',obj.ConfLevel,obj.GetPlotTitle('Mode','chi2'))}];
+            
              %% final sensitivity
             if strcmp(FinalSensitivity,'ON')
                 DataType_i = obj.RunAnaObj.DataType;
@@ -498,7 +518,11 @@ classdef SterileAnalysis < handle
                 obj.RunAnaObj.AngularTFFlag = AngTF;
                 obj.RunAnaObj.ELossFlag = ElossFlag;
                 obj.RunAnaObj.SysBudget = Budget;
-                legStr = [legStr,sprintf('KATRIN Final %.0f%% C.L. (%s)',obj.ConfLevel,obj.GetPlotTitle('Mode','chi2'))];
+                legStr = [legStr,'Projected KATRIN final',sprintf('sensitivity %.0f%% C.L.',obj.ConfLevel)];
+                
+                pNone = plot(NaN,NaN,'Color',rgb('White'));
+                legHandle{numel(legHandle)+1} = pNone;
+                
             end
             %% leg + appearance
             set(gca,'YScale','log');
@@ -513,7 +537,7 @@ classdef SterileAnalysis < handle
             else
                 PRLFormat;
                 set(gca,'FontSize',20);
-                leg.FontSize = 13;
+                leg.FontSize = 16;%13;
             end
            
           xlim([1.2e-02 1]);
@@ -537,6 +561,7 @@ classdef SterileAnalysis < handle
               extraStr = '';
           end
           
+        
           if ~strcmp(SavePlot,'OFF')
               if strcmp(SavePlot,'ON')
                   plotname = sprintf('%s_OsciContour_%.2gCL%s.pdf',obj.DefPlotName,obj.ConfLevel,extraStr);
@@ -632,7 +657,104 @@ classdef SterileAnalysis < handle
            
            
         end
-        
+        function GridPlotFitPar(obj,varargin)
+             p = inputParser;
+            p.addParameter('CL',obj.ConfLevel,@(x)isfloat(x));
+            p.addParameter('HoldOn','OFF',@(x) ismember(x,{'ON','OFF'}));
+            p.addParameter('BestFit','OFF',@(x) ismember(x,{'ON','OFF'}));
+            p.addParameter('Contour','OFF',@(x)ismember(x,{'ON','OFF'}));
+            p.addParameter('SavePlot','OFF',@(x)ismember(x,{'ON','OFF','png'}));
+            p.addParameter('FitPar','mNuSq',@(x)ismember(x,{'mNuSq','E0'}));
+            p.parse(varargin{:});
+            CL       = p.Results.CL;
+            HoldOn   = p.Results.HoldOn;
+            BestFit  = p.Results.BestFit;
+            Contour  = p.Results.Contour;
+            SavePlot = p.Results.SavePlot;
+            FitPar   = p.Results.FitPar;     
+           
+            if strcmp(HoldOn,'ON')
+                hold on
+            else
+            GetFigure;
+            end
+            
+            if strcmp(FitPar,'mNuSq')
+                PlotPar = obj.mNuSq;
+                Plot_bf = obj.mNuSq_bf;
+                ContourVec = [-10 -2 -1 -0.5 1 10];
+                zStr = sprintf('{\\itm}_\\nu^2 (eV^2)');
+            elseif strcmp(FitPar,'E0')
+                PlotPar = obj.E0;
+                Plot_bf = obj.E0_bf;
+                ContourVec = [-0.2 -0.5 0 0.5]+obj.RunAnaObj.ModelObj.Q_i;
+                zStr = sprintf('{\\itE}_0^{fit} (eV)');
+            end
+   
+            surf(obj.sin2T4,obj.mNu4Sq,PlotPar,'EdgeColor','interp','FaceColor','interp');
+            colormap('jet')
+            %% best fit
+            %% contour
+            if strcmp(Contour,'ON')
+                hold on;
+                [M,pContour] = contour3(obj.sin2T4,obj.mNu4Sq,PlotPar,...
+                    [ContourVec],...
+                    'LineWidth',1.5,'LineStyle','-','Color',rgb('Black'),...
+                    'ShowText','on');
+               % pContourNew =plot3(M(1,:),M(2,:),(max(max(PlotPar))+10).*ones(1,size(M,2)),'LineWidth',2,'Color',rgb('Black'));
+              %  pContour.delete;     
+            end
+            
+            if strcmp(BestFit,'ON')
+                obj.FindBestFit;
+                hold on;
+                pbf = plot3(obj.sin2T4_bf,obj.mNu4Sq_bf,Plot_bf+1e5,...
+                    'x','MarkerSize',12,'Color',rgb('White'),'LineWidth',3);
+            end
+            
+            PrettyFigureFormat('FontSize',22)
+            
+            
+            if strcmp(Contour,'ON')  && strcmp(BestFit,'ON')
+                leg = legend([pbf],'Best fit',...
+                    'EdgeColor','none','Location','southwest','Color',rgb('White'),...
+                    'FontSize',get(gca,'FontSize'));
+                set(leg.BoxFace, 'ColorType','truecoloralpha', 'ColorData',uint8(255*[1;1;1;0.3]));
+            end
+            
+            set(gca,'XScale','log')
+            set(gca,'YScale','log')
+            c =colorbar;
+            c.Label.String = zStr;
+            c.Label.FontSize = get(gca,'FontSize')+2;
+            xlabel(sprintf('|{\\itU}_{e4}|^2'));
+            ylabel(sprintf('{\\itm}_4^2 (eV^2)'));
+            zlabel(zStr)
+            grid off
+            view([0 0 1])
+         
+            
+            ylim([1,max(max(obj.mNu4Sq))]);
+            xlim([min(min(obj.sin2T4)), max(max(obj.sin2T4))]);
+            
+            title(sprintf('%s',obj.GetPlotTitle),'FontWeight','normal','FontSize',get(gca,'FontSize'));
+            
+         if obj.range == 65
+             xlim([2e-03,0.5]);
+         end
+             %% save
+           if ~strcmp(SavePlot,'OFF')
+               name_i = obj.DefPlotName;
+               if strcmp(SavePlot,'ON')
+                   plotname = sprintf('%s_GridPlot_%.2gCL.pdf',name_i,obj.ConfLevel);
+                   export_fig(gcf,plotname);
+               elseif strcmp(SavePlot,'png')
+                   plotname = sprintf('%s_GridPlot_%.2gCL.png',name_i,obj.ConfLevel);
+                   print(gcf,plotname,'-dpng','-r450');
+               end
+               fprintf('save plot to %s \n',plotname);
+           end
+        end
         function PlotqUScan(obj,varargin)
          % plot contours with same settings but different fit ranges
          p = inputParser;
@@ -776,7 +898,7 @@ classdef SterileAnalysis < handle
             obj.RunAnaObj.pullFlag = 99;
             obj.LoadGridFile('CheckSmallerN','ON');
             obj.Interp1Grid('RecomputeFlag','ON');
-            pFix1 = obj.ContourPlot('CL',95,'HoldOn','ON',...
+            pFix1 = obj.ContourPlot('CL',95,'HoldOn','OFF',...
                 'Color',rgb('Orange'),'LineStyle','-.','BestFit',BestFit);
             
             %% 95CL - Wilks Theorem Corrected wia MC simulation
@@ -784,13 +906,22 @@ classdef SterileAnalysis < handle
             obj.RunAnaObj.pullFlag = 99;
             obj.LoadGridFile('CheckSmallerN','ON');
             obj.Interp1Grid('RecomputeFlag','ON');
-            pFix2 = obj.ContourPlot('CL',96.45,'HoldOn','ON',...
+            
+            if obj.range==95
+                CL_coverage = 96.45;
+            elseif obj.range==65   
+                CL_coverage = 95.7;
+            elseif obj.range==40   
+                CL_coverage = 94.82;
+            end
+            DeltaChi2Crit = GetDeltaChi2(CL_coverage,2);
+            pFix2 = obj.ContourPlot('CL',CL_coverage,'HoldOn','ON',...
                 'Color',rgb('DodgerBlue'),'LineStyle',':','BestFit',BestFit);
             
             PrettyFigureFormat('FontSize',22);
                 legend([pFix1,pFix2],...
                     sprintf('Fixed {\\itm}_\\nu^2 = 0 eV^2 - \\Delta\\chi^2 = 5.99'),...
-                    sprintf('Fixed {\\itm}_\\nu^2 = 0 eV^2 - \\Delta\\chi^2 = 6.68'),...
+                    sprintf('Fixed {\\itm}_\\nu^2 = 0 eV^2 - \\Delta\\chi^2 = %.2f',DeltaChi2Crit),...
                     'EdgeColor',rgb('Silver'),'Location','southwest');
                 obj.RunAnaObj.fixPar = fixPar_i;
                 obj.RunAnaObj.pullFlag = pull_i ;
@@ -798,6 +929,12 @@ classdef SterileAnalysis < handle
                 if obj.range==65
                     ylim([1 6e3]);
                     xlim([2e-03 0.5]);
+                elseif obj.range==95
+                    ylim([1 1e4]);
+                    xlim([1e-03 0.5]);
+                elseif obj.range==40
+                    ylim([1 2e3]);
+                    xlim([1e-02 0.5]);
                 end
                 %% save
                 if ~strcmp(SavePlot,'OFF')
@@ -936,10 +1073,11 @@ classdef SterileAnalysis < handle
                    end
                elseif obj.range==40
                      if strcmp(PlotStat,'ON')
-                       pF_bfStat = plot(3.676e-02, 7.218e+01,'o','MarkerSize',8,'Color',pFStat.Color,'LineWidth',pFStat.LineWidth);
-                   end
+                      % pF_bfStat = plot(3.676e-02, 7.218e+01,'o','MarkerSize',8,'Color',pFStat.Color,'LineWidth',pFStat.LineWidth);
+                       pF_bfStat = plot(0.036, 73.3,'o','MarkerSize',8,'Color',pFStat.Color,'LineWidth',pFStat.LineWidth);
+                     end
                    if strcmp(PlotTot,'ON')
-                       pF_bfSys = plot(3.247e-02, 7.218e+01,'o','MarkerSize',8,'Color',pFSys.Color,'LineWidth',pFSys.LineWidth);
+                       pF_bfSys = plot(0.034, 74.3,'o','MarkerSize',8,'Color',pFSys.Color,'LineWidth',pFSys.LineWidth);
                    end
                end
            end
@@ -1059,14 +1197,20 @@ classdef SterileAnalysis < handle
             p.addParameter('Troitsk','ON',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('Style','Reg',@(x)ismember(x,{'Reg','PRL'}));
             p.addParameter('FinalSensitivity','OFF',@(x)ismember(x,{'OFF','ON'}))
+            p.addParameter('Sensitivity','OFF',@(x)ismember(x,{'OFF','ON'}))     
+            p.addParameter('FreemNuSq','OFF',@(x)ismember(x,{'OFF','ON','Pull'})) % without pull
+            p.addParameter('AddPull','', @(x)isfloat(x) || isempty(x)); % with additional pull
             
             p.parse(varargin{:});
-            BestFit  = p.Results.BestFit;
-            SavePlot = p.Results.SavePlot;
-            Troitsk  = p.Results.Troitsk;
-            Mainz    = p.Results.Mainz;
-            Style    = p.Results.Style;
+            BestFit          = p.Results.BestFit;
+            SavePlot         = p.Results.SavePlot;
+            Troitsk          = p.Results.Troitsk;
+            Mainz            = p.Results.Mainz;
+            Style            = p.Results.Style;
             FinalSensitivity = p.Results.FinalSensitivity;
+            Sensitivity      = p.Results.Sensitivity;
+            FreemNuSq        = p.Results.FreemNuSq;
+            AddPull          = p.Results.AddPull;
             
             fixPar_i = obj.RunAnaObj.fixPar;
             pull_i = obj.RunAnaObj.pullFlag;
@@ -1082,7 +1226,7 @@ classdef SterileAnalysis < handle
                 sinTsq = 0.5*(1-sqrt(1-dMainz.SinSquare2Theta_X));
                 pMainz = plot(sinTsq,dMainz.DmSquare41_Y,'-.','LineWidth',1.5,'Color',rgb('Salmon')); %Red
                 legHandle{numel(legHandle)+1} = pMainz;
-                legStr = [legStr,{sprintf('Mainz 95%% C.L.  - {\\itm}_\\nu^2 = 0 eV^2')}];
+                legStr = [legStr,{sprintf('Mainz 95%% C.L. :  {\\itm}_\\nu^2 = 0 eV^2')}];
                 hold on;
             end
             %% Troitsk
@@ -1092,10 +1236,26 @@ classdef SterileAnalysis < handle
                 pTroitsk = plot(dTroitsk.SinSquareTheta_X,dTroitsk.m4Square_Y,'--','LineWidth',1.5,...
                     'Color',rgb('Black')); % Orange
                 legHandle{numel(legHandle)+1} = pTroitsk;
-                legStr = [legStr,{sprintf('Troitsk 95%% C.L. - {\\itm}_\\nu^2 = 0 eV^2')}];
+                legStr = [legStr,{sprintf('Troitsk 95%% C.L. :  {\\itm}_\\nu^2 = 0 eV^2')}];
                 hold on;
             end
            
+            %% KSN1 sensitivity
+            if strcmp(Sensitivity,'ON') && strcmp(obj.RunAnaObj.DataType,'Real')
+                obj.RunAnaObj.DataType = 'Twin';
+                obj.RunAnaObj.fixPar = 'E0 Norm Bkg'; obj.RunAnaObj.InitFitPar;
+                obj.RunAnaObj.pullFlag = 99;
+                obj.LoadGridFile('CheckSmallerN','ON');
+                obj.Interp1Grid('RecomputeFlag','ON');
+                pFixSensi = obj.ContourPlot('CL',obj.ConfLevel,'HoldOn','ON',...
+                    'Color',rgb('Silver'),'LineStyle','-','BestFit','OFF');
+                pFixSensi.LineWidth = 2;
+                legHandle{numel(legHandle)+1} = pFixSensi;
+                legStr = [legStr,{sprintf('KATRIN sensitivity %.0f%% C.L. :  {\\itm}_\\nu^2 = 0 eV^2',obj.ConfLevel)}];
+                
+                obj.RunAnaObj.DataType = 'Real';
+            end
+            
             %% fixed nu-mass
             obj.RunAnaObj.fixPar = 'E0 Norm Bkg'; obj.RunAnaObj.InitFitPar;
             obj.RunAnaObj.pullFlag = 99;
@@ -1104,19 +1264,69 @@ classdef SterileAnalysis < handle
             pFix = obj.ContourPlot('CL',obj.ConfLevel,'HoldOn','ON',...
                 'Color',rgb('DodgerBlue'),'LineStyle','-','BestFit',BestFit);
             legHandle{numel(legHandle)+1} = pFix;
-            %%  nuissance nu-mass + pull
-            obj.RunAnaObj.fixPar = 'mNu E0 Norm Bkg'; obj.RunAnaObj.InitFitPar;
-            obj.RunAnaObj.pullFlag = 12;
-            obj.LoadGridFile('CheckSmallerN','ON');
-            obj.Interp1Grid('RecomputeFlag','ON');
-            pPull = obj.ContourPlot('CL',obj.ConfLevel,'HoldOn','ON',...
-                'Color',rgb('Navy'),'LineStyle',':','BestFit',BestFit);
-
-            legHandle{numel(legHandle)+1} = pPull;
+            legStr = [legStr,{sprintf('KATRIN %.0f%% C.L. :  {\\itm}_\\nu^2 = 0 eV^2',obj.ConfLevel)}];
+         
             
-            legStr = [legStr,{sprintf('KATRIN KSN1 %.0f%% C.L. - {\\itm}_\\nu^2 = 0 eV^2',obj.ConfLevel),...
-                sprintf('KATRIN KSN1 %.0f%% C.L. - {\\itm}_\\nu^2 free - \\sigma({\\itm}_\\nu^2) = 1.94 eV^2',obj.ConfLevel)}];
-          
+           %% free unconstrained nu mass
+            if strcmp(FreemNuSq,'ON')
+                obj.InterpMode = 'lin';
+                obj.RunAnaObj.fixPar = 'mNu E0 Norm Bkg'; obj.RunAnaObj.InitFitPar;
+                obj.RunAnaObj.pullFlag = 99;
+                obj.LoadGridFile('CheckSmallerN','ON');
+                obj.Interp1Grid('RecomputeFlag','ON');
+                pfree = obj.ContourPlot('CL',obj.ConfLevel,'HoldOn','ON',...
+                    'Color',rgb('Navy'),'LineStyle',':','BestFit',BestFit);
+                
+                legHandle{numel(legHandle)+1} = pfree;
+                
+                legStr = [legStr,{...
+                    sprintf('KATRIN %.0f%% C.L. :  {\\itm}_\\nu^2 free',obj.ConfLevel)}];
+                
+            end
+            
+            if strcmp(FreemNuSq,'Pull')
+                %%  nuissance nu-mass + pull
+                obj.RunAnaObj.fixPar = 'mNu E0 Norm Bkg'; obj.RunAnaObj.InitFitPar;
+                obj.RunAnaObj.pullFlag = 12;
+                obj.LoadGridFile('CheckSmallerN','ON');
+                obj.Interp1Grid('RecomputeFlag','ON');
+                pPull = obj.ContourPlot('CL',obj.ConfLevel,'HoldOn','ON',...
+                    'Color',rgb('Navy'),'LineStyle',':','BestFit',BestFit);
+                
+                legHandle{numel(legHandle)+1} = pPull;
+                
+                legStr = [legStr,{sprintf('KATRIN %.0f%% C.L. :  {\\itm}_\\nu^2 free , \\sigma({\\itm}_\\nu^2) = 1.94 eV^2',obj.ConfLevel)}];
+            end
+            
+           %% additional contour with some pull
+            if ~isempty(AddPull)
+                 %%  nuissance nu-mass + pull
+                obj.RunAnaObj.fixPar = 'mNu E0 Norm Bkg'; obj.RunAnaObj.InitFitPar;
+                obj.RunAnaObj.pullFlag = AddPull;
+                obj.LoadGridFile('CheckSmallerN','ON');
+                obj.Interp1Grid('RecomputeFlag','ON');
+                pAddPull = obj.ContourPlot('CL',obj.ConfLevel,'HoldOn','ON',...
+                    'Color',rgb('CadetBlue'),'LineStyle','-.','BestFit',BestFit);
+                
+                legHandle{numel(legHandle)+1} = pAddPull;
+                
+                switch AddPull
+                    case 12
+                        pullStr = sprintf('\\sigma({\\itm}_\\nu^{2 }) = 1.94 eV^2');
+                    case 15
+                        pullStr = sprintf('\\sigma({\\itm}_\\nu^{2 }) = 1 eV^2');
+                    case 16
+                        pullStr = sprintf('\\sigma({\\itm}_\\nu^{2 }) = 2 eV^2');
+                    case 17
+                        pullStr = sprintf('\\sigma({\\itm}_\\nu^{2 }) = 3 eV^2');
+                    case 18
+                        pullStr = sprintf('\\sigma({\\itm}_\\nu^{2 }) = 0.5 eV^2');
+                    otherwise
+                        pullStr = '';
+                end
+                legStr = [legStr,{sprintf('KATRIN %.0f%% C.L. :  {\\itm}_\\nu^2 free , %s',obj.ConfLevel,pullStr)}];
+            end
+            
             %% final sensitivity
             if strcmp(FinalSensitivity,'ON')
                 DataType_i = obj.RunAnaObj.DataType;
@@ -1145,8 +1355,12 @@ classdef SterileAnalysis < handle
                 obj.RunAnaObj.AngularTFFlag = AngTF;
                 obj.RunAnaObj.ELossFlag = ElossFlag;
                 obj.RunAnaObj.SysBudget = Budget;
-                  legStr = [legStr,sprintf('KATRIN Final %.0f%% C.L. - {\\itm}_\\nu^2 = 0 eV^2)',obj.ConfLevel)];
+                  legStr = [legStr,sprintf('KATRIN Final %.0f%% C.L. :  {\\itm}_\\nu^2 = 0 eV^2)',obj.ConfLevel)];
             end
+            
+        
+  
+            
             %% appearance + legend
             leg =  legend([legHandle{:}],legStr{:},...
                 'EdgeColor',rgb('Silver'),'Location','southwest');
@@ -1158,7 +1372,7 @@ classdef SterileAnalysis < handle
             else
                 PRLFormat
                 set(gca,'FontSize',20);
-                leg.FontSize = 16;
+                leg.FontSize = 17;
             end
 
             legend boxoff
@@ -1169,7 +1383,8 @@ classdef SterileAnalysis < handle
                 ylim([1 1e4]);
                 xlim([9e-04 0.5]);
             elseif obj.range==40
-                ylim([1 2e3]);
+                %ylim([1 2e3]);
+                ylim([0.2 2e3]);
                 xlim([6e-03 0.5]);
             end
             title('');%remove title
@@ -1180,7 +1395,7 @@ classdef SterileAnalysis < handle
             end
             %% save
             if ~strcmp(SavePlot,'OFF')
-                name_i = strrep(obj.DefPlotName,'_mNuE0BkgNorm','');
+                name_i = extractBefore(strrep(obj.DefPlotName,'_mNuE0BkgNorm',''),'_pull');
                 if strcmp(FinalSensitivity,'ON')
                     name_i = [name_i,'_FinalSensi'];
                 end
@@ -1329,6 +1544,8 @@ classdef SterileAnalysis < handle
             else
                 obj.mNu4Sq = f.mnu4Sq;
                 obj.sin2T4 = f.sin2T4;
+                obj.mNuSq  = cell2mat(cellfun(@(x) x.par(1),f.FitResults,'UniformOutput',0));
+                obj.E0     = cell2mat(cellfun(@(x) x.par(2),f.FitResults,'UniformOutput',0))+obj.RunAnaObj.ModelObj.Q_i; 
                 obj.chi2   = f.chi2;
                 if min(min(obj.chi2)) < f.chi2_ref
                     obj.chi2_ref = min(min(obj.chi2));
@@ -1374,10 +1591,13 @@ classdef SterileAnalysis < handle
                      extraStr = [extraStr,'_AngTF'];
                  end
                  
-                 if obj.RunAnaObj.pullFlag<=12
+                 if obj.RunAnaObj.pullFlag<=20
                      extraStr = sprintf('%s_pull%.0f',extraStr,obj.RunAnaObj.pullFlag);
                  end
                  
+                 if obj.RunAnaObj.ModelObj.mnuSq_i~=0 
+                     extraStr = [extraStr,sprintf('_FixmNuSq%.2feV2',obj.RunAnaObj.ModelObj.mnuSq_i)];
+                 end
                  
                  MakeDir(savedir);
 
@@ -1393,6 +1613,8 @@ classdef SterileAnalysis < handle
                     savedir,func2str(obj.RunAnaObj.FakeInitFile),obj.RunAnaObj.DataType,strrep(freeParStr,' ',''),...
                     obj.range,obj.RunAnaObj.chi2,obj.nGridSteps,extraStr);
             else
+                
+                
                 filename = sprintf('%sKSN1_GridSearch_%s_%s_%s_%.0feVrange_%s_%.0fnGrid%s.mat',...
                     savedir,RunList,obj.RunAnaObj.DataType,strrep(freeParStr,' ',''),...
                     obj.range,obj.RunAnaObj.chi2,obj.nGridSteps,extraStr);

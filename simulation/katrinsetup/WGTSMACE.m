@@ -191,9 +191,9 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             p.addParameter('WGTS_MolFracRelErr_DT',0.06e-2,@(x)isfloat(x));
             p.addParameter('WGTS_MolFracRelErr_HT',0,@(x)isfloat(x));
             % WGTS: Flags for FSD: T-T / D-T / H-T
-            p.addParameter('TTFSD','BlindingKNM2',@(x)ismember(x,{'OFF','DOSS','SAENZ','SAENZNOEE','ROLL','BlindingKNM1','WGTS100K','Sibille','Sibille0p5eV','SibilleFull','BlindingKNM2'}));
-            p.addParameter('DTFSD','BlindingKNM2',@(x)ismember(x,{'OFF','DOSS','ROLL','HTFSD','TTFSD','BlindingKNM1','WGTS100K','Sibille','Sibille0p5eV','SibilleFull','BlindingKNM2'}));
-            p.addParameter('HTFSD','BlindingKNM2',@(x)ismember(x,{'OFF','SAENZ','ROLL','BlindingKNM1','WGTS100K','Sibille','Sibille0p5eV','SibilleFull','BlindingKNM2'}));
+            p.addParameter('TTFSD','BlindingKNM2',@(x)ismember(x,{'OFF','DOSS','SAENZ','SAENZNOEE','ROLL','BlindingKNM1','WGTS100K','Sibille','Sibille0p5eV','SibilleFull','BlindingKNM2','KNM2'}));
+            p.addParameter('DTFSD','BlindingKNM2',@(x)ismember(x,{'OFF','DOSS','ROLL','HTFSD','TTFSD','BlindingKNM1','WGTS100K','Sibille','Sibille0p5eV','SibilleFull','BlindingKNM2','KNM2'}));
+            p.addParameter('HTFSD','BlindingKNM2',@(x)ismember(x,{'OFF','SAENZ','ROLL','BlindingKNM1','WGTS100K','Sibille','Sibille0p5eV','SibilleFull','BlindingKNM2','KNM2'}));
             p.addParameter('TmFSD','SAENZ',@(x)ismember(x,{'OFF','SAENZ'}));
            
             % MACE Parameters
@@ -598,7 +598,11 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             
             if strcmp(saveFile,'ON')
                 if strcmp(obj.ISCS,'Edep')
-                    Estep = Energy(2)-Energy(1);
+                    if numel(Energy)>1
+                        Estep = Energy(2)-Energy(1);
+                    else
+                        Estep = 99;
+                    end
                     IsXstr  = sprintf('Edep-Xsection-max%.0feV_Xstep%.1feV',max(Energy)-18575,Estep);
                 else
                     IsXstr = sprintf('%.5g-Xsection',ISXsection_local(E));

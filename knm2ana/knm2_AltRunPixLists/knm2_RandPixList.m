@@ -1,15 +1,15 @@
 % Uniform fit on KNM2 data
 % Random half of all golden runs
 % March 2020, Lisa
-
 nFits = 500;
 freePar = 'mNu E0 Bkg Norm';
-DataType = 'Twin';
+DataType = 'Real';
 RunList = 'KNM2_Prompt';
 range = 40;               % fit range in eV below endpoint
+FSDFlag = 'KNM2';
 savedir = [getenv('SamakPath'),'knm2ana/knm2_AltRunPixLists/results/'];
-savename = sprintf('%sknm2_PixListRandHalf_%s_%s_%.0feV_%.0ffits.mat',...
-            savedir,DataType,strrep(freePar,' ',''),range,nFits);
+savename = sprintf('%sknm2_PixListRandHalf_%s_%s_%.0feV_%.0ffits_%s.mat',...
+            savedir,DataType,strrep(freePar,' ',''),range,nFits,FSDFlag);
 % draw random pixels
 PixList_def = GetPixList('Knm2');
 nPix = numel(PixList_def);
@@ -17,37 +17,30 @@ nPix = numel(PixList_def);
 if exist(savename,'file')
     load(savename)
 else
- 
+  SigmaSq =  0.0124+0.0025;
     PixList = cell(nFits,1);
     FitResult = cell(nFits,1);
-    E0 = knm2FS_GetE0Twins('SanityPlot','OFF');
+ 
     RunAnaArg = {'RunList',RunList,...  % define run number -> see GetRunList
         'fixPar',freePar,...         % free Parameter !!
         'DataType',DataType,...              % Real, Twin or Fake
-        'FSDFlag','BlindingKNM2',...       % final state distribution (theoretical calculation)
-        'ELossFlag','KatrinT2',...         % energy loss function     ( different parametrizations available)
+        'FSDFlag',FSDFlag,...       % final state distribution (theoretical calculation)
+        'ELossFlag','KatrinT2A20',...         % energy loss function     ( different parametrizations available)
         'AnaFlag','StackPixel',...         % FPD segmentations -> pixel combination
         'chi2','chi2Stat',...              % statistics only
-        'NonPoissonScaleFactor',1,...
-        'MosCorrFlag','OFF',...
-        'TwinBias_Q',E0,...
-        'ROIFlag','14keV',...
-        'DopplerEffectFlag','FSD'};
-   
+        'NonPoissonScaleFactor',1.112,...
+        'TwinBias_Q',18573.7,...
+        'DopplerEffectFlag','FSD',...
+        'FSD_Sigma',sqrt(SigmaSq),...
+        'TwinBias_FSDSigma',sqrt(SigmaSq)};
+    
     for i=1:nFits
         RandIndex    = randperm(nPix);         % randomly permute runlist indices
         nPixHalf     = ceil(nPix/2);           % take only half of all runs
         PixList{i}   = PixList_def(RandIndex(1:nPixHalf));
         
         %% build object of MultiRunAnalysis class
-        D = MultiRunAnalysis(RunAnaArg{:},'PixList',PixList{i});
-        
-        if strcmp(DataType,'Twin')
-            Sigma = std(E0);
-            FSDArg = {'SanityPlot','OFF','Sigma',Sigma};
-            D.ModelObj.LoadFSD(FSDArg{:});
-            D.ModelObj.ComputeTBDDS; D.ModelObj.ComputeTBDIS;
-        end   
+        D = MultiRunAnalysis(RunAnaArg{:},'PixList',PixList{i});    
         D.exclDataStart = D.GetexclDataStart(range); % find correct data, where to cut spectrum     
         %% Fit -> fit results are in property: A.FitResult
         D.InitModelObj_Norm_BKG('RecomputeFlag','ON');

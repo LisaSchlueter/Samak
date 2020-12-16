@@ -40,13 +40,14 @@ S = SterileAnalysis(SterileArg{:});
 S.RunAnaObj.DataType = 'Real';
 S.range = 40;
 S.LoadGridFile('CheckSmallerN','ON','CheckLargerN','ON'); % if CheckSmallerN also look for grid with more/less nGridSteps
-S.InterpMode = 'lin'; % waring: if contour is closed, spline interp sometimes sensitive to artefacts! Switch to "lin" in this case
+S.InterpMode = 'spline'; % waring: if contour is closed, spline interp sometimes sensitive to artefacts! Switch to "lin" in this case
 S.Interp1Grid('RecomputeFlag','ON');% interpolate chi2 map -> nicer appearance of all plots. some
 S.FindBestFit;
 S.CompareBestFitNull;
+%%
 
-% S.InterpMode = 'lin'; %'spline' sometimes causes weird artefacts, but looks smoother than 'lin'
-Arg = {'SavePlot','ON','BestFit','OFF','Style','PRL','FinalSensitivity','OFF'};
+S.InterpMode = 'spline';%spline'; %'spline' sometimes causes weird artefacts, but looks smoother than 'lin'
+Arg = {'SavePlot','ON','BestFit','OFF','Style','PRL','FinalSensitivity','OFF','FreemNuSq','ON','Sensitivity','ON','AddPull',15};
 S.PlotPRL1(Arg{:});
 
 

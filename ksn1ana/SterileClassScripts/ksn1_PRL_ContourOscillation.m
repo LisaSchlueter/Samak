@@ -43,4 +43,3 @@ S.Interp1Grid('RecomputeFlag','ON');% interpolate chi2 map -> nicer appearance o
 Arg = {'SavePlot','ON','BestFit','OFF','FinalSensitivity','ON','Style','PRL'};
 S.ContourPlotOsci(Arg{:});
 
-

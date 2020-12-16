@@ -698,8 +698,13 @@ classdef RunSensitivity < handle
             % label
             fix_str = ConvertFixPar('freePar',obj.RunAnaObj.fixPar,'Mode','Reverse');%strrep(strrep(strrep(obj.RunAnaObj.fixPar,'fix ',''),' ;',' '),' ','');
             savedir = [getenv('SamakPath'),'tritium-data/FC/DeltaChi2LookupTable/'];
+            if strcmp(obj.RunAnaObj.chi2,'chi2Stat')
+                chiStr = sprintf('%s',obj.RunAnaObj.chi2);
+            else
+                 chiStr = sprintf('%s_SysBudget%.0f',obj.RunAnaObj.chi2,obj.RunAnaObj.SysBudget);
+            end
             save_str = sprintf('AsimovDeltaChi2_mNuSq%.3geV2_%s_%s_%.0fbE0_freePar%s_%.0fsamples.mat',...
-                mNuSq_t,obj.RunAnaObj.RunData.RunName,obj.RunAnaObj.chi2,obj.GetRange,fix_str,nSamples);
+                mNuSq_t,obj.RunAnaObj.RunData.RunName,chiStr,obj.GetRange,fix_str,nSamples);
             
             if strcmp(obj.RunAnaObj.AnaFlag,'Ring')
                 save_str = strrep(save_str,'.mat',sprintf('_Ring%s.mat',obj.RunAnaObj.RingMerge));
@@ -925,10 +930,17 @@ classdef RunSensitivity < handle
                 % find acceptance region
                 [CumProb,ia,~] = unique(CumProb_tmp);
                 obj.FC_x1(i) = interp1(CumProb,mNuSq(ia),(1-obj.ConfLevel)/2,'spline');
+                if i~=1
+                    if obj.FC_x1(i)-obj.FC_x1(i-1)<0
+                        % should always be more positive! try piecewise
+                        % cubic interpolation instead
+                         obj.FC_x1(i) = interp1(CumProb,mNuSq(ia),(1-obj.ConfLevel)/2,'pchip');
+                    end
+                end
                 
-                if obj.FC_x1(i)>0
+                if obj.FC_x1(i)>0  % --> twosided
                    obj.FC_x2(i)= interp1(CumProb,mNuSq(ia),(1+obj.ConfLevel)/2,'spline');
-                elseif obj.FC_x1(i)<0
+                elseif obj.FC_x1(i)<0 % --> one-sided
                     obj.FC_x2(i) = interp1(CumProb,mNuSq(ia),obj.ConfLevel,'spline');
                 end 
 
@@ -1752,15 +1764,23 @@ classdef RunSensitivity < handle
             p.addParameter('HoldOn','OFF',@(x)ismember(x,{'ON','OFF'})); % plot 90 and 95% at the same time
             p.addParameter('Lokov','OFF',@(x)ismember(x,{'ON','OFF'})); % plot Lokov belt instead
             p.addParameter('Sensitivity','OFF',@(x)ismember(x,{'ON','OFF'})); % show sensitivity instead of upper limit
+            p.addParameter('Style','PRL',@(x)ismember(x,{'PRL','Pretty'}));
+            p.addParameter('mNuSq_bf','',@(x)isfloat(x));
             p.addParameter('XLim',[-3,3],@(x)isfloat(x));
             p.parse(varargin{:});
             SavePlot = p.Results.SavePlot;
             HoldOn   = p.Results.HoldOn;
             Lokov    = p.Results.Lokov;
             Sensitivity = p.Results.Sensitivity;
+            Style       = p.Results.Style;
             XLim = p.Results.XLim;
+            mNuSq_bf = p.Results.mNuSq_bf;
             
-            LocalFontSize = 32;
+            if strcmp(Style,'PRL')
+                LocalFontSize = 30;
+            else
+                LocalFontSize = 28;
+            end
             
             if isempty(obj.FC_x1)
                 fprintf('No FC belt computed \n');
@@ -1818,6 +1838,7 @@ classdef RunSensitivity < handle
                   EdgeIndex2 = max(find(obj.FC_x1<0));
                   EdgeX2 = obj.FC_x2(EdgeIndex2);
                   IndexEdgeX21= find(plotX2>=EdgeX2,1);
+                  
                   % plot second part x2
                   EdgeX2 = obj.FC_x2(EdgeIndex2+1);
                   IndexEdgeX22 = find(plotX2>=EdgeX2,1);
@@ -1827,9 +1848,13 @@ classdef RunSensitivity < handle
                 
                   % connection to upper part
                   x22_tmp = linspace(plotX2(IndexEdgeX22-50),plotX2(IndexEdgeX22+5),1000);
-                  ploty22_edge = interp1(plotX2(IndexEdgeX22:IndexEdgeX22+5),plotY2(IndexEdgeX22:IndexEdgeX22+5),x22_tmp,'lin','extrap');   
-                  xtmp = linspace(max(x21_tmp(ploty2_edge<=SensitivityLimit-0.01)),min(x22_tmp(ploty22_edge>=SensitivityLimit+0.008)),100);
-                   
+                   if strcmp(obj.RunAnaObj.DataSet,'Knm1')
+                      ploty22_edge = interp1(plotX2(IndexEdgeX22:IndexEdgeX22+5),plotY2(IndexEdgeX22:IndexEdgeX22+5),x22_tmp,'lin','extrap');
+                      xtmp = linspace(max(x21_tmp(ploty2_edge<=SensitivityLimit-0.01)),min(x22_tmp(ploty22_edge>=SensitivityLimit+0.008)),100);
+                   else
+                      ploty22_edge = interp1(plotX2(IndexEdgeX22:IndexEdgeX22+4),plotY2(IndexEdgeX22:IndexEdgeX22+4),x22_tmp,'lin','extrap');
+                      xtmp = linspace(max(x21_tmp(ploty2_edge<=SensitivityLimit)),min(x22_tmp(ploty22_edge>=SensitivityLimit+0.002)),100);
+                  end
                   % correct area
                   plotX2_new = [plotX2(1:IndexEdgeX21-5)',xtmp,plotX2(IndexEdgeX22:end)'];
                   ploty2_new = [plotY2(1:IndexEdgeX21-5)',SensitivityLimit.*ones(100,1)',plotY2(IndexEdgeX22:end)'];
@@ -1858,11 +1883,13 @@ classdef RunSensitivity < handle
 %                   % smooth edges
 %                   xedge1_tmp = x21_tmp(ploty2_edge<=SensitivityLimit);
 %                   yedge1_tmp = ploty2_edge(ploty2_edge<=SensitivityLimit);
-%                   
+%
 %                   xSmoothEdge1 = [xedge1_tmp(end-1:end),xtmp(1:3)];
 %                   YSmoothEdge1 = [yedge1_tmp(end-1:end),SensitivityLimit.*ones(1,3)];
 %                   plot(xSmoothEdge1,smooth(YSmoothEdge1,100));
+                  legStr = 'LT';
               else
+                  legStr = 'FC';
                   p1 =plot(plotX1,smooth(plotY1,100),'-',LineArg{:});
                   p2 =plot(plotX2,smooth(plotY2,100),'-',LineArg{:});
               end
@@ -1887,14 +1914,25 @@ classdef RunSensitivity < handle
                 mNuMeasured = 0;
                 savestr = 'sensitivity_';
             else
-                mNuMeasured = -0.98;
-                savestr = '';
+                if isempty(mNuSq_bf)
+                    if strcmp(obj.RunAnaObj.DataSet,'Knm1')
+                        mNuMeasured = -0.98;
+                    elseif strcmp(obj.RunAnaObj.DataSet,'Knm2')
+                        mNuMeasured = 0.19;
+                    else
+                        mNuMeasured = 0;
+                    end
+                     savestr = '';
+                else
+                    mNuMeasured = mNuSq_bf;
+                    savestr = sprintf('_bf%.2feV2',mNuSq_bf);
+                end
+               
             end
             x1 = obj.FC_x1(~isnan(obj.FC_x1));
             yticks(0:0.2:max(obj.FC_mNuSqTrue))
             mNuLimit = interp1(x1,obj.FC_mNuSqTrue(~isnan(obj.FC_x1)),mNuMeasured,'spline');
-            switch Lokov
-                case 'ON'
+            if strcmp(Lokov,'ON') && mNuMeasured<0
                     mNuLimit = SensitivityLimit;
             end
                 
@@ -1907,23 +1945,35 @@ classdef RunSensitivity < handle
             end
             
             if strcmp(Sensitivity,'ON')
-                leg = legend([p2,plimit],[sprintf(' %.4g%% C.L. ',obj.ConfLevel*100),chi2str],...
-                    sprintf(' Sensitivity: {\\itm}^2_\\nu \\leq %.2f eV^2 \n               \\rightarrow {\\itm}_\\nu  \\leq %.2f eV',mNuLimit,sqrt(mNuLimit)),'Location','northwest');
+                leg = legend([p2,plimit],[sprintf('%s confidence belt at %.4g%% C.L. ',legStr,obj.ConfLevel*100),chi2str],...
+                    sprintf(' Sensitivity: {\\itm}^2_\\nu \\leq %.2f eV^2 \n              \\rightarrow {\\itm}_\\nu  \\leq %.2f eV',mNuLimit,sqrt(mNuLimit)),'Location','northwest');
             else
-                leg = legend([p2,plimit],[sprintf(' %.4g%% C.L. ',obj.ConfLevel*100),chi2str],...
-                    sprintf('     {\\itm}^2_\\nu \\leq %.1f eV^{ 2} \n\\rightarrow {\\itm}_\\nu  \\leq %.1f eV',mNuLimit,sqrt(mNuLimit)),'Location','northwest');
+                leg = legend([p2,plimit],[sprintf('%s confidence belt at %.4g%% C.L. ',legStr,obj.ConfLevel*100),chi2str],...
+                    sprintf('     {\\itm}^2_\\nu \\leq %.2f eV^{ 2} \n\\rightarrow {\\itm}_\\nu  \\leq %.2f eV',mNuLimit,sqrt(mNuLimit)),'Location','northwest');
             end
-            legend boxoff;
-            
+           %legend boxoff;
+            leg.EdgeColor = rgb('Silver');
             % axis style etc.
-           % PrettyFigureFormat('FontSize',LocalFontSize);
-           PRLFormat;
-           set(gca,'FontSize',LocalFontSize)
+            % PrettyFigureFormat('FontSize',LocalFontSize);
+            if strcmp(Style,'PRL')
+                PRLFormat;
+                set(gca,'FontSize',LocalFontSize)
+                set(gca,'TickDir','out');
+            else
+                PrettyFigureFormat('FontSize',LocalFontSize);
+            end
+           % remove top and right ticks
+           a = gca;
+           set(a,'box','off','color','none')% set box property to off and remove background color
+           b = axes('Position',a.Position,...
+               'box','on','xtick',[],'ytick',[],'LineWidth',1.5);% create new, empty axes with box but without ticks
+           axes(a)% set original axes as active
+           linkaxes([a b]) % link axes in case of zooming
             %%
             if ~strcmp(SavePlot,'OFF')
                 savedir = [getenv('SamakPath'),'/tritium-data/FC/plots/'];
                 obj.CreateDir(savedir);
-                savefile = [savedir,sprintf('%s_FCbelt_%s%s_%.2fCL.pdf',obj.RunAnaObj.DataSet,savestr,obj.RunAnaObj.chi2,obj.ConfLevel*100)];
+                savefile = [savedir,sprintf('%s_FCbelt_%s%s_%.0fCL.pdf',obj.RunAnaObj.DataSet,savestr,obj.RunAnaObj.chi2,obj.ConfLevel*100)];
                 if strcmp(Lokov,'ON')
                     leg.FontSize = get(gca,'FontSize')-6;
                     savefile = [savedir,sprintf('%s_Lokovbelt_%s%s_%.0fCL.pdf',obj.RunAnaObj.DataSet,savestr,obj.RunAnaObj.chi2,obj.ConfLevel*100)];
@@ -2257,7 +2307,12 @@ classdef RunSensitivity < handle
             end
             
             if strcmp(obj.RunAnaObj.AnaFlag,'Ring')
-                savefile = strrep(savefile,'.mat',sprintf('_Ring%s.mat',obj.RunAnaObj.RingMerge));
+                if ~contains(obj.RunAnaObj.fixPar,sprintf('fix %.0f',2*obj.RunAnaObj.nRings+10))
+                    % free qU-Offsets
+                     savefile = strrep(savefile,'.mat',sprintf('_Ring%s_qUOffsets.mat',obj.RunAnaObj.RingMerge));
+                else
+                    savefile = strrep(savefile,'.mat',sprintf('_Ring%s.mat',obj.RunAnaObj.RingMerge));
+                end
             end
             % load or save file
             out = 1;
@@ -2476,7 +2531,7 @@ classdef RunSensitivity < handle
             
             switch obj.RunAnaObj.DataSet
                 case 'Knm2'
-                    Default
+                    %Default
                     obj.SysEffectsAll   = {'TCoff_OTHER','FSD','TASR','RF_EL','RF_BF','RF_RX','Stack','LongPlasma','FPDeff','NP','Bkg'}; %Bkg has to be last
                     obj.SysEffectLeg    = {'Theoretical corrections';'Final-state distribution';...
                         'Tritium activity fluctuations';'Energy-loss function';...

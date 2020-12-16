@@ -15,7 +15,7 @@ mBetaSquared = struct('Experiment',{},'Label',{},'Year',{},'Reference',{},'mBeta
 
 mBetaSquared(1).Experiment='Los Alamos';
 mBetaSquared(1).Label='Robertson 1991';
-mBetaSquared(1).Year=1990.5;
+mBetaSquared(1).Year=1990.51;
 mBetaSquared(1).Reference='Phys.Rev.Lett. 67 (1991) 957-960';
 mBetaSquared(1).mBetaSquared=-147;
 mBetaSquared(1).Stat=68;
@@ -26,7 +26,7 @@ mBetaSquared(1).Color=rgb('DarkSlateGray');
 
 mBetaSquared(2).Experiment='Tokyo';
 mBetaSquared(2).Label='KAWAKAMI 1991';
-mBetaSquared(2).Year=1991.5;
+mBetaSquared(2).Year=1991.49;
 mBetaSquared(2).Reference='Phys.Lett. B256 (1991) 105-111';
 mBetaSquared(2).mBetaSquared=-65;
 mBetaSquared(2).Stat=85;
@@ -48,7 +48,7 @@ mBetaSquared(3).Color=rgb('Brown');
 
 mBetaSquared(4).Experiment='Mainz';
 mBetaSquared(4).Label='Weinheimer 1993';
-mBetaSquared(4).Year=1992.5;
+mBetaSquared(4).Year=1992.51;
 mBetaSquared(4).Reference='Phys.Lett. B300 (1993) 210-216';
 mBetaSquared(4).mBetaSquared=-39;
 mBetaSquared(4).Stat=34;
@@ -57,9 +57,9 @@ mBetaSquared(4).Tot=sqrt(mBetaSquared(4).Stat^2+mBetaSquared(4).Sys^2);
 mBetaSquared(4).Marker='d';
 mBetaSquared(4).Color=rgb('CadetBlue');
 
-mBetaSquared(5).Experiment='China';
+mBetaSquared(5).Experiment='Beijing';
 mBetaSquared(5).Label='Sun 1993';
-mBetaSquared(5).Year=1993.5;
+mBetaSquared(5).Year=1993.49;
 mBetaSquared(5).Reference='Chin.J.Nucl.Phys. 15 (1993) 261';
 mBetaSquared(5).mBetaSquared=-31;
 mBetaSquared(5).Stat=75;
@@ -68,9 +68,9 @@ mBetaSquared(5).Tot=sqrt(mBetaSquared(5).Stat^2+mBetaSquared(5).Sys^2);
 mBetaSquared(5).Marker='v';
 mBetaSquared(5).Color=rgb('Gold');
 
-mBetaSquared(6).Experiment='LLNL';
+mBetaSquared(6).Experiment='Livermore';
 mBetaSquared(6).Label='Stoeffl 1995';
-mBetaSquared(6).Year=1994.5;
+mBetaSquared(6).Year=1994.51;
 mBetaSquared(6).Reference='Phys.Rev.Lett. 75 (1995) 3237-3240';
 mBetaSquared(6).mBetaSquared=-130;
 mBetaSquared(6).Stat=20;
@@ -81,7 +81,7 @@ mBetaSquared(6).Color=rgb('Brown');
 
 mBetaSquared(7).Experiment='Troitsk';
 mBetaSquared(7).Label='Belesev 1995';
-mBetaSquared(7).Year=1995.5;
+mBetaSquared(7).Year=1995.49;
 mBetaSquared(7).Reference='Phys.Lett. B350 (1995) 263-272';
 mBetaSquared(7).mBetaSquared=-22;
 mBetaSquared(7).Stat=sqrt(4.8^2/2);
@@ -92,7 +92,7 @@ mBetaSquared(7).Color=rgb('IndianRed');
 
 mBetaSquared(8).Experiment='Mainz';
 mBetaSquared(8).Label='Weinheimer 1999';
-mBetaSquared(8).Year=1998.5;
+mBetaSquared(8).Year=1998.51;
 mBetaSquared(8).Reference='Phys.Lett. B460 (1999) 219-226';
 mBetaSquared(8).mBetaSquared=-3.7;
 mBetaSquared(8).Stat=5.3;
@@ -103,7 +103,7 @@ mBetaSquared(8).Color=rgb('CadetBlue');
 
 mBetaSquared(9).Experiment='Troitsk';
 mBetaSquared(9).Label='Lobashev 1999';
-mBetaSquared(9).Year=1999.5;
+mBetaSquared(9).Year=1999.49;
 mBetaSquared(9).Reference='Phys.Lett. B460 (1999) 227-235';
 mBetaSquared(9).mBetaSquared=-1.9;
 mBetaSquared(9).Stat=3.4;
@@ -164,7 +164,7 @@ mBetaSquared(11).Color=rgb('IndianRed');
 % KATRIN FINAL
 mBetaSquared(12).Experiment='KATRIN 1^{st} Science Run ';
 mBetaSquared(12).Label='KATRIN KNM1 2019';
-mBetaSquared(12).Year=2019+6/12;
+mBetaSquared(12).Year=2019.49;
 mBetaSquared(12).Reference='';
 mBetaSquared(12).mBetaSquared=-1;
 mBetaSquared(12).Stat=0.9474;  % average+/-
@@ -175,7 +175,7 @@ mBetaSquared(12).Color=rgb('DarkGreen');
 
 mBetaSquared(13).Experiment='KATRIN sensitivity - 100% T-activity - 5 y ';
 mBetaSquared(13).Label='KATRIN 2024';
-mBetaSquared(13).Year=2024+6/12;
+mBetaSquared(13).Year=2024.49;
 mBetaSquared(13).Reference='';
 mBetaSquared(13).mBetaSquared=0;
 mBetaSquared(13).Stat=sqrt(0.04^2/2);

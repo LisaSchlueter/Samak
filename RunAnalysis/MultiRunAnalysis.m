@@ -1714,14 +1714,14 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                    end
                    
                    if strcmp(obj.RingMerge,'None')
-                       % delete not used rings (otherwise problems with NaN)
-                       obj.SingleRunData.qU(:,:,~ismember(1:13,obj.RingList)) = [];
-                       obj.SingleRunData.EffCorr(:,:,~ismember(1:13,obj.RingList)) = [];
-                       obj.SingleRunData.TBDIS(:,:,~ismember(1:13,obj.RingList)) = [];
-                       obj.SingleRunData.TBDIS_Default(:,:,~ismember(1:13,obj.RingList)) = [];
-                       obj.SingleRunData.TBDISE(:,:,~ismember(1:13,obj.RingList)) = [];
-                       obj.SingleRunData.MACE_Ba_T(:,~ismember(1:13,obj.RingList)) = [];
-                       obj.SingleRunData.MACE_Bmax_T(:,~ismember(1:13,obj.RingList)) = [];
+%                        % delete not used rings (otherwise problems with NaN)
+%                        obj.SingleRunData.qU(:,:,~ismember(1:13,obj.RingList)) = [];
+%                        obj.SingleRunData.EffCorr(:,:,~ismember(1:13,obj.RingList)) = [];
+%                        obj.SingleRunData.TBDIS(:,:,~ismember(1:13,obj.RingList)) = [];
+%                        obj.SingleRunData.TBDIS_Default(:,:,~ismember(1:13,obj.RingList)) = [];
+%                        obj.SingleRunData.TBDISE(:,:,~ismember(1:13,obj.RingList)) = [];
+%                        obj.SingleRunData.MACE_Ba_T(:,~ismember(1:13,obj.RingList)) = [];
+%                        obj.SingleRunData.MACE_Bmax_T(:,~ismember(1:13,obj.RingList)) = [];
                    end
             end
         end
@@ -1745,7 +1745,8 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                     'ISCS',obj.ISCSFlag,'recomputeRF','OFF','ELossFlag',obj.ELossFlag,'FPD_Segmentation','OFF',...
                     'DTFSD',DTFSD,'HTFSD',HTFSD,'TTFSD',TTFSD,'DopplerEffectFlag',...
                     obj.DopplerEffectFlag,'RadiativeFlag',obj.RadiativeFlag,'RingMerge',obj.RingMerge,...
-                    'AngularTFFlag',obj.AngularTFFlag,'SynchrotronFlag',obj.SynchrotronFlag);
+                    'AngularTFFlag',obj.AngularTFFlag,'SynchrotronFlag',obj.SynchrotronFlag,...
+                    'FSD_Sigma',obj.FSD_Sigma);
                 
                 obj.SingleRunObj{r}.ComputeTBDDS; obj.SingleRunObj{r}.ComputeTBDIS;
             end
@@ -1815,7 +1816,8 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                 'KTFFlag',obj.KTFFlag,...
                 'NIS',NIS,...
                 'SynchrotronFlag',obj.SynchrotronFlag,...
-                'AngularTFFlag',obj.AngularTFFlag};
+                'AngularTFFlag',obj.AngularTFFlag,...
+                'FSD_Sigma',obj.FSD_Sigma};
  
             if ~isempty(qU)
                 TBDarg = {TBDarg{:},'qU',qU};

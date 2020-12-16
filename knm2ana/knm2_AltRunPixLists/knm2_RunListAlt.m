@@ -1,32 +1,34 @@
 % Fit KNM2 alternative runlist
 
-freePar = 'E0 Bkg Norm';
+freePar = 'mNu E0 Bkg Norm';
 DataType = 'Real';
 range = 40;                % fit range in eV below endpoint
-AltRunList = 'KNM2_Down';       % defines alternative pixel list
+AltRunList = 'KNM2_Up';       % defines alternative pixel list
 RecomputeFlag = 'OFF';
+FSDFlag = 'KNM2';
 
 % label
 savedir = [getenv('SamakPath'),'knm2ana/knm2_AltRunPixLists/results/'];
-savename = sprintf('%sknm2_AltRunList_%s_%s_%s_%.0feV.mat',...
-    savedir,AltRunList,DataType,strrep(freePar,' ',''),range);
+savename = sprintf('%sknm2_AltRunList_%s_%s_%s_%.0feV_%s.mat',...
+    savedir,AltRunList,DataType,strrep(freePar,' ',''),range,FSDFlag);
 
 if exist(savename,'file') && strcmp(RecomputeFlag,'OFF')
     load(savename);
 else
+    SigmaSq =  0.0124+0.0025;
     RunAnaArg = {'RunList',AltRunList,...     % define run number -> see GetRunList
         'fixPar',freePar,...               % free Parameter !!
         'DataType',DataType,...            % Real, Twin or Fake
-        'FSDFlag','BlindingKNM2',...       % final state distribution (theoretical calculation)
-        'ELossFlag','KatrinT2',...         % energy loss function     ( different parametrizations available)
+        'FSDFlag',FSDFlag,...       % final state distribution (theoretical calculation)
+        'ELossFlag','KatrinT2A20',...         % energy loss function     ( different parametrizations available)
         'AnaFlag','StackPixel',...         % FPD segmentations -> pixel combination
         'chi2','chi2Stat',...              % statistics only
-        'NonPoissonScaleFactor',1,...
-        'MosCorrFlag','OFF',...
+        'NonPoissonScaleFactor',1.112,...
         'TwinBias_Q',18573.7,...
-        'ROIFlag','14keV',...
         'DopplerEffectFlag','FSD',...
-        'RingMerge','Full'};
+        'RingMerge','Full',...
+        'FSD_Sigma',sqrt(SigmaSq),...
+        'TwinBias_FSDSigma',sqrt(SigmaSq)};
     
     M = MultiRunAnalysis(RunAnaArg{:});          % init model, read data
     M.exclDataStart = M.GetexclDataStart(range); % set fit range
@@ -43,5 +45,5 @@ else
     E0Err    = FitResult.err(2);
     
     MakeDir(savedir);
-    save(savename,'FitResult','RunList','Q_i','mNuSq','E0','mNuSqErr','E0Err');
+    save(savename,'FitResult','RunList','Q_i','mNuSq','E0','mNuSqErr','E0Err','RunAnaArg');
 end
