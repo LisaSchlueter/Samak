@@ -1070,6 +1070,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                 obj.mTSq_bias = obj.mTSq_i;
                 obj.FracTm_bias = 0;
                 obj.WGTS_MolFrac_Tm =  obj.WGTS_MolFrac_Tm_i;
+                obj.eta_bias = 0;
             end
             if flag == 1
                 % Add Bias
@@ -1648,7 +1649,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
             NormDist = 'a/sqrt(2*pi*b^2)*exp(-(x-c)^2/(2*b^2))';
             Spectrum = obj.TBDDS_R;
             Spectrum(1:200) = 0;
-            pd0 = fit(obj.Te-obj.Q,Spectrum,NormDist,'Start',[1.4358e-14 0.41 -0.666]);
+            pd0 = fit(obj.Te-obj.Q,Spectrum,NormDist,'Start',[1.4358e-14 0.41 -1.7]);
 
             hT0 = plot((obj.Te-obj.Q),obj.TBDDS_R,'LineWidth',2,'Color','Black','LineStyle','-');
             hold on;
@@ -1747,6 +1748,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                 sin2T4_prev = obj.sin2T4_i;
                 mTSq_prev = obj.mTSq_i;
                 FracTm_prev = obj.WGTS_MolFrac_Tm_i;
+                eta_prev    = obj.eta_i;
             else             
                 mnuSq_prev = obj.mnuSq;
                 E0_prev = obj.Q;
@@ -1760,6 +1762,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                 sin2T4_prev = obj.sin2T4;
                 mTSq_prev = obj.mTSq;
                 FracTm_prev = obj.WGTS_MolFrac_Tm;
+                eta_prev    = obj.eta;
             end
             
             % Initialization (add bias)
@@ -1784,6 +1787,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                 ((~isempty(obj.HTNormGS)) && any(HTGS_prev ~= obj.DTNormGS)) || ...
                 ((~isempty(obj.HTNormES)) && any(HTES_prev ~= obj.DTNormES)) || ...
                 (mnu4Sq_prev ~= obj.mnu4Sq) || (sin2T4_prev ~= obj.sin2T4) || ...; % steriles
+                (eta_prev ~=obj.eta) || ...                                         % relics
                 (FracTm_prev ~= obj.WGTS_MolFrac_Tm);
              
             if Init_condition || PhaseSpaceChange_condition
@@ -1918,8 +1922,13 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                 TBDDS_beta  = (1+obj.normFit).*(TBDDS_beta./simpsons(obj.Te,TBDDS_beta)).*obj.NormFactorTBDDS;
                 switch obj.ToggleRelic
                     case 'ON'
+                        RateCaptureT_KATRIN = obj.eta*1e10 .* obj.R_Capture .* pi*obj.WGTS_FTR_cm^2*2*obj.WGTS_CD_MolPerCm2*obj.WGTS_epsT .* 1./(365.242*24*3600);
+                        obj.NormFactorTBDDS_R = RateCaptureT_KATRIN...
+                            .*0.5*(1-cos(asin(sqrt(obj.WGTS_B_T./obj.MACE_Bmax_T)))) ...    %angle of acceptance
+                            .*(obj.FPD_MeanEff*obj.FPD_Coverage)...                         %detector efficiency and coverage
+                            .*numel(obj.FPD_PixList)/148;
                         NormGS = obj.WGTS_MolFrac_TT*obj.TTNormGS+obj.WGTS_MolFrac_DT*obj.DTNormGS+obj.WGTS_MolFrac_HT*obj.HTNormGS;
-                        TBDDS_Capture = (1+obj.normFit).*(TBDDS_Capture./simpsons(obj.Te,TBDDS_Capture)).*obj.NormFactorTBDDS_R;
+                        TBDDS_Capture = (TBDDS_Capture./simpsons(obj.Te,TBDDS_Capture)).*obj.NormFactorTBDDS_R;
                         if ~strcmp(obj.TTFSD,'OFF') || ~strcmp(obj.DTFSD,'OFF') || ~strcmp(obj.HTFSD,'OFF')
                             switch obj.ToggleES
                                 case 'ON'
@@ -2188,31 +2197,31 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
 %                        .*obj.qUEfficiencyCorrectionFactor(obj.Te)...
             end
             
-            if strcmp(obj.ToggleRelic,'ON')
-                % Init
-                %temin=18.573; % keV
-                %temax=18.58; % keV
-
-                %nte   = 1000;
-                %tex   = obj.TimeSec./(365.242*24*3600); % year
-                %eres  = 0.01e-3; % keV
-                %Tmass = pi*obj.WGTS_FTR_cm^2*obj.WGTS_CD_MolPerCm2*obj.M*1e3*obj.WGTS_epsT;
-
-                % KATRIN : tritium mass 
-                %com_opt = {...
-                %    'tex',tex,'RNS_nTnu',1000,...
-                %    'nTe',nte,'Temin',temin,...
-                %    'Temax',temax,'Tmass',Tmass,'energy_resol',...
-                %    eres,'mnu',obj.mnuSq_i,'Eta',obj.eta};
-                %A   = TritiumRelicNu(com_opt{:});
-                
-                %RateCaptureT = obj.eta .* 2.85e-2 .* obj.SigmaV ./ (1e-45*obj.NA); % per year per atom
-                RateCaptureT_KATRIN = obj.eta .* obj.R_Capture .* pi*obj.WGTS_FTR_cm^2*2*obj.WGTS_CD_MolPerCm2*obj.WGTS_epsT .* 1./(365.242*24*3600);
-                obj.NormFactorTBDDS_R = RateCaptureT_KATRIN...
-                        .*0.5*(1-cos(asin(sqrt(obj.WGTS_B_T./obj.MACE_Bmax_T)))) ...    %angle of acceptance
-                        .*(obj.FPD_MeanEff*obj.FPD_Coverage)...                         %detector efficiency and coverage
-                        .*numel(obj.FPD_PixList)/148;                                   %number of pixels
-            end
+%             if strcmp(obj.ToggleRelic,'ON')
+%                 % Init
+%                 %temin=18.573; % keV
+%                 %temax=18.58; % keV
+% 
+%                 %nte   = 1000;
+%                 %tex   = obj.TimeSec./(365.242*24*3600); % year
+%                 %eres  = 0.01e-3; % keV
+%                 %Tmass = pi*obj.WGTS_FTR_cm^2*obj.WGTS_CD_MolPerCm2*obj.M*1e3*obj.WGTS_epsT;
+% 
+%                 % KATRIN : tritium mass 
+%                 %com_opt = {...
+%                 %    'tex',tex,'RNS_nTnu',1000,...
+%                 %    'nTe',nte,'Temin',temin,...
+%                 %    'Temax',temax,'Tmass',Tmass,'energy_resol',...
+%                 %    eres,'mnu',obj.mnuSq_i,'Eta',obj.eta};
+%                 %A   = TritiumRelicNu(com_opt{:});
+%                 
+%                 %RateCaptureT = obj.eta .* 2.85e-2 .* obj.SigmaV ./ (1e-45*obj.NA); % per year per atom
+%                 RateCaptureT_KATRIN = obj.eta .* obj.R_Capture .* pi*obj.WGTS_FTR_cm^2*2*obj.WGTS_CD_MolPerCm2*obj.WGTS_epsT .* 1./(365.242*24*3600);
+%                 obj.NormFactorTBDDS_R = RateCaptureT_KATRIN...
+%                         .*0.5*(1-cos(asin(sqrt(obj.WGTS_B_T./obj.MACE_Bmax_T)))) ...    %angle of acceptance
+%                         .*(obj.FPD_MeanEff*obj.FPD_Coverage)...                         %detector efficiency and coverage
+%                         .*numel(obj.FPD_PixList)/148;                                   %number of pixels
+%             end
         end
         
         function          AddStatFluctTBDDS(obj)

@@ -74,6 +74,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
         i_TTES          % Fit Parameter Init: FSD ES
         i_qUOffset      % Fit Parameter Init: qU Offset per ring
         i_mTSq          % Fit Parameter Init: tachyonic neutrino mass (ringwise)
+        i_eta
         CatsResult;     % Results for CATS diagnostics
         RingMerge;      % How you choose to merge the rings
 
@@ -169,6 +170,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             p.addParameter('i_TTES',0,@(x)isfloat(x));
             p.addParameter('i_qUOffset',[],@(x)isfloat(x));
             p.addParameter('i_mTSq',[],@(x)isfloat(x));
+            p.addParameter('i_eta',0,@(x)isfloat(x));
              
             % Monte Carlo Twin options
             p.addParameter('TwinBias_WGTS_CD_MolPerCm2',1,@(x)isfloat(x)); % relative (%)
@@ -233,6 +235,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             obj.i_TTES        = p.Results.i_TTES;
             obj.i_qUOffset    = p.Results.i_qUOffset;
             obj.i_mTSq        = p.Results.i_mTSq;
+            obj.i_eta         = p.Results.i_eta;
             obj.DataEffCorr   = p.Results.DataEffCorr;
             obj.ELossFlag     = p.Results.ELossFlag;
             obj.RingMerge     = p.Results.RingMerge;
@@ -1791,7 +1794,8 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                 'i_TTES',obj.i_TTES,...
                 'i_qUOffset',obj.i_qUOffset,...
                 'i_mTSq',obj.i_mTSq,...
-                'i_FracTm',0);
+                'i_FracTm',0,...
+                'i_eta',obj.i_eta);
             
             obj.FitResult = struct(...
                 'par',F.RESULTS{1},....
@@ -4210,7 +4214,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             end
         end
         function InitFitPar(obj)
-            obj.nPar = 4*obj.ModelObj.nPixels+12; % number of avaibale fit parameter
+            obj.nPar = 4*obj.ModelObj.nPixels+13; % number of avaibale fit parameter
             
             if strcmp(obj.AnaFlag,'StackPixel') % number of FPD segmentations
                 nFPDSeg = 1;

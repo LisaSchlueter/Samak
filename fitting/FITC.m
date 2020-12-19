@@ -93,6 +93,8 @@ classdef FITC < handle
         i_mnu4Sq;
         i_sin2T4;
 
+        i_eta;
+        
         parinit; % initial parameters for the fit
         
         % data
@@ -169,6 +171,7 @@ classdef FITC < handle
             p.addParameter('i_FracTm',[],@(x)isfloat(x));
             p.addParameter('i_mnu4Sq',0,@(x)isfloat(x));
             p.addParameter('i_sin2T4',0,@(x)isfloat(x));
+            p.addParameter('i_eta',0,@(x)isfloat(x));
             
             p.parse(varargin{:});
             
@@ -210,6 +213,7 @@ classdef FITC < handle
             obj.UncMPixFlag     = p.Results.UncMPixFlag;
             obj.i_mnu4Sq        = p.Results.i_mnu4Sq;
             obj.i_sin2T4        = p.Results.i_sin2T4;
+            obj.i_eta           = p.Results.i_eta;
             
             if isempty(obj.SO) && isempty(obj.SOCell)
                 error('You should provide a TBD object to use this class. Ex.: FIT(''SO'',TBDObject)');
@@ -308,7 +312,8 @@ classdef FITC < handle
                                obj.i_mTSq,...
                                obj.i_FracTm,...
                                obj.i_mnu4Sq,...
-                               obj.i_sin2T4];
+                               obj.i_sin2T4,...
+                               obj.i_eta];
                 
                 % initilization for pulls (default all zero)
                 if obj.pulls == 0
@@ -519,6 +524,7 @@ classdef FITC < handle
             FracTm_fit = par(4*obj.SO.nPixels+10);
             mnu4Sq_fit   = par(4*obj.SO.nPixels+11);
             sin2T4_fit   = par(4*obj.SO.nPixels+12);
+            eta_fit      = par(4*obj.SO.nPixels+13);
             
             obj.SO.ComputeTBDDS(...
                 'mSq_bias',mnu_fit,...
@@ -536,7 +542,8 @@ classdef FITC < handle
                 'mTSq_bias',mTSq_fit,...
                 'FracTm_bias',FracTm_fit,...
                 'mnu4Sq_bias',mnu4Sq_fit,...
-                'sin2T4_bias',sin2T4_fit);
+                'sin2T4_bias',sin2T4_fit,...
+                'eta_bias',eta_fit);
             
             obj.SO.ComputeTBDIS();
             

@@ -808,6 +808,14 @@ classdef RelicNuDebug < handle
                                 U.ModelObj.ComputeTBDDS;
                                 U.ModelObj.ComputeTBDIS;
                                 U.Fit;
+                                mnuSq     = U.ModelObj.mnuSq_i+U.FitResult.par(1);
+                                mnuSq_err = U.FitResult.err(1);
+                                E0        = U.ModelObj.Q_i+U.FitResult.par(2);
+                                E0_err    = U.FitResult.err(2);
+                                Bkg       = U.ModelObj.BKG_RateSec_i+U.FitResult.par(3);
+                                Bkg_err   = U.FitResult.err(3);
+                                Norm      = U.FitResult.par(3+U.ModelObj.nPixels:3+2*U.ModelObj.nPixels-1) + 1;
+                                Norm_err  = U.FitResult.err(3+U.ModelObj.nPixels:3+2*U.ModelObj.nPixels-1);
                                 if U.FitResult.chi2min>50
                                     sprintf('Fit failed! Retrying...')
                                     etaupper = etaupper + delta;
@@ -825,6 +833,14 @@ classdef RelicNuDebug < handle
                                 F.ModelObj.ComputeTBDDS;
                                 F.ModelObj.ComputeTBDIS;
                                 F.Fit;
+                                mnuSq     = F.ModelObj.mnuSq_i+F.FitResult.par(1);
+                                mnuSq_err = F.FitResult.err(1);
+                                E0        = F.ModelObj.Q_i+F.FitResult.par(2);
+                                E0_err    = F.FitResult.err(2);
+                                Bkg       = F.ModelObj.BKG_RateSec_i+F.FitResult.par(3);
+                                Bkg_err   = F.FitResult.err(3);
+                                Norm      = F.FitResult.par(3+F.ModelObj.nPixels:3+2*F.ModelObj.nPixels-1) + 1;
+                                Norm_err  = F.FitResult.err(3+F.ModelObj.nPixels:3+2*F.ModelObj.nPixels-1);
                                 if F.FitResult.chi2min>50
                                     sprintf('Fit failed! Retrying...')
                                     etalower = etalower - delta;
@@ -834,7 +850,7 @@ classdef RelicNuDebug < handle
                                 end
                             end
                         end
-                        save(savename,'eta');
+                        save(savename,'eta','mnuSq','mnuSq_err','E0','E0_err','Bkg','Bkg_err','Norm','Norm_err');
                         if strcmp(Plot,'ON')
                             relic_global_twin('eta',eta,'RunList',obj.Params,'fitPar',fitPar,'E0',U.TwinBias_Q,'mnuSq',U.TwinBias_mnuSq,'Syst',Syst);
                         end

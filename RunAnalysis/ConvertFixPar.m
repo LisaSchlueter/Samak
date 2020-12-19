@@ -18,7 +18,7 @@ Mode    = p.Results.Mode;
 
 if strcmp(Mode,'Normal')
     if isempty(nPar)
-        nPar = 3*nPixels+12;
+        nPar = 3*nPixels+13;
     end
     
     fixPar_v = 1:nPar; % array of all parameter
@@ -91,6 +91,12 @@ if strcmp(Mode,'Normal')
         fixPar_v(findIndex)=[];
     end
     
+    %eta
+    if contains(freePar,'eta')
+        findIndex = ismember(fixPar_v,4*nPixels+13);
+        fixPar_v(findIndex)=[];
+    end
+    
     fixPar = sprintf('fix %.0f ;',fixPar_v);
     
 elseif strcmp(Mode,'Reverse')
@@ -140,6 +146,9 @@ elseif strcmp(Mode,'Reverse')
   end
     if ~contains(freePar,sprintf('fix %.0f ;',4*nPixels+12))
       fixPar = [fixPar,'sin2T4'];
+    end
+    if ~contains(freePar,sprintf('fix %.0f ;',4*nPixels+13))
+      fixPar = [fixPar,'eta'];
     end
   
 end
