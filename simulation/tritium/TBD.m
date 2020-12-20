@@ -1922,7 +1922,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                 TBDDS_beta  = (1+obj.normFit).*(TBDDS_beta./simpsons(obj.Te,TBDDS_beta)).*obj.NormFactorTBDDS;
                 switch obj.ToggleRelic
                     case 'ON'
-                        RateCaptureT_KATRIN = obj.eta*1e10 .* obj.R_Capture .* pi*obj.WGTS_FTR_cm^2*2*obj.WGTS_CD_MolPerCm2*obj.WGTS_epsT .* 1./(365.242*24*3600);
+                        RateCaptureT_KATRIN = obj.eta .* obj.R_Capture .* pi*obj.WGTS_FTR_cm^2*2*obj.WGTS_CD_MolPerCm2*obj.WGTS_epsT .* 1./(365.242*24*3600);
                         obj.NormFactorTBDDS_R = RateCaptureT_KATRIN...
                             .*0.5*(1-cos(asin(sqrt(obj.WGTS_B_T./obj.MACE_Bmax_T)))) ...    %angle of acceptance
                             .*(obj.FPD_MeanEff*obj.FPD_Coverage)...                         %detector efficiency and coverage

@@ -58,7 +58,7 @@ for i=1:21
     R = MultiRunAnalysis('RunList','KNM1',... % runlist defines which runs are analysed -> set MultiRunAnalysis.m -> function: GetRunList()
         'chi2','chi2Stat',...                 % uncertainties: statistical or stat + systematic uncertainties
         'DataType','Twin',...                 % can be 'Real' or 'Twin' -> Monte Carlo
-        'fixPar','eta E0 Norm Bkg',...        % free Parameter!!
+        'fixPar','E0 Norm Bkg eta',...        % free Parameter!!
         'RadiativeFlag','ON',...              % theoretical radiative corrections applied in model
         'NonPoissonScaleFactor',1.064,...     % background uncertainty are enhanced
         'fitter','minuit',...                 % minuit standard, matlab to be tried
@@ -75,7 +75,9 @@ for i=1:21
         'TwinBias_mnuSq',mNu);
 
     R.exclDataStart=R.GetexclDataStart(40);
+    R.ModelObj.mnuSq_i = R.TwinBias_mnuSq;
     R.Fit;
+    R.FitResult
     eta_fit(i) = R.FitResult.err(17).*1e10;
 end
 save('./Results.mat','eta_fit','eta_Chi2');
