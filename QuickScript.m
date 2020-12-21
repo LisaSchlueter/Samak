@@ -53,14 +53,14 @@ eta_fit  = zeros(1,20);
 for i=1:21
     mNu = (i-1)/10;
     Q = RelicNuDebug('Params','KNM1');
-    Q.Chi2Twin('Recompute','OFF','Plot','OFF','Syst','OFF','fitPar','E0 Norm Bkg','DeltaChi2',1,'TwinBias_mnuSq',mNu);
+    Q.Chi2Twin('Recompute','ON','Plot','OFF','Syst','OFF','fitPar','E0 Norm Bkg','DeltaChi2',1,'TwinBias_mnuSq',mNu);
     eta_Chi2(i) = Q.etaSensitivity;
     R = MultiRunAnalysis('RunList','KNM1',... % runlist defines which runs are analysed -> set MultiRunAnalysis.m -> function: GetRunList()
         'chi2','chi2Stat',...                 % uncertainties: statistical or stat + systematic uncertainties
         'DataType','Twin',...                 % can be 'Real' or 'Twin' -> Monte Carlo
         'fixPar','E0 Norm Bkg eta',...        % free Parameter!!
         'RadiativeFlag','ON',...              % theoretical radiative corrections applied in model
-        'NonPoissonScaleFactor',1.064,...     % background uncertainty are enhanced
+        'NonPoissonScaleFactor',1,...     % background uncertainty are enhanced
         'fitter','minuit',...                 % minuit standard, matlab to be tried
         'minuitOpt','min ; minos',...         % technical fitting options (minuit)
         'FSDFlag','SibilleFull',...           % final state distribution
@@ -76,6 +76,7 @@ for i=1:21
 
     R.exclDataStart=R.GetexclDataStart(40);
     R.ModelObj.mnuSq_i = R.TwinBias_mnuSq;
+    R.InitModelObj_Norm_BKG('Recompute','ON');
     R.Fit;
     R.FitResult
     eta_fit(i) = R.FitResult.err(17).*1e10;

@@ -328,6 +328,10 @@ classdef RelicNuDebug < handle
             U.exclDataStart = U.GetexclDataStart(range); % set region of interest
             obj.M = U;
             
+            if ~contains(fitPar,'mNu')
+                U.ModelObj.mnuSq_i=TwinBias_mnuSq;
+            end
+            
             if RunNr==10
                 U.InitModelObj_Norm_BKG('Recompute','ON');
             end
@@ -464,6 +468,10 @@ classdef RelicNuDebug < handle
                     end
 
                     F.exclDataStart = F.GetexclDataStart(range); % set region of interest
+                    
+                    if ~contains(fitPar,'mNu')
+                        F.ModelObj.mnuSq_i=TwinBias_mnuSq;
+                    end
                     
                     if RunNr==10
                         U.InitModelObj_Norm_BKG('Recompute','ON');
@@ -642,6 +650,9 @@ classdef RelicNuDebug < handle
             end
 
             U.exclDataStart = U.GetexclDataStart(range); % set region of interest
+            if ~contains(fitPar,'mNu')
+                U.ModelObj.mnuSq_i=TwinBias_mnuSq;
+            end
             U.InitModelObj_Norm_BKG('Recompute','ON');
             
             if ~isempty(TBDISBias)
@@ -767,6 +778,9 @@ classdef RelicNuDebug < handle
                     end
 
                     F.exclDataStart = F.GetexclDataStart(range); % set region of interest
+                    if ~contains(fitPar,'mNu')
+                        F.ModelObj.mnuSq_i=TwinBias_mnuSq;
+                    end
                     F.InitModelObj_Norm_BKG('Recompute','ON');
                     
                     if ~isempty(TBDISBias)
