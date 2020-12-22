@@ -74,7 +74,7 @@ aNH.FaceAlpha = 0.6;
 
 
 legHandle = {legHandle{:},aNH,aIH};
-legStr = {legStr{:},sprintf('KamLAND-Zen NH 90%% C.L.'),sprintf('KamLAND-Zen IH 90%% C.L.')};
+legStr = {legStr{:},sprintf('0\\nu\\beta\\beta NH 90%% C.L.'),sprintf('0\\nu\\beta\\beta IH 90%% C.L.')};
 
 leg = legend([legHandle{:}],legStr{:},'EdgeColor','none','Location','northoutside');
 %%            

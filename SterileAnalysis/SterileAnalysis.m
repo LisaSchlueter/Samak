@@ -376,6 +376,8 @@ classdef SterileAnalysis < handle
             p.addParameter('Neutrino4','ON',@(x) ismember(x,{'ON','OFF'}));
             p.addParameter('Prospect','ON',@(x) ismember(x,{'ON','OFF'}));
             p.addParameter('DANSS','ON',@(x) ismember(x,{'ON','OFF'}));
+            p.addParameter('DayaBay','ON',@(x) ismember(x,{'ON','OFF'}));
+            p.addParameter('DoubleChooz','ON',@(x) ismember(x,{'ON','OFF'}));
             p.addParameter('Stereo','ON',@(x) ismember(x,{'ON','OFF'}));
             p.addParameter('Style','Reg',@(x) ismember(x,{'Reg','PRL'}));
             p.addParameter('FinalSensitivity','OFF',@(x) ismember(x,{'ON','OFF'}));
@@ -392,6 +394,8 @@ classdef SterileAnalysis < handle
             Neutrino4   = p.Results.Neutrino4;
             Prospect    = p.Results.Prospect;
             DANSS       = p.Results.DANSS;
+            DayaBay     = p.Results.DayaBay;
+            DoubleChooz = p.Results.DoubleChooz;
             Stereo      = p.Results.Stereo;
             Style       = p.Results.Style;
             FinalSensitivity = p.Results.FinalSensitivity;
@@ -401,7 +405,7 @@ classdef SterileAnalysis < handle
             if strcmp(HoldOn,'ON')
                 hold on;
             elseif strcmp(HoldOn,'OFF')
-               pHandle =  figure('Units','normalized','Position',[0.1,0.1,0.382,0.66]);%0.618]);
+               pHandle =  figure('Units','normalized','Position',[0.1,0.1,0.382,0.68]);%0.618]);
             end
             
             obj.DeltaChi2 = GetDeltaChi2(CL,2);
@@ -428,7 +432,8 @@ classdef SterileAnalysis < handle
             end
             %% Prospect
             if strcmp(Prospect,'ON')
-                filenameProspect = sprintf('%scoord_Prospect_95CL.mat',savedirOther);
+%                filenameProspect = sprintf('%scoord_Prospect_95CL.mat',savedirOther);
+                filenameProspect = sprintf('%scoord_Prospect2020_95CL.mat',savedirOther);
                 dProspect = importdata(filenameProspect);
                 pProspect = plot(dProspect.SinSquare2Theta_X,dProspect.DmSquare41_Y,'-','LineWidth',1,'Color',rgb('PowderBlue'));
                 legHandle{numel(legHandle)+1} = pProspect;
@@ -444,14 +449,33 @@ classdef SterileAnalysis < handle
                 legStr = [legStr,{sprintf('DANSS 95%% C.L.')}];
                 hold on;
             end
+            %% DayaBay
+            if strcmp(DayaBay,'ON')
+                filenameDayaBay = sprintf('%scoord_DayaBay1230_90CL.mat',savedirOther);
+                dDayaBay = importdata(filenameDayaBay);
+                pDayaBay = plot(dDayaBay.SinSquare2Theta_X,dDayaBay.DmSquare41_Y,'-','LineWidth',1,'Color',rgb('IndianRed'));
+                legHandle{numel(legHandle)+1} = pDayaBay;
+                legStr = [legStr,{sprintf('Daya Bay 90%% C.L.')}];
+                hold on;
+            end
+            %% DoubleChooz
+            if strcmp(DoubleChooz,'ON')
+                filenameDoubleChooz = sprintf('%scoord_DoubleChooz5y_95CL.mat',savedirOther);
+                dDoubleChooz = importdata(filenameDoubleChooz);
+                pDoubleChooz = plot(dDoubleChooz.SinSquare2Theta_X,dDoubleChooz.DmSquare41_Y,'-','LineWidth',1,'Color',rgb('CadetBlue'));
+                legHandle{numel(legHandle)+1} = pDoubleChooz;
+                legStr = [legStr,{sprintf('Double Chooz 95%% C.L.')}];
+                hold on;
+            end
             %% Stereo
             if strcmp(Stereo,'ON')
-                filenameStereo = sprintf('%scoord_Stereo_95CL.mat',savedirOther);
+                %filenameStereo = sprintf('%scoord_Stereo_95CL.mat',savedirOther); % old stereo 2019
+                filenameStereo = sprintf('%scoord_STEREOprd102_95CL.mat',savedirOther); % new stereo 2020
                 dStereo = importdata(filenameStereo);
                 pStereo = plot(dStereo.SinSquare2Theta_X,dStereo.DmSquare41_Y,'-','LineWidth',1,'Color',rgb('Orange'));
 
                 legHandle{numel(legHandle)+1} = pStereo;
-                legStr = [legStr,{sprintf('Stéréo 95%% C.L.')}];
+                legStr = [legStr,{sprintf('STEREO 95%% C.L.')}];
                 hold on;
             end
             %% RAA
