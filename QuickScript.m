@@ -50,7 +50,7 @@
 
 eta_Chi2 = zeros(1,20);
 eta_fit  = zeros(1,20);
-for i=1:21
+for i=11:21
     mNu = (i-1)/10;
     Q = RelicNuDebug('Params','KNM1');
     Q.Chi2Twin('Recompute','ON','Plot','OFF','Syst','OFF','fitPar','E0 Norm Bkg','DeltaChi2',1,'TwinBias_mnuSq',mNu);

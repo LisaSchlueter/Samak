@@ -493,6 +493,14 @@ classdef RelicNuDebug < handle
                     chi2lower = F.FitResult.chi2min;
                     chi2upper = U.FitResult.chi2min;
                     chi2=chi2upper;
+                    mnuSq     = U.ModelObj.mnuSq_i+U.FitResult.par(1);
+                    mnuSq_err = U.FitResult.err(1);
+                    E0        = U.ModelObj.Q_i+U.FitResult.par(2);
+                    E0_err    = U.FitResult.err(2);
+                    Bkg       = U.ModelObj.BKG_RateSec_i+U.FitResult.par(3);
+                    Bkg_err   = U.FitResult.err(3);
+                    Norm      = U.FitResult.par(3+U.ModelObj.nPixels:3+2*U.ModelObj.nPixels-1) + 1;
+                    Norm_err  = U.FitResult.err(3+U.ModelObj.nPixels:3+2*U.ModelObj.nPixels-1);
                     if chi2upper<DeltaChi2
                         sprintf('chi^2 too small! Set larger initial eta.')
                     elseif chi2upper>50
@@ -510,6 +518,14 @@ classdef RelicNuDebug < handle
                                 U.ModelObj.ComputeTBDDS;
                                 U.ModelObj.ComputeTBDIS;
                                 U.Fit;
+                                mnuSq     = U.ModelObj.mnuSq_i+U.FitResult.par(1);
+                                mnuSq_err = U.FitResult.err(1);
+                                E0        = U.ModelObj.Q_i+U.FitResult.par(2);
+                                E0_err    = U.FitResult.err(2);
+                                Bkg       = U.ModelObj.BKG_RateSec_i+U.FitResult.par(3);
+                                Bkg_err   = U.FitResult.err(3);
+                                Norm      = U.FitResult.par(3+U.ModelObj.nPixels:3+2*U.ModelObj.nPixels-1) + 1;
+                                Norm_err  = U.FitResult.err(3+U.ModelObj.nPixels:3+2*U.ModelObj.nPixels-1);
                                 if U.FitResult.chi2min>50
                                     sprintf('Fit failed! Retrying...')
                                     etaupper = etaupper + delta;
@@ -536,7 +552,7 @@ classdef RelicNuDebug < handle
                                 end
                             end
                         end
-                        save(savename,'eta');
+                        save(savename,'eta','mnuSq','mnuSq_err','E0','E0_err','Bkg','Bkg_err','Norm','Norm_err');
                         if strcmp(Plot,'ON')
                             switch RunNr
                                 case 1
@@ -806,6 +822,14 @@ classdef RelicNuDebug < handle
                         minchi2   = chi2lower;
                     end
                     chi2      = chi2upper;
+                    mnuSq     = U.ModelObj.mnuSq_i+U.FitResult.par(1);
+                    mnuSq_err = U.FitResult.err(1);
+                    E0        = U.ModelObj.Q_i+U.FitResult.par(2);
+                    E0_err    = U.FitResult.err(2);
+                    Bkg       = U.ModelObj.BKG_RateSec_i+U.FitResult.par(3);
+                    Bkg_err   = U.FitResult.err(3);
+                    Norm      = U.FitResult.par(3+U.ModelObj.nPixels:3+2*U.ModelObj.nPixels-1) + 1;
+                    Norm_err  = U.FitResult.err(3+U.ModelObj.nPixels:3+2*U.ModelObj.nPixels-1);
                     if chi2<DeltaChi2
                         sprintf('chi^2 too small! Set larger initial eta.')
                     elseif chi2>50
