@@ -1206,9 +1206,11 @@ classdef RelicNuDebug < handle
            p=inputParser;
            p.addParameter('TwinBias_mnuSq',1,@(x)isfloat(x));
            p.addParameter('range',40,@(x)isfloat(x));
+           p.addParameter('Plot','ON',@(x)ismember(x,{'ON','OFF'}));
            p.parse(varargin{:});
            TwinBias_mnuSq = p.Results.TwinBias_mnuSq;
            range          = p.Results.range;
+           Plot           = p.Results.Plot;
            
            matFilePath = [getenv('SamakPath'),sprintf('RelicNuBkg/')];
            savename = [matFilePath,sprintf('SensitivityBreakdown_%s_mnuSq%g_range%g.mat',obj.Params,TwinBias_mnuSq,range)];
@@ -1220,7 +1222,7 @@ classdef RelicNuDebug < handle
                A = MultiRunAnalysis('RunList',obj.Params,... % runlist defines which runs are analysed -> set MultiRunAnalysis.m -> function: GetRunList()
                         'chi2','chi2CMShape',...                 % uncertainties: statistical or stat + systematic uncertainties
                         'DataType','Twin',...                 % can be 'Real' or 'Twin' -> Monte Carlo
-                        'fixPar','mNu E0 Norm Bkg',...                   % free Parameter!!
+                        'fixPar','mNu E0 Norm Bkg eta',...                   % free Parameter!!
                         'RadiativeFlag','ON',...              % theoretical radiative corrections applied in model
                         'NonPoissonScaleFactor',1.064,...     % background uncertainty are enhanced
                         'minuitOpt','min ; minos',...         % technical fitting options (minuit)
@@ -1239,32 +1241,32 @@ classdef RelicNuDebug < handle
                A.InitModelObj_Norm_BKG('Recompute','ON');
 
                A.Fit;
-               ErrTotal = A.FitResult.err(1);
+               ErrTotal = A.FitResult.err(17)*1e10;
                A.ComputeCM('SysEffects',struct('FSD','ON'),'BkgCM','OFF');
                A.Fit;
-               ErrFSD = A.FitResult.err(1);
+               ErrFSD = A.FitResult.err(17)*1e10;
                A.ComputeCM('SysEffects',struct('RF','ON'),'BkgCM','OFF');
                A.Fit;
-               ErrRF = A.FitResult.err(1);
+               ErrRF = A.FitResult.err(17)*1e10;
                A.ComputeCM('SysEffects',struct('TASR','ON'),'BkgCM','OFF');
                A.Fit;
-               ErrTASR = A.FitResult.err(1);
+               ErrTASR = A.FitResult.err(17)*1e10;
                A.ComputeCM('SysEffects',struct('Stack','ON'),'BkgCM','OFF');
                A.Fit;
-               ErrStack = A.FitResult.err(1);
+               ErrStack = A.FitResult.err(17)*1e10;
                A.ComputeCM('SysEffects',struct('FPDeff','ON'),'BkgCM','OFF');
                A.Fit;
-               ErrFPD = A.FitResult.err(1);
+               ErrFPD = A.FitResult.err(17)*1e10;
                A.ComputeCM('SysEffects',struct('TC','ON'),'BkgCM','OFF');
                A.Fit;
-               ErrTC = A.FitResult.err(1);
+               ErrTC = A.FitResult.err(17)*1e10;
                A.ComputeCM('BkgCM','ON');
                A.Fit;
-               ErrBkg = A.FitResult.err(1);
+               ErrBkg = A.FitResult.err(17)*1e10;
                A.NonPoissonScaleFactor = 1;
                A.ComputeCM('SysEffects',struct(),'BkgCM','OFF')
                A.Fit;
-               ErrStat = A.FitResult.err(1);
+               ErrStat = A.FitResult.err(17)*1e10;
                ErrFSD = sqrt(ErrFSD.^2-ErrStat.^2);
                ErrRF = sqrt(ErrRF.^2-ErrStat.^2);
                ErrTASR = sqrt(ErrTASR.^2-ErrStat.^2);
@@ -1278,7 +1280,9 @@ classdef RelicNuDebug < handle
                Y = [ErrTotal ErrStat ErrFSD ErrRF ErrTASR ErrStack ErrFPD ErrTC ErrBkg];
                save(savename,'X','Y');
            end
-           bar(X,Y);
+           if strcmp(Plot,'ON')
+               bar(X,Y);
+           end
            PrettyFigureFormat;
        end
        function Error = CorrectErr(obj,varargin)
