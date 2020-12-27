@@ -1,3 +1,4 @@
+startup;
 A=RelicNuDebug('Params','KNM1');
 matFilePath = [getenv('SamakPath'),sprintf('RelicNuBkg/')];
 A.SystBreakdown('TwinBias_mnuSq',0,'Plot','OFF');
@@ -10,7 +11,7 @@ A.SystBreakdown('TwinBias_mnuSq',5,'Plot','OFF');
 load([matFilePath,'SensitivityBreakdown_KNM1_mnuSq5_range40.mat']);
 Y5=Y;
 
-bar(X,[Y0;Y1]);
+bar(X,[Y0;Y1;Y5]);
 ylabel('\eta');
 legend('m_{\nu}^{2}=0 eV^{2}','m_{\nu}^{2}=1 eV^{2}','m_{\nu}^{2}=5 eV^{2}');
 legend boxoff;
