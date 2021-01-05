@@ -145,7 +145,9 @@ classdef RelicNuDebug < handle
                   obj.M.ComputeCM('SysEffects',struct(),'BkgCM','OFF');
               end
           end
-          obj.M.InitModelObj_Norm_BKG('Recompute','ON');
+          if INIT==1
+            obj.M.InitModelObj_Norm_BKG('Recompute','ON');
+          end
        end
    end
    
@@ -1272,7 +1274,7 @@ classdef RelicNuDebug < handle
                     U.InitModelObj_Norm_BKG('Recompute','ON');
                     obj.M = U;
                     U.Fit;
-                    eta(i) = obj.CorrectErr('Parameter','eta','value',U.FitResult.par(17),'eta',U.FitResult.par(17),'minchi2',U.FitResult.chi2min,'factor',U.FitResult.par(17)/U.FitResult.err(17))*1e10;
+                    eta(i) = obj.CorrectErr('Parameter','eta','value',U.FitResult.par(17),'eta',U.FitResult.par(17),'minchi2',U.FitResult.chi2min,'factor',(1+A.FitResult.err(17)/A.FitResult.par(17))*1e10);
                end
               save(savename,'mNu','eta');
            end
