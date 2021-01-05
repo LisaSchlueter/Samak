@@ -1342,7 +1342,7 @@ classdef RelicNuDebug < handle
                ErrTC = obj.CorrectErr('Parameter','eta','value',A.FitResult.par(17),'eta',A.FitResult.par(17),'minchi2',A.FitResult.chi2min,'factor',(1+A.FitResult.err(17)/A.FitResult.par(17))*1e10,'SystSelect','TC')*1e10;
                A.ComputeCM('BkgCM','ON');
                A.Fit;
-               ErrBkg = obj.CorrectErr('Parameter','eta','value',A.FitResult.par(17),'eta',A.FitResult.par(17),'minchi2',A.FitResult.chi2min,'factor',(1+A.FitResult.err(17)/A.FitResult.par(17))*1e10,'SystSelect','Bkg')*1e10;
+               ErrBkg = obj.CorrectErr('Parameter','eta','value',A.FitResult.par(17),'eta',A.FitResult.par(17),'minchi2',A.FitResult.chi2min,'factor',(1+A.FitResult.err(17)/A.FitResult.par(17))*1e10,'SystSelect','BkgCM')*1e10;
                A.NonPoissonScaleFactor = 1;
                A.ComputeCM('SysEffects',struct(),'BkgCM','OFF');
                A.Fit;
