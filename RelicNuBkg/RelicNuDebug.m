@@ -137,7 +137,7 @@ classdef RelicNuDebug < handle
           end
           if ~strcmp(SystSelect,'OFF')
               if ~(strcmp(SystSelect,'Bkg') || strcmp(SystSelect,'None'))
-                  obj.M.ComputeCM('SysEffects',SystSelect,'ON','BkgCM','OFF');
+                  obj.M.ComputeCM('SysEffects',struct(SystSelect,'ON'),'BkgCM','OFF');
               elseif strcmp(SystSelect,'Bkg')
                   obj.M.ComputeCM('BkgCm','ON');
               elseif strcmp(SystSelect,'None')
