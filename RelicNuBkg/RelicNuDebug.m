@@ -83,7 +83,7 @@ classdef RelicNuDebug < handle
           p.addParameter('Parameter','',@(x)ismember(x,{'mNu','E0','Norm','Bkg','eta'}));
           p.addParameter('value',0,@(x)isfloat(x));
           p.addParameter('INIT',0,@(x)isfloat(x));
-          p.addParameter('SystSelect','OFF',@(x)ismember(x,{'RF','TASR','Stack','FSD','TC','FPDeff','BkgCM','OFF'}));
+          p.addParameter('SystSelect','OFF',@(x)ismember(x,{'RF','TASR','Stack','FSD','TC','FPDeff','BkgCM','None','OFF'}));
           p.parse(varargin{:});
           SystSelect = p.Results.SystSelect;
           Parameter  = p.Results.Parameter;
@@ -136,9 +136,9 @@ classdef RelicNuDebug < handle
               obj.M.ModelObj.eta_i = value;
           end
           if ~strcmp(SystSelect,'OFF')
-              if ~(strcmp(SystSelect,'Bkg') || strcmp(SystSelect,'None'))
+              if ~(strcmp(SystSelect,'BkgCM') || strcmp(SystSelect,'None'))
                   obj.M.ComputeCM('SysEffects',struct(SystSelect,'ON'),'BkgCM','OFF');
-              elseif strcmp(SystSelect,'Bkg')
+              elseif strcmp(SystSelect,'BkgCM')
                   obj.M.ComputeCM('BkgCm','ON');
               elseif strcmp(SystSelect,'None')
                   obj.M.NonPoissonScaleFactor = 1;
@@ -1274,7 +1274,7 @@ classdef RelicNuDebug < handle
                     U.InitModelObj_Norm_BKG('Recompute','ON');
                     obj.M = U;
                     U.Fit;
-                    eta(i) = obj.CorrectErr('Parameter','eta','value',U.FitResult.par(17),'eta',U.FitResult.par(17),'minchi2',U.FitResult.chi2min,'factor',(1+A.FitResult.err(17)/A.FitResult.par(17))*1e10);
+                    eta(i) = obj.CorrectErr('Parameter','eta','value',U.FitResult.par(17),'eta',U.FitResult.par(17),'minchi2',U.FitResult.chi2min,'factor',(1+U.FitResult.err(17)/U.FitResult.par(17))*1e10);
                end
               save(savename,'mNu','eta');
            end
