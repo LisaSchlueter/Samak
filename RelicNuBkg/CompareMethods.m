@@ -8,9 +8,9 @@ for i=1:21
 end
 [mNu,eta] = Q.EtaFit('Recompute','ON');
 save('./Results_mNuFree.mat','eta','eta_Chi2');
-C=plot(mnu,eta_Chi2,'LineWidth',2);
+C=plot(mNu,eta_Chi2,'LineWidth',2);
 hold on;
-F=plot(mnu,eta,'LineWidth',2);
+F=plot(mNu,eta,'LineWidth',2);
 xlabel('m_{\nu}^{2}');
 ylabel('\eta');
 legend('\chi^{2} Scan','\eta Fit');
