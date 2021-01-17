@@ -5,7 +5,7 @@ load(savename);
 F = MultiRunAnalysis('RunList','KNM1',... % runlist defines which runs are analysed -> set MultiRunAnalysis.m -> function: GetRunList()
      'chi2','chi2CMShape',...                 % uncertainties: statistical or stat + systematic uncertainties
      'DataType','Twin',...                 % can be 'Real' or 'Twin' -> Monte Carlo
-     'fixPar','E0 Norm Bkg',...                   % free Parameter!!
+     'fixPar','mNu E0 Norm Bkg',...                   % free Parameter!!
      'RadiativeFlag','ON',...              % theoretical radiative corrections applied in model
      'NonPoissonScaleFactor',1.064,...     % background uncertainty are enhanced
      'fitter','minuit',...

@@ -88,25 +88,44 @@
 %sprintf('%g',eta)
 %plotchi2scan(savename);
 
- A = MultiRunAnalysis('RunList','KNM1',... % runlist defines which runs are analysed -> set MultiRunAnalysis.m -> function: GetRunList()
-                        'chi2','chi2CMShape',...                 % uncertainties: statistical or stat + systematic uncertainties
-                        'DataType','Twin',...                 % can be 'Real' or 'Twin' -> Monte Carlo
-                        'fixPar','mNu E0 Norm Bkg eta',...                   % free Parameter!!
-                        'RadiativeFlag','ON',...              % theoretical radiative corrections applied in model
-                        'NonPoissonScaleFactor',1.064,...     % background uncertainty are enhanced
-                        'minuitOpt','min ; minos',...         % technical fitting options (minuit)
-                        'FSDFlag','SibilleFull',...          % final state distribution
-                        'ELossFlag','KatrinT2',...            % energy loss function
-                        'SysBudget',24,...                    % defines syst. uncertainties -> in GetSysErr.m;
-                        'DopplerEffectFlag','FSD',...
-                        'Twin_SameCDFlag','OFF',...
-                        'Twin_SameIsotopFlag','OFF',...
-                        'SynchrotronFlag','ON',...
-                        'AngularTFFlag','OFF',...
-                        'TwinBias_Q',18573.73,...
-                        'TwinBias_mnuSq',0);
-                    
-A.exclDataStart = A.GetexclDataStart(40);
-A.InitModelObj_Norm_BKG('Recompute','ON');
-A.ComputeCM('SysEffects',struct('FSD','ON'),'BkgCM','OFF');
-A.Fit;
+%  A = MultiRunAnalysis('RunList','KNM1',... % runlist defines which runs are analysed -> set MultiRunAnalysis.m -> function: GetRunList()
+%                         'chi2','chi2CMShape',...                 % uncertainties: statistical or stat + systematic uncertainties
+%                         'DataType','Twin',...                 % can be 'Real' or 'Twin' -> Monte Carlo
+%                         'fixPar','mNu E0 Norm Bkg eta',...                   % free Parameter!!
+%                         'RadiativeFlag','ON',...              % theoretical radiative corrections applied in model
+%                         'NonPoissonScaleFactor',1.064,...     % background uncertainty are enhanced
+%                         'minuitOpt','min ; minos',...         % technical fitting options (minuit)
+%                         'FSDFlag','SibilleFull',...          % final state distribution
+%                         'ELossFlag','KatrinT2',...            % energy loss function
+%                         'SysBudget',24,...                    % defines syst. uncertainties -> in GetSysErr.m;
+%                         'DopplerEffectFlag','FSD',...
+%                         'Twin_SameCDFlag','OFF',...
+%                         'Twin_SameIsotopFlag','OFF',...
+%                         'SynchrotronFlag','ON',...
+%                         'AngularTFFlag','OFF',...
+%                         'TwinBias_Q',18573.73,...
+%                         'TwinBias_mnuSq',0);
+%                     
+% A.exclDataStart = A.GetexclDataStart(40);
+% A.InitModelObj_Norm_BKG('Recompute','ON');
+% A.ComputeCM('SysEffects',struct('FSD','ON'),'BkgCM','OFF');
+% A.Fit;
+
+
+% load('./RelicNuBkg/Results_mNuFree.mat');
+% eta_corrected = eta;
+% eta_Chi2_corrected = eta_Chi2;
+% load('./RelicNuBkg/Results_mNuFree_uncorrected.mat');
+% plot(linspace(0,2,21),eta_fit,'LineWidth',2);
+% hold on;
+% plot(linspace(0,2,21),eta_Chi2,'LineWidth',2);
+% plot(linspace(0,2,21),eta_corrected,'LineWidth',2);
+% plot(linspace(0,2,21),eta_Chi2_corrected,'LineWidth',2);
+% ylim([1.1e11 3e11]);
+% xlabel('m_{\nu}^{2} (eV^2)');
+% ylabel('1\sigma upper Limit of \eta');
+% PrettyFigureFormat;
+% hold off;
+
+T=RelicNuDebug('Params','KNM1');
+T.EtaFit('NmNuBins',1,'MaxmNu',0);

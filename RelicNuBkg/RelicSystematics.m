@@ -1,6 +1,6 @@
 startup;
 B=RelicNuDebug('Params','KNM1');
-matFilePath = [getenv('SamakPath'),sprintf('RelicNuBkg/')];
+matFilePath = [getenv('SamakPath'),sprintf('RelicNuBkg/Misc/')];
 B.SystBreakdown('TwinBias_mnuSq',0,'Plot','OFF');
 B.SystBreakdown('TwinBias_mnuSq',1,'Plot','OFF');
 B.SystBreakdown('TwinBias_mnuSq',5,'Plot','OFF');

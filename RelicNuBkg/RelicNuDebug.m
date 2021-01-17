@@ -135,7 +135,8 @@ classdef RelicNuDebug < handle
           elseif strcmp(Parameter,'eta')
               obj.M.ModelObj.eta_i = value;
           end
-          if ~strcmp(SystSelect,'OFF')
+          
+          if ~strcmp(SystSelect,'OFF') && strcmp(obj.M.chi2,'Chi2CMShape')
               if ~(strcmp(SystSelect,'BkgCM') || strcmp(SystSelect,'None'))
                   obj.M.ComputeCM('SysEffects',struct(SystSelect,'ON'),'BkgCM','OFF');
               elseif strcmp(SystSelect,'BkgCM')
@@ -145,8 +146,10 @@ classdef RelicNuDebug < handle
                   obj.M.ComputeCM('SysEffects',struct(),'BkgCM','OFF');
               end
           end
-          if INIT==1
-            obj.M.InitModelObj_Norm_BKG('Recompute','ON');
+          
+          if strcmp(Parameter,'eta') && INIT==1
+              obj.M.ModelObj.mnuSq_i = obj.M.TwinBias_mnuSq;
+              obj.M.InitModelObj_Norm_BKG('Recompute','ON');
           end
        end
    end
@@ -713,6 +716,9 @@ classdef RelicNuDebug < handle
                 if any(ismember(pullFlag,1))
                     savename = [savename,'_mnuSqPull'];
                 end
+                if DeltaChi2~=2.71
+                    savename = [savename,sprintf('DeltaChi2_%g',DeltaChi2)];
+                end
                 savename=[savename,'.mat'];
                 
                 if exist(savename,'file') && strcmp(Recompute,'OFF')
@@ -761,6 +767,9 @@ classdef RelicNuDebug < handle
                 end
                 if any(ismember(pullFlag,1))
                     savename = [savename,'_mnuSqPull'];
+                end
+                if DeltaChi2~=2.71
+                    savename = [savename,sprintf('DeltaChi2_%g',DeltaChi2)];
                 end
                 savename = [savename,'.mat'];
                 
@@ -1108,6 +1117,9 @@ classdef RelicNuDebug < handle
             if any(ismember(pullFlag,1))
                 savename = [savename,'_mnuSqPull'];
             end
+            if DeltaChi2~=2.71
+                savename = [savename,sprintf('DeltaChi2_%g',DeltaChi2)];
+            end
             savename=[savename,'.mat'];
 
             load(savename);
@@ -1275,6 +1287,7 @@ classdef RelicNuDebug < handle
                     obj.M = U;
                     U.Fit;
                     eta(i) = obj.CorrectErr('Parameter','eta','value',U.FitResult.par(17),'eta',U.FitResult.par(17),'minchi2',0,'factor',(1+U.FitResult.err(17)/U.FitResult.par(17))*1e10);
+                    sprintf('Final Result: eta = %g',eta(i))
                end
               save(savename,'mNu','eta');
            end
@@ -1291,12 +1304,37 @@ classdef RelicNuDebug < handle
            range          = p.Results.range;
            Plot           = p.Results.Plot;
            
-           matFilePath = [getenv('SamakPath'),sprintf('RelicNuBkg/')];
+           matFilePath = [getenv('SamakPath'),sprintf('RelicNuBkg/')];%Misc/')];
            savename = [matFilePath,sprintf('SensitivityBreakdown_%s_mnuSq%g_range%g.mat',obj.Params,TwinBias_mnuSq,range)];
 
            if exist(savename,'file')
                load(savename,'X','Y');
            else
+               
+%                B = MultiRunAnalysis('RunList',obj.Params,... % runlist defines which runs are analysed -> set MultiRunAnalysis.m -> function: GetRunList()
+%                         'chi2','chi2Stat',...                 % uncertainties: statistical or stat + systematic uncertainties
+%                         'DataType','Twin',...                 % can be 'Real' or 'Twin' -> Monte Carlo
+%                         'fixPar','mNu E0 Norm Bkg eta',...                   % free Parameter!!
+%                         'RadiativeFlag','ON',...              % theoretical radiative corrections applied in model
+%                         'NonPoissonScaleFactor',1,...     % background uncertainty are enhanced
+%                         'minuitOpt','min ; minos',...         % technical fitting options (minuit)
+%                         'FSDFlag','SibilleFull',...          % final state distribution
+%                         'ELossFlag','KatrinT2',...            % energy loss function
+%                         'SysBudget',24,...                    % defines syst. uncertainties -> in GetSysErr.m;
+%                         'DopplerEffectFlag','FSD',...
+%                         'Twin_SameCDFlag','OFF',...
+%                         'Twin_SameIsotopFlag','OFF',...
+%                         'SynchrotronFlag','ON',...
+%                         'AngularTFFlag','OFF',...
+%                         'TwinBias_Q',18573.73,...
+%                         'TwinBias_mnuSq',TwinBias_mnuSq);
+%                     
+%                B.exclDataStart = B.GetexclDataStart(range);
+%                B.InitModelObj_Norm_BKG('Recompute','ON');
+%                obj.M = B;
+%                
+%                B.Fit;
+%                ErrStat = obj.CorrectErr('Parameter','eta','value',B.FitResult.par(17),'eta',B.FitResult.par(17),'minchi2',B.FitResult.chi2min,'factor',(1+B.FitResult.err(17)/B.FitResult.par(17))*1e10,'SystSelect','None');
            
                A = MultiRunAnalysis('RunList',obj.Params,... % runlist defines which runs are analysed -> set MultiRunAnalysis.m -> function: GetRunList()
                         'chi2','chi2CMShape',...                 % uncertainties: statistical or stat + systematic uncertainties
@@ -1317,6 +1355,7 @@ classdef RelicNuDebug < handle
                         'TwinBias_mnuSq',TwinBias_mnuSq);
                     
                A.exclDataStart = A.GetexclDataStart(range);
+               A.ModelObj.mnuSq_i = A.TwinBias_mnuSq;
                A.InitModelObj_Norm_BKG('Recompute','ON');
                obj.M = A;
 
