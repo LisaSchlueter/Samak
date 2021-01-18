@@ -112,20 +112,25 @@
 % A.Fit;
 
 
-% load('./RelicNuBkg/Results_mNuFree.mat');
-% eta_corrected = eta;
-% eta_Chi2_corrected = eta_Chi2;
-% load('./RelicNuBkg/Results_mNuFree_uncorrected.mat');
-% plot(linspace(0,2,21),eta_fit,'LineWidth',2);
-% hold on;
-% plot(linspace(0,2,21),eta_Chi2,'LineWidth',2);
-% plot(linspace(0,2,21),eta_corrected,'LineWidth',2);
-% plot(linspace(0,2,21),eta_Chi2_corrected,'LineWidth',2);
-% ylim([1.1e11 3e11]);
-% xlabel('m_{\nu}^{2} (eV^2)');
-% ylabel('1\sigma upper Limit of \eta');
-% PrettyFigureFormat;
-% hold off;
+ load('./RelicNuBkg/Results_mNuFree.mat');
+ %eta_corrected = eta;
+ eta_Chi2_corrected = eta_Chi2;
+ load('./Results_Local_OnlyChi2.mat');
+ eta_local = eta_Chi2;
+ load('./RelicNuBkg/Results_mNuFree_uncorrected.mat');
+ %plot(linspace(0,2,21),eta_fit,'LineWidth',2);
+ hold on;
+ %plot(linspace(0,2,21),eta_Chi2,'LineWidth',2);
+ %plot(linspace(0,2,21),eta_corrected,'LineWidth',2);
+ a=plot(linspace(0,2,21),eta_Chi2_corrected,'LineWidth',2);
+ b=plot(linspace(0,2,21),eta_local,'LineWidth',2);
+ ylim([1.3e11 1.9e11]);
+ xlabel('m_{\nu}^{2} (eV^2)');
+ ylabel('1\sigma upper Limit of \eta');
+ lgd=legend([a b],{'Server','Local'},'Location','northeast','box','off');
+ lgd.FontSize = 12;
+ PrettyFigureFormat;
+ hold off;
 
-T=RelicNuDebug('Params','KNM1');
-T.EtaFit('NmNuBins',1,'MaxmNu',0);
+%T=RelicNuDebug('Params','KNM1');
+%T.Chi2Twin('Recompute','OFF','Plot','OFF','Syst','ON','fitPar','mNu E0 Norm Bkg','DeltaChi2',1,'TwinBias_mnuSq',0,'NetaBins',10,'etarange',11,'etafactor',2);

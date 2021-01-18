@@ -1299,15 +1299,17 @@ classdef RelicNuDebug < handle
            p.addParameter('TwinBias_mnuSq',1,@(x)isfloat(x));
            p.addParameter('range',40,@(x)isfloat(x));
            p.addParameter('Plot','ON',@(x)ismember(x,{'ON','OFF'}));
+           p.addParameter('Recompute','OFF',@(x)ismember(x,{'ON','OFF'}));
            p.parse(varargin{:});
            TwinBias_mnuSq = p.Results.TwinBias_mnuSq;
            range          = p.Results.range;
            Plot           = p.Results.Plot;
+           Recompute      = p.Results.Recompute;
            
-           matFilePath = [getenv('SamakPath'),sprintf('RelicNuBkg/')];%Misc/')];
+           matFilePath = [getenv('SamakPath'),sprintf('RelicNuBkg/Misc/')];
            savename = [matFilePath,sprintf('SensitivityBreakdown_%s_mnuSq%g_range%g.mat',obj.Params,TwinBias_mnuSq,range)];
 
-           if exist(savename,'file')
+           if exist(savename,'file') && strcmp(Recompute,'OFF')
                load(savename,'X','Y');
            else
                
@@ -1447,7 +1449,7 @@ classdef RelicNuDebug < handle
                obj.M.ModelObj.ComputeTBDIS;
                obj.M.Fit;
                Chi2upper  = obj.M.FitResult.chi2min;
-               valueupper = factor*value;
+               valueupper = abs(factor*value);
                value = valueupper;
            end
            while abs(Chi2upper-minchi2-1)>0.01 && abs(Chi2lower-minchi2-1)>0.01
