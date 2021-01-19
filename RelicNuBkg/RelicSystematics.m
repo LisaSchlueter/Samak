@@ -1,8 +1,8 @@
 startup;
-Recompute = 'OFF';
+Recompute = 'ON';
 B=RelicNuDebug('Params','KNM1');
 matFilePath = [getenv('SamakPath'),sprintf('RelicNuBkg/Misc/')];
-%B.SystBreakdown('TwinBias_mnuSq',0,'Plot','OFF','Recompute',Recompute);
+B.SystBreakdown('TwinBias_mnuSq',0,'Plot','OFF','Recompute',Recompute);
 B.SystBreakdown('TwinBias_mnuSq',1,'Plot','OFF','Recompute',Recompute);
 B.SystBreakdown('TwinBias_mnuSq',5,'Plot','OFF','Recompute',Recompute);
 load([matFilePath,'SensitivityBreakdown_KNM1_mnuSq0_range40.mat']);

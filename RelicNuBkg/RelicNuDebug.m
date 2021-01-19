@@ -136,7 +136,7 @@ classdef RelicNuDebug < handle
               obj.M.ModelObj.eta_i = value;
           end
           
-          if ~strcmp(SystSelect,'OFF') && strcmp(obj.M.chi2,'Chi2CMShape')
+          if ~strcmp(SystSelect,'OFF') && strcmp(obj.M.chi2,'chi2CMShape')
               if ~(strcmp(SystSelect,'BkgCM') || strcmp(SystSelect,'None'))
                   obj.M.ComputeCM('SysEffects',struct(SystSelect,'ON'),'BkgCM','OFF');
               elseif strcmp(SystSelect,'BkgCM')
@@ -645,7 +645,7 @@ classdef RelicNuDebug < handle
                 NonPoissonScaleFactor=1;
             end
             
-            fitter = 'minuit';
+            fitter = 'matlab';
 
             if strcmp(RunList,'KNM1')
                 U = MultiRunAnalysis('RunList',RunList,... % runlist defines which runs are analysed -> set MultiRunAnalysis.m -> function: GetRunList()
@@ -1361,33 +1361,34 @@ classdef RelicNuDebug < handle
                A.InitModelObj_Norm_BKG('Recompute','ON');
                obj.M = A;
 
-               A.Fit;
-               ErrTotal = obj.CorrectErr('Parameter','eta','value',A.FitResult.par(17),'eta',A.FitResult.par(17),'minchi2',A.FitResult.chi2min,'factor',(1+A.FitResult.err(17)/A.FitResult.par(17))*1e10);
-               A.ComputeCM('SysEffects',struct('FSD','ON'),'BkgCM','OFF');
-               A.Fit;
-               ErrFSD = obj.CorrectErr('Parameter','eta','value',A.FitResult.par(17),'eta',A.FitResult.par(17),'minchi2',A.FitResult.chi2min,'factor',(1+A.FitResult.err(17)/A.FitResult.par(17))*1e10,'SystSelect','FSD');
-               A.ComputeCM('SysEffects',struct('RF','ON'),'BkgCM','OFF');
-               A.Fit;
-               ErrRF = obj.CorrectErr('Parameter','eta','value',A.FitResult.par(17),'eta',A.FitResult.par(17),'minchi2',A.FitResult.chi2min,'factor',(1+A.FitResult.err(17)/A.FitResult.par(17))*1e10,'SystSelect','RF');
-               A.ComputeCM('SysEffects',struct('TASR','ON'),'BkgCM','OFF');
-               A.Fit;
-               ErrTASR = obj.CorrectErr('Parameter','eta','value',A.FitResult.par(17),'eta',A.FitResult.par(17),'minchi2',A.FitResult.chi2min,'factor',(1+A.FitResult.err(17)/A.FitResult.par(17))*1e10,'SystSelect','TASR');
-               A.ComputeCM('SysEffects',struct('Stack','ON'),'BkgCM','OFF');
-               A.Fit;
-               ErrStack = obj.CorrectErr('Parameter','eta','value',A.FitResult.par(17),'eta',A.FitResult.par(17),'minchi2',A.FitResult.chi2min,'factor',(1+A.FitResult.err(17)/A.FitResult.par(17))*1e10,'SystSelect','Stack');
-               A.ComputeCM('SysEffects',struct('FPDeff','ON'),'BkgCM','OFF');
-               A.Fit;
-               ErrFPD = obj.CorrectErr('Parameter','eta','value',A.FitResult.par(17),'eta',A.FitResult.par(17),'minchi2',A.FitResult.chi2min,'factor',(1+A.FitResult.err(17)/A.FitResult.par(17))*1e10,'SystSelect','FPDeff');
-               A.ComputeCM('SysEffects',struct('TC','ON'),'BkgCM','OFF');
-               A.Fit;
-               ErrTC = obj.CorrectErr('Parameter','eta','value',A.FitResult.par(17),'eta',A.FitResult.par(17),'minchi2',A.FitResult.chi2min,'factor',(1+A.FitResult.err(17)/A.FitResult.par(17))*1e10,'SystSelect','TC');
-               A.ComputeCM('BkgCM','ON');
-               A.Fit;
-               ErrBkg = obj.CorrectErr('Parameter','eta','value',A.FitResult.par(17),'eta',A.FitResult.par(17),'minchi2',A.FitResult.chi2min,'factor',(1+A.FitResult.err(17)/A.FitResult.par(17))*1e10,'SystSelect','BkgCM');
-               A.NonPoissonScaleFactor = 1;
-               A.ComputeCM('SysEffects',struct(),'BkgCM','OFF');
-               A.Fit;
-               ErrStat = obj.CorrectErr('Parameter','eta','value',A.FitResult.par(17),'eta',A.FitResult.par(17),'minchi2',A.FitResult.chi2min,'factor',(1+A.FitResult.err(17)/A.FitResult.par(17))*1e10,'SystSelect','None');
+               %A.Fit;
+               %ErrTotal = obj.CorrectErr('Parameter','eta','value',0,'eta',0,'minchi2',0,'factor',3e11);
+               %A.ComputeCM('SysEffects',struct('FSD','ON'),'BkgCM','OFF');
+               %A.Fit;
+               %ErrFSD = obj.CorrectErr('Parameter','eta','value',A.FitResult.par(17),'eta',A.FitResult.par(17),'minchi2',0,'factor',(1+A.FitResult.err(17)/A.FitResult.par(17))*1e10,'SystSelect','FSD');
+               ErrFSD = obj.CorrectErr('Parameter','eta','value',0.01,'eta',0.01,'minchi2',0,'factor',2e13,'SystSelect','FSD');
+               %A.ComputeCM('SysEffects',struct('RF','ON'),'BkgCM','OFF');
+               %A.Fit;
+               ErrRF = obj.CorrectErr('Parameter','eta','value',0.01,'eta',0.01,'minchi2',0,'factor',2e13,'SystSelect','RF');
+               %A.ComputeCM('SysEffects',struct('TASR','ON'),'BkgCM','OFF');
+               %A.Fit;
+               ErrTASR = obj.CorrectErr('Parameter','eta','value',0.01,'eta',0.01,'minchi2',0,'factor',2e13,'SystSelect','TASR');
+               %A.ComputeCM('SysEffects',struct('Stack','ON'),'BkgCM','OFF');
+               %A.Fit;
+               ErrStack = obj.CorrectErr('Parameter','eta','value',0.01,'eta',0.01,'minchi2',0,'factor',2e13,'SystSelect','Stack');
+               %A.ComputeCM('SysEffects',struct('FPDeff','ON'),'BkgCM','OFF');
+               %A.Fit;
+               ErrFPD = obj.CorrectErr('Parameter','eta','value',0.01,'eta',0.01,'minchi2',0,'factor',2e13,'SystSelect','FPDeff');
+               %A.ComputeCM('SysEffects',struct('TC','ON'),'BkgCM','OFF');
+               %A.Fit;
+               ErrTC = obj.CorrectErr('Parameter','eta','value',0.01,'eta',0.01,'minchi2',0,'factor',2e13,'SystSelect','TC');
+               %A.ComputeCM('BkgCM','ON');
+               %A.Fit;
+               ErrBkg = obj.CorrectErr('Parameter','eta','value',0.01,'eta',0.01,'minchi2',0,'factor',2e13,'SystSelect','BkgCM');
+               %A.NonPoissonScaleFactor = 1;
+               %A.ComputeCM('SysEffects',struct(),'BkgCM','OFF');
+               %A.Fit;
+               ErrStat = obj.CorrectErr('Parameter','eta','value',0.01,'eta',0.01,'minchi2',0,'factor',2e13,'SystSelect','None');
                ErrFSD = sqrt(ErrFSD.^2-ErrStat.^2);
                ErrRF = sqrt(ErrRF.^2-ErrStat.^2);
                ErrTASR = sqrt(ErrTASR.^2-ErrStat.^2);

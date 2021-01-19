@@ -168,7 +168,7 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             p.addParameter('WGTS_Tp',0.95,@(x)isfloat(x) && x>0); %0.95
             p.addParameter('WGTS_DTHTr',0,@(x)isfloat(x) && x>=0);
             p.addParameter('WGTS_FTR_cm',4.5,@(x)isfloat(x) && x>0);
-            p.addParameter('WGTS_CD_MolPerCm2',5e17,@(x)isfloat(x) && x>0);
+            p.addParameter('WGTS_CD_MolPerCm2',5e17,@(x)isfloat(x) && x>=0);
             p.addParameter('WGTS_CD_MolPerCm2_SubRun',[]);
             p.addParameter('WGTS_CDDist',0,@(x)isfloat(x) && sum(x)>0 && sum(x)<=148);
             p.addParameter('WGTS_B_T',3.6,@(x)isfloat(x) && x>0); % Source
@@ -489,7 +489,7 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             p.addParameter('MACE_Bmax_T',obj.MACE_Bmax_T,@(x)isfloat(x));
             p.addParameter('WGTS_B_T',obj.WGTS_B_T,@(x)isfloat(x));
             p.addParameter('ISXsection',obj.ISXsection,@(x)isfloat(x) || isa(x,'function_handle'));
-            p.addParameter('WGTS_CD_MolPerCm2',obj.WGTS_CD_MolPerCm2,@(x)isfloat(x) & x>0);
+            p.addParameter('WGTS_CD_MolPerCm2',obj.WGTS_CD_MolPerCm2,@(x)isfloat(x) & x>=0);
             p.addParameter('saveFile','ON',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('Method','Interp',@(x)ismember(x,{'Exact','Interp'}));
             p.addParameter('Energy',18575,@(x)all(isfloat(x)));
