@@ -1232,7 +1232,7 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             p.addParameter('WGTS_B_T',obj.WGTS_B_T,@(x)isfloat(x));
             p.addParameter('MACE_Ba_T',obj.MACE_Ba_T, @(x)all(isfloat(x)));
             p.addParameter('ISXsection',obj.ISXsection,@(x)isfloat(x) || isa(x,'function_handle'));
-            p.addParameter('WGTS_CD_MolPerCm2',obj.WGTS_CD_MolPerCm2,@(x)isfloat(x) & x>0);
+            p.addParameter('WGTS_CD_MolPerCm2',obj.WGTS_CD_MolPerCm2,@(x)isfloat(x) & x>=0);
             p.addParameter('pixel',1,@(x)isfloat(x));
             p.addParameter('IntMode','Conv',@(x)ismember(x,{'Integral','Conv'}));
             

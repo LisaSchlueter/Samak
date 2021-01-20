@@ -126,6 +126,11 @@ classdef RelicNuDebug < handle
                 obj.M.exclDataStart = range;
           end
           
+          if strcmp(Parameter,'eta') && INIT==1
+              obj.M.ModelObj.mnuSq_i = obj.M.TwinBias_mnuSq;
+              obj.M.InitModelObj_Norm_BKG('Recompute','ON');
+          end
+          
           if strcmp(Parameter,'mNu')
               obj.M.ModelObj.mnuSq_i = value;
           elseif strcmp(Parameter,'E0')
@@ -134,7 +139,7 @@ classdef RelicNuDebug < handle
               obj.M.ModelObj.BKG_RateSec_i = value;
           elseif strcmp(Parameter,'eta')
               obj.M.ModelObj.eta_i = value;
-          end
+          end    
           
           if ~strcmp(SystSelect,'OFF') && strcmp(obj.M.chi2,'chi2CMShape')
               if ~(strcmp(SystSelect,'BkgCM') || strcmp(SystSelect,'None'))
@@ -145,11 +150,6 @@ classdef RelicNuDebug < handle
                   obj.M.NonPoissonScaleFactor = 1;
                   obj.M.ComputeCM('SysEffects',struct(),'BkgCM','OFF');
               end
-          end
-          
-          if strcmp(Parameter,'eta') && INIT==1
-              obj.M.ModelObj.mnuSq_i = obj.M.TwinBias_mnuSq;
-              obj.M.InitModelObj_Norm_BKG('Recompute','ON');
           end
        end
    end
@@ -1285,8 +1285,8 @@ classdef RelicNuDebug < handle
                     U.ModelObj.mnuSq_i = U.TwinBias_mnuSq;
                     U.InitModelObj_Norm_BKG('Recompute','ON');
                     obj.M = U;
-                    U.Fit;
-                    eta(i) = obj.CorrectErr('Parameter','eta','value',U.FitResult.par(17),'eta',U.FitResult.par(17),'minchi2',0,'factor',(1+U.FitResult.err(17)/U.FitResult.par(17))*1e10);
+                    %U.Fit;
+                    eta(i) = obj.CorrectErr('Parameter','eta','value',0.01,'eta',0.01,'minchi2',0,'factor',2e13);
                     sprintf('Final Result: eta = %g',eta(i))
                end
               save(savename,'mNu','eta');
@@ -1306,8 +1306,10 @@ classdef RelicNuDebug < handle
            Plot           = p.Results.Plot;
            Recompute      = p.Results.Recompute;
            
-           matFilePath = [getenv('SamakPath'),sprintf('RelicNuBkg/Misc/')];
+           matFilePath = [getenv('SamakPath')];%,sprintf('RelicNuBkg/Misc/')];
            savename = [matFilePath,sprintf('SensitivityBreakdown_%s_mnuSq%g_range%g.mat',obj.Params,TwinBias_mnuSq,range)];
+           
+           fitter = 'matlab';
 
            if exist(savename,'file') && strcmp(Recompute,'OFF')
                load(savename,'X','Y');
@@ -1344,6 +1346,7 @@ classdef RelicNuDebug < handle
                         'fixPar','mNu E0 Norm Bkg eta',...                   % free Parameter!!
                         'RadiativeFlag','ON',...              % theoretical radiative corrections applied in model
                         'NonPoissonScaleFactor',1.064,...     % background uncertainty are enhanced
+                        'fitter',fitter,...
                         'minuitOpt','min ; minos',...         % technical fitting options (minuit)
                         'FSDFlag','SibilleFull',...          % final state distribution
                         'ELossFlag','KatrinT2',...            % energy loss function
@@ -1362,7 +1365,7 @@ classdef RelicNuDebug < handle
                obj.M = A;
 
                %A.Fit;
-               %ErrTotal = obj.CorrectErr('Parameter','eta','value',0,'eta',0,'minchi2',0,'factor',3e11);
+               ErrTotal = obj.CorrectErr('Parameter','eta','value',0.01,'eta',0.01,'minchi2',0,'factor',2e13);
                %A.ComputeCM('SysEffects',struct('FSD','ON'),'BkgCM','OFF');
                %A.Fit;
                %ErrFSD = obj.CorrectErr('Parameter','eta','value',A.FitResult.par(17),'eta',A.FitResult.par(17),'minchi2',0,'factor',(1+A.FitResult.err(17)/A.FitResult.par(17))*1e10,'SystSelect','FSD');
@@ -1500,8 +1503,8 @@ classdef RelicNuDebug < handle
             
             SystEffects = ["RF","TASR","Stack","FSD","TC","FPDeff","BkgCM"];
             Bias = zeros(1,numel(SystEffects));
-            matFilePath = [getenv('SamakPath'),sprintf('RelicNuBkg/Misc/')];
-            savename=[matFilePath,sprintf('SystEffectOnSensitivity_%s.mat',obj.Params)];
+            matFilePath = [getenv('SamakPath')];%,sprintf('RelicNuBkg/Misc/')];
+            savename=[matFilePath,sprintf('SystEffectOnSensitivity_%s_mnuSq%g.mat',obj.Params,TwinBias_mnuSq)];
             
             if exist(savename,'file') && strcmp(Recompute,'OFF')
                 load(savename);
@@ -1547,7 +1550,7 @@ classdef RelicNuDebug < handle
                     'TwinBias_mnuSq',TwinBias_mnuSq,...
                     'pullFlag',pullFlag,...
                     'etalower',0,...
-                    'etaupper',3e11,...
+                    'etaupper',2e11,...
                     'mode','SEARCH',...
                     'Plot','OFF',...
                     'DeltaChi2',DeltaChi2);
@@ -1565,7 +1568,7 @@ classdef RelicNuDebug < handle
                        'TwinBias_mnuSq',TwinBias_mnuSq,...
                        'pullFlag',pullFlag,...
                        'etalower',0,...
-                       'etaupper',3.001e11,...
+                       'etaupper',2.001e11,...
                        'mode','SEARCH',...
                        'Plot','OFF',...
                        'DeltaChi2',DeltaChi2);
