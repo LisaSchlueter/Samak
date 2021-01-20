@@ -111,56 +111,56 @@
 % B.InitModelObj_Norm_BKG('Recompute','ON');
 % B.ComputeCM('SysEffects',struct('RF','ON'),'BkgCM','OFF');
 % 
-%  A = MultiRunAnalysis('RunList','KNM1',... % runlist defines which runs are analysed -> set MultiRunAnalysis.m -> function: GetRunList()
-%                         'chi2','chi2CMShape',...                 % uncertainties: statistical or stat + systematic uncertainties
-%                         'DataType','Twin',...                 % can be 'Real' or 'Twin' -> Monte Carlo
-%                         'fixPar','mNu E0 Norm Bkg',...                   % free Parameter!!
-%                         'RadiativeFlag','ON',...              % theoretical radiative corrections applied in model
-%                         'NonPoissonScaleFactor',1.064,...     % background uncertainty are enhanced
-%                         'fitter','matlab',...
-%                         'minuitOpt','min ; minos',...         % technical fitting options (minuit)
-%                         'FSDFlag','SibilleFull',...          % final state distribution
-%                         'ELossFlag','KatrinT2',...            % energy loss function
-%                         'SysBudget',24,...                    % defines syst. uncertainties -> in GetSysErr.m;
-%                         'DopplerEffectFlag','FSD',...
-%                         'Twin_SameCDFlag','OFF',...
-%                         'Twin_SameIsotopFlag','OFF',...
-%                         'SynchrotronFlag','ON',...
-%                         'AngularTFFlag','OFF',...
-%                         'TwinBias_Q',18573.73,...
-%                         'TwinBias_mnuSq',0);
-%                     
-% A.exclDataStart = A.GetexclDataStart(40);
-% A.InitModelObj_Norm_BKG('Recompute','ON');
-% %A.RunData.TBDIS = A.RunData.TBDIS + sqrt(diag(B.FitCM));
-% %A.ComputeCM('SysEffects',struct(),'BkgCM','OFF');
-% A.ModelObj.eta_i=2e11;
-% A.ModelObj.eta  =2e11;
-% A.ModelObj.ComputeNormFactorTBDDS;
-% A.ModelObj.ComputeTBDDS;
-% A.ModelObj.ComputeTBDIS;
-% A.Fit;
+ A = MultiRunAnalysis('RunList','KNM1',... % runlist defines which runs are analysed -> set MultiRunAnalysis.m -> function: GetRunList()
+                        'chi2','chi2CMShape',...                 % uncertainties: statistical or stat + systematic uncertainties
+                        'DataType','Twin',...                 % can be 'Real' or 'Twin' -> Monte Carlo
+                        'fixPar','mNu E0 Norm Bkg',...                   % free Parameter!!
+                        'RadiativeFlag','ON',...              % theoretical radiative corrections applied in model
+                        'NonPoissonScaleFactor',1.064,...     % background uncertainty are enhanced
+                        'fitter','matlab',...
+                        'minuitOpt','min ; minos',...         % technical fitting options (minuit)
+                        'FSDFlag','SibilleFull',...          % final state distribution
+                        'ELossFlag','KatrinT2',...            % energy loss function
+                        'SysBudget',24,...                    % defines syst. uncertainties -> in GetSysErr.m;
+                        'DopplerEffectFlag','FSD',...
+                        'Twin_SameCDFlag','OFF',...
+                        'Twin_SameIsotopFlag','OFF',...
+                        'SynchrotronFlag','ON',...
+                        'AngularTFFlag','OFF',...
+                        'TwinBias_Q',18573.73,...
+                        'TwinBias_mnuSq',0);
+                    
+A.exclDataStart = A.GetexclDataStart(40);
+A.InitModelObj_Norm_BKG('Recompute','ON');
+%A.RunData.TBDIS = A.RunData.TBDIS + sqrt(diag(B.FitCM));
+%A.ComputeCM('SysEffects',struct('RF','ON','FSD','ON','TASR','ON','Stack','ON','FPD','ON','TC','ON'),'BkgCM','ON');
+A.ModelObj.eta_i=2e11;
+A.ModelObj.eta  =2e11;
+A.ModelObj.ComputeNormFactorTBDDS;
+A.ModelObj.ComputeTBDDS;
+A.ModelObj.ComputeTBDIS;
+A.Fit;
 
 
- load('./Results_Server_OnlyChi2.mat');
- %eta_corrected = eta;
- eta_Chi2_corrected = eta_Chi2;
- load('./Results_Local_OnlyChi2.mat');
- eta_local = eta_Chi2;
- load('./RelicNuBkg/Results_mNuFree_uncorrected.mat');
- %plot(linspace(0,2,21),eta_fit,'LineWidth',2);
- hold on;
- %plot(linspace(0,2,21),eta_Chi2,'LineWidth',2);
- %plot(linspace(0,2,21),eta_corrected,'LineWidth',2);
- %a=plot(linspace(0,2,21),eta_Chi2_corrected,'LineWidth',2);
- b=plot(linspace(0,2,21),eta_local,'LineWidth',2);
- ylim([1.3e11 1.9e11]);
- xlabel('m_{\nu}^{2} (eV^2)');
- ylabel('1\sigma upper Limit of \eta');
- %lgd=legend([a b],{'Server','Local'},'Location','northeast','box','off');
- %lgd.FontSize = 12;
- PrettyFigureFormat;
- hold off;
+%  load('./Results_Server_OnlyChi2.mat');
+%  %eta_corrected = eta;
+%  eta_Chi2_corrected = eta_Chi2;
+%  load('./Results_Local_OnlyChi2.mat');
+%  eta_local = eta_Chi2;
+%  load('./RelicNuBkg/Results_mNuFree_uncorrected.mat');
+%  %plot(linspace(0,2,21),eta_fit,'LineWidth',2);
+%  hold on;
+%  %plot(linspace(0,2,21),eta_Chi2,'LineWidth',2);
+%  %plot(linspace(0,2,21),eta_corrected,'LineWidth',2);
+%  %a=plot(linspace(0,2,21),eta_Chi2_corrected,'LineWidth',2);
+%  b=plot(linspace(0,2,21),eta_local,'LineWidth',2);
+%  ylim([1.3e11 1.9e11]);
+%  xlabel('m_{\nu}^{2} (eV^2)');
+%  ylabel('1\sigma upper Limit of \eta');
+%  %lgd=legend([a b],{'Server','Local'},'Location','northeast','box','off');
+%  %lgd.FontSize = 12;
+%  PrettyFigureFormat;
+%  hold off;
 
 %T=RelicNuDebug('Params','KNM1');
 %T.Chi2Twin('Recompute','ON','Plot','OFF','Syst','ON','fitPar','mNu E0 Norm Bkg','DeltaChi2',1,'TwinBias_mnuSq',0,'NetaBins',2,'etarange',11,'etafactor',2);

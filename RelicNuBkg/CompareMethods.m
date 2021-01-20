@@ -2,8 +2,8 @@ startup;
 Q = RelicNuDebug('Params','KNM1');
 eta_Chi2 = zeros(1,21);
 for i=1:21
-    mNu = (i-1)/10;
-    Q.Chi2Twin('Recompute','OFF','Plot','OFF','Syst','ON','fitPar','mNu E0 Norm Bkg','DeltaChi2',1,'TwinBias_mnuSq',mNu,'NetaBins',2,'etarange',11,'etafactor',2);
+    mnu = (i-1)/10;
+    Q.Chi2Twin('Recompute','OFF','Plot','OFF','Syst','ON','fitPar','mNu E0 Norm Bkg','DeltaChi2',1,'TwinBias_mnuSq',mnu,'NetaBins',2,'etarange',11,'etafactor',2);
     eta_Chi2(i) = Q.etaSensitivity;
 end
 [mNu,eta] = Q.EtaFit('Recompute','OFF');

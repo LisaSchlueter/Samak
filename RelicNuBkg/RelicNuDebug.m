@@ -126,7 +126,7 @@ classdef RelicNuDebug < handle
                 obj.M.exclDataStart = range;
           end
           
-          if strcmp(Parameter,'eta') && INIT==1
+          if strcmp(Parameter,'eta') && INIT==1 && strcmp(obj.M.chi2,'chi2Stat')
               obj.M.ModelObj.mnuSq_i = obj.M.TwinBias_mnuSq;
               obj.M.InitModelObj_Norm_BKG('Recompute','ON');
           end
@@ -356,7 +356,7 @@ classdef RelicNuDebug < handle
                 U.ModelObj.mnuSq_i=TwinBias_mnuSq;
             end
             
-            if RunNr==10
+            if RunNr==10 && strcmp(U.chi2,'chi2Stat')
                 U.InitModelObj_Norm_BKG('Recompute','ON');
             end
             
@@ -497,7 +497,7 @@ classdef RelicNuDebug < handle
                         F.ModelObj.mnuSq_i=TwinBias_mnuSq;
                     end
                     
-                    if RunNr==10
+                    if RunNr==10 && strcmp(U.chi2,'chi2Stat')
                         U.InitModelObj_Norm_BKG('Recompute','ON');
                     end
 
@@ -693,7 +693,9 @@ classdef RelicNuDebug < handle
             if ~contains(fitPar,'mNu')
                 U.ModelObj.mnuSq_i=TwinBias_mnuSq;
             end
-            U.InitModelObj_Norm_BKG('Recompute','ON');
+            if strcmp(U.chi2,'chi2Stat')
+                U.InitModelObj_Norm_BKG('Recompute','ON');
+            end
             
             if ~isempty(TBDISBias)
                 U.RunData.TBDIS = U.RunData.TBDIS + TBDISBias;
@@ -827,7 +829,9 @@ classdef RelicNuDebug < handle
                     if ~contains(fitPar,'mNu')
                         F.ModelObj.mnuSq_i=TwinBias_mnuSq;
                     end
-                    F.InitModelObj_Norm_BKG('Recompute','ON');
+                    if strcmp(F.chi2,'chi2Stat')
+                        F.InitModelObj_Norm_BKG('Recompute','ON');
+                    end
                     
                     if ~isempty(TBDISBias)
                         F.RunData.TBDIS = F.RunData.TBDIS + sqrt(diag(obj.M.FitCM));
@@ -1030,7 +1034,9 @@ classdef RelicNuDebug < handle
                 end
 
                 U.exclDataStart = U.GetexclDataStart(range); % set region of interest
-                U.InitModelObj_Norm_BKG('Recompute','ON');
+                if strcmp(U.chi2,'chi2Stat')
+                    U.InitModelObj_Norm_BKG('Recompute','ON');
+                end
 
                 mnuScanPoints = logspace(log10(mnulow),log10(mnuhigh),Nmnubins);
                 etaScanPoints = logspace(log10(etalow),log10(etahigh),Netabins);
@@ -1268,7 +1274,7 @@ classdef RelicNuDebug < handle
                         'fixPar','mNu E0 Norm Bkg eta',...        % free Parameter!!
                         'RadiativeFlag','ON',...              % theoretical radiative corrections applied in model
                         'NonPoissonScaleFactor',NPfac,...     % background uncertainty are enhanced
-                        'fitter','minuit',...                 % minuit standard, matlab to be tried
+                        'fitter','matlab',...                 % minuit standard, matlab to be tried
                         'minuitOpt','min ; minos',...         % technical fitting options (minuit)
                         'FSDFlag','SibilleFull',...           % final state distribution
                         'ELossFlag','KatrinT2',...            % energy loss function
@@ -1283,7 +1289,9 @@ classdef RelicNuDebug < handle
 
                     U.exclDataStart=U.GetexclDataStart(40);
                     U.ModelObj.mnuSq_i = U.TwinBias_mnuSq;
-                    U.InitModelObj_Norm_BKG('Recompute','ON');
+                    if strcmp(U.chi2,'chi2Stat')
+                        U.InitModelObj_Norm_BKG('Recompute','ON');
+                    end
                     obj.M = U;
                     %U.Fit;
                     eta(i) = obj.CorrectErr('Parameter','eta','value',0.01,'eta',0.01,'minchi2',0,'factor',2e13);
@@ -1361,7 +1369,6 @@ classdef RelicNuDebug < handle
                     
                A.exclDataStart = A.GetexclDataStart(range);
                A.ModelObj.mnuSq_i = A.TwinBias_mnuSq;
-               A.InitModelObj_Norm_BKG('Recompute','ON');
                obj.M = A;
 
                %A.Fit;
