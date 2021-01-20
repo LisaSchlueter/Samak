@@ -46,8 +46,10 @@ mbbexplim = 0.165;
 nGrid = 50;
 nSamples = 5e3;
 savedir = [getenv('SamakPath'),'ksn1ana/ksn1_NuBetaBeta/results/'];
-savenameNH = sprintf('%sksn1_NuBetaBeta_ToyMC_%.3feVlim_NH_Grid%.0f_Samples%.0f_New_light.mat',savedir,mbbexplim,nGrid,nSamples);
-savenameIH = sprintf('%sksn1_NuBetaBeta_ToyMC_%.3feVlim_IH_Grid%.0f_Samples%.0f_New_light.mat',savedir,mbbexplim,nGrid,nSamples);
+%savenameNH = sprintf('%sksn1_NuBetaBeta_ToyMC_%.3feVlim_NH_Grid%.0f_Samples%.0f_New_light.mat',savedir,mbbexplim,nGrid,nSamples);
+%savenameIH = sprintf('%sksn1_NuBetaBeta_ToyMC_%.3feVlim_IH_Grid%.0f_Samples%.0f_New_light.mat',savedir,mbbexplim,nGrid,nSamples);
+savenameNH = sprintf('%sksn1_NuBetaBeta_ToyMC_%.3feVlim_NH_Grid%.0f_Samples%.0f_light.mat',savedir,mbbexplim,nGrid,nSamples);
+savenameIH = sprintf('%sksn1_NuBetaBeta_ToyMC_%.3feVlim_IH_Grid%.0f_Samples%.0f_light.mat',savedir,mbbexplim,nGrid,nSamples);
 dNH = importdata(savenameNH);
 dIH = importdata(savenameIH);
 
@@ -72,6 +74,7 @@ aNH.FaceAlpha = 0.6;
 
 
 legHandle = {legHandle{:},aNH,aIH};
+
 %legStr = {legStr{:},sprintf('KamLAND-Zen NH 90%% C.L.'),sprintf('KamLAND-Zen IH 90%% C.L.')};
 legStr = {legStr{:},sprintf('0\\nu\\beta\\beta NH 90%% C.L.'),sprintf('0\\nu\\beta\\beta IH 90%% C.L.')};
 
