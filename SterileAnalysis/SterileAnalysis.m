@@ -527,7 +527,8 @@ classdef SterileAnalysis < handle
             %% leg + appearance
             set(gca,'YScale','log');
             set(gca,'XScale','log');
-            xlabel(sprintf('{sin}^2(2\\theta_{ee})'));
+        %   xlabel(sprintf('{sin}^2(2\\theta_{ee})'));
+             xlabel(sprintf('{sin}^2(2\\theta_{14})'));
             ylabel(sprintf('\\Delta{\\itm}_{41}^2 (eV^2)'));    
             leg = legend([legHandle{:}],legStr{:},'EdgeColor','none','Location','northoutside');
             

@@ -3,7 +3,7 @@ range = 40;
 AuxLines = 'ON';
 ShowResults = 'ON';
 SavePlot = 'ON';
-AnaFlag = 'StackPixel';%StackPixel';
+AnaFlag = 'Ring';%StackPixel';
 
 if strcmp(AnaFlag,'Ring')
     SysBudget = 39;
@@ -11,7 +11,10 @@ else
     SysBudget = 38;
 end
 DataType = 'Real';
-freePar = 'mNu E0 Bkg Norm';
+freePar = 'mNu E0 Bkg Norm qU';
+
+ % WARNING: hacked
+ mNuSqCMShift = -0.017;
 %%
 savedir = [getenv('SamakPath'),'knm2ana/knm2_unblindingFinal/results/Chi2Curve/'];
 
@@ -51,6 +54,10 @@ mNuSqCM  = mNuSqCM(~isnan(mNuSqCM));
 mychi2minCM = reshape(ScanResultCM.chi2min,[nFitMax*2,1]);
 mychi2minCM = mychi2minCM(~isnan(mychi2minCM));
 mychi2minCM = mychi2minCM(sortI);
+
+% WARNING hack: 
+dCM.FitResult.par(1) = dCM.FitResult.par(1)+mNuSqCMShift;
+FitResultCM.par(1) = FitResultCM.par(1)+mNuSqCMShift;
 %% plot
 
  f4 = figure('Units','normalized','Position',[0.1,0.1,0.5,0.5]);
@@ -74,7 +81,9 @@ plot(dStat.FitResult.par(1).*ones(100,1),linspace(0,2e2,1e2),'--','LineWidth',2,
 plot(dCM.FitResult.par(1).*ones(100,1),linspace(0,2e2,1e2),'--','LineWidth',2,'Color',rgb('DodgerBlue'))
  end
 
-pCM = plot(mNuSqCM,mychi2minCM,'-','LineWidth',3,'Color',rgb('DodgerBlue'));
+%pCM = plot(mNuSqCM,mychi2minCM,'-','LineWidth',3,'Color',rgb('DodgerBlue'));
+pCM = plot(mNuSqCM+ mNuSqCMShift,mychi2minCM,'-','LineWidth',3,'Color',rgb('DodgerBlue'));
+
 hold on;
 pStat = plot(mNuSqStat,mychi2minStat,'-','LineWidth',3,'Color',rgb('Orange'));
 
@@ -115,7 +124,7 @@ switch DataType
         t = title(sprintf('KNM2 twins - %s',AnaStr),'FontWeight','normal','FontSize',get(gca,'FontSize'));
     case 'Real'
         if strcmp(AnaFlag,'Ring')
-            xlim([-1.15,0.7]);
+            xlim([-0.6,1]);
             ylim([dCM.FitResult.chi2min-1 1+max(max(dStat.ScanResult.chi2min))])
         else
             xlim([-0.6,1]);

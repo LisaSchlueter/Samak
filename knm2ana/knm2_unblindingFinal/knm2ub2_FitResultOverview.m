@@ -36,7 +36,10 @@ end
 if strcmp(MR12,'ON')
     fileStat = [CommonStrStat,sprintf('_RingNone_%s.mat',FSDFlag)];
     dMR12stat = importdata(fileStat);
-    x = [x,dMR12stat.FitResult.par(1),dMR12stat.FitResult.par(1)];
+    
+    fileStatp  = [CommonStrStat,sprintf('+_RingNone_%s.mat',FSDFlag)];
+    dMR12statp = importdata(fileStatp);
+    x = [x,dMR12stat.FitResult.par(1),dMR12stat.FitResult.par(1),dMR12statp.FitResult.par(1)];
 end
 
 %% plot
@@ -83,6 +86,8 @@ if strcmp(MR12,'ON')
     y(end+1) = y(end)+0.25;% y(end+1) = y(end)+0.1;
     eUStat = errorbar(dMR12stat.FitResult.par(1),y(end),0,0,dMR12stat.FitResult.errNeg(1),dMR12stat.FitResult.errPos(1),...
         '*',CommonPlotArg{:},'Color',rgb('Orange'),'MarkerSize',8,'MarkerFaceColor',rgb('Orange'));
+    eUStatp = errorbar(dMR12statp.FitResult.par(1),y(end)+0.1,0,0,dMR12statp.FitResult.errNeg(1),dMR12statp.FitResult.errPos(1),...
+        '*',CommonPlotArg{:},'Color',rgb('SkyBlue'),'MarkerSize',8,'MarkerFaceColor',rgb('DodgerBlue'));
     legStr = {legStr{:},'MR-12'};
 end
 
@@ -91,12 +96,12 @@ pcm   = plot(0,1e2,'LineWidth',2,'Color',rgb('DodgerBlue'));
 pstat =  plot(0,1e2,'LineWidth',2,'Color',rgb('Orange'));
 %
 PrettyFigureFormat('FontSize',22)
-ylim([y(1)-0.1,y(end)+0.22]);%+0.18]);
-yticks([y(1)+0.05,y(3)+0.05,y(5)+0.05,y(end)]); set(gca,'YMinorTick','off');
+ylim([y(1)-0.1,y(end)+0.35]);%+0.18]);
+yticks([y(1)+0.05,y(3)+0.05,y(5)+0.05,y(end)+0.05]); set(gca,'YMinorTick','off');
 yticklabels(legStr);
 xlabel(sprintf('{\\itm}_\\nu^2 (eV^2)'));
 leg = legend([pstat,pcm],'Stat. only','Stat. and syst.','EdgeColor',rgb('Silver'),'Location','northwest');
- %% save
+%% save
 plotdir = strrep(savedir,'results/BestFit','plots');
 MakeDir(plotdir);
 plotname = sprintf('%sknm2ub2_FitResultOverview_mNuSq_%s.png',plotdir,FSDFlag);

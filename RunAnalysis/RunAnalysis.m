@@ -37,6 +37,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
         ROIFlag;        % region of interest
         MosCorrFlag;    % correct data qU by monitor spectrometer drift 
         ISCSFlag;       % inel. scattering cross section flag
+        BKG_PtSlope;
         
         %Covariance Matrices
         FitCM_Obj;      % Fit Covariance Matrix Object
@@ -115,7 +116,8 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
         TwinBias_Q;                 % absolute value for endpoint or 'Fit' -> take fit value      
         FitNBFlag;                  % use normlization and background from fit
         TwinBias_FSDSigma;          % broadening of fsd in eV
-        TwinFakeLabel;               % for labeling twin or fake runs with extra info: e.g. qU-bias,...
+        TwinBias_BKG_PtSlope;      % subrun-wise background slope from penning trap
+        TwinFakeLabel;              % for labeling twin or fake runs with extra info: e.g. qU-bias,...
          
         %Fake MC option
         FakeInitFile %name of study -> Init file
@@ -130,7 +132,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             p.addParameter('RunNr',[],@(x)(isfloat(x) && x>0));
             p.addParameter('AnaFlag','StackPixel',@(x)ismember(x,{'StackPixel', 'SinglePixel', 'MultiPixel', 'Ring'}));
             p.addParameter('ELossFlag','',@(x)ismember(x,{'Aseev','Abdurashitov','CW_GLT','CW_G2LT','KatrinD2','KatrinT2','KatrinT2A20'}));%default given later
-            p.addParameter('FSDFlag','Sibille0p5eV',@(x)ismember(x,{'SAENZ','BlindingKNM1','Sibille','Sibille0p5eV','OFF','SibilleFull','BlindingKNM2','KNM2'}));
+            p.addParameter('FSDFlag','Sibille0p5eV',@(x)ismember(x,{'SAENZ','BlindingKNM1','Sibille','Sibille0p5eV','OFF','SibilleFull','BlindingKNM2','KNM2','KNM2_0p5eV','KNM2_0p1eV'}));
             p.addParameter('FSD_Sigma',0,@(x)isfloat(x));
             p.addParameter('DopplerEffectFlag','',@(x)ismember(x,{'OFF','FSD','FSD_Knm1'}));%default given later
             p.addParameter('ROIFlag','Default',@(x)ismember(x,{'Default','14keV'})); % default->default counts in RS, 14kev->[14,32]keV ROI
@@ -152,6 +154,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             p.addParameter('pullFlag',3);%@(x)ismember(x,{1,2,3}) 
             p.addParameter('RingMerge','None',@(x)ismember(x,{'Default','None','Full','Half','Azi','AziHalfNS','AziHalfEW'}));
             p.addParameter('NonPoissonScaleFactor',[],@(x)isfloat(x) && all(x>0)); 
+            p.addParameter('BKG_PtSlope',0,@(x)isfloat(x));     
             p.addParameter('SysBudget','',@(x)isfloat(x)); %if none given-> defined according to data set
 
             % initialization of fitted parameters
@@ -181,6 +184,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             p.addParameter('TwinBias_Q',18573.73,@(x)isfloat(x) || ismember(x,{'Fit'}));  % absolute (eV)
             p.addParameter('FitNBFlag','ON',@(x)ismember(x,{'ON','OFF','NormOnly'}));
             p.addParameter('TwinBias_FSDSigma',0,@(x)isfloat(x));                 % absolute (eV)
+            p.addParameter('TwinBias_BKG_PtSlope',0,@(x)isfloat(x));
            
             %fake MC option
             p.addParameter('FakeInitFile','',@(x)isa(x,'function_handle') || isempty(x));
@@ -233,6 +237,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             obj.ELossFlag     = p.Results.ELossFlag;
             obj.RingMerge     = p.Results.RingMerge;
             obj.SysBudget     = p.Results.SysBudget;
+            obj.BKG_PtSlope   = p.Results.BKG_PtSlope;
             
             % Monte Carlo Twin options
             obj.TwinBias_WGTS_CD_MolPerCm2  = p.Results.TwinBias_WGTS_CD_MolPerCm2; % relative (%) with respect to real data
@@ -247,6 +252,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             obj.TwinBias_mnuSq              = p.Results.TwinBias_mnuSq;
             obj.TwinBias_Q                  = p.Results.TwinBias_Q;
             obj.TwinBias_FSDSigma           = p.Results.TwinBias_FSDSigma;
+            obj.TwinBias_BKG_PtSlope        = p.Results.TwinBias_BKG_PtSlope;
             
            if isempty(obj.TwinBias_qU) && strcmp(obj.AnaFlag,'Ring')
                 obj.TwinBias_qU = zeros(1,numel(obj.RingList));
@@ -393,8 +399,8 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                     obj.RunData = load(filename);
             end
             
-            obj.RunData.matFilePath = matFilePath;
-            obj.RunData.TimeSec         = mean(obj.RunData.TimeSec(obj.PixList));
+            obj.RunData.matFilePath   = matFilePath;
+            obj.RunData.TimeSec       = mean(obj.RunData.TimeSec(obj.PixList));
             obj.RunData.TBDIS_Default = obj.RunData.TBDIS;
             obj.StackPixel;
             if isfield(obj.RunData,'TBDIS_RM')
@@ -741,7 +747,8 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                 'NIS',NIS,...
                 'SynchrotronFlag',obj.SynchrotronFlag,...
                 'AngularTFFlag',obj.AngularTFFlag,...
-                'FSD_Sigma',obj.FSD_Sigma};
+                'FSD_Sigma',obj.FSD_Sigma,...
+                'BKG_PtSlope',obj.BKG_PtSlope};
             
             if ~isempty(qU)
                 TBDarg = {TBDarg{:},'qU',qU};
@@ -1206,6 +1213,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             p.addParameter('BkgRingCorrCoeff',0,@(x)isfloat(x));
             p.addParameter('BkgScalingOpt',2,@(x)isfloat(x));
             p.addParameter('BkgMode','Gauss',@(x)ismember(x,{'SlopeFit','Gauss'}));
+            p.addParameter('BKG_PtSlopeErr',SysErr.BKG_PtSlopeErr,@(x)isfloat(x));
             p.parse(varargin{:});
             
             InitNormFit              = p.Results.InitNormFit;
@@ -1237,6 +1245,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             BkgRingCorrCoeff         = p.Results.BkgRingCorrCoeff; % ring to ring correlation coefficient
             BkgScalingOpt            = p.Results.BkgScalingOpt;
             BkgMode                  = p.Results.BkgMode;
+            BKG_PtSlopeErr          = p.Results.BKG_PtSlopeErr;
             % --------------------- END PARSER ---------------------------------%
             
             % --------------------  Initialize Covariance Matrix----------------------------%
@@ -1332,6 +1341,21 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                 cprintf('blue','RunAnalysis:ComputeCM: Background Covariance Matrix = OFF  \n')
             end
             
+            % Penning trap covariance matrix
+            if BKG_PtSlopeErr~=0
+                obj.ModelObj.nRuns = obj.nRuns;
+                obj.FitCM_Obj.ComputeCM_BackgroundPT('Display',PlotSaveCM,'nTrials_loc',1e4);
+                
+                % add to previous cm
+                obj.FitCM           = obj.FitCM          + obj.FitCM_Obj.CovMat;     % regular covmat:    add background covmat to signal covmat
+                obj.FitCMFrac       = obj.FitCMFrac      + obj.FitCM_Obj.CovMatFrac; % fractional covmat: add background covmat to signal covmat
+                % shape only:
+                [BkgCMPtShape,BkgCMPtFracShape] = obj.FitCM_Obj.DecomposeCM('CovMatFrac',obj.FitCM_Obj.CovMatFrac,...
+                    'exclDataStart',obj.exclDataStart,'BkgCM','ON');
+                obj.FitCMShape      = obj.FitCMShape     + BkgCMPtShape;     % shape only covmat:            add background covmat to signal covmat
+                obj.FitCMFracShape  = obj.FitCMFracShape + BkgCMPtFracShape; % fractional shape only covmat: add background covmat to signal covmat
+                
+            end
             % Compute Statistical Uncertainties,including P/NP fluctuations
             [StatCM, StatCMFrac] = obj.ComputeCM_StatPNP(varargin);
             
@@ -4034,6 +4058,10 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                     str_bias = [str_bias,'_',obj.KTFFlag];
                 end
                 
+                if obj.TwinBias_BKG_PtSlope~=0
+                    str_bias = [str_bias,sprintf('_BkgPtSlope%.1fmuCpsPerS',obj.TwinBias_BKG_PtSlope*1e6)];
+                end
+                
                 filename = [ringfiles,str_bias];
                 switch obj.FitNBFlag
                     case 'OFF'
@@ -4158,6 +4186,14 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                     DTFSD = 'KNM2';
                     HTFSD = 'KNM2';
                     TTFSD = 'KNM2';
+                case 'KNM2_0p5eV'
+                    DTFSD = 'KNM2_0p5eV';
+                    HTFSD = 'KNM2_0p5eV';
+                    TTFSD = 'KNM2_0p5eV';
+                case 'KNM2_0p1eV'
+                    DTFSD = 'KNM2_0p1eV';
+                    HTFSD = 'KNM2_0p1eV';
+                    TTFSD = 'KNM2_0p1eV';
             end
         end
         function InitFitPar(obj)

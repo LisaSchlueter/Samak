@@ -1,11 +1,12 @@
 %
 % Rebin FSD Files
 %
-extra = '_FullRange';
-dataset = 'KNM1';
-isotopologue='T2';
+extra = '';%'_FullRange';
+dataset = 'KNM2';
+isotopologue='DT';
 
-file = importdata([getenv('SamakPath'),sprintf('/inputs/FSD/FSD_%s_%s_Doppler%s.txt',dataset,isotopologue,extra)]);
+%file = importdata([getenv('SamakPath'),sprintf('/inputs/FSD/FSD_%s_%s_Doppler%s.txt',dataset,isotopologue,extra)]);
+file = importdata([getenv('SamakPath'),sprintf('/inputs/FSD/FSD_%s_%s%s.txt',dataset,isotopologue,extra)]);
 
 % clear
 clear ee; clear eb;
@@ -31,7 +32,13 @@ for i = 1:1:nbin-1
     else
         if ~rem(i,5)
             disp(i)
-            for j = i:1:i+4
+            if i+4>nbin
+                jmax = nbin-i;
+            else
+                jmax = i+4;
+            end
+            
+            for j = i:1:jmax
                 %fprintf('Bin Original %.0f : %.3f %.3g \n',j,file(j,1),file(j,2));
                 ee(counter) = ee(counter) + file(j,1);
                 ep(counter) = ep(counter) + file(j,2);
@@ -55,9 +62,9 @@ variable = [ee' ep'];
   
 switch isotopologue 
     case 'T2'
-save([getenv('SamakPath'),'/inputs/FSD/FSD_KNM1_T2_Doppler0p5eV',extra,'.txt'],'variable','-ascii');
+save([getenv('SamakPath'),'/inputs/FSD/FSD_',dataset,'_T2_0p5eV',extra,'.txt'],'variable','-ascii');
     case 'HT'
-save([getenv('SamakPath'),'/inputs/FSD/FSD_KNM1_HT_Doppler0p5eV',extra,'.txt'],'variable','-ascii');
+save([getenv('SamakPath'),'/inputs/FSD/FSD_',dataset,'_HT_0p5eV',extra,'.txt'],'variable','-ascii');
     case 'DT'
-save([getenv('SamakPath'),'/inputs/FSD/FSD_KNM1_DT_Doppler0p5eV',extra,'.txt'],'variable','-ascii');
+save([getenv('SamakPath'),'/inputs/FSD/FSD_',dataset,'_DT_0p5eV',extra,'.txt'],'variable','-ascii');
 end

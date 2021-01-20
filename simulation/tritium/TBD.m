@@ -123,6 +123,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
         TBDISE;          % Error on Integral Beta Spectrum
         qUOffset; i_qUOffset;
         
+        
         % Screening Correction (electron)
         ScreeningFlag; SCorr; SCorrBias = 0;
         % Finite Extension of Nucleus Charge, L0
@@ -568,7 +569,11 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                 case {'Sibille0p5eV'}
                     ttfsdfilename = [FSDdir,'FSD_KNM1_T2_Doppler0p5eV.txt'];   
                 case {'KNM2'}
-                    ttfsdfilename = [FSDdir,'FSD_KNM2_T2.txt'];  
+                    ttfsdfilename = [FSDdir,'FSD_KNM2_T2.txt'];
+                case {'KNM2_0p5eV'}
+                    ttfsdfilename = [FSDdir,'FSD_KNM2_T2_0p5eV.txt'];
+                case {'KNM2_0p1eV'}
+                    ttfsdfilename = [FSDdir,'FSD_KNM2_T2_0p1eV.txt'];
             end
             %Rebinning
             ttfsdfile_temp=importdata(ttfsdfilename);
@@ -615,6 +620,10 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                     dtfsdfilename = [FSDdir,'FSD_KNM1_DT_Doppler0p5eV.txt'];
                 case {'KNM2'}
                     dtfsdfilename = [FSDdir,'FSD_KNM2_DT.txt'];
+                case {'KNM2_0p5eV'}
+                    dtfsdfilename = [FSDdir,'FSD_KNM2_DT_0p5eV.txt'];
+                case {'KNM2_0p1eV'}
+                    dtfsdfilename = [FSDdir,'FSD_KNM2_DT_0p1eV.txt'];
             end
             %Rebinning
             dtfsdfile_temp=importdata(dtfsdfilename);
@@ -654,6 +663,10 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                     htfsdfilename = [FSDdir,'FSD_KNM1_HT_Doppler0p5eV.txt'];
                 case {'KNM2'}
                     htfsdfilename = [FSDdir,'FSD_KNM2_HT.txt'];
+                case {'KNM2_0p5eV'}
+                    htfsdfilename = [FSDdir,'FSD_KNM2_HT_0p5eV.txt'];
+                case {'KNM2_0p1eV'}
+                    htfsdfilename = [FSDdir,'FSD_KNM2_HT_0p1eV.txt'];
             end
             %Rebinning
             htfsdfile_temp=importdata(htfsdfilename);
@@ -1059,7 +1072,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
             % Initialization
             switch obj.FPD_Segmentation
                 case {'OFF'}%,'RING'}
-                    dim = {obj.nTe,1};
+                     dim = {obj.nTe,1};
                  case 'RING'
                      dim = {obj.nTe,obj.nRings}; 
             end
@@ -1088,7 +1101,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                 
                 if obj.WGTS_MolFrac_TT>0
                     switch obj.TTFSD
-                        case {'DOSS','SAENZ','SAENZNOEE','ROLL','BlindingKNM1','WGTS100K','Sibille','Sibille0p5eV','SibilleFull','BlindingKNM2','KNM2'}
+                        case {'DOSS','SAENZ','SAENZNOEE','ROLL','BlindingKNM1','WGTS100K','Sibille','Sibille0p5eV','SibilleFull','BlindingKNM2','KNM2','KNM2_0p5eV','KNM2_0p1eV'}
                             % Ground State
                             [GS,obj.TTexE_G,obj.TTexP_G] = ...
                                 obj.ComputeFSD_GSES(obj.TTexE,obj.TTexP,obj.TTGSTh,'ground');
@@ -1113,7 +1126,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                 
                 if obj.WGTS_MolFrac_DT>0
                     switch obj.DTFSD
-                        case {'DOSS','HTFSD','TTFSD','BlindingKNM1','WGTS100K','Sibille','Sibille0p5eV','SibilleFull','BlindingKNM2','KNM2'}
+                        case {'DOSS','HTFSD','TTFSD','BlindingKNM1','WGTS100K','Sibille','Sibille0p5eV','SibilleFull','BlindingKNM2','KNM2','KNM2_0p5eV','KNM2_0p1eV'}
                             % Ground State
                             [GS,obj.DTexE_G,obj.DTexP_G] = ...
                                 obj.ComputeFSD_GSES(obj.DTexE,obj.DTexP,obj.DTGSTh,'ground');
@@ -1131,7 +1144,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                 
                 if obj.WGTS_MolFrac_HT>0
                     switch obj.HTFSD
-                        case {'SAENZ','BlindingKNM1','WGTS100K','Sibille','Sibille0p5eV','SibilleFull','BlindingKNM2','KNM2'}
+                        case {'SAENZ','BlindingKNM1','WGTS100K','Sibille','Sibille0p5eV','SibilleFull','BlindingKNM2','KNM2','KNM2_0p5eV','KNM2_0p1eV'}
                             
                             % Ground State
                             [GS,obj.HTexE_G,obj.HTexP_G] = ...
@@ -1762,19 +1775,29 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                 obj.TBDIS = obj.TBDIS.*RoiCorr.*PileUpCorr;
         end
         
-%         %  apply qU Offset (1 per FPD segmentation e.g. 1 per ring)
-%         if any(obj.qUOffset~=0)
-%             TBDIStmp = zeros(obj.nqU,obj.nPixels);
-%             if obj.nPixels==1
-%                 TBDIStmp = interp1(obj.qU,obj.TBDIS,obj.qU+obj.qUOffset,'spline','extrap');
-%             else
-%                 for p=1:obj.nPixels
-%                     TBDIStmp(:,p) = interp1(obj.qU(:,p),obj.TBDIS(:,p),obj.qU(:,p)+obj.qUOffset(p),'spline','extrap');
-%                 end
-%             end
-%             obj.TBDIS = TBDIStmp;
-%         end
+        %         %  apply qU Offset (1 per FPD segmentation e.g. 1 per ring)
+        %         if any(obj.qUOffset~=0)
+        %             TBDIStmp = zeros(obj.nqU,obj.nPixels);
+        %             if obj.nPixels==1
+        %                 TBDIStmp = interp1(obj.qU,obj.TBDIS,obj.qU+obj.qUOffset,'spline','extrap');
+        %             else
+        %                 for p=1:obj.nPixels
+        %                     TBDIStmp(:,p) = interp1(obj.qU(:,p),obj.TBDIS(:,p),obj.qU(:,p)+obj.qUOffset(p),'spline','extrap');
+        %                 end
+        %             end
+        %             obj.TBDIS = TBDIStmp;
+        %         end
         
+        % background slope from penning trap
+        if obj.BKG_PtSlope ~=0
+            TimeTotSubrun    = obj.TimeSec.*obj.qUfrac;
+            TimeAvSubrun     = obj.TimeSec.*obj.qUfrac./obj.nRuns;
+            BkgRate_PngSlope     = 0.5.*obj.BKG_PtSlope.*TimeAvSubrun;
+            Bkg_PtSlope     = BkgRate_PngSlope.*TimeTotSubrun;
+            obj.TBDIS        = obj.TBDIS + Bkg_PtSlope;
+        end
+        
+        % stat. uncertainty
         obj.TBDISE = sqrt(obj.TBDIS);
         end
         

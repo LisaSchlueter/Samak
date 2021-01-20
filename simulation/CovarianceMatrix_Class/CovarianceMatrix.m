@@ -62,6 +62,7 @@ classdef CovarianceMatrix < handle
     BM1_RedFactor;            % Decreasing fraction, with respect to background at endpoint
     BM1_RefSlopeqU;           % Reference potential to fix the background slope of alternative model 
     NonPoissonScaleFactor;    % Non poissonian background fluctuation factor - horizontal Array of Ring-wise
+    BKG_PtSlopeErr;          % background rate increase over time from penning trap
     
     % Uncertainties Stacking 
     Stack_qUErr;
@@ -129,6 +130,7 @@ classdef CovarianceMatrix < handle
          p.addParameter('RW_MultiPosErr',0.1,@(x)isfloat(x));
          p.addParameter('MACE_VarErr',0.02,@(x)isfloat(x));
          p.addParameter('is_EOffsetErr',0.02,@(x)isfloat(x));
+         p.addParameter('BKG_PtSlopeErr',0,@(x)isfloat(x));
          
          p.parse(varargin{:});          
          obj.nTrials                  = p.Results.nTrials;
@@ -163,8 +165,9 @@ classdef CovarianceMatrix < handle
          obj.ShapeCMnormIndex         = p.Results.ShapeCMnormIndex;
          obj.RW_SigmaErr              = p.Results.RW_SigmaErr;
          obj.RW_MultiPosErr           = p.Results.RW_MultiPosErr;
-         obj.MACE_VarErr            = p.Results.MACE_VarErr;
+         obj.MACE_VarErr              = p.Results.MACE_VarErr;
          obj.is_EOffsetErr            = p.Results.is_EOffsetErr;
+         obj.BKG_PtSlopeErr          = p.Results.BKG_PtSlopeErr;
          
          if strcmp(obj.StudyObject.FPD_Segmentation,'RING')
              dim = obj.StudyObject.nqU*obj.StudyObject.nRings;
@@ -195,8 +198,9 @@ classdef CovarianceMatrix < handle
              'FPDeff',...     % detector efficiency from subrun to subrun
              'RW',...        % rear wall /plasma potential over time
              'LongPlasma',...  % longitudinal plasma uncertainty (e-loss shift and variance)
-             'PlasmaOffsets'};  % uncertainty on rel. endpoints for rear wall period combi
-          
+             'PlasmaOffsets',...  % uncertainty on rel. endpoints for rear wall period combi
+             'BkgPT'}         % background slope from penning trap
+         
          % Init  SysEffect structure: Default Option: all OFF  
          if isempty(obj.SysEffect)         
              obj.SysEffect = struct(SysEffectList{1},'OFF'); % make SysEffect a structure
@@ -238,6 +242,7 @@ classdef CovarianceMatrix < handle
                   obj.SysEffect.FSD = 'ON';
                   obj.SysEffect.RW = 'ON';
                   obj.SysEffect.LongPlasma = 'ON';
+                  obj.SysEffect.BkgPT = 'ON';
                   obj.SysEffect = rmfield(obj.SysEffect,'all');
               end
           end
@@ -898,8 +903,7 @@ classdef CovarianceMatrix < handle
                     end
             end
             
-        end   
-        
+        end         
         function Convert2NSPD(obj,varargin)
             % Convert to the nearest (in Frobenius norm) Symmetric Positive Definite matrix to CovMat or CovMatFrac
             p = inputParser;
@@ -913,8 +917,7 @@ classdef CovarianceMatrix < handle
             elseif strcmp(Option,'CM')
                 obj.CovMat = nearestSPD(obj.CovMat);
             end
-        end
-        
+        end   
         function [CMShapeOnly,CMFracShapeOnly] = DecomposeCM(obj,varargin)
              cprintf('blue','CovarianceMatrix: Decompose CM - Extract Shape Only CM \n');
             % Decompose Covariance Matrix to extract Shape Only component
@@ -2165,7 +2168,7 @@ function ComputeCM_Background(obj,varargin)
         extraStr = sprintf('_%s',Mode);
     else
         extraStr = '';
-    end  
+    end
     cm_name        = sprintf('BackgroundCM_%s_%.0fmcps_Constrain%.3gCpsPerEv_%.0feVBkgRange_%.0fTrials%s.mat',...
         strrep(obj.StudyObject.TD,'_E018573.73eV2',''),...
         sum(obj.StudyObject.BKG_RateSec)*1e3,sum(MaxSlopeCpsPereV),BkgRange,obj.nTrials,extraStr);
@@ -2216,7 +2219,7 @@ function ComputeCM_Background(obj,varargin)
         
         if nRingLoop>1 && numel(MaxSlopeCpsPereV)== 1% for more than 1 ring
             % normalize MaxSlopeCpsPereV to correct statistics
-            switch ScalingOpt   
+            switch ScalingOpt
                 case 1
                     MaxSlopeCpsPereV = MaxSlopeCpsPereV.*(BKG_Asimov./sum(BKG_Asimov));
                 case 2
@@ -2240,13 +2243,13 @@ function ComputeCM_Background(obj,varargin)
             if numel(RingCorrCoeff)==1
                 BKGCorrMat    = diag(ones(BKGnqU.*nRingLoop,1))+RingCorrCoeff.*(repmat(diag(ones(BKGnqU,1) ),nRingLoop,nRingLoop)-diag(ones(BKGnqU.*nRingLoop,1)));
             else
-               fprintf('more complex ring to ring correlation matrix to be implemented...\n');
-               return
+                fprintf('more complex ring to ring correlation matrix to be implemented...\n');
+                return
             end
             BKGCovMat     = BKG_RateErr.*BKGCorrMat.*BKG_RateErr';
             
             BKG         = mvnrnd(BKG_AsimovqU,BKGCovMat,obj.nTrials); % ranomize with multivariate distribution
-            BKG         = permute(reshape(BKG,obj.nTrials,BKGnqU,nRingLoop),[2,1,3]); % shape back to nqU x nTrials x nRing 
+            BKG         = permute(reshape(BKG,obj.nTrials,BKGnqU,nRingLoop),[2,1,3]); % shape back to nqU x nTrials x nRing
             BKG_RateErr = reshape(BKG_RateErr,BKGnqU,nRingLoop);   % shape back to nqU x nRing
             
             if strcmp(Mode,'Gauss')
@@ -2264,8 +2267,8 @@ function ComputeCM_Background(obj,varargin)
                 Slopes = MaxSlopeCpsPereV.*randn(1,obj.nTrials);% slopes
             end
         end
-       
-        for rl=1:1:nRingLoop  
+        
+        for rl=1:1:nRingLoop
             par        = zeros(2,obj.nTrials);
             err        = zeros(2,obj.nTrials);
             chi2min    = zeros(obj.nTrials,1);
@@ -2275,7 +2278,7 @@ function ComputeCM_Background(obj,varargin)
             BkgPlot_Data = zeros(BKGnqU,obj.nTrials);              % Store for sanity plot
             Data         = zeros(BKGnqU,3,obj.nTrials);
             Bkg_Fit      = zeros(obj.StudyObject.nqU,obj.nTrials); % Store for covmat computation
-           
+            
             % Fit Background Rate (in counts per second)
             progressbar(sprintf('Compute Bkg CM ring %.0f out of %.0f',rl,nRingLoop));
             for i=1:obj.nTrials
@@ -2297,7 +2300,7 @@ function ComputeCM_Background(obj,varargin)
                     if  chi2min(i)>Chi2CutOff
                         Bkg_Fit(:,i)      = nan(numel(obj.StudyObject.qU),1); CutOff(i) = 0;
                         SlopesExcl(rl,i)  = 0;
-                    elseif abs(par(2,i))<= MaxSlopeCpsPereV(rl) 
+                    elseif abs(par(2,i))<= MaxSlopeCpsPereV(rl)
                         par(1,i) = BKG_Asimov(rl); % do not vary offset
                         Bkg_Fit(:,i)      = ComputeBkgSlope(par(:,i),obj.StudyObject.qU(:,rl));
                     else
@@ -2318,8 +2321,8 @@ function ComputeCM_Background(obj,varargin)
             BkgPlot_Data      = BkgPlot_Data(:,:);
         end
         
-        % convert TBDIS_V back into matrix. for rings: use common good trials   
-        if nRingLoop>1  
+        % convert TBDIS_V back into matrix. for rings: use common good trials
+        if nRingLoop>1
             SlopesExclCommon =  logical(prod(SlopesExcl));
             nCommonTrials = sum(SlopesExclCommon);
             %  nCommonTrials      = min(nGoodTrials);
@@ -2353,10 +2356,10 @@ function ComputeCM_Background(obj,varargin)
             'SlopesExcl','Slopes');
         
         if nRingLoop>1
-           save(obj.CovMatFile,'BKGCorrMat','BKGCovMat','-append')
+            save(obj.CovMatFile,'BKGCorrMat','BKGCovMat','-append')
         end
     end
-
+    
     % Display
     switch Display
         case 'ON'
@@ -2419,194 +2422,323 @@ function ComputeCM_Background(obj,varargin)
                 % export_fig(fig1,savefile);
                 fprintf('Save plot to %s \n',savefile);
             end
-          
-           if strcmp(obj.StudyObject.FPD_Segmentation,'RING')
-               nRingLoop = obj.StudyObject.nRings;
-           else
-               nRingLoop = 1;
-           end
-           if nRingLoop >1
-               fig2        = figure('Units','normalized','pos',[0.1 0.1 0.7 0.7]);
-               s= cell(nRingLoop,1);
-               for i=1:nRingLoop
-                   s{i} = subplot(floor(nRingLoop/2),ceil(nRingLoop/2),i);
-                   h1 = histogram(Slopes(i,:).*1e6,'FaceColor',rgb('LightGray'));
-                   if strcmp(Mode,'SlopeFit')
-                       hold on;
-                       SlopesExclCommon =  logical(prod(SlopesExcl));
-                       SlopeOK = Slopes(i,SlopesExclCommon);
-                       h22 = histogram(Slopes(i,abs(Slopes(i,:))<MaxSlopeCpsPereV(i)).*1e06,'FaceColor',rgb('PowderBlue'),...
-                           'FaceAlpha',1,'BinWidth',h1.BinWidth);
-                       h2 = histogram(SlopeOK.*1e06,'FaceColor',rgb('DodgerBlue'),...
-                           'FaceAlpha',1,'BinWidth',h1.BinWidth);
-                       leg = legend('MC fit slopes',sprintf('MC fit slopes < %.1f mcps / keV',MaxSlopeCpsPereV(i)*1e6),...
-                             'MC fit slopes acctepted');
-                   else
+            
+            if strcmp(obj.StudyObject.FPD_Segmentation,'RING')
+                nRingLoop = obj.StudyObject.nRings;
+            else
+                nRingLoop = 1;
+            end
+            if nRingLoop >1
+                fig2        = figure('Units','normalized','pos',[0.1 0.1 0.7 0.7]);
+                s= cell(nRingLoop,1);
+                for i=1:nRingLoop
+                    s{i} = subplot(floor(nRingLoop/2),ceil(nRingLoop/2),i);
+                    h1 = histogram(Slopes(i,:).*1e6,'FaceColor',rgb('LightGray'));
+                    if strcmp(Mode,'SlopeFit')
+                        hold on;
+                        SlopesExclCommon =  logical(prod(SlopesExcl));
+                        SlopeOK = Slopes(i,SlopesExclCommon);
+                        h22 = histogram(Slopes(i,abs(Slopes(i,:))<MaxSlopeCpsPereV(i)).*1e06,'FaceColor',rgb('PowderBlue'),...
+                            'FaceAlpha',1,'BinWidth',h1.BinWidth);
+                        h2 = histogram(SlopeOK.*1e06,'FaceColor',rgb('DodgerBlue'),...
+                            'FaceAlpha',1,'BinWidth',h1.BinWidth);
+                        leg = legend('MC fit slopes',sprintf('MC fit slopes < %.1f mcps / keV',MaxSlopeCpsPereV(i)*1e6),...
+                            'MC fit slopes acctepted');
+                    else
                         leg = legend(sprintf('Randomized slopes \\sigma = %.1f mcps / keV',MaxSlopeCpsPereV(i)*1e6));
-                   end
-                   xlabel('Background slope (mcps / keV)');
-                   PrettyFigureFormat('FontSize',18)
-                   leg.Location='northwest';
-                   leg.EdgeColor = rgb('Silver');
-                   leg.Title.String = sprintf('Pseudo-Ring %.0f',i);
-                   hold off;
-                   ylim([0 3200])
-                   xlim([-20 20])    
-               end
-               sgtitle(sprintf('Background slope contrain (all pixels) = %.1f mcps / keV',MaxSlopeCpsPereV_i*1e6));
-               linkaxes([s{:}],'x');
-               
-           else
-               fig2        = figure('Units','normalized','pos',[0.1 0.1 0.4 0.4]);
-               h1 = histogram(Slopes.*1e6,'FaceColor',rgb('LightGray'));
-               
-               if strcmp(Mode,'SlopeFit')
-                   hold on;
-                   SlopeOK = Slopes(logical(SlopesExcl));
-                   h2 = histogram(SlopeOK.*1e06,'FaceColor',rgb('DodgerBlue'),...
-                       'FaceAlpha',1,'BinWidth',h1.BinWidth);
-                   leg = legend('MC fit slopes',sprintf('MC fit slopes < %.1f mcps / keV',MaxSlopeCpsPereV*1e6));
-               else
-                   h1.FaceColor = rgb('DodgerBlue');
-                   leg = legend(sprintf('Randomized slopes \\sigma = %.1f mcps / keV',MaxSlopeCpsPereV*1e6));
-               end
-               leg.Location='northwest';
-               leg.EdgeColor = rgb('Silver');
-               xlabel('Background slope (mcps / keV)');
-               PrettyFigureFormat('FontSize',22)
-               hold off;
-               ylim([0 2500])
-           end
-           savefile    =  [savedir,strrep(cm_name,'.mat','_Hist.pdf')];
-           print(fig2,strrep(strrep(savefile,'.pdf','.png'),'plots/','plots/png/'),'-dpng','-r500');
-           export_fig(fig2,savefile);
-           fprintf('Save plot to %s \n',savefile);
-           
-           if nRingLoop>1
-               xlim([-MaxSlopeCpsPereV_i,MaxSlopeCpsPereV_i]*1e6);
-               savefile    =  [savedir,strrep(cm_name,'.mat','_HistZoom.pdf')];
-               export_fig(fig2,savefile);
-               print(fig2,strrep(strrep(savefile,'.pdf','.png'),'plots/','plots/png/'),'-dpng','-r500');
-               fprintf('Save plot to %s \n',savefile);
-           end
-           %             % Trials Toy MC Features
-           %             myMainTitle = sprintf('KATRIN - Background Toy Monte Carlo (Slope Constrain = %.0f mcps/keV)',MaxSlopeCpsPereV*1e6); maintitle   = myMainTitle;
-           %             savefile    =  [savedir,sprintf('/ComputeCM_Background_2_Bkg%.0fmcps_Hists_Constrain%.0fMcpsPerKeV.pdf',BKG_i*1e3, MaxSlopeCpsPereV)];
-           %             fig2        = figure('Name','KATRIN - Background Toy Monte Carlo','NumberTitle','off','rend','painters','pos',[1 1 1000 1000]);
-           %             a = annotation('textbox', [0 0.9 1 0.1], 'String', maintitle,'EdgeColor', 'none','HorizontalAlignment', 'center');
-           %             a.FontSize=18;a.FontWeight='bold';
-           %
-           %             subplot(2,2,2);
-           %             h1 = histogram(par(2,CutOff)*1e6,15,'Normalization','probability','FaceColor',rgb('IndianRed'),'LineWidth',2);
-           %             xlabel('qU-slope: mcps/keV');ylabel('frequency');
-           %             PrettyFigureFormat;set(gca,'FontSize',16);
-           %
-           %             subplot(2,2,4);
-           %             histogram(chi2min(CutOff),15,'Normalization','probability','FaceColor',rgb('IndianRed'),'LineWidth',2);
-           %             xlabel('\chi^2');ylabel('frequency');
-           %             PrettyFigureFormat;set(gca,'FontSize',16);
-           %             subplot(2,2,1);
-           %             histogram(par(1,CutOff)*1e3,15,'Normalization','probability','FaceColor',rgb('IndianRed'),'LineWidth',2);
-           %             xlabel('Flat Component (mcps)');ylabel('frequency');
-           %             PrettyFigureFormat;set(gca,'FontSize',16);
-           %             subplot(2,2,3);
-           %             histogram(err(1,CutOff)*1e3,15,'Normalization','probability','FaceColor',rgb('IndianRed'),'LineWidth',2);
-           %             xlabel('Baseline Component Error (mcps)');ylabel('frequency');
-           %             %xlim([0 5]);
-           %             set(gca,'YScale','log');
-           %             PrettyFigureFormat;set(gca,'FontSize',16);
-           %             export_fig(fig2,savefile,'-painters');
-           %
-           %             % Covariance Matrix
-           %             myMainTitle = sprintf('KATRIN - Background Covariance Matrix'); maintitle   = myMainTitle;
-           %             savefile    =  [savedir,sprintf('/ComputeCM_Background_Convergence_Bkg%.0fmcps_Constrain%.0fMcpsPerKeV.png',BKG_i*1e3, MaxSlopeCpsPereV)];
-           %             fig3        = figure('Name','KATRIN - Background Covariance Matrix','NumberTitle','off','rend','painters','pos',[10 10 1200 600]);
-           %             a = annotation('textbox', [0 0.9 1 0.1], 'String', maintitle,'EdgeColor', 'none','HorizontalAlignment', 'center');
-           %             a.FontSize=18;a.FontWeight='bold';
-           %             qULong=obj.StudyObject.qU(qUStartIndex:end);
-           %             subplot(2,2,[1,3]);
-           %             imagesc(obj.CovMatFrac(qUStartIndex:end,qUStartIndex:end));
-           %             PrettyFigureFormat
-           %             c = colorbar('northoutside');
-           %             c.Label.String = 'fractional covariance (bkg)';
-           %             c.FontSize = 18;
-           %             colormap(parula);
-           %             pbaspect([1 1 1])
-           %             set(gca,'xtick',[1 obj.StudyObject.nqU]),set(gca,'ytick',[])
-           %             qUmin = sprintf('qU_{min} = E_0 - %.0fV',abs(obj.StudyObject.qU(qUStartIndex)-obj.StudyObject.Q_i));
-           %             qUmax = sprintf('qU_{max} = E_0 + %.0fV',obj.StudyObject.qU(end)-obj.StudyObject.Q_i);
-           %             set(gca,'xticklabel',{qUmin,qUmax}); set(gca,'yticklabel',[]);
-           %             set(gca,'FontSize',16)
-           %
-           %             subplot(2,2,2);
-           %             subruntime  = obj.StudyObject.TimeSec.*obj.StudyObject.qUfrac(qUStartIndex:end);
-           %             meanBcounts = mean(Bkg_Fit(qUStartIndex:end,:),2).*subruntime;
-%             %                 [SysLine, SysArea] =  boundedline(qULong-obj.StudyObject.Q_i,...
-%             %                     1e3.*mean(Bkg_Fit(qUStartIndex:end,:),2),...
-%             %                     1e3.*std(permute(Bkg_Fit(qUStartIndex:end,:),[2,1])));
-%             [SysLine, SysArea] =  boundedline(qULong-obj.StudyObject.Q_i,...
-%                 1e3*meanBcounts./subruntime,...
-%                 1e3*sqrt(diag(obj.CovMat(qUStartIndex:end,qUStartIndex:end)))./subruntime); % B counts
-%             hold on;
-%             %                 pStat = errorbar(obj.StudyObject.qU(qUStartIndex:end)-obj.StudyObject.Q_i,...
-%             %                     1e3.*mean(Bkg_Fit(qUStartIndex:end,:),2),...
-%             %                     1e3.*sqrt(mean(Bkg_Fit(qUStartIndex:end,:),2)./sqrt((obj.StudyObject.TimeSec.*obj.StudyObject.qUfrac(qUStartIndex:end)))),...
-%             %                     'o','Color',rgb('GoldenRod'),'MarkerFaceColor',rgb('RoyalBlue'),'MarkerEdgeColor',rgb('RoyalBlue'),'MarkerSize',2);
-%             pStat = errorbar(obj.StudyObject.qU(qUStartIndex:end)-obj.StudyObject.Q_i,...
-%                 1e3*meanBcounts./subruntime,...
-%                 1e3*sqrt(meanBcounts)./subruntime,...
-%                 'o','Color',rgb('GoldenRod'),'MarkerFaceColor',rgb('RoyalBlue'),'MarkerEdgeColor',rgb('RoyalBlue'),'MarkerSize',2);
-%             SysArea.FaceColor = rgb('CadetBlue');
-%             SysLine.LineWidth = 5; SysLine.Color = rgb('RoyalBlue');
-%             SysArea.FaceAlpha = 0.5;
-%             xlabel(sprintf('Retarding Potential qU - %.01f (eV)',obj.StudyObject.Q_i));
-%             ylabel('Background (mcps)');
-%             leg =legend([SysLine, SysArea,pStat],'<B>','1 \sigma_{B,sys}','1 \sigma_{B,stat}','Location','northeast');
-%             leg.FontSize = 18;
-%             leg.NumColumns = 3;
-%             legend boxoff
-%             xlim([min(qULong) max(qULong)]-obj.StudyObject.Q_i);
-%             ylimdown = (1e3*mean(mean(Bkg_Fit(qUStartIndex:end,:),2)))-1e3*min(sqrt(mean(Bkg_Fit(qUStartIndex:end,:),2)./(obj.StudyObject.TimeSec.*obj.StudyObject.qUfrac(qUStartIndex:end))));%1e3*(mean(mean(Bkg_Fit,2))-max(std(permute(Bkg_Fit,[2,1]))));
-%             ylimup   = 1e3*mean(mean(Bkg_Fit(qUStartIndex:end,:),2))+(1e3.*max(sqrt(mean(Bkg_Fit(qUStartIndex:end,:),2)./(obj.StudyObject.TimeSec.*obj.StudyObject.qUfrac(qUStartIndex:end)))));%1e3*(mean(mean(Bkg_Fit,2))+max(std(permute(Bkg_Fit,[2,1]))));
-%             if ylimup<=1e3*max(max(mean(Bkg_Fit(qUStartIndex:end,:),2)+std(permute(Bkg_Fit(qUStartIndex:end,:),[2,1]))))
-%                 ylimup =1e3*max(max(mean(Bkg_Fit(qUStartIndex:end,:),2)+std(permute(Bkg_Fit(qUStartIndex:end,:),[2,1]))));
-%                 ylimdown =1e3*min(min(mean(Bkg_Fit(qUStartIndex:end,:),2)-std(permute(Bkg_Fit(qUStartIndex:end,:),[2,1]))));
-%             end
-%             ylim([0.97*ylimdown, 1.01*ylimup]);
-%             PrettyFigureFormat;
-%             set(gca,'FontSize',16);
-%             
-%             subplot(2,2,4);
-%             Nmax = max(size(BkgIS_SampleNorm));
-%             StepSize = 10;
-%             CovMatnTrials = cell(round(Nmax/StepSize),1);     % CovMat for different nTrials
-%             CovMatTrace = zeros(round(Nmax/StepSize),1);      % Trace of CovMats
-%             for x = StepSize:StepSize:Nmax                    %Compute CovMats für different nTrials
-%                 xn = x/StepSize;
-%                 CovMatnTrials{xn,1} = cov(BkgIS_SampleNorm(:,1:x)'); %CovMats
-%                 CovMatTrace(xn) = norm(CovMatnTrials{xn,1},'fro');
-%             end
-%             
-%             while max(size([StepSize:StepSize:Nmax]))~=max(size(CovMatTrace))
-%                 if max(size([StepSize:StepSize:Nmax]))>=max(size(CovMatTrace))
-%                     Nmax = Nmax-StepSize;
-%                 elseif max(size([StepSize:StepSize:Nmax]))<=max(size(CovMatTrace))
-%                     Nmax = Nmax+StepSize;
-%                 end
-%             end
-%             
-%             plot([StepSize:StepSize:Nmax]',CovMatTrace,'Color',rgb('GoldenRod'),'LineWidth',4);
-%             xlabel('samples');
-%             ylabel('|| M ||');
-%             PrettyFigureFormat;
-%             set(gca,'FontSize',16);
-%             xlim([0 Nmax-2*StepSize]);
-%             print(fig3,savefile,'-dpng','-r400');
+                    end
+                    xlabel('Background slope (mcps / keV)');
+                    PrettyFigureFormat('FontSize',18)
+                    leg.Location='northwest';
+                    leg.EdgeColor = rgb('Silver');
+                    leg.Title.String = sprintf('Pseudo-Ring %.0f',i);
+                    hold off;
+                    ylim([0 3200])
+                    xlim([-20 20])
+                end
+                sgtitle(sprintf('Background slope contrain (all pixels) = %.1f mcps / keV',MaxSlopeCpsPereV_i*1e6));
+                linkaxes([s{:}],'x');
+                
+            else
+                fig2        = figure('Units','normalized','pos',[0.1 0.1 0.4 0.4]);
+                h1 = histogram(Slopes.*1e6,'FaceColor',rgb('LightGray'));
+                
+                if strcmp(Mode,'SlopeFit')
+                    hold on;
+                    SlopeOK = Slopes(logical(SlopesExcl));
+                    h2 = histogram(SlopeOK.*1e06,'FaceColor',rgb('DodgerBlue'),...
+                        'FaceAlpha',1,'BinWidth',h1.BinWidth);
+                    leg = legend('MC fit slopes',sprintf('MC fit slopes < %.1f mcps / keV',MaxSlopeCpsPereV*1e6));
+                else
+                    h1.FaceColor = rgb('DodgerBlue');
+                    leg = legend(sprintf('Randomized slopes \\sigma = %.1f mcps / keV',MaxSlopeCpsPereV*1e6));
+                end
+                leg.Location='northwest';
+                leg.EdgeColor = rgb('Silver');
+                xlabel('Background slope (mcps / keV)');
+                PrettyFigureFormat('FontSize',22)
+                hold off;
+                ylim([0 2500])
+            end
+            savefile    =  [savedir,strrep(cm_name,'.mat','_Hist.pdf')];
+            print(fig2,strrep(strrep(savefile,'.pdf','.png'),'plots/','plots/png/'),'-dpng','-r500');
+            export_fig(fig2,savefile);
+            fprintf('Save plot to %s \n',savefile);
+            
+            if nRingLoop>1
+                xlim([-MaxSlopeCpsPereV_i,MaxSlopeCpsPereV_i]*1e6);
+                savefile    =  [savedir,strrep(cm_name,'.mat','_HistZoom.pdf')];
+                export_fig(fig2,savefile);
+                print(fig2,strrep(strrep(savefile,'.pdf','.png'),'plots/','plots/png/'),'-dpng','-r500');
+                fprintf('Save plot to %s \n',savefile);
+            end
+            %             % Trials Toy MC Features
+            %             myMainTitle = sprintf('KATRIN - Background Toy Monte Carlo (Slope Constrain = %.0f mcps/keV)',MaxSlopeCpsPereV*1e6); maintitle   = myMainTitle;
+            %             savefile    =  [savedir,sprintf('/ComputeCM_Background_2_Bkg%.0fmcps_Hists_Constrain%.0fMcpsPerKeV.pdf',BKG_i*1e3, MaxSlopeCpsPereV)];
+            %             fig2        = figure('Name','KATRIN - Background Toy Monte Carlo','NumberTitle','off','rend','painters','pos',[1 1 1000 1000]);
+            %             a = annotation('textbox', [0 0.9 1 0.1], 'String', maintitle,'EdgeColor', 'none','HorizontalAlignment', 'center');
+            %             a.FontSize=18;a.FontWeight='bold';
+            %
+            %             subplot(2,2,2);
+            %             h1 = histogram(par(2,CutOff)*1e6,15,'Normalization','probability','FaceColor',rgb('IndianRed'),'LineWidth',2);
+            %             xlabel('qU-slope: mcps/keV');ylabel('frequency');
+            %             PrettyFigureFormat;set(gca,'FontSize',16);
+            %
+            %             subplot(2,2,4);
+            %             histogram(chi2min(CutOff),15,'Normalization','probability','FaceColor',rgb('IndianRed'),'LineWidth',2);
+            %             xlabel('\chi^2');ylabel('frequency');
+            %             PrettyFigureFormat;set(gca,'FontSize',16);
+            %             subplot(2,2,1);
+            %             histogram(par(1,CutOff)*1e3,15,'Normalization','probability','FaceColor',rgb('IndianRed'),'LineWidth',2);
+            %             xlabel('Flat Component (mcps)');ylabel('frequency');
+            %             PrettyFigureFormat;set(gca,'FontSize',16);
+            %             subplot(2,2,3);
+            %             histogram(err(1,CutOff)*1e3,15,'Normalization','probability','FaceColor',rgb('IndianRed'),'LineWidth',2);
+            %             xlabel('Baseline Component Error (mcps)');ylabel('frequency');
+            %             %xlim([0 5]);
+            %             set(gca,'YScale','log');
+            %             PrettyFigureFormat;set(gca,'FontSize',16);
+            %             export_fig(fig2,savefile,'-painters');
+            %
+            %             % Covariance Matrix
+            %             myMainTitle = sprintf('KATRIN - Background Covariance Matrix'); maintitle   = myMainTitle;
+            %             savefile    =  [savedir,sprintf('/ComputeCM_Background_Convergence_Bkg%.0fmcps_Constrain%.0fMcpsPerKeV.png',BKG_i*1e3, MaxSlopeCpsPereV)];
+            %             fig3        = figure('Name','KATRIN - Background Covariance Matrix','NumberTitle','off','rend','painters','pos',[10 10 1200 600]);
+            %             a = annotation('textbox', [0 0.9 1 0.1], 'String', maintitle,'EdgeColor', 'none','HorizontalAlignment', 'center');
+            %             a.FontSize=18;a.FontWeight='bold';
+            %             qULong=obj.StudyObject.qU(qUStartIndex:end);
+            %             subplot(2,2,[1,3]);
+            %             imagesc(obj.CovMatFrac(qUStartIndex:end,qUStartIndex:end));
+            %             PrettyFigureFormat
+            %             c = colorbar('northoutside');
+            %             c.Label.String = 'fractional covariance (bkg)';
+            %             c.FontSize = 18;
+            %             colormap(parula);
+            %             pbaspect([1 1 1])
+            %             set(gca,'xtick',[1 obj.StudyObject.nqU]),set(gca,'ytick',[])
+            %             qUmin = sprintf('qU_{min} = E_0 - %.0fV',abs(obj.StudyObject.qU(qUStartIndex)-obj.StudyObject.Q_i));
+            %             qUmax = sprintf('qU_{max} = E_0 + %.0fV',obj.StudyObject.qU(end)-obj.StudyObject.Q_i);
+            %             set(gca,'xticklabel',{qUmin,qUmax}); set(gca,'yticklabel',[]);
+            %             set(gca,'FontSize',16)
+            %
+            %             subplot(2,2,2);
+            %             subruntime  = obj.StudyObject.TimeSec.*obj.StudyObject.qUfrac(qUStartIndex:end);
+            %             meanBcounts = mean(Bkg_Fit(qUStartIndex:end,:),2).*subruntime;
+            %             %                 [SysLine, SysArea] =  boundedline(qULong-obj.StudyObject.Q_i,...
+            %             %                     1e3.*mean(Bkg_Fit(qUStartIndex:end,:),2),...
+            %             %                     1e3.*std(permute(Bkg_Fit(qUStartIndex:end,:),[2,1])));
+            %             [SysLine, SysArea] =  boundedline(qULong-obj.StudyObject.Q_i,...
+            %                 1e3*meanBcounts./subruntime,...
+            %                 1e3*sqrt(diag(obj.CovMat(qUStartIndex:end,qUStartIndex:end)))./subruntime); % B counts
+            %             hold on;
+            %             %                 pStat = errorbar(obj.StudyObject.qU(qUStartIndex:end)-obj.StudyObject.Q_i,...
+            %             %                     1e3.*mean(Bkg_Fit(qUStartIndex:end,:),2),...
+            %             %                     1e3.*sqrt(mean(Bkg_Fit(qUStartIndex:end,:),2)./sqrt((obj.StudyObject.TimeSec.*obj.StudyObject.qUfrac(qUStartIndex:end)))),...
+            %             %                     'o','Color',rgb('GoldenRod'),'MarkerFaceColor',rgb('RoyalBlue'),'MarkerEdgeColor',rgb('RoyalBlue'),'MarkerSize',2);
+            %             pStat = errorbar(obj.StudyObject.qU(qUStartIndex:end)-obj.StudyObject.Q_i,...
+            %                 1e3*meanBcounts./subruntime,...
+            %                 1e3*sqrt(meanBcounts)./subruntime,...
+            %                 'o','Color',rgb('GoldenRod'),'MarkerFaceColor',rgb('RoyalBlue'),'MarkerEdgeColor',rgb('RoyalBlue'),'MarkerSize',2);
+            %             SysArea.FaceColor = rgb('CadetBlue');
+            %             SysLine.LineWidth = 5; SysLine.Color = rgb('RoyalBlue');
+            %             SysArea.FaceAlpha = 0.5;
+            %             xlabel(sprintf('Retarding Potential qU - %.01f (eV)',obj.StudyObject.Q_i));
+            %             ylabel('Background (mcps)');
+            %             leg =legend([SysLine, SysArea,pStat],'<B>','1 \sigma_{B,sys}','1 \sigma_{B,stat}','Location','northeast');
+            %             leg.FontSize = 18;
+            %             leg.NumColumns = 3;
+            %             legend boxoff
+            %             xlim([min(qULong) max(qULong)]-obj.StudyObject.Q_i);
+            %             ylimdown = (1e3*mean(mean(Bkg_Fit(qUStartIndex:end,:),2)))-1e3*min(sqrt(mean(Bkg_Fit(qUStartIndex:end,:),2)./(obj.StudyObject.TimeSec.*obj.StudyObject.qUfrac(qUStartIndex:end))));%1e3*(mean(mean(Bkg_Fit,2))-max(std(permute(Bkg_Fit,[2,1]))));
+            %             ylimup   = 1e3*mean(mean(Bkg_Fit(qUStartIndex:end,:),2))+(1e3.*max(sqrt(mean(Bkg_Fit(qUStartIndex:end,:),2)./(obj.StudyObject.TimeSec.*obj.StudyObject.qUfrac(qUStartIndex:end)))));%1e3*(mean(mean(Bkg_Fit,2))+max(std(permute(Bkg_Fit,[2,1]))));
+            %             if ylimup<=1e3*max(max(mean(Bkg_Fit(qUStartIndex:end,:),2)+std(permute(Bkg_Fit(qUStartIndex:end,:),[2,1]))))
+            %                 ylimup =1e3*max(max(mean(Bkg_Fit(qUStartIndex:end,:),2)+std(permute(Bkg_Fit(qUStartIndex:end,:),[2,1]))));
+            %                 ylimdown =1e3*min(min(mean(Bkg_Fit(qUStartIndex:end,:),2)-std(permute(Bkg_Fit(qUStartIndex:end,:),[2,1]))));
+            %             end
+            %             ylim([0.97*ylimdown, 1.01*ylimup]);
+            %             PrettyFigureFormat;
+            %             set(gca,'FontSize',16);
+            %
+            %             subplot(2,2,4);
+            %             Nmax = max(size(BkgIS_SampleNorm));
+            %             StepSize = 10;
+            %             CovMatnTrials = cell(round(Nmax/StepSize),1);     % CovMat for different nTrials
+            %             CovMatTrace = zeros(round(Nmax/StepSize),1);      % Trace of CovMats
+            %             for x = StepSize:StepSize:Nmax                    %Compute CovMats für different nTrials
+            %                 xn = x/StepSize;
+            %                 CovMatnTrials{xn,1} = cov(BkgIS_SampleNorm(:,1:x)'); %CovMats
+            %                 CovMatTrace(xn) = norm(CovMatnTrials{xn,1},'fro');
+            %             end
+            %
+            %             while max(size([StepSize:StepSize:Nmax]))~=max(size(CovMatTrace))
+            %                 if max(size([StepSize:StepSize:Nmax]))>=max(size(CovMatTrace))
+            %                     Nmax = Nmax-StepSize;
+            %                 elseif max(size([StepSize:StepSize:Nmax]))<=max(size(CovMatTrace))
+            %                     Nmax = Nmax+StepSize;
+            %                 end
+            %             end
+            %
+            %             plot([StepSize:StepSize:Nmax]',CovMatTrace,'Color',rgb('GoldenRod'),'LineWidth',4);
+            %             xlabel('samples');
+            %             ylabel('|| M ||');
+            %             PrettyFigureFormat;
+            %             set(gca,'FontSize',16);
+            %             xlim([0 Nmax-2*StepSize]);
+            %             print(fig3,savefile,'-dpng','-r400');
     end
     
     obj.nTrials = TrialSave;
     
 end
+function ComputeCM_BackgroundPT(obj,varargin)
+    % bkg rate increase over subrun time from penning trap (PT)
+      p = inputParser;
+      p.addParameter('Display','OFF',@(x)ismember(x,{'ON','OFF'}));
+      p.addParameter('nTrials_loc',obj.nTrials,@(x)isfloat(x));
+      p.parse(varargin{:});
+      Display = p.Results.Display;
+      nTrials_loc = p.Results.nTrials_loc;
+      
+      fprintf('--------------------------------------------------------------------------\n')
+      cprintf('blue','CovarianceMatrix:ComputeCM_BackgroundPT: Compute background penning trap Covariance Matrix  \n')
+      
+      % labelling
+      cm_path =[getenv('SamakPath'),sprintf('inputs/CovMat/BkgPT/CM/')];
+      MakeDir(cm_path);
+      obj.CovMatFile = sprintf('%sBkgPT_%s_B%.0fmcps_Slope%.1fmuCpsPerS_SlopeErr%.1fmuCpsPerS_%.0fTrials.mat',...
+          cm_path,strrep(obj.StudyObject.TD,'_E018573.73eV2',''),...
+          sum(obj.StudyObject.BKG_RateSec)*1e3,...
+          obj.StudyObject.BKG_PtSlope,obj.BKG_PtSlopeErr*1e6,nTrials_loc);
+      
+      if exist(obj.CovMatFile,'file')==2 && strcmp(obj.RecomputeFlag,'OFF')
+          fprintf(2,'CovarianceMatrix::ComputeCM_BackgroundPT:ReadCMFile: Loading CovMatrix File: %s \n',obj.CovMatFile)
+          cmfile = importdata(obj.CovMatFile);
+          obj.CovMat          = cmfile.obj.CovMat;
+          obj.CovMatFrac      = cmfile.obj.CovMatFrac;
+          obj.CovMatFracShape = cmfile.obj.CovMatFracShape;
+          obj.MultiCovMat.CM_BkgShape          = cmfile.obj.CovMat;
+          obj.MultiCovMatFrac.CM_BkgShape      = cmfile.obj.CovMatFrac;
+          obj.MultiCovMatFracShape.CM_BkgShape = cmfile.obj.CovMatFracShape;
+          if strcmp(Display,'OFF')
+              return;
+          end
+          load(obj.CovMatFile,'Bkg_PtSlope_v','BkgRate_PtSlope_v','BkgCounts_PtSlope_v',...
+              'Bkg_PtSlope_i','BkgRate_PtSlope_i','BkgCounts_PtSlope_i');
+          cmlog = 1; %loaded, but waiting for display
+      else
+          cmlog = 0; %not loaded, but waiting for display
+      end
+      
+      if cmlog==0
+          % calculate cm
+          TimeTotSubrun    = obj.StudyObject.TimeSec.*obj.StudyObject.qUfrac; % total time in stacked subruns
+          TimeAvSubrun     = obj.StudyObject.TimeSec.*obj.StudyObject.qUfrac./obj.StudyObject.nRuns; % average time in subrun
+          
+          % central value
+          Bkg_PtSlope_i         = obj.StudyObject.BKG_PtSlope;
+          BkgRate_PtSlope_i    = 0.5.*Bkg_PtSlope_i.*TimeAvSubrun+obj.StudyObject.BKG_RateSec;
+          BkgCounts_PtSlope_i  = (obj.StudyObject.BKG_RateSec+BkgRate_PtSlope_i).*TimeTotSubrun;
+          
+          % sample bkg slope
+          Bkg_PtSlope_v     = Bkg_PtSlope_i+obj.BKG_PtSlopeErr.*randn(1,nTrials_loc);
+          BkgRate_PtSlope_v = 0.5.*Bkg_PtSlope_v.*TimeAvSubrun+obj.StudyObject.BKG_RateSec;
+          BkgCounts_PtSlope_v = (obj.StudyObject.BKG_RateSec+BkgRate_PtSlope_v).*TimeTotSubrun;
+          
+          % Compute Covariance Matrix
+          obj.CovMat = cov(BkgCounts_PtSlope_v');
+          obj.MultiCovMat.CM_BkgPT = obj.CovMat;
+          
+          % Save
+          save(obj.CovMatFile,'obj','Bkg_PtSlope_v','BkgRate_PtSlope_v','BkgCounts_PtSlope_v',...
+              'Bkg_PtSlope_i','BkgRate_PtSlope_i','BkgCounts_PtSlope_i', '-mat');
+          
+          
+          % Compute Fractional CM
+          obj.ComputeFracCM('Mode','CM2Frac');
+          obj.MultiCovMatFrac.CM_BkgPT = obj.CovMatFrac;
+          
+          % Compute Decomposed CM
+          [~, obj.CovMatFracShape] = obj.DecomposeCM('CovMatFrac',obj.CovMatFrac,'exclDataStart',1,'BkgCM','ON');
+          obj.MultiCovMatFracShape.CM_BkgPT = obj.CovMatFracShape;
+          obj.MultiCovMatFracNorm.CM_BkgPT  = obj.CovMatFracNorm;
+          
+          % Save again
+          save(obj.CovMatFile, 'obj','-append');
+          
+      end
+      
+      % sanity plot
+      if strcmp(Display,'ON')
+          Mode = 'Rate';
+          f1 = figure('Units','normalized','Position',[0.1,0.1,0.73,0.47]);
+          subplot(1,4,[1,2,3]);
+          qU = obj.StudyObject.qU-18574;
+          switch Mode
+              case 'Counts'
+                  [l_v,a_v]= boundedline(qU,mean(BkgCounts_PtSlope_v,2),std(BkgCounts_PtSlope_v,0,2));
+                  hold on;
+                  p_i = plot(qU, BkgCounts_PtSlope_i,':','LineWidth',2,'Color',rgb('Orange'));
+                  ylabel('Background counts');
+              case 'Rate'
+                  [l_v,a_v]= boundedline(qU,1e3.*mean(BkgRate_PtSlope_v,2),1e3.*std(BkgRate_PtSlope_v,0,2));
+                  hold on;
+                  p_i = plot(qU,1e3.*BkgRate_PtSlope_i,':','LineWidth',2,'Color',rgb('Orange'));
+                  ylabel('Background rate (mcps)');
+          end
+          l_v.LineWidth = 2; a_v.FaceAlpha = 0.5;
+          xlabel('Retarding potential - 18574 (eV)');
+          leg = legend([p_i,l_v,a_v],sprintf('central value: {\\ita}= %.1e cps/s',Bkg_PtSlope_i),...
+              'sample mean',...
+              sprintf('1\\sigma error band \\Delta{\\ita}= %.1e cps/s',obj.BKG_PtSlopeErr));
+          legend boxoff
+          
+          ax1 = gca;
+          set(ax1,'Position',[ax1.Position(1)-0.06,ax1.Position(2),ax1.Position(3)-0.05,ax1.Position(4)]);
+          xlim([min(qU) max(qU)])
+          PrettyFigureFormat('FontSize',18);
+          leg.FontSize  = get(ax1,'FontSize')+2;
+          
+          subplot(1,4,4);
+          h1 = histogram(Bkg_PtSlope_v);
+          h1.EdgeColor = rgb('DodgerBlue');
+          h1.FaceColor = h1.EdgeColor;
+          ax1 = gca;
+          set(ax1,'Position',[ax1.Position(1)-0.09,ax1.Position(2),ax1.Position(3)+0.17,ax1.Position(4)]);
+          xlabel(sprintf('{\\ita} samples'));
+          ylabel('Entries');
+          PrettyFigureFormat('FontSize',18);
+ 
+          %save
+          plotpath = [cm_path,'plots/'];
+          MakeDir(plotpath)
+          plotname =  sprintf('%sBkgPT_%s_Slope%.1fmuCpsPerS_SlopeErr%.1fmuCpsPerS_%.0fTrials.png',...
+              plotpath,strrep(obj.StudyObject.TD,'_E018573.73eV2',''),...
+              obj.StudyObject.BKG_PtSlope,obj.BKG_PtSlopeErr*1e6,nTrials_loc);
+          
+          print(f1,plotname,'-dpng','-r300');
+      end
+end
+
 
 function ComputeCM_TCoff(obj,varargin)
     fprintf('--------------------------------------------------------------------------\n')
@@ -2940,7 +3072,7 @@ function ComputeCM_FSD(obj,varargin)
         % Bin-to-Bin uncorrelated variation
         DT_P_rand =permute(repmat(randn(size(obj.StudyObject.DTexP,2),obj.nTrials),1,1,nRings),[3,1,2]);
         DT_P(:,1:obj.StudyObject.DTGSTh,:)     = DT_P(:,1:obj.StudyObject.DTGSTh,:).* (1+(DT_P_rand(:,1:obj.StudyObject.DTGSTh,:).*obj.FSDShapeGS_RelErr));
-        DT_P(:,obj.StudyObject.DTGSTh+1:end,:) = DT_P(:,obj.StudyObject.DTGSTh+1:end,:).*(1+(DT_P_rand(:,obj.StudyObject.DTGSTh+1:end,:).*obj.FSDShapeES_RelErr)); 
+        DT_P(:,obj.StudyObject.DTGSTh+1:end,:) = DT_P(:,obj.StudyObject.DTGSTh+1:end,:).*(1+(DT_P_rand(:,obj.StudyObject.DTGSTh+1:end,:).*obj.FSDShapeES_RelErr));
         DT_P(DT_P<0)=0;
     end
     if strcmp(obj.HTFlag,'ON')
@@ -2954,7 +3086,7 @@ function ComputeCM_FSD(obj,varargin)
         NormBiasTT = randn(obj.nTrials,1).*obj.StudyObject.TTNormGS_i'*obj.FSDNorm_RelErr;
         TT_P_rand = permute(repmat(randn(size(obj.StudyObject.TTexP,2),obj.nTrials),1,1,nRings),[3,1,2]);
         TT_P(:,1:obj.StudyObject.TTGSTh,:)  = TT_P(:,1:obj.StudyObject.TTGSTh,:).* (1+(TT_P_rand(:,1:obj.StudyObject.TTGSTh,:).*obj.FSDShapeGS_RelErr));
-        TT_P(:,obj.StudyObject.TTGSTh+1:end,:) = TT_P(:,obj.StudyObject.TTGSTh+1:end,:).*(1+(TT_P_rand(:,obj.StudyObject.TTGSTh+1:end,:).*obj.FSDShapeES_RelErr)); 
+        TT_P(:,obj.StudyObject.TTGSTh+1:end,:) = TT_P(:,obj.StudyObject.TTGSTh+1:end,:).*(1+(TT_P_rand(:,obj.StudyObject.TTGSTh+1:end,:).*obj.FSDShapeES_RelErr));
         TT_P(TT_P<0)=0;
     end
     

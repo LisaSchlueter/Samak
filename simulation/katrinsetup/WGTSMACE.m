@@ -167,7 +167,7 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             % WGTS Parameters
             p.addParameter('WGTS_Tp',0.95,@(x)isfloat(x) && x>0); %0.95
             p.addParameter('WGTS_DTHTr',0,@(x)isfloat(x) && x>=0);
-            p.addParameter('WGTS_FTR_cm',4.5,@(x)isfloat(x) && x>0);
+            p.addParameter('WGTS_FTR_cm',4.2,@(x)isfloat(x) && x>0);
             p.addParameter('WGTS_CD_MolPerCm2',5e17,@(x)isfloat(x) && x>0);
             p.addParameter('WGTS_CD_MolPerCm2_SubRun',[]);
             p.addParameter('WGTS_CDDist',0,@(x)isfloat(x) && sum(x)>0 && sum(x)<=148);
@@ -191,9 +191,9 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             p.addParameter('WGTS_MolFracRelErr_DT',0.06e-2,@(x)isfloat(x));
             p.addParameter('WGTS_MolFracRelErr_HT',0,@(x)isfloat(x));
             % WGTS: Flags for FSD: T-T / D-T / H-T
-            p.addParameter('TTFSD','BlindingKNM2',@(x)ismember(x,{'OFF','DOSS','SAENZ','SAENZNOEE','ROLL','BlindingKNM1','WGTS100K','Sibille','Sibille0p5eV','SibilleFull','BlindingKNM2','KNM2'}));
-            p.addParameter('DTFSD','BlindingKNM2',@(x)ismember(x,{'OFF','DOSS','ROLL','HTFSD','TTFSD','BlindingKNM1','WGTS100K','Sibille','Sibille0p5eV','SibilleFull','BlindingKNM2','KNM2'}));
-            p.addParameter('HTFSD','BlindingKNM2',@(x)ismember(x,{'OFF','SAENZ','ROLL','BlindingKNM1','WGTS100K','Sibille','Sibille0p5eV','SibilleFull','BlindingKNM2','KNM2'}));
+            p.addParameter('TTFSD','BlindingKNM2',@(x)ismember(x,{'OFF','DOSS','SAENZ','SAENZNOEE','ROLL','BlindingKNM1','WGTS100K','Sibille','Sibille0p5eV','SibilleFull','BlindingKNM2','KNM2','KNM2_0p5eV','KNM2_0p1eV'}));
+            p.addParameter('DTFSD','BlindingKNM2',@(x)ismember(x,{'OFF','DOSS','ROLL','HTFSD','TTFSD','BlindingKNM1','WGTS100K','Sibille','Sibille0p5eV','SibilleFull','BlindingKNM2','KNM2','KNM2_0p5eV','KNM2_0p1eV'}));
+            p.addParameter('HTFSD','BlindingKNM2',@(x)ismember(x,{'OFF','SAENZ','ROLL','BlindingKNM1','WGTS100K','Sibille','Sibille0p5eV','SibilleFull','BlindingKNM2','KNM2','KNM2_0p5eV','KNM2_0p1eV'}));
             p.addParameter('TmFSD','SAENZ',@(x)ismember(x,{'OFF','SAENZ'}));
            
             % MACE Parameters

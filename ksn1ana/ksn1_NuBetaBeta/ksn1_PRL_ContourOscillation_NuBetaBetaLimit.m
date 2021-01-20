@@ -41,7 +41,7 @@ S.InterpMode = 'spline';           % waring: if contour is closed, spline interp
 S.Interp1Grid('RecomputeFlag','ON');% interpolate chi2 map -> nicer appearance of all plots. some
 
 Arg = {'SavePlot','OFF','BestFit','OFF','FinalSensitivity','ON','Style','PRL'};
-%%
+%
 mbbexplim = 0.165;
 nGrid = 50;
 nSamples = 5e3;
@@ -72,15 +72,17 @@ aNH.FaceAlpha = 0.6;
 
 
 legHandle = {legHandle{:},aNH,aIH};
-legStr = {legStr{:},sprintf('KamLAND-Zen NH 90%% C.L.'),sprintf('KamLAND-Zen IH 90%% C.L.')};
+%legStr = {legStr{:},sprintf('KamLAND-Zen NH 90%% C.L.'),sprintf('KamLAND-Zen IH 90%% C.L.')};
+legStr = {legStr{:},sprintf('0\\nu\\beta\\beta NH 90%% C.L.'),sprintf('0\\nu\\beta\\beta IH 90%% C.L.')};
 
 leg = legend([legHandle{:}],legStr{:},'EdgeColor','none','Location','northoutside');
 %%            
 plotdir = strrep(savedir,'results','plots');
 MakeDir(plotdir)
 if contains(savenameNH,'New')
-    plotname = sprintf('%sNuBetaBeta_PRL_%.3feV_New.png',plotdir,mbbexplim);
+    plotname = sprintf('%sNuBetaBeta_PRL_%.3feV_mbb3nu_Cosmo.pdf',plotdir,mbbexplim);
 else
-    plotname = sprintf('%sNuBetaBeta_PRL_%.3feV.png',plotdir,mbbexplim);
+    plotname = sprintf('%sNuBetaBeta_PRL_%.3feV_mbb3nu_NonDeg.pdf',plotdir,mbbexplim);
 end
-print(plotname,'-dpng','-r350');
+%print(plotname,'-dpng','-r350');
+export_fig(plotname);

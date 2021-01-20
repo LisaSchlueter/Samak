@@ -1,11 +1,12 @@
-% unblinded fit 0.241
+% unblinded fit with penning track background slope
 range     = 40;
 freePar   = 'mNu E0 Bkg Norm';
-chi2      = 'chi2Stat';%CMShape';
+chi2      = 'chi2Stat';%CMShape';%CMShape';
 DataType  = 'Twin';%Real';
 AnaFlag   = 'StackPixel';
 RingMerge = 'Full';%'None';
-FSDFlag = 'KNM2';
+BKG_PtSlope = 3*1e-06;
+TwinBias_BKG_PtSlope = 3*1e-06; 
 
 if strcmp(AnaFlag,'Ring')
     SysBudget = 39;
@@ -15,13 +16,15 @@ if strcmp(AnaFlag,'Ring')
         AnaStr = sprintf('Ring%s',RingMerge);
     end
 else
-    SysBudget = 38;
+    SysBudget = 40;
     AnaStr = AnaFlag;
 end
 
-savedir = [getenv('SamakPath'),'knm2ana/knm2_unblindingFinal/results/BestFit/'];
-savename = sprintf('%sknm2ub2_Fit_%s_%.0feV_%s_%s_%s_%s.mat',...
-    savedir,DataType,range,strrep(freePar,' ',''),chi2,AnaStr,FSDFlag);
+FSDFlag   = 'KNM2';
+
+savedir = [getenv('SamakPath'),'knm2ana/knm2_PngBkg/results/'];
+savename = sprintf('%sknm2ubfinal_Fit_Bpng-%.1fmucpsPers_%s_%.0feV_%s_%s_%s_%s.mat',...
+    savedir,BKG_PtSlope*1e6,DataType,range,strrep(freePar,' ',''),chi2,AnaStr,FSDFlag);
 
 
 if strcmp(chi2,'chi2Stat')
@@ -33,7 +36,7 @@ elseif strcmp(chi2,'chi2Stat+')
     chi2 = 'chi2Stat';
 end
 
-if ~strcmp(chi2,'chi2Stat')
+if ~strcmp(chi2,'chi2Stat') 
     savename = strrep(savename,'.mat',sprintf('_SysBudget%.0f.mat',SysBudget));
 end
 
@@ -57,7 +60,9 @@ else
         'FSD_Sigma',sqrt(SigmaSq),...
         'TwinBias_FSDSigma',sqrt(SigmaSq),...
         'RingMerge',RingMerge,...
-        'PullFlag',99};%99 = no pull
+        'PullFlag',99,...
+        'BKG_PtSlope',BKG_PtSlope,...
+        'TwinBias_BKG_PtSlope',TwinBias_BKG_PtSlope};%99 = no pull
     A = MultiRunAnalysis(RunAnaArg{:});
     %%
     A.exclDataStart = A.GetexclDataStart(range);
@@ -66,11 +71,11 @@ else
         A.ModelObj.RFBinStep = 0.01;
         A.ModelObj.InitializeRF;
     end
-    
+     
     A.Fit;
     FitResult = A.FitResult;
     MakeDir(savedir);
-    save(savename,'FitResult','RunAnaArg','A','SigmaSq')
+   % save(savename,'FitResult','RunAnaArg','A','SigmaSq')
 end
 %%
 %A.PlotFit;
