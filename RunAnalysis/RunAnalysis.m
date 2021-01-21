@@ -4014,7 +4014,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                     str_CDbias = sprintf('_sameCD');
                     str_bias = [str_bias,str_CDbias];
                 elseif obj.TwinBias_WGTS_CD_MolPerCm2~=1
-                    str_CDbias = sprintf('_%.1f-WGTS_CD_MolPerCm2Bias',obj.TwinBias_WGTS_CD_MolPerCm2);
+                    str_CDbias = sprintf('_%g-WGTS_CD_MolPerCm2Bias',obj.TwinBias_WGTS_CD_MolPerCm2);
                     str_bias = [str_bias,str_CDbias];
                 end
                 

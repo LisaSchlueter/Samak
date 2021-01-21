@@ -131,9 +131,9 @@
                         'TwinBias_mnuSq',0);
                     
 A.exclDataStart = A.GetexclDataStart(40);
-A.InitModelObj_Norm_BKG('Recompute','ON');
+%A.InitModelObj_Norm_BKG('Recompute','ON');
 %A.RunData.TBDIS = A.RunData.TBDIS + sqrt(diag(B.FitCM));
-%A.ComputeCM('SysEffects',struct('RF','ON','FSD','ON','TASR','ON','Stack','ON','FPD','ON','TC','ON'),'BkgCM','ON');
+A.ComputeCM('SysEffects',struct(),'BkgCM','ON');
 A.ModelObj.eta_i=2e11;
 A.ModelObj.eta  =2e11;
 A.ModelObj.ComputeNormFactorTBDDS;
@@ -142,7 +142,7 @@ A.ModelObj.ComputeTBDIS;
 A.Fit;
 
 
-%  load('./Results_Server_OnlyChi2.mat');
+%  load('./RelicNuBkg/Results_mNuFree.mat');
 %  %eta_corrected = eta;
 %  eta_Chi2_corrected = eta_Chi2;
 %  load('./Results_Local_OnlyChi2.mat');
@@ -150,11 +150,11 @@ A.Fit;
 %  load('./RelicNuBkg/Results_mNuFree_uncorrected.mat');
 %  %plot(linspace(0,2,21),eta_fit,'LineWidth',2);
 %  hold on;
-%  %plot(linspace(0,2,21),eta_Chi2,'LineWidth',2);
+%  plot(linspace(0,2,21),eta_Chi2,'LineWidth',2);
 %  %plot(linspace(0,2,21),eta_corrected,'LineWidth',2);
-%  %a=plot(linspace(0,2,21),eta_Chi2_corrected,'LineWidth',2);
+%  a=plot(linspace(0,2,21),eta_Chi2_corrected,'LineWidth',2);
 %  b=plot(linspace(0,2,21),eta_local,'LineWidth',2);
-%  ylim([1.3e11 1.9e11]);
+%  ylim([1.39e11 1.95e11]);
 %  xlabel('m_{\nu}^{2} (eV^2)');
 %  ylabel('1\sigma upper Limit of \eta');
 %  %lgd=legend([a b],{'Server','Local'},'Location','northeast','box','off');

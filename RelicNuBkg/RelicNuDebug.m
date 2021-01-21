@@ -869,6 +869,10 @@ classdef RelicNuDebug < handle
                     elseif chi2>50
                         sprintf('Minos failed! Vary initial eta.')
                     else
+                        if chi2<(DeltaChi2+minchi2)
+                            eta = etalower;
+                            chi2=chi2lower;
+                        end
                         while abs(chi2-minchi2-DeltaChi2)>0.01
                             if chi2>(DeltaChi2+minchi2)
                                 etaupper=eta;
@@ -1314,7 +1318,7 @@ classdef RelicNuDebug < handle
            Plot           = p.Results.Plot;
            Recompute      = p.Results.Recompute;
            
-           matFilePath = [getenv('SamakPath')];%,sprintf('RelicNuBkg/Misc/')];
+           matFilePath = [getenv('SamakPath'),sprintf('RelicNuBkg/Misc/')];
            savename = [matFilePath,sprintf('SensitivityBreakdown_%s_mnuSq%g_range%g.mat',obj.Params,TwinBias_mnuSq,range)];
            
            fitter = 'matlab';
@@ -1510,7 +1514,7 @@ classdef RelicNuDebug < handle
             
             SystEffects = ["RF","TASR","Stack","FSD","TC","FPDeff","BkgCM"];
             Bias = zeros(1,numel(SystEffects));
-            matFilePath = [getenv('SamakPath')];%,sprintf('RelicNuBkg/Misc/')];
+            matFilePath = [getenv('SamakPath'),sprintf('RelicNuBkg/Misc/')];
             savename=[matFilePath,sprintf('SystEffectOnSensitivity_%s_mnuSq%g.mat',obj.Params,TwinBias_mnuSq)];
             
             if exist(savename,'file') && strcmp(Recompute,'OFF')
