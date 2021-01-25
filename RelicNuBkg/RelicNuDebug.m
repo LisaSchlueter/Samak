@@ -1276,7 +1276,7 @@ classdef RelicNuDebug < handle
            
            if ~exist(savename,'file') || strcmp(Recompute,'ON')
                eta  = zeros(1,NmNuBins);
-               mNu  = linspace(0,MaxmNu,NmNuBins);
+               mNu  = linspace(MinmNu,MaxmNu,NmNuBins);
                if strcmp(Syst,'ON')
                    chi2opt = 'chi2CMShape';
                    NPfac   = 1.064;
