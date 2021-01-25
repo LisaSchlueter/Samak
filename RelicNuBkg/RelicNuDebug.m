@@ -83,7 +83,7 @@ classdef RelicNuDebug < handle
           p.addParameter('Parameter','',@(x)ismember(x,{'mNu','E0','Norm','Bkg','eta'}));
           p.addParameter('value',0,@(x)isfloat(x));
           p.addParameter('INIT',0,@(x)isfloat(x));
-          p.addParameter('SystSelect','OFF',@(x)ismember(x,{'RF','TASR','Stack','FSD','TC','FPDeff','BkgCM','None','OFF'}));
+          p.addParameter('SystSelect','OFF',@(x)ismember(x,{'RF','TASR','Stack','FSD','TC','FPDeff','BkgCM','NP','None','OFF'}));
           p.parse(varargin{:});
           SystSelect = p.Results.SystSelect;
           Parameter  = p.Results.Parameter;
@@ -103,6 +103,12 @@ classdef RelicNuDebug < handle
           end
           
           if INIT==1
+              if ~(strcmp(SystSelect,'NP') || strcmp(SystSelect,'OFF'))
+                  obj.M.NonPoissonScaleFactor = 1;
+              end
+              if strcmp(SystSelect,'NP')
+                  obj.M.NonPoissonScaleFactor = 1.064;
+              end
               range = obj.M.exclDataStart;
               obj.M = MultiRunAnalysis('RunList',obj.Params,... % runlist defines which runs are analysed -> set MultiRunAnalysis.m -> function: GetRunList()
                     'chi2',obj.M.chi2,...                 % uncertainties: statistical or stat + systematic uncertainties
@@ -148,6 +154,8 @@ classdef RelicNuDebug < handle
                   obj.M.ComputeCM('BkgCm','ON');
               elseif strcmp(SystSelect,'None')
                   obj.M.NonPoissonScaleFactor = 1;
+                  obj.M.ComputeCM('SysEffects',struct(),'BkgCM','OFF');
+              elseif strcmp(SystSelect,'NP')
                   obj.M.ComputeCM('SysEffects',struct(),'BkgCM','OFF');
               end
           end
@@ -1246,19 +1254,25 @@ classdef RelicNuDebug < handle
        function [mNu,eta] = EtaFit(obj,varargin)
            p = inputParser();
            p.addParameter('NmNuBins',21,@(x)isfloat(x));
+           p.addParameter('MinmNu',0,@(x)isfloat(x));
            p.addParameter('MaxmNu',2,@(x)isfloat(x));
            p.addParameter('Syst','ON',@(x)ismember(x,{'ON','OFF'}));
            p.addParameter('DataType','Twin',@(x)ismember(x,{'ON','OFF'}));
            p.addParameter('Recompute','OFF',@(x)ismember(x,{'ON','OFF'}));
            p.parse(varargin{:});
            NmNuBins  = p.Results.NmNuBins;
+           MinmNu    = p.Results.MinmNu;
            MaxmNu    = p.Results.MaxmNu;
            Syst      = p.Results.Syst;
            DataType  = p.Results.DataType;
            Recompute = p.Results.Recompute;
            
            matFilePath = [getenv('SamakPath'),sprintf('RelicNuBkg/UpperLimits/')];
-           savename    = [matFilePath,sprintf('EtaFit_mNu0_%g_Syst%s_DataType%s.mat',MaxmNu,Syst,DataType)];
+           if MinmNu~=0
+               savename    = [matFilePath,sprintf('EtaFit_mNu0_%g_%g_Syst%s_DataType%s.mat',MinmNu,MaxmNu,Syst,DataType)];
+           else
+               savename    = [matFilePath,sprintf('EtaFit_mNu0_%g_Syst%s_DataType%s.mat',MaxmNu,Syst,DataType)];
+           end
            
            if ~exist(savename,'file') || strcmp(Recompute,'ON')
                eta  = zeros(1,NmNuBins);
@@ -1402,6 +1416,7 @@ classdef RelicNuDebug < handle
                %A.NonPoissonScaleFactor = 1;
                %A.ComputeCM('SysEffects',struct(),'BkgCM','OFF');
                %A.Fit;
+               ErrNP = obj.CorrectErr('Parameter','eta','value',0.01,'eta',0.01,'minchi2',0,'factor',2e13,'SystSelect','NP');
                ErrStat = obj.CorrectErr('Parameter','eta','value',0.01,'eta',0.01,'minchi2',0,'factor',2e13,'SystSelect','None');
                ErrFSD = sqrt(ErrFSD.^2-ErrStat.^2);
                ErrRF = sqrt(ErrRF.^2-ErrStat.^2);
@@ -1410,10 +1425,11 @@ classdef RelicNuDebug < handle
                ErrFPD = sqrt(ErrFPD.^2-ErrStat.^2);
                ErrTC = sqrt(ErrTC.^2-ErrStat.^2);
                ErrBkg = sqrt(ErrBkg.^2-ErrStat.^2);
+               ErrNP = sqrt(ErrNP.^2-ErrStat.^2);
 
-               X = categorical({'Total','Stat','FSD','RF','TASR','Stack','FPD','TC','Bkg'});
-               X = reordercats(X,{'Total','Stat','FSD','RF','TASR','Stack','FPD','TC','Bkg'});
-               Y = [ErrTotal ErrStat ErrFSD ErrRF ErrTASR ErrStack ErrFPD ErrTC ErrBkg];
+               X = categorical({'Total','Stat','FSD','RF','TASR','Stack','FPD','TC','Bkg','NP'});
+               X = reordercats(X,{'Total','Stat','FSD','RF','TASR','Stack','FPD','TC','Bkg','NP'});
+               Y = [ErrTotal ErrStat ErrFSD ErrRF ErrTASR ErrStack ErrFPD ErrTC ErrBkg ErrNP];
                save(savename,'X','Y');
            end
            if strcmp(Plot,'ON')
@@ -1428,7 +1444,7 @@ classdef RelicNuDebug < handle
            p.addParameter('eta',0,@(x)isfloat(x));
            p.addParameter('minchi2',0,@(x)isfloat(x));
            p.addParameter('factor',0,@(x)isfloat(x));
-           p.addParameter('SystSelect','OFF',@(x)ismember(x,{'RF','TASR','Stack','FSD','TC','FPDeff','BkgCM','None','OFF'}));
+           p.addParameter('SystSelect','OFF',@(x)ismember(x,{'RF','TASR','Stack','FSD','TC','FPDeff','BkgCM','NP','None','OFF'}));
            p.parse(varargin{:});
            Parameter  = p.Results.Parameter;
            value      = p.Results.value;

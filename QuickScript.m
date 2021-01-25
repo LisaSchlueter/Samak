@@ -133,9 +133,11 @@
 A.exclDataStart = A.GetexclDataStart(40);
 %A.InitModelObj_Norm_BKG('Recompute','ON');
 %A.RunData.TBDIS = A.RunData.TBDIS + sqrt(diag(B.FitCM));
-A.ComputeCM('SysEffects',struct(),'BkgCM','ON');
+%A.ComputeCM('SysEffects',struct('FSD','ON'),'BkgCM','OFF');
+%A.ComputeCM('BkgCM','ON');
 A.ModelObj.eta_i=2e11;
 A.ModelObj.eta  =2e11;
+A.NonPoissonScaleFactor = 1;
 A.ModelObj.ComputeNormFactorTBDDS;
 A.ModelObj.ComputeTBDDS;
 A.ModelObj.ComputeTBDIS;
