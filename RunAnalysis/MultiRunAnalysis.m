@@ -45,6 +45,8 @@ classdef MultiRunAnalysis < RunAnalysis & handle
         % Radiative Corrections Flag
         RadiativeFlag;
         
+        RelicPeakPosition;
+        
     end
     methods % Constructor
         function obj = MultiRunAnalysis(varargin)
@@ -63,6 +65,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             p.addParameter('Twin_SameCDFlag','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('Twin_SameIsotopFlag','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('RadiativeFlag','ON',@(x)ismember(x,{'ON','OFF'}));
+            p.addParameter('RelicPeakPosition','',@(x)(isfloat(x) && x>=0) || isempty(x));
            
             % Parse unmatched parameters to RunAnalysis.m
             p.KeepUnmatched=1;
@@ -86,6 +89,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             obj.Twin_SameCDFlag     = p.Results.Twin_SameCDFlag;
             obj.Twin_SameIsotopFlag = p.Results.Twin_SameIsotopFlag;
             obj.RadiativeFlag       = p.Results.RadiativeFlag;
+            obj.RelicPeakPosition   = p.Results.RelicPeakPosition;
 
             obj.SingleRun_FitResults = struct('chi2Stat','','chi2CMall','','chi2CMcorr','');
             %------------------------------- Parser End----------------------------------------%
@@ -1850,6 +1854,9 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             end
             if ~isempty(WGTS_B_T)
                 TBDarg = {TBDarg{:},'WGTS_B_T',WGTS_B_T};
+            end
+            if ~isempty(obj.RelicPeakPosition)
+                TBDarg = {TBDarg{:},'PeakPosition',obj.RelicPeakPosition};
             end
             
 %             if strcmp(obj.MosCorrFlag,'ON') 

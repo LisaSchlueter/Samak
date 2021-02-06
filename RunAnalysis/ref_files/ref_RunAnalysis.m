@@ -70,6 +70,7 @@ p.addParameter('PixList',1:148,@(x)isfloat(x));
 p.addParameter('RingList',1:12,@(x)isfloat(x));
 p.addParameter('RingMerge','Default',@(x)ismember(x,{'Default','None','Full','Half','Azi','AziHalfNS','AziHalfEW'}));
 p.addParameter('FSD_Sigma','',@(x)isfloat(x) || isempty(x)); % std of gaussian or width of rectangle
+p.addParameter('PeakPosition','',@(x)isfloat(x) && x>=0);
            
 p.parse(varargin{:});
 
@@ -132,6 +133,8 @@ UseParallelRF            = p.Results.UseParallelRF;
 MACE_Bmax_T              = p.Results.MACE_Bmax_T;
 MACE_Ba_T                = p.Results.MACE_Ba_T; 
 MACE_Sigma               = p.Results.MACE_Sigma;
+
+PeakPosition             = p.Results.PeakPosition;
 % ---------------------------------------------------------------------- %
 % Create Tritium spectrum object 
 opt_calc = {...
@@ -254,6 +257,8 @@ opt_integration = {'IStype','SIMPFAST'};
 
 opt_corr = {'RadiativeFlag',RadiativeFlag};
 
+opt_relic = {'PeakPosition',PeakPosition};
+
 TritiumObject = TBD(...
     opt_corr{:},...
     opt_calc{:},...
@@ -265,5 +270,6 @@ TritiumObject = TBD(...
     opt_fsd{:},...
     opt_bkg{:},...
     opt_doppler{:},...
-    opt_integration{:});
+    opt_integration{:},...
+    opt_relic{:});
 end

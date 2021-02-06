@@ -1,4 +1,4 @@
-A=RelicNuDebug('Params','KNM1');
+A=RelicNuAnalysis('Params','KNM1');
 %A.Chi2Twin('Recompute','OFF','CheckErrors','ON','Plot','OFF','Syst','ON','pullFlag',[1 3]);
 %A.Chi2Twin('Recompute','OFF','Plot','OFF','Syst','ON','pullFlag',[1 3]);
 A.Chi2Twin('Recompute','OFF','Plot','OFF','Syst','OFF','fitPar','E0 Norm Bkg');

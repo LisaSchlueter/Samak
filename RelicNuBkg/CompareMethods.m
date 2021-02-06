@@ -1,5 +1,5 @@
 startup;
-Q = RelicNuDebug('Params','KNM1');
+Q = RelicNuAnalysis('Params','KNM1');
 %eta_Chi2 = zeros(1,21);
 % for i=1:21
 %     mnu = (i-1)/10;

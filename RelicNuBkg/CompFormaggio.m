@@ -1,29 +1,29 @@
 H0 = importdata('RelicNuBkg/FormaggioISBeta.txt');
 H1 = importdata('RelicNuBkg/FormaggioISRelic.txt');
 
-T = RelicNuDebug('Params','TDR','ToggleES','ON');
+T = RelicNuAnalysis('Params','TDR','ToggleES','ON');
 T.SetRhoDmnu2TimeEta('mnu',1,'Time',365.242*24*3600,'Eta',1);%,'RhoDMode','EffMass','RhoD',66.5e-6);
 fig1=figure(1);
 T.TotalCountsStudy('Plot','ON');
 
-% U = RelicNuDebug('Params','TDR','ToggleES','OFF');
-% U.SetRhoDmnu2TimeEta('mnu',1,'Time',365.242*24*3600,'Eta',1);%,'RhoDMode','EffMass','RhoD',66.5e-6);
-% fig2=figure(2);
-% pT=semilogy(T.R.Te-T.R.Q,T.R.TBDDS_R,'LineWidth',2,'Color','BLue');
-% hold on;
-% pU=semilogy(U.R.Te-U.R.Q,U.R.TBDDS_R,'LineWidth',2,'Color','Red');
-% ylim([1e-25 1e-10]);
-% yticks([1e-20 1e-10]);
-% xlabel(sprintf('{\\itE} - {\\itE}_0 (eV)'),'FontSize',12);
-% ylabel('Rate per 0.1 eV per second','FontSize',12);
-% lh1 = legend([pT pU],'FSD on','FSD ES off - GS on','Box','off','location','northwest');
-% set(lh1,'FontSize',12);
-% PrettyFigureFormat;
-% hold off;
-% 
-% 
-% Eta = 1e6./(T.R.NormFactorTBDDS_R*T.R.WGTS_CD_MolPerCm2/5e17./T.R.TimeSec.*365.242.*24.*3600);
-% T.SetRhoDmnu2TimeEta('mnu',1,'Time',365.242*24*3600,'Eta',Eta);
+U = RelicNuAnalysis('Params','TDR','ToggleES','OFF');
+U.SetRhoDmnu2TimeEta('mnu',1,'Time',365.242*24*3600,'Eta',1);%,'RhoDMode','EffMass','RhoD',66.5e-6);
+fig2=figure(2);
+pT=semilogy(T.R.Te-T.R.Q,T.R.TBDDS_R,'LineWidth',2,'Color','BLue');
+hold on;
+pU=plot(U.R.Te-U.R.Q,U.R.TBDDS_R,'LineWidth',2,'Color','Red');
+ylim([1e-15 1e-10]);
+%yticks([1e-20 1e-10]);
+xlabel(sprintf('{\\itE} - {\\itE}_0 (eV)'),'FontSize',12);
+ylabel('Rate per 0.1 eV per second','FontSize',12);
+lh1 = legend([pT pU],'Full FSD','Gaussian fit of ground state','Box','off','location','northwest');
+set(lh1,'FontSize',12);
+PrettyFigureFormat;
+hold off;
+
+
+Eta = 1e6./(T.R.NormFactorTBDDS_R*T.R.WGTS_CD_MolPerCm2/5e17./T.R.TimeSec.*365.242.*24.*3600);
+T.SetRhoDmnu2TimeEta('mnu',1,'Time',365.242*24*3600,'Eta',Eta);
 
 T.SetRhoDmnu2TimeEta('mnu',1,'Time',365.242*24*3600,'Eta',(6.4915/5)*1.7931e11/0.5717,'RhoDMode','EffMass','RhoD',66.5e-6);
 T.TotalCountsStudy('Plot','OFF');

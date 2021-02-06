@@ -2,12 +2,12 @@ function relic_global_twin(varargin)
 
     %% Settings
     p=inputParser;
-    p.addParameter('eta',2.8e9,@(x)isfloat(x));
+    p.addParameter('eta',2e11,@(x)isfloat(x));
     p.addParameter('RunList','KNM1',@(x)ismember(x,{'KNM1','KNM2'}));
     p.addParameter('fitPar','mNu E0 Norm Bkg',@(x)ischar(x));
     p.addParameter('E0',18573.73,@(x)isfloat(x));                                         % Endpoint in eV
     p.addParameter('mnuSq',0,@(x)isfloat(x));
-    p.addParameter('Syst','OFF',@(x)ismember(x,{'ON','OFF'}));
+    p.addParameter('Syst','ON',@(x)ismember(x,{'ON','OFF'}));
     p.addParameter('range',40,@(x)isfloat(x));
     p.parse(varargin{:});
     eta      =p.Results.eta;
@@ -64,7 +64,7 @@ function relic_global_twin(varargin)
             'minuitOpt','min ; minos',...         % technical fitting options (minuit)
             'FSDFlag','SibilleFull',...           % final state distribution
             'ELossFlag','KatrinT2',...            % energy loss function
-            'SysBudget',22,...                    % defines syst. uncertainties -> in GetSysErr.m;
+            'SysBudget',24,...                    % defines syst. uncertainties -> in GetSysErr.m;
             'DopplerEffectFlag','FSD',...
             'Twin_SameCDFlag','OFF',...
             'Twin_SameIsotopFlag','OFF',...

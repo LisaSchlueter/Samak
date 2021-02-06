@@ -113,7 +113,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
         
         % relic neutrinos
         eta_i;eta;ToggleRelic;
-        ToggleES;
+        ToggleES;PeakPosition;
         
         % Phase Space Correction for Negative Mass Squared
         PS_Wein93;
@@ -267,6 +267,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
             p.addParameter('eta_i',1,@(x)isfloat(x));
             p.addParameter('ToggleRelic','ON',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('ToggleES','OFF',@(x)ismember(x,{'ON','OFF'}));
+            p.addParameter('PeakPosition','',@(x)(isfloat(x) && x>=0) || isempty(x));
 
             % TBD: Flag for Theoretical Corrections
             p.addParameter('ScreeningFlag','OFF',@(x)ismember(x,{'OFF','ON'}));
@@ -333,6 +334,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
             obj.eta_i               = p.Results.eta_i;
             obj.ToggleRelic         = p.Results.ToggleRelic;
             obj.ToggleES            = p.Results.ToggleES;
+            obj.PeakPosition        = p.Results.PeakPosition;
             
             % TBD: Flag Theoretical Corrections
             obj.ScreeningFlag       = p.Results.ScreeningFlag;
@@ -1168,7 +1170,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                             .*((Q_local-obj.Te).^2-obj.mnu4Sq).^0.5));
                         obj.PhaseSpace(isnan(obj.PhaseSpace)) = 0;
                     case 'NuCapture'
-                        obj.PhaseSpace = pdf('Normal',obj.Te-obj.Q,mNuSq_local,obj.DE_sigma);
+                        obj.PhaseSpace = pdf('Normal',obj.Te-obj.Q,sqrt(mNuSq_local),obj.DE_sigma);
                 end
                 
             else
@@ -1824,7 +1826,16 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                                         savename = sprintf('RelicNuBkg/FSDwidths/FSDGroundStateWidth_%s%s%s.mat',obj.TTFSD,obj.DTFSD,obj.HTFSD);
                                         if exist(savename,'file')
                                             load(savename,'FSDwidth','Position');
-                                            obj.PhaseSpace = pdf('Normal',obj.Te-obj.Q,Position+obj.mnuSq,sqrt(obj.DE_sigma^2+FSDwidth^2));  %obj.Q.*obj.me./(obj.me+obj.MH3+obj.MHe3),
+                                            if ~isempty(obj.PeakPosition)
+                                                RelicPeakPosition = Position+obj.PeakPosition;
+                                            else
+                                                if obj.mnuSq<0
+                                                    RelicPeakPosition = Position;
+                                                else
+                                                    RelicPeakPosition = Position+sqrt(obj.mnuSq);
+                                                end
+                                            end
+                                            obj.PhaseSpace = pdf('Normal',obj.Te-obj.Q,RelicPeakPosition,sqrt(obj.DE_sigma^2+FSDwidth^2));  %obj.Q.*obj.me./(obj.me+obj.MH3+obj.MHe3),
                                         elseif strcmp(obj.TTFSD,'OFF') && strcmp(obj.DTFSD,'OFF') && strcmp(obj.HTFSD,'OFF')
                                             obj.ComputePhaseSpace('NuCapture');
                                         else
