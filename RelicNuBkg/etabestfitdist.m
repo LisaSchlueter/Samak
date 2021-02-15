@@ -1,7 +1,7 @@
 initfile=@ref_RelicNuBkg_KNM1;
 fitresults = zeros(11,1000);
 for j=1
-    M = RunAnalysis('RunNr',10,...         % runlist defines which runs are analysed -> set MultiRunAnalysis.m -> function: GetRunList()
+    M = RunAnalysis('RunNr',1,...         % runlist defines which runs are analysed -> set MultiRunAnalysis.m -> function: GetRunList()
                 'FakeInitFile',initfile,...
                 'chi2','chi2Stat',...              % uncertainties: statistical or stat + systematic uncertainties
                 'DataType','Fake',...                 % can be 'Real' or 'Twin' -> Monte Carlo

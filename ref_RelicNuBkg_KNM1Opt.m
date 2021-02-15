@@ -1,10 +1,9 @@
-function TritiumObject = ref_RelicNuBkg_KNM1(varargin)
+function TritiumObject = ref_RelicNuBkg_KNM1Opt(varargin)
 
 
 TDMode = 'DataTBD';
 % use MTD from KNM1 for 30 eV
 MTD = importdata('KNM1_RelicOpt.mat');
-%MTD = importdata('KNM1_40.mat');
 
 PixList = GetPixList('Knm1');
 
@@ -235,5 +234,3 @@ TritiumObject = TBD(...
     opt_integration{:},...
     opt_relic{:});
 end
-
-

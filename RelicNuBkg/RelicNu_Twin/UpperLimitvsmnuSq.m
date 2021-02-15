@@ -1,27 +1,29 @@
 %% Settings
 TwinmnuSq = -1;
-mNuBins   = 6;
+mNuBins   = 9;
 mNuUpper  = 4;   %eV
 
 A = RelicNuAnalysis('Params','KNM1');
 
 matFilePath = [getenv('SamakPath'),sprintf('RelicNuBkg/')];
-savename = [matFilePath,sprintf('SensVsMnuSq_%s_[0_%g].mat',A.Params,mNuUpper)];
+savename = [matFilePath,sprintf('SensVsMnuSq_%s_[0_%g]_mnuSqfix.mat',A.Params,mNuUpper)];
 
 if exist(savename,'file')
     load(savename,'ScanPoints','Sensitivities')
 else
     Sensitivities = linspace(0,mNuUpper,mNuBins);
-    ScanPoints = linspace(0,mNuUpper,mNuBins);
+    ScanPoints = linspace(4,mNuUpper,mNuBins);
 
     for i=1:numel(ScanPoints)
         A.Chi2Twin('Recompute','ON',...
-            'TwinBias_mnuSq',ScanPoints(i),...
+            'TwinBias_mnuSq',TwinmnuSq,...
+            'fitPar','E0 Norm Bkg',...
             'etarange',11,...
-            'etafactor',3.001,...
+            'etafactor',6.001,...
             'NetaBins',2,...
             'DeltaChi2',2.71,...
-            'Plot','OFF');
+            'Plot','OFF',...
+            'mnuSqfix',ScanPoints(i));
         Sensitivities(i) = A.etaSensitivity;
     end
 

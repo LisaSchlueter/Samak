@@ -3510,8 +3510,8 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             runsRW1 = sort(importdata([RunListDir,'KNM2_RW1.dat']));
             runsRW2 = sort(importdata([RunListDir,'KNM2_RW2.dat']));
             runsRW3 = sort(importdata([RunListDir,'KNM2_RW3.dat']));
-            runsRW1a= sort(importdata([RunListDir,'KNM2_RW1a.dat']));
-            runsRW1b= sort(importdata([RunListDir,'KNM2_RW1b.dat']));
+            %runsRW1a= sort(importdata([RunListDir,'KNM2_RW1a.dat']));
+            %runsRW1b= sort(importdata([RunListDir,'KNM2_RW1b.dat']));
             
             if ~isempty(obj.TwinFakeLabel)
                 ListName = strrep(ListName,obj.TwinFakeLabel,'');
