@@ -1183,7 +1183,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             %RunAnalysis settings
             p.addParameter('InitNormFit','ON',@(x)ismember(x,{'ON','OFF'})); % Init Model Normalization + Background with Fit
             p.addParameter('BkgCM','ON',@(x)ismember(x,{'ON','OFF'}));       % Use Background CovMat ON/OFF
-            
+            p.addParameter('BkgPtCM','ON',@(x)ismember(x,{'ON','OFF'}));      % Use Background CovMat ON/OFF
             % CovMat settings
             p.addParameter('SysEffects',defaultEffects,@(x)isstruct(x));
             p.addParameter('RecomputeFlag','OFF',@(x)ismember(x,{'ON','OFF'}));
@@ -1218,6 +1218,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             
             InitNormFit              = p.Results.InitNormFit;
             BkgCM                    = p.Results.BkgCM;
+            BkgPtCM                  = p.Results.BkgPtCM;
             SysEffects               = p.Results.SysEffects;
             RecomputeFlag            = p.Results.RecomputeFlag;
             nTrials                  = p.Results.nTrials;
@@ -1245,7 +1246,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             BkgRingCorrCoeff         = p.Results.BkgRingCorrCoeff; % ring to ring correlation coefficient
             BkgScalingOpt            = p.Results.BkgScalingOpt;
             BkgMode                  = p.Results.BkgMode;
-            BKG_PtSlopeErr          = p.Results.BKG_PtSlopeErr;
+            BKG_PtSlopeErr           = p.Results.BKG_PtSlopeErr;
             % --------------------- END PARSER ---------------------------------%
             
             % --------------------  Initialize Covariance Matrix----------------------------%
@@ -1264,7 +1265,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             %Initialize Normalization and Background with a stat. Fit
             if strcmp(InitNormFit,'ON')
                 % 40 eV range, stat only, free parameters: E0, Bkg, Norm
-                obj.InitModelObj_Norm_BKG('RecomputeFlag','ON');
+                obj.InitModelObj_Norm_BKG('RecomputeFlag','OFF');
             end
             
             obj.FitCM_Obj = CovarianceMatrix('StudyObject',obj.ModelObj, 'nTrials',nTrials,...
@@ -1283,7 +1284,8 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                 'RW_MultiPosErr',RW_MultiPosErr,...
                 'NonPoissonScaleFactor',obj.NonPoissonScaleFactor,...
                 'MACE_VarErr',MACE_VarErr,...
-                'is_EOffsetErr',is_EOffsetErr);
+                'is_EOffsetErr',is_EOffsetErr,...
+                'BKG_PtSlopeErr',BKG_PtSlopeErr);
             
             if strcmp(DataDriven,'ON')
                 obj.Get_DataDriven_RelErr_TASR; % replaces default values with Data Driven values
@@ -1314,14 +1316,19 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             % Compute Shape only covariance matrix for desired fit range
             
             try
-                [obj.FitCMShape,obj.FitCMFracShape] = obj.FitCM_Obj.DecomposeCM('CovMatFrac',obj.FitCMFrac,'exclDataStart',obj.exclDataStart);
+                if sum(sum(obj.FitCMFrac))~=0
+                    [obj.FitCMShape,obj.FitCMFracShape] = obj.FitCM_Obj.DecomposeCM('CovMatFrac',obj.FitCMFrac,'exclDataStart',obj.exclDataStart);
+                else
+                    obj.FitCMShape     = zeros(obj.ModelObj.nqU,obj.ModelObj.nqU);
+                    obj.FitCMFracShape = zeros(obj.ModelObj.nqU,obj.ModelObj.nqU);
+                end
             catch
                 fprintf('Decomposition doesnt work - TASR covariance matrix probably too small (Knm2) \n')
                 fprintf('Temporary fix: take regular covariance matrix instead - no shape only \n')
                 obj.FitCMShape = obj.FitCM;
                 obj.FitCMFracShape = obj.FitCMFrac;
             end
-          
+            
             % Background Covariance Matrix: Compute and Add to Signal Covariance Matrix
             if strcmp(BkgCM,'ON')
                 obj.FitCM_Obj.ComputeCM_Background('Display',PlotSaveCM,...
@@ -1342,20 +1349,21 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             end
             
             % Penning trap covariance matrix
-            if BKG_PtSlopeErr~=0
+            if BKG_PtSlopeErr~=0 && strcmp(BkgPtCM,'ON')
                 obj.ModelObj.nRuns = obj.nRuns;
                 obj.FitCM_Obj.ComputeCM_BackgroundPT('Display',PlotSaveCM,'nTrials_loc',1e4);
                 
                 % add to previous cm
                 obj.FitCM           = obj.FitCM          + obj.FitCM_Obj.CovMat;     % regular covmat:    add background covmat to signal covmat
                 obj.FitCMFrac       = obj.FitCMFrac      + obj.FitCM_Obj.CovMatFrac; % fractional covmat: add background covmat to signal covmat
+               
                 % shape only:
                 [BkgCMPtShape,BkgCMPtFracShape] = obj.FitCM_Obj.DecomposeCM('CovMatFrac',obj.FitCM_Obj.CovMatFrac,...
-                    'exclDataStart',obj.exclDataStart,'BkgCM','ON');
+                    'exclDataStart',obj.exclDataStart,'BkgPTCM','ON');
                 obj.FitCMShape      = obj.FitCMShape     + BkgCMPtShape;     % shape only covmat:            add background covmat to signal covmat
                 obj.FitCMFracShape  = obj.FitCMFracShape + BkgCMPtFracShape; % fractional shape only covmat: add background covmat to signal covmat
-                
             end
+            
             % Compute Statistical Uncertainties,including P/NP fluctuations
             [StatCM, StatCMFrac] = obj.ComputeCM_StatPNP(varargin);
             
@@ -1728,7 +1736,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                     obj.InitModelObj_Norm_BKG('RecomputeFlag','OFF');
                 end
                 
-                [StatCM, StatCMFrac] = obj.ComputeCM_StatPNP(varargin);
+               [StatCM, StatCMFrac] = obj.ComputeCM_StatPNP(varargin);
                obj.FitCM = StatCM;         
                obj.FitCMShape = StatCM;
                obj.FitCMFrac = StatCMFrac; 
@@ -4129,7 +4137,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                     case 'FirstTritium.katrin'
                         obj.SysBudget = 0;
                     case 'Knm2'
-                        obj.SysBudget = 38;
+                        obj.SysBudget = 40;
                 end
             end
             

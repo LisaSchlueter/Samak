@@ -2,10 +2,11 @@
 range     = 40;
 freePar   = 'mNu E0 Bkg Norm';
 chi2      = 'chi2Stat';%CMShape';
-DataType  = 'Twin';%Real';
+DataType  = 'Real';%Real';
 AnaFlag   = 'StackPixel';
 RingMerge = 'Full';%'None';
 FSDFlag = 'KNM2';
+DopplerEffectFlag = 'FSD';
 
 if strcmp(AnaFlag,'Ring')
     SysBudget = 39;
@@ -57,7 +58,8 @@ else
         'FSD_Sigma',sqrt(SigmaSq),...
         'TwinBias_FSDSigma',sqrt(SigmaSq),...
         'RingMerge',RingMerge,...
-        'PullFlag',99};%99 = no pull
+        'PullFlag',99,...
+        'DopplerEffectFlag',DopplerEffectFlag};%99 = no pull
     A = MultiRunAnalysis(RunAnaArg{:});
     %%
     A.exclDataStart = A.GetexclDataStart(range);

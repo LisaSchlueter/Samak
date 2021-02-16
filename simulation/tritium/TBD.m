@@ -1792,8 +1792,8 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
         if obj.BKG_PtSlope ~=0
             TimeTotSubrun    = obj.TimeSec.*obj.qUfrac;
             TimeAvSubrun     = obj.TimeSec.*obj.qUfrac./obj.nRuns;
-            BkgRate_PngSlope     = 0.5.*obj.BKG_PtSlope.*TimeAvSubrun;
-            Bkg_PtSlope     = BkgRate_PngSlope.*TimeTotSubrun;
+            BkgRate_PngSlope = 0.5.*obj.BKG_PtSlope.*TimeAvSubrun;
+            Bkg_PtSlope      = BkgRate_PngSlope.*TimeTotSubrun;
             obj.TBDIS        = obj.TBDIS + Bkg_PtSlope;
         end
         

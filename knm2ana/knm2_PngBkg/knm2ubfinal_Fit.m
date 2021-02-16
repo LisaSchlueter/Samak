@@ -1,12 +1,18 @@
 % unblinded fit with penning track background slope
 range     = 40;
 freePar   = 'mNu E0 Bkg Norm';
-chi2      = 'chi2Stat';%CMShape';%CMShape';
-DataType  = 'Twin';%Real';
+chi2      = 'chi2Stat';
+DataType  = 'Twin';
 AnaFlag   = 'StackPixel';
 RingMerge = 'Full';%'None';
-BKG_PtSlope = 3*1e-06;
-TwinBias_BKG_PtSlope = 3*1e-06; 
+DopplerEffectFlag = 'FSD';
+
+BKG_PtSlopeAll =[3,0:6].*1e-06;
+for i=1:numel(BKG_PtSlopeAll)
+    
+BKG_PtSlope = BKG_PtSlopeAll(i);%3*1e-06;
+TwinBias_BKG_PtSlope = 3*1e-06;
+FSDFlag   = 'KNM2';
 
 if strcmp(AnaFlag,'Ring')
     SysBudget = 39;
@@ -20,12 +26,9 @@ else
     AnaStr = AnaFlag;
 end
 
-FSDFlag   = 'KNM2';
-
 savedir = [getenv('SamakPath'),'knm2ana/knm2_PngBkg/results/'];
 savename = sprintf('%sknm2ubfinal_Fit_Bpng-%.1fmucpsPers_%s_%.0feV_%s_%s_%s_%s.mat',...
     savedir,BKG_PtSlope*1e6,DataType,range,strrep(freePar,' ',''),chi2,AnaStr,FSDFlag);
-
 
 if strcmp(chi2,'chi2Stat')
     NonPoissonScaleFactor = 1;
@@ -36,11 +39,15 @@ elseif strcmp(chi2,'chi2Stat+')
     chi2 = 'chi2Stat';
 end
 
-if ~strcmp(chi2,'chi2Stat') 
+if ~strcmp(chi2,'chi2Stat')
     savename = strrep(savename,'.mat',sprintf('_SysBudget%.0f.mat',SysBudget));
 end
 
-if exist(savename,'file') 
+if strcmp(DataType,'Twin')
+    savename = strrep(savename,'.mat',sprintf('_TwinBpng-%.1fmucpsPers.mat',1e6*TwinBias_BKG_PtSlope));
+end
+
+if exist(savename,'file')
     load(savename,'FitResult','RunAnaArg','A');
 else
     SigmaSq =  0.0124+0.0025;
@@ -60,9 +67,10 @@ else
         'FSD_Sigma',sqrt(SigmaSq),...
         'TwinBias_FSDSigma',sqrt(SigmaSq),...
         'RingMerge',RingMerge,...
-        'PullFlag',99,...
+        'PullFlag',99,...;%99 = no pull
         'BKG_PtSlope',BKG_PtSlope,...
-        'TwinBias_BKG_PtSlope',TwinBias_BKG_PtSlope};%99 = no pull
+        'TwinBias_BKG_PtSlope',TwinBias_BKG_PtSlope,...
+        'DopplerEffectFlag',DopplerEffectFlag};
     A = MultiRunAnalysis(RunAnaArg{:});
     %%
     A.exclDataStart = A.GetexclDataStart(range);
@@ -71,13 +79,14 @@ else
         A.ModelObj.RFBinStep = 0.01;
         A.ModelObj.InitializeRF;
     end
-     
+    
     A.Fit;
     FitResult = A.FitResult;
     MakeDir(savedir);
-   % save(savename,'FitResult','RunAnaArg','A','SigmaSq')
+    save(savename,'FitResult','RunAnaArg','A','SigmaSq')
 end
 %%
+
 %A.PlotFit;
 fprintf('m_nu^2 = %.3f + %.3f %.3f eV^2       , ',FitResult.par(1),FitResult.errPos(1),FitResult.errNeg(1))
 fprintf('mean err = %.3f eV^2 \n',(FitResult.errPos(1)-FitResult.errNeg(1))/2)
@@ -85,6 +94,7 @@ fprintf('E_0 = %.3f + %.3f eV  \n',FitResult.par(2)+A.ModelObj.Q_i,FitResult.err
 fprintf('chi2 = %.3f (%.0f dof), p = %.3f  \n',FitResult.chi2min,FitResult.dof,1-chi2cdf(FitResult.chi2min,FitResult.dof));
 
 %%
+end
 Plot = 'OFF';
 if strcmp(Plot,'ON')
     if strcmp(AnaFlag,'StackPixel')

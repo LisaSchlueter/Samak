@@ -105,7 +105,7 @@ classdef RunSensitivity < handle
             obj.PlotColor = {rgb('White'),rgb('Navy'),rgb('GoldenRod'),rgb('PowderBlue'),...
                 rgb('CadetBlue'),rgb('DarkOrange'),rgb('FireBrick'),rgb('DarkSlateGray'),...
                 rgb('YellowGreen'),rgb('Magenta'),...
-                rgb('SeaGreen'),rgb('DodgerBlue')};
+                rgb('SeaGreen'),rgb('DodgerBlue'),rgb('LightGreen')};
             
             if strcmp(obj.RunAnaObj.fitter,'matlab')
                 % do 1 init fit
@@ -174,16 +174,21 @@ classdef RunSensitivity < handle
                         BkgMode = 'Gauss';
                     end
                     obj.RunAnaObj.ComputeCM('SysEffect',struct('FSD','OFF'),...
-                        'BkgCM','ON','nTrials',nTrials,'Mode',BkgMode,...
+                        'BkgCM','ON','BkgPtCM','OFF','nTrials',nTrials,'Mode',BkgMode,...
                         'BkgScalingOpt',2,'BkgRingCorrCoeff',0);
                     obj.RunAnaObj.NonPoissonScaleFactor = 1;
                     obj.RunAnaObj.ComputeCM('SysEffect',struct('FSD','OFF'),...
-                        'BkgCM','ON','nTrials',nTrials,'Mode',BkgMode,...
+                        'BkgCM','ON','BkgPtCM','OFF','nTrials',nTrials,'Mode',BkgMode,...
                         'BkgScalingOpt',2,'BkgRingCorrCoeff',0);
+                elseif strcmp(obj.SysEffect,'BkgPT')
+                     [SysErr,~] = GetSysErr(obj.RunAnaObj.SysBudget);
+                      obj.RunAnaObj.ComputeCM('SysEffect',struct('FSD','OFF'),...
+                        'BkgCM','OFF','BkgPtCM','ON','nTrials',nTrials,...
+                        'BKG_PtSlopeErr',SysErr.BKG_PtSlopeErr);
                 else
                     [~,CmArg] = GetSysErr(obj.RunAnaObj.SysBudget);
                     obj.RunAnaObj.ComputeCM('SysEffects',obj.SysEffect,CmArg{:},...
-                        'BkgCM','OFF','nTrials',nTrials);
+                        'BkgCM','OFF','BkgPtCM','OFF''nTrials',nTrials);
                 end
             end
             
@@ -989,10 +994,10 @@ classdef RunSensitivity < handle
                     obj.RunAnaObj.SetNPfactor;
                      
                     % get covariance matrix
-                    if ~ismember(obj.SysEffectsAll{i},{'Bkg','NP'})
+                    if ~ismember(obj.SysEffectsAll{i},{'Bkg','NP','BkgPT'})
                         obj.RunAnaObj.NonPoissonScaleFactor=1;
                         obj.RunAnaObj.ComputeCM('SysEffect',struct(obj.SysEffectsAll{i},'ON'),...
-                            'nTrials',nTrials,CmArg{:},'BkgCM','OFF');
+                            'nTrials',nTrials,CmArg{:},'BkgCM','OFF','BkgPtCM','OFF');
                     elseif strcmp(obj.SysEffectsAll{i},'Bkg')
                         if strcmp(obj.RunAnaObj.DataSet,'Knm1')
                             BkgMode = 'SlopeFit';
@@ -1007,16 +1012,18 @@ classdef RunSensitivity < handle
                         obj.RunAnaObj.NonPoissonScaleFactor=1;
                         obj.RunAnaObj.SetNPfactor;
                         obj.RunAnaObj.ComputeCM('SysEffect',struct('FSD','OFF'),...
-                            'BkgCM','ON','nTrials',nTrials,'BkgMode',BkgMode);
+                            'BkgCM','ON','BkgPtCM','OFF','nTrials',nTrials,'BkgMode',BkgMode);
+                    elseif strcmp(obj.SysEffectsAll{i},'BkgPT')
+                        obj.RunAnaObj.NonPoissonScaleFactor=1;
+                        obj.RunAnaObj.ComputeCM('SysEffect',struct('FSD','OFF'),...
+                            'nTrials',nTrials,CmArg{:},'BkgCM','OFF','BkgPtCM','ON');
                     elseif strcmp(obj.SysEffectsAll{i},'NP')
                         % exception for background rate (Non-Poiss)
                         obj.RunAnaObj.chi2          = 'chi2Stat';
-                        obj.RunAnaObj.NonPoissonScaleFactor=NP_prev;
-                        obj.RunAnaObj.SetNPfactor;
+                        obj.RunAnaObj.NonPoissonScaleFactor = NP_prev;
+                        obj.RunAnaObj.SetNPfactor;  
                     end
-                    
-                    obj.RunAnaObj.NonPoissonScaleFactor=NP_prev;
-                      
+ 
                     %compute sensitivity
                     switch obj.Mode
                         case 'Asimov'
@@ -1025,6 +1032,8 @@ classdef RunSensitivity < handle
                             obj.ComputeSensitivity_Scan('cl',obj.ConfLevel,'GetCM','OFF'); %factor has to applied now
                     end
                     
+                    obj.RunAnaObj.NonPoissonScaleFactor= NP_prev;
+                  
                     %save
                     obj.LoadSaveSensitivity('Mode','save','SysEffect',obj.SysEffectsAll{i});
                 end
@@ -1117,10 +1126,13 @@ classdef RunSensitivity < handle
                     nTrials = obj.GetnTrials(SysEffect_local);
                     if strcmp(obj.SysEffectsAll{i},'Bkg')
                         obj.RunAnaObj.ComputeCM('SysEffect',SysEffect_local,CmArg{:},...
-                            'BkgCM','ON','nTrials',nTrials);
+                            'BkgCM','ON','BkgPtCM','OFF','nTrials',nTrials);
+                    elseif strcmp(obj.SysEffectsAll{i},'BkgPT')
+                        obj.RunAnaObj.ComputeCM('SysEffect',SysEffect_local,CmArg{:},...
+                            'BkgCM','OFF','BkgPtCM','ON','nTrials',nTrials);
                     else
                         obj.RunAnaObj.ComputeCM('SysEffect',SysEffect_local,CmArg{:},...
-                            'BkgCM','OFF','nTrials',nTrials);
+                            'BkgCM','OFF','BkgPtCM','OFF','nTrials',nTrials);
                     end
                     
                     %compute sensitivity
@@ -1490,15 +1502,19 @@ classdef RunSensitivity < handle
                 
                 if strcmp(obj.AsymErr,'ON') && strcmp(obj.RunAnaObj.fitter,'minuit')
                     PlotVarTmpNeg = struct2array(structfun(@(x)abs(x(Parameter)),obj.MultiLparNeg,'UniformOutput',0));
-                    PlotVarTmpNeg(PlotVarTmpNeg<PlotVarTmpNeg(1))=PlotVarTmpNeg(1); % no sensitivity can be smaller as stat only
+                    %PlotVarTmpNeg(PlotVarTmpNeg<PlotVarTmpNeg(1))=PlotVarTmpNeg(1); % no sensitivity can be smaller as stat only
                     PlotVarTmpPos = struct2array(structfun(@(x)abs(x(Parameter)),obj.MultiLparPos,'UniformOutput',0));
-                    PlotVarTmpPos(PlotVarTmpPos<PlotVarTmpPos(1))=PlotVarTmpPos(1); % no sensitivity can be smaller as stat only
+                    
+                    %PlotVarTmpPos(PlotVarTmpPos<PlotVarTmpPos(1))=PlotVarTmpPos(1); % no sensitivity can be smaller as stat only
                     SingleBarY(i,1)      =  SingleBarStat(i);
-                    SingleBarY(i,2:end)  = 0.5.*(sqrt(PlotVarTmpNeg(2:end).^2-PlotVarTmpNeg(1).^2)+...
-                        sqrt(PlotVarTmpPos(2:end).^2-PlotVarTmpPos(1).^2));
+                    %SingleBarY(i,2:end)  = 0.5.*(sqrt(PlotVarTmpNeg(2:end).^2-PlotVarTmpNeg(1).^2)+...
+                    %    sqrt(PlotVarTmpPos(2:end).^2-PlotVarTmpPos(1).^2));
+                    
+                    MeanErr = 0.5*(PlotVarTmpPos+PlotVarTmpNeg);
+                    MeanErr(MeanErr<MeanErr(1)) = MeanErr(1);% no sensitivity can be smaller as stat only
+                    SingleBarY(i,2:end) = sqrt(MeanErr(2:end).^2-MeanErr(1).^2);
                 end
             end
-            
             % SingleBarX = obj.GetRangeSingleSys('PlotRanges',StackBarX'); % Single Bar range values
             
             % MultiBar Plot (Stacked)
@@ -2532,12 +2548,12 @@ classdef RunSensitivity < handle
             switch obj.RunAnaObj.DataSet
                 case 'Knm2'
                     %Default
-                    obj.SysEffectsAll   = {'TCoff_OTHER','FSD','TASR','RF_EL','RF_BF','RF_RX','Stack','LongPlasma','FPDeff','NP','Bkg'}; %Bkg has to be last
+                    obj.SysEffectsAll   = {'TCoff_OTHER','FSD','TASR','RF_EL','RF_BF','RF_RX','Stack','LongPlasma','FPDeff','NP','BkgPT','Bkg'}; %Bkg has to be last
                     obj.SysEffectLeg    = {'Theoretical corrections';'Final-state distribution';...
                         'Tritium activity fluctuations';'Energy-loss function';...
                         'Magnetic fields';'Source scattering';'HV fluctuations';...
                         'Long. source potential';...
-                        'Detector efficiency';'Non-Poisson background';'Background slope'};
+                        'Detector efficiency';'Non-Poisson background';'Background PT';'Background slope'};
                 case 'Knm1'
                     obj.SysEffectsAll      = {'TCoff_OTHER','FSD','TASR','RF_EL','RF_BF','RF_RX','Stack','FPDeff','NP','Bkg'}; %Bkg has to be last
                     obj.SysEffectLeg      = {'Theoretical corrections';'Final-state distribution';...

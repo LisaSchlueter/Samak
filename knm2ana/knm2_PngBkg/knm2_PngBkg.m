@@ -3,7 +3,7 @@
 Plot = 'ON';
 DataType = 'MC';
 range = 40;
-BKG_PtSlope = 3e-06;%1.7*1e-06; % background rate increase over time, in cps per second 
+BKG_PtSlope =1.7*1e-06; %3e-06;%1.7*1e-06; % background rate increase over time, in cps per second 
 
 savedir = [getenv('SamakPath'),'knm2ana/knm2_PngBkg/results/'];
 savename = sprintf('%sknm2_PngBkg_%s_%.0feV_Bpng-%.1fmucpsPers.mat',...
@@ -30,6 +30,7 @@ else
         'RingMerge','Full',...
         'PullFlag',99,...
         'RadiativeFlag','ON'};
+    
     A = MultiRunAnalysis(RunAnaArg{:});
     A.exclDataStart = A.GetexclDataStart(range);
     if ismember(A.DataType,{'Twin','MC'})
@@ -116,7 +117,7 @@ if strcmp(Plot,'ON')
     leg = legend([ptot,pi,ppng],...
         sprintf('\\beta + {\\it B}_{const.} + {\\it B}_{pt.}'),...
         sprintf('{\\it B}_{const.}'),...
-        sprintf('{\\itB}_{pt.}'));
+        sprintf('{\\itB}_{pt.}: \\alpha = %.1f \\mucps/s',BKG_PtSlope*1e6));
     leg.EdgeColor = rgb('LightGray');
     xticklabels('')
     ax1 = gca;
@@ -132,7 +133,7 @@ if strcmp(Plot,'ON')
     pm05eV = plot(qU,TBDIS_m01eV2./TBDIS_i,':','LineWidth',2,'Color',rgb('FireBrick'));
     PrettyFigureFormat;
     ylabel(sprintf('Ratio'))
-    leg = legend([ppng,p05eV,pm05eV],sprintf('{\\itB}_{pt.}'),...
+    leg = legend([ppng,p05eV,pm05eV],sprintf('{\\itB}_{pt.}: \\alpha = %.1f \\mucps/s',BKG_PtSlope*1e6),...
         sprintf('{\\itm}_\\nu^2 = 0.1 eV^2'),...
         sprintf('{\\itm}_\\nu^2 = -0.1 eV^2'));
     ax1 = gca;
@@ -159,7 +160,9 @@ if strcmp(Plot,'ON')
     print(gcf,plotname,'-dpng','-r300');
 end
 %% nu-mass bias
-fprintf('reference fit: mnu^2 = %.3f eV^2 , E0 = %.3f eV \n',FitResult_i.par(1),FitResult_i.par(2));
-fprintf('BslopePng fit: mnu^2 = %.3f eV^2 , E0 = %.3f eV \n',FitResult_png.par(1),FitResult_png.par(2));
+fprintf('reference fit: mnu^2 = %.3f eV^2 +-  %.3f eV^2, E0 = %.3f eV \n',...
+    FitResult_i.par(1),FitResult_i.err(1),FitResult_i.par(2));
+fprintf('BslopePng fit: mnu^2 = %.3f eV^2 +- %.3f eV^2 , E0 = %.3f eV \n',...
+    FitResult_png.par(1),FitResult_i.err(1),FitResult_png.par(2));
 
 

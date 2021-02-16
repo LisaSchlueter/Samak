@@ -18,7 +18,7 @@ for i=1:numel(SysEffectsAll)
     if strcmp(AnaFlag,'Ring')
 nametmp = sprintf('%sRunSensAsimov_KNM2_Prompt_40eV_chi2CMShape_budget39_MinuitMinosFit_Real_%s_RingFull.mat',dir,SysEffectsAll{i});
     else
-        nametmp = sprintf('%sRunSensAsimov_KNM2_Prompt_39eV_chi2CMShape_budget38_MinuitMinosFit_Real_%s.mat',dir,SysEffectsAll{i});
+        nametmp = sprintf('%sRunSensAsimov_KNM2_Prompt_39eV_chi2CMShape_budget40_MinuitMinosFit_Real_%s.mat',dir,SysEffectsAll{i});
 
     end
 dtmp = importdata(nametmp);

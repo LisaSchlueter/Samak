@@ -441,7 +441,7 @@ classdef CovarianceMatrix < handle
                 case 'CM'
                     CovMatDisp = TBDIS_NoBKG.*obj.CovMatFrac.*TBDIS_NoBKG';
                     CovMatSpec = CovMatDisp; % for sigma sys/ sigma stat plot
-                    strTitle   = 'Covariance';
+                    strTitle   = sprintf('Covariance (counts^2)');
                 case 'Frac'
                     CovMatDisp = obj.CovMatFrac; 
                     CovMatSpec = TBDIS_NoBKG.*obj.CovMatFrac.*TBDIS_NoBKG';
@@ -449,7 +449,7 @@ classdef CovarianceMatrix < handle
                 case 'Shape'
                     CovMatDisp = obj.CovMatFracShape;
                     CovMatSpec = TBDIS_NoBKG(1:end).*obj.CovMatFracShape.*TBDIS_NoBKG(1:end)';
-                    strTitle   = 'Fractional covariance';
+                    strTitle   = 'Fractional covariance ';
             end
             
             if ~isempty(CovMatInput)
@@ -473,8 +473,8 @@ classdef CovarianceMatrix < handle
             pbaspect([1 1 1])
             % axis
             xlabel(sprintf('Retarding energy - 18574 (eV)'));
-             qUmin = sprintf('%.0f',obj.StudyObject.qU(qUWindowIndexMin)-obj.StudyObject.Q_i);
-             qUmax = sprintf('%.0f',obj.StudyObject.qU(qUWindowIndexMax)-obj.StudyObject.Q_i);
+             qUmin = sprintf('%.0f',obj.StudyObject.qU(qUWindowIndexMin)-18574);
+             qUmax = sprintf('%.0f',obj.StudyObject.qU(qUWindowIndexMax)-18574);
              
             if strcmp(obj.StudyObject.FPD_Segmentation,'RING')
                 %x-axis
@@ -688,8 +688,8 @@ classdef CovarianceMatrix < handle
             % axis
             ax1 = gca;
             xlabel(sprintf('Retarding energy - 18574 (eV)'));
-            qUmin = sprintf('%.0f',obj.StudyObject.qU(qUWindowIndexMin)-obj.StudyObject.Q_i);
-            qUmax = sprintf('%.0f',obj.StudyObject.qU(qUWindowIndexMax)-obj.StudyObject.Q_i);
+            qUmin = sprintf('%.0f',obj.StudyObject.qU(qUWindowIndexMin)-18574);
+            qUmax = sprintf('%.0f',obj.StudyObject.qU(qUWindowIndexMax)-18574);
             ax1.XAxisLocation = 'bottom';
             if strcmp(obj.StudyObject.FPD_Segmentation,'RING')
                 %x-axis
@@ -927,6 +927,7 @@ classdef CovarianceMatrix < handle
             p.addParameter('plots','OFF',@(x)ismember(x,{'ON','OFF'})); % some sanity plots
             p.addParameter('exclDataStart',1,@(x)isfloat(x));           % defines range for normalization
             p.addParameter('BkgCM','OFF',@(x)ismember(x,{'ON','OFF'})); % if covmat is background covmat
+            p.addParameter('BkgPTCM','OFF',@(x)ismember(x,{'ON','OFF'})); % if covmat is background pt covmat
             
             p.parse(varargin{:});
             plots               = p.Results.plots;
@@ -946,8 +947,15 @@ classdef CovarianceMatrix < handle
                     -(obj.StudyObject.BKG_RateSec.*obj.StudyObject.qUfrac.*obj.StudyObject.TimeSec);
             elseif strcmp(BkgCM,'ON')
                 % Background covariance matrix
-                % Use background spectrum 
+                % Use background spectrum
                 TBDIS_NoBKG = obj.StudyObject.BKG_RateSec.*obj.StudyObject.qUfrac.*obj.StudyObject.TimeSec;
+            elseif strcmp(BkgPTCM,'ON')
+                % Background time slope penning trap (pt) covariance matrix
+                % Use background spectrum
+                TimeTotSubrun    = obj.StudyObject.TimeSec.*obj.StudyObject.qUfrac;
+                TimeAvSubrun     = obj.StudyObject.TimeSec.*obj.StudyObject.qUfrac./obj.StudyObject.nRuns;
+                BkgRate_PngSlope = 0.5.*obj.StudyObject.BKG_PtSlope.*TimeAvSubrun;
+                TBDIS_NoBKG      = (BkgRate_PngSlope+obj.StudyObject.BKG_RateSec).*TimeTotSubrun;
             end
             
             %sum of Asiomov spectrum (ringwise)
@@ -2628,7 +2636,7 @@ function ComputeCM_BackgroundPT(obj,varargin)
       obj.CovMatFile = sprintf('%sBkgPT_%s_B%.0fmcps_Slope%.1fmuCpsPerS_SlopeErr%.1fmuCpsPerS_%.0fTrials.mat',...
           cm_path,strrep(obj.StudyObject.TD,'_E018573.73eV2',''),...
           sum(obj.StudyObject.BKG_RateSec)*1e3,...
-          obj.StudyObject.BKG_PtSlope,obj.BKG_PtSlopeErr*1e6,nTrials_loc);
+          obj.StudyObject.BKG_PtSlope*1e6,obj.BKG_PtSlopeErr*1e6,nTrials_loc);
       
       if exist(obj.CovMatFile,'file')==2 && strcmp(obj.RecomputeFlag,'OFF')
           fprintf(2,'CovarianceMatrix::ComputeCM_BackgroundPT:ReadCMFile: Loading CovMatrix File: %s \n',obj.CovMatFile)
@@ -2653,16 +2661,16 @@ function ComputeCM_BackgroundPT(obj,varargin)
           % calculate cm
           TimeTotSubrun    = obj.StudyObject.TimeSec.*obj.StudyObject.qUfrac; % total time in stacked subruns
           TimeAvSubrun     = obj.StudyObject.TimeSec.*obj.StudyObject.qUfrac./obj.StudyObject.nRuns; % average time in subrun
-          
+           
           % central value
           Bkg_PtSlope_i         = obj.StudyObject.BKG_PtSlope;
           BkgRate_PtSlope_i    = 0.5.*Bkg_PtSlope_i.*TimeAvSubrun+obj.StudyObject.BKG_RateSec;
-          BkgCounts_PtSlope_i  = (obj.StudyObject.BKG_RateSec+BkgRate_PtSlope_i).*TimeTotSubrun;
+          BkgCounts_PtSlope_i  = BkgRate_PtSlope_i.*TimeTotSubrun;
           
           % sample bkg slope
           Bkg_PtSlope_v     = Bkg_PtSlope_i+obj.BKG_PtSlopeErr.*randn(1,nTrials_loc);
           BkgRate_PtSlope_v = 0.5.*Bkg_PtSlope_v.*TimeAvSubrun+obj.StudyObject.BKG_RateSec;
-          BkgCounts_PtSlope_v = (obj.StudyObject.BKG_RateSec+BkgRate_PtSlope_v).*TimeTotSubrun;
+          BkgCounts_PtSlope_v = BkgRate_PtSlope_v.*TimeTotSubrun;
           
           % Compute Covariance Matrix
           obj.CovMat = cov(BkgCounts_PtSlope_v');
@@ -2672,15 +2680,21 @@ function ComputeCM_BackgroundPT(obj,varargin)
           save(obj.CovMatFile,'obj','Bkg_PtSlope_v','BkgRate_PtSlope_v','BkgCounts_PtSlope_v',...
               'Bkg_PtSlope_i','BkgRate_PtSlope_i','BkgCounts_PtSlope_i', '-mat');
           
+          % Compute Fractional Covariance Matrix
+          obj.CovMatFrac = bsxfun(@rdivide,obj.CovMat,BkgCounts_PtSlope_i);      %divides 1st row of CovMat by TBDIS(1), etc...
+          obj.CovMatFrac = bsxfun(@rdivide,obj.CovMatFrac,BkgCounts_PtSlope_i'); %divides columnwise
           
-          % Compute Fractional CM
-          obj.ComputeFracCM('Mode','CM2Frac');
-          obj.MultiCovMatFrac.CM_BkgPT = obj.CovMatFrac;
+          % Compute Shape Only 
+          [~, obj.CovMatFracShape] = obj.DecomposeCM('CovMatFrac',obj.CovMatFrac,'exclDataStart',1,'BkgPTCM','ON');
+          obj.MultiCovMat.CM_BkgPT               = obj.CovMat;
+          obj.MultiCovMatFrac.CM_BkgPT           = obj.CovMatFrac;
+          obj.MultiCovMatFracShape.CM_BkgPTShape = obj.CovMatFracShape;
           
-          % Compute Decomposed CM
-          [~, obj.CovMatFracShape] = obj.DecomposeCM('CovMatFrac',obj.CovMatFrac,'exclDataStart',1,'BkgCM','ON');
-          obj.MultiCovMatFracShape.CM_BkgPT = obj.CovMatFracShape;
-          obj.MultiCovMatFracNorm.CM_BkgPT  = obj.CovMatFracNorm;
+  
+%           % Compute Decomposed CM
+%           [~, obj.CovMatFracShape] = obj.DecomposeCM('CovMatFrac',obj.CovMatFrac,'exclDataStart',1,'BkgPTCM','ON');
+%           obj.MultiCovMatFracShape.CM_BkgPT = obj.CovMatFracShape;
+%           obj.MultiCovMatFracNorm.CM_BkgPT  = obj.CovMatFracNorm;
           
           % Save again
           save(obj.CovMatFile, 'obj','-append');
@@ -2689,7 +2703,7 @@ function ComputeCM_BackgroundPT(obj,varargin)
       
       % sanity plot
       if strcmp(Display,'ON')
-          Mode = 'Rate';
+          Mode = 'Counts';
           f1 = figure('Units','normalized','Position',[0.1,0.1,0.73,0.47]);
           subplot(1,4,[1,2,3]);
           qU = obj.StudyObject.qU-18574;
@@ -2697,19 +2711,19 @@ function ComputeCM_BackgroundPT(obj,varargin)
               case 'Counts'
                   [l_v,a_v]= boundedline(qU,mean(BkgCounts_PtSlope_v,2),std(BkgCounts_PtSlope_v,0,2));
                   hold on;
-                  p_i = plot(qU, BkgCounts_PtSlope_i,':','LineWidth',2,'Color',rgb('Orange'));
+                  p_i = plot(qU, BkgCounts_PtSlope_i,'-','LineWidth',2,'Color',rgb('MediumBlue'));
                   ylabel('Background counts');
               case 'Rate'
                   [l_v,a_v]= boundedline(qU,1e3.*mean(BkgRate_PtSlope_v,2),1e3.*std(BkgRate_PtSlope_v,0,2));
                   hold on;
-                  p_i = plot(qU,1e3.*BkgRate_PtSlope_i,':','LineWidth',2,'Color',rgb('Orange'));
+                  p_i = plot(qU,1e3.*BkgRate_PtSlope_i,'-','LineWidth',2,'Color',rgb('MediumBlue'));
                   ylabel('Background rate (mcps)');
           end
-          l_v.LineWidth = 2; a_v.FaceAlpha = 0.5;
+          a_v.FaceColor = rgb('LightBlue');
+          l_v.LineWidth = 2; a_v.FaceAlpha = 1;
           xlabel('Retarding potential - 18574 (eV)');
-          leg = legend([p_i,l_v,a_v],sprintf('central value: {\\ita}= %.1e cps/s',Bkg_PtSlope_i),...
-              'sample mean',...
-              sprintf('1\\sigma error band \\Delta{\\ita}= %.1e cps/s',obj.BKG_PtSlopeErr));
+          leg = legend([p_i,a_v],sprintf('Central value for slope {\\it\\alpha}= %.1f \\mucps/s',1e6.*Bkg_PtSlope_i),...  
+              sprintf('1\\sigma error band \\sigma({\\it\\alpha})= %.1f \\mucps/s',1e6.*obj.BKG_PtSlopeErr));
           legend boxoff
           
           ax1 = gca;
@@ -2719,20 +2733,30 @@ function ComputeCM_BackgroundPT(obj,varargin)
           leg.FontSize  = get(ax1,'FontSize')+2;
           
           subplot(1,4,4);
-          h1 = histogram(Bkg_PtSlope_v);
-          h1.EdgeColor = rgb('DodgerBlue');
+          h1 = histogram(1e6*Bkg_PtSlope_v);
+          h1.EdgeColor = rgb('LightBlue');
           h1.FaceColor = h1.EdgeColor;
+          h1.FaceAlpha = 1;
+          hold on;
+          p1 = plot(mean(1e6*Bkg_PtSlope_v).*[1,1],[0, max(ylim)],'-','Color',rgb('MediumBlue'),'LineWidth',2);
+          p2 = plot((mean(1e6*Bkg_PtSlope_v)-std(1e6*Bkg_PtSlope_v)).*[1,1],[0, max(ylim)],':','Color',rgb('MediumBlue'),'LineWidth',2);
+          plot((mean(1e6*Bkg_PtSlope_v)+std(1e6*Bkg_PtSlope_v)).*[1,1],[0, max(ylim)],':','Color',rgb('MediumBlue'),'LineWidth',2) ;
           ax1 = gca;
-          set(ax1,'Position',[ax1.Position(1)-0.09,ax1.Position(2),ax1.Position(3)+0.17,ax1.Position(4)]);
-          xlabel(sprintf('{\\ita} samples'));
+          set(ax1,'Position',[ax1.Position(1)-0.1,ax1.Position(2),ax1.Position(3)+0.185,ax1.Position(4)]);
+          xlabel(sprintf('Slope {\\it\\alpha} samples (\\mucps/s)'));
           ylabel('Entries');
           PrettyFigureFormat('FontSize',18);
- 
+          leg = legend([p1,p2],sprintf('\\langle\\alpha\\rangle = %.1f \\mucps/s',mean(1e6*Bkg_PtSlope_v)),...
+              sprintf('\\sigma(\\alpha) = %.1f \\mucps/s',std(1e6*Bkg_PtSlope_v)));
+          leg.FontSize  = get(ax1,'FontSize')+2;
+          LegAlpha(leg,0.75)
+          xlim([mean(1e6*Bkg_PtSlope_v)-3*std(1e6*Bkg_PtSlope_v),mean(1e6*Bkg_PtSlope_v)+3*std(1e6*Bkg_PtSlope_v)])
+         
           %save
           plotpath = [cm_path,'plots/'];
           MakeDir(plotpath)
-          plotname =  sprintf('%sBkgPT_%s_Slope%.1fmuCpsPerS_SlopeErr%.1fmuCpsPerS_%.0fTrials.png',...
-              plotpath,strrep(obj.StudyObject.TD,'_E018573.73eV2',''),...
+          plotname =  sprintf('%sBkgPT_%s_%s_Slope%.1fmuCpsPerS_SlopeErr%.1fmuCpsPerS_%.0fTrials.png',...
+              plotpath,Mode,strrep(obj.StudyObject.TD,'_E018573.73eV2',''),...
               obj.StudyObject.BKG_PtSlope,obj.BKG_PtSlopeErr*1e6,nTrials_loc);
           
           print(f1,plotname,'-dpng','-r300');

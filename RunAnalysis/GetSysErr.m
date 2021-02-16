@@ -499,7 +499,7 @@ elseif SysBudget == 40 % KNM2 unblinding stage 3 (data w unblinded FSD) systemat
     SysErr.is_EOffsetErr = 99;
     SysErr.MACE_VarErr = sqrt(0.0161^2+(0.0016^2)^2);
     SysErr.MaxSlopeCpsPereV = 4.74.*1e-06;
-    SysErr.BKG_PtSlopeErr = 3e-03;
+    SysErr.BKG_PtSlopeErr = 3e-06;
 elseif SysBudget == 66 %TDR-like
     SysErr.WGTS_TASR_RelErr = 0; % data driven
     SysErr.FSDNorm_RelErr=  0.01;
@@ -515,7 +515,7 @@ elseif SysBudget == 66 %TDR-like
     SysErr.is_EOffsetErr = 0;
     SysErr.MACE_VarErr = 0;
     SysErr.MaxSlopeCpsPereV = 0;
-      SysErr.BKG_PtSlopeErr = 0;
+   SysErr.BKG_PtSlopeErr = 0;
 end
 
 CMArg = {'WGTS_CD_MolPerCm2_RelErr',SysErr.WGTS_CD_MolPerCm2_RelErr,...
@@ -530,5 +530,6 @@ CMArg = {'WGTS_CD_MolPerCm2_RelErr',SysErr.WGTS_CD_MolPerCm2_RelErr,...
     'FPDeff_RelErr',SysErr.FPDeff_RelErr,...
     'DataDriven',SysErr.DataDriven,...
     'is_EOffsetErr',SysErr.is_EOffsetErr,...
-    'MACE_VarErr',SysErr.MACE_VarErr};
+    'MACE_VarErr',SysErr.MACE_VarErr,...
+    'BKG_PtSlopeErr',SysErr.BKG_PtSlopeErr};
 end

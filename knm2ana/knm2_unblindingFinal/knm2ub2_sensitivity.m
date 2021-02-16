@@ -2,6 +2,10 @@
 range = 40;
 DataType = 'Real';
 SigmaSq =  0.0124+0.0025;
+SysBudget = 40;
+BKG_PtSlope = 3*1e-06;
+TwinBias_BKG_PtSlope = 3*1e-06; 
+DopplerEffectFlag = 'FSD';
 
 RunAnaArg = {'RunList','KNM2_Prompt',... % all KNM2 golden runs
     'fixPar','mNu E0 Bkg Norm',...           % free Parameter !!
@@ -12,10 +16,13 @@ RunAnaArg = {'RunList','KNM2_Prompt',... % all KNM2 golden runs
     'chi2','chi2Stat',...              % statistics only
     'NonPoissonScaleFactor',1.112,...
     'TwinBias_Q',18573.70,...
-    'SysBudget',38,...
+    'SysBudget',SysBudget,...
     'chi2','chi2Stat',...
     'TwinBias_FSDSigma',sqrt(SigmaSq),...
-    'FSD_Sigma',sqrt(SigmaSq)};
+    'FSD_Sigma',sqrt(SigmaSq),...
+    'BKG_PtSlope',BKG_PtSlope,...
+    'TwinBias_BKG_PtSlope',TwinBias_BKG_PtSlope,...
+    'DopplerEffectFlag',DopplerEffectFlag};
 
 MC = MultiRunAnalysis(RunAnaArg{:});
 MC.exclDataStart = MC.GetexclDataStart(range);
@@ -34,5 +41,5 @@ S.RecomputeFlag='OFF';
 S.LimitFlag = 'Central';
 S.ConfLevel=0; % 0 == 1 sigma
 %%
-S.AsymErr = 'ON';
+AsymErr = 'ON';
 S.PlotSysBreakdownBars2('Ranges',MC.exclDataStart,'SavePlot','pdf','HoldOn','OFF','SysInfoBox','OFF');
