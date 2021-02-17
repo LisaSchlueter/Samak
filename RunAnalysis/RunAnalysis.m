@@ -34,6 +34,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
         FSD_Sigma;
         SynchrotronFlag;
         AngularTFFlag;
+        RadiativeFlag;
         ROIFlag;        % region of interest
         MosCorrFlag;    % correct data qU by monitor spectrometer drift 
         ISCSFlag;       % inel. scattering cross section flag
@@ -140,6 +141,8 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             p.addParameter('KTFFlag','WGTSMACE',@(x)ismember(x,{'WGTSMACE','MACE','WGTSMACE_NIS1'}));
             p.addParameter('SynchrotronFlag','ON',@(x)ismember(x,{'OFF','ON'}));
             p.addParameter('AngularTFFlag','ON',@(x)ismember(x,{'OFF','ON'}));
+            p.addParameter('RadiativeFlag','ON',@(x)ismember(x,{'ON','OFF'}));
+          
             p.addParameter('ISCSFlag','Edep',@(x)ismember(x,{'Aseev','Theory','Edep'}));
             % Fit Options
             p.addParameter('chi2','chi2Stat',@(x)ismember(x,{'chi2Stat', 'chi2CM', 'chi2CMFrac','chi2CMShape', 'chi2P','chi2Nfix'}));
@@ -210,6 +213,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             obj.KTFFlag           = p.Results.KTFFlag;
             obj.SynchrotronFlag   = p.Results.SynchrotronFlag;
             obj.AngularTFFlag     = p.Results.AngularTFFlag;
+            obj.RadiativeFlag       = p.Results.RadiativeFlag;
             obj.ISCSFlag          = p.Results.ISCSFlag;
             obj.fitter            = p.Results.fitter;
             obj.minuitOpt         = p.Results.minuitOpt;
@@ -741,7 +745,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                 'HTFSD',HTFSD,...
                 'TTFSD',TTFSD,...
                 'DopplerEffectFlag',obj.DopplerEffectFlag,...
-                'RadiativeFlag','ON',...
+                'RadiativeFlag',obj.RadiativeFlag,...
                 'RingMerge',obj.RingMerge...
                 'KTFFlag',obj.KTFFlag,...
                 'NIS',NIS,...

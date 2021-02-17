@@ -40,11 +40,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
         Twin_SameqUFlag;    %if flag is ON: compute twin runs with same qU as average qU in MultiRun, if OFF: take qU values from data, if a numer (eV) takes same plus gaussian distribution with this sigma
         Twin_SameqUfracFlag;
         Twin_SameCDFlag;
-        Twin_SameIsotopFlag; % MolFrac_TT, HT,DT
-        
-        % Radiative Corrections Flag
-        RadiativeFlag;
-        
+        Twin_SameIsotopFlag; % MolFrac_TT, HT,DT 
     end
     methods % Constructor
         function obj = MultiRunAnalysis(varargin)
@@ -62,7 +58,6 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             p.addParameter('Twin_SameqUfracFlag','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('Twin_SameCDFlag','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('Twin_SameIsotopFlag','OFF',@(x)ismember(x,{'ON','OFF'}));
-            p.addParameter('RadiativeFlag','ON',@(x)ismember(x,{'ON','OFF'}));
            
             % Parse unmatched parameters to RunAnalysis.m
             p.KeepUnmatched=1;
@@ -85,7 +80,6 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             obj.Twin_SameqUfracFlag = p.Results.Twin_SameqUfracFlag;
             obj.Twin_SameCDFlag     = p.Results.Twin_SameCDFlag;
             obj.Twin_SameIsotopFlag = p.Results.Twin_SameIsotopFlag;
-            obj.RadiativeFlag       = p.Results.RadiativeFlag;
 
             obj.SingleRun_FitResults = struct('chi2Stat','','chi2CMall','','chi2CMcorr','');
             %------------------------------- Parser End----------------------------------------%
