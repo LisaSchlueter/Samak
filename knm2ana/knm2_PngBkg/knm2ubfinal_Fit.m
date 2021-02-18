@@ -1,8 +1,8 @@
 % unblinded fit with penning track background slope
 range     = 40;
-freePar   = 'mNu E0 Bkg Norm';
+freePar   = 'mNu E0 Bkg Norm qU';
 chi2      = 'chi2Stat';
-DataType  = 'Twin';
+DataType  = 'Real';
 AnaFlag   = 'Ring';
 RingMerge = 'Full';%'None';
 DopplerEffectFlag = 'FSD';
