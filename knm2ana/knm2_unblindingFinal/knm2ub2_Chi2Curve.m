@@ -1,7 +1,7 @@
 range        = 40;
 PlotChi2Scan = 'ON';
 chi2         = 'chi2Stat';%CMShape';
-freePar      = 'mNu E0 Bkg Norm qU';
+freePar      = 'mNu E0 Bkg Norm';
 SysBudget     = 38;
 DataType      = 'Real';
 AnaFlag       = 'Ring';%StackPixel';

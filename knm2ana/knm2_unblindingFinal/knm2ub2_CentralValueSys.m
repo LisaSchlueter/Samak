@@ -1,7 +1,7 @@
 dir = [getenv('SamakPath'),'tritium-data/sensitivity/Knm2/'];
 Blinding = 'OFF';
 AnaFlag = 'StackPixel';
-SysEffectsAll   = {'FSD','RF_BF','RF_RX','LongPlasma','FPDeff','NP','Bkg'}; %Bkg has to be last
+SysEffectsAll   = {'FSD','RF_BF','RF_RX','LongPlasma','FPDeff','NP','BkgPT','Bkg'}; %Bkg has to be last
 mNuSq    = zeros(numel(SysEffectsAll)+2,1);
 mNuSqErr = zeros(numel(SysEffectsAll)+2,1);
 
@@ -28,14 +28,20 @@ end
 
 %% pull term: fit with bkg slope as nuissance parameter with pull term
 if ~strcmp(AnaFlag,'Ring')
-   % namePull = sprintf('%sknm2ana/knm2_unblindingFinal/results/BestFit/knm2ub2_FitBkgSlope_Real_40eV_mNuE0BkgNormBkgSlope_chi2CMShape_StackPixel_BkgPull10_4.74mcpskeV_SysBudget38.mat',getenv('SamakPath'));
-    namePull = sprintf('%sknm2ana/knm2_unblindingFinal/results/BestFit/knm2ub2_FitBkgSlope_Real_40eV_mNuE0BkgNormBkgSlope_chi2Stat_StackPixel_BkgPull10_4.74mcpskeV.mat',getenv('SamakPath'));
-  
+    
+    if any(ismember(SysEffectsAll,'BkgPT'))
+        namePull = sprintf('%sknm2ana/knm2_PngBkg/results/knm2ubfinal_FitBkgSlope_Real_40eV_mNuE0BkgNormBkgSlope_chi2Stat_StackPixel_BkgPull10_4.74mcpskeV.mat',getenv('SamakPath'));
+        plotname = sprintf('%sknm2ana/knm2_PngBkg/plots/CentralValueSys_Real_StackedPixel_Stat.png',getenv('SamakPath'));
+    else
+        % namePull = sprintf('%sknm2ana/knm2_unblindingFinal/results/BestFit/knm2ub2_FitBkgSlope_Real_40eV_mNuE0BkgNormBkgSlope_chi2CMShape_StackPixel_BkgPull10_4.74mcpskeV_SysBudget38.mat',getenv('SamakPath'));
+        namePull = sprintf('%sknm2ana/knm2_unblindingFinal/results/BestFit/knm2ub2_FitBkgSlope_Real_40eV_mNuE0BkgNormBkgSlope_chi2Stat_StackPixel_BkgPull10_4.74mcpskeV.mat',getenv('SamakPath'));
+        plotname = sprintf('%sknm2ana/knm2_unblindingFinal/plots/Fit_BslopePull_Real_StackedPixel_Stat.png',getenv('SamakPath'));
+    end
     dpull    = importdata(namePull);
     mNuSq(end) = dpull.FitResult.par(1);
     mNuSqErr(end) = (-dpull.FitResult.errNeg(1)+dpull.FitResult.errPos(1))/2;
     x = 1:numel(SysEffectsAll)+2;
-    plotname = sprintf('%sknm2ana/knm2_unblindingFinal/plots/Fit_BslopePull_Real_StackedPixel_Stat.png',getenv('SamakPath'));
+    
 else
     mNuSq(end) = [];
     mNuSqErr(end) = [];
@@ -57,22 +63,28 @@ f1 = figure('Units','normalized','Position',[0.1,0.1,0.5,0.45]);
 pcov = plot(x,mNuSq+rndNum,'.:','MarkerSize',26,'LineWidth',1.5,'Color',rgb('DodgerBlue'));
 hold on;
 pstat = plot(x(1),mNuSq(1)+rndNum,'k.','MarkerSize',26,'LineWidth',1.5);
-if ~strcmp(AnaFlag,'Ring')
-ppull = plot(x(end),mNuSq(end)+rndNum,'.','MarkerSize',26,'LineWidth',1.5,'Color',rgb('Orange'));
+if ~strcmp(AnaFlag,'Ring') 
+    ppull = plot(x(end),mNuSq(end)+rndNum,'.','MarkerSize',26,'LineWidth',1.5,'Color',rgb('Orange'));
 end
 xticks(x); xlim([min(x)-0.5 max(x)+0.5]);
 PrettyFigureFormat;
 if ~strcmp(AnaFlag,'Ring')
-xticklabels({'Stat.','FSD','B-fields',sprintf('\\rhod\\sigma'),'Plasma',sprintf('\\epsilon_{FPD}'),sprintf('B_{NP}'),sprintf('B_{slope}'),sprintf('B_{slope}')});
-legend([pstat,pcov,ppull],'stat. only','stat. and cov. mat.','stat. and pull term','Location','southwest','EdgeColor',rgb('Silver'));
+    if any(ismember(SysEffectsAll,'BkgPT'))
+        xticklabels({'Stat.','FSD','B-fields',sprintf('\\rhod\\sigma'),'Plasma',sprintf('\\epsilon_{FPD}'),sprintf('B_{NP}'),sprintf('B_{PT}'),sprintf('B_{slope}'),sprintf('B_{slope}')});
+        legend([pstat,pcov,ppull],'stat. only','stat. and cov. mat.','stat. and pull term','Location','southwest','EdgeColor',rgb('Silver'));
+   
+    else
+        xticklabels({'Stat.','FSD','B-fields',sprintf('\\rhod\\sigma'),'Plasma',sprintf('\\epsilon_{FPD}'),sprintf('B_{NP}'),sprintf('B_{slope}'),sprintf('B_{slope}')});
+        legend([pstat,pcov,ppull],'stat. only','stat. and cov. mat.','stat. and pull term','Location','southwest','EdgeColor',rgb('Silver'));
+    end
 else
     xticklabels({'Stat.','FSD','B-fields',sprintf('\\rhod\\sigma'),'Plasma',sprintf('\\epsilon_{FPD}'),sprintf('B_{NP}'),sprintf('B_{slope}')});
-legend([pstat,pcov],'stat. only','stat. and cov. mat.','Location','southwest','EdgeColor',rgb('Silver'));
-
+    legend([pstat,pcov],'stat. only','stat. and cov. mat.','Location','southwest','EdgeColor',rgb('Silver'));
+    
 end
 ylabel(sprintf('{\\itm}_\\nu^2 %s (eV^{ 2})',ystr));
 ylim([min(mNuSq(end)+rndNum)-0.01,max(mNuSq(1)+rndNum)+0.01])
-%%
+    %%
 if strcmp(Blinding,'ON')
    plotname =  strrep(plotname,'.png','_Blinding.png');
 end

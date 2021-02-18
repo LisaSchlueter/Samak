@@ -1790,9 +1790,14 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
         
         % background slope from penning trap
         if obj.BKG_PtSlope ~=0
+            if strcmp(obj.FPD_Segmentation,'RING')
+                BKG_PtSlope_local = obj.BKG_PtSlope.*obj.BKG_RateSec./sum(obj.BKG_RateSec);
+            else
+                BKG_PtSlope_local = obj.BKG_PtSlope;
+            end
             TimeTotSubrun    = obj.TimeSec.*obj.qUfrac;
             TimeAvSubrun     = obj.TimeSec.*obj.qUfrac./obj.nRuns;
-            BkgRate_PngSlope = 0.5.*obj.BKG_PtSlope.*TimeAvSubrun;
+            BkgRate_PngSlope = 0.5.*BKG_PtSlope_local.*TimeAvSubrun;
             Bkg_PtSlope      = BkgRate_PngSlope.*TimeTotSubrun;
             obj.TBDIS        = obj.TBDIS + Bkg_PtSlope;
         end

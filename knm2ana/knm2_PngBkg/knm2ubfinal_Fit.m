@@ -3,14 +3,10 @@ range     = 40;
 freePar   = 'mNu E0 Bkg Norm';
 chi2      = 'chi2Stat';
 DataType  = 'Twin';
-AnaFlag   = 'StackPixel';
+AnaFlag   = 'Ring';
 RingMerge = 'Full';%'None';
 DopplerEffectFlag = 'FSD';
-
-BKG_PtSlopeAll =[3,0:6].*1e-06;
-for i=1:numel(BKG_PtSlopeAll)
-    
-BKG_PtSlope = BKG_PtSlopeAll(i);%3*1e-06;
+BKG_PtSlope = 3*1e-06;
 TwinBias_BKG_PtSlope = 3*1e-06;
 FSDFlag   = 'KNM2';
 
@@ -94,7 +90,7 @@ fprintf('E_0 = %.3f + %.3f eV  \n',FitResult.par(2)+A.ModelObj.Q_i,FitResult.err
 fprintf('chi2 = %.3f (%.0f dof), p = %.3f  \n',FitResult.chi2min,FitResult.dof,1-chi2cdf(FitResult.chi2min,FitResult.dof));
 
 %%
-end
+
 Plot = 'OFF';
 if strcmp(Plot,'ON')
     if strcmp(AnaFlag,'StackPixel')
