@@ -2638,8 +2638,12 @@ function ComputeCM_BackgroundPT(obj,varargin)
           cm_path,strrep(obj.StudyObject.TD,'_E018573.73eV2',''),...
           sum(obj.StudyObject.BKG_RateSec)*1e3,...
           obj.StudyObject.BKG_PtSlope*1e6,obj.BKG_PtSlopeErr*1e6,nTrials_loc);
+      if strcmp(obj.StudyObject.FPD_Segmentation,'RING')
+          obj.CovMatFile = strrep(obj.CovMatFile,'.mat',sprintf('_Ring%s.mat',obj.StudyObject.FPD_RingMerge));
+      end
       
-      if exist(obj.CovMatFile,'file')==2 && strcmp(obj.RecomputeFlag,'OFF')
+         
+      if exist(obj.CovMatFile,'file') && strcmp(obj.RecomputeFlag,'OFF')
           fprintf(2,'CovarianceMatrix::ComputeCM_BackgroundPT:ReadCMFile: Loading CovMatrix File: %s \n',obj.CovMatFile)
           cmfile = importdata(obj.CovMatFile);
           obj.CovMat          = cmfile.obj.CovMat;
@@ -2663,16 +2667,39 @@ function ComputeCM_BackgroundPT(obj,varargin)
           TimeTotSubrun    = obj.StudyObject.TimeSec.*obj.StudyObject.qUfrac; % total time in stacked subruns
           TimeAvSubrun     = obj.StudyObject.TimeSec.*obj.StudyObject.qUfrac./obj.StudyObject.nRuns; % average time in subrun
            
+          if strcmp(obj.StudyObject.FPD_Segmentation,'RING')
+                BKG_PtSlope_local = obj.StudyObject.BKG_PtSlope.*obj.StudyObject.BKG_RateSec./sum(obj.StudyObject.BKG_RateSec);
+                BKG_PtSlopeErr_local= obj.BKG_PtSlopeErr.*sqrt(obj.StudyObject.BKG_RateSec./sum(obj.StudyObject.BKG_RateSec));
+            else
+                BKG_PtSlope_local    = obj.StudyObject.BKG_PtSlope;
+                BKG_PtSlopeErr_local = obj.BKG_PtSlopeErr;
+          end
+            
           % central value
-          Bkg_PtSlope_i         = obj.StudyObject.BKG_PtSlope;
+          Bkg_PtSlope_i         = BKG_PtSlope_local;
           BkgRate_PtSlope_i    = 0.5.*Bkg_PtSlope_i.*TimeAvSubrun+obj.StudyObject.BKG_RateSec;
           BkgCounts_PtSlope_i  = BkgRate_PtSlope_i.*TimeTotSubrun;
           
           % sample bkg slope
-          Bkg_PtSlope_v     = Bkg_PtSlope_i+obj.BKG_PtSlopeErr.*randn(1,nTrials_loc);
-          BkgRate_PtSlope_v = 0.5.*Bkg_PtSlope_v.*TimeAvSubrun+obj.StudyObject.BKG_RateSec;
-          BkgCounts_PtSlope_v = BkgRate_PtSlope_v.*TimeTotSubrun;
           
+          if strcmp(obj.StudyObject.FPD_Segmentation,'RING')
+              % some reshaping
+              TimeAvSubrun  = permute(repmat(TimeAvSubrun,[1,1,nTrials_loc]),[3,1,2]);
+              TimeTotSubrun = permute(repmat(TimeTotSubrun,[1,1,nTrials_loc]),[3,1,2]);
+              Bflat         = permute(repmat(obj.StudyObject.BKG_RateSec,[nTrials_loc,1,obj.StudyObject.nqU]),[1 3 2]);
+              
+              Bkg_PtSlope_v     = Bkg_PtSlope_i+BKG_PtSlopeErr_local.*randn(nTrials_loc,obj.StudyObject.nPixels);
+              Bkg_PtSlope_v     = reshape(Bkg_PtSlope_v,[nTrials_loc, 1, obj.StudyObject.nPixels]);
+              BkgRate_PtSlope_v = 0.5.*Bkg_PtSlope_v.*TimeAvSubrun+Bflat;
+              BkgCounts_PtSlope_v = BkgRate_PtSlope_v.*TimeTotSubrun;
+              
+              BkgCounts_PtSlope_v = reshape(BkgCounts_PtSlope_v,[nTrials_loc,obj.StudyObject.nPixels.*obj.StudyObject.nqU])';
+              BkgCounts_PtSlope_i = reshape(BkgCounts_PtSlope_i,[obj.StudyObject.nPixels.*obj.StudyObject.nqU,1]);
+          else
+              Bkg_PtSlope_v     = Bkg_PtSlope_i+BKG_PtSlopeErr_local.*randn(1,nTrials_loc);
+              BkgRate_PtSlope_v = 0.5.*Bkg_PtSlope_v.*TimeAvSubrun+obj.StudyObject.BKG_RateSec;
+              BkgCounts_PtSlope_v = BkgRate_PtSlope_v.*TimeTotSubrun;
+          end
           % Compute Covariance Matrix
           obj.CovMat = cov(BkgCounts_PtSlope_v');
           obj.MultiCovMat.CM_BkgPT = obj.CovMat;

@@ -12,7 +12,7 @@ FSDFlag   = 'KNM2';
 PullFlag = 99;%[7,24]; %24 = 3.0 mucps/s
 
 if strcmp(AnaFlag,'Ring')
-    SysBudget = 39;
+    SysBudget = 41;
     if strcmp(RingMerge,'Full')
         AnaStr = AnaFlag;
     else

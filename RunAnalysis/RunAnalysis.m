@@ -1260,11 +1260,12 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                 nStack=1;
             end
             
-            % Thierry  - WARNING - 22/2/2019
-            obj.FitCM       = [];
-            obj.FitCMFrac   = [];
-            obj.FitCMShape  = [];
-            obj.FitCMNorm   = [];
+            % init
+            obj.FitCM          = zeros(obj.ModelObj.nqU*obj.ModelObj.nPixels,obj.ModelObj.nqU*obj.ModelObj.nPixels);
+            obj.FitCMFrac      = zeros(obj.ModelObj.nqU*obj.ModelObj.nPixels,obj.ModelObj.nqU*obj.ModelObj.nPixels);
+            obj.FitCMShape     = zeros(obj.ModelObj.nqU*obj.ModelObj.nPixels,obj.ModelObj.nqU*obj.ModelObj.nPixels);
+            obj.FitCMNorm      = zeros(obj.ModelObj.nqU*obj.ModelObj.nPixels,obj.ModelObj.nqU*obj.ModelObj.nPixels);
+            obj.FitCMFracShape = zeros(obj.ModelObj.nqU*obj.ModelObj.nPixels,obj.ModelObj.nqU*obj.ModelObj.nPixels);
             
             %Initialize Normalization and Background with a stat. Fit
             if strcmp(InitNormFit,'ON')
@@ -1299,40 +1300,36 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             % -------------------- Computation of Covariance Matrix -------------------------------%
             % RecomputeFlag=='ON' : Computation of Covariance Matrix
             % RecomputeFlag=='OFF': Read adequard Covariance Matrix if available, otherwise: computation
+            
             if any(structfun(@(x) contains(x,'ON'),SysEffects))
                 obj.FitCM_Obj.ComputeCM('PlotSaveCM',PlotSaveCM);
-            end
-            
-            %Initialize Normalization and Background with a stat. Fit
-            if strcmp(InitNormFit,'ON')
-                % 40 eV range, stat only, free parameters: E0, Bkg, Norm
-                obj.InitModelObj_Norm_BKG('RecomputeFlag','OFF');
-            end
-            
-            % Move to Fit CM and do renormalization with current statistics
-            obj.FitCMFrac = obj.FitCM_Obj.CovMatFrac;
-            TBDIS_NoBKG   = obj.ModelObj.TBDIS-(obj.ModelObj.BKG_RateSec.*obj.ModelObj.TimeSec.*obj.ModelObj.qUfrac);
-            if strcmp(obj.AnaFlag,'Ring')
-                TBDIS_NoBKG = reshape(TBDIS_NoBKG,[obj.ModelObj.nqU*obj.ModelObj.nRings,1]);
-            end
-            obj.FitCM     = TBDIS_NoBKG.*obj.FitCMFrac.*TBDIS_NoBKG';
-            
-            % Compute Shape only covariance matrix for desired fit range
-            
-            try
-                if sum(sum(obj.FitCMFrac))~=0
-                    [obj.FitCMShape,obj.FitCMFracShape] = obj.FitCM_Obj.DecomposeCM('CovMatFrac',obj.FitCMFrac,'exclDataStart',obj.exclDataStart);
-                else
-                    obj.FitCMShape     = zeros(obj.ModelObj.nqU,obj.ModelObj.nqU);
-                    obj.FitCMFracShape = zeros(obj.ModelObj.nqU,obj.ModelObj.nqU);
+                
+                
+                % Move to Fit CM and do renormalization with current statistics
+                obj.FitCMFrac = obj.FitCM_Obj.CovMatFrac;
+                TBDIS_NoBKG   = obj.ModelObj.TBDIS-(obj.ModelObj.BKG_RateSec.*obj.ModelObj.TimeSec.*obj.ModelObj.qUfrac);
+                if strcmp(obj.AnaFlag,'Ring')
+                    TBDIS_NoBKG = reshape(TBDIS_NoBKG,[obj.ModelObj.nqU*obj.ModelObj.nRings,1]);
                 end
-            catch
-                fprintf('Decomposition doesnt work - TASR covariance matrix probably too small (Knm2) \n')
-                fprintf('Temporary fix: take regular covariance matrix instead - no shape only \n')
-                obj.FitCMShape = obj.FitCM;
-                obj.FitCMFracShape = obj.FitCMFrac;
+                obj.FitCM     = TBDIS_NoBKG.*obj.FitCMFrac.*TBDIS_NoBKG';
+                
+                % Compute Shape only covariance matrix for desired fit range
+                
+                try
+                    if sum(sum(obj.FitCMFrac))~=0
+                        [obj.FitCMShape,obj.FitCMFracShape] = obj.FitCM_Obj.DecomposeCM('CovMatFrac',obj.FitCMFrac,'exclDataStart',obj.exclDataStart);
+                    else
+                        obj.FitCMShape     = zeros(obj.ModelObj.nqU,obj.ModelObj.nqU);
+                        obj.FitCMFracShape = zeros(obj.ModelObj.nqU,obj.ModelObj.nqU);
+                    end
+                catch
+                    fprintf('Decomposition doesnt work - TASR covariance matrix probably too small (Knm2) \n')
+                    fprintf('Temporary fix: take regular covariance matrix instead - no shape only \n')
+                    obj.FitCMShape = obj.FitCM;
+                    obj.FitCMFracShape = obj.FitCMFrac;
+                end
+                
             end
-            
             % Background Covariance Matrix: Compute and Add to Signal Covariance Matrix
             if strcmp(BkgCM,'ON')
                 obj.FitCM_Obj.ComputeCM_Background('Display',PlotSaveCM,...
