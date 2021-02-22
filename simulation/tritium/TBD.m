@@ -203,6 +203,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
         E0_bias;
         Bkg_Bias;
         BkgSlope_Bias;
+        BkgPTSlope_Bias; 
         Norm_Bias;
         mnu4Sq_Bias;
         sin2T4_Bias;
@@ -983,13 +984,10 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
             %
             if flag == 0
                 obj.Q           = obj.Q_i;
-                obj.qUOffset    = obj.i_qUOffset;
-                obj.BKG_RateSecallPixels    = obj.BKG_RateSecallPixels_i;             
+                obj.qUOffset    = obj.i_qUOffset;                            
                 obj.mnuSq_Bias  = 0;
                 obj.E0_bias     = 0;
-                obj.Bkg_Bias    = zeros(1,obj.nPixels);
-                obj.BkgSlope_Bias  = obj.BKG_Slope_i;
-                obj.Norm_Bias   = zeros(1,obj.nPixels);
+                obj.Norm_Bias   = zeros(1,obj.nPixels); 
                 obj.mnu4Sq_Bias = 0;
                 obj.sin2T4_Bias = 0;
                 obj.TTGS_bias   = 0;
@@ -1002,6 +1000,12 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                 obj.mTSq_bias = obj.mTSq_i;
                 obj.FracTm_bias = 0;
                 obj.WGTS_MolFrac_Tm =  obj.WGTS_MolFrac_Tm_i;
+                 % background
+                obj.Bkg_Bias              = zeros(1,obj.nPixels);
+                obj.BkgPTSlope_Bias       = 0;
+                obj.BkgSlope_Bias         = obj.BKG_Slope_i;
+                obj.BKG_PtSlope           = obj.BKG_PtSlope_i;
+                obj.BKG_RateSecallPixels  = obj.BKG_RateSecallPixels_i;
             end
             if flag == 1
                 % Add Bias
@@ -1010,6 +1014,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                 obj.normFit     = obj.normFit_i + obj.Norm_Bias;
                 obj.BKG_RateSec = obj.BKG_RateSec_i + obj.Bkg_Bias;
                 obj.BKG_Slope   = obj.BKG_Slope_i + obj.BkgSlope_Bias;
+                obj.BKG_PtSlope = obj.BKG_PtSlope_i + obj.BkgPTSlope_Bias;
                 obj.mnu4Sq      = obj.mnu4Sq_i  + obj.mnu4Sq_Bias;
                 obj.sin2T4      = obj.sin2T4_i  + obj.sin2T4_Bias;
                 obj.TTNormGS    = obj.TTNormGS_i + obj.TTGS_bias;
@@ -1546,6 +1551,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
             p.addParameter('DE_bias',0.,@(x)isfloat(x));
             p.addParameter('B_bias',0.,@(x)isfloat(x));
             p.addParameter('BSlope_bias',0,@(x)isfloat(x));
+            p.addParameter('BPTSlope_bias',0,@(x)isfloat(x));  
             p.addParameter('TTGS_bias',0.,@(x)isfloat(x));
             p.addParameter('TTES_bias',0.,@(x)isfloat(x));
             p.addParameter('DTGS_bias',0.,@(x)isfloat(x));
@@ -1565,6 +1571,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
             obj.DE_Bias          = p.Results.DE_bias;
             obj.Bkg_Bias         = p.Results.B_bias;
             obj.BkgSlope_Bias    = p.Results.BSlope_bias;
+            obj.BkgPTSlope_Bias  = p.Results.BPTSlope_bias;
             obj.TTGS_bias        = p.Results.TTGS_bias;
             obj.TTES_bias        = p.Results.TTES_bias;
             obj.DTGS_bias        = p.Results.DTGS_bias;
@@ -1616,7 +1623,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
             Init_condition = (obj.mnuSq_Bias == 0) && ...
                 (obj.E0_bias == 0) && all(obj.Norm_Bias == 0) && ...
                 all(obj.Bkg_Bias == 0) && all(obj.qUOffset_bias == 0) && ...
-                all(obj.BkgSlope_Bias == 0) && all(obj.mTSq_bias == 0) && (obj.FracTm_bias==0);
+                all(obj.BkgSlope_Bias == 0) && all(obj.BkgPTSlope_Bias == 0) && all(obj.mTSq_bias == 0) && (obj.FracTm_bias==0);
             
             % Check if parameters changed, which require recalculation of phace space
             PhaseSpaceChange_condition = ...

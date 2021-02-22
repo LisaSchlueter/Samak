@@ -1363,7 +1363,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                
                 % shape only:
                 [BkgCMPtShape,BkgCMPtFracShape] = obj.FitCM_Obj.DecomposeCM('CovMatFrac',obj.FitCM_Obj.CovMatFrac,...
-                    'exclDataStart',obj.exclDataStart,'BkgPTCM','ON');
+                    'exclDataStart',obj.exclDataStart,'BkgCM','PT');
                 obj.FitCMShape      = obj.FitCMShape     + BkgCMPtShape;     % shape only covmat:            add background covmat to signal covmat
                 obj.FitCMFracShape  = obj.FitCMFracShape + BkgCMPtFracShape; % fractional shape only covmat: add background covmat to signal covmat
             end
@@ -4209,7 +4209,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             end
         end
         function InitFitPar(obj)
-            obj.nPar = 4*obj.ModelObj.nPixels+12; % number of avaibale fit parameter
+            obj.nPar = 4*obj.ModelObj.nPixels+13; % number of avaibale fit parameter
             
             if strcmp(obj.AnaFlag,'StackPixel') % number of FPD segmentations
                 nFPDSeg = 1;

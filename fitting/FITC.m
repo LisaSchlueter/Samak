@@ -77,7 +77,8 @@ classdef FITC < handle
         i_Q;
         i_B;
         i_N;
-        i_BSlope; %background slope
+        i_BSlope;   %background qU slope
+        i_BPTSlope; %background subrun time slope from interspec penning trap
         
         i_DTGS; % DT Ground  State Probability
         i_DTES; % DT Excited State Probability
@@ -165,6 +166,7 @@ classdef FITC < handle
             p.addParameter('i_N',[],@(x)isfloat(x));
             p.addParameter('i_qUOffset',[],@(x)isfloat(x));
             p.addParameter('i_BSlope',0,@(x)isfloat(x));
+            p.addParameter('i_BPTSlope',0,@(x)isfloat(x));
             p.addParameter('i_mTSq',[],@(x)isfloat(x));
             p.addParameter('i_FracTm',[],@(x)isfloat(x));
             p.addParameter('i_mnu4Sq',0,@(x)isfloat(x));
@@ -206,6 +208,7 @@ classdef FITC < handle
             obj.i_qUOffset      = p.Results.i_qUOffset;
             obj.i_mTSq          = p.Results.i_mTSq;
             obj.i_BSlope        = p.Results.i_BSlope;
+            obj.i_BPTSlope      = p.Results.i_BPTSlope;
             obj.i_FracTm        = p.Results.i_FracTm;
             obj.UncMPixFlag     = p.Results.UncMPixFlag;
             obj.i_mnu4Sq        = p.Results.i_mnu4Sq;
@@ -308,7 +311,8 @@ classdef FITC < handle
                                obj.i_mTSq,...
                                obj.i_FracTm,...
                                obj.i_mnu4Sq,...
-                               obj.i_sin2T4];
+                               obj.i_sin2T4,...
+                               obj.i_BPTSlope];
                 
                 % initilization for pulls (default all zero)
                 if obj.pulls == 0
@@ -330,10 +334,13 @@ classdef FITC < handle
             qUOffsettol = 10;     % qUOffset absolute tolerance (eV)
             qUmeanOffsettol = 0.5;  % qUOffset tolerance from ring to ring (eV)
             BkgSlopetol = 4.74.*1e-06;%5*1e-6; % background slope constrain (cps/eV)
+            BkgPTSlopetol24 = 3.*1e-06; % background time slope constrain (cps/s)
+            BkgPTSlopetol25 = 2.5.*1e-06; % background time slope constrain (cps/s)
             mNuSqtol = 1;         % neutrino mass pull tolerance (eV^2)
             mTSqtol = 1;          % tachyonic neutrino mass (nu-mass offset) from ring to ring (eV^2)
             sin2T4tol = 0.5;
-
+           
+            
             PullTerm = 0;
             % 1: neutrino mass pull
             if any(ismember(obj.pullFlag,1))
@@ -502,6 +509,14 @@ classdef FITC < handle
                 mNuSqtol_Loose =  100; % eV^2
                 PullTerm = PullTerm + (par(1)-0)^2/mNuSqtol_Loose^2;
             end
+            
+            if any(ismember(obj.pullFlag,24)) % background subrun time slope from penning trap pull
+                PullTerm = PullTerm + (par(4*obj.SO.nPixels+13)-0)^2/BkgPTSlopetol24^2;
+            end
+            
+            if any(ismember(obj.pullFlag,25)) % background subrun time slope from penning trap pull
+                PullTerm = PullTerm + (par(4*obj.SO.nPixels+13)-0)^2/BkgPTSlopetol25^2;
+            end
         end
         function chi2 = chi2function(obj,par)
             
@@ -531,6 +546,7 @@ classdef FITC < handle
             FracTm_fit = par(4*obj.SO.nPixels+10);
             mnu4Sq_fit   = par(4*obj.SO.nPixels+11);
             sin2T4_fit   = par(4*obj.SO.nPixels+12);
+            BPTSlope_fit = par(4*obj.SO.nPixels+13);
             
             obj.SO.ComputeTBDDS(...
                 'mSq_bias',mnu_fit,...
@@ -545,6 +561,7 @@ classdef FITC < handle
                 'TTES_bias',TTES_fit,...
                 'qUOffset_bias',qUOffset_fit,...
                 'BSlope_bias',BSlope_fit,...
+                'BPTSlope_Bias',BPTSlope_fit,...
                 'mTSq_bias',mTSq_fit,...
                 'FracTm_bias',FracTm_fit,...
                 'mnu4Sq_bias',mnu4Sq_fit,...
@@ -772,6 +789,10 @@ classdef FITC < handle
             sin2T4_fit      = par(4*obj.SO.nPixels+12);
             sin2T4_fit_err  = err(4*obj.SO.nPixels+12);
             
+            % background PT slope
+            BPTslope_fit     = (par(4*obj.SO.nPixels+13)+obj.SO.BKG_PtSlope_i).*1e6;
+            BPTslope_fit_err = err(4*obj.SO.nPixels+13).*1e6;
+            
             cprintf('blue','===============================================\n');
             cprintf('blue','  m^2       = %g +/- %g eV^2\n', mnuSq_report,err(1));
             cprintf('blue','  m         = %g +/- %g eV\n', mnu_report,err_mnu);
@@ -845,11 +866,16 @@ classdef FITC < handle
                         cprintf('blue','  qU offset                     = %g +/- %g eV \n', qUoffset_fit, qUoffset_fit_err);        
                 end
             end
+            % background qU slope
             if  ~(contains(obj.fixPar,char(string(2*obj.SO.nPixels+10))))
                   cprintf('blue',' - - - - - - - - - - - - - - - - - - - - - - - \n');
                   cprintf('blue','  B slope  = %.3g +/- %.3g mcps/eV \n',  Bslope_fit, Bslope_fit_err);
             end
-            
+             % background time slope
+            if  ~(contains(obj.fixPar,char(string(4*obj.SO.nPixels+13))))
+                  cprintf('blue',' - - - - - - - - - - - - - - - - - - - - - - - \n');
+                  cprintf('blue','  B PT slope  = %.3g +/- %.3g mucps/s \n',  BPTslope_fit, BPTslope_fit_err);
+            end
             % neutrino mass offsets
             if ~(contains(obj.fixPar,char(string(4*obj.SO.nPixels+9))))
                  cprintf('blue',' - - - - - - - - - - - - - - - - - - - - - - - \n');
@@ -860,6 +886,7 @@ classdef FITC < handle
                 cprintf('blue',' - - - - - - - - - - - - - - - - - - - - - - - \n');
                 cprintf('blue',' Fraction T^- ion         = %g +/- %g   \n', FracTm_fit, FracTm_fit_err);
             end
+            
             cprintf('blue',' - - - - - - - - - - - - - - - - - - - - - - - \n');
             cprintf('blue','  chi2/dof  = %g/%g\n', chi2min, dof);
             cprintf('blue','  p-value   = %g\n', chi2pvalue(chi2min,dof));

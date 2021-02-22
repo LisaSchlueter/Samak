@@ -60,7 +60,7 @@ classdef FPD < KATRIN & handle %!dont change superclass without modifying parsin
         BKG_RateSecallPixels; BKG_RateSecallPixels_i; % Pixel-wise rate per second
         BKG_RateSecErrallPixels;      % Pixel-wise rate per second error
         BKG_Slope;  BKG_Slope_i=0;
-        BKG_PtSlope; % subrun-wise background slope from Penning trap (KNM2)
+        BKG_PtSlope; BKG_PtSlope_i;% subrun-wise background slope from Penning trap (KNM2)
         nRuns; % if stacked, necessary for Penning bkg slope
     end
     
@@ -85,7 +85,7 @@ classdef FPD < KATRIN & handle %!dont change superclass without modifying parsin
             p.addParameter('BKG_RateAllFPDSec',300e-3,@(x)all(isfloat(x)) && x>=0);
             p.addParameter('BKG_RateRingSec',10e-3,@(x)all(isfloat(x)));
             p.addParameter('BKG_RatePixelSec',1e-3,@(x)all(isfloat(x)));
-            p.addParameter('BKG_PtSlope',0,@(x)all(isfloat(x)));
+            p.addParameter('BKG_PtSlope_i',0,@(x)all(isfloat(x)));
             p.addParameter('nRuns',1,@(x)all(isfloat(x)));
             
             %|<- Inherited KATRIN.m ...
@@ -123,7 +123,7 @@ classdef FPD < KATRIN & handle %!dont change superclass without modifying parsin
             obj.BKG_RateAllFPDSec   = p.Results.BKG_RateAllFPDSec;
             obj.BKG_RateRingSec     = p.Results.BKG_RateRingSec;
             obj.BKG_RatePixelSec    = p.Results.BKG_RatePixelSec;
-            obj.BKG_PtSlope         = p.Results.BKG_PtSlope;
+            obj.BKG_PtSlope_i         = p.Results.BKG_PtSlope_i;
             obj.nRuns               = p.Results.nRuns;
             
             % Synchronize/overlap selected pixels with selected rings

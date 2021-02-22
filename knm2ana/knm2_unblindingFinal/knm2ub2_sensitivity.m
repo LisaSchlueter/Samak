@@ -1,6 +1,6 @@
 % Calculte and/or plot systematics breakdown for KNM2 unblinding 1
 range = 40;
-DataType = 'Twin';
+DataType = 'Real';
 SigmaSq =  0.0124+0.0025;
 SysBudget = 40;
 BKG_PtSlope = 3*1e-06;

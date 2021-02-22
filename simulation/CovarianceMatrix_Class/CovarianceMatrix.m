@@ -422,6 +422,7 @@ classdef CovarianceMatrix < handle
             % convert into an index
             qUWindowIndexMin = find((18574-obj.StudyObject.qU)<qUWindowIndexMin,1);
             qUWindowIndexMax = find((18574-obj.StudyObject.qU)<qUWindowIndexMax,1);
+            qUWindowIndexZero= find((18574-obj.StudyObject.qU(qUWindowIndexMin:qUWindowIndexMax))<0,1);
             
             if strcmp(ConvergenceTest,'ON')
                 [Trials, Convergence] = obj.ConvergenceTest('Criterium','Cauchy');
@@ -473,8 +474,8 @@ classdef CovarianceMatrix < handle
             pbaspect([1 1 1])
             % axis
             xlabel(sprintf('Retarding energy - 18574 (eV)'));
-             qUmin = sprintf('%.0f',obj.StudyObject.qU(qUWindowIndexMin)-18574);
-             qUmax = sprintf('%.0f',obj.StudyObject.qU(qUWindowIndexMax)-18574);
+            qUmin = sprintf('%.0f',obj.StudyObject.qU(qUWindowIndexMin)-18574);
+            qUmax = sprintf('%.0f',obj.StudyObject.qU(qUWindowIndexMax)-18574);
              
             if strcmp(obj.StudyObject.FPD_Segmentation,'RING')
                 %x-axis
@@ -489,9 +490,9 @@ classdef CovarianceMatrix < handle
                 ax = gca;
                 ax.YAxisLocation = 'right';
             else
-                set(gca,'xtick',[1 qUWindowIndexMax-qUWindowIndexMin+1]); set(gca,'ytick',[])
+                set(gca,'xtick',[1 qUWindowIndexZero,qUWindowIndexMax-qUWindowIndexMin+1]); set(gca,'ytick',[])
               
-                set(gca,'xticklabel',{qUmin,qUmax}); set(gca,'yticklabel',[]);
+                set(gca,'xticklabel',{qUmin,0,qUmax}); set(gca,'yticklabel',[]);
             end
             % colorbar
             c = colorbar('westoutside');
@@ -661,6 +662,7 @@ classdef CovarianceMatrix < handle
             % convert into an index
             qUWindowIndexMin = find((18574-obj.StudyObject.qU)<qUWindowIndexMin,1);
             qUWindowIndexMax = find((18574-obj.StudyObject.qU)<qUWindowIndexMax,1);
+            qUWindowIndexZero= find((18574-obj.StudyObject.qU(qUWindowIndexMin:qUWindowIndexMax))<0,1);
             
             % plot correlation matrix (of fractional)
             fig1= figure('Units', 'normalized', 'Position', [0.1, 0.1, 0.5 ,0.5]);
@@ -704,8 +706,8 @@ classdef CovarianceMatrix < handle
                 ax = gca;
                 ax.YAxisLocation = 'right';
             else
-                set(gca,'xtick',[1 qUWindowIndexMax-qUWindowIndexMin+1]); set(gca,'ytick',[])
-                set(gca,'xticklabel',{qUmin,qUmax}); set(gca,'yticklabel',[]);
+                set(gca,'xtick',[1 qUWindowIndexZero qUWindowIndexMax-qUWindowIndexMin+1]); set(gca,'ytick',[])
+                set(gca,'xticklabel',{qUmin,0,qUmax}); set(gca,'yticklabel',[]);
             end
             
             PrettyFigureFormat('FontSize',FontSize);
@@ -926,9 +928,8 @@ classdef CovarianceMatrix < handle
             p.addParameter('CovMatFrac','',@(x)isfloat(x));             % input: fractional covariance matrix 
             p.addParameter('plots','OFF',@(x)ismember(x,{'ON','OFF'})); % some sanity plots
             p.addParameter('exclDataStart',1,@(x)isfloat(x));           % defines range for normalization
-            p.addParameter('BkgCM','OFF',@(x)ismember(x,{'ON','OFF'})); % if covmat is background covmat
-            p.addParameter('BkgPTCM','OFF',@(x)ismember(x,{'ON','OFF'})); % if covmat is background pt covmat
-            
+            p.addParameter('BkgCM','OFF',@(x)ismember(x,{'ON','OFF','PT'})); % if covmat is background covmat
+             
             p.parse(varargin{:});
             plots               = p.Results.plots;
             CovMatFrac_local    = p.Results.CovMatFrac;
@@ -949,7 +950,7 @@ classdef CovarianceMatrix < handle
                 % Background covariance matrix
                 % Use background spectrum
                 TBDIS_NoBKG = obj.StudyObject.BKG_RateSec.*obj.StudyObject.qUfrac.*obj.StudyObject.TimeSec;
-            elseif strcmp(BkgPTCM,'ON')
+            elseif strcmp(BkgCM,'PT')
                 % Background time slope penning trap (pt) covariance matrix
                 % Use background spectrum
                 TimeTotSubrun    = obj.StudyObject.TimeSec.*obj.StudyObject.qUfrac;
@@ -2356,8 +2357,8 @@ function ComputeCM_Background(obj,varargin)
         
         % Compute Shape Only & Frac Shape Only Covariance Matrices
         [~, obj.CovMatFracShape] = obj.DecomposeCM('CovMatFrac',obj.CovMatFrac,'exclDataStart',1,'BkgCM','ON');
-        obj.MultiCovMat.CM_BkgShape   = obj.CovMat;
-        obj.MultiCovMatFrac.CM_BkgShape  = obj.CovMatFrac;
+        obj.MultiCovMat.CM_BkgShape           = obj.CovMat;
+        obj.MultiCovMatFrac.CM_BkgShape       = obj.CovMatFrac;
         obj.MultiCovMatFracShape.CM_BkgShape = obj.CovMatFracShape;
         save(obj.CovMatFile,'obj','TBDIS_V','BKG_Asimov','par','err','chi2min',...
             'Bkg_Fit','BKG_i','BKG','BKGIndex','BkgPlot_Data','Data','BKGnqU','MaxSlopeCpsPereV',...
@@ -2644,9 +2645,9 @@ function ComputeCM_BackgroundPT(obj,varargin)
           obj.CovMat          = cmfile.obj.CovMat;
           obj.CovMatFrac      = cmfile.obj.CovMatFrac;
           obj.CovMatFracShape = cmfile.obj.CovMatFracShape;
-          obj.MultiCovMat.CM_BkgShape          = cmfile.obj.CovMat;
-          obj.MultiCovMatFrac.CM_BkgShape      = cmfile.obj.CovMatFrac;
-          obj.MultiCovMatFracShape.CM_BkgShape = cmfile.obj.CovMatFracShape;
+          obj.MultiCovMat.CM_BkgPT          = cmfile.obj.CovMat;
+          obj.MultiCovMatFrac.CM_BkgPT      = cmfile.obj.CovMatFrac;
+          obj.MultiCovMatFracShape.CM_BkgPT = cmfile.obj.CovMatFracShape;
           if strcmp(Display,'OFF')
               return;
           end
@@ -2685,16 +2686,10 @@ function ComputeCM_BackgroundPT(obj,varargin)
           obj.CovMatFrac = bsxfun(@rdivide,obj.CovMatFrac,BkgCounts_PtSlope_i'); %divides columnwise
           
           % Compute Shape Only 
-          [~, obj.CovMatFracShape] = obj.DecomposeCM('CovMatFrac',obj.CovMatFrac,'exclDataStart',1,'BkgPTCM','ON');
-          obj.MultiCovMat.CM_BkgPT               = obj.CovMat;
-          obj.MultiCovMatFrac.CM_BkgPT           = obj.CovMatFrac;
-          obj.MultiCovMatFracShape.CM_BkgPTShape = obj.CovMatFracShape;
-          
-  
-%           % Compute Decomposed CM
-%           [~, obj.CovMatFracShape] = obj.DecomposeCM('CovMatFrac',obj.CovMatFrac,'exclDataStart',1,'BkgPTCM','ON');
-%           obj.MultiCovMatFracShape.CM_BkgPT = obj.CovMatFracShape;
-%           obj.MultiCovMatFracNorm.CM_BkgPT  = obj.CovMatFracNorm;
+          [~, obj.CovMatFracShape] = obj.DecomposeCM('CovMatFrac',obj.CovMatFrac,'exclDataStart',1,'BkgCM','PT');
+          obj.MultiCovMat.CM_BkgPT            = obj.CovMat;
+          obj.MultiCovMatFrac.CM_BkgPT        = obj.CovMatFrac;
+          obj.MultiCovMatFracShape.CM_BkgPT   = obj.CovMatFracShape;
           
           % Save again
           save(obj.CovMatFile, 'obj','-append');

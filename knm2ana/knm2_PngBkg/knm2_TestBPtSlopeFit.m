@@ -1,15 +1,15 @@
-% unblinded fit with penning track background slope
+% test unblinded fit with penning track background slope as fit parameter (constrained with pull-term)
 range     = 40;
-freePar   = 'mNu E0 Bkg Norm qU';
-chi2      = 'chi2CMShape';
-DataType  = 'Real';
-AnaFlag   = 'Ring';
+freePar   = 'mNu E0 Bkg Norm';
+chi2      = 'chi2Stat';
+DataType  = 'Twin';
+AnaFlag   = 'StackPixel';
 RingMerge = 'Full';%'None';
 DopplerEffectFlag = 'FSD';
-BKG_PtSlope = 3*1e-06;
-TwinBias_BKG_PtSlope = 3*1e-06;
+BKG_PtSlope = 0;%3*1e-06;
+TwinBias_BKG_PtSlope = 0;%3*1e-06;
 FSDFlag   = 'KNM2';
-PullFlag = 99;%[7,24]; %24 = 3.0 mucps/s
+PullFlag = 99;%99 = no pull
 
 if strcmp(AnaFlag,'Ring')
     SysBudget = 39;
@@ -44,12 +44,8 @@ if strcmp(DataType,'Twin')
     savename = strrep(savename,'.mat',sprintf('_TwinBpng-%.1fmucpsPers.mat',1e6*TwinBias_BKG_PtSlope));
 end
 
-if any(PullFlag~=99)
-    if numel(PullFlag)==2
-        savename = strrep(savename,'.mat',sprintf('_pull%.0f_%.0f.mat',PullFlag(1),PullFlag(2)));
-    else
+if PullFlag~=99
     savename = strrep(savename,'.mat',sprintf('_pull%.0f.mat',PullFlag));
-    end
 end
 
 if exist(savename,'file')
@@ -83,14 +79,6 @@ else
     if strcmp(DataType,'Twin')
         A.ModelObj.RFBinStep = 0.01;
         A.ModelObj.InitializeRF;
-    end
-    
-    if  contains(freePar,'BkgPTSlope') && contains(freePar,'BkgSlope')  && strcmp(chi2,'chi2CMShape')
-        A.ComputeCM('BkgPTCM','OFF','BkgCM','OFF');
-    elseif  contains(freePar,'BkgSlope') && strcmp(chi2,'chi2CMShape')
-         A.ComputeCM('BkgPTCM','ON','BkgCM','OFF');
-    elseif contains(freePar,'BkgPTSlope') && strcmp(chi2,'chi2CMShape')
-         A.ComputeCM('BkgPTCM','OFF','BkgCM','ON');
     end
     
     A.Fit;

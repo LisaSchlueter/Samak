@@ -262,7 +262,7 @@ classdef McRunGenerator < handle
             end
             
             nPixels =numel(obj.RunObj.RunData.MACE_Ba_T);
-            nPar = 4*nPixels+12; %avaibale fit parameter
+            nPar = 4*nPixels+13; %avaibale fit parameter
             obj.RunObj.DataType = 'Real';
             obj.RunObj.fixPar   = ConvertFixPar('freePar','E0 Bkg Norm',...
                 'nPar',nPar,'nPixels',nPixels); %fix everything, except endpoint normalization background 

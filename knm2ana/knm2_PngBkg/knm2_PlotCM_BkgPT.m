@@ -1,5 +1,5 @@
 % unblinded fit with penning track background slope
-TestFit = 'ON';
+TestFit = 'OFF';
 BKG_PtSlopeErr = 3*1e-06;
 BKG_PtSlope = 3*1e-06;
 TwinBias_BKG_PtSlope = 3*1e-06;
@@ -14,8 +14,6 @@ AnaFlag   = 'StackPixel';
 RingMerge = 'Full';%'None';
 FSDFlag   = 'KNM2';
 SigmaSq =  0.0124+0.0025;
-
-
 
 RunAnaArg = {'RunList','KNM2_Prompt',...
     'DataType',DataType,...
@@ -34,7 +32,8 @@ RunAnaArg = {'RunList','KNM2_Prompt',...
     'RingMerge',RingMerge,...
     'PullFlag',99,...
     'BKG_PtSlope',BKG_PtSlope,...
-    'TwinBias_BKG_PtSlope',TwinBias_BKG_PtSlope};%99 = no pull
+    'TwinBias_BKG_PtSlope',TwinBias_BKG_PtSlope,...
+    'DopplerEffectFlag','FSD'};%99 = no pull
 
 
 if ischar(RunList)
@@ -53,6 +52,7 @@ if strcmp(TestFit,'ON')
         A.chi2 = 'chi2CMShape';
         A.ComputeCM('BkgPTCM','ON','RecomputeFlag','ON','BKG_PtSlopeErr',BKG_PtSlopeErr,'SysEffect',struct('FSD','OFF'),'BkgCM','OFF','nTrials',1e4);
     else
+        savenameStat = sprintf('%sknm2_PlotTestBkgPTCM_StatOnly_%s%s.mat',savedir,DataType,RunList);
         A.chi2 = 'chi2Stat';
         A.Fit;
         mNuSqErr = 0.5*(A.FitResult.errPos(1)- A.FitResult.errNeg(1));
