@@ -2,10 +2,10 @@
 mNuBins  = 5;
 mNuUpper = 4;   %eV²
 
-A = RelicNuAnalysis('Params','KNM2');
+A = RelicNuAnalysis('Params','KNM1');
 
 matFilePath = [getenv('SamakPath'),sprintf('RelicNuBkg/')];
-savename = [matFilePath,sprintf('SensVsmnuSQ_KNM2_[1_%g].mat',mNuUpper)];
+savename = [matFilePath,sprintf('SensVsmnuSq_KNM1_[1_%g]_opt.mat',mNuUpper)];
 
 if exist(savename,'file')
     load(savename,'ScanPoints','Sensitivities')

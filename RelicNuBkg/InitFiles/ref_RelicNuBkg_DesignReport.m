@@ -53,7 +53,7 @@ p.addParameter('mnuSq_i',1,@(x)isfloat(x));
 p.addParameter('Q_i',18575,@(x)isfloat(x));
 
 % FPD
-p.addParameter('FPD_MeanEff',0.9,@(x)isfloat(x) && x>0);  %0.95
+p.addParameter('FPD_MeanEff',0.95,@(x)isfloat(x) && x>0);  %0.95
 p.addParameter('FPD_ROIlow',14,@(x)isfloat(x) && x>0);
 p.addParameter('FPD_ROIEff','OFF',@(x)ismember(x,{'ON','OFF'}));
 p.addParameter('FPD_PileUpEff','OFF',@(x)ismember(x,{'ON','OFF'}));

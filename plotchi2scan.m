@@ -1,23 +1,138 @@
 function plotchi2scan(savename)
-    load(savename);
+    
+    if exist(savename,'file')
+        load(savename);
+    end
     
     if contains(savename,'2D')
-        [~,s]=contour(etaScanPoints,mnuScanPoints,Chi2,50);
+        fig1=figure(1);
+        s=imagesc(etaScanPoints,mnuScanPoints,Chi2-GlobalChi2Min);
+        colorbar;
+        title('\chi^2');
         %s.FaceColor='interp';
-        s.LineWidth = 2;
+        %s.LineWidth = 2;
         xlabel('\eta','FontSize',12);
         ylabel('m_{\nu}^{2} (eV^{2})','FontSize',12);
-        zlabel('\chi^2','FontSize',12);
+        zlabel('\Delta\chi^2','FontSize',12);
+        title('\Delta\chi^2');
         PRLFormat;
         %set(gca, 'YScale', 'log');
         %set(gca, 'XScale', 'log');
-        colorbar;
         hold on;
-        [~,t]=contour(etaScanPoints,mnuScanPoints,Chi2,[0 4.61]);
+        [~,t]=contour(etaScanPoints,mnuScanPoints,Chi2-GlobalChi2Min,[0 4.61]);
         t.LineWidth = 2;
+        t.LineColor = 'White';
         t.ShowText = 'ON';
+        [~,u]=contour(etaScanPoints,mnuScanPoints,Chi2-GlobalChi2Min,[0 5.99]);
+        u.LineWidth = 2;
+        u.LineColor = 'White';
+        u.ShowText = 'ON';
+        [~,v]=contour(etaScanPoints,mnuScanPoints,Chi2-GlobalChi2Min,[0 9.21]);
+        v.LineWidth = 2;
+        v.LineColor = 'White';
+        v.ShowText = 'ON';
         PrettyFigureFormat;
-        %hold off;
+        hold off;
+        
+        fig2=figure(2);
+        imagesc(etaScanPoints,mnuScanPoints,E0);
+        colorbar;
+        title('E_0');
+        xlabel('\eta','FontSize',12);
+        ylabel('m_{\nu}^{2} (eV^{2})','FontSize',12);
+        PRLFormat;
+        
+        fig3=figure(3);
+        imagesc(etaScanPoints,mnuScanPoints,Norm);
+        colorbar;
+        title('Normalization');
+        xlabel('\eta','FontSize',12);
+        ylabel('m_{\nu}^{2} (eV^{2})','FontSize',12);
+        PRLFormat;
+        
+        fig4=figure(4);
+        imagesc(etaScanPoints,mnuScanPoints,Bkg);
+        colorbar;
+        title('Background');
+        xlabel('\eta','FontSize',12);
+        ylabel('m_{\nu}^{2} (eV^{2})','FontSize',12);
+        PRLFormat;
+        
+    elseif contains(savename,'EtaFit')
+        fig1=figure(10);
+        boundedline(sqrt(mNu),etaFit,[(eta-etaFit); eta-etaFit]');
+        xlabel('m_{\nu} (eV)');
+        ylabel('\eta');
+        legend('\eta best fit with 90% C.L.','box','off','Location','northwest');
+        PRLFormat;
+        
+        FitStyleArg = {'o','Color','k','LineWidth',1.0,'MarkerFaceColor',rgb('Black'),'MarkerSize',4,'MarkerEdgeColor',rgb('Black')};
+
+        fig2=figure(20);
+        pE0=errorbar(mNu,E0,E0_err,FitStyleArg{:},'CapSize',0);
+        hold on;
+        fitobject = fit(permute(mNu,[2 1]),permute(E0,[2 1]),'poly1');
+        plot(fitobject,mNu,E0);
+        xlabel('m_{\nu}^2 (ev^2)','FontSize',12);
+        ylabel('E_0^{fit} (eV)','FontSize',12);
+        lgd=legend([pE0],{'E_0^{fit} with linear trend'},'Location','northwest','box','off');
+        lgd.FontSize = 12;
+        PrettyFigureFormat;
+        hold off;
+        
+        fig3=figure(30);
+        pChi2=plot(mNu,Chi2,'LineWidth',2);
+        xlabel('m_{\nu}^2 (ev^2)','FontSize',12);
+        ylabel('\chi^2','FontSize',12);
+        lgd=legend([pChi2],{'\chi^2'},'Location','northwest','box','off');
+        lgd.FontSize = 12;
+        PrettyFigureFormat;
+        hold off;
+        
+        fig4=figure(40);
+        pNorm=errorbar(mNu,Norm,Norm_err,FitStyleArg{:},'CapSize',0);
+        hold on;
+        fitobject = fit(permute(mNu,[2 1]),permute(Norm,[2 1]),'poly1');
+        plot(fitobject,mNu,Norm);
+        xlabel('m_{\nu}^2 (ev^2)','FontSize',12);
+        ylabel('N','FontSize',12);
+        lgd=legend([pNorm],{'Normalization with linear trend'},'Location','northwest','box','off');
+        lgd.FontSize = 12;
+        PrettyFigureFormat;
+        hold off;
+        
+        fig5=figure(50);
+        pBkg=errorbar(mNu,Bkg,Bkg_err,FitStyleArg{:},'CapSize',0);
+        hold on;
+        fitobject = fit(permute(mNu,[2 1]),permute(Bkg,[2 1]),'poly1');
+        plot(fitobject,mNu,Bkg);
+        xlabel('m_{\nu}^2 (ev^2)','FontSize',12);
+        ylabel('Bkg (mcps)','FontSize',12);
+        lgd=legend([pBkg],{'Background rate with linear trend'},'Location','northwest','box','off');
+        lgd.FontSize = 12;
+        PrettyFigureFormat;
+        hold off;
+        
+    elseif strcmp(savename,'KRN1Raster')
+        load('./RelicNuBkg/UpperLimits/EtaFit_mNu0_4_SystON_DataTypeRealSinglemnuSq_TwinBias_mnuSq0_E0 Norm Bkg eta.mat');
+        eta90=eta;
+        etaFit90=etaFit;
+        load('./RelicNuBkg/UpperLimits/EtaFit_mNu0_4_SystON_DataTypeRealSinglemnuSq_TwinBias_mnuSq0_E0 Norm Bkg etaDeltaChi2_3.840000e+00.mat');
+        eta95=eta;
+        etaFit95=etaFit;
+        load('./RelicNuBkg/UpperLimits/EtaFit_mNu0_4_SystON_DataTypeRealSinglemnuSq_TwinBias_mnuSq0_E0 Norm Bkg etaDeltaChi2_6.630000e+00.mat');
+        hold on;
+        [~,b] = boundedline(sqrt(mNu),etaFit90,[(eta90-etaFit90); eta90-etaFit90]','cmap',[0 0.75 0.75]);
+        [~,d] = boundedline(sqrt(mNu),etaFit95,[(eta95-etaFit95); eta95-etaFit95]','cmap',[0 0.5 0.5],'alpha');
+        [~,f] = boundedline(sqrt(mNu),etaFit,[(eta-etaFit); eta-etaFit]','cmap',[0 0.25 0.25],'alpha');
+        %legend([b d f],'\eta 90% C.L.','\eta 95% C.L.','\eta 99% C.L.');
+        text(0.1,4e11,'\eta 90% C.L.','FontSize',14);
+        text(0.6,5.8e11,'\eta 95% C.L.','FontSize',14);
+        text(1.1,7.5e11,'\eta 99% C.L.','FontSize',14);
+        ylim([0 inf]);
+        xlabel('m_{\nu}');
+        ylabel('\eta');
+        PrettyFigureFormat;
     else
 
         eta=(0:(Netabins-1))*((etafactor*10^(etarange))/(Netabins-1));
@@ -80,6 +195,6 @@ function plotchi2scan(savename)
         lgd=legend([pN],{'Normalization with linear trend'},'Location','northeast','box','off');
         lgd.FontSize = 12;
         PrettyFigureFormat;
-        hold off;
+        hold off;     
     end
 end

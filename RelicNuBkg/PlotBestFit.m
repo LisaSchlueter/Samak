@@ -1,21 +1,32 @@
 function PlotBestFit(varargin)
     p=inputParser;
     p.addParameter('mnuSq',0,@(x)isfloat(x));
-    p.addParameter('Nfit',500,@(x)sfloat(x));
+    p.addParameter('Nfit',1,@(x)isfloat(x));
+    p.addParameter('DataType','Real',@(x)ismember(x,{'Twin','Real'}));
+    p.addParameter('Syst','OFF',@(x)ismember(x,{'ON','OFF'}));
     p.parse(varargin{:});
-    mnuSq = p.Results.mnuSq;
-    Nfit  = p.Results.Nfit;
+    mnuSq    = p.Results.mnuSq;
+    Nfit     = p.Results.Nfit;
+    DataType = p.Results.DataType;
+    Syst     = p.Results.Syst;
 
     
-    if exist(sprintf('./EtaFitResult_AllParams_mnuSq%g_Nfit%g.mat',mnuSq,Nfit),'file')
+    if ~exist(sprintf('./EtaFitResult_AllParams_mnuSq%g_Nfit%g.mat',mnuSq,Nfit),'file')
         load(sprintf('./EtaFitResult_AllParams_mnuSq%g_Nfit%g.mat',mnuSq,Nfit));
     else
+        if strcmp(Syst,'OFF')
+            Chi2opt='chi2Stat';
+            NP=1;
+        else
+            Chi2opt='chi2CMShape';
+            NP=1.064;
+        end
         D = MultiRunAnalysis('RunList','KNM1',...         % runlist defines which runs are analysed -> set MultiRunAnalysis.m -> function: GetRunList()
-                    'chi2','chi2Stat',...              % uncertainties: statistical or stat + systematic uncertainties
-                    'DataType','Twin',...                 % can be 'Real' or 'Twin' -> Monte Carlo
+                    'chi2',Chi2opt,...              % uncertainties: statistical or stat + systematic uncertainties
+                    'DataType',DataType,...                 % can be 'Real' or 'Twin' -> Monte Carlo
                     'fixPar','mNu E0 Norm Bkg',...        % free Parameter!!
                     'RadiativeFlag','ON',...              % theoretical radiative corrections applied in model
-                    'NonPoissonScaleFactor',1,...     % background uncertainty are enhanced
+                    'NonPoissonScaleFactor',NP,...     % background uncertainty are enhanced
                     'minuitOpt','min ; minos',...         % technical fitting options (minuit)
                     'FSDFlag','SibilleFull',...           % final state distribution
                     'ELossFlag','KatrinT2',...            % energy loss function
@@ -31,11 +42,11 @@ function PlotBestFit(varargin)
         fitresults = zeros(11,Nfit);
         for j=1:Nfit
             M = MultiRunAnalysis('RunList','KNM1',...         % runlist defines which runs are analysed -> set MultiRunAnalysis.m -> function: GetRunList()
-                        'chi2','chi2Stat',...              % uncertainties: statistical or stat + systematic uncertainties
-                        'DataType','Twin',...                 % can be 'Real' or 'Twin' -> Monte Carlo
+                        'chi2',Chi2opt,...              % uncertainties: statistical or stat + systematic uncertainties
+                        'DataType',DataType,...                 % can be 'Real' or 'Twin' -> Monte Carlo
                         'fixPar','mNu E0 Norm Bkg eta',...    % free Parameter!!
                         'RadiativeFlag','ON',...              % theoretical radiative corrections applied in model
-                        'NonPoissonScaleFactor',1,...     % background uncertainty are enhanced
+                        'NonPoissonScaleFactor',NP,...     % background uncertainty are enhanced
                         'minuitOpt','min ; minos',...         % technical fitting options (minuit)
                         'FSDFlag','SibilleFull',...           % final state distribution
                         'ELossFlag','KatrinT2',...            % energy loss function
@@ -49,15 +60,18 @@ function PlotBestFit(varargin)
                         'TwinBias_mnuSq',mnuSq,...
                         'RelicPeakPosition','');
 
-
-            M.RunData.TBDIS(end-5:end)=mean(M.RunData.TBDIS(end-5:end)./(M.RunData.qUfrac(end-5:end).*M.RunData.TimeSec)).*M.RunData.qUfrac(end-5:end).*M.RunData.TimeSec;
-            statfluct = zeros(numel(D.RunData.qU),1);
-            for i=1:numel(D.RunData.qU)
-                gm=gmdistribution(D.RunData.TBDIS(i),D.RunData.TBDIS(i));
-                statfluct(i) = random(gm)-D.RunData.TBDIS(i);
+            if strcmp(DataType,'Twin')
+                M.RunData.TBDIS(end-5:end)=mean(M.RunData.TBDIS(end-5:end)./(M.RunData.qUfrac(end-5:end).*M.RunData.TimeSec)).*M.RunData.qUfrac(end-5:end).*M.RunData.TimeSec;
+                statfluct = zeros(numel(D.RunData.qU),1);
+                for i=1:numel(D.RunData.qU)
+                    gm=gmdistribution(D.RunData.TBDIS(i),D.RunData.TBDIS(i));
+                    statfluct(i) = random(gm)-D.RunData.TBDIS(i);
+                end
+                M.RunData.TBDIS = M.RunData.TBDIS+statfluct;
             end
-            M.RunData.TBDIS = M.RunData.TBDIS+statfluct;
+            
             M.exclDataStart = M.GetexclDataStart(40);
+            %M.ModelObj.BKG_RateSec_i=0.292256;
             M.Fit;
             fitresults(1,j)=M.FitResult.par(1);
             fitresults(2,j)=M.FitResult.err(1);
@@ -73,7 +87,9 @@ function PlotBestFit(varargin)
         end
         save(sprintf('./EtaFitResult_AllParams_mnuSq%g_Nfit%g.mat',mnuSq,Nfit),'fitresults');
         D.exclDataStart = D.GetexclDataStart(40);
-        D.RunData.TBDIS = D.RunData.TBDIS+statfluct;
+        if strcmp(DataType,'Twin')
+            D.RunData.TBDIS = D.RunData.TBDIS+statfluct;
+        end
         D.Fit;
 
         %% Global variables
@@ -156,7 +172,7 @@ function PlotBestFit(varargin)
         hr1 = plot(qU,RSP,'color',rgb('Salmon'),'LineWidth',3,'LineStyle','-');
         hold on;
         hr2 = plot(qU,ones(1,numel(qU)),'color',prlB,'LineWidth',3,'LineStyle',':');
-        hr3 = errorbar(qU,(YI./DIS),err,FitStyleArg{:},'CapSize',0);
+        hr3 = errorbar(qU,(DIS./YIs),err,FitStyleArg{:},'CapSize',0);
         yl2=ylabel('Ratio');
         katrinsim   = sprintf('\\eta=0');
         sterilemod  = sprintf('Best fit: \\eta=%.2g',M.ModelObj.eta);
