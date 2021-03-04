@@ -4,7 +4,7 @@
 % Lisa Schlüter, 2019
 %% settings
 Mode        = 'FC';  % FC = Feldman Cousin, LT = Lokov Tkachov
-Sensitivity = 'ON'; % OFF= show best fit, ON = show sensitivity only
+Sensitivity = 'OFF'; % OFF= show best fit, ON = show sensitivity only
 SavePlot    = 'ON';
 range = 40;
 chi2 = 'chi2CMShape';
@@ -13,7 +13,7 @@ DopplerEffectFlag = 'FSD';
 BKG_PtSlope = 3*1e-06;
 TwinBias_BKG_PtSlope = 3*1e-06;
 FSDFlag   = 'KNM2';
-
+mNuSq_bf = 0.2639;
 if strcmp(chi2,'chi2Stat')
     NonPoissonScaleFactor = 1;
 elseif  strcmp(chi2,'chi2CMShape')
@@ -48,24 +48,27 @@ S = RunSensitivity('RunAnaObj',D);
 % mNuSq_2 = [0.11,0.13,0.17,0.25:0.1:0.55,0.95];
 % mNuSq_3 = [1,1.1,1.3,1.6,1.4,1.7];
 %mNuSq = sort([mNuSq_1,mNuSq_2,mNuSq_3]);
-mNuSq = sort([0:0.1:1.6,0.05,0.08]);
+%mNuSq = sort([0:0.1:1.6,0.05,0.08]);
+%mNuSq =  [1.55:-0.1:0.15];
+mNuSq = sort([0,0.1:0.1:0.5,0.05,0.08,0.65:0.1:1.55]);%0.65:0.1:1.55,0.1:0.1:1.3
 %mNuSq = mNuSq(1:15);
 %% Compute and Plot Confidence Belt
 S.ConfLevel = 0.9; % confidence level (0==1 sigma)
 switch Mode
     case 'FC'
         S.ComputeFC_Asimov('mNuSq_t',mNuSq,'nSamplesAsimov',300);
-        S.PlotFCBelt('HoldOn','OFF','Sensitivity','OFF',...%Sensitivity,...
+        S.PlotFCBelt('HoldOn','OFF','Sensitivity',Sensitivity,...
             'SavePlot','ON','XLim',[-1.5,1.5],...
-            'Style','Pretty','mNuSq_bf',0.158);
+            'Style','Pretty','mNuSq_bf',mNuSq_bf);
     case 'LT'
-        mNuSq(mNuSq==0.8) = [];
+       % mNuSq(mNuSq==0.8) = [];
         S.ComputeLokhov_Asimov('mNuSq_t',mNuSq);
-        S.PlotFCBelt('Lokov','ON','Sensitivity','OFF','SavePlot',SavePlot,...
-            'Style','Pretty','XLim',[-1.5,1.5],'mNuSq_bf',0.158);
+        S.PlotFCBelt('Lokov','ON','Sensitivity',Sensitivity,'SavePlot',SavePlot,...
+            'Style','Pretty','XLim',[-1.5,1.5],'mNuSq_bf',mNuSq_bf);
 end
 %% get limit as function of m_measured
-savedir  = [getenv('SamakPath'),'knm2ana/knm2_unblindingFinal/results/'];
+%savedir  = [getenv('SamakPath'),'knm2ana/knm2_unblindingFinal/results/'];
+savedir  = [getenv('SamakPath'),'knm2ana/knm2_PngBkg/results/'];
 savename = sprintf('%sknm2ub2_mNuLimits_%s.mat',savedir,Mode);
 if exist(savename,'file') 
     load(savename,'mNuMeasured_v','mNuSqLimit_v')

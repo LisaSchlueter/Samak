@@ -772,8 +772,8 @@ classdef FITC < handle
             qUoffset_fit_err = err(2*obj.SO.nPixels+9:3*obj.SO.nPixels+8);
             
             % background slope
-            Bslope_fit     = par(3*obj.SO.nPixels+9)*1e3;
-            Bslope_fit_err = err(3*obj.SO.nPixels+9)*1e3;
+            Bslope_fit     = par(3*obj.SO.nPixels+9)*1e6;
+            Bslope_fit_err = err(3*obj.SO.nPixels+9)*1e6;
             
             % tachynoc neutrino mass squared
             mTSq_fit      = par(3*obj.SO.nPixels+10:4*obj.SO.nPixels+9);
@@ -869,7 +869,7 @@ classdef FITC < handle
             % background qU slope
             if  ~(contains(obj.fixPar,char(string(2*obj.SO.nPixels+10))))
                   cprintf('blue',' - - - - - - - - - - - - - - - - - - - - - - - \n');
-                  cprintf('blue','  B slope  = %.3g +/- %.3g mcps/eV \n',  Bslope_fit, Bslope_fit_err);
+                  cprintf('blue','  B slope  = %.3g +/- %.3g mcps/keV \n',  Bslope_fit, Bslope_fit_err);
             end
              % background time slope
             if  ~(contains(obj.fixPar,char(string(4*obj.SO.nPixels+13))))

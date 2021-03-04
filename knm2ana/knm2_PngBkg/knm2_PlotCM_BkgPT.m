@@ -8,12 +8,18 @@ TwinBias_BKG_PtSlope = 3*1e-06;
 RunList = 'KNM2_Prompt';
 range     = 40;
 freePar   = 'mNu E0 Bkg Norm';
-chi2      = 'chi2Stat';%CMShape';%CMShape';
-DataType  = 'Twin';
-AnaFlag   = 'StackPixel';
-RingMerge = 'Full';%'None';
+chi2      = 'chi2Stat';
+DataType  = 'Real';
+AnaFlag   = 'Ring';
+RingMerge = 'Full';
 FSDFlag   = 'KNM2';
 SigmaSq =  0.0124+0.0025;
+
+if strcmp(AnaFlag,'StackPixel')
+    SysBudget = 40;
+else
+      SysBudget = 41;
+end
 
 RunAnaArg = {'RunList','KNM2_Prompt',...
     'DataType',DataType,...
@@ -22,7 +28,7 @@ RunAnaArg = {'RunList','KNM2_Prompt',...
     'minuitOpt','min ; minos',...
     'FSDFlag',FSDFlag,...
     'ELossFlag','KatrinT2A20',...
-    'SysBudget',40,...
+    'SysBudget',SysBudget,...
     'AnaFlag',AnaFlag,...
     'chi2',chi2,...
     'TwinBias_Q',18573.7,...
@@ -71,7 +77,7 @@ end
 %%
 
 [BkgCMPtShape,BkgCMPtFracShape] = A.FitCM_Obj.DecomposeCM('CovMatFrac',A.FitCM_Obj.CovMatFrac,...
-    'exclDataStart',A.exclDataStart,'BkgCM','ON');
+    'exclDataStart',A.exclDataStart,'BkgCM','PT');
 %%
 A.FitCM_Obj.ComputeCM_BackgroundPT('Display','OFF')
 %%

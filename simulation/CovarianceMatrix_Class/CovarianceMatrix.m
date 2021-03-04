@@ -1843,7 +1843,8 @@ classdef CovarianceMatrix < handle
             nRings = numel(obj.StudyObject.MACE_Ba_T);
 
             % Compute Differential / Integral Spectra: only once!
-            obj.StudyObject.BKG_RateSec_i = 1e-9;
+            bkg_i_store =  obj.StudyObject.BKG_RateSec_i;
+            obj.StudyObject.BKG_RateSec_i = 1e-9.*ones(1,nRings);
             ComputeTBDDS(obj.StudyObject,'B_bias',0);
             ComputeTBDIS(obj.StudyObject);
             TBDIS = obj.StudyObject.TBDIS;
@@ -1877,6 +1878,9 @@ classdef CovarianceMatrix < handle
             
             % Save again
             save(obj.CovMatFile,'obj','-mat','-append');
+            
+            %reset init background
+            obj.StudyObject.BKG_RateSec_i = bkg_i_store;
         end
         function ComputeCM_FPDeff(obj,varargin)
             % systematic uncertainty on FPD efficiency
@@ -2725,10 +2729,25 @@ function ComputeCM_BackgroundPT(obj,varargin)
       
       % sanity plot
       if strcmp(Display,'ON')
-          Mode = 'Counts';
+          Mode = 'Rate';
+          
+          if strcmp(obj.StudyObject.FPD_Segmentation,'RING')
+              ring = 1;
+              qU = obj.StudyObject.qU(:,ring)-18574;
+              StartI = (ring-1)*obj.StudyObject.nqU+1;
+              StopI  = (ring-1)*obj.StudyObject.nqU+obj.StudyObject.nqU;
+              BkgCounts_PtSlope_v = BkgCounts_PtSlope_v(StartI:StopI,:);
+              BkgCounts_PtSlope_i = BkgCounts_PtSlope_i(StartI:StopI)';
+              BkgRate_PtSlope_v    = squeeze(BkgRate_PtSlope_v(:,:,ring))';
+              BkgRate_PtSlope_i    = BkgRate_PtSlope_i(:,ring);
+              Bkg_PtSlope_v       = squeeze(Bkg_PtSlope_v(:,:,ring));
+          else
+              qU = obj.StudyObject.qU-18574;
+          end
+          
           f1 = figure('Units','normalized','Position',[0.1,0.1,0.73,0.47]);
           subplot(1,4,[1,2,3]);
-          qU = obj.StudyObject.qU-18574;
+          
           switch Mode
               case 'Counts'
                   [l_v,a_v]= boundedline(qU,mean(BkgCounts_PtSlope_v,2),std(BkgCounts_PtSlope_v,0,2));
@@ -2744,8 +2763,16 @@ function ComputeCM_BackgroundPT(obj,varargin)
           a_v.FaceColor = rgb('LightBlue');
           l_v.LineWidth = 2; a_v.FaceAlpha = 1;
           xlabel('Retarding potential - 18574 (eV)');
-          leg = legend([p_i,a_v],sprintf('Central value for slope {\\it\\alpha}= %.1f \\mucps/s',1e6.*Bkg_PtSlope_i),...  
-              sprintf('1\\sigma error band \\sigma({\\it\\alpha})= %.1f \\mucps/s',1e6.*obj.BKG_PtSlopeErr));
+          if strcmp(obj.StudyObject.FPD_Segmentation,'RING')
+              BKG_PtSlopeErr_local= obj.BKG_PtSlopeErr.*sqrt(obj.StudyObject.BKG_RateSec./sum(obj.StudyObject.BKG_RateSec));
+               leg = legend([p_i,a_v],sprintf('Central value for slope {\\it\\alpha}= %.2f \\mucps/s',1e6.*Bkg_PtSlope_i(ring)),...
+                  sprintf('1\\sigma error band \\sigma({\\it\\alpha})= %.1f \\mucps/s',1e6.*BKG_PtSlopeErr_local(ring)));
+              leg.Title.String = sprintf('Pseudo-ring %.0f',ring);
+              leg.Title.FontWeight = 'normal';
+          else
+              leg = legend([p_i,a_v],sprintf('Central value for slope {\\it\\alpha}= %.1f \\mucps/s',1e6.*Bkg_PtSlope_i),...
+                  sprintf('1\\sigma error band \\sigma({\\it\\alpha})= %.1f \\mucps/s',1e6.*obj.BKG_PtSlopeErr));
+          end
           legend boxoff
           
           ax1 = gca;
@@ -2780,7 +2807,9 @@ function ComputeCM_BackgroundPT(obj,varargin)
           plotname =  sprintf('%sBkgPT_%s_%s_Slope%.1fmuCpsPerS_SlopeErr%.1fmuCpsPerS_%.0fTrials.png',...
               plotpath,Mode,strrep(obj.StudyObject.TD,'_E018573.73eV2',''),...
               obj.StudyObject.BKG_PtSlope,obj.BKG_PtSlopeErr*1e6,nTrials_loc);
-          
+           if strcmp(obj.StudyObject.FPD_Segmentation,'RING')
+               plotname = strrep(plotname,'.png',['_Ring',ring,'.png']);
+           end
           print(f1,plotname,'-dpng','-r300');
       end
 end
@@ -2821,7 +2850,7 @@ function ComputeCM_TCoff(obj,varargin)
         elseif strcmp(obj.SysEffect.TCoff_RAD,'ON') && strcmp(obj.SysEffect.TCoff_OTHER,'OFF')
             obj.ReadCMFile('filename',obj.CovMatFile,'SysEffect','TCoff_RAD');
             obj.MultiCovMat.CM_TCoff_RAD = obj.CovMat;
-        elseif strcmp(obj.SysEffect.TCoff_RAD,'OFF') && strcmp(obj.SysEffect.TCoff_OTHER,'OFF')
+        elseif strcmp(obj.SysEffect.TCoff_RAD,'OFF') && strcmp(obj.SysEffect.TCoff_OTHER,'ON')
             obj.ReadCMFile('filename',obj.CovMatFile,'SysEffect','TCoff_OTHER');
             obj.MultiCovMat.CM_TCoff_OTHER = obj.CovMat;
         end

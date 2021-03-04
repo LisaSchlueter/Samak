@@ -11,7 +11,7 @@ classdef RunSensitivity < handle
         % Sensitivity properties
         ConfLevel;         % confidence level: e.g. 0.9
         Lpar;              % current sensitivity (all parameters)
-        LparMinos;         % current mNuSw sensitivity with MINOS errors (averaged)
+        LparMinos;         % current mNuSq sensitivity with MINOS errors (averaged)
         LparNeg
         LparPos
         MultiLpar;         % sensitivity of single effects: stat + TC, stat + FSD,....
@@ -19,6 +19,7 @@ classdef RunSensitivity < handle
         MultiLparNeg;
         MultiLparPos;
         MultiLparStack;    % sensitivities N+1: stat, stat+SysEffectAll{1}, stat + +SysEffectAll{1} ++SysEffectAll{2}, .....
+        MultiFitResults;   % fit results
         NPcomponent;       % non poissonian component
         AsymErr;           % use asymmetric uncertainties (only minos) or symmetrized 
         
@@ -29,9 +30,9 @@ classdef RunSensitivity < handle
         % systematics / covariance matrices
         SysEffectsAll;     % cell with systematic effects (used in loop)
         SysEffect;         % struct with effects (used when only 1 sensitivity is calculated)
-        SysEffectLeg;     % legend (has to match SysEffectsAll)
+        SysEffectLeg;      % legend (has to match SysEffectsAll)
         nSys;              % number of systematic effects
-        CovMatFrac;       % struct with covariance matrices from MultiLpar
+        CovMatFrac;        % struct with covariance matrices from MultiLpar
         CovMatFracStack;   % struct with covariance matrices from MultiLparStack
         CovMatShape;
         CovMatShapeStack;
@@ -855,7 +856,7 @@ classdef RunSensitivity < handle
             
             for i=1:numel(mNuSq_t)
                 % Get Delta Chi2 Curve
-                [mNuSq,DeltaChi2,Chi2True,~] = obj.FC_ComputeDeltaChi2LookupTables('mNuSq_t',mNuSq_t(i),'nSamples',nSamplesAsimov);
+                [mNuSq,DeltaChi2,Chi2True,Chi2Best] = obj.FC_ComputeDeltaChi2LookupTables('mNuSq_t',mNuSq_t(i),'nSamples',nSamplesAsimov);
                 
                 % Convert Chi2True into Probability
                 Prob_tmp = exp(-Chi2True./2);
@@ -979,10 +980,6 @@ classdef RunSensitivity < handle
             [~,CmArg] = GetSysErr(obj.RunAnaObj.SysBudget);
             
             for i=1:obj.nSys
-%                 if contains(obj.SysEffectsAll{i},'RF')
-%                     continue
-%                     %WARNING temporary
-%                 end
                 % get covariance matrix
                 nTrials = obj.GetnTrials(obj.SysEffectsAll{i});
                 
@@ -1815,9 +1812,9 @@ classdef RunSensitivity < handle
             
             x1Index = find(~isnan(obj.FC_x1),1);
             plotX1 = linspace(min(obj.FC_x1(x1Index:end)),max(obj.FC_x1),1000)';
-            plotY1 = interp1(obj.FC_x1(x1Index:end),obj.FC_mNuSqTrue(x1Index:end),plotX1,'lin');
+            plotY1 = interp1(obj.FC_x1(x1Index:end),obj.FC_mNuSqTrue(x1Index:end),plotX1,'spline');
             plotX2 = linspace(min(obj.FC_x2),max(obj.FC_x2),1000)';
-            plotY2 = interp1(obj.FC_x2,obj.FC_mNuSqTrue,plotX2,'lin');
+            plotY2 = interp1(obj.FC_x2,obj.FC_mNuSqTrue,plotX2,'spline');
             
               switch Lokov
                 case 'ON'
@@ -1906,8 +1903,8 @@ classdef RunSensitivity < handle
                   legStr = 'LT';
               else
                   legStr = 'FC';
-                  p1 =plot(plotX1,smooth(plotY1,100),'-',LineArg{:});
-                  p2 =plot(plotX2,smooth(plotY2,100),'-',LineArg{:});
+                  p1 =plot(plotX1,plotY1,'-',LineArg{:});%smooth(plotY1,100)
+                  p2 =plot(plotX2,plotY2,'-',LineArg{:});%smooth(plotY2,100)
               end
               
             if strcmp(SavePlot,'ON')
@@ -1968,23 +1965,25 @@ classdef RunSensitivity < handle
                     sprintf('     {\\itm}^2_\\nu \\leq %.2f eV^{ 2} \n\\rightarrow {\\itm}_\\nu  \\leq %.2f eV',mNuLimit,sqrt(mNuLimit)),'Location','northwest');
             end
            %legend boxoff;
-            leg.EdgeColor = rgb('Silver');
+           PrettyLegendFormat(leg);
+            %leg.EdgeColor = rgb('Silver');
             % axis style etc.
             % PrettyFigureFormat('FontSize',LocalFontSize);
             if strcmp(Style,'PRL')
                 PRLFormat;
                 set(gca,'FontSize',LocalFontSize)
                 set(gca,'TickDir','out');
+                % remove top and right ticks
+                a = gca;
+                set(a,'box','off','color','none')% set box property to off and remove background color
+                b = axes('Position',a.Position,...
+                    'box','on','xtick',[],'ytick',[],'LineWidth',1.5);% create new, empty axes with box but without ticks
+                axes(a)% set original axes as active
+                linkaxes([a b]) % link axes in case of zooming
             else
                 PrettyFigureFormat('FontSize',LocalFontSize);
             end
-           % remove top and right ticks
-           a = gca;
-           set(a,'box','off','color','none')% set box property to off and remove background color
-           b = axes('Position',a.Position,...
-               'box','on','xtick',[],'ytick',[],'LineWidth',1.5);% create new, empty axes with box but without ticks
-           axes(a)% set original axes as active
-           linkaxes([a b]) % link axes in case of zooming
+            
             %%
             if ~strcmp(SavePlot,'OFF')
                 savedir = [getenv('SamakPath'),'/tritium-data/FC/plots/'];
@@ -1996,7 +1995,7 @@ classdef RunSensitivity < handle
                 end
                 
                 if strcmp(SavePlot,'png')
-                    obj.PlotWhiteSpace;
+                    %obj.PlotWhiteSpace;
                     savefile = strrep(savefile,'.pdf','.png');
                     print(f111,savefile,'-dpng','-r100');
                 else
@@ -2009,18 +2008,20 @@ classdef RunSensitivity < handle
         function PlotFC_DeltaChi2(obj,varargin)
             p=inputParser;
             p.addParameter('mNuSq_t',0.6,@(x)isfloat(x));
+            p.addParameter('mNuSq_bf',-0.98,@(x)isfloat(x)); 
             p.addParameter('SavePlot','OFF',@(x)ismember(x,{'ON','OFF','pdf','png'}));
-            p.addParameter('PDF','OFF',@(x)ismember(x,{'ON','OFF','Central','1sigma'})); % plot PDF instead
+            p.addParameter('Mode','Chi2',@(x)ismember(x,{'Chi2','PDF','CompareBf'})); % plot PDF instead
             p.parse(varargin{:});
             mNuSq_t  = p.Results.mNuSq_t;
             SavePlot = p.Results.SavePlot;
-            PDF      = p.Results.PDF;
+            Mode      = p.Results.Mode;
+            mNuSq_bf = p.Results.mNuSq_bf;
             
-            LabelFontSize = 30; %
+            LabelFontSize = 24; %
             
             f111 = figure('Renderer','painters');
             set(f111, 'Units', 'normalized', 'Position', [0.1, 0.1, 0.7, 0.7]);
-            PlotArg = {'Color',rgb('DodgerBlue'),'MarkerFaceColor',rgb('SteelBlue'),'LineWidth',4,'MarkerSize',8};
+            PlotArg = {'Color',rgb('DodgerBlue'),'LineWidth',4};
             
             Index = find(mNuSq_t==obj.FC_mNuSqTrue);
             if isempty(Index)
@@ -2028,62 +2029,69 @@ classdef RunSensitivity < handle
                 return
             end
             
-            if strcmp(PDF,'OFF')
+            x = obj.FC_mNuSqFit(Index,:);
+            if strcmp(Mode,'Chi2')
+                % plot chi2-profile
                 y = obj.FC_DeltaChi2(Index,:);
-                xstr = sprintf('\\Delta \\chi2');
-                ystr = '';
+                ystr = sprintf('\\Delta\\chi^2');
+                xstr = sprintf('Measured {\\itm}^2_\\nu (eV^{2})');
+                AuxLineMax1 = obj.FC_DeltaChi2C(Index);
+                AuxLineMax2 = obj.FC_DeltaChi2C(Index);
             else
-                y = exp(-obj.FC_Chi2True./2);
-                y = y./simpsons(obj.FC_mNuSqFit(Index,:),y);
-                if ismember(SavePlot,{'ON','pdf'})
-                    ystr = sprintf('Probability density (eV^{-2})');
-                    xstr = sprintf('Measured {\\itm}^2_\\nu (eV^{ 2})');
+                % convert(original chi2, not delta chi2) into likelihood profile
+                y = exp(-obj.FC_Chi2True./2);%exp(-obj.FC_DeltaChi2(Index,:)./2);%exp(-obj.FC_Chi2True./2);
+                y = y./simpsons(x,y);  
+                ystr = sprintf('Probability density (eV^{-2})');
+                xstr = sprintf('Measured {\\itm}^2_\\nu (eV^{2})');  
+                AuxLineMax1 =  interp1(x,y,obj.FC_x1(Index),'spline');
+                AuxLineMax2 =  interp1(x,y,obj.FC_x2(Index),'spline');
+            end
+            
+            % fill confidence area
+            if ~strcmp(Mode,'CompareBf')
+                if isnan(obj.FC_x1(Index))
+                    FillLog = x<=obj.FC_x2(Index);
+                    xmin = -(obj.FC_x2(Index)+(obj.FC_x2(Index)-mNuSq_t));
                 else
-                    ystr = sprintf('Probability density (eV^{-2})');
-                    xstr = sprintf('Measured {\\itm}^2_\\nu (eV^{2})');
+                    FillLog =x >=obj.FC_x1(Index) & x<=obj.FC_x2(Index);
+                    xmin = obj.FC_x1(Index)-(mNuSq_t-obj.FC_x1(Index));
+                end
+                p2 = area(x(FillLog),y(FillLog),0,...
+                    'LineStyle','none','ShowBaseLine','OFF','FaceColor',rgb('Silver'));
+                xlim([xmin,obj.FC_x2(Index)+(obj.FC_x2(Index)-mNuSq_t)]);
+                hold on;
+                if strcmp(Mode,'Chi2')
+                    p2.BaseValue = obj.FC_DeltaChi2C(Index);
+                    ytmp = ylim;
+                    if mNuSq_t==0
+                    ylim([-0.05,ytmp(2)]);
+                    end
                 end
             end
             
-            p1 = plot(obj.FC_mNuSqFit(Index,:),y,'-',PlotArg{:});
+            % draw chi2 or likelihood profile
+            p1 = plot(x,y,'-',PlotArg{:});
             hold on;
             
-            if strcmp(PDF,'OFF')
-                plotIndex = round(linspace(1,size(obj.FC_mNuSqFit,2),300),0);
-                plot(obj.FC_mNuSqFit(Index,plotIndex),y(plotIndex),'o',PlotArg{:});
-            end
-            
-            if ~ismember(PDF,{'Central','1sigma'}) 
-                p3 =plot(obj.FC_x1(Index)*ones(10,1),linspace(0,obj.FC_DeltaChi2C(Index),10),...
-                    '--','LineWidth',4,'Color',rgb('Silver'));
-                plot(obj.FC_x2(Index)*ones(10,1),linspace(0,obj.FC_DeltaChi2C(Index),10),...
-                    '--','LineWidth',4,'Color',rgb('Silver'));    
-            elseif strcmp(PDF,'Central') 
-                x =obj.FC_mNuSqFit(Index,:);
+            if strcmp(Mode,'Chi2') || strcmp(Mode,'PDF')
+                p3 =plot(obj.FC_x1(Index)*ones(10,1),linspace(0,AuxLineMax1,10),...
+                    ':','LineWidth',3,'Color',rgb('Black'));
+                plot(obj.FC_x2(Index)*ones(10,1),linspace(0,AuxLineMax2,10),...
+                    ':','LineWidth',3,'Color',rgb('Black'));
+            elseif strcmp(Mode,'CompareBf')
                 p1.delete;
                 a1 =area(x,y,'FaceColor',rgb('DodgerBlue'),'FaceAlpha',1,'EdgeColor',rgb('DodgerBlue'),...
                     'LineWidth',3);
-                a2 =area(x(x<=-0.98),y(x<=-0.98),'FaceColor',rgb('DarkBlue'),'FaceAlpha',1,...
-                    'EdgeColor',rgb('DarkBlue'),'LineWidth',3);
-            else
-                x =obj.FC_mNuSqFit(Index,:);
-                p1.delete;
-                CDF = GetCDF(x,y);
-                [CDF,ia]=unique(CDF);
-                Neg1Sigma = interp1(CDF,x(ia),(1-0.6827)/2,'spline');
-                Pos1Sigma = interp1(CDF,x(ia),(1+0.6827)/2,'spline');
-                a1 =area(x,y,'FaceColor',rgb('DodgerBlue'),'FaceAlpha',1,'EdgeColor',rgb('DodgerBlue'),...
-                    'LineWidth',3);
-                a2 =area(x(x<=Neg1Sigma),y(x<=Neg1Sigma),'FaceColor',rgb('DarkBlue'),'FaceAlpha',1,...
-                    'EdgeColor',rgb('DarkBlue'),'LineWidth',3);
-                a3 =area(x(x>=Pos1Sigma),y(x>=Pos1Sigma),'FaceColor',rgb('DarkBlue'),'FaceAlpha',1,...
-                    'EdgeColor',rgb('DarkBlue'),'LineWidth',3);
+                if mNuSq_bf<0
+                    a2 =area(x(x<=mNuSq_bf),y(x<=mNuSq_bf),'FaceColor',rgb('DarkBlue'),'FaceAlpha',1,...
+                        'EdgeColor',rgb('DarkBlue'),'LineWidth',3);
+                else
+                    a2 =area(x(x>=mNuSq_bf),y(x>=mNuSq_bf),'FaceColor',rgb('DarkBlue'),'FaceAlpha',1,...
+                        'EdgeColor',rgb('DarkBlue'),'LineWidth',3);
+                end
             end
             
-            if strcmp(PDF,'OFF')
-                p2 = plot(linspace(min(p1.XData),max(p1.XData),10),obj.FC_DeltaChi2C(Index).*ones(10,1),...
-                    '-','LineWidth',4,'Color',rgb('Orange'));
-                xlim([mNuSq_t-3,mNuSq_t+3]);
-            else
+            if ~strcmp(Mode,'Chi2')
                 if strcmp(obj.RunAnaObj.DataSet,'Knm1')
                     xlim([mNuSq_t-5,mNuSq_t+5]);
                     xticks((-4:4))
@@ -2107,68 +2115,58 @@ classdef RunSensitivity < handle
             else
                 plotx1 = '';
             end
-            
-            if strcmp(obj.RunAnaObj.chi2,'chi2Stat')
-                chi2str = '(stat. only)';
-            else
-                chi2str = '(stat. and syst.)';
-            end
-            
-            if strcmp(PDF,'OFF')
-                leg = legend([p1,p2,p3],sprintf('True {\\itm}^2_\\nu = %.3g eV^2',mNuSq_t),...
-                    sprintf('\\Delta \\chi2_c = %.2f %s',obj.FC_DeltaChi2C(Index),chi2str),...
+     
+            if strcmp(Mode,'Chi2')
+                leg = legend([p1,p2,p3],sprintf('\\chi^2 profile for true {\\itm}^2_\\nu = %.3g eV^2',mNuSq_t),...
+                    sprintf('\\Delta\\chi^2_{crit.} = %.2f (%.0f%% C.L.)',obj.FC_DeltaChi2C(Index),obj.ConfLevel*100),...
                     sprintf('%sx_2 = %.2f eV^2',plotx1,obj.FC_x2(Index)));
+                leg.Location = 'northwest';
+            PrettyLegendFormat(leg,'alpha',0.7);
                 savestr = '';
-                leg.Location = 'northwest'; legend boxoff;
-            elseif strcmp(PDF,'Central')
-                CumSum = GetCDF(obj.FC_mNuSqFit(Index,:),y);%cumsum(y);
-                %CumSum = CumSum./max(CumSum);
-                ylim([0,max(y)*1.05])
-                mNuSq_bestfit = -0.98;
-                savestr = 'PDF_Central';
-              %  xlim([-4,4])
-                ax = gca;
-                mNuSqFrac =100.*interp1(x,CumSum,mNuSq_bestfit,'spline');
-                t = text(mNuSq_bestfit-1.2,interp1(x,y,mNuSq_bestfit-1.0)/2,sprintf('%.1f %s',mNuSqFrac,'%'),...
-                    'FontSize',ax.FontSize,'FontWeight',ax.FontWeight,'Color',rgb('White'));
-            elseif strcmp(PDF,'1sigma')
-                 CumSum = GetCDF(obj.FC_mNuSqFit(Index,:),y);%cumsum(y);
-                %CumSum = CumSum./max(CumSum);
-                ylim([0,max(y)*1.05])
-                if strcmp(obj.RunAnaObj.DataSet,'Knm1')
-                    mNuSq_bestfit = -0.98;
-                    y = interp1(x,y,mNuSq_bestfit-1.0)/2;
-                    textx = [-0.15,-1.6,1.3];
-                else
-                    mNuSq_bestfit = 0;
-                    y = 0.1;
-                    textx = [0,-0.55,0.45];
-                end
-                savestr = 'PDF_1sigma';
-               %xlim([-4,4])
-                ax = gca;
-                mNuSqFrac =100.*interp1(x,CumSum,mNuSq_bestfit,'spline');
-               
-                t1 = text(textx(1),y,sprintf('%.1f %s',68.27,'%'),...
-                    'FontSize',ax.FontSize,'FontWeight',ax.FontWeight,'Color',rgb('White'),...
-                    'HorizontalAlignment','center');
-                t2 = text(textx(2),y,sprintf('%.1f %s',100*(1-0.6827)/2,'%'),...
-                    'FontSize',ax.FontSize,'FontWeight',ax.FontWeight,'Color',rgb('White'),...
-                    'HorizontalAlignment','center');
-                t3 = text(textx(3),y,sprintf('%.1f %s',100*(1-0.6827)/2,'%'),...
-                    'FontSize',ax.FontSize,'FontWeight',ax.FontWeight,'Color',rgb('White'),...
-                    'HorizontalAlignment','center');
-            else
-                ylim([0,max(y)*1.05])
-                leg = legend([p1,p3],sprintf('True {\\itm}^2_\\nu = %.3g eV^2',mNuSq_t),...
+                savedir = [getenv('SamakPath'),'tritium-data/FC/plots/Chi2Profile/'];
+            elseif strcmp(Mode,'PDF')
+                leg = legend([p1,p2,p3],sprintf('Profile Likelihood for true {\\itm}^2_\\nu = %.3g eV^2',mNuSq_t),...
+                    sprintf('Confidence region (%.0f%% C.L.)',obj.ConfLevel*100),...
                     sprintf('%sx_2 = %.2f eV^2',plotx1,obj.FC_x2(Index)));
-                   savestr = 'PDF';
-                   leg.Location = 'northwest';
-                   legend boxoff;
+                savedir = [getenv('SamakPath'),'tritium-data/FC/plots/Likelihood/'];
+                savestr = 'PDF_1sigma';
+                leg.Location = 'northwest';
+                PrettyLegendFormat(leg,'alpha',0.7);
+            elseif strcmp(Mode,'CompareBf')
+                CumSum = GetCDF(x,y);
+                ylim([0,max(y)*1.05])
+                ax = gca;
+                mNuSqFrac =100.*interp1(x,CumSum,mNuSq_bf,'spline');
+                if mNuSq_bf>0
+                    mNuSqFrac =100-mNuSqFrac;
+                     t = text(mNuSq_bf+0.05,0.93,sprintf('{\\itP}({\\itm}_{measured}^2 \\geq {\\itm}_{bf}^2) = %.1f %s',mNuSqFrac,'%'),...
+                        'FontSize',ax.FontSize,'FontWeight',ax.FontWeight,'Color',rgb('DarkBlue'));
+                    
+                    % make nice arrow
+                    xStart = interp1(ax.XAxis.Limits,[0,1],x(find(x>=mNuSq_bf+0.2,1)));
+                    yStart = interp1(ax.YAxis.Limits,[0,1],y(find(x>=mNuSq_bf+0.2,1)));
+                    xEnd = interp1(ax.XAxis.Limits,[0,1],x(find(x>=mNuSq_bf+0.4,1)));  
+                    arrow = annotation('textarrow',[xEnd,xStart],[0.8,yStart],'Color',rgb('DarkBlue'),'LineWidth',2);
+                else
+                    t = text(min(xlim)+0.1,0.93,sprintf('{\\itP}({\\itm}_{measured}^2 \\leq {\\itm}_{bf}^2) = %.1f %s',mNuSqFrac,'%'),...
+                        'FontSize',ax.FontSize,'FontWeight',ax.FontWeight,'Color',rgb('DarkBlue'));
+                    
+                    % make nice arrow
+                    xStart = interp1(ax.XAxis.Limits,[0,1],x(find(x>=mNuSq_bf-0.1,1)));
+                    yStart = interp1(ax.YAxis.Limits,[0,1],y(find(x>=mNuSq_bf-0.1,1)));
+                    xEnd = interp1(ax.XAxis.Limits,[0,1],x(find(x>=mNuSq_bf,1)));
+                    annotation('textarrow',[xStart,xEnd],[0.8,yStart],'Color',rgb('DarkBlue'),'LineWidth',2);
+                end
+                
+                savedir = [getenv('SamakPath'),'tritium-data/FC/plots/Likelihood/'];
+                savestr = sprintf('PDF_CompareBf%.3geV2',mNuSq_bf);
+          
             end
-             mylim = ylim;
-           %  text(-3.85,max(mylim)*0.94,'d)','FontSize',get(gca,'FontSize')+6,'FontName',get(gca,'FontName'));
-            savedir = [getenv('SamakPath'),'/tritium-data/FC/plots/'];
+            
+            
+            %mylim = ylim;
+            %  text(-3.85,max(mylim)*0.94,'d)','FontSize',get(gca,'FontSize')+6,'FontName',get(gca,'FontName'));
+           
             obj.CreateDir(savedir);
             savefile = [savedir,sprintf('%s_DeltaChi2_%.3geV2_%s%s.pdf',obj.RunAnaObj.DataSet,mNuSq_t,obj.RunAnaObj.chi2,savestr)];
             
@@ -2176,8 +2174,10 @@ classdef RunSensitivity < handle
                 fprintf('Save plot to %s \n',savefile);
                 export_fig(f111,savefile);
             elseif strcmp(SavePlot,'png')
-                obj.PlotWhiteSpace;
-                print(f111,strrep(savefile,'.pdf','.png'),'-dpng','-r100');
+             %   obj.PlotWhiteSpace;
+                savefile = strrep(savefile,'.pdf','.png');
+                print(f111,savefile,'-dpng','-r300');
+                fprintf('Save plot to %s \n',savefile);
             end
         end
         function PlotFC_PDF(obj,varargin)
@@ -2346,7 +2346,7 @@ classdef RunSensitivity < handle
 %                         out = 0;
 %                        return
 %                     end
-                    
+                    obj.MultiFitResults.(SysEffect_save) = [d.FitResult.par(1),d.FitResult.par(2)+obj.RunAnaObj.ModelObj.Q_i];            
                     obj.Lpar                         = d.Lpar;
                     obj.MultiLpar.(SysEffect_save)   = d.Lpar;
                     obj.CovMatFrac.(SysEffect_save)  = d.FitCMFrac;

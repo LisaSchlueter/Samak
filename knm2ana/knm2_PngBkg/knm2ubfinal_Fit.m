@@ -1,10 +1,10 @@
 % unblinded fit with penning track background slope
 range     = 40;
 freePar   = 'mNu E0 Bkg Norm qU';
-chi2      = 'chi2Stat';
+chi2      = 'chi2CMShape';
 DataType  = 'Real';
 AnaFlag   = 'Ring';
-RingMerge = 'None';%'None';
+RingMerge = 'Full';%'None';
 DopplerEffectFlag = 'FSD';
 BKG_PtSlope = 3*1e-06;
 TwinBias_BKG_PtSlope = 3*1e-06;
@@ -122,7 +122,7 @@ if strcmp(Plot,'ON')
             'TickDir','Out');
     else
         % A.PlotResidualsMultiRing('saveplot','ON','YLimRes',[-2.4 2.6])
-        A.PlotFit('ring',4,...
+        A.PlotFit('ring',1,...
             'saveplot','pdf',...
             'ErrorBarScaling',50,...
             'Colors','RGB',...
