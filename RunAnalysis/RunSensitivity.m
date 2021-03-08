@@ -1858,16 +1858,19 @@ classdef RunSensitivity < handle
                   % connection: lower part - horizontal line
                   x21_tmp = linspace(plotX2(IndexEdgeX21-10),plotX2(IndexEdgeX21+50),1000);
                   ploty2_edge = interp1(plotX2(IndexEdgeX21-10:IndexEdgeX21-2),plotY2(IndexEdgeX21-10:IndexEdgeX21-2),x21_tmp,'lin','extrap');   
-                
+                     
                   % connection to upper part
-                  x22_tmp = linspace(plotX2(IndexEdgeX22-50),plotX2(IndexEdgeX22+5),1000);
                    if strcmp(obj.RunAnaObj.DataSet,'Knm1')
+                        x22_tmp = linspace(plotX2(IndexEdgeX22-50),plotX2(IndexEdgeX22+5),1000);
+                 
                       ploty22_edge = interp1(plotX2(IndexEdgeX22:IndexEdgeX22+5),plotY2(IndexEdgeX22:IndexEdgeX22+5),x22_tmp,'lin','extrap');
                       xtmp = linspace(max(x21_tmp(ploty2_edge<=SensitivityLimit-0.01)),min(x22_tmp(ploty22_edge>=SensitivityLimit+0.008)),100);
                    else
-                      ploty22_edge = interp1(plotX2(IndexEdgeX22:IndexEdgeX22+4),plotY2(IndexEdgeX22:IndexEdgeX22+4),x22_tmp,'lin','extrap');
-                      xtmp = linspace(max(x21_tmp(ploty2_edge<=SensitivityLimit)),min(x22_tmp(ploty22_edge>=SensitivityLimit+0.002)),100);
-                  end
+                     x22_tmp = linspace(plotX2(IndexEdgeX22-52),plotX2(IndexEdgeX22+5),1000);
+                     ploty22_edge = interp1(plotX2(IndexEdgeX22:IndexEdgeX22+4),plotY2(IndexEdgeX22:IndexEdgeX22+4),x22_tmp,'lin','extrap');
+                     xtmp = linspace(max(x21_tmp(ploty2_edge<=SensitivityLimit)),min(x22_tmp(ploty22_edge>=SensitivityLimit)),100);
+                   end
+                  
                   % correct area
                   plotX2_new = [plotX2(1:IndexEdgeX21-5)',xtmp,plotX2(IndexEdgeX22:end)'];
                   ploty2_new = [plotY2(1:IndexEdgeX21-5)',SensitivityLimit.*ones(100,1)',plotY2(IndexEdgeX22:end)'];
@@ -1876,9 +1879,9 @@ classdef RunSensitivity < handle
 
                   %%% plot correct lines
                 % plot first part x1
-                  p1 =plot(plotX1(xIndex),smooth(plotY1(xIndex),100),'-',LineArg{:});
+                  p1 =plot(plotX1(xIndex),plotY1(xIndex),'-',LineArg{:});%smooth(plotY1(xIndex),100)
                   % plot second part x1
-                  plot(plotX1(~xIndex),smooth(plotY1(~xIndex),100),'-',LineArg{:});      
+                  plot(plotX1(~xIndex),plotY1(~xIndex),'-',LineArg{:});      
                   % plot continuous edge x1 
                   plot(plotX1(IndexEdge-1:IndexEdge+1),smooth(plotY1(IndexEdge-1:IndexEdge+1),100),'-',LineArg{:});
                   % plot first part x2
@@ -1887,11 +1890,11 @@ classdef RunSensitivity < handle
                   p2 =plot(plotX2(IndexEdgeX22:end),smooth(plotY2(IndexEdgeX22:end),100),'-',LineArg{:});
                  
                   % connection: lower part - horizontal line  
-                  plot(x21_tmp(ploty2_edge<=SensitivityLimit+0.0001),ploty2_edge(ploty2_edge<=SensitivityLimit+0.0001),'-',LineArg{:});
+                 plot(x21_tmp(ploty2_edge<=SensitivityLimit+1e-04),ploty2_edge(ploty2_edge<=SensitivityLimit+1e-04),'-',LineArg{:});
                   % connection to upper part  
-                  plot(x22_tmp(ploty22_edge>=SensitivityLimit),ploty22_edge(ploty22_edge>=SensitivityLimit),'-',LineArg{:});
-                  plot(xtmp,SensitivityLimit.*ones(100,1),'-',LineArg{:}) %horizontal line       
-                  plot(plotX2(IndexEdgeX21-1:IndexEdgeX21+1),smooth(plotY2(IndexEdgeX21-1:IndexEdgeX21+1),100),'-',LineArg{:})
+                plot(x22_tmp(ploty22_edge>=SensitivityLimit),ploty22_edge(ploty22_edge>=SensitivityLimit),'-',LineArg{:});
+                 plot(xtmp,SensitivityLimit.*ones(100,1),'-',LineArg{:}) %horizontal line       
+                % p4= plot(plotX2(IndexEdgeX21-1:IndexEdgeX21+1),smooth(plotY2(IndexEdgeX21-1:IndexEdgeX21+1),100),'-',LineArg{:})
                  
 %                   % smooth edges
 %                   xedge1_tmp = x21_tmp(ploty2_edge<=SensitivityLimit);

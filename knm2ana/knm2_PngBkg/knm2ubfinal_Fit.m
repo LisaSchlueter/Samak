@@ -4,12 +4,12 @@ freePar   = 'mNu E0 Bkg Norm qU';
 chi2      = 'chi2CMShape';
 DataType  = 'Real';
 AnaFlag   = 'Ring';
-RingMerge = 'Full';%'None';
+RingMerge = 'None';%'None';
 DopplerEffectFlag = 'FSD';
 BKG_PtSlope = 3*1e-06;
 TwinBias_BKG_PtSlope = 3*1e-06;
 FSDFlag   = 'KNM2';
-PullFlag = 99;%[7,24]; %24 = 3.0 mucps/s
+PullFlag = 6;%[7,24]; %24 = 3.0 mucps/s
 
 if strcmp(AnaFlag,'Ring')
     SysBudget = 41;
@@ -93,6 +93,22 @@ else
          A.ComputeCM('BkgPTCM','OFF','BkgCM','ON');
     end
     
+    if strcmp(RingMerge,'None') && strcmp(chi2,'chi2CMShape')
+        A.ComputeCM('SysEffect',  struct(...
+                        'RF_EL','OFF',...   % Response Function(RF) EnergyLoss
+                        'RF_BF','OFF',...   % RF B-Fields
+                        'RF_RX','OFF',...   % Column Density, inel cross ection
+                        'FSD','ON',...
+                        'TASR','ON',...
+                        'TCoff_RAD','OFF',...
+                        'TCoff_OTHER','ON',...
+                        'DOPoff','OFF',...
+                        'Stack','OFF',...
+                        'FPDeff','ON',...
+                        'LongPlasma','ON'),...
+                        'BkgPTCM','ON',...
+                        'BkgCM','ON');
+    end
     A.Fit;
     FitResult = A.FitResult;
     MakeDir(savedir);

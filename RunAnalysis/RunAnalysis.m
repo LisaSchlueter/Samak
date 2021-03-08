@@ -2686,7 +2686,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             ResStyleArg = {'o','Color','k','LineWidth',1.0,'MarkerFaceColor',rgb('Black'),'MarkerSize',MarkerSize,'Color',rgb('Black')};
             
             % Chi2 Flag
-            for r=1:4
+            for r=1:obj.nRings
                 [StatCM, ~] = obj.ComputeCM_StatPNP;
                 CMdim = ((r-1)*obj.ModelObj.nqU+1):(r*obj.ModelObj.nqU); %ring dimension in covariance matrix
                 StatErr(r,:) = diag(StatCM(CMdim,CMdim));
@@ -2700,9 +2700,21 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                 end
             end
                         
+            RingPreFix = 'Pseudo-';
             % Spectrum + Fit with Residuals
             fig5 = figure('Renderer','painters');
-                set(fig5, 'Units', 'normalized', 'Position', [0.001, 0.001,0.45, 0.7]);
+            if obj.nRings<=4
+                set(fig5, 'Units', 'normalized', 'Position', [0.001, 0.001,0.6, 0.7]);
+                nCol = 1;
+                nRow = obj.nRings;
+            else
+                set(fig5, 'Units', 'normalized', 'Position', [0.001, 0.001,0.7, 0.7]);
+                nCol = 2;
+                nRow = obj.nRings/2;
+                if obj.nRings==12
+                    RingPreFix = '';
+                end
+            end
             
             if strcmp(qUDisp,'Rel')
                 qU = obj.ModelObj.qU(obj.exclDataStart:BkgEnd,:)-obj.ModelObj.Q_i;
@@ -2734,162 +2746,113 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             
             % %            ax1 = gca;
             
-            for r=1:4
-                
-            if strcmp(DisplayStyle,'PRL') || strcmp(DisplayMTD,'ON')
-                s(r)= subplot(5,1,r);
-            else
-                s(r)= subplot(4,1,r);
-            end
-            
-            DataStat = [qU,zeros(size(qU)),(sqrt(StatErr(r,obj.exclDataStart:BkgEnd)./PlotErr(r,obj.exclDataStart:BkgEnd)))'];
-            
-            if strcmp(obj.chi2,'chi2Stat')
-                [lstat , pstat]  = boundedline(DataStat(:,1),DataStat(:,2),DataStat(:,3));
-                lstat.LineStyle= '--'; lstat.Color = rgb('DarkSlateGray'); lstat.LineWidth=LocalLineWidth;
-                pstat.FaceColor = obj.PlotColorLight;
-                
-            elseif ~strcmp(obj.chi2,'chi2Stat') %&& numel(hdata)==1
-                DataSys = [qU,zeros(numel(qU),1), ones(numel(qU),1)];
-                [l,p] = boundedline(DataSys(:,1),DataSys(:,2),DataSys(:,3),...
-                    '-b*',DataStat(:,1),DataStat(:,2),DataStat(:,3),'--ro');
-                lsys = l(1);  lstat = l(2);
-                psys = p(1);  pstat = p(2);
-                
-                pstat.FaceColor = rgb('PowderBlue');
-                if strcmp(Colors,'RGB')
-                    psys.FaceColor =obj.PlotColor; %psys.FaceAlpha=0.3;
-                    lstat.Color = rgb('Silver');
+            for r=1:obj.nRings
+ 
+                if strcmp(DisplayStyle,'PRL') || strcmp(DisplayMTD,'ON')
+                    s(r)= subplot(nRow+1,nCol,r);
                 else
-                    pstat.FaceColor = rgb('Black')';%obj.PlotColor;
-                    psys.FaceColor = rgb('Black'); psys.FaceAlpha=0.4;
-                    lstat.Color = rgb('Black');
+                    s(r)= subplot(nRow,nCol,r);
                 end
-                lsys.LineStyle= 'none';
-                lstat.LineStyle= '--';  lstat.LineWidth=LocalLineWidth;
-                lstat.Marker = 'none'; lsys.Marker = 'none';
-                 leg.FontSize = get(gca,'FontSize')+4;
-            end
-            
-            yres = (obj.RunData.TBDIS(obj.exclDataStart:BkgEnd,r)-obj.ModelObj.TBDIS(obj.exclDataStart:BkgEnd,r))...
-                ./sqrt(PlotErr(r,obj.exclDataStart:BkgEnd)');
-            
-            hold on;
-            pRes = errorbar(qU,yres,...
-                zeros(numel(qU),1),...
-                ResStyleArg{:});
-            pRes.CapSize = 0;
-            
-            pleg = plot(0,0,'Color',rgb('White'));
-            
-            if ~strcmp(obj.chi2,'chi2Stat')
-                leg = legend([pleg,pstat psys],sprintf('Pseudo-Ring %0.f',r),'Stat.',sprintf('Stat. and syst.'),'Location','Northeast'); %hsyst
-            elseif strcmp(obj.chi2,'chi2Stat')
-                leg = legend([pleg,pstat],sprintf('Pseudo-Ring %0.f Stat.',r),'Location','Northeast'); %hsyst
-            end
-            legend('boxoff');
-           %leg.EdgeColor = 'none';
-           % set(leg.BoxFace, 'ColorType','truecoloralpha', 'ColorData',uint8(255*[1;1;1;0.5])); 
-
-            leg.NumColumns = 3;
-            
-            hold off;
-            % xlabel(sprintf('retarding energy - %.1f (eV)',obj.ModelObj.Q_i),'FontSize',LocalFontSize);
-            if strcmp(DisplayStyle,'PRL') || strcmp(DisplayMTD,'ON')
-                % xlabel(sprintf('retarding energy - %.0f (eV)',obj.ModelObj.Q_i));
+                
+                DataStat = [qU,zeros(size(qU)),(sqrt(StatErr(r,obj.exclDataStart:BkgEnd)./PlotErr(r,obj.exclDataStart:BkgEnd)))'];
+                
+                if strcmp(obj.chi2,'chi2Stat')
+                    [lstat , pstat]  = boundedline(DataStat(:,1),DataStat(:,2),DataStat(:,3));
+                    lstat.LineStyle= '--'; lstat.Color = rgb('DarkSlateGray'); lstat.LineWidth=LocalLineWidth;
+                    pstat.FaceColor = obj.PlotColorLight;
+                    
+                elseif ~strcmp(obj.chi2,'chi2Stat') %&& numel(hdata)==1
+                    DataSys = [qU,zeros(numel(qU),1), ones(numel(qU),1)];
+                    [l,p] = boundedline(DataSys(:,1),DataSys(:,2),DataSys(:,3),...
+                        '-b*',DataStat(:,1),DataStat(:,2),DataStat(:,3),'--ro');
+                    lsys = l(1);  lstat = l(2);
+                    psys = p(1);  pstat = p(2);
+                    
+                    pstat.FaceColor = rgb('PowderBlue');
+                    if strcmp(Colors,'RGB')
+                        psys.FaceColor =obj.PlotColor; %psys.FaceAlpha=0.3;
+                        lstat.Color = rgb('Silver');
+                    else
+                        pstat.FaceColor = rgb('Black')';%obj.PlotColor;
+                        psys.FaceColor = rgb('Black'); psys.FaceAlpha=0.4;
+                        lstat.Color = rgb('Black');
+                    end
+                    lsys.LineStyle= 'none';
+                    lstat.LineStyle= '--';  lstat.LineWidth=LocalLineWidth;
+                    lstat.Marker = 'none'; lsys.Marker = 'none';
+                    leg.FontSize = get(gca,'FontSize')+4;
+                end
+                
+                yres = (obj.RunData.TBDIS(obj.exclDataStart:BkgEnd,r)-obj.ModelObj.TBDIS(obj.exclDataStart:BkgEnd,r))...
+                    ./sqrt(PlotErr(r,obj.exclDataStart:BkgEnd)');
+                
+                hold on;
+                pRes = errorbar(qU,yres,...
+                    zeros(numel(qU),1),...
+                    ResStyleArg{:});
+                pRes.CapSize = 0;
+                
+                pleg = plot(0,0,'Color',rgb('White'));
+                
+                if ~strcmp(obj.chi2,'chi2Stat')
+                    leg = legend([pleg,pstat psys],sprintf('%sRing %0.f',RingPreFix,r),'Stat.',sprintf('Stat. and syst.'),'Location','Northeast'); %hsyst
+                elseif strcmp(obj.chi2,'chi2Stat')
+                    leg = legend([pleg,pstat],sprintf('%sRing %0.f Stat.',RingPreFix,r),'Location','Northeast'); %hsyst
+                end
+                legend('boxoff');
+                %leg.EdgeColor = 'none';
+                % set(leg.BoxFace, 'ColorType','truecoloralpha', 'ColorData',uint8(255*[1;1;1;0.5]));
+                
+                leg.NumColumns = 3;
+                
+                hold off;
+                % xlabel(sprintf('retarding energy - %.1f (eV)',obj.ModelObj.Q_i),'FontSize',LocalFontSize);
+                if strcmp(DisplayStyle,'PRL') || strcmp(DisplayMTD,'ON')
+                    % xlabel(sprintf('retarding energy - %.0f (eV)',obj.ModelObj.Q_i));
+                    if ismember(DisplayStyle,'PRL')
+                        PRLFormat;
+                    else
+                        PrettyFigureFormat
+                    end
+                    %pstat.delete; psys.delete;
+                    lstat.Color = rgb('DarkGray');
+                else
+                    if r==4
+                        xlabel(xstr,'FontSize',LocalFontSize);
+                        leg.FontSize = get(gca,'FontSize')+4;
+                    end
+                end
+                
+                %leg.FontSize = 16;%get(gca,'FontSize')-2;
+                ylabel(sprintf('Res. (\\sigma)'));
+                if strcmp(qUDisp,'Rel')
+                    xlim([floor(min(qU))-4 max(qU)*1.04]);
+                elseif strcmp(qUDisp,'Abs')
+                    xlim([min(qU)*0.9999 max(qU)*1.0001]);
+                end
+                ymin = 1.1*min(yres);
+                ymax = 1.8*max(yres);
+                if ymin<=-1 || ymax<=1
+                    ylim([-2.5 2.5]);% ylim([ymin,ymax]);%ylim([-2 2])
+                else
+                    ylim([ymin,ymax]);
+                end
+                
                 if ismember(DisplayStyle,'PRL')
                     PRLFormat;
+                    xlim([-40 max(qU)+1]);
                 else
-                    PrettyFigureFormat
+                    PrettyFigureFormat; set(gca,'FontSize',LocalFontSize);
+                    set(gca,'YMinorTick','off');
+                    set(gca,'XMinorTick','off');
+                    set(gca,'TickLength',[0.01 0.01]);
+                    set(get(gca,'YLabel'),'FontSize',LocalFontSize+4);
+                    set(get(gca,'XLabel'),'FontSize',LocalFontSize+4);
                 end
-                %pstat.delete; psys.delete;
-                lstat.Color = rgb('DarkGray');
-            else
-                if r==4
-                xlabel(xstr,'FontSize',LocalFontSize);
-                leg.FontSize = get(gca,'FontSize')+4;
-                end
-            end
-            
-            %leg.FontSize = 16;%get(gca,'FontSize')-2;
-            ylabel(sprintf('Res. (\\sigma)'));
-            if strcmp(qUDisp,'Rel')
-                xlim([floor(min(qU))-4 max(qU)*1.04]);
-            elseif strcmp(qUDisp,'Abs')
-                xlim([min(qU)*0.9999 max(qU)*1.0001]);
-            end
-            ymin = 1.1*min(yres);
-            ymax = 1.8*max(yres);
-            if ymin<=-1 || ymax<=1
-               ylim([-2.5 2.5]);% ylim([ymin,ymax]);%ylim([-2 2])
-            else
-                ylim([ymin,ymax]);
-            end
-            
-            if ismember(DisplayStyle,'PRL')
-                PRLFormat;
-                xlim([-40 max(qU)+1]);
-            else
-                PrettyFigureFormat; set(gca,'FontSize',LocalFontSize);
-                set(gca,'YMinorTick','off');
-                set(gca,'XMinorTick','off');
-                set(gca,'TickLength',[0.01 0.01]);
-                set(get(gca,'YLabel'),'FontSize',LocalFontSize+4);
-                set(get(gca,'XLabel'),'FontSize',LocalFontSize+4);
-            end
-
-            if ~isempty(YLimRes)
-                ylim([min(YLimRes) max(YLimRes)]);
-            end
-            
-            if strcmp(qUDisp,'Abs')
-                xticks(myxticks);
-                ax = gca;
-                ax.XAxis.Exponent = 0;
-            end
-            
-            if strcmp(qUDisp,'Rel')
-                xlim([min(qU)*1.04 max(qU)*1.04]);
-            elseif strcmp(qUDisp,'Abs')
-                xticks(myxticks);
-                ax = gca;
-                ax.XAxis.Exponent = 0;
-                xlim([min(qU)*0.9999 max(qU)*1.0001]);
-            end
-            ax1 = gca;
-            tmp = get(ax1,'YLabel');
-            tmp2 = get(gca,'YLabel');
-            set(get(gca,'YLabel'),'Position',[tmp.Position(1),tmp2.Position(2),tmp2.Position(3)]);
-            ax = gca; 
-            mypos = ax.Position;
-            ax.Position = [mypos(1)+0.05 mypos(2)+0.01 mypos(3:4)];
-            if ~isempty(XLims)
-                xlim([min(XLims),max(XLims)])
-            end
-            
-            % MTD - optional
-            if strcmp(DisplayStyle,'PRL')  || strcmp(DisplayMTD,'ON')
-                mylim = ylim;
-                %  text(-57,mean(mylim),'b)','FontSize',get(gca,'FontSize')+4,'FontName',get(gca,'FontName'));
-                %text(textx,max(mylim)*0.65,'b)','FontSize',get(gca,'FontSize')+4,'FontName',get(gca,'FontName'));
                 
-                s(5)= subplot(5,1,5);
-                ring=1;
-                b1 = bar(qU,obj.RunData.qUfrac(obj.exclDataStart:BkgEnd,ring).*obj.RunData.TimeSec(ring)./(60*60));
-                b1.FaceColor = obj.PlotColor;
-                b1.EdgeColor = obj.PlotColor;
-                xlabel(xstr);
-                ylabel('Time (h)')
-                ylim([0,max(obj.RunData.qUfrac(obj.exclDataStart:obj.exclDataStop,ring).*obj.RunData.TimeSec(ring))/(60*60)*1.05]);
-                if strcmp(DisplayStyle,'PRL')
-                    PRLFormat;
-                else
-                    PrettyFigureFormat;
+                if ~isempty(YLimRes)
+                    ylim([min(YLimRes) max(YLimRes)]);
                 end
-                tmp = get(ax1,'YLabel');
-                tmp2 = get(gca,'YLabel');
-                set(get(gca,'YLabel'),'Position',[tmp.Position(1),tmp2.Position(2),tmp2.Position(3)]);
-                b1.BarWidth=0.6;
                 
                 if strcmp(qUDisp,'Abs')
                     xticks(myxticks);
@@ -2897,18 +2860,82 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                     ax.XAxis.Exponent = 0;
                 end
                 
-                ax = gca;
-                mypos = ax.Position;
-                ax.Position = [mypos(1)+0.05 mypos(2)+0.01 mypos(3:4)];
+                if strcmp(qUDisp,'Rel')
+                    xlim([min(qU)*1.04 max(qU)*1.04]);
+                elseif strcmp(qUDisp,'Abs')
+                    xticks(myxticks);
+                    ax = gca;
+                    ax.XAxis.Exponent = 0;
+                    xlim([min(qU)*0.9999 max(qU)*1.0001]);
+                end
                 
-                if ~isempty(XLims)
-                    xlim([min(XLims),max(XLims)])
-                end
-            else
-                if r==4
+               
+                    ax1 = gca;
+                    tmp = get(ax1,'YLabel');
+                    tmp2 = get(gca,'YLabel');
+                    set(get(gca,'YLabel'),'Position',[tmp.Position(1),tmp2.Position(2),tmp2.Position(3)]);
+                    ax = gca;
+                    mypos = ax.Position;
+                    if obj.nRings<=4
+                        ax.Position = [mypos(1)+0.05 mypos(2)+0.01 mypos(3:4)];
+                    else
+                        if mod(r,2) % if uneven (left side)
+                            ax.Position = [mypos(1)-0.05 mypos(2)-0.01 mypos(3)+0.08,mypos(4)+0.03]; 
+                        else
+                            ax.Position = [mypos(1) mypos(2)-0.01 mypos(3)+0.08,mypos(4)+0.03];
+                        end
+                        
+                    end
+                    if ~isempty(XLims)
+                        xlim([min(XLims),max(XLims)])
+                    end
+              
+                
+                % MTD - optional
+                if strcmp(DisplayStyle,'PRL')  || strcmp(DisplayMTD,'ON')
+                    mylim = ylim;
+                    %  text(-57,mean(mylim),'b)','FontSize',get(gca,'FontSize')+4,'FontName',get(gca,'FontName'));
+                    %text(textx,max(mylim)*0.65,'b)','FontSize',get(gca,'FontSize')+4,'FontName',get(gca,'FontName'));
+                    
+                    s(5)= subplot(obj.nRings+1,1,obj.nRings+1);
+                    ring=1;
+                    b1 = bar(qU,obj.RunData.qUfrac(obj.exclDataStart:BkgEnd,ring).*obj.RunData.TimeSec(ring)./(60*60));
+                    b1.FaceColor = obj.PlotColor;
+                    b1.EdgeColor = obj.PlotColor;
                     xlabel(xstr);
+                    ylabel('Time (h)')
+                    ylim([0,max(obj.RunData.qUfrac(obj.exclDataStart:obj.exclDataStop,ring).*obj.RunData.TimeSec(ring))/(60*60)*1.05]);
+                    if strcmp(DisplayStyle,'PRL')
+                        PRLFormat;
+                    else
+                        PrettyFigureFormat;
+                    end
+                    tmp = get(ax1,'YLabel');
+                    tmp2 = get(gca,'YLabel');
+                    set(get(gca,'YLabel'),'Position',[tmp.Position(1),tmp2.Position(2),tmp2.Position(3)]);
+                    b1.BarWidth=0.6;
+                    
+                    if strcmp(qUDisp,'Abs')
+                        xticks(myxticks);
+                        ax = gca;
+                        ax.XAxis.Exponent = 0;
+                    end
+                    
+                  
+                    ax = gca;
+                    mypos = ax.Position;
+                    ax.Position = [mypos(1)+0.05 mypos(2)+0.01 mypos(3:4)];
+                    
+                    if ~isempty(XLims)
+                        xlim([min(XLims),max(XLims)])
+                    end
+                else
+                    if obj.nRings==4 && r==4
+                        xlabel(xstr);
+                    elseif nCol==2 && (r==obj.nRings  || r==obj.nRings-1 )
+                         xlabel(xstr);
+                    end
                 end
-            end
             end
             
             if numel(s)==4
@@ -4402,7 +4429,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             
             fig1 = figure('Units','normalized','Position',[0.1,0.1,0.6,0.5]);
             if ismember(PlotPar,{'qU','mTSq'})
-                plot(linspace(-5,5,10),zeros(10,1),'LineWidth',2,'Color',rgb('Silver'));
+                plot(linspace(-5,obj.nRings+1,10),zeros(10,1),'LineWidth',2,'Color',rgb('Silver'));
                 hold on;
             end
             e1 = errorbar(obj.RingList,y,yErr,PlotStyle{:});

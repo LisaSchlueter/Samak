@@ -50,7 +50,7 @@ S = RunSensitivity('RunAnaObj',D);
 %mNuSq = sort([mNuSq_1,mNuSq_2,mNuSq_3]);
 %mNuSq = sort([0:0.1:1.6,0.05,0.08]);
 %mNuSq =  [1.55:-0.1:0.15];
-mNuSq = sort([0,0.1:0.1:0.5,0.05,0.08,0.65:0.1:1.55]);%0.65:0.1:1.55,0.1:0.1:1.3
+mNuSq = sort([0.05,0.15,0:0.1:0.6,0.8,0.45:0.1:1.55]);%0.65:0.1:1.55,0.1:0.1:1.3,0.05,0.08
 %mNuSq = mNuSq(1:15);
 %% Compute and Plot Confidence Belt
 S.ConfLevel = 0.9; % confidence level (0==1 sigma)
@@ -58,13 +58,12 @@ switch Mode
     case 'FC'
         S.ComputeFC_Asimov('mNuSq_t',mNuSq,'nSamplesAsimov',300);
         S.PlotFCBelt('HoldOn','OFF','Sensitivity',Sensitivity,...
-            'SavePlot','ON','XLim',[-1.5,1.5],...
+            'SavePlot','ON','XLim',[-1.25,1.25],...
             'Style','Pretty','mNuSq_bf',mNuSq_bf);
     case 'LT'
-       % mNuSq(mNuSq==0.8) = [];
         S.ComputeLokhov_Asimov('mNuSq_t',mNuSq);
         S.PlotFCBelt('Lokov','ON','Sensitivity',Sensitivity,'SavePlot',SavePlot,...
-            'Style','Pretty','XLim',[-1.5,1.5],'mNuSq_bf',mNuSq_bf);
+            'Style','Pretty','XLim',[-1.25,1.25],'mNuSq_bf',mNuSq_bf);
 end
 %% get limit as function of m_measured
 %savedir  = [getenv('SamakPath'),'knm2ana/knm2_unblindingFinal/results/'];

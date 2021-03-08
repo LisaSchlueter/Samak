@@ -1,7 +1,7 @@
 Uniform = 'ON';
 MR4 = 'OFF';
 MR4qU = 'ON';
-MR12 = 'OFF';
+MR12qU = 'ON';
 range = 40;
 freePar = 'mNu E0 Bkg Norm';
 savedir = [getenv('SamakPath'),'knm2ana/knm2_PngBkg/results/'];
@@ -32,8 +32,8 @@ if strcmp(MR4qU,'ON')
     x = [x,dMR4qUstat.FitResult.par(1),dMR4qUcm.FitResult.par(1)];
 end
 %%
-if strcmp(MR12,'ON')
-    fileStat = [CommonStrStat,'_RingNone.mat'];
+if strcmp(MR12qU,'ON')
+     fileStat = strrep([CommonStrStat,'_RingNone_KNM2_pull6.mat'],strrep(freePar,' ',''),[strrep(freePar,' ',''),'qU']);
     dMR12stat = importdata(fileStat);
     x = [x,dMR12stat.FitResult.par(1),dMR12stat.FitResult.par(1)];
 end
@@ -78,7 +78,7 @@ if strcmp(MR4,'ON')
 end
 
 
-if strcmp(MR12,'ON')
+if strcmp(MR12qU,'ON')
     y(end+1) = y(end)+0.25;% y(end+1) = y(end)+0.1;
     eUStat = errorbar(dMR12stat.FitResult.par(1),y(end),0,0,dMR12stat.FitResult.errNeg(1),dMR12stat.FitResult.errPos(1),...
         '*',CommonPlotArg{:},'Color',rgb('Orange'),'MarkerSize',8,'MarkerFaceColor',rgb('Orange'));
@@ -91,16 +91,20 @@ pstat =  plot(0,1e2,'LineWidth',2,'Color',rgb('Orange'));
 %
 PrettyFigureFormat('FontSize',22)
 ylim([y(1)-0.1,y(end)+0.22]);%+0.18]);
-if strcmp(MR12,'ON')
-yticks([y(1)+0.05,y(3)+0.05,y(5)+0.05,y(end)]); 
+if strcmp(MR12qU,'ON')
+    if strcmp(MR4,'ON')
+    yticks([y(1)+0.05,y(3)+0.05,y(5)+0.05,y(end)]);
+    else
+      yticks([y(1)+0.05,y(3)+0.05,y(end)]);  
+    end
 else
-    yticks([y(1)+0.05,y(3)+0.05]); 
+    yticks([y(1)+0.05,y(3)+0.05]);
 end
 set(gca,'YMinorTick','off');
 yticklabels(legStr);
 xlabel(sprintf('{\\itm}_\\nu^2 (eV^2)'));
 leg = legend([pstat,pcm],'Stat. only','Stat. and syst.','EdgeColor',rgb('Silver'),'Location','northwest');
- 
+PrettyLegendFormat(leg);
 plotdir = strrep(savedir,'results/BestFit','plots');
 plotname = sprintf('%sknm2ub1_FitResultOverview_mNuSq.png',plotdir);
 print(plotname,'-dpng','-r350');
