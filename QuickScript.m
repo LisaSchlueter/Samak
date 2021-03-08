@@ -33,15 +33,15 @@
 %  PrettyFigureFormat;
 %  hold off;
 
-N=1;
+N=100;
 G=6.67428e-11;
-%rho2=linspace(1,11342,N);  %kg/m³
+rho2=linspace(1,11342/2.2,N);  %kg/m³
 rho1=11342; %kg/m³
 R1=3092700; %m
 R2=linspace(1,5400000,N);
 r2=R1+R2+1612e3;
 m1=4*pi./3.*R1^3.*rho1; %kg
-m2=linspace(1,7.117e24,N);%4.*pi./3.*R2.^3.*rho2;
+m2=4.*pi./3.*R2.^3.*rho2; %linspace(1,7.117e24,N);
 mu=1-1./(1+sqrt(m2./m1));
 T=2.*pi.*sqrt(r2.^3./(G.*(m1+m2)));
 v_o=(2.*pi.*0.5.*r2)./T;
@@ -58,25 +58,25 @@ for i=1:N
         vnull(i,j)=sqrt(-2*G*(m1./rL(i,j)-m1./R1));
     end
 end
-x=linspace(-2*R1,2*R1,300);
-y=linspace(-r2,r2,300);
-v=[0 0 0];
-for i=1:numel(x)
-    for j=1:numel(y)
-        U(i,j)=-G.*m1./(sqrt(x(i).^2+(y(j)+0.5.*r2).^2))-G.*m2./(sqrt(x(i).^2+(y(j)-0.5.*r2).^2));
-        v_r(i,j)=(2.*pi.*sqrt(x(i)^2+y(j)^2))./T;
-        F(i,j,:)=G.*m1./(x(i).^2+(y(j)+0.5*r2).^2).*[-x(i) -y(j)-r2/2]./sqrt(x(i)^2+(-y(j)-r2/2)^2)+...
-            G.*m2./(x(i).^2+(y(j)-0.5*r2).^2).*[-x(i) -y(j)+r2/2]./sqrt(x(i)^2+(y(j)-r2/2)^2)+...
-            v_r(i,j).^2./sqrt(x(i)^2+y(j)^2).*[-x(i) -y(j)]./sqrt(x(i)^2+y(j)^2)+...
-            2.*[2*pi./T.*v(2) -v(1).*2*pi./T];                                  %F(x,y)=[F(x,y,1),F(x,y,2)]
-        if x(i)^2+(y(j)+0.5*r2)^2<R1^2 || (y(j)-0.5*r2)^2+x(i)^2<R2^2
-            U(i,j)=0;
-            F(i,j,:)=0;
-        end
-        %hold on;
-        %plot([x(i) x(i)+1e5*F(i,j,1)],[y(j) y(j)+1e5*F(i,j,2)]);
-    end
-end
+% x=linspace(-2*R1,2*R1,300);
+% y=linspace(-r2,r2,300);
+% vx=[0 0 0];
+% for i=1:numel(x)
+%     for j=1:numel(y)
+%         U(i,j)=-G.*m1./(sqrt(x(i).^2+(y(j)+0.5.*r2).^2))-G.*m2./(sqrt(x(i).^2+(y(j)-0.5.*r2).^2));
+%         v_r(i,j)=(2.*pi.*sqrt(x(i)^2+y(j)^2))./T;
+%         F(i,j,:)=G.*m1./(x(i).^2+(y(j)+0.5*r2).^2).*[-x(i) -y(j)-r2/2]./sqrt(x(i)^2+(-y(j)-r2/2)^2)+...
+%             G.*m2./(x(i).^2+(y(j)-0.5*r2).^2).*[-x(i) -y(j)+r2/2]./sqrt(x(i)^2+(y(j)-r2/2)^2)+...
+%             v_r(i,j).^2./sqrt(x(i)^2+y(j)^2).*[-x(i) -y(j)]./sqrt(x(i)^2+y(j)^2)+...
+%             2.*[2*pi./T.*vx(2) -vx(1).*2*pi./T];                                  %F(x,y)=[F(x,y,1),F(x,y,2)]
+%         if x(i)^2+(y(j)+0.5*r2)^2<R1^2 || (y(j)-0.5*r2)^2+x(i)^2<R2^2
+%             U(i,j)=0;
+%             F(i,j,:)=0;
+%         end
+%         %hold on;
+%         %plot([x(i) x(i)+1e5*F(i,j,1)],[y(j) y(j)+1e5*F(i,j,2)]);
+%     end
+% end
 % for i=1:10
 %     for j=1:10
 %         hold on;

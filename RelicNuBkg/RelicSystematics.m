@@ -8,6 +8,8 @@
 % % B.SystBias('TwinBias_mnuSq',0,'Recompute',Recompute,'Plot','ON','DeltaChi2',1);
 % % B.SystBias('TwinBias_mnuSq',1,'Recompute',Recompute,'Plot','ON','DeltaChi2',1);
 % % B.SystBias('TwinBias_mnuSq',5,'Recompute',Recompute,'Plot','ON','DeltaChi2',1);
+load([matFilePath,'SensitivityBreakdown_KNM1_mnuSq0_range40_RealData.mat']);
+YD=Y;
 load([matFilePath,'SensitivityBreakdown_KNM1_mnuSq0_range40.mat']);
 Y0=Y;
 load([matFilePath,'SensitivityBreakdown_KNM1_mnuSq1_range40.mat']);
@@ -44,7 +46,7 @@ Bias5=Y;Bias5(3)=Bias(4);Bias5(4)=Bias(1);Bias5(5)=Bias(2);Bias5(6)=Bias(3);Bias
 
 fig100=figure(100);
 X = categorical({'Total','Statistical','Final-state distribution','Response function','Scan fluctuations','Stacking','Detector efficiency','Theoretical corrections','Bkg slope','Bkg rate'});
-X = reordercats(X,{'Theoretical corrections','Scan fluctuations','Detector efficiency','Final-state distribution','Response function','Stacking','Bkg slope','Bkg rate','Statistical','Total'});
+X = reordercats(X,{'Response function','Theoretical corrections','Scan fluctuations','Detector efficiency','Final-state distribution','Stacking','Bkg slope','Bkg rate','Statistical','Total'});
 bsingle = cell(numel(X),1);
 
 PlotColor = {rgb('White'),rgb('Navy'),rgb('GoldenRod'),rgb('PowderBlue'),...
@@ -54,7 +56,7 @@ PlotColor = {rgb('White'),rgb('Navy'),rgb('GoldenRod'),rgb('PowderBlue'),...
 
 hold on;
 for i=1:numel(X)
-    bsingle{i}  = barh(X(i),Y1(i));
+    bsingle{i}  = barh(X(i),YD(i));
     btmp= bsingle{i};
     btmp.LineStyle = 'none';
     btmp.FaceColor = PlotColor{i+1}; btmp.LineStyle ='none';
@@ -73,7 +75,7 @@ xlabel('\eta');
 
 effs = ones(1,numel(bsingle));
 vals = ones(1,numel(bsingle));
-%labels = string(bsingle{:}.YData);
+labels = string(zeros(10,1));
 for i=1:numel(bsingle)
     effs(i) = bsingle{i}.YEndPoints;
     vals(i) = bsingle{i}.XEndPoints;
@@ -81,6 +83,7 @@ for i=1:numel(bsingle)
 end
 text(effs,vals,labels,'HorizontalAlignment','left',...
    'VerticalAlignment','middle','FontSize',16);
+xlim([1e9,1e12]);
 PrettyFigureFormat;
 
 % fig2=figure(2);

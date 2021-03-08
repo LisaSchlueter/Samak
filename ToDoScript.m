@@ -1,10 +1,10 @@
-PlotBestFit('Nfit',1000,'Syst','ON');
+PlotBestFit('Nfit',1000,'Syst','ON','DataType','Twin');
 
-% A=RelicNuAnalysis('Params','KNM1');
-% A.EtaFit('NmNuBins',5,'MaxmNu',4,'DataType','Real','Mode','SinglemnuSq','fitPar','E0 Norm Bkg eta','DeltaChi2',2.71,'Recompute','OFF');
-% A.EtaFit('NmNuBins',5,'MaxmNu',4,'DataType','Real','Mode','SinglemnuSq','fitPar','E0 Norm Bkg eta','DeltaChi2',3.84,'Recompute','OFF');
-% A.EtaFit('NmNuBins',5,'MaxmNu',4,'DataType','Real','Mode','SinglemnuSq','fitPar','E0 Norm Bkg eta','DeltaChi2',6.63,'Recompute','OFF');
-% A.Chi2Scan_2D('Syst','ON','DataType','Real','DeltaEta',5e11,'Deltamnu',3,'Recompute','OFF');
+%A=RelicNuAnalysis('Params','KNM1');
+%A.EtaFit('NmNuBins',5,'MaxmNu',1,'DataType','Real','Mode','SinglemnuSq','fitPar','E0 Norm Bkg eta','DeltaChi2',1,'Recompute','OFF');
+%A.EtaFit('NmNuBins',5,'MaxmNu',1,'DataType','Real','Mode','SinglemnuSq','fitPar','E0 Norm Bkg eta','DeltaChi2',4,'Recompute','OFF');
+%A.EtaFit('NmNuBins',5,'MaxmNu',1,'DataType','Real','Mode','SinglemnuSq','fitPar','E0 Norm Bkg eta','DeltaChi2',9,'Recompute','OFF');
+%A.Chi2Scan_2D('Syst','ON','DataType','Real','DeltaEta',5e11,'Deltamnu',3,'Recompute','OFF');
 
 %A.Chi2Twin('Recompute','OFF','CheckErrors','ON','Plot','OFF','Syst','ON','pullFlag',[1 3]);
 %A.Chi2Twin('Recompute','OFF','Plot','OFF','Syst','ON','pullFlag',[1 3]);

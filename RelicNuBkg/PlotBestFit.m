@@ -11,7 +11,7 @@ function PlotBestFit(varargin)
     Syst     = p.Results.Syst;
 
     
-    if ~exist(sprintf('./EtaFitResult_AllParams_mnuSq%g_Nfit%g.mat',mnuSq,Nfit),'file')
+    if exist(sprintf('./EtaFitResult_AllParams_mnuSq%g_Nfit%g.mat',mnuSq,Nfit),'file')
         load(sprintf('./EtaFitResult_AllParams_mnuSq%g_Nfit%g.mat',mnuSq,Nfit));
     else
         if strcmp(Syst,'OFF')
