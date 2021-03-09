@@ -55,7 +55,7 @@ classdef SterileAnalysis < handle
             p.addParameter('range',65,@(x)isfloat(x));
             p.addParameter('ConfLevel',95,@(x)isfloat(x));
             p.addParameter('InterpMode','spline',@(x)ismember(x,{'lin','spline'}));
-          
+            
             p.parse(varargin{:});
             
             obj.RunAnaObj = p.Results.RunAnaObj;
@@ -66,7 +66,7 @@ classdef SterileAnalysis < handle
             obj.RandMC        = p.Results.RandMC;
             obj.range         = p.Results.range;
             obj.ConfLevel     = p.Results.ConfLevel;
-            obj.InterpMode    = p.Results.InterpMode; 
+            obj.InterpMode    = p.Results.InterpMode;
             
             if isempty(obj.RunAnaObj)
                 fprintf(2,'RunAnaObj has to be specified! \n');
@@ -74,16 +74,112 @@ classdef SterileAnalysis < handle
             end
             GetSamakPath; %sets current samak path as enviromental variable
             
-           obj.SetNPfactor; % -> stat or syst
-           obj.RunAnaObj.exclDataStart = obj.RunAnaObj.GetexclDataStart(obj.range);
-           obj.InitPlotArg; % some plotting defaults
-        end  
+            obj.SetNPfactor; % -> stat or syst
+            obj.RunAnaObj.exclDataStart = obj.RunAnaObj.GetexclDataStart(obj.range);
+            obj.InitPlotArg; % some plotting defaults
+        end
     end
     
-    methods 
-        function GridSearch(varargin) %
-
-        end        
+    methods
+        function GridSearch(obj,varargin)
+            p = inputParser;
+            p.addParameter('Negsin2T4','OFF',@(x)ismember(x,{'ON','OFF'}));
+            p.addParameter('NegmNu4Sq','OFF',@(x)ismember(x,{'ON','OFF'}));
+            p.addParameter('Extsin2T4','OFF',@(x)ismember(x,{'ON','OFF'})); %extended sin2T2 (up to 1)
+            p.addParameter('FixmNuSq',0,@(x)isfloat(x)); % if light nu-mass fixed (eV^2)
+            p.parse(varargin{:});
+            Negsin2T4     = p.Results.Negsin2T4;
+            NegmNu4Sq     = p.Results.NegmNu4Sq;
+            Extsin2T4     = p.Results.Extsin2T4;
+            FixmNuSq      = p.Results.FixmNuSq;
+            
+            savefile = obj.GridFilename;
+            
+            if exist(savefile,'file') && strcmp(obj.RecomputeFlag,'OFF')
+                %load(savefile,'mnu4Sq','sin2T4','chi2','chi2_ref','FitResults_Null')
+                fprintf('grid file already computed - skip %s \n',savefile)
+            else
+                
+                % set range
+                obj.RunAnaObj.exclDataStart = obj.RunAnaObj.GetexclDataStart(obj.range);
+                
+                % get covariance matrix
+                if strcmp(obj.RunAnaObj.chi2,'chi2CMShape') && strcmp(obj.SysEffect,'Bkg')
+                    obj.RunAnaObj.ComputeCM('SysEffect',struct('FSD','OFF'),'BkgCM','ON');
+                elseif strcmp(obj.RunAnaObj.chi2,'chi2CMShape') && ~strcmp(obj.SysEffect,'all')
+                    obj.RunAnaObj.ComputeCM('SysEffect',struct(obj.SysEffect,'ON'),'BkgCM','OFF','BkgPtCM','OFF');
+                elseif strcmp(obj.RunAnaObj.chi2,'chi2CMShape') && strcmp(obj.SysEffect,'all')
+                    obj.RunAnaObj.ComputeCM('BkgCM','ON','BkgPtCM','ON');
+                end
+                
+                % if light nu-mass is fixed in fit, but model nu-mass shall not be something else than 0 eV^2
+                if FixmNuSq~=0 && contains(obj.RunAnaObj.fixPar,'fix 1 ;')
+                    obj.RunAnaObj.ModelObj.mnuSq_i = FixmNuSq;
+                end
+                
+                %% null hypothesis : no steriles
+                obj.RunAnaObj.Fit;
+                FitResults_Null = obj.RunAnaObj.FitResult;
+                
+                %% define grid
+                if strcmp(Extsin2T4,'ON')
+                    sin2T4Max = 1;
+                else
+                    sin2T4Max = 0.5;
+                end
+                sin2T4      = logspace(-3,log10(sin2T4Max),obj.nGridSteps); %linspace(0.001,0.5,nGridSteps)
+                mnu4Sq      = logspace(0,log10((obj.range+5)^2),obj.nGridSteps)';
+                mnu4Sq      = repmat(mnu4Sq,1,obj.nGridSteps);
+                sin2T4      = repmat(sin2T4,obj.nGridSteps,1);
+                
+                %% make copy of model for parallel computing
+                D = copy(repmat(obj.RunAnaObj,obj.nGridSteps^2,1));
+                D = reshape(D,numel(D),1);
+                %% scan over msq4-sin2t4 grid
+                chi2Grid       = zeros(obj.nGridSteps^2,1);
+                FitResultsGrid = cell(obj.nGridSteps^2,1);
+                mnu4Sq_Grid    = reshape(mnu4Sq',obj.nGridSteps^2,1);
+                sin2T4_Grid    = reshape(sin2T4',obj.nGridSteps^2,1);
+                
+                if strcmp(NegmNu4Sq,'ON')
+                    mnu4Sq_Grid = -mnu4Sq_Grid;
+                    mnu4Sq = - mnu4Sq;
+                end
+                
+                if strcmp(Negsin2T4,'ON')
+                    sin2T4_Grid = -sin2T4_Grid;
+                    sin2T4 = -sin2T4;
+                end
+                
+                fixPartmp = obj.RunAnaObj.fixPar;
+                
+                parfor i= 1:(obj.nGridSteps^2)
+                    D(i).SimulateStackRuns;
+                    if FixmNuSq~=0 && contains(fixPartmp,'fix 1 ;')
+                        % if light nu-mass is fixed and shall not be fixed to 0 eV^2
+                        D(i).ModelObj.mnuSq_i = FixmNuSq;
+                    end
+                    D(i).ModelObj.SetFitBiasSterile(mnu4Sq_Grid(i),sin2T4_Grid(i));
+                    D(i).Fit
+                    chi2Grid(i) = D(i).FitResult.chi2min;
+                    FitResultsGrid{i} = D(i).FitResult;
+                end
+                
+                chi2       = reshape(chi2Grid,obj.nGridSteps,obj.nGridSteps);
+                FitResults = reshape(FitResultsGrid,obj.nGridSteps,obj.nGridSteps);
+                
+                if min(min(chi2))<obj.RunAnaObj.FitResult.chi2min
+                    chi2_ref = min(min(chi2));
+                else
+                    chi2_ref = T.FitResult.chi2min;
+                end
+                
+                %% save
+                save(savefile,'chi2_ref',...%'FitResults_ref'
+                    'chi2','mnu4Sq','sin2T4','FitResults','FitResults_Null');
+                fprintf('save file to %s \n',savefile);
+            end
+        end
     end
     
     methods
