@@ -2239,7 +2239,7 @@ function ComputeCM_Background(obj,varargin)
                     MaxSlopeCpsPereV = MaxSlopeCpsPereV.*sqrt(BKG_Asimov./sum(BKG_Asimov));
                 case 3
                     MaxSlopeCpsPereV = repmat(MaxSlopeCpsPereV,nRingLoop,1);
-            end
+            end        
         end
         
         Slopes      = zeros(nRingLoop,obj.nTrials); % background fit slope
@@ -2271,6 +2271,7 @@ function ComputeCM_Background(obj,varargin)
                 else
                     GaussCorrMat = RingCorrCoeff;
                 end
+               
                 GaussCovMat  = MaxSlopeCpsPereV.*GaussCorrMat.*MaxSlopeCpsPereV';
                 Slopes       = mvnrnd(zeros(nRingLoop,1),GaussCovMat,obj.nTrials)';
             end

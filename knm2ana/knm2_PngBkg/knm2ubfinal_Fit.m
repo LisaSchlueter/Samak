@@ -11,12 +11,13 @@ TwinBias_BKG_PtSlope = 3*1e-06;
 FSDFlag   = 'KNM2';
 PullFlag = 6;%[7,24]; %24 = 3.0 mucps/s
 
-if strcmp(AnaFlag,'Ring')
-    SysBudget = 41;
+if strcmp(AnaFlag,'Ring') 
     if strcmp(RingMerge,'Full')
         AnaStr = AnaFlag;
+         SysBudget = 41;
     else
         AnaStr = sprintf('Ring%s',RingMerge);
+         SysBudget = 40;
     end
 else
     SysBudget = 40;

@@ -86,19 +86,22 @@ classdef SterileAnalysis < handle
             p.addParameter('Negsin2T4','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('NegmNu4Sq','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('Extsin2T4','OFF',@(x)ismember(x,{'ON','OFF'})); %extended sin2T2 (up to 1)
+            p.addParameter('AddSmallNu4Sq','OFF',@(x)ismember(x,{'ON','OFF'})); %add  m4Sq  smaller values (0.1-1)     
             p.addParameter('FixmNuSq',0,@(x)isfloat(x)); % if light nu-mass fixed (eV^2)
             p.parse(varargin{:});
             Negsin2T4     = p.Results.Negsin2T4;
             NegmNu4Sq     = p.Results.NegmNu4Sq;
             Extsin2T4     = p.Results.Extsin2T4;
+            AddSmallNu4Sq = p.Results.AddSmallNu4Sq;
             FixmNuSq      = p.Results.FixmNuSq;
             
-            savefile = obj.GridFilename;
+            savefile = obj.GridFilename('Negsin2T4',Negsin2T4,'NegmNu4Sq',NegmNu4Sq,...
+                                        'Extsin2T4',Extsin2T4,'FixmNuSq',FixmNuSq,'AddSmallNu4Sq',AddSmallNu4Sq);
             
             if exist(savefile,'file') && strcmp(obj.RecomputeFlag,'OFF')
-                %load(savefile,'mnu4Sq','sin2T4','chi2','chi2_ref','FitResults_Null')
-                fprintf('grid file already computed - skip %s \n',savefile)
+                fprintf('Grid file already exists: %s \nIf you want to load grid into memory call: obj.LoadGridFile() \n',savefile)
             else
+                tStart = cputime;
                 
                 % set range
                 obj.RunAnaObj.exclDataStart = obj.RunAnaObj.GetexclDataStart(obj.range);
@@ -127,19 +130,28 @@ classdef SterileAnalysis < handle
                 else
                     sin2T4Max = 0.5;
                 end
-                sin2T4      = logspace(-3,log10(sin2T4Max),obj.nGridSteps); %linspace(0.001,0.5,nGridSteps)
-                mnu4Sq      = logspace(0,log10((obj.range+5)^2),obj.nGridSteps)';
+                
+                if strcmp(AddSmallNu4Sq,'ON') 
+                    mnu4Sq      = (0:0.1:0.9)'; % compute only some small m4^2
+                    nGridSteps_mNu4Sq = 10;
+                    nGridTot = nGridSteps_mNu4Sq*obj.nGridSteps;
+                else
+                    mnu4Sq      = logspace(0,log10((obj.range+5)^2),obj.nGridSteps)';
+                    nGridSteps_mNu4Sq = obj.nGridSteps;
+                    nGridTot = obj.nGridSteps^2;
+                end     
+                sin2T4      = logspace(-3,log10(sin2T4Max),obj.nGridSteps);  
                 mnu4Sq      = repmat(mnu4Sq,1,obj.nGridSteps);
-                sin2T4      = repmat(sin2T4,obj.nGridSteps,1);
+                sin2T4      = repmat(sin2T4,nGridSteps_mNu4Sq,1);
                 
                 %% make copy of model for parallel computing
-                D = copy(repmat(obj.RunAnaObj,obj.nGridSteps^2,1));
+                D = copy(repmat(obj.RunAnaObj,nGridTot,1));
                 D = reshape(D,numel(D),1);
                 %% scan over msq4-sin2t4 grid
-                chi2Grid       = zeros(obj.nGridSteps^2,1);
-                FitResultsGrid = cell(obj.nGridSteps^2,1);
-                mnu4Sq_Grid    = reshape(mnu4Sq',obj.nGridSteps^2,1);
-                sin2T4_Grid    = reshape(sin2T4',obj.nGridSteps^2,1);
+                chi2Grid       = zeros(nGridTot,1);
+                FitResultsGrid = cell(nGridTot,1);
+                mnu4Sq_Grid    = reshape(mnu4Sq',nGridTot,1);
+                sin2T4_Grid    = reshape(sin2T4',nGridTot,1);
                 
                 if strcmp(NegmNu4Sq,'ON')
                     mnu4Sq_Grid = -mnu4Sq_Grid;
@@ -153,7 +165,7 @@ classdef SterileAnalysis < handle
                 
                 fixPartmp = obj.RunAnaObj.fixPar;
                 
-                parfor i= 1:(obj.nGridSteps^2)
+                parfor i= 1:(nGridTot)
                     D(i).SimulateStackRuns;
                     if FixmNuSq~=0 && contains(fixPartmp,'fix 1 ;')
                         % if light nu-mass is fixed and shall not be fixed to 0 eV^2
@@ -165,8 +177,8 @@ classdef SterileAnalysis < handle
                     FitResultsGrid{i} = D(i).FitResult;
                 end
                 
-                chi2       = reshape(chi2Grid,obj.nGridSteps,obj.nGridSteps);
-                FitResults = reshape(FitResultsGrid,obj.nGridSteps,obj.nGridSteps);
+                chi2       = reshape(chi2Grid,nGridSteps_mNu4Sq,obj.nGridSteps);
+                FitResults = reshape(FitResultsGrid,nGridSteps_mNu4Sq,obj.nGridSteps);
                 
                 if min(min(chi2))<obj.RunAnaObj.FitResult.chi2min
                     chi2_ref = min(min(chi2));
@@ -174,9 +186,10 @@ classdef SterileAnalysis < handle
                     chi2_ref = T.FitResult.chi2min;
                 end
                 
+                tCpuHour = (cputime-tStart)/60; % cpu time in hours
                 %% save
                 save(savefile,'chi2_ref',...%'FitResults_ref'
-                    'chi2','mnu4Sq','sin2T4','FitResults','FitResults_Null');
+                    'chi2','mnu4Sq','sin2T4','FitResults','FitResults_Null','tCpuHour');
                 fprintf('save file to %s \n',savefile);
             end
         end
@@ -200,21 +213,25 @@ classdef SterileAnalysis < handle
             end
             
             %% define maximum m4:
-            if obj.range==65
-                Maxm4Sq = 59^2;
-            elseif obj.range==95 && strcmp(obj.RunAnaObj.DataType,'Real')
-                freePar = ConvertFixPar('freePar',obj.RunAnaObj.fixPar,'Mode','Reverse');
-                if contains(freePar,'mNu')
-                    Maxm4Sq = 83^2;
+            if  strcmp(obj.InterpMode,'lin')
+                Maxm4Sq = obj.range^2;
+            else    
+                if obj.range==65
+                    Maxm4Sq = 59^2;
+                elseif obj.range==95 && strcmp(obj.RunAnaObj.DataType,'Real')
+                    freePar = ConvertFixPar('freePar',obj.RunAnaObj.fixPar,'Mode','Reverse');
+                    if contains(freePar,'mNu')
+                        Maxm4Sq = 83^2;
+                    else
+                        Maxm4Sq =  90^2;%84.5^2;
+                    end
+                elseif obj.range==40 && strcmp(obj.RunAnaObj.DataType,'Real')
+                    Maxm4Sq =  36^2;%(obj.range-3)^2;
+                elseif obj.range==40 && strcmp(obj.RunAnaObj.DataType,'Fake')
+                    Maxm4Sq =  (obj.range-3.3)^2;
                 else
-                    Maxm4Sq =  90^2;%84.5^2;
+                    Maxm4Sq =  (obj.range-5)^2;
                 end
-            elseif obj.range==40 && strcmp(obj.RunAnaObj.DataType,'Real')
-                Maxm4Sq =  36^2;%(obj.range-3)^2;
-            elseif obj.range==40 && strcmp(obj.RunAnaObj.DataType,'Fake')
-                Maxm4Sq =  (obj.range-3.3)^2;
-            else
-                Maxm4Sq =  (obj.range-5)^2;
             end
             
             [X,Y] = meshgrid(obj.mNu4Sq(:,1),obj.sin2T4(1,:));
@@ -349,7 +366,7 @@ classdef SterileAnalysis < handle
     
     %% Plotting
     methods
-        function pHandle = ContourPlot(obj,varargin)
+        function [pHandle,sin2T4_min] = ContourPlot(obj,varargin)
             p = inputParser;
             p.addParameter('BestFit','OFF',@(x) ismember(x,{'ON','OFF'}));
             p.addParameter('CL',obj.ConfLevel,@(x)isfloat(x));   
@@ -396,6 +413,7 @@ classdef SterileAnalysis < handle
                 [obj.DeltaChi2 obj.DeltaChi2],...
                 PlotArg{:});
             
+            sin2T4_min = min(M(1,:));
             ExclIndex = find(M(1,:)==obj.DeltaChi2(1));
             nContour = numel(ExclIndex);
             if nContour>1
@@ -442,7 +460,7 @@ classdef SterileAnalysis < handle
             if any(CL<1)
                 CL = CL*1e2;
             end
-            legStr = sprintf(' %.1f%% C.L. -',CL);  
+            legStr = sprintf(' %.3g%% C.L. -',CL);  
             legend(legStr(1:end-1),'EdgeColor',rgb('Silver'),'Location','southwest');
             
               if ~strcmp(SavePlot,'OFF')
@@ -528,8 +546,8 @@ classdef SterileAnalysis < handle
             end
             %% Prospect
             if strcmp(Prospect,'ON')
-%                filenameProspect = sprintf('%scoord_Prospect_95CL.mat',savedirOther);
-                filenameProspect = sprintf('%scoord_Prospect2020_95CL.mat',savedirOther);
+                filenameProspect = sprintf('%scoord_Prospect_95CL.mat',savedirOther);
+%                filenameProspect = sprintf('%scoord_Prospect2020_95CL.mat',savedirOther);
                 dProspect = importdata(filenameProspect);
                 pProspect = plot(dProspect.SinSquare2Theta_X,dProspect.DmSquare41_Y,'-','LineWidth',1,'Color',rgb('PowderBlue'));
                 legHandle{numel(legHandle)+1} = pProspect;
@@ -565,8 +583,8 @@ classdef SterileAnalysis < handle
             end
             %% Stereo
             if strcmp(Stereo,'ON')
-                %filenameStereo = sprintf('%scoord_Stereo_95CL.mat',savedirOther); % old stereo 2019
-                filenameStereo = sprintf('%scoord_STEREOprd102_95CL.mat',savedirOther); % new stereo 2020
+                filenameStereo = sprintf('%scoord_Stereo_95CL.mat',savedirOther); % old stereo 2019
+     %           filenameStereo = sprintf('%scoord_STEREOprd102_95CL.mat',savedirOther); % new stereo 2020
                 dStereo = importdata(filenameStereo);
                 pStereo = plot(dStereo.SinSquare2Theta_X,dStereo.DmSquare41_Y,'-','LineWidth',1,'Color',rgb('Orange'));
 
@@ -708,6 +726,9 @@ classdef SterileAnalysis < handle
             Contour  = p.Results.Contour;
             SavePlot = p.Results.SavePlot;
                  
+            if CL<1
+                CL = CL*100;
+            end
             obj.DeltaChi2 = GetDeltaChi2(CL,2);
             chi2grid = obj.chi2;
             chi2grid((chi2grid-obj.chi2_ref)>obj.DeltaChi2) =  NaN;%DeltaChi2+chi2_ref;% NaN;
@@ -727,20 +748,25 @@ classdef SterileAnalysis < handle
                     'x','MarkerSize',9,'Color',rgb('White'),'LineWidth',3);
             end
             
-              PrettyFigureFormat('FontSize',22)
+            PrettyFigureFormat('FontSize',22)
             %% contour
-            if strcmp(Contour,'ON')     
-            [M,pContour] = contour(obj.sin2T4,obj.mNu4Sq,obj.chi2-obj.chi2_ref,...
-                [obj.DeltaChi2 obj.DeltaChi2],...
-                'LineWidth',3,'LineStyle','-','Color',rgb('Black'));
+            if strcmp(Contour,'ON')
+                hold on;
+                [~,pContour] = contour(obj.sin2T4,obj.mNu4Sq,obj.chi2-obj.chi2_ref,...
+                    [obj.DeltaChi2 obj.DeltaChi2],...
+                    'LineWidth',3,'LineStyle','-','Color',rgb('Black'));
             end
                
             if strcmp(Contour,'ON')  && strcmp(BestFit,'ON')
-                leg = legend([pContour,pbf],sprintf('%.0f%% C.L.',obj.ConfLevel),'Best fit',...
-                    'EdgeColor','none','Location','southwest','Color',rgb('White'),...
-                    'FontSize',get(gca,'FontSize'));
-                set(leg.BoxFace, 'ColorType','truecoloralpha', 'ColorData',uint8(255*[1;1;1;0.3]));
+                leg = legend([pContour,pbf],sprintf('%.3g%% C.L.',CL),'Best fit',...
+                   'Location','southwest','FontSize',get(gca,'FontSize')); 
+               PrettyLegendFormat(leg,'alpha',0.6);
+            elseif strcmp(Contour,'ON')
+                 leg = legend(pContour,sprintf('%.3g%% C.L.',CL),...
+                   'Location','southwest','FontSize',get(gca,'FontSize'));   
+               PrettyLegendFormat(leg,'alpha',0.6);
             end
+            
             zlim([0 zlimMax])
             set(gca,'XScale','log')
             set(gca,'YScale','log')
@@ -801,15 +827,19 @@ classdef SterileAnalysis < handle
             end
             
             if strcmp(FitPar,'mNuSq')
+                if strcmp(obj.RunAnaObj.DataSet,'Knm1')
+                     ContourVec = [-10 -2 -1 -0.5 1 10];
+                else
+                     ContourVec = [-10 -2 -1 0 0.5 1 5 10,50];
+                end
                 PlotPar = obj.mNuSq;
                 Plot_bf = obj.mNuSq_bf;
-                ContourVec = [-10 -2 -1 -0.5 1 10];
                 zStr = sprintf('{\\itm}_\\nu^2 (eV^2)');
             elseif strcmp(FitPar,'E0')
-                PlotPar = obj.E0;
+                PlotPar = obj.E0-obj.E0_bf;
                 Plot_bf = obj.E0_bf;
-                ContourVec = [-0.2 -0.5 0 0.5]+obj.RunAnaObj.ModelObj.Q_i;
-                zStr = sprintf('{\\itE}_0^{fit} (eV)');
+                ContourVec = [-0.2 -0.5 0 0.5];%+obj.RunAnaObj.ModelObj.Q_i;
+                zStr = sprintf('{\\itE}_0 - \\langle{\\itE}_0^{bf}\\rangle (eV)');
             end
    
             surf(obj.sin2T4,obj.mNu4Sq,PlotPar,'EdgeColor','interp','FaceColor','interp');
@@ -946,10 +976,13 @@ classdef SterileAnalysis < handle
         function PlotmNuSqOverview(obj,varargin)
             p = inputParser;
             p.addParameter('BestFit','OFF',@(x)ismember(x,{'ON','OFF'}));
+            p.addParameter('PullmNuSq','ON',@(x)ismember(x,{'ON','OFF'})); % show also contour with constrained m^2
             p.addParameter('SavePlot','OFF',@(x)ismember(x,{'ON','OFF','png'}));
             p.parse(varargin{:});
             BestFit  = p.Results.BestFit;
             SavePlot = p.Results.SavePlot;
+            PullmNuSq = p.Results.PullmNuSq;
+            
             fixPar_i = obj.RunAnaObj.fixPar;
             pull_i = obj.RunAnaObj.pullFlag;
 
@@ -962,32 +995,44 @@ classdef SterileAnalysis < handle
                 'Color',rgb('ForestGreen'),'LineStyle','-','BestFit',BestFit);
 
             %%  nuissance nu-mass + pull
-            obj.RunAnaObj.pullFlag = 12;
-                        obj.LoadGridFile('CheckSmallerN','ON');
-            obj.Interp1Grid('RecomputeFlag','ON');
-            pPull = obj.ContourPlot('CL',obj.ConfLevel,'HoldOn','ON',...
-                'Color',rgb('Orange'),'LineStyle','-.','BestFit',BestFit);
+            if strcmp(PullmNuSq,'ON')
+                obj.RunAnaObj.pullFlag = 12;
+                obj.LoadGridFile('CheckSmallerN','ON');
+                obj.Interp1Grid('RecomputeFlag','ON');
+                pPull = obj.ContourPlot('CL',obj.ConfLevel,'HoldOn','ON',...
+                    'Color',rgb('Orange'),'LineStyle','-.','BestFit',BestFit);
+            end
             
             %% fixed nu-mass
             obj.RunAnaObj.fixPar = 'E0 Norm Bkg'; obj.RunAnaObj.InitFitPar;
             obj.RunAnaObj.pullFlag = 99;
             obj.LoadGridFile('CheckSmallerN','ON');
             obj.Interp1Grid('RecomputeFlag','ON');
-            pFix = obj.ContourPlot('CL',obj.ConfLevel,'HoldOn','ON',...
+            [pFix,pfixmin] = obj.ContourPlot('CL',obj.ConfLevel,'HoldOn','ON',...
                 'Color',rgb('DodgerBlue'),'LineStyle',':','BestFit',BestFit);
             
             PrettyFigureFormat('FontSize',22);
+            if strcmp(PullmNuSq,'ON')
                 legend([pFree,pPull,pFix],...
                     sprintf('Free {\\itm}_\\nu^2 without pull term'),...
                     sprintf('Free {\\itm}_\\nu^2 with pull term \\sigma({\\itm}_\\nu^2) = 1.94 eV^2'),...
                     sprintf('Fixed {\\itm}_\\nu^2 = 0 eV^2'),...
                     'EdgeColor',rgb('Silver'),'Location','southwest');
+            else
+                 legend([pFree,pFix],...
+                    sprintf('Free {\\itm}_\\nu^2 without pull term'),...   
+                    sprintf('Fixed {\\itm}_\\nu^2 = 0 eV^2'),...
+                    'EdgeColor',rgb('Silver'),'Location','southwest');
+            end
+            
                 obj.RunAnaObj.fixPar = fixPar_i;
                 obj.RunAnaObj.pullFlag = pull_i ;
                
                 if obj.range==65
                     ylim([1 6e3]);
                     xlim([2e-03 0.5]);
+                else
+                    xlim([pfixmin*0.5,0.5]);
                 end
                 %% save
                 if ~strcmp(SavePlot,'OFF')
@@ -1087,19 +1132,20 @@ classdef SterileAnalysis < handle
             obj.RunAnaObj.DataType = 'Twin';
             obj.LoadGridFile('CheckSmallerN','ON');
             obj.Interp1Grid('RecomputeFlag','ON');
-            pTwin = obj.ContourPlot('CL',obj.ConfLevel,'HoldOn','OFF',...
+            [pTwin,sin2T4_Twinmin] = obj.ContourPlot('CL',obj.ConfLevel,'HoldOn','OFF',...
                 'Color',rgb('Orange'),'LineStyle','-.','BestFit','OFF');
             
             % data
             obj.RunAnaObj.DataType = 'Real';
             obj.LoadGridFile('CheckSmallerN','ON');
             obj.Interp1Grid('RecomputeFlag','ON');
-            pData = obj.ContourPlot('CL',obj.ConfLevel,'HoldOn','ON',...
+            [pData,sin2T4_Datamin] = obj.ContourPlot('CL',obj.ConfLevel,'HoldOn','ON',...
                 'Color',rgb('DodgerBlue'),'LineStyle','-','BestFit',BestFit);
             
             titleStr = sprintf('%.0f%% C.L. , %.0feV range (%s)',obj.ConfLevel,obj.range,obj.GetPlotTitle('Mode','chi2'));
             title(titleStr,'FontWeight','normal','FontSize',get(gca,'FontSize'));
             legend([pData,pTwin],'Data','Twin','EdgeColor',rgb('Silver'),'Location','southwest');
+            xlim([min([sin2T4_Datamin,sin2T4_Twinmin])*0.5,0.5]);
             
             obj.RunAnaObj.DataType = DataType_i;
             
@@ -1272,7 +1318,7 @@ classdef SterileAnalysis < handle
             obj.RunAnaObj.chi2 = 'chi2CMShape';
             obj.LoadGridFile('CheckSmallerN','ON');
             obj.Interp1Grid('RecomputeFlag','ON');
-            pSys = obj.ContourPlot('CL',obj.ConfLevel,'HoldOn','ON',...
+            [pSys,pSysMin] = obj.ContourPlot('CL',obj.ConfLevel,'HoldOn','ON',...
                 'Color',rgb('Orange'),'LineStyle','-','BestFit',BestFit,'PlotSplines','OFF');
 
         %% legend
@@ -1283,15 +1329,18 @@ classdef SterileAnalysis < handle
                extraStr = '';
            
            obj.RunAnaObj.chi2 = chi2_i;
-            if obj.range==65
+           
+            if strcmp(obj.RunAnaObj.DataSet,'Knm1') && obj.range==65
                 xlim([4e-03 0.5])
                 ylim([1 1e4])
-            elseif obj.range==40
+            elseif strcmp(obj.RunAnaObj.DataSet,'Knm1') && obj.range==40
                 xlim([1e-02 0.5])
                 ylim([1 3e3])
-            elseif obj.range==95
+            elseif strcmp(obj.RunAnaObj.DataSet,'Knm1') && obj.range==95
                 xlim([3e-03 0.5])
                 ylim([1 2e4]) 
+            else
+                xlim([pSysMin*0.5,0.5]);
             end
             
             title(sprintf('%s , %.0f eV range , %.0f%% C.L.',obj.GetPlotTitle('Mode','data'),obj.range,obj.ConfLevel),'FontWeight','normal','FontSize',get(gca,'FontSize'));
@@ -1681,7 +1730,20 @@ classdef SterileAnalysis < handle
             end
             
         end
-        function filename = GridFilename(obj)
+        function filename = GridFilename(obj,varargin)
+            p = inputParser;
+            p.addParameter('Negsin2T4','OFF',@(x)ismember(x,{'ON','OFF'}));
+            p.addParameter('NegmNu4Sq','OFF',@(x)ismember(x,{'ON','OFF'}));
+            p.addParameter('Extsin2T4','OFF',@(x)ismember(x,{'ON','OFF'})); %extended sin2T2 (up to 1)
+            p.addParameter('AddSmallNu4Sq','OFF',@(x)ismember(x,{'ON','OFF'}));
+            p.addParameter('FixmNuSq',0,@(x)isfloat(x)); % if light nu-mass fixed (eV^2)
+            p.parse(varargin{:});
+            Negsin2T4     = p.Results.Negsin2T4;
+            NegmNu4Sq     = p.Results.NegmNu4Sq;
+            Extsin2T4     = p.Results.Extsin2T4;
+            AddSmallNu4Sq     = p.Results.AddSmallNu4Sq;
+            FixmNuSq      = p.Results.FixmNuSq;
+            
             %% label
             if strcmp(obj.SmartGrid,'ON')
                 AddSin2T4 = 0.1;
@@ -1712,40 +1774,54 @@ classdef SterileAnalysis < handle
                      extraStr = [extraStr,'_AngTF'];
                  end
                  
-                 if obj.RunAnaObj.pullFlag<=20
+                 if obj.RunAnaObj.pullFlag<99
                      extraStr = sprintf('%s_pull%.0f',extraStr,obj.RunAnaObj.pullFlag);
                  end
                  
-                 if obj.RunAnaObj.ModelObj.mnuSq_i~=0 
-                     extraStr = [extraStr,sprintf('_FixmNuSq%.2feV2',obj.RunAnaObj.ModelObj.mnuSq_i)];
+                 if strcmp(NegmNu4Sq,'ON')
+                     extraStr = [extraStr,'_NegmNu4Sq'];
+                 end
+                 
+                 if strcmp(Negsin2T4,'ON')
+                     extraStr = [extraStr,'_Negsin2T4'];
+                 end
+                 
+                 if strcmp(Extsin2T4,'ON')
+                     extraStr = [extraStr,'_Extsin2T4'];
+                 end
+                 
+                  if strcmp(AddSmallNu4Sq,'ON')
+                     extraStr = [extraStr,'_AddSmallmNu4Sq'];
+                  end
+                 
+                 if FixmNuSq~=0
+                     extraStr = [extraStr,sprintf('_FixmNuSq%.2feV2',FixmNuSq)];
                  end
                  
                  MakeDir(savedir);
-
-            % get runlist-name
-            RunList = extractBefore(obj.RunAnaObj.RunData.RunName,'_E0');
-            if isempty(RunList)
-                RunList = obj.RunAnaObj.RunData.RunName;
-            end
-            
-            freeParStr =  ConvertFixPar('freePar',obj.RunAnaObj.fixPar,'Mode','Reverse');
-            if strcmp(obj.RunAnaObj.DataType,'Fake')
-                filename = sprintf('%sKSNX_GridSearch_%s_%s_%s_%.0feVrange_%s_%.0fnGrid%s.mat',...
-                    savedir,func2str(obj.RunAnaObj.FakeInitFile),obj.RunAnaObj.DataType,strrep(freeParStr,' ',''),...
-                    obj.range,obj.RunAnaObj.chi2,obj.nGridSteps,extraStr);
-            else
-                
-                
-                filename = sprintf('%sKSN1_GridSearch_%s_%s_%s_%.0feVrange_%s_%.0fnGrid%s.mat',...
-                    savedir,RunList,obj.RunAnaObj.DataType,strrep(freeParStr,' ',''),...
-                    obj.range,obj.RunAnaObj.chi2,obj.nGridSteps,extraStr);
-            end
-  
-        end  
+                 
+                 % get runlist-name
+                 RunList = extractBefore(obj.RunAnaObj.RunData.RunName,'_E0');
+                 if isempty(RunList)
+                     RunList = obj.RunAnaObj.RunData.RunName;
+                 end
+                 
+                 freeParStr =  ConvertFixPar('freePar',obj.RunAnaObj.fixPar,'Mode','Reverse');
+                 if strcmp(obj.RunAnaObj.DataType,'Fake')
+                     filename = sprintf('%sKSNX_GridSearch_%s_%s_%s_%.0feVrange_%s_%.0fnGrid%s.mat',...
+                         savedir,func2str(obj.RunAnaObj.FakeInitFile),obj.RunAnaObj.DataType,strrep(freeParStr,' ',''),...
+                         obj.range,obj.RunAnaObj.chi2,obj.nGridSteps,extraStr);
+                 else
+                     filename = sprintf('%sKSN%.0f_GridSearch_%s_%s_%s_%.0feVrange_%s_%.0fnGrid%s.mat',...
+                         savedir,str2double(obj.RunAnaObj.DataSet(end)),RunList,obj.RunAnaObj.DataType,strrep(freeParStr,' ',''),...
+                         obj.range,obj.RunAnaObj.chi2,obj.nGridSteps,extraStr);
+                 end
+                 
+        end
         function plotname = DefPlotName(obj)
             % generic plot name
             filename = obj.GridFilename;
-            filename = extractBetween(filename,'KSN1_','.mat');
+            filename = extractBetween(filename,sprintf('KSN%.0f_',str2double(obj.RunAnaObj.DataSet(end))),'.mat');
             plotdir = sprintf('%sSterileAnalysis/plots/%s/%s/',...
                      getenv('SamakPath'),obj.RunAnaObj.DataSet,obj.RunAnaObj.DataType);
             MakeDir(plotdir);

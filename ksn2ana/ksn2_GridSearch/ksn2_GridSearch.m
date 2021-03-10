@@ -1,7 +1,7 @@
 % ksn2 calculate chi2 grid search
 %% settings that might change
 chi2 = 'chi2Stat';
-DataType = 'Twin';
+DataType = 'Real';
 nGridSteps = 25;
 range = 40;
 
@@ -40,8 +40,20 @@ SterileArg = {'RunAnaObj',A,... % Mother Object: defines RunList, Column Density
     'RandMC','OFF',...
     'range',range};
 
+
 S = SterileAnalysis(SterileArg{:});
-S.GridSearch;
-S.LoadGridFile('CheckSmallerN','OFF');
-
-
+S.GridSearch('AddSmallNu4Sq','ON');
+%%
+% S.LoadGridFile('CheckSmallerN','OFF');
+% if strcmp(A.DataType,'Real')
+%     S.InterpMode = 'lin';
+%     BF = 'ON';
+% else
+%     S.InterpMode = 'spline';
+%    BF = 'OFF';
+% end
+% S.Interp1Grid('RecomputeFlag','ON');
+%S.GridPlot('Contour','ON','BestFit',BF,'SavePlot','png','CL',95)
+%S.ContourPlot('BestFit','OFF','CL',95)
+% S.PlotStatandSys('SavePlot','png')
+%S.PlotmNuSqOverview('PullmNuSq','OFF','SavePlot','png')
