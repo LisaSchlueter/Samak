@@ -154,7 +154,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             p.addParameter('RingList',1:12,@(x)isfloat(x) && all(x>0));
             p.addParameter('fixPar','',@(x)ischar(x)); %default given in constructor: FSD and qUOffset fixed
             p.addParameter('pulls',[],@(x)isfloat(x) && all(x>0));
-            p.addParameter('pullFlag',3);%@(x)ismember(x,{1,2,3}) 
+            p.addParameter('pullFlag',99);%@(x)ismember(x,{1,2,3}) 
             p.addParameter('RingMerge','None',@(x)ismember(x,{'Default','None','Full','Half','Azi','AziHalfNS','AziHalfEW'}));
             p.addParameter('NonPoissonScaleFactor',[],@(x)isfloat(x) && all(x>0)); 
             p.addParameter('BKG_PtSlope',0,@(x)isfloat(x));     

@@ -1,28 +1,31 @@
-function TritiumObject = ref_KSN2_KATRIN_Flat40TD(varargin)
-
+function TritiumObject = ref_KNM2_KATRIN_FlatMTD(varargin)
 
 TDMode = 'DataTBD';
-% use MTD from KNM1
-DataKNM2 = importdata([getenv('SamakPath'),'tritium-data/mat/Knm2/51536.mat']);
 
+% use configuration from KNM2 - except MTD
+DataKNM2   = importdata([getenv('SamakPath'),'tritium-data/mat/Knm2/57136.mat']);
+qU         = mean(DataKNM2.qU,2);
+qUfracNorm = mean(sum(DataKNM2.qUfrac)); % <1, because of deleted 300 eV point
+qUfrac     = qUfracNorm.*ones(size(qU))./size(qU,1);
+TimeSec    = 361*mean(DataKNM2.TimeSec);
 % ---------------------------------------------------------------------- %
 % WGTS
 p = inputParser;
-p.addParameter('WGTS_CD_MolPerCm2',5*1e17,@(x)isfloat(x) && x>0);
+p.addParameter('WGTS_CD_MolPerCm2',DataKNM2.WGTS_CD_MolPerCm2,@(x)isfloat(x) && x>0);
 p.addParameter('WGTS_CD_MolPerCm2_SubRun','',@(x)isfloat(x));
-p.addParameter('WGTS_MolFrac_TT',0.95,@(x)isfloat(x) && x>0);
+p.addParameter('WGTS_MolFrac_TT',DataKNM2.WGTS_MolFrac_TT,@(x)isfloat(x) && x>0);
 p.addParameter('WGTS_MolFrac_TT_SubRun','');
-p.addParameter('WGTS_MolFrac_DT',0.011,@(x)isfloat(x) && x>0);
+p.addParameter('WGTS_MolFrac_DT',DataKNM2.WGTS_MolFrac_DT,@(x)isfloat(x) && x>0);
 p.addParameter('WGTS_MolFrac_DT_SubRun','');
-p.addParameter('WGTS_MolFrac_HT',0.035,@(x)isfloat(x)&& x>0);
+p.addParameter('WGTS_MolFrac_HT',DataKNM2.WGTS_MolFrac_HT,@(x)isfloat(x)&& x>0);
 p.addParameter('WGTS_MolFrac_HT_SubRun','');
 p.addParameter('WGTS_B_T',2.52,@(x)isfloat(x) && x>0);
 
 % Theory
 p.addParameter('ISCS','Edep',@(x)ismember(x,{'Aseev','Theory','Edep'}));
-p.addParameter('DTFSD','SibilleFull',@(x)ismember(x,{'OFF','DOSS','BlindingKNM1','SibilleFull','Sibille0p5eV','BlindingKNM2'}));
-p.addParameter('HTFSD','SibilleFull',@(x)ismember(x,{'OFF','SAENZ','BlindingKNM1','SibilleFull','Sibille0p5eV','BlindingKNM2'}));
-p.addParameter('TTFSD','SibilleFull',@(x)ismember(x,{'OFF','DOSS','SAENZ','BlindingKNM1','SibilleFull','Sibille0p5eV','BlindingKNM2'}));
+p.addParameter('DTFSD','Sibille0p5eV',@(x)ismember(x,{'OFF','DOSS','BlindingKNM1','SibilleFull','Sibille0p5eV','BlindingKNM2'}));
+p.addParameter('HTFSD','Sibille0p5eV',@(x)ismember(x,{'OFF','SAENZ','BlindingKNM1','SibilleFull','Sibille0p5eV','BlindingKNM2'}));
+p.addParameter('TTFSD','Sibille0p5eV',@(x)ismember(x,{'OFF','DOSS','SAENZ','BlindingKNM1','SibilleFull','Sibille0p5eV','BlindingKNM2'}));
 p.addParameter('ELossFlag','KatrinT2A20',@(x)ismember(x,{'Aseev','Abdurashitov','CW_GLT','KatrinD2','KatrinT2','KatrinT2A20'}));
 p.addParameter('DopplerEffectFlag','FSD',@(x)ismember(x,{'OFF','FSD'}));
 p.addParameter('AngularTFFlag','ON',@(x)ismember(x,{'OFF','ON'}));
@@ -30,18 +33,18 @@ p.addParameter('SynchrotronFlag','ON',@(x)ismember(x,{'OFF','ON'}));
 
 % Binning
 p.addParameter('nTeBinningFactor',100,@(x)isfloat(x) && x>0);
-p.addParameter('qU',mean(DataKNM2.qU,2),@(x)isfloat(x) && all(x>0));
-p.addParameter('qUfrac',mean(DataKNM2.qUfrac,2),@(x)isfloat(x));
+p.addParameter('qU',qU,@(x)isfloat(x) && all(x>0));
+p.addParameter('qUfrac',qUfrac,@(x)isfloat(x));
 
 % MACE
-p.addParameter('MACE_Bmax_T',4.23,@(x)isfloat(x) && x>0);
-p.addParameter('MACE_Ba_T',6.3*1e-04,@(x)isfloat(x) && x>0);
+p.addParameter('MACE_Bmax_T',mean(DataKNM2.MACE_Bmax_T),@(x)isfloat(x) && x>0);
+p.addParameter('MACE_Ba_T',mean(DataKNM2.MACE_Ba_T),@(x)isfloat(x) && x>0);
 p.addParameter('KTFFlag','WGTSMACE',@(x)ismember(x,{'OFF','MACE','WGTSMACE'}));
 p.addParameter('recomputeRF','OFF',@(x)ismember(x,{'ON','OFF'}));
 p.addParameter('UseParallelRF','ON',@(x)ismember(x,{'OFF','ON'}));
 
 % General
-p.addParameter('TimeSec',750*24*60*60,@(x)isfloat(x));
+p.addParameter('TimeSec',TimeSec,@(x)isfloat(x));
 p.addParameter('mnuSq_i',0,@(x)isfloat(x));
 p.addParameter('Q_i',18573.7,@(x)isfloat(x));
 
@@ -52,7 +55,7 @@ p.addParameter('FPD_ROIEff','OFF',@(x)ismember(x,{'ON','OFF'}));
 p.addParameter('FPD_PileUpEff','OFF',@(x)ismember(x,{'ON','OFF'}));
 p.addParameter('BKG_Flag','ON',@(x)ismember(x,{'ON','OFF','XmasData'}));
 p.addParameter('BKG_Type','FLAT',@(x)ismember(x,{'FLAT','SLOPE'}));
-p.addParameter('BKG_RateAllFPDSec',0.130);
+p.addParameter('BKG_RateAllFPDSec',0.220);
 p.addParameter('BKG_RatePixelSec',''); 
 p.addParameter('BKG_RateRingSec','');
 p.addParameter('FPD_Segmentation','OFF',@(x) ismember(x,{'OFF','SINGLEPIXEL','MULTIPIXEL','RING'}));

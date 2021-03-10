@@ -1,15 +1,15 @@
 % unblinded fit with penning track background slope
 range     = 40;
-freePar   = 'mNu E0 Bkg Norm qU';
+freePar   = 'mNu E0 Bkg Norm';
 chi2      = 'chi2CMShape';
 DataType  = 'Real';
-AnaFlag   = 'Ring';
+AnaFlag   = 'StackPixel';%'Ring';
 RingMerge = 'None';%'None';
 DopplerEffectFlag = 'FSD';
 BKG_PtSlope = 3*1e-06;
 TwinBias_BKG_PtSlope = 3*1e-06;
 FSDFlag   = 'KNM2';
-PullFlag = 6;%[7,24]; %24 = 3.0 mucps/s
+PullFlag = 99;%[7,24]; %24 = 3.0 mucps/s
 
 if strcmp(AnaFlag,'Ring') 
     if strcmp(RingMerge,'Full')
