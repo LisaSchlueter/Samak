@@ -495,6 +495,16 @@ classdef FITC < handle
                     (par(4*obj.SO.nPixels+12)-sin4Central).^2./sin4Tol^2+...  % sin2t4
                     (par(4*obj.SO.nPixels+11)-m4Central).^2./m4Tol^2;         % m4
             end
+            
+            if any(ismember(obj.pullFlag,22))  %exclude negative neutrino mass squared
+                PullTerm = PullTerm + ...
+                    exp(-par(1)./1e-3);
+            end
+            
+            if any(ismember(obj.pullFlag,23))  %exclude negative relic overdensity
+                PullTerm = PullTerm + ...
+                    exp(-par(17));
+            end
         end
         function chi2 = chi2function(obj,par)
             

@@ -10,7 +10,7 @@ fitresults = zeros(11,numel(RunLists));
 
 for i=16:19
     M = MultiRunAnalysis('RunList',RunLists{i},...         % runlist defines which runs are analysed -> set MultiRunAnalysis.m -> function: GetRunList()
-        'chi2','chi2CMShape',...              % uncertainties: statistical or stat + systematic uncertainties
+        'chi2','chi2Stat',...              % uncertainties: statistical or stat + systematic uncertainties
         'DataType','Real',...                 % can be 'Real' or 'Twin' -> Monte Carlo
         'fixPar','mNu E0 Norm Bkg eta',...        % free Parameter!!
         'RadiativeFlag','ON',...              % theoretical radiative corrections applied in model

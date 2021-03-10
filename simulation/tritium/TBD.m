@@ -1835,7 +1835,12 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                                                     RelicPeakPosition = Position+sqrt(obj.mnuSq);
                                                 end
                                             end
-                                            obj.PhaseSpace = repmat(pdf('Normal',obj.Te-obj.Q,RelicPeakPosition,sqrt(obj.DE_sigma^2+FSDwidth^2)),1,obj.nRings);  %obj.Q.*obj.me./(obj.me+obj.MH3+obj.MHe3),
+                                            switch obj.FPD_Segmentation
+                                                case 'OFF'
+                                                    obj.PhaseSpace = pdf('Normal',obj.Te-obj.Q,RelicPeakPosition,sqrt(obj.DE_sigma^2+FSDwidth^2));
+                                                case 'RING'
+                                                    obj.PhaseSpace = repmat(pdf('Normal',obj.Te-obj.Q,RelicPeakPosition,sqrt(obj.DE_sigma^2+FSDwidth^2)),1,obj.nRings);  %obj.Q.*obj.me./(obj.me+obj.MH3+obj.MHe3),
+                                            end
                                         elseif strcmp(obj.TTFSD,'OFF') && strcmp(obj.DTFSD,'OFF') && strcmp(obj.HTFSD,'OFF')
                                             obj.ComputePhaseSpace('NuCapture');
                                         else

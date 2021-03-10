@@ -1,13 +1,15 @@
 function PlotBestFit(varargin)
     p=inputParser;
     p.addParameter('mnuSq',0,@(x)isfloat(x));
+    p.addParameter('pullFlag',3);
     p.addParameter('Nfit',1,@(x)isfloat(x));
     p.addParameter('DataType','Real',@(x)ismember(x,{'Twin','Real'}));
     p.addParameter('Syst','OFF',@(x)ismember(x,{'ON','OFF'}));
     p.addParameter('RunList','KNM1',@(x)ischar(x));
-    p.addParameter('Plot','ON',@(x)ismember(y,{'ON','OFF'}));
+    p.addParameter('Plot','ON',@(x)ismember(x,{'ON','OFF'}));
     p.parse(varargin{:});
     mnuSq    = p.Results.mnuSq;
+    pullFlag = p.Results.pullFlag;
     Nfit     = p.Results.Nfit;
     DataType = p.Results.DataType;
     Syst     = p.Results.Syst;
@@ -32,6 +34,7 @@ function PlotBestFit(varargin)
                     'RadiativeFlag','ON',...              % theoretical radiative corrections applied in model
                     'NonPoissonScaleFactor',NP,...     % background uncertainty are enhanced
                     'minuitOpt','min ; minos',...         % technical fitting options (minuit)
+                    'pullFlag',pullFlag,...
                     'FSDFlag','SibilleFull',...           % final state distribution
                     'ELossFlag','KatrinT2',...            % energy loss function
                     'SysBudget',24,...                    % defines syst. uncertainties -> in GetSysErr.m;
@@ -52,6 +55,7 @@ function PlotBestFit(varargin)
                         'RadiativeFlag','ON',...              % theoretical radiative corrections applied in model
                         'NonPoissonScaleFactor',NP,...     % background uncertainty are enhanced
                         'minuitOpt','min ; minos',...         % technical fitting options (minuit)
+                        'pullFlag',pullFlag,...
                         'FSDFlag','SibilleFull',...           % final state distribution
                         'ELossFlag','KatrinT2',...            % energy loss function
                         'SysBudget',24,...                    % defines syst. uncertainties -> in GetSysErr.m;
