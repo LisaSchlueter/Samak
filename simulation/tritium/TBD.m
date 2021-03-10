@@ -1835,7 +1835,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                                                     RelicPeakPosition = Position+sqrt(obj.mnuSq);
                                                 end
                                             end
-                                            obj.PhaseSpace = pdf('Normal',obj.Te-obj.Q,RelicPeakPosition,sqrt(obj.DE_sigma^2+FSDwidth^2));  %obj.Q.*obj.me./(obj.me+obj.MH3+obj.MHe3),
+                                            obj.PhaseSpace = repmat(pdf('Normal',obj.Te-obj.Q,RelicPeakPosition,sqrt(obj.DE_sigma^2+FSDwidth^2)),1,obj.nRings);  %obj.Q.*obj.me./(obj.me+obj.MH3+obj.MHe3),
                                         elseif strcmp(obj.TTFSD,'OFF') && strcmp(obj.DTFSD,'OFF') && strcmp(obj.HTFSD,'OFF')
                                             obj.ComputePhaseSpace('NuCapture');
                                         else
@@ -1933,11 +1933,21 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                 TBDDS_beta  = (1+obj.normFit).*(TBDDS_beta./simpsons(obj.Te,TBDDS_beta)).*obj.NormFactorTBDDS;
                 switch obj.ToggleRelic
                     case 'ON'
-                        RateCaptureT_KATRIN = obj.eta .* obj.R_Capture .* pi*obj.WGTS_FTR_cm^2*2*obj.WGTS_CD_MolPerCm2*obj.WGTS_epsT .* 1./(365.242*24*3600);
-                        obj.NormFactorTBDDS_R = RateCaptureT_KATRIN...
-                            .*0.5*(1-cos(asin(sqrt(obj.WGTS_B_T./obj.MACE_Bmax_T)))) ...    %angle of acceptance
-                            .*(obj.FPD_MeanEff*obj.FPD_Coverage)...                         %detector efficiency and coverage
-                            .*numel(obj.FPD_PixList)/148;
+                        switch obj.FPD_Segmentation
+                            case 'OFF'
+                                RateCaptureT_KATRIN = obj.eta .* obj.R_Capture .* pi*obj.WGTS_FTR_cm^2*2*obj.WGTS_CD_MolPerCm2*obj.WGTS_epsT .* 1./(365.242*24*3600);
+                                obj.NormFactorTBDDS_R = RateCaptureT_KATRIN...
+                                    .*0.5*(1-cos(asin(sqrt(obj.WGTS_B_T./obj.MACE_Bmax_T)))) ...    %angle of acceptance
+                                    .*(obj.FPD_MeanEff*obj.FPD_Coverage)...                         %detector efficiency and coverage
+                                    .*numel(obj.FPD_PixList)/148;
+                            case 'RING'
+                                nPix = cell2mat(cellfun(@(x) numel(x),obj.FPD_RingPixList,'UniformOutput',false)');
+                                RateCaptureT_KATRIN = obj.eta .* obj.R_Capture .* pi*obj.WGTS_FTR_cm^2*2*obj.WGTS_CD_MolPerCm2*obj.WGTS_epsT .* 1./(365.242*24*3600);
+                                obj.NormFactorTBDDS_R = RateCaptureT_KATRIN...
+                                    .*0.5*(1-cos(asin(sqrt(obj.WGTS_B_T./obj.MACE_Bmax_T)))) ...    %angle of acceptance
+                                    .*(obj.FPD_MeanEff*obj.FPD_Coverage)...                         %detector efficiency and coverage
+                                    .*nPix/148;
+                        end
                         NormGS = obj.WGTS_MolFrac_TT*obj.TTNormGS+obj.WGTS_MolFrac_DT*obj.DTNormGS+obj.WGTS_MolFrac_HT*obj.HTNormGS;
                         TBDDS_Capture = (TBDDS_Capture./simpsons(obj.Te,TBDDS_Capture)).*obj.NormFactorTBDDS_R;
                         if ~strcmp(obj.TTFSD,'OFF') || ~strcmp(obj.DTFSD,'OFF') || ~strcmp(obj.HTFSD,'OFF')
@@ -1950,7 +1960,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                                         TBDDS_Capture = TBDDS_Capture.*NormGS/GSFrac;       %fraction of captures happening inside the considered energy range
                                     end
                                 case'OFF'
-                                    TBDDS_Capture = TBDDS_Capture.*NormGS;
+                                    TBDDS_Capture = TBDDS_Capture.*mean(NormGS);
                             end
                         end
                 end
@@ -1989,6 +1999,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                     case 'SIMPFAST' %Same as TRAPZFAST but with simpsons instead of trapz
                         if strcmp(obj.FPD_Segmentation,'RING')
                             TBDDSandRF = permute(repmat(obj.TBDDS,1,1,obj.nqU),[1,3,2]).*obj.RF;
+                            TBDDSandRF_R = permute(repmat(obj.TBDDS_R,1,1,obj.nqU),[1,3,2]).*obj.RF;
                         else
                             TBDDSandRF = repmat(obj.TBDDS,1,obj.nqU).*obj.RF;
                             TBDDSandRF_R = repmat(obj.TBDDS_R,1,obj.nqU).*obj.RF;

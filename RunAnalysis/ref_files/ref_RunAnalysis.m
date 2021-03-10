@@ -23,7 +23,7 @@ p.addParameter('nTeBinningFactor',100,@(x)isfloat(x) && x>0);
 p.addParameter('qU',D.qU,@(x)all(isfloat(x) & all(x>0)));
 p.addParameter('qUfrac',D.qUfrac,@(x)isfloat(x));
 p.addParameter('TDMode','DataTBD',@(x)ischar(x));
-p.addParameter('TD',D.RunName,@(x)ischar(x));  %TD-name not used anymore: here just placeolder -> could also be removed
+p.addParameter('TD','KNM1',@(x)ischar(x));  %TD-name not used anymore: here just placeolder -> could also be removed
 
 % WGTS
 p.addParameter('WGTS_CD_MolPerCm2',D.WGTS_CD_MolPerCm2,@(x)isfloat(x) && x>=0); 

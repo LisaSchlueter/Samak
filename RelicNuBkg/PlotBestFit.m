@@ -4,14 +4,18 @@ function PlotBestFit(varargin)
     p.addParameter('Nfit',1,@(x)isfloat(x));
     p.addParameter('DataType','Real',@(x)ismember(x,{'Twin','Real'}));
     p.addParameter('Syst','OFF',@(x)ismember(x,{'ON','OFF'}));
+    p.addParameter('RunList','KNM1',@(x)ischar(x));
+    p.addParameter('Plot','ON',@(x)ismember(y,{'ON','OFF'}));
     p.parse(varargin{:});
     mnuSq    = p.Results.mnuSq;
     Nfit     = p.Results.Nfit;
     DataType = p.Results.DataType;
     Syst     = p.Results.Syst;
+    RunList  = p.Results.RunList;
+    Plot     = p.Results.Plot;
 
     
-    if exist(sprintf('./EtaFitResult_AllParams_mnuSq%g_Nfit%g.mat',mnuSq,Nfit),'file')
+    if exist(sprintf('./EtaFitResult_AllParams_mnuSq%g_Nfit%g.mat',mnuSq,Nfit),'file') && Nfit>1
         load(sprintf('./EtaFitResult_AllParams_mnuSq%g_Nfit%g.mat',mnuSq,Nfit));
     else
         if strcmp(Syst,'OFF')
@@ -21,7 +25,7 @@ function PlotBestFit(varargin)
             Chi2opt='chi2CMShape';
             NP=1.064;
         end
-        D = MultiRunAnalysis('RunList','KNM1',...         % runlist defines which runs are analysed -> set MultiRunAnalysis.m -> function: GetRunList()
+        D = MultiRunAnalysis('RunList',RunList,...         % runlist defines which runs are analysed -> set MultiRunAnalysis.m -> function: GetRunList()
                     'chi2',Chi2opt,...              % uncertainties: statistical or stat + systematic uncertainties
                     'DataType',DataType,...                 % can be 'Real' or 'Twin' -> Monte Carlo
                     'fixPar','mNu E0 Norm Bkg',...        % free Parameter!!
@@ -41,7 +45,7 @@ function PlotBestFit(varargin)
 
         fitresults = zeros(11,Nfit);
         for j=1:Nfit
-            M = MultiRunAnalysis('RunList','KNM1',...         % runlist defines which runs are analysed -> set MultiRunAnalysis.m -> function: GetRunList()
+            M = MultiRunAnalysis('RunList',RunList,...         % runlist defines which runs are analysed -> set MultiRunAnalysis.m -> function: GetRunList()
                         'chi2',Chi2opt,...              % uncertainties: statistical or stat + systematic uncertainties
                         'DataType',DataType,...                 % can be 'Real' or 'Twin' -> Monte Carlo
                         'fixPar','mNu E0 Norm Bkg eta',...    % free Parameter!!
@@ -215,64 +219,66 @@ function PlotBestFit(varargin)
 %             fitresults(:,i)=[];
 %         end
 %     end
-    fig2 = figure('Renderer','painters');
-    set(fig2, 'Units', 'normalized', 'Position', [0.001, 0.001,0.45, 0.8]);
-    PlotStyle = { 'o','MarkerSize',2,'MarkerFaceColor',rgb('IndianRed'),...%rgb('IndianRed'),...%
-                'LineWidth',2,'Color',rgb('IndianRed')};
-    sub1=subplot(4,4,1);
-    plot(fitresults(1,:),fitresults(3,:)-18573.73,PlotStyle{:});
-    ylabel('\Delta E_{0} (eV)');
-    set(gca,'xtick',[]);
-    PrettyFigureFormat;
-    sub2=subplot(4,4,5);
-    plot(fitresults(1,:),fitresults(7,:)-1,PlotStyle{:});
-    ylabel('\Delta N');
-    set(gca,'xtick',[]);
-    PrettyFigureFormat;
-    sub2=subplot(4,4,6);
-    plot(fitresults(3,:)-18573.73,fitresults(7,:)-1,PlotStyle{:});
-    set(gca,'xtick',[]);
-    set(gca,'ytick',[]);
-    PrettyFigureFormat;
-    sub2=subplot(4,4,9);
-    plot(fitresults(1,:),fitresults(5,:),PlotStyle{:});
-    ylabel('Bkg (cps)');
-    set(gca,'xtick',[]);
-    PrettyFigureFormat;
-    sub2=subplot(4,4,10);
-    plot(fitresults(3,:)-18573.73,fitresults(5,:),PlotStyle{:});
-    set(gca,'xtick',[]);
-    set(gca,'ytick',[]);
-    PrettyFigureFormat;
-    sub2=subplot(4,4,11);
-    plot(fitresults(7,:)-1,fitresults(5,:),PlotStyle{:});
-    set(gca,'xtick',[]);
-    set(gca,'ytick',[]);
-    PrettyFigureFormat;
-    sub2=subplot(4,4,13);
-    plot(fitresults(1,:),fitresults(9,:),PlotStyle{:});
-    ylabel('\eta');
-    xlabel('m_{\nu}^2 (eV^2)');
-    PrettyFigureFormat;
-    sub2=subplot(4,4,14);
-    plot(fitresults(3,:)-18573.73,fitresults(9,:),PlotStyle{:});
-    xlabel('\Delta E_0 (eV)');
-    set(gca,'ytick',[]);
-    PrettyFigureFormat;
-    sub2=subplot(4,4,15);
-    plot(fitresults(7,:)-1,fitresults(9,:),PlotStyle{:});
-    xlabel('\Delta N');
-    set(gca,'ytick',[]);
-    PrettyFigureFormat;
-    sub2=subplot(4,4,16);
-    plot(fitresults(5,:),fitresults(9,:),PlotStyle{:});
-    xlabel('Bkg (cps)');
-    set(gca,'ytick',[]);
-    PrettyFigureFormat;
-    sub2=subplot(4,4,[3 4 7 8]);
-    histfit(fitresults(11,:));
-    xlabel('\chi^2');
-    PrettyFigureFormat;
+    if strcmp(Plot,'ON')
+        fig2 = figure('Renderer','painters');
+        set(fig2, 'Units', 'normalized', 'Position', [0.001, 0.001,0.45, 0.8]);
+        PlotStyle = { 'o','MarkerSize',2,'MarkerFaceColor',rgb('IndianRed'),...%rgb('IndianRed'),...%
+                    'LineWidth',2,'Color',rgb('IndianRed')};
+        sub1=subplot(4,4,1);
+        plot(fitresults(1,:),fitresults(3,:)-18573.73,PlotStyle{:});
+        ylabel('\Delta E_{0} (eV)');
+        set(gca,'xtick',[]);
+        PrettyFigureFormat;
+        sub2=subplot(4,4,5);
+        plot(fitresults(1,:),fitresults(7,:)-1,PlotStyle{:});
+        ylabel('\Delta N');
+        set(gca,'xtick',[]);
+        PrettyFigureFormat;
+        sub2=subplot(4,4,6);
+        plot(fitresults(3,:)-18573.73,fitresults(7,:)-1,PlotStyle{:});
+        set(gca,'xtick',[]);
+        set(gca,'ytick',[]);
+        PrettyFigureFormat;
+        sub2=subplot(4,4,9);
+        plot(fitresults(1,:),fitresults(5,:),PlotStyle{:});
+        ylabel('Bkg (cps)');
+        set(gca,'xtick',[]);
+        PrettyFigureFormat;
+        sub2=subplot(4,4,10);
+        plot(fitresults(3,:)-18573.73,fitresults(5,:),PlotStyle{:});
+        set(gca,'xtick',[]);
+        set(gca,'ytick',[]);
+        PrettyFigureFormat;
+        sub2=subplot(4,4,11);
+        plot(fitresults(7,:)-1,fitresults(5,:),PlotStyle{:});
+        set(gca,'xtick',[]);
+        set(gca,'ytick',[]);
+        PrettyFigureFormat;
+        sub2=subplot(4,4,13);
+        plot(fitresults(1,:),fitresults(9,:),PlotStyle{:});
+        ylabel('\eta');
+        xlabel('m_{\nu}^2 (eV^2)');
+        PrettyFigureFormat;
+        sub2=subplot(4,4,14);
+        plot(fitresults(3,:)-18573.73,fitresults(9,:),PlotStyle{:});
+        xlabel('\Delta E_0 (eV)');
+        set(gca,'ytick',[]);
+        PrettyFigureFormat;
+        sub2=subplot(4,4,15);
+        plot(fitresults(7,:)-1,fitresults(9,:),PlotStyle{:});
+        xlabel('\Delta N');
+        set(gca,'ytick',[]);
+        PrettyFigureFormat;
+        sub2=subplot(4,4,16);
+        plot(fitresults(5,:),fitresults(9,:),PlotStyle{:});
+        xlabel('Bkg (cps)');
+        set(gca,'ytick',[]);
+        PrettyFigureFormat;
+        sub2=subplot(4,4,[3 4 7 8]);
+        histfit(fitresults(11,:));
+        xlabel('\chi^2');
+        PrettyFigureFormat;
+    end
 end
 
 

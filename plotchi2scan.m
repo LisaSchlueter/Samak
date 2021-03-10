@@ -118,17 +118,17 @@ function plotchi2scan(savename)
         hold off;
         
     elseif strcmp(savename,'KRN1Raster')
-        load('./RelicNuBkg/UpperLimits/EtaFit_mNu0_4_SystON_DataTypeRealSinglemnuSq_TwinBias_mnuSq0_E0 Norm Bkg eta.mat');
+        load('./RelicNuBkg/UpperLimits/EtaFit_mNu0_1_SystON_DataTypeRealSinglemnuSq_TwinBias_mnuSq0_E0 Norm Bkg etaDeltaChi2_1.mat');
         eta90=eta;
         etaFit90=etaFit;
-        load('./RelicNuBkg/UpperLimits/EtaFit_mNu0_4_SystON_DataTypeRealSinglemnuSq_TwinBias_mnuSq0_E0 Norm Bkg etaDeltaChi2_3.84.mat');
+        load('./RelicNuBkg/UpperLimits/EtaFit_mNu0_1_SystON_DataTypeRealSinglemnuSq_TwinBias_mnuSq0_E0 Norm Bkg etaDeltaChi2_4.mat');
         eta95=eta;
         etaFit95=etaFit;
-        load('./RelicNuBkg/UpperLimits/EtaFit_mNu0_4_SystON_DataTypeRealSinglemnuSq_TwinBias_mnuSq0_E0 Norm Bkg etaDeltaChi2_6.63.mat');
+        load('./RelicNuBkg/UpperLimits/EtaFit_mNu0_1_SystON_DataTypeRealSinglemnuSq_TwinBias_mnuSq0_E0 Norm Bkg etaDeltaChi2_9.mat');
         hold on;
-        [~,b] = boundedline(sqrt(mNu),etaFit90,eta90-etaFit90,'cmap',[0 0.75 0.75]);
-        [~,d] = boundedline(sqrt(mNu),etaFit95,eta95-etaFit95,'cmap',[0 0.5 0.5],'alpha');
-        [~,f] = boundedline(sqrt(mNu),etaFit,eta-etaFit,'cmap',[0 0.25 0.25],'alpha');
+        [~,b] = boundedline(sqrt(mNu),etaFit90,eta90,'cmap',[0 0.75 0.75]);
+        [~,d] = boundedline(sqrt(mNu),etaFit95,eta95,'cmap',[0 0.5 0.5],'alpha');
+        [~,f] = boundedline(sqrt(mNu),etaFit,eta,'cmap',[0 0.25 0.25],'alpha');
         %legend([b d f],'\eta 90% C.L.','\eta 95% C.L.','\eta 99% C.L.');
         text(0.1,3.3e11,'1\sigma C.L.','FontSize',14);
         text(0.4,5e11,'2\sigma C.L.','FontSize',14);
