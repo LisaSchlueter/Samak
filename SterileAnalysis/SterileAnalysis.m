@@ -86,17 +86,20 @@ classdef SterileAnalysis < handle
             p.addParameter('Negsin2T4','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('NegmNu4Sq','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('Extsin2T4','OFF',@(x)ismember(x,{'ON','OFF'})); %extended sin2T2 (up to 1)
+            p.addParameter('ExtmNu4Sq','OFF',@(x)ismember(x,{'ON','OFF'})); %extended m4Sq (from 0.1)
             p.addParameter('AddSmallNu4Sq','OFF',@(x)ismember(x,{'ON','OFF'})); %add  m4Sq  smaller values (0.1-1)     
             p.addParameter('FixmNuSq',0,@(x)isfloat(x)); % if light nu-mass fixed (eV^2)
             p.parse(varargin{:});
             Negsin2T4     = p.Results.Negsin2T4;
             NegmNu4Sq     = p.Results.NegmNu4Sq;
             Extsin2T4     = p.Results.Extsin2T4;
+            ExtmNu4Sq     = p.Results.ExtmNu4Sq;
             AddSmallNu4Sq = p.Results.AddSmallNu4Sq;
             FixmNuSq      = p.Results.FixmNuSq;
             
             savefile = obj.GridFilename('Negsin2T4',Negsin2T4,'NegmNu4Sq',NegmNu4Sq,...
-                                        'Extsin2T4',Extsin2T4,'FixmNuSq',FixmNuSq,'AddSmallNu4Sq',AddSmallNu4Sq);
+                                        'Extsin2T4',Extsin2T4,'ExtmNu4Sq',ExtmNu4Sq,...
+                                        'FixmNuSq',FixmNuSq,'AddSmallNu4Sq',AddSmallNu4Sq);
             
             if exist(savefile,'file') && strcmp(obj.RecomputeFlag,'OFF')
                 fprintf('Grid file already exists: %s \nIf you want to load grid into memory call: obj.LoadGridFile() \n',savefile)
@@ -131,16 +134,20 @@ classdef SterileAnalysis < handle
                     sin2T4Max = 0.5;
                 end
                 
-                if strcmp(AddSmallNu4Sq,'ON') 
+                if strcmp(AddSmallNu4Sq,'ON')
                     mnu4Sq      = (0:0.1:0.9)'; % compute only some small m4^2
                     nGridSteps_mNu4Sq = 10;
                     nGridTot = nGridSteps_mNu4Sq*obj.nGridSteps;
+                elseif strcmp(ExtmNu4Sq,'ON')
+                    mnu4Sq = [0.1,0.35,0.7,logspace(0,log10((obj.range+5)^2),obj.nGridSteps-3)'];
+                    nGridSteps_mNu4Sq = obj.nGridSteps;
+                    nGridTot = obj.nGridSteps^2;
                 else
                     mnu4Sq      = logspace(0,log10((obj.range+5)^2),obj.nGridSteps)';
                     nGridSteps_mNu4Sq = obj.nGridSteps;
                     nGridTot = obj.nGridSteps^2;
-                end     
-                sin2T4      = logspace(-3,log10(sin2T4Max),obj.nGridSteps);  
+                end
+                sin2T4      = logspace(-3,log10(sin2T4Max),obj.nGridSteps);
                 mnu4Sq      = repmat(mnu4Sq,1,obj.nGridSteps);
                 sin2T4      = repmat(sin2T4,nGridSteps_mNu4Sq,1);
                 
@@ -244,6 +251,8 @@ classdef SterileAnalysis < handle
             obj.mNu4Sq = repmat(mNu4tmp,nInter,1);
             obj.sin2T4 = repmat(logspace(log10(min(min(obj.sin2T4))),log10(max(max(obj.sin2T4))),nInter),nInter,1)';
             obj.chi2   = reshape(interp2(X,Y,obj.chi2,obj.mNu4Sq,obj.sin2T4,obj.InterpMode),nInter,nInter);
+           
+            % best fit results (nuisance parameter)
             obj.mNuSq  = reshape(interp2(X,Y,obj.mNuSq,obj.mNu4Sq,obj.sin2T4,obj.InterpMode),nInter,nInter);
             obj.E0  = reshape(interp2(X,Y,obj.E0,obj.mNu4Sq,obj.sin2T4,obj.InterpMode),nInter,nInter);
           
@@ -1710,11 +1719,25 @@ classdef SterileAnalysis < handle
             p = inputParser;
             p.addParameter('CheckLargerN','ON',@(x)ismember(x,{'ON','OFF'})); % if specified ngrids do not exist - look also for larger n grids
             p.addParameter('CheckSmallerN','OFF',@(x)ismember(x,{'ON','OFF'})); % if specified ngrids  +larger do not exist - look also for smaller n grids
+            p.addParameter('Negsin2T4','OFF',@(x)ismember(x,{'ON','OFF'}));
+            p.addParameter('NegmNu4Sq','OFF',@(x)ismember(x,{'ON','OFF'}));
+            p.addParameter('Extsin2T4','OFF',@(x)ismember(x,{'ON','OFF'})); %extended sin2T2 (up to 1)
+            p.addParameter('ExtmNu4Sq','OFF',@(x)ismember(x,{'ON','OFF'})); %extended m4Sq (from 0.1)
+            p.addParameter('AddSmallNu4Sq','OFF',@(x)ismember(x,{'ON','OFF'})); %add  m4Sq  smaller values (0.1-1)
+            p.addParameter('FixmNuSq',0,@(x)isfloat(x)); % if light nu-mass fixed (eV^2)
             p.parse(varargin{:});
             CheckLargerN  = p.Results.CheckLargerN;
             CheckSmallerN = p.Results.CheckSmallerN;
+            Negsin2T4     = p.Results.Negsin2T4;
+            NegmNu4Sq     = p.Results.NegmNu4Sq;
+            Extsin2T4     = p.Results.Extsin2T4;
+            ExtmNu4Sq     = p.Results.ExtmNu4Sq;
+            AddSmallNu4Sq = p.Results.AddSmallNu4Sq;
+            FixmNuSq      = p.Results.FixmNuSq;
             
-            filename = obj.GridFilename;
+            filename = obj.GridFilename('Negsin2T4',Negsin2T4,'NegmNu4Sq',NegmNu4Sq,...
+                                        'Extsin2T4',Extsin2T4,'ExtmNu4Sq',ExtmNu4Sq,...
+                                        'FixmNuSq',FixmNuSq,'AddSmallNu4Sq',AddSmallNu4Sq);
             
             loadSuccess = 0;
             
@@ -1779,13 +1802,16 @@ classdef SterileAnalysis < handle
             p.addParameter('Negsin2T4','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('NegmNu4Sq','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('Extsin2T4','OFF',@(x)ismember(x,{'ON','OFF'})); %extended sin2T2 (up to 1)
+            p.addParameter('ExtmNu4Sq','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('AddSmallNu4Sq','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('FixmNuSq',0,@(x)isfloat(x)); % if light nu-mass fixed (eV^2)
+            
             p.parse(varargin{:});
             Negsin2T4     = p.Results.Negsin2T4;
             NegmNu4Sq     = p.Results.NegmNu4Sq;
             Extsin2T4     = p.Results.Extsin2T4;
-            AddSmallNu4Sq     = p.Results.AddSmallNu4Sq;
+            ExtmNu4Sq     = p.Results.ExtmNu4Sq;
+            AddSmallNu4Sq  = p.Results.AddSmallNu4Sq;
             FixmNuSq      = p.Results.FixmNuSq;
             
             %% label
@@ -1834,6 +1860,10 @@ classdef SterileAnalysis < handle
                      extraStr = [extraStr,'_Extsin2T4'];
                  end
                  
+                  if strcmp(ExtmNu4Sq,'ON')
+                     extraStr = [extraStr,'_ExtmNu4Sq'];
+                 end
+
                   if strcmp(AddSmallNu4Sq,'ON')
                      extraStr = [extraStr,'_AddSmallmNu4Sq'];
                   end
