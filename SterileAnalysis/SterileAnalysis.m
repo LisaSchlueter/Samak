@@ -164,9 +164,14 @@ classdef SterileAnalysis < handle
                 end
                 
                 fixPartmp = obj.RunAnaObj.fixPar;
+                DataTypetmp = obj.RunAnaObj.DataType;
                 
                 parfor i= 1:(nGridTot)
-                    D(i).SimulateStackRuns;
+                    if strcmp(DataTypetmp,'Fake')
+                        D(i).SimulateRun;
+                    else
+                        D(i).SimulateStackRuns;
+                    end
                     if FixmNuSq~=0 && contains(fixPartmp,'fix 1 ;')
                         % if light nu-mass is fixed and shall not be fixed to 0 eV^2
                         D(i).ModelObj.mnuSq_i = FixmNuSq;
@@ -971,8 +976,7 @@ classdef SterileAnalysis < handle
              end
              
              obj.range = range_i;
-        end
-        
+        end    
         function PlotmNuSqOverview(obj,varargin)
             p = inputParser;
             p.addParameter('BestFit','OFF',@(x)ismember(x,{'ON','OFF'}));
@@ -1048,7 +1052,6 @@ classdef SterileAnalysis < handle
                 end
                 
         end
-        
         function TestCoverageImpact(obj,varargin)
             p = inputParser;
             p.addParameter('BestFit','OFF',@(x)ismember(x,{'ON','OFF'}));
@@ -1115,9 +1118,7 @@ classdef SterileAnalysis < handle
                     fprintf('save plot to %s \n',plotname);
                 end
                 
-        end
-
-        
+        end      
         function PlotTwinData(obj,varargin)
             p=inputParser;
             p.addParameter('BestFit','OFF',@(x)ismember(x,{'ON','OFF'}));
@@ -1162,8 +1163,7 @@ classdef SterileAnalysis < handle
                     fprintf('save plot to %s \n',plotname);
                 end
                 
-        end
-        
+        end     
         function PlotFitriumSamak(obj,varargin)
             p = inputParser;
             p.addParameter('SavePlot','OFF',@(x)ismember(x,{'ON','OFF','png'}));
@@ -1289,8 +1289,7 @@ classdef SterileAnalysis < handle
                end
                fprintf('save plot to %s \n',plotname);
            end
-        end
-        
+        end   
         function PlotStatandSys(obj,varargin)
             % plot for a given range: stat. only and stat + syst
             p = inputParser;
@@ -1621,43 +1620,88 @@ classdef SterileAnalysis < handle
             
             
         end
-        
-        function titleStr = GetPlotTitle(obj,varargin)
-            p=inputParser;
-            p.addParameter('Mode','all',@(x)ismember(x,{'all','chi2','data'}));
-            p.parse(varargin{:});
-            Mode = p.Results.Mode;
-            
-            % some useful default title
-            if strcmp(obj.RunAnaObj.DataType,'Real')
-                DataStr = 'Data';
-            else
-                 DataStr = 'Twin';
-            end
-            
-            if strcmp(obj.RunAnaObj.chi2,'chi2Stat')
-                chi2Str = 'stat. only';
-            else
-                chi2Str = 'stat. and syst.';
-            end
-            
-            switch Mode
-                case 'all'
-            titleStr = sprintf('%s , %.0f eV range (%s)',DataStr,obj.range,chi2Str);
-                case 'chi2'
-                    titleStr = chi2Str;
-                case 'data'
-                    titleStr = DataStr;
-            end
+        function PlotTririumSpectrumImprint(obj,varargin)
+            % look at imprint of (mnu4Sq_Grid,sin2T4) in tritium spectrum
+            % define chi2 = (H0-H1)^2/sigma(H0)^2
+           p = inputParser;
+           p.addParameter('mnu4Sq','',@(x)isfloat(x) || isempty(x));
+           p.addParameter('sin2T4',0.1,@(x)isfloat(x));
+           p.parse(varargin{:});
+           mNu4Sq_Plot = p.Results.mnu4Sq;
+           sin2T4_Plot = p.Results.sin2T4;
+           
+           qU = obj.RunAnaObj.ModelObj.qU;
+           Bkg_i = obj.RunAnaObj.ModelObj.BKG_RateSec_i;
+           BKG_PtSlope_i = obj.RunAnaObj.ModelObj.BKG_PtSlope_i;
+           obj.RunAnaObj.ModelObj.BKG_RateSec_i = 0;
+           obj.RunAnaObj.ModelObj.BKG_PtSlope_i = 0;
+         
+           % null hypothesis (no sterile)
+           obj.RunAnaObj.ModelObj.SetFitBiasSterile(0,0);
+           obj.RunAnaObj.ModelObj.ComputeTBDDS;
+           obj.RunAnaObj.ModelObj.ComputeTBDIS;
+           H0 = obj.RunAnaObj.ModelObj.TBDIS;
+           H0 = H0./simpsons(qU,H0);
+           Time = obj.RunAnaObj.ModelObj.qUfrac.*obj.RunAnaObj.ModelObj.TimeSec;
+           
+          % alt. hypothesis (3+1 sterile)
+          if isempty(mNu4Sq_Plot)
+              mNu4Sq_Plot = [0,5,10,20,30,40].^2;
+              nmNuSq = numel(mNu4Sq_Plot);
+              H1 = zeros(numel(qU),nmNuSq);
+           %  mNu4Sq_Plot = logspace(0,log10(obj.range^2),nmNuSq);
+               
+              for i=1:nmNuSq
+                 progressbar(i/nmNuSq)
+                  obj.RunAnaObj.ModelObj.SetFitBiasSterile(mNu4Sq_Plot(i),sin2T4_Plot);
+                  obj.RunAnaObj.ModelObj.ComputeTBDDS;
+                  obj.RunAnaObj.ModelObj.ComputeTBDIS;
+                  H1(:,i) = obj.RunAnaObj.ModelObj.TBDIS;
+                  H1(:,i) = H1(:,i)./simpsons(qU,H1(:,i));
+              end
+          else
+              nmNuSq = 1;
+              obj.RunAnaObj.ModelObj.SetFitBiasSterile(mNu4Sq_Plot,sin2T4_Plot);
+              obj.RunAnaObj.ModelObj.ComputeTBDDS;
+              obj.RunAnaObj.ModelObj.ComputeTBDIS;
+              H1 = obj.RunAnaObj.ModelObj.TBDIS;
+              H1 = H1.*simpsons(qU,H0)./simpsons(qU,H1);
+          end
+             
+          % y = (H0-H1).^2./sqrt(H0).^2;
+           y = (H0-H1)./H0;
+           y(isnan(y)) = 0;
+           
+          GetFigure;
+          a = area(qU(1:obj.RunAnaObj.exclDataStart)-obj.RunAnaObj.ModelObj.Q_i-0.5,ones(numel(qU(1:obj.RunAnaObj.exclDataStart)),1),...
+              'FaceColor',rgb('LightGray'),'EdgeColor','none');
+          hold on;
+          Colors = flipud(colormap('cool'));
+         %  Colors = flipud(colormap('hsv'));
+         p = cell(nmNuSq,1);
+          for i=1:nmNuSq
+          p{i} = plot(qU-obj.RunAnaObj.ModelObj.Q_i,y(:,i),'.-','LineWidth',2,...
+              'Color',Colors(i*floor(256/nmNuSq),:),'LineStyle',obj.PlotLines{i},...
+              'MarkerSize',15);
+          hold on;
+          end
+          PrettyFigureFormat('FontSize',20);
+          ylabel('Rel. difference integral spectrum');
+          xlabel(sprintf('Retarding energy - {\\itE}_0 (eV)'));
+          
+          legStr = arrayfun(@(x) sprintf('%.0f eV',x),sqrt(mNu4Sq_Plot),'UniformOutput',false);
+          leg = legend([p{:}],legStr);
+          leg.Title.String = sprintf('{\\itm}_4^2');
+          leg.Title.FontWeight = 'normal';
+          PrettyLegendFormat(leg);
+          leg.Location = 'northwest';
+          obj.RunAnaObj.ModelObj.BKG_RateSec_i = Bkg_i;
+          obj.RunAnaObj.ModelObj.BKG_PtSlope_i  = BKG_PtSlope_i;
+          text(-49.5,0.05,sprintf('Outside of \nROI'),'FontSize',get(gca,'FontSize'),'HorizontalAlignment','center')
+          xlim([-55,5])
+          ylim([0 1.1.*max(max(y))]);
         end
         
-        function InitPlotArg(obj)
-            obj.PlotColors =  {rgb('DodgerBlue'),rgb('Orange'),rgb('DarkSlateGray'),rgb('FireBrick'),...
-                rgb('Magenta'),rgb('LimeGreen'),rgb('CadetBlue'),rgb('Navy'),...
-                rgb('ForestGreen'),rgb('PowderBlue'),rgb('Pink'),rgb('DarkOrange'),rgb('Black'),...
-                rgb('ForestGreen'),rgb('PowderBlue'),rgb('Pink'),rgb('DarkOrange')};
-            obj.PlotLines = {'-','-.',':','--','-','-.',':','--','-','-.',':','--','-','-.',':','--'};
-        end
     end
     
     % Data stream: labels, loading, saving
@@ -1831,6 +1875,43 @@ classdef SterileAnalysis < handle
             
             
              plotname = sprintf('%s%s',plotdir,filename{:});
+        end
+        function titleStr = GetPlotTitle(obj,varargin)
+            p=inputParser;
+            p.addParameter('Mode','all',@(x)ismember(x,{'all','chi2','data'}));
+            p.parse(varargin{:});
+            Mode = p.Results.Mode;
+            
+            % some useful default title
+            if strcmp(obj.RunAnaObj.DataType,'Real')
+                DataStr = 'Data';
+            elseif strcmp(obj.RunAnaObj.DataType,'Twin')
+                DataStr = 'Twin';
+            elseif strcmp(obj.RunAnaObj.DataType,'Fake')
+                DataStr = 'Simulation';
+            end
+            
+            if strcmp(obj.RunAnaObj.chi2,'chi2Stat')
+                chi2Str = 'stat. only';
+            else
+                chi2Str = 'stat. and syst.';
+            end
+            
+            switch Mode
+                case 'all'
+            titleStr = sprintf('%s , %.0f eV range (%s)',DataStr,obj.range,chi2Str);
+                case 'chi2'
+                    titleStr = chi2Str;
+                case 'data'
+                    titleStr = DataStr;
+            end
+        end      
+        function InitPlotArg(obj)
+            obj.PlotColors =  {rgb('DodgerBlue'),rgb('Orange'),rgb('DarkSlateGray'),rgb('FireBrick'),...
+                rgb('Magenta'),rgb('LimeGreen'),rgb('CadetBlue'),rgb('Navy'),...
+                rgb('ForestGreen'),rgb('PowderBlue'),rgb('Pink'),rgb('DarkOrange'),rgb('Black'),...
+                rgb('ForestGreen'),rgb('PowderBlue'),rgb('Pink'),rgb('DarkOrange')};
+            obj.PlotLines = {'-','-.',':','--','-','-.',':','--','-','-.',':','--','-','-.',':','--'};
         end
     end
     

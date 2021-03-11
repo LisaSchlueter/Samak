@@ -1,12 +1,28 @@
-function TritiumObject = ref_KNM2_KATRIN_FlatMTD(varargin)
+function TritiumObject = ref_KNM2_KATRIN_LinFlatMTD(varargin)
 % flat in qUfrac
-% qU from KNM-2 MTD
-
+% linearly spaced qU
 TDMode = 'DataTBD';
 
 % use configuration from KNM2 - except MTD
 DataKNM2   = importdata([getenv('SamakPath'),'tritium-data/mat/Knm2/57136.mat']);
-qU         = mean(DataKNM2.qU,2);
+qUData        = mean(DataKNM2.qU,2);
+qU = zeros(size(qUData));
+
+% below 40 eV
+Below40Log = (qUData-18574<-40);
+nB40 = sum(Below40Log);  % number of qU below -40 eV range
+qU(Below40Log) = linspace(min(qUData(Below40Log)),max(qUData(Below40Log)),nB40); % change 
+
+% above 40 eV, but below E0
+Above40Log = (qUData-18574>=-40 & qUData<18574);
+nA40 = sum(Above40Log); % number of qU above -40 eV range
+qU(Above40Log) = linspace(min(qUData(Above40Log)),max(qUData(Above40Log)),nA40); % change 
+
+% above E0
+AboveE0Log = (qUData>=18574);
+nAE0 = sum(AboveE0Log); % number of qU above E0 range
+qU(AboveE0Log) = linspace(min(qUData(AboveE0Log)),max(qUData(AboveE0Log)),nAE0); % change 
+
 qUfracNorm = mean(sum(DataKNM2.qUfrac)); % <1, because of deleted 300 eV point
 qUfrac     = qUfracNorm.*ones(size(qU))./size(qU,1);
 TimeSec    = 361*mean(DataKNM2.TimeSec);

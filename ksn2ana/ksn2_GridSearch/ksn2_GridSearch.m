@@ -42,7 +42,7 @@ SterileArg = {'RunAnaObj',A,... % Mother Object: defines RunList, Column Density
 
 
 S = SterileAnalysis(SterileArg{:});
-S.GridSearch('AddSmallNu4Sq','ON');
+S.GridSearch('AddSmallNu4Sq','OFF');
 %%
 % S.LoadGridFile('CheckSmallerN','OFF');
 % if strcmp(A.DataType,'Real')

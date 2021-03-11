@@ -31,3 +31,7 @@ SterileArg = {'RunAnaObj',F,... % Mother Object: defines RunList, Column Density
     'range',range};
 S = SterileAnalysis(SterileArg{:});
 S.GridSearch;
+%%
+S.LoadGridFile
+S.Interp1Grid;
+S.ContourPlot
