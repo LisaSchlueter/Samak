@@ -139,7 +139,7 @@ classdef SterileAnalysis < handle
                     nGridSteps_mNu4Sq = 10;
                     nGridTot = nGridSteps_mNu4Sq*obj.nGridSteps;
                 elseif strcmp(ExtmNu4Sq,'ON')
-                    mnu4Sq = [0.1,0.35,0.7,logspace(0,log10((obj.range+5)^2),obj.nGridSteps-3)'];
+                    mnu4Sq = [0.1;0.35;0.7;logspace(0,log10((obj.range+5)^2),obj.nGridSteps-3)'];
                     nGridSteps_mNu4Sq = obj.nGridSteps;
                     nGridTot = obj.nGridSteps^2;
                 else
@@ -795,7 +795,7 @@ classdef SterileAnalysis < handle
             view([0 0 1])
          
             
-            ylim([1,max(max(obj.mNu4Sq))]);
+            ylim([min(min(obj.mNu4Sq)),max(max(obj.mNu4Sq))]);
             xlim([min(min(obj.sin2T4)), max(max(obj.sin2T4))]);
             
             title(sprintf('%s',obj.GetPlotTitle),'FontWeight','normal','FontSize',get(gca,'FontSize'));
@@ -1178,13 +1178,14 @@ classdef SterileAnalysis < handle
             p.addParameter('SavePlot','OFF',@(x)ismember(x,{'ON','OFF','png'}));
             p.addParameter('PlotStat','ON',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('PlotTot','ON',@(x)ismember(x,{'ON','OFF'}));
-            
+            p.addParameter('PlotKaFit','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.parse(varargin{:});
             SavePlot = p.Results.SavePlot;
             PlotStat = p.Results.PlotStat;
             PlotTot  = p.Results.PlotTot;
+            PlotKaFit = p.Results.PlotKaFit;
+            
             chi2_i   = obj.RunAnaObj.chi2;
-        
             if strcmp(obj.RunAnaObj.DataType,'Real')
                 BestFit = 'ON';
             else
@@ -1199,6 +1200,7 @@ classdef SterileAnalysis < handle
                 obj.Interp1Grid('RecomputeFlag','ON');
                 pStat = obj.ContourPlot('CL',obj.ConfLevel,'HoldOn','OFF',...
                     'Color',rgb('DodgerBlue'),'LineStyle','-','BestFit',BestFit,'PlotSplines','OFF');
+                hold on;
             end
             
             if strcmp(PlotTot,'ON')
@@ -1208,19 +1210,27 @@ classdef SterileAnalysis < handle
                 pSys = obj.ContourPlot('CL',obj.ConfLevel,'HoldOn','ON',...
                     'Color',rgb('FireBrick'),'LineStyle','-','BestFit',BestFit,'PlotSplines','OFF');
             end
-           %% load fitrium
-           savedirF = [getenv('SamakPath'),'SterileAnalysis/GridSearchFiles/Knm1/Others/'];
-           fstat = sprintf('%scontour_KSN1_Fitrium_%s_%.0feV_stat_95CL_0.txt',savedirF,obj.RunAnaObj.DataType,obj.range);
-           dfStat = importdata(fstat);
-           
-           fsys = sprintf('%scontour_KSN1_Fitrium_%s_%.0feV_total_95CL_0.txt',savedirF,obj.RunAnaObj.DataType,obj.range);
-           dfSys = importdata(fsys);
+            %% load fitrium
+            savedirF = [getenv('SamakPath'),'SterileAnalysis/GridSearchFiles/',obj.RunAnaObj.DataSet,'/Others/'];
+            if strcmp(obj.RunAnaObj.DataSet,'Knm1')
+                fstat = sprintf('%scontour_KSN1_Fitrium_%s_%.0feV_stat_95CL_0.txt',savedirF,obj.RunAnaObj.DataType,obj.range);
+                fsys = sprintf('%scontour_KSN1_Fitrium_%s_%.0feV_total_95CL_0.txt',savedirF,obj.RunAnaObj.DataType,obj.range);   
+            else
+                fstat = sprintf('%scontour_KSN2_Fitrium_%s_%.0feV_stat_95CL.dat',savedirF,obj.RunAnaObj.DataType,obj.range);
+                fsys = sprintf('%scontour_KSN2_Fitrium_%s_%.0feV_total_95CL.dat',savedirF,obj.RunAnaObj.DataType,obj.range);   
+        
+            end
            
            if strcmp(PlotStat,'ON')
-               pFStat = plot(dfStat.data(:,1),dfStat.data(:,2),'LineStyle','-.','Color',rgb('PowderBlue'),'LineWidth',LineWidth);
+               dfStat = importdata(fstat);  
+                 if strcmp(obj.RunAnaObj.DataSet,'Knm2')
+                     dfStat.data(:,2) = dfStat.data(:,2).^2;
+                 end %PowderBlue
+               pFStat = plot(dfStat.data(:,1),dfStat.data(:,2),'LineStyle','-.','Color',rgb('Orange'),'LineWidth',LineWidth);
            end
            
            if strcmp(PlotTot,'ON')
+                dfSys = importdata(fsys);
                pFSys  = plot(dfSys.data(:,1),dfSys.data(:,2),'LineStyle','-.','Color',rgb('Orange'),'LineWidth',LineWidth);
                if obj.range==95 &&strcmp(obj.RunAnaObj.DataType,'Real')
                    fsys1 = sprintf('%scontour_KSN1_Fitrium_%s_%.0feV_total_95CL_1.txt',savedirF,obj.RunAnaObj.DataType,obj.range);
@@ -1258,13 +1268,26 @@ classdef SterileAnalysis < handle
                end
            end
            
+           if strcmp(PlotKaFit ,'ON')
+             kstat = sprintf('%scontour_KSN2_Kafit_%s_%.0feV_stat_95CL.txt',savedirF,obj.RunAnaObj.DataType,obj.range);
+             dkStat = importdata(kstat);
+             pKStat = plot(dkStat.data(:,1),dkStat.data(:,2),'LineStyle',':','Color',rgb('ForestGreen'),'LineWidth',LineWidth+0.5);
+           
+           end
+           
            if strcmp(PlotStat,'ON') && strcmp(PlotTot,'ON')
                legStr = {'Samak (stat. only)','Fitrium (stat. only)','Samak (stat. and syst.)','Fitrium (stat. and syst.)'};
                legend([pStat,pFStat,pSys,pFSys],legStr,'EdgeColor',rgb('Silver'),'Location','southwest');
                extraStr = '';
            elseif strcmp(PlotStat,'ON')
-                legStr = {'Samak (stat. only)','Fitrium (stat. only)'};
-               legend([pStat,pFStat],legStr,'EdgeColor',rgb('Silver'),'Location','southwest');
+               if strcmp(PlotKaFit ,'ON')
+                   legStr = {'Samak (stat. only)','Fitrium (stat. only)','KaFit (stat. only)'};
+                   leg = legend([pStat,pFStat,pKStat],legStr,'EdgeColor',rgb('Silver'),'Location','southwest');
+                   PrettyLegendFormat(leg)
+               else
+                   legStr = {'Samak (stat. only)','Fitrium (stat. only)'};
+                   legend([pStat,pFStat],legStr,'EdgeColor',rgb('Silver'),'Location','southwest');
+               end
                extraStr = '_StatOnly';
            elseif strcmp(PlotTot,'ON')
                 legStr = {'Samak (stat. and syst.)','Fitrium (stat. and syst.)'};
@@ -1273,12 +1296,17 @@ classdef SterileAnalysis < handle
            end
            
            obj.RunAnaObj.chi2 = chi2_i;
-            if obj.range==65
-                xlim([4e-03 0.5])
-                ylim([1 1e4])
-            elseif obj.range==40
-                xlim([1e-02 0.5])
-                ylim([1 3e3])
+           if obj.range==65
+               xlim([4e-03 0.5])
+               ylim([1 1e4])
+           elseif obj.range==40
+               if strcmp(obj.RunAnaObj.DataSet,'Knm1')
+                   xlim([1e-02 0.5])
+                   ylim([1 3e3])
+               else
+                   xlim([7e-03 0.5])
+                   ylim([1 40^2])
+               end   
             elseif obj.range==95
                 xlim([3e-03 0.5])
                 ylim([1 2e4]) 
@@ -1872,6 +1900,14 @@ classdef SterileAnalysis < handle
                      extraStr = [extraStr,sprintf('_FixmNuSq%.2feV2',FixmNuSq)];
                  end
                  
+                 if strcmp(obj.RunAnaObj.DataSet,'Knm1') ...
+                         && obj.RunAnaObj.NonPoissonScaleFactor~=1 && obj.RunAnaObj.NonPoissonScaleFactor~=1.064
+                     extraStr = [extraStr,sprintf('_NP%.3f',obj.RunAnaObj.NonPoissonScaleFactor)];
+                 elseif strcmp(obj.RunAnaObj.DataSet,'Knm2')...
+                          && obj.RunAnaObj.NonPoissonScaleFactor~=1 && obj.RunAnaObj.NonPoissonScaleFactor~=1.112
+                     extraStr = [extraStr,sprintf('_NP%.3g',obj.RunAnaObj.NonPoissonScaleFactor)];
+                 end
+                 
                  MakeDir(savedir);
                  
                  % get runlist-name
@@ -1948,7 +1984,7 @@ classdef SterileAnalysis < handle
     % small auxillary methods
     methods
         function SetNPfactor(obj)
-            if ~strcmp(obj.RunAnaObj.chi2,'chi2Stat')
+            if ~strcmp(obj.RunAnaObj.chi2,'chi2Stat') && ~strcmp(obj.RunAnaObj.chi2,'chi2Stat+')
                 switch obj.RunAnaObj.DataSet
                     case 'Knm1'
                         obj.RunAnaObj.NonPoissonScaleFactor= 1.064;
@@ -1959,6 +1995,9 @@ classdef SterileAnalysis < handle
                 end
             elseif strcmp(obj.RunAnaObj.chi2,'chi2Stat')
                 obj.RunAnaObj.NonPoissonScaleFactor=1;
+            elseif strcmp(obj.RunAnaObj.chi2,'chi2Stat+')
+                % keep factor as it is
+                obj.RunAnaObj.chi2 = 'chi2Stat';
             end 
         end
     end

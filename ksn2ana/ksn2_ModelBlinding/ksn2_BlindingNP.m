@@ -1,16 +1,11 @@
 % ksn2 calculate chi2 grid search
 %% settings that might change
-chi2 = 'chi2Stat';
-DataType = 'Real';
+chi2 = 'chi2Stat+';
+DataType = 'Twin';
 nGridSteps = 25;
 range = 40;
-
+NonPoissonScaleFactor = 1+2.*0.112;
 %% configure RunAnalysis object
-if strcmp(chi2,'chi2Stat')
-    NonPoissonScaleFactor = 1;
-elseif  strcmp(chi2,'chi2CMShape')
-    NonPoissonScaleFactor = 1.112;
-end
 RunAnaArg = {'RunList','KNM2_Prompt',...
     'DataType',DataType,...
     'fixPar','E0 Norm Bkg',...%free par
@@ -42,19 +37,10 @@ SterileArg = {'RunAnaObj',A,... % Mother Object: defines RunList, Column Density
 
 %%
 S = SterileAnalysis(SterileArg{:});
-S.GridSearch('ExtmNu4Sq','ON');
 %%
-S.LoadGridFile('ExtmNu4Sq','ON');
-
-if strcmp(A.DataType,'Real')
-    S.InterpMode = 'lin';
-    BF = 'ON';
-else
-    S.InterpMode = 'spline';
-   BF = 'OFF';
-end
-S.Interp1Grid('RecomputeFlag','ON');
-S.GridPlot('Contour','ON','BestFit',BF,'SavePlot','png','CL',95)
-%S.ContourPlot('BestFit','OFF','CL',95)
-% S.PlotStatandSys('SavePlot','png')
-%S.PlotmNuSqOverview('PullmNuSq','OFF','SavePlot','png')
+S.GridSearch;
+%%
+% S.LoadGridFile();
+% S.InterpMode = 'spline';
+% S.Interp1Grid('RecomputeFlag','ON');
+% S.ContourPlot('BestFit','OFF','CL',95)

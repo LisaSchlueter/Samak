@@ -3,7 +3,7 @@
 
 FakeInitFile = @ref_KNM2_KATRIN_LinFlatMTD;
 range = 40;
-freePar = 'E0 Norm Bkg';
+freePar = 'mNu E0 Norm Bkg';
 nGridSteps = 25;
 
 %% tritium run model

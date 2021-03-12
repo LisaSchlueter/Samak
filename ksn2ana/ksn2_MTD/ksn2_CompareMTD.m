@@ -35,12 +35,17 @@ S.InterpMode = 'spline';
 S.RunAnaObj.FakeInitFile = @ref_KNM2_KATRIN_RegMTD;
 S.LoadGridFile
 S.Interp1Grid;
-preg = S.ContourPlot('Color',rgb('DodgerBlue'),'LineStyle','-','HoldOn','OFF');
+preg = S.ContourPlot('Color',rgb('DodgerBlue'),'LineStyle','-.','HoldOn','OFF');
 % flat KNM-2 MTD
 S.RunAnaObj.FakeInitFile = @ref_KNM2_KATRIN_FlatMTD;
 S.LoadGridFile
 S.Interp1Grid;
-pflat = S.ContourPlot('Color',rgb('Orange'),'LineStyle','-.','HoldOn','ON');
+pflat = S.ContourPlot('Color',rgb('Orange'),'LineStyle','-','HoldOn','ON');
+% flat KNM-2 MTD
+S.RunAnaObj.FakeInitFile = @ref_KNM2_KATRIN_LinFlatMTD;
+S.LoadGridFile
+S.Interp1Grid;
+plinflat = S.ContourPlot('Color',rgb('FireBrick'),'LineStyle','--','HoldOn','ON');
 % isostat KNM-2 MTD
 S.RunAnaObj.FakeInitFile = @ref_KNM2_KATRIN_IsoStatMTD;
 S.LoadGridFile
@@ -53,7 +58,7 @@ else
     title('Simulation','FontSize',get(gca,'FontSize'),'FontWeight','normal');
 end
 
-leg = legend([preg,piso,pflat],'Regular KNM-2','Iso-Stat','Flat');
+leg = legend([preg,piso,pflat,plinflat],'KNM-2','Iso-Stat','Time-Flat','Time-qU-Flat');
 xlim([5e-03,0.5])
 leg.Title.String = sprintf('MTD');
 leg.Title.FontWeight = 'normal';

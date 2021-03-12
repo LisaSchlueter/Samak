@@ -145,7 +145,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
           
             p.addParameter('ISCSFlag','Edep',@(x)ismember(x,{'Aseev','Theory','Edep'}));
             % Fit Options
-            p.addParameter('chi2','chi2Stat',@(x)ismember(x,{'chi2Stat', 'chi2CM', 'chi2CMFrac','chi2CMShape', 'chi2P','chi2Nfix'}));
+            p.addParameter('chi2','chi2Stat',@(x)ismember(x,{'chi2Stat', 'chi2CM', 'chi2CMFrac','chi2CMShape', 'chi2P','chi2Nfix','chi2Stat+'}));
             p.addParameter('fitter','minuit',@(x)ismember(x,{'minuit','matlab'}));
             p.addParameter('minuitOpt','min;minos',@(x)ischar(x));
             p.addParameter('exclDataStart',1,@(x)isfloat(x));
@@ -325,10 +325,10 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                     if all(~ismember(obj.DataEffCorr,{'OFF','RunSummary'}))
                         obj.ROIPileUpDataCorrection();
                     end
-                    if all(~ismember(obj.chi2,{'chi2Stat','chi2P'}))
+                    if all(~ismember(obj.chi2,{'chi2Stat','chi2P','chi2Stat+'}))
                         obj.ComputeCM('RecomputeFlag','OFF');
                     end
-                    if strcmp(obj.chi2,'chi2Stat')
+                    if strcmp(obj.chi2,'chi2Stat') || strcmp(obj.chi2,'chi2Stat+')
                         [StatCM, StatCMFrac] = obj.ComputeCM_StatPNP(varargin);
                         obj.FitCM = StatCM;            obj.FitCMShape = StatCM;
                         obj.FitCMFrac = StatCMFrac;    obj.FitCMFracShape = StatCMFrac;

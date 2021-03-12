@@ -157,7 +157,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             obj.SetNPfactor
             obj.GetPlotColor;
             
-            if ~strcmp(obj.chi2,'chi2Stat') && ~strcmp(obj.chi2,'chi2P')
+            if ~strcmp(obj.chi2,'chi2Stat') && ~strcmp(obj.chi2,'chi2P') && ~strcmp(obj.chi2,'chi2Stat+')
                 switch obj.Debug
                     case 'ON'
                         cprintf('blue','MultiRunAnalysis: ComputeCM\n');
