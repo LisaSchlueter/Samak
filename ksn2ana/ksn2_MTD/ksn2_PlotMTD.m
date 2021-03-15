@@ -1,0 +1,36 @@
+% plot MTDs
+MTD = 'LinFlat';
+switch MTD
+    case 'Reg'
+        FakeInitFile = @ref_KNM2_KATRIN_RegMTD;
+        tStr = 'Regular';
+        Color = 'DodgerBlue';
+    case 'Iso'
+        tStr = 'Iso-Stat';
+        FakeInitFile = @ref_KNM2_KATRIN_IsoStatMTD;
+        Color = 'ForestGreen';
+    case 'Flat'
+        tStr = 'Time-Flat';
+        FakeInitFile = @ref_KNM2_KATRIN_FlatMTD;
+        Color = 'Orange';
+    case 'LinFlat'
+        tStr = 'Time-qU-Flat';
+        Color = 'FireBrick';
+        FakeInitFile = @ref_KNM2_KATRIN_LinFlatMTD;
+end
+%% tritium run model
+F = RunAnalysis('RunNr',1,...
+    'DataType','Fake',...
+    'FakeInitFile',FakeInitFile,...
+    'fixPar','E0 Norm Bkg',...
+    'SysBudget',40,...
+    'AnaFlag','StackPixel',...
+    'chi2','chi2Stat',...
+    'FSDFlag','Sibille0p5eV',...
+    'ELossFlag','KatrinT2A20',...
+    'DopplerEffectFlag','FSD',...
+    'RadiativeFlag','ON',...
+    'minuitOpt','min ; minos');
+%%
+F.ModelObj.TD = tStr;
+F.ModelObj.PlotTD('xLim',[-42 138],'yLim',[0, 0.09],'Color',Color);

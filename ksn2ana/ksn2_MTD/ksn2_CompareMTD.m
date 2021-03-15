@@ -55,7 +55,7 @@ piso = S.ContourPlot('Color',rgb('ForestGreen'),'LineStyle',':','HoldOn','ON');
 if ~contains(freePar,'mNu')
     title(sprintf('Simulation , {\\itm}_\\nu^2 = 0 eV^2'),'FontSize',get(gca,'FontSize'),'FontWeight','normal');
 else
-    title('Simulation','FontSize',get(gca,'FontSize'),'FontWeight','normal');
+    title(sprintf('Simulation , {\\itm}_\\nu^2 free'),'FontSize',get(gca,'FontSize'),'FontWeight','normal');
 end
 
 leg = legend([preg,piso,pflat,plinflat],'KNM-2','Iso-Stat','Time-Flat','Time-qU-Flat');
@@ -67,6 +67,6 @@ PrettyLegendFormat(leg);
 %% save plot
 plotdir = [getenv('SamakPath'),'ksn2ana/ksn2_MTD/plots/'];
 MakeDir(plotdir);
-plotname = sprintf('%sksn2_SensitivityCompareMTD.png',plotdir);
+plotname = sprintf('%sksn2_SensitivityCompareMTD_%s.png',plotdir,strrep(freePar,' ',''));
 print(plotname,'-dpng','-r300');
 fprintf('save plot to %s\n',plotname);

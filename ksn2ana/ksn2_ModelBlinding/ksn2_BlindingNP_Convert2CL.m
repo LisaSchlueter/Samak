@@ -41,33 +41,34 @@ S = SterileAnalysis(SterileArg{:});
 %S.GridSearch;
 S.InterpMode = 'spline';
 %%
-NPfac = 1+[0,0.1121/0.112,2,5].*0.112;
-pHandle = cell(numel(NPfac),1);
-pStr = cell(numel(NPfac),1);
+NPfacAlt = 1+5.*0.112;
+CLalt = 98;
 Colors = colormap('winter');
-for i=1:numel(NPfac)
-S.RunAnaObj.NonPoissonScaleFactor = NPfac(i);
+
+% Ksn2 - with alternative NP for 95%% CL
+S.RunAnaObj.NonPoissonScaleFactor = NPfacAlt;
 S.LoadGridFile;
 S.Interp1Grid('RecomputeFlag','ON');
-if i==1
-    HoldOn = 'OFF';
-else
-    HoldOn = 'ON';
-end
-pHandle{i} = S.ContourPlot('Color',Colors(i*floor(256/numel(NPfac)),:),'HoldOn',HoldOn,'SavePlot','OFF');
-if NPfac(i)==1.1121
-    legStr{i} = sprintf('{\\itB}_{NP} = %.1f%% (KSN-2 default)',(NPfac(i)-1)*1e2);
-else
-    legStr{i} = sprintf('{\\itB}_{NP} = %.1f%%',(NPfac(i)-1)*1e2);
-end
-end
-%
-leg = legend([pHandle{:}],legStr{:});
+p2 = S.ContourPlot('CL',95,'Color',Colors(255,:),'HoldOn','OFF','SavePlot','OFF');
+
+% Ksn2 - default NP for 2 CL
+S.RunAnaObj.NonPoissonScaleFactor = 1.1121;
+S.LoadGridFile;
+S.Interp1Grid('RecomputeFlag','ON');
+p1 = S.ContourPlot('Color',rgb('DodgerBlue'),'HoldOn','ON','SavePlot','OFF');
+p11 = S.ContourPlot('CL',CLalt,'Color',rgb('DodgerBlue'),'HoldOn','ON','SavePlot','OFF','LineStyle',':');
+
 xlim([5e-03,0.5])
+%
+leg = legend([p1,p11,p2],...
+     sprintf('{\\itB}_{NP} = 11.2%% at 95%% C.L. (KSN-2 default)'),...
+     sprintf('{\\itB}_{NP} = 11.2%% at %.3g%% C.L.',CLalt),...
+      sprintf('{\\itB}_{NP} = %.1f%% at 95%% C.L.',(NPfac-1)*100));
 PrettyLegendFormat(leg);
+%
 
 %% save
 plotdir = [getenv('SamakPath'),'ksn2ana/ksn2_ModelBlinding/plots/'];
-plotname = sprintf('%sksn2_ModelBlindingNP.png',plotdir);
+plotname = sprintf('%sksn2_ModelBlindingNP_Convert2CL.png',plotdir);
 print(plotname,'-dpng','-r300');
 fprintf('save plot to %s \n',plotname);

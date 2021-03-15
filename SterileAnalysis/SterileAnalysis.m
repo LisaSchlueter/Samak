@@ -111,7 +111,9 @@ classdef SterileAnalysis < handle
                 
                 % get covariance matrix
                 if strcmp(obj.RunAnaObj.chi2,'chi2CMShape') && strcmp(obj.SysEffect,'Bkg')
-                    obj.RunAnaObj.ComputeCM('SysEffect',struct('FSD','OFF'),'BkgCM','ON');
+                    obj.RunAnaObj.ComputeCM('SysEffect',struct('FSD','OFF'),'BkgCM','ON','BkgPtCM','OFF');
+                elseif strcmp(obj.RunAnaObj.chi2,'chi2CMShape') && strcmp(obj.SysEffect,'BkgPt') 
+                    obj.RunAnaObj.ComputeCM('SysEffect',struct('FSD','OFF'),'BkgCM','OFF','BkgPtCM','ON');
                 elseif strcmp(obj.RunAnaObj.chi2,'chi2CMShape') && ~strcmp(obj.SysEffect,'all')
                     obj.RunAnaObj.ComputeCM('SysEffect',struct(obj.SysEffect,'ON'),'BkgCM','OFF','BkgPtCM','OFF');
                 elseif strcmp(obj.RunAnaObj.chi2,'chi2CMShape') && strcmp(obj.SysEffect,'all')
@@ -826,6 +828,7 @@ classdef SterileAnalysis < handle
             p.addParameter('Contour','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('SavePlot','OFF',@(x)ismember(x,{'ON','OFF','png'}));
             p.addParameter('FitPar','mNuSq',@(x)ismember(x,{'mNuSq','E0'}));
+            p.addParameter('ContourVec','',@(x)isfloat(x) || isempty(x));
             p.parse(varargin{:});
             CL       = p.Results.CL;
             HoldOn   = p.Results.HoldOn;
@@ -833,6 +836,7 @@ classdef SterileAnalysis < handle
             Contour  = p.Results.Contour;
             SavePlot = p.Results.SavePlot;
             FitPar   = p.Results.FitPar;     
+           ContourVec = p.Results.ContourVec;
            
             if strcmp(HoldOn,'ON')
                 hold on
@@ -841,10 +845,12 @@ classdef SterileAnalysis < handle
             end
             
             if strcmp(FitPar,'mNuSq')
-                if strcmp(obj.RunAnaObj.DataSet,'Knm1')
-                     ContourVec = [-10 -2 -1 -0.5 1 10];
-                else
-                     ContourVec = [-10 -2 -1 0 0.5 1 5 10,50];
+                if isempty(ContourVec)
+                    if strcmp(obj.RunAnaObj.DataSet,'Knm1')
+                        ContourVec = [-10 -2 -1 -0.5 1 10];
+                    else
+                        ContourVec = [-10 -2 -1 0 0.5 1 5 10,50];
+                    end
                 end
                 PlotPar = obj.mNuSq;
                 Plot_bf = obj.mNuSq_bf;
@@ -852,7 +858,9 @@ classdef SterileAnalysis < handle
             elseif strcmp(FitPar,'E0')
                 PlotPar = obj.E0-obj.E0_bf;
                 Plot_bf = obj.E0_bf;
-                ContourVec = [-0.2 -0.5 0 0.5];%+obj.RunAnaObj.ModelObj.Q_i;
+                if isempty(ContourVec)
+                    ContourVec = [-0.2 -0.5 0 0.5];%+obj.RunAnaObj.ModelObj.Q_i;
+                end
                 zStr = sprintf('{\\itE}_0 - \\langle{\\itE}_0^{bf}\\rangle (eV)');
             end
    
@@ -986,15 +994,17 @@ classdef SterileAnalysis < handle
              
              obj.range = range_i;
         end    
-        function PlotmNuSqOverview(obj,varargin)
+        function [pFree,pFix] = PlotmNuSqOverview(obj,varargin)
             p = inputParser;
             p.addParameter('BestFit','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('PullmNuSq','ON',@(x)ismember(x,{'ON','OFF'})); % show also contour with constrained m^2
             p.addParameter('SavePlot','OFF',@(x)ismember(x,{'ON','OFF','png'}));
+            p.addParameter('HoldOn','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.parse(varargin{:});
             BestFit  = p.Results.BestFit;
             SavePlot = p.Results.SavePlot;
             PullmNuSq = p.Results.PullmNuSq;
+            HoldOn   = p.Results.HoldOn;
             
             fixPar_i = obj.RunAnaObj.fixPar;
             pull_i = obj.RunAnaObj.pullFlag;
@@ -1004,7 +1014,7 @@ classdef SterileAnalysis < handle
             obj.RunAnaObj.pullFlag = 99;
             obj.LoadGridFile('CheckSmallerN','ON');
             obj.Interp1Grid('RecomputeFlag','ON');
-            pFree = obj.ContourPlot('CL',obj.ConfLevel,'HoldOn','OFF',...
+            pFree = obj.ContourPlot('CL',obj.ConfLevel,'HoldOn',HoldOn,...
                 'Color',rgb('ForestGreen'),'LineStyle','-','BestFit',BestFit);
 
             %%  nuissance nu-mass + pull
@@ -1889,27 +1899,30 @@ classdef SterileAnalysis < handle
                  end
                  
                   if strcmp(ExtmNu4Sq,'ON')
-                     extraStr = [extraStr,'_ExtmNu4Sq'];
-                 end
-
-                  if strcmp(AddSmallNu4Sq,'ON')
-                     extraStr = [extraStr,'_AddSmallmNu4Sq'];
+                      extraStr = [extraStr,'_ExtmNu4Sq'];
                   end
-                 
-                 if FixmNuSq~=0
-                     extraStr = [extraStr,sprintf('_FixmNuSq%.2feV2',FixmNuSq)];
-                 end
-                 
-                 if strcmp(obj.RunAnaObj.DataSet,'Knm1') ...
-                         && obj.RunAnaObj.NonPoissonScaleFactor~=1 && obj.RunAnaObj.NonPoissonScaleFactor~=1.064
-                     extraStr = [extraStr,sprintf('_NP%.3f',obj.RunAnaObj.NonPoissonScaleFactor)];
-                 elseif strcmp(obj.RunAnaObj.DataSet,'Knm2')...
-                          && obj.RunAnaObj.NonPoissonScaleFactor~=1 && obj.RunAnaObj.NonPoissonScaleFactor~=1.112
-                     extraStr = [extraStr,sprintf('_NP%.3g',obj.RunAnaObj.NonPoissonScaleFactor)];
-                 end
-                 
-                 MakeDir(savedir);
-                 
+                  
+                  if strcmp(AddSmallNu4Sq,'ON')
+                      extraStr = [extraStr,'_AddSmallmNu4Sq'];
+                  end
+                  
+                  if FixmNuSq~=0
+                      extraStr = [extraStr,sprintf('_FixmNuSq%.2feV2',FixmNuSq)];
+                  end
+                  
+                  if strcmp(obj.RunAnaObj.DataSet,'Knm1') ...
+                          && obj.RunAnaObj.NonPoissonScaleFactor~=1 && obj.RunAnaObj.NonPoissonScaleFactor~=1.064
+                      extraStr = [extraStr,sprintf('_NP%.3f',obj.RunAnaObj.NonPoissonScaleFactor)];
+                  elseif strcmp(obj.RunAnaObj.DataSet,'Knm2')
+                      if strcmp(obj.RunAnaObj.chi2,'chi2Stat') && obj.RunAnaObj.NonPoissonScaleFactor~=1
+                          extraStr = [extraStr,sprintf('_NP%.3g',obj.RunAnaObj.NonPoissonScaleFactor)];
+                      elseif strcmp(obj.RunAnaObj.chi2,'chi2CMShape') && obj.RunAnaObj.NonPoissonScaleFactor~=1.112
+                          extraStr = [extraStr,sprintf('_NP%.3g',obj.RunAnaObj.NonPoissonScaleFactor)];
+                      end
+                  end
+                  
+                  MakeDir(savedir);
+                  
                  % get runlist-name
                  RunList = extractBefore(obj.RunAnaObj.RunData.RunName,'_E0');
                  if isempty(RunList)
