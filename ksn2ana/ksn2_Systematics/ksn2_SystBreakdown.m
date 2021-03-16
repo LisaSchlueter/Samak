@@ -11,6 +11,7 @@ if strcmp(chi2,'chi2Stat')
 elseif  strcmp(chi2,'chi2CMShape')
     NonPoissonScaleFactor = 1.112;
 end
+
 RunAnaArg = {'RunList','KNM2_Prompt',...
     'DataType',DataType,...
     'fixPar','E0 Norm Bkg',...%free par

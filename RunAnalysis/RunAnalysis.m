@@ -1705,7 +1705,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
         function Fit(obj,varargin)
             % Fit of the Data/Sim
             % -------------------------------------------------------------%
-
+            
             p = inputParser;
             p.addParameter('CATS','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('InitNB','OFF', @(x) ismember(x,{'ON','OFF'}));
@@ -1737,11 +1737,11 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                     obj.InitModelObj_Norm_BKG('RecomputeFlag','OFF');
                 end
                 
-               [StatCM, StatCMFrac] = obj.ComputeCM_StatPNP(varargin);
-               obj.FitCM = StatCM;         
-               obj.FitCMShape = StatCM;
-               obj.FitCMFrac = StatCMFrac; 
-               obj.FitCMFracShape = StatCMFrac;
+                [StatCM, StatCMFrac] = obj.ComputeCM_StatPNP(varargin);
+                obj.FitCM = StatCM;
+                obj.FitCMShape = StatCM;
+                obj.FitCMFrac = StatCMFrac;
+                obj.FitCMFracShape = StatCMFrac;
             end
             
             F = FITC('SO',obj.ModelObj,'DATA',Data,'fitter',obj.fitter,...
@@ -1777,14 +1777,14 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             
             % Asymmetric uncertainty
             if numel(F.RESULTS)>5 && strcmp(obj.fitter,'minuit') && contains(obj.minuitOpt,'minos')
-                  obj.FitResult.errNeg = F.RESULTS{6}';
-                  obj.FitResult.errPos = F.RESULTS{7}';
+                obj.FitResult.errNeg = F.RESULTS{6}';
+                obj.FitResult.errPos = F.RESULTS{7}';
             end
             
             % Calling CATS
             switch CATS
                 case 'ON'
-                    F.catss; 
+                    F.catss;
                     F.Samakcats_StandResidual_Leverage;
                     F.Samakcats_StandResidualLeverage2D;
                     F.Samakcats_Dffits;
@@ -1817,6 +1817,15 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                 FitResult = obj.FitResult;
                 save(savename,'FitResult');
             end
+        end
+        function ResetFitResults(obj)
+            % delete fit results and set everything to 0
+            obj.FitResult = struct(...
+                'par',zeros(obj.nPar,1),....
+                'err',zeros(obj.nPar,1),....
+                'chi2min',0,...
+                'errmat',zeros(obj.nPar,obj.nPar),...
+                'dof',0);
         end
         function FitBackground(obj,varargin)
             % Fit Background Only
@@ -1901,10 +1910,10 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             % To be run after the regular fit
             p = inputParser;
             p.addParameter('Parameter','mNu',@(x)ismember(x,{'mNu','E0'}));
-            p.addParameter('ScanPrcsn',0.01,@(x)isfloat(x)); % start value
-            p.addParameter('nFitMax',20,@(x)isfloat(x));   % max number of fits
-            p.addParameter('ParScanMax',1,@(x)isfloat(x)); % maximal deviation
-            p.addParameter('Mode','Smart',@(x)ismember(x,{'Smart','Uniform'})); %scanning strategy
+            p.addParameter('ScanPrcsn',0.01,@(x)isfloat(x)); % precision of chi^2 scan (only for smart Mode) 
+            p.addParameter('nFitMax',20,@(x)isfloat(x));     % max number of fits (for uniform: number of fits)
+            p.addParameter('ParScanMax',1,@(x)isfloat(x));   % maximal deviation from current fit result 
+            p.addParameter('Mode','Smart',@(x)ismember(x,{'Smart','Uniform'})); % scanning strategy
             p.addParameter('SanityPlot','OFF',@(x)ismember(x,{'ON','OFF'}));
             
             p.parse(varargin{:});
@@ -1914,8 +1923,16 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             ParScanMax = p.Results.ParScanMax;
             Mode       = p.Results.Mode;
             SanityPlot = p.Results.SanityPlot;
+            
             fixPar_prev = obj.fixPar; % save previous setting
             FitResult_prev = obj.FitResult;
+            
+            switch obj.AnaFlag
+                case 'StackPixel'
+                    AnaStr = 'Uniform';
+                case 'Ring'
+                    AnaStr = sprintf('Ring_%s',obj.RingMerge);
+            end
             
             % init
             ScanResults = struct('ParScan',zeros(nFitMax,2),...% scan vector
@@ -1948,62 +1965,80 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                 ScanResults.ParScan(:,2) = sort(linspace(obj.FitResult.par(ParScanIndex)-ParScanMax,obj.FitResult.par(ParScanIndex),nFitMax),'descend');
             end
             
-            for d=1:2 % direction: upper and lower uncertainty
-                if d==1
-                    progressbar('Calculate uppper fit error with scan');
-                else
-                    progressbar('Calculate lower fit error with scan');
-                end
-                
-                for i=1:nFitMax
-                    progressbar(i/nFitMax);
-                    obj.ModelObj.(ModelPar_i) = ScanResults.ParScan(i,d);
-                    obj.Fit;
-                    ScanResults.par(:,i,d) = obj.FitResult.par;
-                    ScanResults.err(:,i,d) = obj.FitResult.err;
-                    ScanResults.chi2min(i,d) = obj.FitResult.chi2min;
-                    ScanResults.dof(i,d)     = obj.FitResult.dof;
-                    if strcmp(Mode,'Smart')
-                        if i==1
-                            chi2min = obj.FitResult.chi2min;
-                            continue
-                        elseif i==2 % test ParScanMax. if chi2 less than 1 larger than minimal chi2 -> test range not wide enough
-                            if ScanResults.chi2min(i,d)-chi2min<1
-                                fprintf('ParScanMax of %.2g is too close to best fit \n',ParScanMax);
-                                break
-                            end
-                        end
-                        DeltaChi2  = ScanResults.chi2min(i,d)-chi2min;
-                        if  abs(DeltaChi2-1)<ScanPrcsn % exit condition
-                            fprintf('1 sigma uncertainty found - exit scan \n');
-                            ScanResults.ParScan(i+1:end,d)=NaN; % set all not fitted to NaN
-                            ScanResults.chi2min(i+1:end,d) = NaN;
-                            ScanResults.dof(i+1:end,d)     = NaN;
-                            ScanResults.par(:,i+1:end,d)   = NaN;
-                            ScanResults.err(:,i+1:end,d)   = NaN;
-                            break
-                        elseif (DeltaChi2<1 && d==1) || (DeltaChi2>1 && d==2)
-                            ParScanLarger= min(ScanResults.ParScan(ScanResults.ParScan(:,d)>ScanResults.ParScan(i,d),d)); % find next higher ParScan
-                            %ScanResults.ParScan(i+1,d) =  0.5*(ScanResults.ParScan(i,d)+ParScanLarger); % find middle between current and next higher one
-                            ScanResults.ParScan(i+1,d) =  ScanResults.ParScan(i,d) + abs(diff([ScanResults.ParScan(i,d),ParScanLarger])/2);
-                        elseif (DeltaChi2>1 && d==1) || (DeltaChi2<1 && d==2)
-                            ParScanSmaller= max(ScanResults.ParScan(ScanResults.ParScan(:,d)<ScanResults.ParScan(i,d),d)); % find next smaller mNuSq
-                            ScanResults.ParScan(i+1,d) =  ScanResults.ParScan(i,d) - abs(diff([ScanResults.ParScan(i,d),ParScanSmaller])/2);  % find middle between current and next smaller one
-                        end
-                    elseif strcmp(Mode,'Uniform') && i==1 && d==1
-                        chi2min = obj.FitResult.chi2min;
-                    end
-                end
+            savedir = sprintf('%stritium-data/fit/%s/Chi2Profile/%s/%s/',getenv('SamakPath'),obj.DataSet,AnaStr);
+            savename = sprintf('%sChi2Profile_%s_%sScan_%s_%s_%sFPD_%s_NP%.3f_FitPar%s_nFit%.0f.mat',...
+                savedir,obj.DataType,Mode,Parameter,obj.DataSet,AnaStr,obj.chi2,obj.NonPoissonScaleFactor,...
+                ConvertFixPar('freePar',obj.fixPar,'Mode','Reverse','nPar',obj.nPar),nFitMax);
+            
+            if strcmp(Mode,'Uniform')
+                savename = strrep(savename,'.mat',sprintf('_min%.3g_max%.3g.mat',min(min(ScanResults.ParScan)),max(max(ScanResults.ParScan))));
             end
             
-            % find parameters (positive and negative), for which chi2 = chi2min + 1
-            ParScanUp = interp1(ScanResults.chi2min(~isnan(ScanResults.chi2min(:,1)),1),...
-                ScanResults.ParScan(~isnan(ScanResults.chi2min(:,1)),1),chi2min+1,'spline');
-            ParScanDown = interp1(ScanResults.chi2min(~isnan(ScanResults.chi2min(:,2)),2),...
-                ScanResults.ParScan(~isnan(ScanResults.chi2min(:,2)),2),chi2min+1,'spline');
-            % get asymmetric uncertainties
-            ScanResults.AsymErr(1) = diff([ScanResults.ParScan(1,1),ParScanUp]);
-            ScanResults.AsymErr(2) = diff([ScanResults.ParScan(1,2),ParScanDown]);
+            if exist(savename,'file')
+                load(savename,'ScanResults')
+                fprintf('load scan results from file %s \n',savename);
+            else
+                for d=1:2 % direction: upper and lower uncertainty
+                    if d==1
+                        progressbar('Calculate uppper fit error with scan');
+                    else
+                        progressbar('Calculate lower fit error with scan');
+                    end
+                    
+                    for i=1:nFitMax
+                        progressbar(i/nFitMax);
+                        obj.ModelObj.(ModelPar_i) = ScanResults.ParScan(i,d);
+                        obj.Fit;
+                        ScanResults.par(:,i,d) = obj.FitResult.par;
+                        ScanResults.err(:,i,d) = obj.FitResult.err;
+                        ScanResults.chi2min(i,d) = obj.FitResult.chi2min;
+                        ScanResults.dof(i,d)     = obj.FitResult.dof;
+                        if strcmp(Mode,'Smart')
+                            if i==1
+                                chi2min = obj.FitResult.chi2min;
+                                continue
+                            elseif i==2 % test ParScanMax. if chi2 less than 1 larger than minimal chi2 -> test range not wide enough
+                                if ScanResults.chi2min(i,d)-chi2min<1
+                                    fprintf('ParScanMax of %.2g is too close to best fit \n',ParScanMax);
+                                    break
+                                end
+                            end
+                            DeltaChi2  = ScanResults.chi2min(i,d)-chi2min;
+                            if  abs(DeltaChi2-1)<ScanPrcsn % exit condition
+                                fprintf('1 sigma uncertainty found - exit scan \n');
+                                ScanResults.ParScan(i+1:end,d)=NaN; % set all not fitted to NaN
+                                ScanResults.chi2min(i+1:end,d) = NaN;
+                                ScanResults.dof(i+1:end,d)     = NaN;
+                                ScanResults.par(:,i+1:end,d)   = NaN;
+                                ScanResults.err(:,i+1:end,d)   = NaN;
+                                break
+                            elseif (DeltaChi2<1 && d==1) || (DeltaChi2>1 && d==2)
+                                ParScanLarger= min(ScanResults.ParScan(ScanResults.ParScan(:,d)>ScanResults.ParScan(i,d),d)); % find next higher ParScan
+                                %ScanResults.ParScan(i+1,d) =  0.5*(ScanResults.ParScan(i,d)+ParScanLarger); % find middle between current and next higher one
+                                ScanResults.ParScan(i+1,d) =  ScanResults.ParScan(i,d) + abs(diff([ScanResults.ParScan(i,d),ParScanLarger])/2);
+                            elseif (DeltaChi2>1 && d==1) || (DeltaChi2<1 && d==2)
+                                ParScanSmaller= max(ScanResults.ParScan(ScanResults.ParScan(:,d)<ScanResults.ParScan(i,d),d)); % find next smaller mNuSq
+                                ScanResults.ParScan(i+1,d) =  ScanResults.ParScan(i,d) - abs(diff([ScanResults.ParScan(i,d),ParScanSmaller])/2);  % find middle between current and next smaller one
+                            end
+                        elseif strcmp(Mode,'Uniform') && i==1 && d==1
+                            chi2min = obj.FitResult.chi2min;
+                        end
+                    end
+                end
+                
+                % find parameters (positive and negative), for which chi2 = chi2min + 1
+                ParScanUp = interp1(ScanResults.chi2min(~isnan(ScanResults.chi2min(:,1)),1),...
+                    ScanResults.ParScan(~isnan(ScanResults.chi2min(:,1)),1),chi2min+1,'spline');
+                ParScanDown = interp1(ScanResults.chi2min(~isnan(ScanResults.chi2min(:,2)),2),...
+                    ScanResults.ParScan(~isnan(ScanResults.chi2min(:,2)),2),chi2min+1,'spline');
+                % get asymmetric uncertainties
+                ScanResults.AsymErr(1) = diff([ScanResults.ParScan(1,1),ParScanUp]);
+                ScanResults.AsymErr(2) = diff([ScanResults.ParScan(1,2),ParScanDown]);
+                
+                MakeDir(savedir);
+                save(savename,'ScanResults','ParScanUp','ParScanDown');
+                fprintf('save results to %s \n',savename);
+            end
             
             % set everything back to previous setting and fit results
             obj.fixPar = fixPar_prev;

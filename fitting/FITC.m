@@ -44,6 +44,7 @@ classdef FITC < handle
         
         % Main inputs (necessary)
         SO;             % Study Object
+        SO2;            % 2nd Study Object for knm1+2 combi fit 
         SOCell;         % Study Objects in a cell (for use with the rhoD handle study)
         DATA;           % Data for fit, it could be a cell with three elemnts {qU,counts,errors} or a matrix 3*pixels columns [qU,counts,errors]
         
@@ -75,6 +76,7 @@ classdef FITC < handle
         % initialization of fitted paramaters
         i_mnu;
         i_Q;
+        i_Q2; % second endpoint for knm1+2 combi fit
         i_B;
         i_N;
         i_BSlope;   %background qU slope
@@ -124,6 +126,7 @@ classdef FITC < handle
             p = inputParser;
             % Main inputs (necessary)
             p.addParameter('SO',[],@(x) isa(x,'TBD') || isa(x,'RHOD')); %Study Object
+            p.addParameter('SO2',[],@(x) isa(x,'TBD')); %2nd Study Object (optional! for knm1+2 test fit)
             p.addParameter('SOCell',{},@(x) iscell(x)); %Study Objects in cell
             p.addParameter('DATA',[],@(x) (iscell(x) || ismatrix(x)) && (size(x,2) <= 148*3));
             % Main inputs (optional)
@@ -156,6 +159,7 @@ classdef FITC < handle
             % initialization of fitted parameters
             p.addParameter('i_mnu',0,@(x)isfloat(x));
             p.addParameter('i_Q',0,@(x)isfloat(x));
+             p.addParameter('i_Q2',0,@(x)isfloat(x));
             p.addParameter('i_DTGS',0,@(x)isfloat(x));
             p.addParameter('i_DTES',0,@(x)isfloat(x));
             p.addParameter('i_HTGS',0,@(x)isfloat(x));
@@ -175,6 +179,7 @@ classdef FITC < handle
             p.parse(varargin{:});
             
             obj.SO              = p.Results.SO;
+            obj.SO2             = p.Results.SO2;
             obj.DATA            = p.Results.DATA;
             obj.COVMAT          = p.Results.COVMAT;
             obj.COVMATFrac      = p.Results.COVMATFrac;
@@ -197,6 +202,7 @@ classdef FITC < handle
             
             obj.i_mnu           = p.Results.i_mnu;
             obj.i_Q             = p.Results.i_Q;
+            obj.i_Q2             = p.Results.i_Q;
             obj.i_B             = p.Results.i_B;
             obj.i_N             = p.Results.i_N;
             obj.i_DTGS          = p.Results.i_DTGS;
@@ -233,9 +239,10 @@ classdef FITC < handle
                 readdata(obj);
                 preparevars(obj);
                 obj.RESULTS = startfit(obj);
-
-
-                displayresults(obj);
+                
+                if isempty(obj.SO2)
+                    displayresults(obj);
+                end
             end
             
         end % constructor
@@ -313,7 +320,16 @@ classdef FITC < handle
                                obj.i_mnu4Sq,...
                                obj.i_sin2T4,...
                                obj.i_BPTSlope];
-                
+                           
+                           if ~isempty(obj.SO2)
+                               obj.i_N = [0,0];
+                               %combi fit with knm1+2
+                               obj.parinit = [obj.i_mnu,...
+                                   obj.i_Q,...
+                                   obj.i_Q2,...
+                                   obj.i_B,...
+                                   obj.i_N];
+                           end
                 % initilization for pulls (default all zero)
                 if obj.pulls == 0
                     obj.pulls = inf(1,length(obj.parinit));
@@ -529,46 +545,69 @@ classdef FITC < handle
                     par = partmp;
             end
             
-            % Distribute the fitting parameters
-            mnu_fit   = par(1);
-            Q_fit     = par(2);
-            backs_fit = par(3:obj.SO.nPixels+2);
-            norms_fit = par((obj.SO.nPixels+3):(2*obj.SO.nPixels+2));
-            DTGS_fit  = par(2*obj.SO.nPixels+3);
-            DTES_fit  = par(2*obj.SO.nPixels+4);
-            HTGS_fit  = par(2*obj.SO.nPixels+5);%par(4*obj.SO.nPixels+3);
-            HTES_fit  = par(2*obj.SO.nPixels+6);%par(4*obj.SO.nPixels+4);
-            TTGS_fit  = par(2*obj.SO.nPixels+7);%par(6*obj.SO.nPixels+3);
-            TTES_fit  = par(2*obj.SO.nPixels+8);%par(6*obj.SO.nPixels+4);
-            qUOffset_fit = par((2*obj.SO.nPixels+9):(3*obj.SO.nPixels+8));
-            BSlope_fit  = par(3*obj.SO.nPixels+9);
-            mTSq_fit    =par(3*obj.SO.nPixels+10:4*obj.SO.nPixels+9);
-            FracTm_fit = par(4*obj.SO.nPixels+10);
-            mnu4Sq_fit   = par(4*obj.SO.nPixels+11);
-            sin2T4_fit   = par(4*obj.SO.nPixels+12);
-            BPTSlope_fit = par(4*obj.SO.nPixels+13);
+            if ~isempty(obj.SO2)
+                % Distribute the fitting parameters
+                mnu_fit   = par(1);
+                Q_fit     = par(2);
+                Q2_fit    = par(3);
+                backs_fit = par(4:5);
+                norms_fit = par(6:7);
+                obj.SO.nPixels = 1;
+                obj.SO.ComputeTBDDS(...
+                    'mSq_bias',mnu_fit,...
+                    'E0_bias',Q_fit,...
+                    'B_bias',backs_fit(1),...
+                    'N_bias',norms_fit(1))
+                obj.SO.ComputeTBDIS;
+                
+                obj.SO2.ComputeTBDDS(...
+                    'mSq_bias',mnu_fit,...
+                    'E0_bias',Q2_fit,...
+                    'B_bias',backs_fit(2),...
+                    'N_bias',norms_fit(2))
+                obj.SO2.ComputeTBDIS;
+            else
+                % Distribute the fitting parameters
+                mnu_fit   = par(1);
+                Q_fit     = par(2);
+                backs_fit = par(3:obj.SO.nPixels+2);
+                norms_fit = par((obj.SO.nPixels+3):(2*obj.SO.nPixels+2));
+                DTGS_fit  = par(2*obj.SO.nPixels+3);
+                DTES_fit  = par(2*obj.SO.nPixels+4);
+                HTGS_fit  = par(2*obj.SO.nPixels+5);%par(4*obj.SO.nPixels+3);
+                HTES_fit  = par(2*obj.SO.nPixels+6);%par(4*obj.SO.nPixels+4);
+                TTGS_fit  = par(2*obj.SO.nPixels+7);%par(6*obj.SO.nPixels+3);
+                TTES_fit  = par(2*obj.SO.nPixels+8);%par(6*obj.SO.nPixels+4);
+                qUOffset_fit = par((2*obj.SO.nPixels+9):(3*obj.SO.nPixels+8));
+                BSlope_fit  = par(3*obj.SO.nPixels+9);
+                mTSq_fit    =par(3*obj.SO.nPixels+10:4*obj.SO.nPixels+9);
+                FracTm_fit = par(4*obj.SO.nPixels+10);
+                mnu4Sq_fit   = par(4*obj.SO.nPixels+11);
+                sin2T4_fit   = par(4*obj.SO.nPixels+12);
+                BPTSlope_fit = par(4*obj.SO.nPixels+13);
+                
+                obj.SO.ComputeTBDDS(...
+                    'mSq_bias',mnu_fit,...
+                    'E0_bias',Q_fit,...
+                    'B_bias',backs_fit,...
+                    'N_bias',norms_fit,...
+                    'DTGS_bias',DTGS_fit,...
+                    'DTES_bias',DTES_fit,...
+                    'HTGS_bias',HTGS_fit,...
+                    'HTES_bias',HTES_fit,...
+                    'TTGS_bias',TTGS_fit,...
+                    'TTES_bias',TTES_fit,...
+                    'qUOffset_bias',qUOffset_fit,...
+                    'BSlope_bias',BSlope_fit,...
+                    'BPTSlope_Bias',BPTSlope_fit,...
+                    'mTSq_bias',mTSq_fit,...
+                    'FracTm_bias',FracTm_fit,...
+                    'mnu4Sq_bias',mnu4Sq_fit,...
+                    'sin2T4_bias',sin2T4_fit);
+                  obj.SO.ComputeTBDIS();
+            end
             
-            obj.SO.ComputeTBDDS(...
-                'mSq_bias',mnu_fit,...
-                'E0_bias',Q_fit,...
-                'B_bias',backs_fit,...
-                'N_bias',norms_fit,...
-                'DTGS_bias',DTGS_fit,...
-                'DTES_bias',DTES_fit,...
-                'HTGS_bias',HTGS_fit,...
-                'HTES_bias',HTES_fit,...
-                'TTGS_bias',TTGS_fit,...
-                'TTES_bias',TTES_fit,...
-                'qUOffset_bias',qUOffset_fit,...
-                'BSlope_bias',BSlope_fit,...
-                'BPTSlope_Bias',BPTSlope_fit,...
-                'mTSq_bias',mTSq_fit,...
-                'FracTm_bias',FracTm_fit,...
-                'mnu4Sq_bias',mnu4Sq_fit,...
-                'sin2T4_bias',sin2T4_fit);
-            
-            obj.SO.ComputeTBDIS();
-            
+ 
             % exclude data points: data and model TBDIS
             if numel(obj.exclDataStart)==1
                 IncludeIndices = obj.exclDataStart:obj.exclDataStop;
@@ -648,6 +687,67 @@ classdef FITC < handle
             
         end % chi2function
         
+        function chi2 = chi2function2(obj,par)
+            % chi2 function for combi knm1+2 fit
+            % Distribute the fitting parameters
+            mnu_fit   = par(1);
+            Q_fit     = par(2);
+            Q2_fit    = par(3);
+            backs_fit = par(4:5);
+            norms_fit = par(6:7);
+            obj.SO.nPixels = 1;
+            
+            % model 1 (knm1)
+            obj.SO.ComputeTBDDS(...
+                'mSq_bias',mnu_fit,...
+                'E0_bias',Q_fit,...
+                'B_bias',backs_fit(1),...
+                'N_bias',norms_fit(1))
+            obj.SO.ComputeTBDIS;
+            
+            % model 2 (knm2)
+            obj.SO2.ComputeTBDDS(...
+                'mSq_bias',mnu_fit,...
+                'E0_bias',Q2_fit,...
+                'B_bias',backs_fit(2),...
+                'N_bias',norms_fit(2))
+            obj.SO2.ComputeTBDIS;
+
+            % exclude data points: data and model TBDIS
+            % only 40 eV range possible
+            range = 40;   
+            IncludeIndices = obj.qUdata-18574>=-range;
+            m1 = obj.SO.TBDIS(IncludeIndices(:,1)); %model
+            y1 = obj.counts(IncludeIndices(:,1),1);   %data
+            z1 = obj.c_error(IncludeIndices(:,1),1);  %error
+            
+            m2 = obj.SO2.TBDIS(IncludeIndices(:,2)); %model
+            y2 = obj.counts(IncludeIndices(:,2),2);   %data
+            z2 = obj.c_error(IncludeIndices(:,2),2);  %error
+            
+            m = [m1;m2];
+            y = [y1;y2];
+            z = [z1;z2];
+
+            % exclude points in covariance matrix:
+            IncludeIndicesAll = [IncludeIndices(:,1);IncludeIndices(:,2)];
+            CovMatFit = obj.COVMAT(IncludeIndicesAll,IncludeIndicesAll);
+            CovMatShapeFit = obj.COVMATShape(IncludeIndicesAll,IncludeIndicesAll);
+             
+            if any(y==0)
+                sprintf('Cannot fit data with zero counts \n');
+                return
+            end
+            
+            PullTerm = obj.ComputePulls(par);
+ 
+            switch obj.chi2name
+                case {'chi2Stat','chi2CM'}
+                        chi2 = ((y - m)')*(CovMatFit \ (y - m))  + PullTerm;
+                case 'chi2CMShape'
+                    chi2 = ((y - m)')* (CovMatShapeFit  \ (y - m)) + PullTerm;
+            end
+        end
         function results = startfit(obj)
             if obj.preparevarsdone
                 switch obj.fitter
@@ -704,7 +804,11 @@ classdef FITC < handle
                         Args = {obj.parinit, obj, '-c',tmparg};
                         minuitOutputStr = [tempname(pwd),'.txt']; % random string 
                         diary(minuitOutputStr)
-                        [par, err, chi2min, errmat] = fminuit('chi2minuit',Args{:});
+                        if isempty(obj.SO2)
+                            [par, err, chi2min, errmat] = fminuit('chi2minuit',Args{:});
+                        else
+                            [par, err, chi2min, errmat] = fminuit('chi2minuitCombi',Args{:});
+                        end
                         diary off
                         fixpar_local = strrep(obj.fixPar,';','');
                         fixpar_local = strrep(fixpar_local,'fix','');

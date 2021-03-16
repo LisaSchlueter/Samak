@@ -324,7 +324,7 @@ elseif SysBudget == 29 % new KNM1 default
     SysErr.is_EOffsetErr = 0;
     SysErr.MACE_VarErr = 0;
     SysErr.MaxSlopeCpsPereV = 5.2*1e-06; % warning: changed 02.May 2020 from 15e-6
-      SysErr.BKG_PtSlopeErr = 0;
+    SysErr.BKG_PtSlopeErr = 0;
 elseif SysBudget == 299 % new KNM1 default + plasma knm1
     SysErr.FSDNorm_RelErr=  0.01;
     SysErr.FSDShapeGS_RelErr= 0.04;
