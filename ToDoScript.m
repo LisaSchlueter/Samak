@@ -1,4 +1,4 @@
-PlotBestFit('Nfit',1000,'Syst','ON','DataType','Twin');
+PlotBestFit('DataType','Twin','Nfit',500,'Plot','OFF','Syst','ON');%,'pullFlag',[3 22 23]);
 
 %A=RelicNuAnalysis('Params','KNM1');
 %A.EtaFit('NmNuBins',5,'MaxmNu',1,'DataType','Real','Mode','SinglemnuSq','fitPar','E0 Norm Bkg eta','DeltaChi2',1,'Recompute','OFF');

@@ -1,3 +1,5 @@
+CheckmnuSqDist('Nfit',500);
+
 % A=ref_RelicNuBkg_KNM1('TTFSD','OFF','HTFSD','OFF','DTFSD','OFF','mnuSq_i',2);
 % B=ref_RelicNuBkg_KNM1('mnuSq_i',2);
 % a=semilogy(A.Te-A.Q,A.TBDDS,'LineWidth',2);
@@ -33,31 +35,31 @@
 %  PrettyFigureFormat;
 %  hold off;
 
-N=100;
-G=6.67428e-11;
-rho2=linspace(1,11342/2.2,N);  %kg/m³
-rho1=11342; %kg/m³
-R1=3092700; %m
-R2=linspace(1,5400000,N);
-r2=R1+R2+1612e3;
-m1=4*pi./3.*R1^3.*rho1; %kg
-m2=4.*pi./3.*R2.^3.*rho2; %linspace(1,7.117e24,N);
-mu=1-1./(1+sqrt(m2./m1));
-T=2.*pi.*sqrt(r2.^3./(G.*(m1+m2)));
-v_o=(2.*pi.*0.5.*r2)./T;
-for i=1:N
-%     if r2(i)<R1+R2(i)
-%         r2(i)=R1+R2;
+% N=100;
+% G=6.67428e-11;
+% rho2=linspace(1,11342/2.2,N);  %kg/m³
+% rho1=11342; %kg/m³
+% R1=3092700; %m
+% R2=linspace(1,5400000,N);
+% r2=R1+R2+1612e3;
+% m1=4*pi./3.*R1^3.*rho1; %kg
+% m2=4.*pi./3.*R2.^3.*rho2; %linspace(1,7.117e24,N);
+% mu=1-1./(1+sqrt(m2./m1));
+% T=2.*pi.*sqrt(r2.^3./(G.*(m1+m2)));
+% v_o=(2.*pi.*0.5.*r2)./T;
+% for i=1:N
+% %     if r2(i)<R1+R2(i)
+% %         r2(i)=R1+R2;
+% %     end
+%     for j=1:N
+%         rL(i,j)=r2(j)./(1+sqrt(m2(i)/m1));
+%         v(i,j)=sqrt(-2*G*(m1./rL(i,j)+m2(i)./(r2(j)-rL(i,j))-m1./R1-m2(i)./(r2(j)-R1)));
+%         if m2(i)>m1.*(r2(j)-R1).^2/R1.^2
+%             v(i,j)=0;
+%         end
+%         vnull(i,j)=sqrt(-2*G*(m1./rL(i,j)-m1./R1));
 %     end
-    for j=1:N
-        rL(i,j)=r2(j)./(1+sqrt(m2(i)/m1));
-        v(i,j)=sqrt(-2*G*(m1./rL(i,j)+m2(i)./(r2(j)-rL(i,j))-m1./R1-m2(i)./(r2(j)-R1)));
-        if m2(i)>m1.*(r2(j)-R1).^2/R1.^2
-            v(i,j)=0;
-        end
-        vnull(i,j)=sqrt(-2*G*(m1./rL(i,j)-m1./R1));
-    end
-end
+% end
 % x=linspace(-2*R1,2*R1,300);
 % y=linspace(-r2,r2,300);
 % vx=[0 0 0];

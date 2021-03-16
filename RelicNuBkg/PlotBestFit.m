@@ -4,7 +4,7 @@ function PlotBestFit(varargin)
     p.addParameter('pullFlag',3);
     p.addParameter('Nfit',1,@(x)isfloat(x));
     p.addParameter('DataType','Real',@(x)ismember(x,{'Twin','Real'}));
-    p.addParameter('Syst','OFF',@(x)ismember(x,{'ON','OFF'}));
+    p.addParameter('Syst','ON',@(x)ismember(x,{'ON','OFF'}));
     p.addParameter('RunList','KNM1',@(x)ischar(x));
     p.addParameter('Plot','ON',@(x)ismember(x,{'ON','OFF'}));
     p.parse(varargin{:});
@@ -69,13 +69,16 @@ function PlotBestFit(varargin)
                         'RelicPeakPosition','');
 
             if strcmp(DataType,'Twin')
-                M.RunData.TBDIS(end-5:end)=mean(M.RunData.TBDIS(end-5:end)./(M.RunData.qUfrac(end-5:end).*M.RunData.TimeSec)).*M.RunData.qUfrac(end-5:end).*M.RunData.TimeSec;
-                statfluct = zeros(numel(D.RunData.qU),1);
-                for i=1:numel(D.RunData.qU)
-                    gm=gmdistribution(D.RunData.TBDIS(i),D.RunData.TBDIS(i));
-                    statfluct(i) = random(gm)-D.RunData.TBDIS(i);
-                end
-                M.RunData.TBDIS = M.RunData.TBDIS+statfluct;
+                %M.RunData.TBDIS(end-5:end)=mean(M.RunData.TBDIS(end-5:end)./(M.RunData.qUfrac(end-5:end).*M.RunData.TimeSec)).*M.RunData.qUfrac(end-5:end).*M.RunData.TimeSec;
+                %statfluct = zeros(numel(D.RunData.qU),1);
+                %for i=1:numel(D.RunData.qU)
+                %    gm=gmdistribution(D.RunData.TBDIS(i),(1+NP)*D.RunData.TBDIS(i));
+                %    statfluct(i) = random(gm)-D.RunData.TBDIS(i);
+                %end
+                %M.RunData.TBDIS = M.RunData.TBDIS+statfluct;
+                statfluct = mvnrnd(M.RunData.TBDIS',M.FitCM,1)';
+                statfluct = statfluct - M.RunData.TBDIS;
+                M.RunData.TBDIS = M.RunData.TBDIS + statfluct;
             end
             
             M.exclDataStart = M.GetexclDataStart(40);
@@ -216,6 +219,32 @@ function PlotBestFit(varargin)
 
         linkaxes([s1,s2,s3],'x');
         hold off;
+        
+        if strcmp(Plot,'ON')
+            errormat_M=[M.FitResult.errmat(1,1:4) M.FitResult.errmat(1,17);...
+                        M.FitResult.errmat(2,1:4) M.FitResult.errmat(2,17);...
+                        M.FitResult.errmat(3,1:4) M.FitResult.errmat(3,17);...
+                        M.FitResult.errmat(4,1:4) M.FitResult.errmat(4,17);...
+                        M.FitResult.errmat(17,1:4) M.FitResult.errmat(17,17)];
+                    
+            errormat_D=[D.FitResult.errmat(1,1:4) D.FitResult.errmat(1,17);...
+                        D.FitResult.errmat(2,1:4) D.FitResult.errmat(2,17);...
+                        D.FitResult.errmat(3,1:4) D.FitResult.errmat(3,17);...
+                        D.FitResult.errmat(4,1:4) D.FitResult.errmat(4,17);...
+                        D.FitResult.errmat(17,1:4) D.FitResult.errmat(17,17)];
+                    
+            fig3=figure(3);
+            corplot(errormat_M);
+            set(gca,'XTickLabel',{'m_\nu^2','E_0','B','N','\eta'});
+            set(gca,'YTickLabel',{'m_\nu^2','E_0','B','N','\eta'});
+            PrettyFigureFormat;
+            
+            fig4=figure(4);
+            corplot(errormat_D);
+            set(gca,'XTickLabel',{'m_\nu^2','E_0','B','N','\eta'});
+            set(gca,'YTickLabel',{'m_\nu^2','E_0','B','N','\eta'});
+            PrettyFigureFormat;
+        end
     end
 
 %     for i=1:983
@@ -223,7 +252,7 @@ function PlotBestFit(varargin)
 %             fitresults(:,i)=[];
 %         end
 %     end
-    if strcmp(Plot,'ON')
+    if strcmp(Plot,'ON') && Nfit>10
         fig2 = figure('Renderer','painters');
         set(fig2, 'Units', 'normalized', 'Position', [0.001, 0.001,0.45, 0.8]);
         PlotStyle = { 'o','MarkerSize',2,'MarkerFaceColor',rgb('IndianRed'),...%rgb('IndianRed'),...%
