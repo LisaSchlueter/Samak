@@ -717,7 +717,8 @@ classdef FITC < handle
             % only 40 eV range possible
             range = 40;   
             IncludeIndices = obj.qUdata-18574>=-range;
-            m1 = obj.SO.TBDIS(IncludeIndices(:,1)); %model
+            m1tmp = obj.SO.TBDIS(2:end);
+            m1 = m1tmp(IncludeIndices(:,1));%obj.SO.TBDIS(IncludeIndices(:,1)); %model
             y1 = obj.counts(IncludeIndices(:,1),1);   %data
             z1 = obj.c_error(IncludeIndices(:,1),1);  %error
             

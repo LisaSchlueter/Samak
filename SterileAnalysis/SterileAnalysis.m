@@ -328,12 +328,14 @@ classdef SterileAnalysis < handle
             
             obj.nGridSteps = 25;
             obj.InterpMode  = 'lin';
+            NP_prev = obj.RunAnaObj.NonPoissonScaleFactor;
             
             for i=1:numel(Ranges)
                 %  progressbar(i/numel(Ranges));
                 obj.range = Ranges(i);
                 
                 obj.RunAnaObj.chi2 = 'chi2Stat';
+                obj.RunAnaObj.NonPoissonScaleFactor = 1;
                 obj.LoadGridFile('CheckSmallerN','OFF','CheckLargerN','OFF');
                 obj.Interp1Grid('RecomputeFlag','ON','nInter',1e3);
                 [M,c]= contour(obj.sin2T4,obj.mNu4Sq,obj.chi2-obj.chi2_ref,...
@@ -343,6 +345,7 @@ classdef SterileAnalysis < handle
                 c.delete;
                 
                 obj.RunAnaObj.chi2 = 'chi2CMShape';
+                obj.SetNPfactor;
                 obj.LoadGridFile('CheckSmallerN','OFF','CheckLargerN','OFF');
                 obj.Interp1Grid('RecomputeFlag','ON','nInter',1e3);
                 [M,c]= contour(obj.sin2T4,obj.mNu4Sq,obj.chi2-obj.chi2_ref,...
@@ -363,6 +366,7 @@ classdef SterileAnalysis < handle
                 sin2T4_Sys{i}        = sqrt(sin2T4_Tot{i}.^2-sin2T4_Stat{i}.^2);
             end
             
+             obj.RunAnaObj.NonPoissonScaleFactor =  NP_prev;
             %% get ratio syst % stat
             StatDomFraction = zeros(numel(Ranges),1); % fraction of m4 that are stat. dominated;
             mnu4SqCommonLin   = cell(numel(Ranges),1);
@@ -1661,7 +1665,10 @@ classdef SterileAnalysis < handle
                     legStr{i+1} = sprintf('%.0f eV range',Ranges(i));
                 end
             end
-            ylim([0 6.5])
+            
+            if strcmp(obj.RunAnaObj.DataSet,'Knm1')
+                ylim([0 6.5])
+            end
             PrettyFigureFormat;
             leg = legend([pref,pl{:}],legStr{:},'EdgeColor',rgb('Silver'),'Location','northwest');
             

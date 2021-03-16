@@ -45,28 +45,55 @@ SterileArg = {'RunAnaObj',A,... % Mother Object: defines RunList, Column Density
 S = SterileAnalysis(SterileArg{:});
 S.RunAnaObj.chi2 = 'chi2CMShape';
 S.RunAnaObj.NonPoissonScaleFactor = 1;
-SysEffectsAll   = {'FSD','BkgPT','Bkg','NP','LongPlasma','TASR','RF_EL','RF_BF','RF_RX','FPDeff','Stack','TCoff_OTHER'}; %Bkg has to be last
+SysEffectsAll   = {'Stat','FSD','BkgPT','Bkg','NP'};%,'NP','LongPlasma','TASR','RF_EL','RF_BF','RF_RX','FPDeff','Stack','TCoff_OTHER'}; %Bkg has to be last
+
+HoldOn = 'OFF';
+pHandle = cell(numel(SysEffectsAll),1);
+LineStyle = {'-','-.',':','--','-','-.',':','--','-','-.',':','--'};
+Colors = colormap('winter');
 
 for i=1:numel(SysEffectsAll)
     S.SysEffect = SysEffectsAll{i};
-    if strcmp(SysEffectsAll{i},'NP')
+    
+    if strcmp(SysEffectsAll{i},'NP') || strcmp(SysEffectsAll{i},'Stat')
         S.RunAnaObj.chi2 = 'chi2Stat';
-        S.RunAnaObj.NonPoissonScaleFactor = 1.112;
+        if strcmp(SysEffectsAll{i},'NP')
+            S.RunAnaObj.NonPoissonScaleFactor = 1.112;
+        end
         S.GridSearch;
+        
+        S.LoadGridFile;
+        S.Interp1Grid;
         
         S.RunAnaObj.chi2 = 'chi2CMShape';
         S.RunAnaObj.NonPoissonScaleFactor = 1;
+
     else
         S.GridSearch;
+        
+        S.LoadGridFile;
+        S.Interp1Grid;
     end
 
+   pHandle{i} =  S.ContourPlot('HoldOn',HoldOn,'SavePlot','OFF','Color',Colors(i*floor(256/numel(SysEffectsAll)),:),'LineStyle',LineStyle{i});
+    HoldOn = 'ON';
 end
 
-SysEffectLeg    = {'Theoretical corrections';'Final-state distribution';...
-                        'Tritium activity fluctuations';'Energy-loss function';...
-                        'Magnetic fields';'Source scattering';'HV fluctuations';...
-                        'Long. source potential';...
-                        'Detector efficiency';'Non-Poisson background';'Background PT';'Background slope'};
+%%
+xlim([7e-03,0.5])
+SysEffectsAll   = {'FSD','BkgPT','Bkg','NP'};%,'NP','LongPlasma','TASR','RF_EL','RF_BF','RF_RX','FPDeff','Stack','TCoff_OTHER'}; %Bkg has to be last
+
+SysEffectLeg    = {'Stat. only';'Final-state distribution';'Background PT';'Background slope'; 'Non-Poisson background'};
+leg = legend([pHandle{:}],SysEffectLeg);
+PrettyLegendFormat(leg);
+leg.Title.String = 'Stat. + 1 syst.';
+leg.Title.FontWeight ='normal';
+
+%                         'Tritium activity fluctuations';'Energy-loss function';...
+%                         'Magnetic fields';'Source scattering';'HV fluctuations';...
+%                         'Long. source potential';...
+%                         'Theoretical corrections';...
+%                         'Detector efficiency';};
 %%
 
             

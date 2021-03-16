@@ -2,18 +2,19 @@
 
 tStart = tic;
 %% KNM-1 Model
-freePar               = 'mNu E0 Bkg Norm';
-RunList = 'KNM1';
 chi2 = 'chi2CMShape';
-range                 = 40;
 DataType              = 'Real';
-
+RecomputeFlag = 'ON';
 savedir = [getenv('SamakPath'),'knm2ana/knm2_Combination/results/'];
 savename = sprintf('%sknm2_CombiFit_%s_Uniform_%s.mat',savedir,DataType,chi2);
 
-if exist(savename,'file')
+if exist(savename,'file') && strcmp(RecomputeFlag,'OFF')
+    d = importdata(savename);
+    fprintf('load results from file %s \n',savename)
 else
-    % Init Model Object and covariance matrix object
+    range                 = 40;
+    freePar               = 'mNu E0 Bkg Norm';
+    RunList = 'KNM1'; 
     K1 = MultiRunAnalysis('RunList',RunList,...
         'chi2',chi2,...
         'DataType',DataType,...
@@ -27,8 +28,8 @@ else
         'AngularTFFlag','OFF',...
         'DopplerEffectFlag','FSD');
     K1.exclDataStart = K1.GetexclDataStart(range);
-    K1.i_qUOffset =zeros(1,K1.ModelObj.nPixels);
-    K1.i_mTSq =zeros(1,K1.ModelObj.nPixels);
+    K1.i_qUOffset    = zeros(1,K1.ModelObj.nPixels);
+    K1.i_mTSq        = zeros(1,K1.ModelObj.nPixels);
     
     
     %% KNM-2 Model
@@ -66,8 +67,8 @@ else
     K2 = MultiRunAnalysis(RunAnaArg{:});
     
     K2.exclDataStart = K2.GetexclDataStart(range);
-    K2.i_qUOffset =zeros(1,K2.ModelObj.nPixels);
-    K2.i_mTSq =zeros(1,K2.ModelObj.nPixels);
+    K2.i_qUOffset = zeros(1,K2.ModelObj.nPixels);
+    K2.i_mTSq = zeros(1,K2.ModelObj.nPixels);
     
     
     %% Combine
@@ -155,3 +156,15 @@ else
     FitResult = K1.FitResult;
     save(savename,'FitResult','K1','K2','tCPU','F')
 end
+
+%% display
+fprintf('- Fit results  --------------------\n');
+fprintf('mnu^2      = %.3f +- %.3f eV^2 \n',d.FitResult.par(1),d.FitResult.err(1));
+fprintf('E0 (KNM-1) = %.3f +- %.3f eV \n',d.FitResult.par(2)+d.K1.ModelObj.Q_i,d.FitResult.err(2));
+fprintf('E0 (KNM-2) = %.3f +- %.3f eV \n',d.FitResult.par(3)+d.K2.ModelObj.Q_i,d.FitResult.err(3));
+fprintf('B  (KNM-1) = %.1f +- %.1f mcps \n',1e3.*(d.FitResult.par(4)+d.K1.ModelObj.BKG_RateSec_i),1e3*d.FitResult.err(4));
+fprintf('B  (KNM-2) = %.1f +- %.1f mcps \n',1e3*(d.FitResult.par(5)+d.K2.ModelObj.BKG_RateSec_i),1e3*d.FitResult.err(5));
+fprintf('N  (KNM-1) = %.3f +- %.3f  \n',(d.FitResult.par(6)+1),d.FitResult.err(6));
+fprintf('N  (KNM-2) = %.3f +- %.3f  \n',(d.FitResult.par(7)+1),d.FitResult.err(7));
+fprintf('chi^2_min  = %.2f (%.0f dof)\n',d.FitResult.chi2min,27+28-7)
+fprintf('- ---------------------------------\n');
