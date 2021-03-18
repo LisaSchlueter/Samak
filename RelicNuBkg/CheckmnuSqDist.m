@@ -40,7 +40,7 @@ function CheckmnuSqDist(varargin)
                         'pullFlag',pullFlag,...
                         'FSDFlag','SibilleFull',...           % final state distribution
                         'ELossFlag','KatrinT2',...            % energy loss function
-                        'SysBudget',24,...                    % defines syst. uncertainties -> in GetSysErr.m;
+                        'SysBudget',22,...                    % defines syst. uncertainties -> in GetSysErr.m;
                         'DopplerEffectFlag','FSD',...
                         'Twin_SameCDFlag','OFF',...
                         'Twin_SameIsotopFlag','OFF',...
@@ -53,7 +53,7 @@ function CheckmnuSqDist(varargin)
                 %M.RunData.TBDIS(end-5:end)=mean(M.RunData.TBDIS(end-5:end)./(M.RunData.qUfrac(end-5:end).*M.RunData.TimeSec)).*M.RunData.qUfrac(end-5:end).*M.RunData.TimeSec;
                 %statfluct = zeros(numel(D.RunData.qU),1);
                 %for i=1:numel(D.RunData.qU)
-                %    gm=gmdistribution(D.RunData.TBDIS(i),(1+NP)*D.RunData.TBDIS(i));
+                %    gm=gmdistribution(D.RunData.TBDIS(i),(NP)*D.RunData.TBDIS(i));
                 %    statfluct(i) = random(gm)-D.RunData.TBDIS(i);
                 %end
                 %M.RunData.TBDIS = M.RunData.TBDIS+statfluct;
@@ -63,15 +63,15 @@ function CheckmnuSqDist(varargin)
             M.exclDataStart = M.GetexclDataStart(40);
             %M.ModelObj.BKG_RateSec_i=0.292256;
             M.Fit;
-            fitresults(1,j)=M.FitResult.par(1);
-            fitresults(2,j)=M.FitResult.err(1);
+            fitresults(1,j)= M.FitResult.par(1);
+            fitresults(2,j)= M.FitResult.err(1);
             fitresults(3,j)= M.ModelObj.Q_i+M.FitResult.par(2);
             fitresults(4,j)= M.FitResult.err(2);
             fitresults(5,j)= M.ModelObj.BKG_RateSec_i+M.FitResult.par(3);
             fitresults(6,j)= M.FitResult.err(3);
             fitresults(7,j)= M.FitResult.par(3+M.ModelObj.nPixels:3+2*M.ModelObj.nPixels-1) + 1;
             fitresults(8,j)= M.FitResult.err(3+M.ModelObj.nPixels:3+2*M.ModelObj.nPixels-1);
-            fitresults(9,j)=M.FitResult.chi2min;
+            fitresults(9,j)= M.FitResult.chi2min;
+            save(sprintf('./mNuFitResult_AllParams_mnuSq%g_Nfit%g.mat',mnuSq,Nfit),'fitresults');
         end
-        save(sprintf('./mNuFitResult_AllParams_mnuSq%g_Nfit%g.mat',mnuSq,Nfit),'fitresults');
     end

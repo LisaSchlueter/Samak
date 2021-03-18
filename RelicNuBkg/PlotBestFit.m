@@ -37,7 +37,7 @@ function PlotBestFit(varargin)
                     'pullFlag',pullFlag,...
                     'FSDFlag','SibilleFull',...           % final state distribution
                     'ELossFlag','KatrinT2',...            % energy loss function
-                    'SysBudget',24,...                    % defines syst. uncertainties -> in GetSysErr.m;
+                    'SysBudget',22,...                    % defines syst. uncertainties -> in GetSysErr.m;
                     'DopplerEffectFlag','FSD',...
                     'Twin_SameCDFlag','OFF',...
                     'Twin_SameIsotopFlag','OFF',...
@@ -58,7 +58,7 @@ function PlotBestFit(varargin)
                         'pullFlag',pullFlag,...
                         'FSDFlag','SibilleFull',...           % final state distribution
                         'ELossFlag','KatrinT2',...            % energy loss function
-                        'SysBudget',24,...                    % defines syst. uncertainties -> in GetSysErr.m;
+                        'SysBudget',22,...                    % defines syst. uncertainties -> in GetSysErr.m;
                         'DopplerEffectFlag','FSD',...
                         'Twin_SameCDFlag','OFF',...
                         'Twin_SameIsotopFlag','OFF',...
@@ -72,7 +72,7 @@ function PlotBestFit(varargin)
                 %M.RunData.TBDIS(end-5:end)=mean(M.RunData.TBDIS(end-5:end)./(M.RunData.qUfrac(end-5:end).*M.RunData.TimeSec)).*M.RunData.qUfrac(end-5:end).*M.RunData.TimeSec;
                 %statfluct = zeros(numel(D.RunData.qU),1);
                 %for i=1:numel(D.RunData.qU)
-                %    gm=gmdistribution(D.RunData.TBDIS(i),(1+NP)*D.RunData.TBDIS(i));
+                %    gm=gmdistribution(D.RunData.TBDIS(i),(NP)*D.RunData.TBDIS(i));
                 %    statfluct(i) = random(gm)-D.RunData.TBDIS(i);
                 %end
                 %M.RunData.TBDIS = M.RunData.TBDIS+statfluct;
@@ -95,8 +95,8 @@ function PlotBestFit(varargin)
             fitresults(9,j)=M.FitResult.par(17).*1e10;
             fitresults(10,j)=M.FitResult.err(17).*1e10;
             fitresults(11,j)=M.FitResult.chi2min;
+            save(sprintf('./EtaFitResult_AllParams_mnuSq%g_Nfit%g.mat',mnuSq,Nfit),'fitresults');
         end
-        save(sprintf('./EtaFitResult_AllParams_mnuSq%g_Nfit%g.mat',mnuSq,Nfit),'fitresults');
         D.exclDataStart = D.GetexclDataStart(40);
         if strcmp(DataType,'Twin')
             D.RunData.TBDIS = D.RunData.TBDIS+statfluct;

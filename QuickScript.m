@@ -1,4 +1,15 @@
-CheckmnuSqDist('Nfit',500);
+CheckmnuSqDist('Nfit',100);
+
+% Nfit=1000;
+% statfluct   = zeros(numel(M.RunData.qU),Nfit);
+% statfluct_1=mvnrnd(M.RunData.TBDIS',M.FitCM,Nfit)';
+% for j=1:Nfit
+%     for i=1:numel(M.RunData.qU)
+%         gm=gmdistribution(M.RunData.TBDIS(i),(M.NonPoissonScaleFactor)*M.RunData.TBDIS(i));
+%         statfluct(i,j) = random(gm)-M.RunData.TBDIS(i);
+%     end
+%     statfluct_1(:,j)=statfluct_1(:,j)-M.RunData.TBDIS;
+% end
 
 % A=ref_RelicNuBkg_KNM1('TTFSD','OFF','HTFSD','OFF','DTFSD','OFF','mnuSq_i',2);
 % B=ref_RelicNuBkg_KNM1('mnuSq_i',2);

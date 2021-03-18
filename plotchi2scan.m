@@ -15,7 +15,7 @@ function plotchi2scan(savename)
 %         %set(gca, 'YScale', 'log');
 %         %set(gca, 'XScale', 'log');
         hold on;
-        [~,t]=contour(mnuScanPoints,etaScanPoints,(Chi2-GlobalChi2Min).',[0 4.61]);
+        [~,t]=contour(mnuScanPoints,etaScanPoints,(Chi2-GlobalChi2Min).',[0 2.3]);
         t.LineWidth = 2;
         %t.LineColor = 'White';
         %t.ShowText = 'ON';
@@ -31,10 +31,11 @@ function plotchi2scan(savename)
         xlabel('m_{\nu}^{2} (eV^{2})','FontSize',12);
         zlabel('\Delta\chi^2','FontSize',12);
         title('\Delta\chi^2');
-        text(0,2e11,'1\sigma C.L.','FontSize',14);
-        text(-1,-0.5e11,'2\sigma C.L.','FontSize',14);
-        text(-1,4e11,'3\sigma C.L.','FontSize',14);
+        text(0,2.5e11,'1\sigma C.L.','FontSize',14);
+        text(-0.5,4e11,'2\sigma C.L.','FontSize',14);
+        text(-0.25,6e11,'3\sigma C.L.','FontSize',14);
         xlim([-1,1]);
+        ylim([0,inf]);
         PrettyFigureFormat;
         hold off;
         
