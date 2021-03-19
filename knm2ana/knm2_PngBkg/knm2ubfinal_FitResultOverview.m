@@ -35,7 +35,10 @@ end
 if strcmp(MR12qU,'ON')
      fileStat = strrep([CommonStrStat,'_RingNone_KNM2_pull6.mat'],strrep(freePar,' ',''),[strrep(freePar,' ',''),'qU']);
     dMR12stat = importdata(fileStat);
-    x = [x,dMR12stat.FitResult.par(1),dMR12stat.FitResult.par(1)];
+     fileCM = strrep([CommonStrCM,'_RingNone_KNM2_SysBudget40_pull6.mat'],strrep(freePar,' ',''),[strrep(freePar,' ',''),'qU']);
+    dMR12cm = importdata(fileCM);
+    
+    x = [x,dMR12stat.FitResult.par(1),dMR12cm.FitResult.par(1)];
 end
 
 %% plot
@@ -79,9 +82,11 @@ end
 
 
 if strcmp(MR12qU,'ON')
-    y(end+1) = y(end)+0.25;% y(end+1) = y(end)+0.1;
-    eUStat = errorbar(dMR12stat.FitResult.par(1),y(end),0,0,dMR12stat.FitResult.errNeg(1),dMR12stat.FitResult.errPos(1),...
+    y(end+1) = y(end)+0.25; y(end+1) = y(end)+0.1;
+    eUStat = errorbar(dMR12stat.FitResult.par(1),y(end-1),0,0,dMR12stat.FitResult.errNeg(1),dMR12stat.FitResult.errPos(1),...
         '*',CommonPlotArg{:},'Color',rgb('Orange'),'MarkerSize',8,'MarkerFaceColor',rgb('Orange'));
+     eUcm = errorbar(dMR12cm.FitResult.par(1),y(end),0,0,dMR12cm.FitResult.errNeg(1),dMR12cm.FitResult.errPos(1),...
+        '*',CommonPlotArg{:},'Color',rgb('DodgerBlue'),'MarkerSize',8,'MarkerFaceColor',rgb('DodgerBlue'));
     legStr = {legStr{:},'MR-12'};
 end
 
@@ -93,7 +98,7 @@ PrettyFigureFormat('FontSize',22)
 ylim([y(1)-0.1,y(end)+0.22]);%+0.18]);
 if strcmp(MR12qU,'ON')
     if strcmp(MR4,'ON')
-    yticks([y(1)+0.05,y(3)+0.05,y(5)+0.05,y(end)]);
+    yticks([y(1)+0.05,y(3)+0.05,y(5)+0.05]);
     else
       yticks([y(1)+0.05,y(3)+0.05,y(end)]);  
     end
@@ -105,6 +110,7 @@ yticklabels(legStr);
 xlabel(sprintf('{\\itm}_\\nu^2 (eV^2)'));
 leg = legend([pstat,pcm],'Stat. only','Stat. and syst.','EdgeColor',rgb('Silver'),'Location','northwest');
 PrettyLegendFormat(leg);
-plotdir = strrep(savedir,'results/BestFit','plots');
+xlim([-0.1,0.65])
+plotdir = strrep(savedir,'results','plots');
 plotname = sprintf('%sknm2ub1_FitResultOverview_mNuSq.png',plotdir);
 print(plotname,'-dpng','-r350');

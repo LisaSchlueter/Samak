@@ -5,7 +5,7 @@
 %% settings
 Mode        = 'FC';  % FC = Feldman Cousin, LT = Lokov Tkachov
 Sensitivity = 'OFF'; % OFF= show best fit, ON = show sensitivity only
-SavePlot    = 'ON';
+SavePlot    = 'OFF';
 range = 40;
 chi2 = 'chi2CMShape';
 SysBudget = 40;
@@ -72,7 +72,7 @@ savename = sprintf('%sknm2ub2_mNuLimits_%s.mat',savedir,Mode);
 if exist(savename,'file') 
     load(savename,'mNuMeasured_v','mNuSqLimit_v')
 else
-    mNuMeasured_v = sort([linspace(0,1,100),0.1820, 0.1358,0.1904,0.1576,0.2138,0.1859,0.2249]);
+    mNuMeasured_v = linspace(0,1,1e3);
     x1 = S.FC_x1(~isnan(S.FC_x1));
     mNuSqLimit_v = interp1(x1,S.FC_mNuSqTrue(~isnan(S.FC_x1)),mNuMeasured_v,'spline');
     save(savename,'mNuMeasured_v','mNuSqLimit_v');

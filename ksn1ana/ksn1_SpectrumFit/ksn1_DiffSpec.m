@@ -69,4 +69,4 @@ xlim([-40 1]);
 ylim([-0.25 3.5])
 savepath = [getenv('SamakPath'),'ksn1ana/ksn1_SpectrumFit/plots/'];
 savename = sprintf('%sksn1_DiffSpec%s.png',savepath,SaveStr);
-print(savename,'-dpng','-r350');
+%print(savename,'-dpng','-r350');

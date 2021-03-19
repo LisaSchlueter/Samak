@@ -1,6 +1,6 @@
 % unblinded fit with penning track background slope
 range     = 40;
-freePar   = 'mNu E0 Bkg Norm';
+freePar   = 'mNu E0 Bkg Norm qU';
 chi2      = 'chi2CMShape';
 DataType  = 'Real';
 AnaFlag   = 'Ring';
@@ -9,7 +9,7 @@ DopplerEffectFlag = 'FSD';
 BKG_PtSlope = 3*1e-06;
 TwinBias_BKG_PtSlope = 3*1e-06;
 FSDFlag   = 'KNM2';
-PullFlag = 99;%[7,24]; %24 = 3.0 mucps/s
+PullFlag = 6;%[7,24]; %24 = 3.0 mucps/s
 
 if strcmp(AnaFlag,'Ring') 
     if strcmp(RingMerge,'Full')
@@ -160,9 +160,9 @@ if strcmp(Plot,'ON')
 end
 %  A.FitCM_Obj.PlotCM('qUWindowIndexMax',10,'qUWindowIndexMin',40,'saveplot',...
 %         'ON','Convergence','OFF','CovMatInput',A.FitCMFracShape,'PlotEffect','total',...
-%         %         'savename','KNM2_UB1_MultiRingFull');
-% A.FitCM_Obj.PlotCorr('qUWindowIndexMax',10,'qUWindowIndexMin',90,'saveplot',...
-% 'ON','CovMatInput',A.FitCMFracShape,...
-% 'savename',sprintf('KNM2_UB1_%s',AnaFlag));
+%%         %         'savename','KNM2_UB1_MultiRingFull');
+% % A.FitCM_Obj.PlotCorr('qUWindowIndexMax',10,'qUWindowIndexMin',90,'saveplot',...
+% % 'ON','CovMatInput',A.FitCMFracShape,...
+% % 'savename',sprintf('KNM2_Final_%s',AnaFlag));
 
 %%

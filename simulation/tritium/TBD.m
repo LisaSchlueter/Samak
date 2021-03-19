@@ -875,7 +875,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
             end
             %% calculate response function
             if loadSuccess==0
-                tfloc = obj.GetRF(); %function handle of response function
+                tfloc = obj.GetRF(); %function handle of response function     
                 switch obj.FPD_Segmentation
                     case {'SINGLEPIXEL','MULTIPIXEL'}
                         switch obj.UseParallelRF

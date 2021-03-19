@@ -1,6 +1,6 @@
 range   = 40;
-freePar = 'mNu E0 Bkg Norm';
-chi2    = 'chi2Stat';%CMShape';
+freePar = 'mNu E0 Bkg Norm qU';
+chi2    = 'chi2CMShape';
 DataType = 'Real';%Real';
 AnaFlag = 'Ring';%Ring';
 RingMerge = 'None';%'None';

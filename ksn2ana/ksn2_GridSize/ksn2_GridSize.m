@@ -1,11 +1,11 @@
-% ksn2 calculate chi2 grid search
-%% settings that might change
-chi2 = 'chi2Stat';
-DataType = 'Twin';
-nGridSteps = 50;
-range = 40;
+% investigate impact of grid size on contour 
+nGridSteps = [50,25];
 
 %% configure RunAnalysis object
+chi2 = 'chi2Stat';
+DataType = 'Twin';
+range = 40;
+
 if strcmp(chi2,'chi2Stat')
     NonPoissonScaleFactor = 1;
 elseif  strcmp(chi2,'chi2CMShape')
@@ -33,20 +33,37 @@ RunAnaArg = {'RunList','KNM2_Prompt',...
 A = MultiRunAnalysis(RunAnaArg{:});
 %% configure Sterile analysis object
 SterileArg = {'RunAnaObj',A,... % Mother Object: defines RunList, Column Density, Stacking Cuts,....
-    'nGridSteps',nGridSteps,...
+    'nGridSteps',nGridSteps(1),...
     'SmartGrid','OFF',...
     'RecomputeFlag','OFF',...
     'SysEffect','all',...
     'RandMC','OFF',...
     'range',range};
-
-
 S = SterileAnalysis(SterileArg{:});
 %%
-S.LoadGridFile('ExtmNu4Sq','ON');
+HoldOn = 'OFF';
+Colors = {'DodgerBlue','Orange','ForestGreen','FireBrick'};
+LineStyles = {'-','-.',':','--'};
+pHandle = cell(numel(nGridSteps),1);
+legStr = cell(numel(nGridSteps),1);
 S.InterpMode = 'spline';
-S.Interp1Grid('RecomputeFlag','ON');
+for i=1:numel(nGridSteps)
+S.nGridSteps = nGridSteps(i);
+S.LoadGridFile('CheckExtmNu4Sq','ON','CheckLargerN','OFF','CheckSmallerN','OFF');
+S.Interp1Grid('Maxm4Sq',37^2);
+pHandle{i} = S.ContourPlot('HoldOn',HoldOn,'Color',rgb(Colors{i}),'LineStyle',LineStyles{i});
+legStr{i} = sprintf('%.0f x %.0f',nGridSteps(i),nGridSteps(i));
+HoldOn = 'ON';
+end
 
-%% pHandle = S.ContourPlot('BestFit','OFF','CL',95);
-S.InterpMode = 'lin';
-S.PlotFitriumSamak('PlotTot','OFF','SavePlot','png','PlotKafit','ON')
+leg = legend([pHandle{:}],legStr);
+PrettyLegendFormat(leg);
+leg.Title.String = 'Grid size'; leg.Title.FontWeight = 'normal';
+xlim([7e-3,0.5]);
+ylim([1,1.5e3])
+
+plotdir = [getenv('SamakPath'),'ksn2ana/ksn2_GridSize/plots/'];
+plotname = sprintf('%sksn2_GridSize.png',plotdir);
+MakeDir(plotdir);
+%print(plotname,'-dpng','-r300');
+fprintf('save plot to %s \n',plotname);

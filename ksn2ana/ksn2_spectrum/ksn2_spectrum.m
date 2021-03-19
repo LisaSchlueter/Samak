@@ -31,6 +31,7 @@ RunAnaArg = {'RunList','KNM2_Prompt',...
     'TwinBias_BKG_PtSlope',3*1e-06,...
     'DopplerEffectFlag','FSD'};
 A = MultiRunAnalysis(RunAnaArg{:});
+A.InitModelObj_Norm_BKG;
 %% configure Sterile analysis object
 SterileArg = {'RunAnaObj',A,... % Mother Object: defines RunList, Column Density, Stacking Cuts,....
     'nGridSteps',nGridSteps,...
@@ -48,5 +49,4 @@ S.InterpMode = 'spline';
 S.Interp1Grid('RecomputeFlag','ON');
 
 %% pHandle = S.ContourPlot('BestFit','OFF','CL',95);
-S.InterpMode = 'lin';
-S.PlotFitriumSamak('PlotTot','OFF','SavePlot','png','PlotKafit','ON')
+S.PlotTririumSpectrumImprint('sin2T4',0.01,'Mode','Ratio','SavePlot','ON')

@@ -137,15 +137,20 @@ classdef SterileAnalysis < handle
                 end
                 
                 if strcmp(AddSmallNu4Sq,'ON')
-                    mnu4Sq      = (0:0.1:0.9)'; % compute only some small m4^2
+                    mnu4Sq      = (0:0.1:0.9)'; % compute only some small m4^2 -> not good
                     nGridSteps_mNu4Sq = 10;
                     nGridTot = nGridSteps_mNu4Sq*obj.nGridSteps;
                 elseif strcmp(ExtmNu4Sq,'ON')
-                    mnu4Sq = [0.1;0.35;0.7;logspace(0,log10((obj.range+5)^2),obj.nGridSteps-3)'];
+                    mnu4Sq = [0.1;0.35;0.7;logspace(0,log10((obj.range)^2),obj.nGridSteps-3)'];
                     nGridSteps_mNu4Sq = obj.nGridSteps;
                     nGridTot = obj.nGridSteps^2;
                 else
-                    mnu4Sq      = logspace(0,log10((obj.range+5)^2),obj.nGridSteps)';
+                    if obj.nGridSteps>=50
+                        mnu4Sq      = logspace(0,log10((obj.range)^2),obj.nGridSteps)';
+                    else
+                        mnu4Sq      = logspace(0,log10((obj.range)^2),obj.nGridSteps-3)';
+                        mnu4Sq      = sort([mnu4Sq;1000;1200;1300]);
+                    end
                     nGridSteps_mNu4Sq = obj.nGridSteps;
                     nGridTot = obj.nGridSteps^2;
                 end
@@ -216,38 +221,41 @@ classdef SterileAnalysis < handle
             p = inputParser;
             p.addParameter('nInter',1e3,@(x)isfloat(x));
             p.addParameter('RecomputeFlag','OFF',@(x)ismember(x,{'ON','OFF'})); % force recompute
+            p.addParameter('Maxm4Sq','',@(x)isfloat(x) || isempty(x));
+            
             p.parse(varargin{:});
             nInter        = p.Results.nInter;
-           
-            RecomputeFlag = p.Results.RecomputeFlag;
+            Maxm4Sq       = p.Results.Maxm4Sq;
+            RecomputeFlag_loc = p.Results.RecomputeFlag;
             
-            if size(obj.mNu4Sq,1)>=nInter && strcmp(RecomputeFlag,'OFF')
+            if size(obj.mNu4Sq,1)>=nInter && strcmp(RecomputeFlag_loc,'OFF')
                 fprintf('Interp1 stoped - mNuSq size already large than interpolation \n')
                 return
             end
             
             %% define maximum m4:
-            if  strcmp(obj.InterpMode,'lin')
-                Maxm4Sq = obj.range^2;
-            else    
-                if obj.range==65
-                    Maxm4Sq = 59^2;
-                elseif obj.range==95 && strcmp(obj.RunAnaObj.DataType,'Real')
-                    freePar = ConvertFixPar('freePar',obj.RunAnaObj.fixPar,'Mode','Reverse');
-                    if contains(freePar,'mNu')
-                        Maxm4Sq = 83^2;
-                    else
-                        Maxm4Sq =  90^2;%84.5^2;
-                    end
-                elseif obj.range==40 && strcmp(obj.RunAnaObj.DataType,'Real')
-                    Maxm4Sq =  36^2;%(obj.range-3)^2;
-                elseif obj.range==40 && strcmp(obj.RunAnaObj.DataType,'Fake')
-                    Maxm4Sq =  (obj.range-3.3)^2;
+            if isempty(Maxm4Sq)
+                if  strcmp(obj.InterpMode,'lin')
+                    Maxm4Sq = obj.range^2;
                 else
-                    Maxm4Sq =  (obj.range-5)^2;
+                    if obj.range==65
+                        Maxm4Sq = 59^2;
+                    elseif obj.range==95 && strcmp(obj.RunAnaObj.DataType,'Real')
+                        freePar = ConvertFixPar('freePar',obj.RunAnaObj.fixPar,'Mode','Reverse');
+                        if contains(freePar,'mNu')
+                            Maxm4Sq = 83^2;
+                        else
+                            Maxm4Sq =  90^2;%84.5^2;
+                        end
+                    elseif obj.range==40 && strcmp(obj.RunAnaObj.DataType,'Real')
+                        Maxm4Sq =  36^2;%(obj.range-3)^2;
+                    elseif obj.range==40 && strcmp(obj.RunAnaObj.DataType,'Fake')
+                        Maxm4Sq =  (obj.range-3.3)^2;
+                    else
+                        Maxm4Sq =  (obj.range-2).^2;%(obj.range-5)^2;
+                    end
                 end
             end
-            
             [X,Y] = meshgrid(obj.mNu4Sq(:,1),obj.sin2T4(1,:));
             mNu4tmp = logspace(log10(min(min(obj.mNu4Sq))),log10(Maxm4Sq),nInter);
             obj.mNu4Sq = repmat(mNu4tmp,nInter,1);
@@ -1639,7 +1647,7 @@ classdef SterileAnalysis < handle
             p.parse(varargin{:});
             Ranges   = p.Results.Ranges;
             SavePlot = p.Results.SavePlot;
-            PlotStatDom = 'ON';
+            PlotStatDom = 'OFF';
             [sin2T4_Stat, sin2T4_Sys, sin2T4_Tot, mmNu4SqCommon, StatDomFraction] = obj.StatOverSys('Ranges',Ranges);
             pl = cell(numel(Ranges),1);
             GetFigure;
@@ -1670,7 +1678,7 @@ classdef SterileAnalysis < handle
                 ylim([0 6.5])
             end
             PrettyFigureFormat;
-            leg = legend([pref,pl{:}],legStr{:},'EdgeColor',rgb('Silver'),'Location','northwest');
+          %  leg = legend([pref,pl{:}],legStr{:},'EdgeColor',rgb('Silver'),'Location','northwest');
             
             
         end
@@ -1679,83 +1687,152 @@ classdef SterileAnalysis < handle
             % define chi2 = (H0-H1)^2/sigma(H0)^2
            p = inputParser;
            p.addParameter('mnu4Sq','',@(x)isfloat(x) || isempty(x));
-           p.addParameter('sin2T4',0.1,@(x)isfloat(x));
+           p.addParameter('sin2T4',0.01,@(x)isfloat(x));
+           p.addParameter('Mode','Residuals',@(x)ismember(x,{'Residuals','Ratio'}));
+           p.addParameter('SavePlot','OFF',@(x)ismember(x,{'ON','OFF'}));
            p.parse(varargin{:});
            mNu4Sq_Plot = p.Results.mnu4Sq;
            sin2T4_Plot = p.Results.sin2T4;
+           Mode        = p.Results.Mode;
+           SavePlot    = p.Results.SavePlot;
            
            qU = obj.RunAnaObj.ModelObj.qU;
-           Bkg_i = obj.RunAnaObj.ModelObj.BKG_RateSec_i;
-           BKG_PtSlope_i = obj.RunAnaObj.ModelObj.BKG_PtSlope_i;
-           obj.RunAnaObj.ModelObj.BKG_RateSec_i = 0;
-           obj.RunAnaObj.ModelObj.BKG_PtSlope_i = 0;
-         
+           Time = obj.RunAnaObj.ModelObj.qUfrac.*obj.RunAnaObj.ModelObj.TimeSec;
+           
            % null hypothesis (no sterile)
            obj.RunAnaObj.ModelObj.SetFitBiasSterile(0,0);
            obj.RunAnaObj.ModelObj.ComputeTBDDS;
            obj.RunAnaObj.ModelObj.ComputeTBDIS;
-           H0 = obj.RunAnaObj.ModelObj.TBDIS;
-           H0 = H0./simpsons(qU,H0);
-           Time = obj.RunAnaObj.ModelObj.qUfrac.*obj.RunAnaObj.ModelObj.TimeSec;
+           H0 = obj.RunAnaObj.ModelObj.TBDIS./Time;
+           H0Err = sqrt(obj.RunAnaObj.ModelObj.TBDIS)./Time;
            
           % alt. hypothesis (3+1 sterile)
           if isempty(mNu4Sq_Plot)
               mNu4Sq_Plot = [0,5,10,20,30,40].^2;
               nmNuSq = numel(mNu4Sq_Plot);
               H1 = zeros(numel(qU),nmNuSq);
-           %  mNu4Sq_Plot = logspace(0,log10(obj.range^2),nmNuSq);
-               
+              H1Err = zeros(numel(qU),nmNuSq);
               for i=1:nmNuSq
                  progressbar(i/nmNuSq)
                   obj.RunAnaObj.ModelObj.SetFitBiasSterile(mNu4Sq_Plot(i),sin2T4_Plot);
                   obj.RunAnaObj.ModelObj.ComputeTBDDS;
                   obj.RunAnaObj.ModelObj.ComputeTBDIS;
-                  H1(:,i) = obj.RunAnaObj.ModelObj.TBDIS;
-                  H1(:,i) = H1(:,i)./simpsons(qU,H1(:,i));
+                  H1(:,i) = obj.RunAnaObj.ModelObj.TBDIS./Time;
+                  H1Err(:,i) = sqrt(obj.RunAnaObj.ModelObj.TBDIS)./Time;
               end
           else
               nmNuSq = 1;
               obj.RunAnaObj.ModelObj.SetFitBiasSterile(mNu4Sq_Plot,sin2T4_Plot);
               obj.RunAnaObj.ModelObj.ComputeTBDDS;
               obj.RunAnaObj.ModelObj.ComputeTBDIS;
-              H1 = obj.RunAnaObj.ModelObj.TBDIS;
-              H1 = H1.*simpsons(qU,H0)./simpsons(qU,H1);
+              H1 = obj.RunAnaObj.ModelObj.TBDIS./Time;
+              H1Err = sqrt(obj.RunAnaObj.ModelObj.TBDIS)./Time;
           end
-             
-          % y = (H0-H1).^2./sqrt(H0).^2;
-           y = (H0-H1)./H0;
-           y(isnan(y)) = 0;
-           
+          
+          if strcmp(Mode,'Residuals') 
+              y = (H1-H0)./H1Err;
+              yStr = sprintf('Residuals (\\sigma)');
+          else
+              y = H1./H0;
+              yStr = sprintf('Ratio H_1/H_0');
+          end
           GetFigure;
-          a = area(qU(1:obj.RunAnaObj.exclDataStart)-obj.RunAnaObj.ModelObj.Q_i-0.5,ones(numel(qU(1:obj.RunAnaObj.exclDataStart)),1),...
+          a = area(qU(1:obj.RunAnaObj.exclDataStart)-obj.RunAnaObj.ModelObj.Q_i-0.5,...
+              50.*ones(numel(qU(1:obj.RunAnaObj.exclDataStart)),1),-50,...
               'FaceColor',rgb('LightGray'),'EdgeColor','none');
           hold on;
-          Colors = flipud(colormap('cool'));
+          Colors = flipud(colormap('jet'));
          %  Colors = flipud(colormap('hsv'));
          p = cell(nmNuSq,1);
           for i=1:nmNuSq
-          p{i} = plot(qU-obj.RunAnaObj.ModelObj.Q_i,y(:,i),'.-','LineWidth',2,...
+          p{i} = plot(qU-obj.RunAnaObj.ModelObj.Q_i,y(:,i),'-.','LineWidth',2,...
               'Color',Colors(i*floor(256/nmNuSq),:),'LineStyle',obj.PlotLines{i},...
               'MarkerSize',15);
           hold on;
           end
           PrettyFigureFormat('FontSize',20);
-          ylabel('Rel. difference integral spectrum');
+          ylabel(yStr);
           xlabel(sprintf('Retarding energy - {\\itE}_0 (eV)'));
           
-          legStr = arrayfun(@(x) sprintf('%.0f eV',x),sqrt(mNu4Sq_Plot),'UniformOutput',false);
+          legStr = arrayfun(@(x) sprintf('{\\itm}_4 = %.0f eV',x),sqrt(mNu4Sq_Plot),'UniformOutput',false);
           leg = legend([p{:}],legStr);
-          leg.Title.String = sprintf('{\\itm}_4^2');
+          leg.Title.String = sprintf('|{\\itU}_{e4}|^2 = %.3g',sin2T4_Plot);
           leg.Title.FontWeight = 'normal';
           PrettyLegendFormat(leg);
-          leg.Location = 'northwest';
-          obj.RunAnaObj.ModelObj.BKG_RateSec_i = Bkg_i;
-          obj.RunAnaObj.ModelObj.BKG_PtSlope_i  = BKG_PtSlope_i;
-          text(-49.5,0.05,sprintf('Outside of \nROI'),'FontSize',get(gca,'FontSize'),'HorizontalAlignment','center')
-          xlim([-55,5])
-          ylim([0 1.1.*max(max(y))]);
+          leg.Location = 'southeast';
+          xlim([-54,5])
+          if min(y)<0
+              ylim([min(min(y)).*1.01 1.01.*max(max(y))]);
+          else
+              ylim([min(min(y)).*0.996 1.004.*max(max(y))]);
+          end
+          text(-46.8,min(min(ylim))+0.9*(max(max(ylim))-min(min(ylim))),...
+              sprintf('Outside of \nROI'),'FontSize',get(gca,'FontSize'),'HorizontalAlignment','center')
+          if strcmp(SavePlot,'ON')
+              plotdir = [getenv('SamakPath'),sprintf('SterileAnalysis/plots/%s/spectra/',obj.RunAnaObj.DataSet)];
+              MakeDir(plotdir)
+              plotname = sprintf('%sTririumSpectrumImprint_%s_%s.png',plotdir,obj.RunAnaObj.DataSet,Mode);
+              print(plotname,'-dpng','-r300');
+              fprintf('save plot to %s \n',plotname);
+          end 
         end
-        
+        function PlotTririumSpectrum(obj,varargin)
+            % look at imprint of (mnu4Sq_Grid,sin2T4) in tritium spectrum
+            % define chi2 = (H0-H1)^2/sigma(H0)^2
+           p = inputParser;
+           p.addParameter('mnu4Sq',20^2,@(x)isfloat(x) || isempty(x));
+           p.addParameter('sin2T4',0.1,@(x)isfloat(x));
+           p.addParameter('SavePlot','OFF',@(x)ismember(x,{'ON','OFF'}));
+           p.parse(varargin{:});
+           mNu4Sq_Plot = p.Results.mnu4Sq;
+           sin2T4_Plot = p.Results.sin2T4;
+           SavePlot    = p.Results.SavePlot;
+           
+           qU = obj.RunAnaObj.ModelObj.qU;
+           Time = obj.RunAnaObj.ModelObj.qUfrac.*obj.RunAnaObj.ModelObj.TimeSec;
+           
+           % null hypothesis (no sterile)
+           obj.RunAnaObj.ModelObj.SetFitBiasSterile(0,0);
+           obj.RunAnaObj.ModelObj.ComputeTBDDS;
+           obj.RunAnaObj.ModelObj.ComputeTBDIS;
+           H0 = obj.RunAnaObj.ModelObj.TBDIS./Time;
+
+           % only. hypothesis (3+1 sterile)
+           obj.RunAnaObj.ModelObj.SetFitBiasSterile(mNu4Sq_Plot,1);%sin2T4_Plot);
+           obj.RunAnaObj.ModelObj.ComputeTBDDS;
+           obj.RunAnaObj.ModelObj.ComputeTBDIS;
+           H1 = obj.RunAnaObj.ModelObj.TBDIS./Time;
+   
+           BKG_RateSec = obj.RunAnaObj.ModelObj.BKG_RateSec+0.5.*obj.RunAnaObj.ModelObj.BKG_PtSlope.*Time./obj.RunAnaObj.nRuns;
+           GetFigure;
+           p0 = plot(qU-obj.RunAnaObj.ModelObj.Q,(1-sin2T4_Plot).*(H0-BKG_RateSec)+BKG_RateSec,'LineWidth',2.5,'Color',rgb('DodgerBlue'));
+           hold on;
+           p1 = plot(qU-obj.RunAnaObj.ModelObj.Q,sin2T4_Plot.*(H1-BKG_RateSec)+BKG_RateSec,'-.','LineWidth',2.5,'Color',rgb('ForestGreen'));
+           p2 = plot(qU-obj.RunAnaObj.ModelObj.Q,sin2T4_Plot.*(H1-BKG_RateSec)+BKG_RateSec+...
+               (1-sin2T4_Plot).*(H0-BKG_RateSec),':','LineWidth',2.5,'Color',rgb('Orange'));
+           set(gca,'YScale','log')
+           PrettyFigureFormat('FontSize',22);
+           ylabel('Rate');
+           xlabel(sprintf('Retarding energy - {\\itE}_0 (eV)'));
+           leg = legend([p0,p1,p2],sprintf('Active branch'),...
+               sprintf('Sterile branch: {\\itm}_4 = %.3g eV , |{\\itU}_{e4}|^2 = %.3g',sqrt(mNu4Sq_Plot),sin2T4_Plot),...
+               'Active + Sterile branch');
+           PrettyLegendFormat(leg);
+          
+           ylim([0.1,1e2])
+           xlim([-42,5])
+           title('Integral spectrum','FontWeight','normal','FontSize',get(gca,'FontSize'));
+           
+           if strcmp(SavePlot,'ON')
+              plotdir = [getenv('SamakPath'),sprintf('SterileAnalysis/plots/%s/spectra/',obj.RunAnaObj.DataSet)];
+              MakeDir(plotdir)
+              plotname = sprintf('%sTririumSpectrum_%s_%.3geVm4_%.3gsint4Sq.png',...
+                  plotdir,obj.RunAnaObj.DataSet,sqrt(mNu4Sq_Plot),sin2T4_Plot);
+              print(plotname,'-dpng','-r300');
+              fprintf('save plot to %s \n',plotname);
+           end 
+          
+        end
     end
     
     % Data stream: labels, loading, saving
@@ -1764,6 +1841,7 @@ classdef SterileAnalysis < handle
             p = inputParser;
             p.addParameter('CheckLargerN','ON',@(x)ismember(x,{'ON','OFF'})); % if specified ngrids do not exist - look also for larger n grids
             p.addParameter('CheckSmallerN','OFF',@(x)ismember(x,{'ON','OFF'})); % if specified ngrids  +larger do not exist - look also for smaller n grids
+            p.addParameter('CheckExtmNu4Sq','ON',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('Negsin2T4','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('NegmNu4Sq','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('Extsin2T4','OFF',@(x)ismember(x,{'ON','OFF'})); %extended sin2T2 (up to 1)
@@ -1773,6 +1851,7 @@ classdef SterileAnalysis < handle
             p.parse(varargin{:});
             CheckLargerN  = p.Results.CheckLargerN;
             CheckSmallerN = p.Results.CheckSmallerN;
+            CheckExtmNu4Sq= p.Results.CheckExtmNu4Sq;
             Negsin2T4     = p.Results.Negsin2T4;
             NegmNu4Sq     = p.Results.NegmNu4Sq;
             Extsin2T4     = p.Results.Extsin2T4;
@@ -1790,6 +1869,17 @@ classdef SterileAnalysis < handle
                 f = importdata(filename);
                 fprintf('load grid from file %s \n',filename)
                 loadSuccess = 1;
+            end
+            
+            if strcmp(CheckExtmNu4Sq,'ON') && loadSuccess == 0
+                if strcmp(ExtmNu4Sq,'OFF')
+                    TestFile =  strrep(filename,'.mat','_ExtmNu4Sq.mat');
+                    if exist(TestFile,'file')
+                     f = importdata(TestFile);
+                    fprintf('change local ExtmNu4Sq to ON - load grid from file %s \n',TestFile)
+                    loadSuccess = 1;
+                    end
+                end
             end
             
             if strcmp(CheckLargerN,'ON') && loadSuccess == 0
@@ -1926,6 +2016,10 @@ classdef SterileAnalysis < handle
                       elseif strcmp(obj.RunAnaObj.chi2,'chi2CMShape') && obj.RunAnaObj.NonPoissonScaleFactor~=1.112
                           extraStr = [extraStr,sprintf('_NP%.3g',obj.RunAnaObj.NonPoissonScaleFactor)];
                       end
+                      % if knm2
+                      if obj.RunAnaObj.ModelObj.BKG_PtSlope ~=3*1e-06
+                           extraStr = [extraStr,sprintf('_BkgPtSlope%.3gmuCpsS',1e6.*obj.RunAnaObj.ModelObj.BKG_PtSlope)];
+                      end
                   end
                   
                   MakeDir(savedir);
@@ -1983,14 +2077,24 @@ classdef SterileAnalysis < handle
                 chi2Str = 'stat. and syst.';
             end
             
+            if ~contains(ConvertFixPar('freePar',obj.RunAnaObj.fixPar,'Mode','Reverse'),'mNu')
+                fitparStr = sprintf('{\\itm}_\\nu^2 = %.3g eV^2',obj.RunAnaObj.ModelObj.mnuSq_i);
+            elseif obj.RunAnaObj.pullFlag == 99
+                 fitparStr = sprintf('{\\itm}_\\nu^2 free');
+            else
+                 fitparStr = sprintf('{\\itm}_\\nu^2 free + pull');
+            end
+            
             switch Mode
                 case 'all'
-            titleStr = sprintf('%s , %.0f eV range (%s)',DataStr,obj.range,chi2Str);
+            titleStr = sprintf('%s , %.0f eV range (%s) , %s',DataStr,obj.range,chi2Str,fitparStr);
                 case 'chi2'
                     titleStr = chi2Str;
                 case 'data'
                     titleStr = DataStr;
             end
+            
+            
         end      
         function InitPlotArg(obj)
             obj.PlotColors =  {rgb('DodgerBlue'),rgb('Orange'),rgb('DarkSlateGray'),rgb('FireBrick'),...

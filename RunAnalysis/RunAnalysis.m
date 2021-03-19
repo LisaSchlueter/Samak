@@ -1302,8 +1302,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             % RecomputeFlag=='OFF': Read adequard Covariance Matrix if available, otherwise: computation
             
             if any(structfun(@(x) contains(x,'ON'),SysEffects))
-                obj.FitCM_Obj.ComputeCM('PlotSaveCM',PlotSaveCM);
-                
+                obj.FitCM_Obj.ComputeCM('PlotSaveCM',PlotSaveCM);       
                 
                 % Move to Fit CM and do renormalization with current statistics
                 obj.FitCMFrac = obj.FitCM_Obj.CovMatFrac;
@@ -1604,7 +1603,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                         'FPDeff','ON');
             end
         end
-        function InitModelObj_Norm_BKG(obj,varargin)
+        function FitResults = InitModelObj_Norm_BKG(obj,varargin)
             % Init Model (Normalization and Background) with Data
             % Should be done before computing Stacking Covariance Matrix
             % -------------------------------------------------------------%

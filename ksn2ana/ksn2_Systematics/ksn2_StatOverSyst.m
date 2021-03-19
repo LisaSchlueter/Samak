@@ -1,16 +1,17 @@
 % ksn2 calculate chi2 grid search
+% compare m2 free, m2 nuisance parameter
 %% settings that might change
 chi2 = 'chi2Stat';
 DataType = 'Twin';
-nGridSteps = 50;
+nGridSteps = 25;
 range = 40;
-
 %% configure RunAnalysis object
 if strcmp(chi2,'chi2Stat')
     NonPoissonScaleFactor = 1;
 elseif  strcmp(chi2,'chi2CMShape')
     NonPoissonScaleFactor = 1.112;
 end
+
 RunAnaArg = {'RunList','KNM2_Prompt',...
     'DataType',DataType,...
     'fixPar','E0 Norm Bkg',...%free par
@@ -40,13 +41,5 @@ SterileArg = {'RunAnaObj',A,... % Mother Object: defines RunList, Column Density
     'RandMC','OFF',...
     'range',range};
 
-
-S = SterileAnalysis(SterileArg{:});
 %%
-S.LoadGridFile('ExtmNu4Sq','ON');
-S.InterpMode = 'spline';
-S.Interp1Grid('RecomputeFlag','ON');
-
-%% pHandle = S.ContourPlot('BestFit','OFF','CL',95);
-S.InterpMode = 'lin';
-S.PlotFitriumSamak('PlotTot','OFF','SavePlot','png','PlotKafit','ON')
+S = SterileAnalysis(SterileArg{:});
