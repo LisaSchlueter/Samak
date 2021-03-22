@@ -476,7 +476,7 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             end
             
         end
-        function out    = ComputeISProb(obj,varargin)
+        function [out,Pis_z]    = ComputeISProb(obj,varargin)
             % Compute:
             % - Inelastic Scattering Probabilities in WGTS
             % If no further arguments: Init KATRIN setting
@@ -516,7 +516,7 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             % - both methods give the same result
             % ---------------------------------------------------------
             
-            if strcmp(Method,'Interp') && ~strcmp(obj.KTFFlag,'RW_WGTSMACE')
+            if strcmp(Method,'Interp') && ~strcmp(obj.KTFFlag,'RW_WGTSMACE')  && WGTS_CD_MolPerCm2_local<=5e17
                 try
                     %fprintf('Interpolation of inel. scattering probabilities ...')
                     out = ISProbInterp('WGTS_CD_MolPerCm2',WGTS_CD_MolPerCm2_local,...

@@ -267,13 +267,7 @@ classdef SterileAnalysis < handle
             obj.E0  = reshape(interp2(X,Y,obj.E0,obj.mNu4Sq,obj.sin2T4,obj.InterpMode),nInter,nInter);
           
             obj.chi2(obj.chi2<0) = NaN;
-            %             if strcmp(InterpMode,'spline')
-            %                 [row, col]    = find(obj.chi2 < 0);
-            %                 obj.chi2(row,:) = NaN;
-            %                 obj.chi2(:,col) = NaN;
-%                 obj.sin2T4(row,col) = NaN;
-%                 obj.mNu4Sq(row,col) = NaN;
-%             end
+
             
              obj.chi2_ref = min(min(obj.chi2));
             fprintf('Grid interpolation sucessfull \n');

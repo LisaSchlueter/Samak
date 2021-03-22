@@ -1,7 +1,8 @@
 % investigate possible impact of new syst. effect: Tritium on rear wall
 % response function needs modification: no integration over starting position z
 savedir = [getenv('SamakPath'),'ksn2ana/ksn2_Systematics/results/'];
-savename = [savedir,'ksn2_RWsyst_NewRW.mat'];
+WGTS_B_T = 1.23;
+savename = [savedir,sprintf('ksn2_RWsyst_NewRW_Bs%.3gT.mat',WGTS_B_T)];
 
 if exist(savename,'file')
     load(savename)
@@ -32,6 +33,7 @@ else
     RF_WGTS = A.ModelObj.RF;
     %%
     A.ModelObj.KTFFlag = 'RW_WGTSMACE';
+    A.ModelObj.WGTS_B_T = WGTS_B_T;
     A.ModelObj.InitializeRF;
     RF_RW = A.ModelObj.RF;
     
@@ -59,6 +61,6 @@ leg = legend([p_wgts,p_rw],'RF_{WGTS}','RF_{RW}','Location','northwest');
 PrettyLegendFormat(leg);
 % save
 plotdir = strrep(savedir,'results','plots');
-plotname = [plotdir,'ksn2_RWsyst_NewRW.png'];
+plotname = [plotdir,'ksn2_RWsyst_NewRF.png'];
 print(gcf,plotname,'-dpng','-r300');
 fprintf('save plot to %s \n',plotname);

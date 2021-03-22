@@ -166,4 +166,4 @@ S.GridPlot;
 
 hold on;
 %%
-p2 =plot3(sin2T4_k2_contour, mNu4Sq_k2_contour,S.DeltaChi2.*ones(size(mNu4Sq_k2_contour)))
+p2 =plot3(sin2T4_k2_contour, mNu4Sq_k2_contour,S.DeltaChi2.*ones(size(mNu4Sq_k2_contour)));

@@ -709,8 +709,16 @@ classdef RunSensitivity < handle
             else
                  chiStr = sprintf('%s_SysBudget%.0f',obj.RunAnaObj.chi2,obj.RunAnaObj.SysBudget);
             end
-            save_str = sprintf('AsimovDeltaChi2_mNuSq%.3geV2_%s_%s_%.0fbE0_freePar%s_%.0fsamples.mat',...
-                mNuSq_t,obj.RunAnaObj.RunData.RunName,chiStr,obj.GetRange,fix_str,nSamples);
+            if strcmp(obj.RunAnaObj.DataSet,'Knm1')
+                RunName = 'KNM1';
+                 save_str = sprintf('AsimovDeltaChi2_mNuSq%.3geV2_%s_%s_%.0fbE0_freePar%s_%.0fsamples.mat',...
+                mNuSq_t,RunName,obj.RunAnaObj.chi2,obj.GetRange,fix_str,nSamples);
+            else
+                RunName = obj.RunAnaObj.RunData.RunName;
+                 save_str = sprintf('AsimovDeltaChi2_mNuSq%.3geV2_%s_%s_%.0fbE0_freePar%s_%.0fsamples.mat',...
+                mNuSq_t,RunName,chiStr,obj.GetRange,fix_str,nSamples);
+            end
+           
             
             if strcmp(obj.RunAnaObj.AnaFlag,'Ring')
                 save_str = strrep(save_str,'.mat',sprintf('_Ring%s.mat',obj.RunAnaObj.RingMerge));
@@ -2151,13 +2159,14 @@ classdef RunSensitivity < handle
                     xEnd = interp1(ax.XAxis.Limits,[0,1],x(find(x>=mNuSq_bf+0.4,1)));  
                     arrow = annotation('textarrow',[xEnd,xStart],[0.8,yStart],'Color',rgb('DarkBlue'),'LineWidth',2);
                 else
-                    t = text(min(xlim)+0.1,0.93,sprintf('{\\itP}({\\itm}_{measured}^2 \\leq {\\itm}_{bf}^2) = %.1f %s',mNuSqFrac,'%'),...
-                        'FontSize',ax.FontSize,'FontWeight',ax.FontWeight,'Color',rgb('DarkBlue'));
-                    
-                    % make nice arrow
                     xStart = interp1(ax.XAxis.Limits,[0,1],x(find(x>=mNuSq_bf-0.1,1)));
                     yStart = interp1(ax.YAxis.Limits,[0,1],y(find(x>=mNuSq_bf-0.1,1)));
                     xEnd = interp1(ax.XAxis.Limits,[0,1],x(find(x>=mNuSq_bf,1)));
+                    
+                    t = text(min(xlim)+0.3,xEnd+0.02,sprintf('{\\itP}({\\itm}_{measured}^2 \\leq {\\itm}_{bf}^2) = %.1f %s',mNuSqFrac,'%'),...
+                        'FontSize',ax.FontSize,'FontWeight',ax.FontWeight,'Color',rgb('DarkBlue'));
+                    
+                    % make nice arrow
                     annotation('textarrow',[xStart,xEnd],[0.8,yStart],'Color',rgb('DarkBlue'),'LineWidth',2);
                 end
                 
