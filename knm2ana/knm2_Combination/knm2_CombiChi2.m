@@ -2,6 +2,7 @@
 % by adding chi^2 curves
 DataType = 'Real';
 chi2 = 'chi2CMShape';
+Knm2AnaFlag = 'MR-4';
 %% load chi2-profiles (pre-calculated)
 % knm1
 k1file = [getenv('SamakPath'),sprintf('tritium-data/fit/Knm1/Chi2Profile/Uniform/Chi2Profile_%s_UniformScan_mNu_Knm1_UniformFPD_%s_NP1.064_FitParE0BkgNorm_nFit20_min-2_max1.mat',DataType,chi2)];
@@ -11,7 +12,11 @@ mNuSq1 =[flipud(ScanResults1.ParScan(:,2));ScanResults1.ParScan(2:end,1)];
 Chi21 = [flipud(ScanResults1.chi2min(:,2));ScanResults1.chi2min(2:end,1)];
 
 % knm2
+if strcmp(Knm2AnaFlag,'Uniform')
 k2file = [getenv('SamakPath'),sprintf('tritium-data/fit/Knm2/Chi2Profile/Uniform/Chi2Profile_%s_UniformScan_mNu_Knm2_UniformFPD_%s_NP1.112_FitParE0BkgNorm_nFit20_min-2_max1.mat',DataType,chi2)];
+elseif strcmp(Knm2AnaFlag,'MR-4')
+k2file = [getenv('SamakPath'),sprintf('tritium-data/fit/Knm2/Chi2Profile/Ring_Full/Chi2Profile_%s_UniformScan_mNu_Knm2_Ring_FullFPD_%s_NP1.112_FitParE0BkgNormqU_nFit20_min-2_max1.mat',DataType,chi2)];   
+end
 d2 = importdata(k2file); fprintf('load knm2: %s \n',k2file)
 ScanResults2 = d2.ScanResults;
 mNuSq2 =[flipud(ScanResults2.ParScan(:,2));ScanResults2.ParScan(2:end,1)];
@@ -60,7 +65,7 @@ psumbf = errorbar(mNuSqsum_bf,Chi2sum_min,0,0,mNuSqsum_errNeg,mNuSqsum_errPos,'.
 
 PrettyFigureFormat('FontSize',22);
 leg = legend([p1,p2,psum,p1bf,p2bf,psumbf],...
-    'KNM-1','KNM-2','KNM-1 and KNM-2',...
+    'KNM-1 (Uniform)',sprintf('KNM-2 (%s)',Knm2AnaFlag),'KNM-1 and KNM-2',...
     sprintf('best fit: {\\itm}_\\nu^2 = %.2f \\pm %.2f eV^2',mNuSq1_bf,0.5.*(mNuSq1_errPos-mNuSq1_errNeg)),...
    sprintf('best fit: {\\itm}_\\nu^2 = %.2f \\pm %.2f eV^2',mNuSq2_bf,0.5.*(-mNuSq2_errNeg+mNuSq2_errPos)),...
     sprintf('best fit: {\\itm}_\\nu^2 = %.2f \\pm %.2f eV^2',mNuSqsum_bf,0.5.*(-mNuSqsum_errNeg+mNuSqsum_errPos)));
@@ -70,10 +75,13 @@ xlabel(sprintf('{\\itm}_\\nu^2 (eV^2)'));
 ylabel(sprintf('\\chi^2'));
 PrettyLegendFormat(leg);
 xlim([-2,1])
-
+if strcmp(Knm2AnaFlag,'MR-4')
+    ylimMax = max(ylim)+33;
+    ylim([min(ylim),ylimMax]);
+end
 %% save plot
 savedir = [getenv('SamakPath'),'knm2ana/knm2_Combination/plots/'];
 MakeDir(savedir);
-savename = sprintf('%sknm2_CombiChi2_%s_Uniform_%s.png',savedir,DataType,chi2);
+savename = sprintf('%sknm2_CombiChi2_%s_Uniform_%s_KNM2%s.png',savedir,DataType,chi2,Knm2AnaFlag);
 print(gcf,savename,'-dpng','-r300');
 fprintf('save plot to %s \n',savename);

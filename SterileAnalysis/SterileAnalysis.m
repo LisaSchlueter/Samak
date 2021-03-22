@@ -148,8 +148,8 @@ classdef SterileAnalysis < handle
                     if obj.nGridSteps>=50
                         mnu4Sq      = logspace(0,log10((obj.range)^2),obj.nGridSteps)';
                     else
-                        mnu4Sq      = logspace(0,log10((obj.range)^2),obj.nGridSteps-3)';
-                        mnu4Sq      = sort([mnu4Sq;1000;1200;1300]);
+                        mnu4Sq      = logspace(0,log10((obj.range)^2),obj.nGridSteps-4)';
+                        mnu4Sq      = sort([mnu4Sq;1000;1200;1300;1450]);
                     end
                     nGridSteps_mNu4Sq = obj.nGridSteps;
                     nGridTot = obj.nGridSteps^2;
@@ -2017,8 +2017,19 @@ classdef SterileAnalysis < handle
                           extraStr = [extraStr,sprintf('_NP%.3g',obj.RunAnaObj.NonPoissonScaleFactor)];
                       end
                       % if knm2
-                      if obj.RunAnaObj.ModelObj.BKG_PtSlope ~=3*1e-06
-                           extraStr = [extraStr,sprintf('_BkgPtSlope%.3gmuCpsS',1e6.*obj.RunAnaObj.ModelObj.BKG_PtSlope)];
+                      if strcmp(obj.RunAnaObj.DataType,'Twin')
+                          % twin
+                          if obj.RunAnaObj.ModelObj.BKG_PtSlope==obj.RunAnaObj.TwinBias_BKG_PtSlope && obj.RunAnaObj.ModelObj.BKG_PtSlope ~=3*1e-06
+                              % twin (KNM-2): model and twin BKG_PtSlope same, but not default 3e-06
+                              extraStr = [extraStr,sprintf('_BkgPtSlope%.3gmuCpsS',1e6.*obj.RunAnaObj.ModelObj.BKG_PtSlope)];
+                          elseif obj.RunAnaObj.ModelObj.BKG_PtSlope ~=3*1e-06 || obj.RunAnaObj.TwinBias_BKG_PtSlope ~=3*1e-06
+                              % twin (KNM-2): twin or model BKG_PtSlope not default 3e-06
+                              extraStr = [extraStr,sprintf('_BkgPtSlope%.3gmuCpsS_TwinPtSlope%.3gmuCpsS',...
+                                  1e6.*obj.RunAnaObj.ModelObj.BKG_PtSlope,1e6.*obj.RunAnaObj.TwinBias_BKG_PtSlope)];
+                          end
+                      elseif obj.RunAnaObj.ModelObj.BKG_PtSlope ~=3*1e-06
+                          % data (KNM-2): model BKG_PtSlope not default 3e-06
+                          extraStr = [extraStr,sprintf('_BkgPtSlope%.3gmuCpsS',1e6.*obj.RunAnaObj.ModelObj.BKG_PtSlope)];
                       end
                   end
                   

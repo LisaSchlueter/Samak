@@ -2,17 +2,17 @@
 
 %% settings
 range                 = 40;
-freePar               = 'mNu E0 Bkg Norm';
+freePar               = 'mNu E0 Bkg Norm qU';
 chi2                  = 'chi2CMShape';
 DataType              = 'Real';
-AnaFlag               = 'StackPixel';
+AnaFlag               = 'Ring';
 RingMerge             = 'Full';%'None'; %only relevand when AnaFlag = Ring
 DopplerEffectFlag     = 'FSD';
 BKG_PtSlope           = 3*1e-06;
 TwinBias_BKG_PtSlope  = 3*1e-06;
 FSDFlag               = 'KNM2';
 PullFlag              = 99;% 99 = no pull
-SysBudget             = 40;
+SysBudget             = 41;
 NonPoissonScaleFactor = 1.112;
 SigmaSq               =  0.0124+0.0025;
 
