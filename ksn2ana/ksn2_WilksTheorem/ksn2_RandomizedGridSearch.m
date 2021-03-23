@@ -1,8 +1,13 @@
+% grid search on randomized twins
 % ksn2 calculate chi2 grid search
-%% settings that might change
-chi2 = 'chi2Stat';
+
+randMC = 1;%:100;
+Twin_sin2T4 = 0;
+Twin_mNu4Sq = 0;
+chi2 = 'chi2CMShape';
 DataType = 'Twin';
-nGridSteps = 50;
+freePar = 'E0 Norm Bkg';
+nGridSteps = 25;
 range = 40;
 
 %% configure RunAnalysis object
@@ -13,7 +18,7 @@ elseif  strcmp(chi2,'chi2CMShape')
 end
 RunAnaArg = {'RunList','KNM2_Prompt',...
     'DataType',DataType,...
-    'fixPar','E0 Norm Bkg',...%free par
+    'fixPar',freePar,...%free par
     'SysBudget',40,...
     'fitter','minuit',...
     'minuitOpt','min;migrad',...
@@ -37,16 +42,14 @@ SterileArg = {'RunAnaObj',A,... % Mother Object: defines RunList, Column Density
     'SmartGrid','OFF',...
     'RecomputeFlag','OFF',...
     'SysEffect','all',...
+    'range',range,...
     'RandMC','OFF',...
-    'range',range};
-
+    'Twin_mNu4Sq',Twin_mNu4Sq,...
+    'Twin_sin2T4',Twin_sin2T4};
 
 S = SterileAnalysis(SterileArg{:});
-%%
-S.LoadGridFile('ExtmNu4Sq','ON');
-S.InterpMode = 'spline';
-S.Interp1Grid('RecomputeFlag','ON');
 
-% pHandle = S.ContourPlot('BestFit','OFF','CL',95);
-S.InterpMode = 'spline';
-S.PlotFitriumSamak('PlotTot','OFF','SavePlot','png','PlotKafit','ON')
+for i=1:numel(randMC)
+    S.RandMC= randMC(i);
+    S.GridSearch;
+end

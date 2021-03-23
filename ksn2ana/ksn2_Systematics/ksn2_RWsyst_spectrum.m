@@ -6,7 +6,7 @@
 % 4) No additional background
 % 5) maybe different FSD
 
-E0ShifteV = 1.5; % eV
+E0ShifteV = 1.64; % eV
 savedir = [getenv('SamakPath'),'ksn2ana/ksn2_Systematics/results/'];
 savename = [savedir,sprintf('ksn2_RWsyst_spectrum_E0shift%.3geV.mat',E0ShifteV)];
 
@@ -68,7 +68,7 @@ Scale = 1e3;
  p_wgts = plot(qU-18574,TBDIS_wgts./Time,':','LineWidth',2.5,'Color',rgb('Orange'));
  p_rw = plot(qU-18574,(TBDIS_rw.*Scale/1e3)./Time,'-.','LineWidth',2.5,'Color',rgb('FireBrick'));
  
- PrettyFigureFormat('FontSize',22);
+ PrettyFigureFormat('FontSize',22); 
  xlabel('Retarding energy - 18574 (eV)');
 ylabel('Rate');
 xlim([-41 137]);

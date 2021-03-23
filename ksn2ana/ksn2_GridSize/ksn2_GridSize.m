@@ -1,11 +1,11 @@
 % investigate impact of grid size on contour 
-nGridSteps = [50,25];
+nGridSteps = [50,25,10];
 
 %% configure RunAnalysis object
 chi2 = 'chi2Stat';
 DataType = 'Twin';
 range = 40;
-
+InterpMode = 'spline';
 if strcmp(chi2,'chi2Stat')
     NonPoissonScaleFactor = 1;
 elseif  strcmp(chi2,'chi2CMShape')
@@ -46,11 +46,11 @@ Colors = {'DodgerBlue','Orange','ForestGreen','FireBrick'};
 LineStyles = {'-','-.',':','--'};
 pHandle = cell(numel(nGridSteps),1);
 legStr = cell(numel(nGridSteps),1);
-S.InterpMode = 'spline';
+S.InterpMode = InterpMode;
 for i=1:numel(nGridSteps)
 S.nGridSteps = nGridSteps(i);
 S.LoadGridFile('CheckExtmNu4Sq','ON','CheckLargerN','OFF','CheckSmallerN','OFF');
-S.Interp1Grid('Maxm4Sq',37^2);
+S.Interp1Grid('Maxm4Sq',38.2^2);
 pHandle{i} = S.ContourPlot('HoldOn',HoldOn,'Color',rgb(Colors{i}),'LineStyle',LineStyles{i});
 legStr{i} = sprintf('%.0f x %.0f',nGridSteps(i),nGridSteps(i));
 HoldOn = 'ON';
@@ -60,10 +60,10 @@ leg = legend([pHandle{:}],legStr);
 PrettyLegendFormat(leg);
 leg.Title.String = 'Grid size'; leg.Title.FontWeight = 'normal';
 xlim([7e-3,0.5]);
-ylim([1,1.5e3])
+ylim([1,1.6e3])
 
 plotdir = [getenv('SamakPath'),'ksn2ana/ksn2_GridSize/plots/'];
-plotname = sprintf('%sksn2_GridSize.png',plotdir);
+plotname = sprintf('%sksn2_GridSize_%s.png',plotdir,InterpMode);
 MakeDir(plotdir);
-%print(plotname,'-dpng','-r300');
+print(plotname,'-dpng','-r300');
 fprintf('save plot to %s \n',plotname);

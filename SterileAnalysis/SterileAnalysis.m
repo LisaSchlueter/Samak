@@ -6,9 +6,13 @@ classdef SterileAnalysis < handle
         nGridSteps;   
         SmartGrid;
         RecomputeFlag;
-        SysEffect;
-        RandMC; 
+        SysEffect; 
         range; % in eV
+        
+        % randomized MC
+        RandMC;      
+        Twin_mNu4Sq; % for randomized MCs with sterile-nu hypothesis
+        Twin_sin2T4; % for randomized MCs with sterile-nu hypothesis
         
         % grid parameters
         mNu4Sq;
@@ -47,7 +51,7 @@ classdef SterileAnalysis < handle
         function obj = SterileAnalysis(varargin)
             p = inputParser;
             p.addParameter('RunAnaObj','', @(x)  isa(x,'RunAnalysis') || isa(x,'MultiRunAnalysis'));
-            p.addParameter('nGridSteps',50,@(x)isfloat(x)); % time on server: 25 points ~ 7-10 minutes, 50 points ~ 40 minutes on csltr server
+            p.addParameter('nGridSteps',50,@(x)isfloat(x)); % time on server (KSN1): 25 points ~ 7-10 minutes, 50 points ~ 40 minutes on csltr server
             p.addParameter('SmartGrid','OFF',@(x)ismember(x,{'ON','OFF'})); % work in progress
             p.addParameter('RecomputeFlag','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('SysEffect','all',@(x)ischar(x)); % if chi2CMShape: all or only 1
@@ -55,7 +59,9 @@ classdef SterileAnalysis < handle
             p.addParameter('range',65,@(x)isfloat(x));
             p.addParameter('ConfLevel',95,@(x)isfloat(x));
             p.addParameter('InterpMode','spline',@(x)ismember(x,{'lin','spline'}));
-            
+            p.addParameter('Twin_mNu4Sq',0,@(x)isfloat(x)); % for randomized MCs with sterile-nu hypothesis
+            p.addParameter('Twin_sin2T4',0,@(x)isfloat(x)); % for randomized MCs with sterile-nu hypothesis
+          
             p.parse(varargin{:});
             
             obj.RunAnaObj = p.Results.RunAnaObj;
@@ -67,6 +73,8 @@ classdef SterileAnalysis < handle
             obj.range         = p.Results.range;
             obj.ConfLevel     = p.Results.ConfLevel;
             obj.InterpMode    = p.Results.InterpMode;
+            obj.Twin_sin2T4   = p.Results.Twin_sin2T4;
+            obj.Twin_mNu4Sq   = p.Results.Twin_mNu4Sq;
             
             if isempty(obj.RunAnaObj)
                 fprintf(2,'RunAnaObj has to be specified! \n');
@@ -89,14 +97,14 @@ classdef SterileAnalysis < handle
             p.addParameter('ExtmNu4Sq','OFF',@(x)ismember(x,{'ON','OFF'})); %extended m4Sq (from 0.1)
             p.addParameter('AddSmallNu4Sq','OFF',@(x)ismember(x,{'ON','OFF'})); %add  m4Sq  smaller values (0.1-1)     
             p.addParameter('FixmNuSq',0,@(x)isfloat(x)); % if light nu-mass fixed (eV^2)
-            p.parse(varargin{:});
+             p.parse(varargin{:});
             Negsin2T4     = p.Results.Negsin2T4;
             NegmNu4Sq     = p.Results.NegmNu4Sq;
             Extsin2T4     = p.Results.Extsin2T4;
             ExtmNu4Sq     = p.Results.ExtmNu4Sq;
             AddSmallNu4Sq = p.Results.AddSmallNu4Sq;
             FixmNuSq      = p.Results.FixmNuSq;
-            
+
             savefile = obj.GridFilename('Negsin2T4',Negsin2T4,'NegmNu4Sq',NegmNu4Sq,...
                                         'Extsin2T4',Extsin2T4,'ExtmNu4Sq',ExtmNu4Sq,...
                                         'FixmNuSq',FixmNuSq,'AddSmallNu4Sq',AddSmallNu4Sq);
@@ -120,7 +128,28 @@ classdef SterileAnalysis < handle
                     obj.RunAnaObj.ComputeCM('BkgCM','ON','BkgPtCM','ON');
                 end
                 
-                % if light nu-mass is fixed in fit, but model nu-mass shall not be something else than 0 eV^2
+                %% ranomized mc data
+                if isfloat(obj.RandMC) && strcmp(obj.RunAnaObj.DataType,'Twin')
+                    % change to randomized MC data
+                    obj.RunAnaObj.InitModelObj_Norm_BKG('RecomputeFlag','ON');
+                    if obj.Twin_mNu4Sq~=0 || obj.Twin_sin2T4~=0
+                        obj.RunAnaObj.ModelObj.BKG_RateSec_i = obj.RunAnaObj.ModelObj.BKG_RateSec;
+                        obj.RunAnaObj.ModelObj.normFit_i = obj.RunAnaObj.ModelObj.normFit;
+                        obj.RunAnaObj.ModelObj.SetFitBiasSterile(obj.Twin_mNu4Sq,obj.Twin_sin2T4);
+                        obj.RunAnaObj.ModelObj.ComputeTBDDS;
+                        obj.RunAnaObj.ModelObj.ComputeTBDIS;
+                        TBDIS_i = obj.RunAnaObj.ModelObj.TBDIS';
+                    else
+                        obj.RunAnaObj.ModelObj.ComputeTBDDS;
+                        obj.RunAnaObj.ModelObj.ComputeTBDIS;
+                        TBDIS_i = obj.RunAnaObj.RunData.TBDIS';
+                    end
+                    
+                    TBDIS_mc = mvnrnd(TBDIS_i,obj.RunAnaObj.FitCMShape,1)';
+                    obj.RunAnaObj.RunData.TBDIS = TBDIS_mc;
+                    obj.RunAnaObj.RunData.TBDISE = sqrt(TBDIS_mc);
+                end
+                %% if light nu-mass is fixed in fit, but model nu-mass shall not be something else than 0 eV^2
                 if FixmNuSq~=0 && contains(obj.RunAnaObj.fixPar,'fix 1 ;')
                     obj.RunAnaObj.ModelObj.mnuSq_i = FixmNuSq;
                 end
@@ -129,6 +158,11 @@ classdef SterileAnalysis < handle
                 obj.RunAnaObj.Fit;
                 FitResults_Null = obj.RunAnaObj.FitResult;
                 
+                if isfloat(obj.RandMC) && strcmp(obj.RunAnaObj.DataType,'Twin')
+                    if obj.Twin_mNu4Sq~=0 || obj.Twin_sin2T4~=0
+                        obj.RunAnaObj.SimulateStackRuns;
+                    end
+                end
                 %% define grid
                 if strcmp(Extsin2T4,'ON')
                     sin2T4Max = 1;
@@ -145,12 +179,12 @@ classdef SterileAnalysis < handle
                     nGridSteps_mNu4Sq = obj.nGridSteps;
                     nGridTot = obj.nGridSteps^2;
                 else
-                    if obj.nGridSteps>=50
+%                     if obj.nGridSteps>=50
                         mnu4Sq      = logspace(0,log10((obj.range)^2),obj.nGridSteps)';
-                    else
-                        mnu4Sq      = logspace(0,log10((obj.range)^2),obj.nGridSteps-4)';
-                        mnu4Sq      = sort([mnu4Sq;1000;1200;1300;1450]);
-                    end
+%                     else
+%                         mnu4Sq      = logspace(0,log10((obj.range)^2),obj.nGridSteps-4)';
+%                         mnu4Sq      = sort([mnu4Sq;1000;1200;1300;1450]);
+%                     end
                     nGridSteps_mNu4Sq = obj.nGridSteps;
                     nGridTot = obj.nGridSteps^2;
                 end
@@ -202,7 +236,7 @@ classdef SterileAnalysis < handle
                 if min(min(chi2))<obj.RunAnaObj.FitResult.chi2min
                     chi2_ref = min(min(chi2));
                 else
-                    chi2_ref = T.FitResult.chi2min;
+                    chi2_ref = RunAnaObj.FitResult.chi2min;
                 end
                 
                 tCpuHour = (cputime-tStart)/60; % cpu time in hours
@@ -1213,7 +1247,7 @@ classdef SterileAnalysis < handle
             if strcmp(PlotStat,'ON')
                 obj.RunAnaObj.chi2 = 'chi2Stat';
                 obj.LoadGridFile('CheckSmallerN','ON');
-                obj.Interp1Grid('RecomputeFlag','ON');
+                obj.Interp1Grid('RecomputeFlag','ON','Maxm4Sq',38.2^2);
                 pStat = obj.ContourPlot('CL',obj.ConfLevel,'HoldOn','OFF',...
                     'Color',rgb('DodgerBlue'),'LineStyle','-','BestFit',BestFit,'PlotSplines','OFF');
                 hold on;
@@ -1959,18 +1993,26 @@ classdef SterileAnalysis < handle
 
             savedir = sprintf('%sSterileAnalysis/GridSearchFiles/%s/%s/',...
                      getenv('SamakPath'),obj.RunAnaObj.DataSet,obj.RunAnaObj.DataType);
-            
-                 if isfloat(obj.RandMC) && strcmp(obj.RunAnaObj.DataType,'Twin')
-                     extraStr = sprintf('%s_RandMC%.0f',extraStr,obj.RandMC);
-                     savedir = strrep(savedir,'Twin/','TwinRandomizedMC/');
-                 end
-                 
+
                  if ~strcmp(obj.RunAnaObj.ELossFlag,'KatrinT2')
                      extraStr = [extraStr,sprintf('_%s',obj.RunAnaObj.ELossFlag)];
                  end
                  
                  if ~strcmp(obj.RunAnaObj.AngularTFFlag,'OFF')
                      extraStr = [extraStr,'_AngTF'];
+                 end
+                 
+                 if obj.Twin_sin2T4~=0
+                     extraStr = [extraStr,sprintf('_sinT4Sq%.3g',obj.Twin_sin2T4)];
+                 end
+                 
+                 if obj.Twin_mNu4Sq~=0
+                     extraStr = [extraStr,sprintf('_mNu4Sq%.3g',obj.Twin_mNu4Sq)];
+                 end
+
+                 if isfloat(obj.RandMC) && strcmp(obj.RunAnaObj.DataType,'Twin')
+                     extraStr = sprintf('%s_RandMC%.0f',extraStr,obj.RandMC);
+                     savedir = strrep(savedir,'Twin/','TwinRandomizedMC/');
                  end
                  
                  if obj.RunAnaObj.pullFlag<99

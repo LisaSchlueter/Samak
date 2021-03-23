@@ -4,9 +4,10 @@ RecomputeFlag = 'OFF';
 %% KNM-1 Model
 chi2          = 'chi2CMShape';
 DataType      = 'Twin';
-nGridSteps    = 25;
+nGridSteps    = 1;
 freePar               = 'mNu E0 Bkg Norm';
-savedir = [getenv('SamakPath'),'tritium-data/SterileAnalysis/GridSearchFiles/Combi/',DataType,'/'];
+range = 40;
+savedir = [getenv('SamakPath'),'/SterileAnalysis/GridSearchFiles/Combi/',DataType,'/'];
 MakeDir(savedir)
 savename = sprintf('%sKSN12Combi_GridSearch_%s_%s_Uniform_%s.mat',savedir,DataType,strrep(freePar,' ',''),chi2);
 
@@ -141,47 +142,52 @@ else
         'i_FracTm',0};
     
     %% reference fit with m4=0 sint4Sq =0 (Null hypothesis)
-    F = FITC(FitCArg{:});
-    FitResult_Null = struct(...
-        'par',F.RESULTS{1},....
-        'err',F.RESULTS{2},....
-        'chi2min',F.RESULTS{3},...
-        'errmat',F.RESULTS{4},...
-        'dof',F.RESULTS{5});
-    
-    % define grid
-    sin2T4Max = 0.5;
-    mnu4Sq = [0.1;0.35;0.7;logspace(0,log10((obj.range)^2),obj.nGridSteps-3)'];
-    sin2T4      = logspace(-3,log10(sin2T4Max),obj.nGridSteps);
-    mnu4Sq      = repmat(mnu4Sq,1,obj.nGridSteps);
-    sin2T4      = repmat(sin2T4,nGridSteps_mNu4Sq,1);
-    
-    %% make copy of model for parallel computing
-    D1 = copy(repmat(K1,nGridSteps^2,1));
-    D2 = copy(repmat(K2,nGridSteps^2,1));
-    
-    D1 = reshape(D1,numel(D1),1);
-    D2 = reshape(D2,numel(D2),1);
-    %% scan over msq4-sin2t4 grid
-    chi2Grid       = zeros(nGridSteps,1);
-    FitResultsGrid = cell(nGridSteps,1);
-    mnu4Sq_Grid    = reshape(mnu4Sq',nGridSteps,1);
-    sin2T4_Grid    = reshape(sin2T4',nGridSteps,1);
-    
+   F = FITC(FitCArg{:});
+  FitResult_Null = struct(...
+      'par',F.RESULTS{1},....
+      'err',F.RESULTS{2},....
+      'chi2min',F.RESULTS{3},...
+      'errmat',F.RESULTS{4},...
+      'dof',F.RESULTS{5});
+
+% define grid
+sin2T4Max = 0.5;
+if nGridSteps<4 % for testing
+    mnu4Sq = logspace(0,log10((range)^2),nGridSteps)';
+else
+    mnu4Sq = [0.1;0.35;0.7;logspace(0,log10((range)^2),nGridSteps-3)'];
+end
+sin2T4      = logspace(-3,log10(sin2T4Max),nGridSteps);
+mnu4Sq      = repmat(mnu4Sq,1,nGridSteps);
+sin2T4      = repmat(sin2T4,nGridSteps,1);
+
+%% make copy of model for parallel computing
+D1 = copy(repmat(K1,nGridSteps^2,1));
+D2 = copy(repmat(K2,nGridSteps^2,1));
+
+D1 = reshape(D1,numel(D1),1);
+D2 = reshape(D2,numel(D2),1);
+%% scan over msq4-sin2t4 grid
+chi2Grid       = zeros(nGridSteps^2,1);
+FitResultsGrid = cell(nGridSteps^2,1);
+mnu4Sq_Grid    = reshape(mnu4Sq',nGridSteps^2,1);
+sin2T4_Grid    = reshape(sin2T4',nGridSteps^2,1);
+
     fixPartmp = K1.fixPar;
     DataTypetmp = DataType;
     
-    parfor i= 1:(nGridSteps)
+    parfor i= 1:(nGridSteps^2)
        
         D1(i).SimulateStackRuns;
         D2(i).SimulateStackRuns;
+        D1(i).ModelObj.nPixels = 2; %
         
         % set sterile parameter
         D1(i).ModelObj.SetFitBiasSterile(mnu4Sq_Grid(i),sin2T4_Grid(i));
         D2(i).ModelObj.SetFitBiasSterile(mnu4Sq_Grid(i),sin2T4_Grid(i));
         
         % fit
-        F = FITC({'SO',D1(i).ModelObj,...
+        F = FITC('SO',D1(i).ModelObj,...
         'SO2',D2(i).ModelObj,...
         'DATA',Data,'fitter',D1(i).fitter,...
         'chi2name',D1(i).chi2,'minuitOpt',D1(i).minuitOpt,...
@@ -206,7 +212,7 @@ else
         'i_TTES',D1(i).i_TTES,...
         'i_qUOffset',D1(i).i_qUOffset,...
         'i_mTSq',D1(i).i_mTSq,...
-        'i_FracTm',0});
+        'i_FracTm',0);
         
         FitResult = struct(...
             'par',F.RESULTS{1},....
@@ -219,10 +225,10 @@ else
         FitResultsGrid{i} = FitResult;
     end
     
-    chi2       = reshape(chi2Grid,nGridSteps_mNu4Sq,obj.nGridSteps);
-    FitResults = reshape(FitResultsGrid,nGridSteps_mNu4Sq,obj.nGridSteps);
+    chi2       = reshape(chi2Grid,nGridSteps,nGridSteps);
+    FitResults = reshape(FitResultsGrid,nGridSteps,nGridSteps);
     
-    if min(min(chi2))<obj.RunAnaObj.FitResult.chi2min
+    if min(min(chi2))<FitResult_Null.chi2min
         chi2_ref = min(min(chi2));
     else
         chi2_ref = FitResult_Null.chi2min;
