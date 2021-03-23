@@ -2172,7 +2172,7 @@ function ComputeCM_Background(obj,varargin)
     MaxSlopeCpsPereV_i = MaxSlopeCpsPereV;
     
     % Number of Trials - Hardcoded
-    TrialSave  = obj.nTrials; obj.nTrials = 50000; % BASELINE, termine after obj.nTrials
+    TrialSave  = obj.nTrials; obj.nTrials = 10000;%50000; % BASELINE, termine after obj.nTrials
     
     % Covariance Matrix File
     cm_path        = [getenv('SamakPath'),sprintf('inputs/CovMat/Background/CM/')];

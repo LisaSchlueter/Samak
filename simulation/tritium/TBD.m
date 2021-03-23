@@ -491,7 +491,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
             p.addParameter('Sigma',obj.FSD_Sigma,@(x)isfloat(x) || isempty(x));                % broadening of FSD
             p.addParameter('MultiPos',obj.FSD_MultiPos,@(x) isfloat(x) || isempty(x));         %3 gaussians instead of using 1 gaussian per energy (for 3 RW settings): relative position
             p.addParameter('MultiWeights',obj.FSD_MultiWeights,@(x) isfloat(x) || isempty(x)); %3 gaussians instead of using 1 gaussian per energy: relative weight
-            p.addParameter('BinningFactor',2,@(x) isfloat(x) || isempty(x));                   % enhance binning: twice, 3 times,... as much bins
+            p.addParameter('BinningFactor',1,@(x) isfloat(x) || isempty(x));                   % enhance binning: twice, 3 times,... as much bins
             p.addParameter('SanityPlot','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('ZoomPlot','OFF',@(x)ismember(x,{'ON','OFF'})); % save also zoom to 1 final state
             p.addParameter('Dist','Gauss',@(x)ismember(x,{'Gauss','Rect'}));
@@ -575,6 +575,8 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                     ttfsdfilename = [FSDdir,'FSD_KNM2_T2_0p5eV.txt'];
                 case {'KNM2_0p1eV'}
                     ttfsdfilename = [FSDdir,'FSD_KNM2_T2_0p1eV.txt'];
+                case {'KNM2_0p1eV_cut40eV'}
+                    ttfsdfilename = [FSDdir,'FSD_KNM2_T2_0p1eV_cut40eV.txt'];
             end
             %Rebinning
             ttfsdfile_temp=importdata(ttfsdfilename);
@@ -625,6 +627,8 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                     dtfsdfilename = [FSDdir,'FSD_KNM2_DT_0p5eV.txt'];
                 case {'KNM2_0p1eV'}
                     dtfsdfilename = [FSDdir,'FSD_KNM2_DT_0p1eV.txt'];
+                case {'KNM2_0p1eV_cut40eV'}
+                    dtfsdfilename = [FSDdir,'FSD_KNM2_DT_0p1eV_cut40eV.txt'];
             end
             %Rebinning
             dtfsdfile_temp=importdata(dtfsdfilename);
@@ -668,6 +672,8 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                     htfsdfilename = [FSDdir,'FSD_KNM2_HT_0p5eV.txt'];
                 case {'KNM2_0p1eV'}
                     htfsdfilename = [FSDdir,'FSD_KNM2_HT_0p1eV.txt'];
+                case {'KNM2_0p1eV_cut40eV'}
+                    htfsdfilename = [FSDdir,'FSD_KNM2_HT_0p1eV_cut40eV.txt'];
             end
             %Rebinning
             htfsdfile_temp=importdata(htfsdfilename);
@@ -1106,7 +1112,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                 
                 if obj.WGTS_MolFrac_TT>0
                     switch obj.TTFSD
-                        case {'DOSS','SAENZ','SAENZNOEE','ROLL','BlindingKNM1','WGTS100K','Sibille','Sibille0p5eV','SibilleFull','BlindingKNM2','KNM2','KNM2_0p5eV','KNM2_0p1eV'}
+                        case {'DOSS','SAENZ','SAENZNOEE','ROLL','BlindingKNM1','WGTS100K','Sibille','Sibille0p5eV','SibilleFull','BlindingKNM2','KNM2','KNM2_0p5eV','KNM2_0p1eV','KNM2_0p1eV_cut40eV'}
                             % Ground State
                             [GS,obj.TTexE_G,obj.TTexP_G] = ...
                                 obj.ComputeFSD_GSES(obj.TTexE,obj.TTexP,obj.TTGSTh,'ground');
@@ -1131,7 +1137,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                 
                 if obj.WGTS_MolFrac_DT>0
                     switch obj.DTFSD
-                        case {'DOSS','HTFSD','TTFSD','BlindingKNM1','WGTS100K','Sibille','Sibille0p5eV','SibilleFull','BlindingKNM2','KNM2','KNM2_0p5eV','KNM2_0p1eV'}
+                        case {'DOSS','HTFSD','TTFSD','BlindingKNM1','WGTS100K','Sibille','Sibille0p5eV','SibilleFull','BlindingKNM2','KNM2','KNM2_0p5eV','KNM2_0p1eV','KNM2_0p1eV_cut40eV'}
                             % Ground State
                             [GS,obj.DTexE_G,obj.DTexP_G] = ...
                                 obj.ComputeFSD_GSES(obj.DTexE,obj.DTexP,obj.DTGSTh,'ground');
@@ -1149,7 +1155,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                 
                 if obj.WGTS_MolFrac_HT>0
                     switch obj.HTFSD
-                        case {'SAENZ','BlindingKNM1','WGTS100K','Sibille','Sibille0p5eV','SibilleFull','BlindingKNM2','KNM2','KNM2_0p5eV','KNM2_0p1eV'}
+                        case {'SAENZ','BlindingKNM1','WGTS100K','Sibille','Sibille0p5eV','SibilleFull','BlindingKNM2','KNM2','KNM2_0p5eV','KNM2_0p1eV','KNM2_0p1eV_cut40eV'}
                             
                             % Ground State
                             [GS,obj.HTexE_G,obj.HTexP_G] = ...

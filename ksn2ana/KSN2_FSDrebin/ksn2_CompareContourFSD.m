@@ -1,8 +1,12 @@
+% compare contour with different FSDs 
+% twin, stat, 40 eV
+% ksn2 contour on twins without penning trap background slope for fitter
+% comparison
 % ksn2 calculate chi2 grid search
 %% settings that might change
 chi2 = 'chi2Stat';
 DataType = 'Twin';
-nGridSteps = 50;
+nGridSteps = 25;
 range = 40;
 
 %% configure RunAnalysis object
@@ -27,8 +31,8 @@ RunAnaArg = {'RunList','KNM2_Prompt',...
     'TwinBias_FSDSigma',sqrt(0.0124+0.0025),...
     'TwinBias_Q',18573.7,...
     'PullFlag',99,...;%99 = no pull
-    'BKG_PtSlope',3*1e-06,...
-    'TwinBias_BKG_PtSlope',3*1e-06,...
+    'BKG_PtSlope',3e-06,...
+    'TwinBias_BKG_PtSlope',3e-06,...
     'DopplerEffectFlag','FSD'};
 A = MultiRunAnalysis(RunAnaArg{:});
 %% configure Sterile analysis object
@@ -40,8 +44,21 @@ SterileArg = {'RunAnaObj',A,... % Mother Object: defines RunList, Column Density
     'RandMC','OFF',...
     'range',range};
 
+%%
 
 S = SterileAnalysis(SterileArg{:});
+A.FSDFlag = 'KNM2'; A.SimulateStackRuns;
+S.GridSearch;
 
-S.InterpMode = 'spline';
-S.PlotFitriumSamak('PlotTot','OFF','SavePlot','png','PlotKafit','ON')
+S = SterileAnalysis(SterileArg{:});
+A.FSDFlag = 'KNM2_0p5eV'; A.SimulateStackRuns;
+S.GridSearch;
+
+
+%% save
+% plotdir = sprintf('%sksn2ana/ksn2_FSDrebin/plots/',getenv('SamakPath'));
+% MakeDir(plotdir);
+% plotname = sprintf('%sksn2_CompareContourFSD.png',plotdir);
+% print(gcf,plotname,'-dpng','-r350');
+% fprintf('save plot to %s \n',plotname);
+

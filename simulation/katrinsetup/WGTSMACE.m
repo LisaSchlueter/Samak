@@ -191,9 +191,9 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             p.addParameter('WGTS_MolFracRelErr_DT',0.06e-2,@(x)isfloat(x));
             p.addParameter('WGTS_MolFracRelErr_HT',0,@(x)isfloat(x));
             % WGTS: Flags for FSD: T-T / D-T / H-T
-            p.addParameter('TTFSD','BlindingKNM2',@(x)ismember(x,{'OFF','DOSS','SAENZ','SAENZNOEE','ROLL','BlindingKNM1','WGTS100K','Sibille','Sibille0p5eV','SibilleFull','BlindingKNM2','KNM2','KNM2_0p5eV','KNM2_0p1eV'}));
-            p.addParameter('DTFSD','BlindingKNM2',@(x)ismember(x,{'OFF','DOSS','ROLL','HTFSD','TTFSD','BlindingKNM1','WGTS100K','Sibille','Sibille0p5eV','SibilleFull','BlindingKNM2','KNM2','KNM2_0p5eV','KNM2_0p1eV'}));
-            p.addParameter('HTFSD','BlindingKNM2',@(x)ismember(x,{'OFF','SAENZ','ROLL','BlindingKNM1','WGTS100K','Sibille','Sibille0p5eV','SibilleFull','BlindingKNM2','KNM2','KNM2_0p5eV','KNM2_0p1eV'}));
+            p.addParameter('TTFSD','BlindingKNM2',@(x)ismember(x,{'OFF','DOSS','SAENZ','SAENZNOEE','ROLL','BlindingKNM1','WGTS100K','Sibille','Sibille0p5eV','SibilleFull','BlindingKNM2','KNM2','KNM2_0p5eV','KNM2_0p1eV','KNM2_0p1eV_cut40eV'}));
+            p.addParameter('DTFSD','BlindingKNM2',@(x)ismember(x,{'OFF','DOSS','ROLL','HTFSD','TTFSD','BlindingKNM1','WGTS100K','Sibille','Sibille0p5eV','SibilleFull','BlindingKNM2','KNM2','KNM2_0p5eV','KNM2_0p1eV','KNM2_0p1eV_cut40eV'}));
+            p.addParameter('HTFSD','BlindingKNM2',@(x)ismember(x,{'OFF','SAENZ','ROLL','BlindingKNM1','WGTS100K','Sibille','Sibille0p5eV','SibilleFull','BlindingKNM2','KNM2','KNM2_0p5eV','KNM2_0p1eV','KNM2_0p1eV_cut40eV'}));
             p.addParameter('TmFSD','SAENZ',@(x)ismember(x,{'OFF','SAENZ'}));
            
             % MACE Parameters

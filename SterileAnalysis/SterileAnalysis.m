@@ -1229,6 +1229,7 @@ classdef SterileAnalysis < handle
             p.addParameter('PlotStat','ON',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('PlotTot','ON',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('PlotKaFit','OFF',@(x)ismember(x,{'ON','OFF'}));
+            
             p.parse(varargin{:});
             SavePlot = p.Results.SavePlot;
             PlotStat = p.Results.PlotStat;
@@ -1273,10 +1274,10 @@ classdef SterileAnalysis < handle
            
            if strcmp(PlotStat,'ON')
                dfStat = importdata(fstat);  
-                 if strcmp(obj.RunAnaObj.DataSet,'Knm2')
-                     dfStat.data(:,2) = dfStat.data(:,2).^2;
-                 end %PowderBlue
-               pFStat = plot(dfStat.data(:,1),dfStat.data(:,2),'LineStyle','-.','Color',rgb('Orange'),'LineWidth',LineWidth);
+%                  if strcmp(obj.RunAnaObj.DataSet,'Knm2')
+%                      dfStat.data(:,2) = dfStat.data(:,2);
+%                  end %PowderBlue
+               pFStat = plot(dfStat(:,1),dfStat(:,2).^2,'LineStyle','-.','Color',rgb('Orange'),'LineWidth',LineWidth);
            end
            
            if strcmp(PlotTot,'ON')
@@ -1331,8 +1332,8 @@ classdef SterileAnalysis < handle
                extraStr = '';
            elseif strcmp(PlotStat,'ON')
                if strcmp(PlotKaFit ,'ON')
-                   legStr = {'Samak (stat. only)','Fitrium (stat. only)','KaFit (stat. only)'};
-                   leg = legend([pStat,pFStat,pKStat],legStr,'EdgeColor',rgb('Silver'),'Location','southwest');
+                   legStr = {'Fitrium (stat. only)','KaFit (stat. only)','Samak (stat. only)'};
+                   leg = legend([pFStat,pKStat,pStat],legStr,'EdgeColor',rgb('Silver'),'Location','southwest');
                    PrettyLegendFormat(leg)
                else
                    legStr = {'Samak (stat. only)','Fitrium (stat. only)'};
@@ -2083,9 +2084,9 @@ classdef SterileAnalysis < handle
                          savedir,func2str(obj.RunAnaObj.FakeInitFile),obj.RunAnaObj.DataType,strrep(freeParStr,' ',''),...
                          obj.range,obj.RunAnaObj.chi2,obj.nGridSteps,extraStr);
                  else
-                     filename = sprintf('%sKSN%.0f_GridSearch_%s_%s_%s_%.0feVrange_%s_%.0fnGrid%s.mat',...
+                     filename = sprintf('%sKSN%.0f_GridSearch_%s_%s_%s_%.0feVrange_FSD%s_%s_%.0fnGrid%s.mat',...
                          savedir,str2double(obj.RunAnaObj.DataSet(end)),RunList,obj.RunAnaObj.DataType,strrep(freeParStr,' ',''),...
-                         obj.range,obj.RunAnaObj.chi2,obj.nGridSteps,extraStr);
+                         obj.range,obj.RunAnaObj.FSDFlag,obj.RunAnaObj.chi2,obj.nGridSteps,extraStr);
                  end
                  
         end

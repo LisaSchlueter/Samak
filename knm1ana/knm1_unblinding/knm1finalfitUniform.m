@@ -3,91 +3,64 @@
 % Uniform Fit
 % Golden Run List
 % Golden Pixel List
-% 
-% Last Updated: 15/08/2019
-%
+% Last Updated: 23/03/2021
 
 %% settings
-RunList               = 'KNM1';
-exclDataStart         = 13; % 27 subruns
-RecomputeFlag         = 'OFF';
-BkgCM                 = 'ON';
+RecomputeFlag = 'OFF';
+Plots        = 'OFF';
+DataType     = 'Real';
+range        = 40;
+chi2         = 'chi2CMShape';
+freePar      = 'mNu E0 Norm Bkg';
+FSDFlag      = 'Sibille0p5eV';
+NonPoissonScaleFactor = 1.064;
+SysBudget = 22;
+savedir = [getenv('SamakPath'),'knm1ana/knm1_unblinding/results/'];
+savefile = sprintf('%sknm1finalfitUniform_%s_%s_NP%.4g_%s_%.0feV_%s.mat',savedir,DataType,chi2,NonPoissonScaleFactor,strrep(freePar,' ',''),range,FSDFlag);
+if strcmp(chi2,'chi2CMShape')
+    savefile = strrep(savefile,chi2,sprintf('%s_SysBudget%.0f',chi2,SysBudget));
+end
 
-%% Init Model Object and covariance matrix object
-Real = MultiRunAnalysis('RunList',RunList,...
-    'chi2','chi2Stat',...
-    'DataType','Real',...
-    'exclDataStart',exclDataStart,...
-    'fixPar','mNu Norm E0 Bkg',...
-    'RadiativeFlag','ON',...
-    'NonPoissonScaleFactor',1.064,...
-    'minuitOpt','min ; minos',...
-    'FSDFlag','Sibille0p5eV',...%'SAENZ',...%Sibille0p5eV',...%'Sibille',...
-    'ELossFlag','KatrinT2',...
-    'SysBudget',22,...
-    'AngularTFFlag','OFF');
-
-% Modification - 24/10/2019
-%    'fixPar','5 6 7 8 9 10 11',...
-%% CM Shape
-Real.chi2='chi2CMShape'; Real.ComputeCM('BkgCM',BkgCM);
-
-%Real.PlotFitCovCorMatrices('Mode','Shape');
-Real.Fit('CATS','OFF');
-Real.PlotFit('LabelFlag','data','saveplot','pdf','ErrorBarScaling',1,'YLimRes',[-2.2,2.9],'Colors','RGB','DisplayStyle','PRL');
-%Real.PlotFit('LabelFlag','FinalKNM1','saveplot','pdf','ErrorBarScaling',1,'YLimRes',[-2.2,2.9],'Colors','RGB','DisplayStyle','PRL');
-%Real.PlotFit('LabelFlag','FinalKNM1','saveplot','pdf','ErrorBarScaling',50,'YLimRes',[-2.2,2.9],'Colors','RGB','DisplayStyle','PRL');
-return;
-
-%Real.PlotFit('LabelFlag','FinalKNM1','saveplot','pdf','ErrorBarScaling',1,'YLimRes',[-2.2,2.9],'Colors','BW');
-%Real.PlotFit('LabelFlag','FinalKNM1','saveplot','pdf','ErrorBarScaling',50,'YLimRes',[-2.2,2.9],'Colors','BW');
-Rsysshape = Real.FitResult;
-Real.PlotFitCovCorMatrices('Mode','Shape');
-
-%% Sensitivity - Via ASimov Fit Error
-% Stat
-Real.chi2='chi2Stat'; Real.ComputeCM('BkgCM',BkgCM);
-Real.Fit;
-Rstat = Real.FitResult;
-
-%% CM
-SysEffects = Real.GetDefaultEffects();
-Real.chi2='chi2CM';Real.ComputeCM('SysEffects',SysEffects,'BkgCM',BkgCM);
-Real.PlotFitCovCorMatrices('Mode','Frac');
-Real.Fit; Real.PlotFit('saveplot','png');
-Rsys  = Real.FitResult;
-
-
-%% Plot Correlation EO/m2
-Real.PlotFitm2e0Contours('ErrorOnModel','OFF');
-
+if exist(savefile,'file') && strcmp(RecomputeFlag,'OFF')
+    load(savefile);
+    fprintf('load from file %s \n',savefile)
+else
+    
+    %% Init Model Object and covariance matrix object
+    Real = MultiRunAnalysis('RunList','KNM1',...
+        'chi2',chi2,...
+        'DataType',DataType,...
+        'fixPar',freePar,...
+        'NonPoissonScaleFactor',NonPoissonScaleFactor,...
+        'SysBudget',SysBudget,...
+        'minuitOpt','min ; minos',...
+        'FSDFlag',FSDFlag,...
+        'ELossFlag','KatrinT2',...
+        'AngularTFFlag','OFF',...
+        'SynchrotronFlag','ON',...
+        'RadiativeFlag','ON',...
+        'DopplerEffectFlag','OFF');
+    
+    Real.exclDataStart =    Real.GetexclDataStart(range);
+    
+    if strcmp(chi2,'chi2Stat')
+        Real.InitModelObj_Norm_BKG('RecomputeFlag','ON');
+    else
+        Real.InitModelObj_Norm_BKG('RecomputeFlag','ON');
+        Real.ComputeCM;
+    end
+    
+    Real.Fit;
+    
+    FitResult = Real.FitResult;
+    save(savefile,'FitResult','Real');
+end
 %%
-t = PrintTable('Sensitivity Fit Results');
-t.addRow('Parameter','Value','Error','Value','Error','Value','Error');
-t.addRow('m^2_\beta \, (eV^2)',...
-    sprintf('%.2f',Rstat.par(1)),sprintf('%.2f',Rstat.err(1)),...
-    sprintf('%.2f',Rsys.par(1)),sprintf('%.2f',Rsys.err(1)),...
-    sprintf('%.2f',Rsysshape.par(1)),sprintf('%.2f',Rsysshape.err(1)));
-t.addRow('E_{0,eff}  \, (eV)',...
-    sprintf('%.2f',Real.ModelObj.Q_i+Rstat.par(2)),sprintf('%.2f',Rstat.err(2)),...
-    sprintf('%.2f',Real.ModelObj.Q_i+Rsys.par(2)),sprintf('%.2f',Rsys.err(2)),...
-    sprintf('%.2f',Real.ModelObj.Q_i+Rsysshape.par(2)),sprintf('%.2f',Rsysshape.err(2)));
-t.addRow('\rm{Background}  \, (mcps)',...
-    sprintf('%.2f',(Real.ModelObj.BKG_RateSec_i + Rstat.par(3))*1e3),sprintf('%.2f',Rstat.err(3)*1e3),...
-    sprintf('%.2f',(Real.ModelObj.BKG_RateSec_i + Rsys.par(3))*1e3),sprintf('%.2f',Rsys.err(3)*1e3),...
-    sprintf('%.2f',(Real.ModelObj.BKG_RateSec_i + Rsysshape.par(3))*1e3),sprintf('%.2f',Rsysshape.err(3)*1e3));
-t.addRow('\rm{Normalization}',...
-    sprintf('%.2f',Rstat.par(4)+1),sprintf('%.2f',Rstat.err(3)),...
-    sprintf('%.2f',Rsys.par(4)+1),sprintf('%.2f',Rsys.err(3)),...
-    sprintf('%.2f',Rsysshape.par(4)+1),sprintf('%.2f',Rsysshape.err(3)));
-t.addRow('','','','','','','');
-t.addRow('\chi^2/dof',...
-    [sprintf('%.2f',Rstat.chi2min) '/' sprintf('%.2f',Rstat.dof)],'',...
-    [sprintf('%.2f',Rsys.chi2min) '/' sprintf('%.2f',Rsys.dof)],'',...
-    [sprintf('%.2f',Rsysshape.chi2min) '/' sprintf('%.2f',Rsysshape.dof)],'');
-t.display;
-t.HasHeader = true;
-t.Format = 'tex';
-t.Caption = sprintf('Fit Results  - Fitter = %s - Range = [%.1f - %.1f] eV',...
-    Real.fitter,Real.ModelObj.qU(Real.exclDataStart),Real.ModelObj.qU(end));
-t.print;
+fprintf('m^2 = %.2f (%.2f +%.2f) eV^2 \n',FitResult.par(1),FitResult.errNeg(1),FitResult.errPos(1))
+fprintf('E0 = %.3f  (%.3f +%.3f) eV \n',FitResult.par(2)+Real.ModelObj.Q_i,FitResult.errNeg(2),FitResult.errPos(2))
+fprintf('B  = %.1f (%.1f +%.1f) mcps \n',(FitResult.par(3)+Real.ModelObj.BKG_RateSec_i)*1e3,1e3*FitResult.errNeg(3),1e3*FitResult.errPos(3))
+fprintf('chi^2 = %.1f (%.0f dof) \n',FitResult.chi2min,FitResult.dof)
+if strcmp(Plots,'ON')
+    Real.PlotFit('LabelFlag','data','saveplot','pdf','ErrorBarScaling',1,'YLimRes',[-2.2,2.9],'Colors','RGB','DisplayStyle','PRL');
+end
+

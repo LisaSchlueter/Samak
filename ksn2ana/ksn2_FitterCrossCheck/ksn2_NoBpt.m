@@ -51,14 +51,14 @@ S = SterileAnalysis(SterileArg{:});
 
 S.RunAnaObj.ModelObj.BKG_PtSlope = 3e-06;
 S.RunAnaObj.TwinBias_BKG_PtSlope = 3e-06;
-S.nGridSteps = 25;
+S.nGridSteps = 50;
 S.LoadGridFile('ExtmNu4Sq','OFF');
 S.InterpMode = 'spline';
-S.Interp1Grid('RecomputeFlag','ON','Maxm4Sq',1200);
+S.Interp1Grid('RecomputeFlag','ON','Maxm4Sq',38.2^2);
 p1 = S.ContourPlot;
 
-% Write2Txt('filename',[savedir,'KSN2_contour_Samak_stat_40eV_E0NormBkg'],...
-%     'Format','dat','variable',[S.sin2T4_contour;S.mNu4Sq_contour],'nCol',2,'variableName','sinT4Sq m4Sq');
+Write2Txt('filename',[savedir,'KSN2_contour_Samak_twin_stat_40eV_E0NormBkg'],...
+    'Format','dat','variable',[S.sin2T4_contour;S.mNu4Sq_contour],'nCol',2,'variableName','sinT4Sq m4Sq');
 
 S.nGridSteps = 25;
 S.RunAnaObj.ModelObj.BKG_PtSlope = 0;
