@@ -122,7 +122,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
          
         %Fake MC option
         FakeInitFile %name of study -> Init file
-        % 
+       
     end
     methods % Constructor
         function obj = RunAnalysis(varargin)
@@ -1262,8 +1262,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                 nStack =numel(obj.StackedRuns);
             else
                 nStack=1;
-            end
-            
+            end    
             % init
             obj.FitCM          = zeros(obj.ModelObj.nqU*obj.ModelObj.nPixels,obj.ModelObj.nqU*obj.ModelObj.nPixels);
             obj.FitCMFrac      = zeros(obj.ModelObj.nqU*obj.ModelObj.nPixels,obj.ModelObj.nqU*obj.ModelObj.nPixels);
@@ -1385,6 +1384,14 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                     obj.FitCMShape     = obj.FitCMShape + StatCM;
             end
             
+            if ~isempty(SysErr.AddCovMatFrac)
+              AddCovMat = TBDIS_NoBKG.*SysErr.AddCovMatFrac.*TBDIS_NoBKG';
+              obj.FitCMShape     = obj.FitCMShape  + AddCovMat;
+              obj.FitCM          = obj.FitCM + AddCovMat;
+              obj.FitCMFracShape = obj.FitCMFracShape + SysErr.AddCovMatFrac;
+              obj.FitCMFrac      =  obj.FitCMFrac + SysErr.AddCovMatFrac;
+              fprintf('KSN-2 model blinding test: + SysErr.AddCovMatFrac ')
+            end
             % Test for PositiveSemiDefinite
             obj.TestCM_PositiveSemiDefinite;
         end    

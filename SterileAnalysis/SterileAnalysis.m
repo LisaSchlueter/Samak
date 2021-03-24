@@ -129,8 +129,9 @@ classdef SterileAnalysis < handle
                 end
                 
                 %% ranomized mc data
-                if isfloat(obj.RandMC) && strcmp(obj.RunAnaObj.DataType,'Twin')
-                    % change to randomized MC data
+                if strcmp(obj.RunAnaObj.DataType,'Twin') && (isfloat(obj.RandMC)  || (obj.Twin_mNu4Sq~=0 || obj.Twin_sin2T4~=0))
+                    % 1) twin and isfloat(obj.RandMC) -> randomized data
+                    % 2) twin and (obj.Twin_mNu4Sq~=0 || obj.Twin_sin2T4~=0) -> asimov twin with sterile nu-signal
                     obj.RunAnaObj.InitModelObj_Norm_BKG('RecomputeFlag','ON');
                     if obj.Twin_mNu4Sq~=0 || obj.Twin_sin2T4~=0
                         obj.RunAnaObj.ModelObj.BKG_RateSec_i = obj.RunAnaObj.ModelObj.BKG_RateSec;
@@ -145,10 +146,16 @@ classdef SterileAnalysis < handle
                         TBDIS_i = obj.RunAnaObj.RunData.TBDIS';
                     end
                     
-                    TBDIS_mc = mvnrnd(TBDIS_i,obj.RunAnaObj.FitCMShape,1)';
+                    if isfloat(obj.RandMC)
+                        % change to randomized MC data
+                        TBDIS_mc = mvnrnd(TBDIS_i,obj.RunAnaObj.FitCMShape,1)';
+                    else
+                        TBDIS_mc = TBDIS_i;
+                    end
                     obj.RunAnaObj.RunData.TBDIS = TBDIS_mc;
                     obj.RunAnaObj.RunData.TBDISE = sqrt(TBDIS_mc);
                 end
+                
                 %% if light nu-mass is fixed in fit, but model nu-mass shall not be something else than 0 eV^2
                 if FixmNuSq~=0 && contains(obj.RunAnaObj.fixPar,'fix 1 ;')
                     obj.RunAnaObj.ModelObj.mnuSq_i = FixmNuSq;
@@ -158,7 +165,7 @@ classdef SterileAnalysis < handle
                 obj.RunAnaObj.Fit;
                 FitResults_Null = obj.RunAnaObj.FitResult;
                 
-                if isfloat(obj.RandMC) && strcmp(obj.RunAnaObj.DataType,'Twin')
+                if strcmp(obj.RunAnaObj.DataType,'Twin') && (isfloat(obj.RandMC)  || (obj.Twin_mNu4Sq~=0 || obj.Twin_sin2T4~=0))    
                     if obj.Twin_mNu4Sq~=0 || obj.Twin_sin2T4~=0
                         obj.RunAnaObj.SimulateStackRuns;
                     end

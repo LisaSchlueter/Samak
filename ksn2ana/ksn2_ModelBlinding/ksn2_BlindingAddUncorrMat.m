@@ -1,24 +1,18 @@
-% grid search on randomized twins
-% ksn2 calculate chi2 grid search
-
-randMC = 2:100;
-Twin_sin2T4 = 0;
-Twin_mNu4Sq = 0;
+% ksn2 proposed model blinding
+% ksn2 calculate chi2 grid search with different settings
+%% settings that might change
 chi2 = 'chi2CMShape';
 DataType = 'Twin';
-freePar = 'E0 Norm Bkg';
 nGridSteps = 25;
 range = 40;
-
+NonPoissonScaleFactor = 1.112;
+Twin_mNu4Sq = 10^2;
+Twin_sin2T4 = 0.03;
+SysBudget = 440 + [0,1,2,3];
 %% configure RunAnalysis object
-if strcmp(chi2,'chi2Stat')
-    NonPoissonScaleFactor = 1;
-elseif  strcmp(chi2,'chi2CMShape')
-    NonPoissonScaleFactor = 1.112;
-end
 RunAnaArg = {'RunList','KNM2_Prompt',...
     'DataType',DataType,...
-    'fixPar',freePar,...%free par
+    'fixPar','E0 Norm Bkg',...%free par
     'SysBudget',40,...
     'fitter','minuit',...
     'minuitOpt','min;migrad',...
@@ -47,9 +41,11 @@ SterileArg = {'RunAnaObj',A,... % Mother Object: defines RunList, Column Density
     'Twin_mNu4Sq',Twin_mNu4Sq,...
     'Twin_sin2T4',Twin_sin2T4};
 
-S = SterileAnalysis(SterileArg{:});
 %%
-for i=1:numel(randMC)
-    S.RandMC= randMC(i);
+S = SterileAnalysis(SterileArg{:});
+for i=1:numel(SysBudget)
+    A.SysBudget = SysBudget(i);
+    A.ComputeCM;
     S.GridSearch;
 end
+

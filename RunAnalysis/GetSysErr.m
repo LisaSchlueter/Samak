@@ -340,7 +340,7 @@ elseif SysBudget == 299 % new KNM1 default + plasma knm1
     SysErr.is_EOffsetErr = 0.04;
     SysErr.MACE_VarErr = 0.08^2/3;
     SysErr.MaxSlopeCpsPereV = 5.2*1e-06; % warning: changed 02.May 2020 from 15e-6
-      SysErr.BKG_PtSlopeErr = 0;
+    SysErr.BKG_PtSlopeErr = 0;
 elseif SysBudget == 31 % preliminary KNM2 systematics (January 20)
     SysErr.WGTS_TASR_RelErr = 5e-4; % data driven
     SysErr.FSDNorm_RelErr=  0.01;
@@ -435,7 +435,7 @@ elseif SysBudget == 36 % KNM2 Figure skating II systematics (5th May 2020), upda
     SysErr.is_EOffsetErr = 0.05;
     SysErr.MACE_VarErr = 0.0149;
     SysErr.MaxSlopeCpsPereV = 4.74.*1e-06;
-      SysErr.BKG_PtSlopeErr = 0;
+    SysErr.BKG_PtSlopeErr = 0;
 elseif SysBudget == 37 % KNM2 Figure skating II MULTIRING systematics (14th May 2020), update: longplasma, bkg slope
     SysErr.WGTS_TASR_RelErr = 5e-4; % data driven
     SysErr.FSDNorm_RelErr=  0.01;
@@ -467,7 +467,7 @@ elseif SysBudget == 38 % KNM2 unblinding stage 1 (data w blinded FSD) systematic
     SysErr.is_EOffsetErr = 99;
     SysErr.MACE_VarErr = sqrt(0.0161^2+(0.0016^2)^2);
     SysErr.MaxSlopeCpsPereV = 4.74.*1e-06;
-      SysErr.BKG_PtSlopeErr = 0;
+    SysErr.BKG_PtSlopeErr = 0;
 elseif SysBudget == 39 % KNM2 MultiRing unblinding stage 1 (data w blinded FSD) systematics (25.09.2020). update: Ba + e-loss shift coupled to broadening
     SysErr.WGTS_TASR_RelErr = 5e-4; % data driven
     SysErr.FSDNorm_RelErr=  0.01;
@@ -500,7 +500,7 @@ elseif SysBudget == 40 % KNM2 unblinding stage 3 (data w unblinded FSD) systemat
     SysErr.MACE_VarErr = sqrt(0.0161^2+(0.0016^2)^2);
     SysErr.MaxSlopeCpsPereV = 4.74.*1e-06;
     SysErr.BKG_PtSlopeErr = 3e-06;
-    elseif SysBudget == 41 % KNM2 unblinding stage 3 (data w unblinded FSD) systematics update with respect to 39: penning trap sys
+elseif SysBudget == 41 % KNM2 unblinding stage 3 (data w unblinded FSD) systematics update with respect to 39: penning trap sys
     SysErr.WGTS_TASR_RelErr = 5e-4; % data driven
     SysErr.FSDNorm_RelErr=  0.01;
     SysErr.FSDShapeGS_RelErr= 0.04;
@@ -516,6 +516,32 @@ elseif SysBudget == 40 % KNM2 unblinding stage 3 (data w unblinded FSD) systemat
     SysErr.MACE_VarErr = sqrt(0.0161^2+(0.0016^2)^2);
     SysErr.MaxSlopeCpsPereV =  [2.22, 2.56, 2.64,2.03].*1e-06;
     SysErr.BKG_PtSlopeErr = 3e-06;
+elseif SysBudget == 440 || SysBudget == 441 || SysBudget == 442 || SysBudget == 443% KNM2 syst. budget (like 40) + addition uncorrelated syst. for blinding
+    SysErr.WGTS_TASR_RelErr = 5e-4; % data driven
+    SysErr.FSDNorm_RelErr=  0.01;
+    SysErr.FSDShapeGS_RelErr= 0.04;
+    SysErr.FSDShapeES_RelErr= 0.18;
+    SysErr.MACE_Ba_T_RelErr= 0.01;
+    SysErr.MACE_Bmax_T_RelErr= 0.001;
+    SysErr.WGTS_B_T_RelErr= 0.017;
+    SysErr.WGTS_CD_MolPerCm2_RelErr= 0.0025;
+    SysErr.ISXsection_RelErr= 0; %use rhod sigma together as uncertainty
+    SysErr.DataDriven = 'ON';
+    SysErr.FPDeff_RelErr = 1e-4;
+    SysErr.is_EOffsetErr = 99;
+    SysErr.MACE_VarErr = sqrt(0.0161^2+(0.0016^2)^2);
+    SysErr.MaxSlopeCpsPereV = 4.74.*1e-06;
+    SysErr.BKG_PtSlopeErr = 3e-06;
+    % WARNING WORKS only for 38 subruns (KNM-2)
+    if SysBudget == 440
+        SysErr.AddCovMatFrac = [0.0005,0.001]; % mu ,sigma
+    elseif SysBudget == 441
+        SysErr.AddCovMatFrac = [0.001,0.001]; % mu ,sigma
+    elseif SysBudget == 442
+        SysErr.AddCovMatFrac = [0.002,0.001]; % mu ,sigma
+    elseif   SysBudget == 443
+        SysErr.AddCovMatFrac = [0.004,0.001]; % mu ,sigma
+    end
 elseif SysBudget == 66 %TDR-like
     SysErr.WGTS_TASR_RelErr = 0; % data driven
     SysErr.FSDNorm_RelErr=  0.01;
@@ -548,4 +574,12 @@ CMArg = {'WGTS_CD_MolPerCm2_RelErr',SysErr.WGTS_CD_MolPerCm2_RelErr,...
     'is_EOffsetErr',SysErr.is_EOffsetErr,...
     'MACE_VarErr',SysErr.MACE_VarErr,...
     'BKG_PtSlopeErr',SysErr.BKG_PtSlopeErr};
+
+if ~isfield(SysErr,'AddCovMatFrac')
+    SysErr.AddCovMatFrac = '';
+else
+    savedir  = [getenv('SamakPath'),'ksn2ana/ksn2_ModelBlinding/results/'];
+    savefile = sprintf('%sksn2_RandUncorrFracMat_mu%.3g_std%.3g.mat',savedir,SysErr.AddCovMatFrac(1),SysErr.AddCovMatFrac(2));
+    SysErr.AddCovMatFrac = importdata(savefile);    
+end
 end
