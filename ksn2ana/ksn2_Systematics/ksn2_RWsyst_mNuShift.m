@@ -55,6 +55,7 @@ else
      %% init rear wall spectrum
      A.ModelObj.KTFFlag = 'RW_WGTSMACE';
      A.ModelObj.WGTS_B_T = B_RW_Source;
+     A.ModelObj.ComputeNormFactorTBDDS;
      A.ModelObj.InitializeRF;
      A.ModelObj.Q_i = Q_i + E0ShifteV;
      Bkg_i = A.ModelObj.BKG_RateSec_i;
@@ -74,6 +75,7 @@ else
      A.ModelObj.KTFFlag = 'WGTSMACE';
      A.ModelObj.WGTS_B_T = 2.52;
      A.ModelObj.WGTS_CD_MolPerCm2 = WGTS_CD_MolPerCm2_i;
+     A.ModelObj.ComputeNormFactorTBDDS;
      A.ModelObj.InitializeRF;
  
      % fit for wgts

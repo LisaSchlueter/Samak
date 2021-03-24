@@ -2,7 +2,7 @@
 % by adding chi^2 curves
 DataType = 'Real';
 chi2 = 'chi2CMShape';
-Knm2AnaFlag = 'MR-4';
+Knm2AnaFlag = 'Uniform';%MR-4';
 %% load chi2-profiles (pre-calculated)
 % knm1
 k1file = [getenv('SamakPath'),sprintf('tritium-data/fit/Knm1/Chi2Profile/Uniform/Chi2Profile_%s_UniformScan_mNu_Knm1_UniformFPD_%s_NP1.064_FitParE0BkgNorm_nFit20_min-2_max1.mat',DataType,chi2)];
@@ -33,24 +33,63 @@ mNuSq        = linspace(min(mNuSq1),max(mNuSq1),5e3);
 Chi21_plot   = interp1(mNuSq1,Chi21,mNuSq,'spline');
 Chi22_plot   = interp1(mNuSq1,Chi22,mNuSq,'spline');
 Chi2sum_plot = interp1(mNuSq1,Chi21+Chi22,mNuSq,'spline');
+
+
 %% find minimum and uncertainty
-%knm1
-Chi21_min = min(Chi21_plot);
-mNuSq1_bf = mNuSq(Chi21_plot==Chi21_min);
-mNuSq1_errNeg = interp1(Chi21_plot(mNuSq<mNuSq1_bf),mNuSq(mNuSq<mNuSq1_bf),Chi21_min+1,'spline')-mNuSq1_bf;
-mNuSq1_errPos = interp1(Chi21_plot(mNuSq>mNuSq1_bf),mNuSq(mNuSq>mNuSq1_bf),Chi21_min+1,'spline')-mNuSq1_bf;
+if isfield(d1,'BestFit')
+    Chi21_min = d1.BestFit.chi2;
+    mNuSq1_bf = d1.BestFit.mNuSq;
+    mNuSq1_errNeg = d1.BestFit.mNuSqErrNeg;
+    mNuSq1_errPos = d1.BestFit.mNuSqErrPos;
+    mNuSq1_err = d1.BestFit.mNuSqErr;
+else
+    %knm1
+    Chi21_min = min(Chi21_plot);
+    mNuSq1_bf = mNuSq(Chi21_plot==Chi21_min);
+    mNuSq1_errNeg = interp1(Chi21_plot(mNuSq<mNuSq1_bf),mNuSq(mNuSq<mNuSq1_bf),Chi21_min+1,'spline')-mNuSq1_bf;
+    mNuSq1_errPos = interp1(Chi21_plot(mNuSq>mNuSq1_bf),mNuSq(mNuSq>mNuSq1_bf),Chi21_min+1,'spline')-mNuSq1_bf;
+    mNuSq1_err = 0.5*(mNuSq1_errPos-mNuSq1_errNeg);
+    BestFit = struct('chi2',Chi21_min,'mNuSq',mNuSq1_bf,'mNuSqErrPos',mNuSq1_errPos,'mNuSqErrNeg',mNuSq1_errNeg,'mNuSqErr',mNuSq1_err);
+    save(k1file,'BestFit','-append')
+end
 
 %knm2
-Chi22_min = min(Chi22_plot);
-mNuSq2_bf = mNuSq(Chi22_plot==Chi22_min);
-mNuSq2_errNeg = interp1(Chi22_plot(mNuSq<mNuSq2_bf),mNuSq(mNuSq<mNuSq2_bf),Chi22_min+1,'spline')-mNuSq2_bf;
-mNuSq2_errPos = interp1(Chi22_plot(mNuSq>mNuSq2_bf),mNuSq(mNuSq>mNuSq2_bf),Chi22_min+1,'spline')-mNuSq2_bf;
+if isfield(d2,'BestFit')
+       Chi22_min  = d2.BestFit.chi2;
+    mNuSq2_bf     = d2.BestFit.mNuSq;
+    mNuSq2_errNeg = d2.BestFit.mNuSqErrNeg;
+    mNuSq2_errPos = d2.BestFit.mNuSqErrPos;
+    mNuSq2_err    = d2.BestFit.mNuSqErr;
+else
+    Chi22_min = min(Chi22_plot);
+    mNuSq2_bf = mNuSq(Chi22_plot==Chi22_min);
+    mNuSq2_errNeg = interp1(Chi22_plot(mNuSq<mNuSq2_bf),mNuSq(mNuSq<mNuSq2_bf),Chi22_min+1,'spline')-mNuSq2_bf;
+    mNuSq2_errPos = interp1(Chi22_plot(mNuSq>mNuSq2_bf),mNuSq(mNuSq>mNuSq2_bf),Chi22_min+1,'spline')-mNuSq2_bf;
+    mNuSq2_err = 0.5*(mNuSq2_errPos-mNuSq2_errNeg);
+    BestFit = struct('chi2',Chi22_min,'mNuSq',mNuSq2_bf,'mNuSqErrPos',mNuSq2_errPos,'mNuSqErrNeg',mNuSq2_errNeg,'mNuSqErr',mNuSq2_err);
+    save(k2file,'BestFit','-append')
+end
 
-%knm1+2
-Chi2sum_min = min(Chi2sum_plot);
-mNuSqsum_bf = mNuSq(Chi2sum_plot==Chi2sum_min);
-mNuSqsum_errNeg = interp1(Chi2sum_plot(mNuSq<mNuSqsum_bf),mNuSq(mNuSq<mNuSqsum_bf),Chi2sum_min+1,'spline')-mNuSqsum_bf;
-mNuSqsum_errPos = interp1(Chi2sum_plot(mNuSq>mNuSqsum_bf),mNuSq(mNuSq>mNuSqsum_bf),Chi2sum_min+1,'spline')-mNuSqsum_bf;
+ksumfile = [getenv('SamakPath'),sprintf('tritium-data/fit/Knm1/Chi2Profile/Uniform/Chi2ProfileCombi_%s_UniformScan_mNu_Knm1KNM2_UniformFPD_%s_FitParE0BkgNorm_nFit20_min-2_max1.mat',DataType,chi2)];
+if exist(ksumfile,'file')
+    dsum = importdata(ksumfile);
+    Chi2sum_min = dsum.BestFit.chi2;
+    mNuSqsum_bf = dsum.BestFit.mNuSq;
+    mNuSqsum_errNeg = dsum.BestFit.mNuSqErrNeg;
+    mNuSqsum_errPos = dsum.BestFit.mNuSqErrPos;
+    mNuSqsum_err = dsum.BestFit.mNuSqErr;
+else
+    %knm1+2
+    Chi2sum_min = min(Chi2sum_plot);
+    mNuSqsum_bf = mNuSq(Chi2sum_plot==Chi2sum_min);
+    mNuSqsum_errNeg = interp1(Chi2sum_plot(mNuSq<mNuSqsum_bf),mNuSq(mNuSq<mNuSqsum_bf),Chi2sum_min+1,'spline')-mNuSqsum_bf;
+    mNuSqsum_errPos = interp1(Chi2sum_plot(mNuSq>mNuSqsum_bf),mNuSq(mNuSq>mNuSqsum_bf),Chi2sum_min+1,'spline')-mNuSqsum_bf;
+    mNuSqsum_err = 0.5*(mNuSqsum_errPos-mNuSqsum_errNeg);
+    
+    BestFit = struct('chi2',Chi2sum_min,'mNuSq',mNuSqsum_bf,'mNuSqErrPos',mNuSqsum_errPos,...
+        'mNuSqErrNeg',mNuSqsum_errNeg,'mNuSqErr',mNuSqsum_err);
+    save(ksumfile,'mNuSq','Chi2sum_plot','BestFit');
+end
 %%
 GetFigure;
 p1 = plot(mNuSq,Chi21_plot,':','LineWidth',2);
@@ -85,3 +124,5 @@ MakeDir(savedir);
 savename = sprintf('%sknm2_CombiChi2_%s_Uniform_%s_KNM2%s.png',savedir,DataType,chi2,Knm2AnaFlag);
 print(gcf,savename,'-dpng','-r300');
 fprintf('save plot to %s \n',savename);
+
+

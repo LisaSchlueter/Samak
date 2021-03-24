@@ -286,7 +286,7 @@ classdef SterileAnalysis < handle
                     elseif obj.range==40 && strcmp(obj.RunAnaObj.DataType,'Fake')
                         Maxm4Sq =  (obj.range-3.3)^2;
                     else
-                        Maxm4Sq =  (obj.range-2).^2;%(obj.range-5)^2;
+                        Maxm4Sq =  (38.2).^2;%(obj.range-5)^2;
                     end
                 end
             end
@@ -1397,12 +1397,14 @@ classdef SterileAnalysis < handle
             LineWidth = 2.5;
             %% load stat and syst
             obj.RunAnaObj.chi2 = 'chi2Stat';
+            obj.SetNPfactor;
             obj.LoadGridFile('CheckSmallerN','ON');
             obj.Interp1Grid('RecomputeFlag','ON');
             pStat = obj.ContourPlot('CL',obj.ConfLevel,'HoldOn','OFF',...
                 'Color',rgb('DodgerBlue'),'LineStyle','-','BestFit',BestFit,'PlotSplines','OFF');
             
             obj.RunAnaObj.chi2 = 'chi2CMShape';
+            obj.SetNPfactor;
             obj.LoadGridFile('CheckSmallerN','ON');
             obj.Interp1Grid('RecomputeFlag','ON');
             [pSys,pSysMin] = obj.ContourPlot('CL',obj.ConfLevel,'HoldOn','ON',...

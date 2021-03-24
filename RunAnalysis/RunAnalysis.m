@@ -133,7 +133,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             p.addParameter('RunNr',[],@(x)(isfloat(x) && x>0));
             p.addParameter('AnaFlag','StackPixel',@(x)ismember(x,{'StackPixel', 'SinglePixel', 'MultiPixel', 'Ring'}));
             p.addParameter('ELossFlag','',@(x)ismember(x,{'Aseev','Abdurashitov','CW_GLT','CW_G2LT','KatrinD2','KatrinT2','KatrinT2A20'}));%default given later
-            p.addParameter('FSDFlag','Sibille0p5eV',@(x)ismember(x,{'SAENZ','BlindingKNM1','Sibille','Sibille0p5eV','OFF','SibilleFull','BlindingKNM2','KNM2','KNM2_0p5eV','KNM2_0p1eV','KNM2_0p1eV_cut40eV'}));
+            p.addParameter('FSDFlag','Sibille0p5eV',@(x)ismember(x,{'SAENZ','BlindingKNM1','Sibille','Sibille0p5eV','OFF','SibilleFull','BlindingKNM2','KNM2','KNM2_0p5eV','KNM2_0p1eV','KNM2_0p1eV_cut40eV','KNM2_0p1eV_cut50eV'}));
             p.addParameter('FSD_Sigma',0,@(x)isfloat(x));
             p.addParameter('DopplerEffectFlag','OFF',@(x)ismember(x,{'OFF','FSD','FSD_Knm1'}));%default given later
             p.addParameter('ROIFlag','Default',@(x)ismember(x,{'Default','14keV'})); % default->default counts in RS, 14kev->[14,32]keV ROI
@@ -4274,6 +4274,10 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                     DTFSD = 'KNM2_0p1eV_cut40eV';
                     HTFSD = 'KNM2_0p1eV_cut40eV';
                     TTFSD = 'KNM2_0p1eV_cut40eV';
+                case 'KNM2_0p1eV_cut50eV'
+                    DTFSD = 'KNM2_0p1eV_cut50eV';
+                    HTFSD = 'KNM2_0p1eV_cut50eV';
+                    TTFSD = 'KNM2_0p1eV_cut50eV';
             end
         end
         function InitFitPar(obj)

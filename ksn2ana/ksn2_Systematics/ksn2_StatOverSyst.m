@@ -3,7 +3,7 @@
 %% settings that might change
 chi2 = 'chi2Stat';
 DataType = 'Twin';
-nGridSteps = 25;
+nGridSteps = 50;
 range = 40;
 %% configure RunAnalysis object
 if strcmp(chi2,'chi2Stat')
@@ -43,3 +43,4 @@ SterileArg = {'RunAnaObj',A,... % Mother Object: defines RunList, Column Density
 
 %%
 S = SterileAnalysis(SterileArg{:});
+S.PlotStatandSys;

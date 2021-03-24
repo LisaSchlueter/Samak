@@ -8,7 +8,7 @@ chi2 = 'chi2Stat';
 DataType = 'Twin';
 nGridSteps = 25;
 range = 40;
-
+FSDFlag = 'KNM2_0p1eV';
 %% configure RunAnalysis object
 if strcmp(chi2,'chi2Stat')
     NonPoissonScaleFactor = 1;
@@ -22,7 +22,7 @@ RunAnaArg = {'RunList','KNM2_Prompt',...
     'fitter','minuit',...
     'minuitOpt','min;migrad',...
     'RadiativeFlag','ON',...
-    'FSDFlag','KNM2_0p1eV',...
+    'FSDFlag',FSDFlag,...
     'ELossFlag','KatrinT2A20',...
     'AnaFlag','StackPixel',...
     'chi2',chi2,...
@@ -43,18 +43,25 @@ SterileArg = {'RunAnaObj',A,... % Mother Object: defines RunList, Column Density
     'SysEffect','all',...
     'RandMC','OFF',...
     'range',range};
-
-%%
-
 S = SterileAnalysis(SterileArg{:});
-A.FSDFlag = 'KNM2'; A.SimulateStackRuns;
 S.GridSearch;
 
-S = SterileAnalysis(SterileArg{:});
-A.FSDFlag = 'KNM2_0p5eV'; A.SimulateStackRuns;
-S.GridSearch;
+%% plot
 
+A.FSDFlag = 'KNM2_0p1eV';
+S.LoadGridFile('CheckLargerN','OFF');
+S.Interp1Grid('maxM4Sq',38^2)
+p1 = S.ContourPlot('HoldOn','OFF');
 
+A.FSDFlag = 'KNM2_0p1eV_cut40eV';
+S.LoadGridFile('CheckLargerN','OFF');
+S.Interp1Grid('maxM4Sq',38^2)
+p2 = S.ContourPlot('HoldOn','ON','Color',rgb('Orange'),'LineStyle','-.');
+
+A.FSDFlag = 'KNM2';
+S.LoadGridFile('CheckLargerN','OFF');
+S.Interp1Grid('maxM4Sq',38^2)
+p3 = S.ContourPlot('HoldOn','ON','Color',rgb('ForestGreen'),'LineStyle',':');
 %% save
 % plotdir = sprintf('%sksn2ana/ksn2_FSDrebin/plots/',getenv('SamakPath'));
 % MakeDir(plotdir);

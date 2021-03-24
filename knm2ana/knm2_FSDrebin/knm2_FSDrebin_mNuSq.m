@@ -1,6 +1,6 @@
 % unblinded fit with penning track background slope
 BinningFactor = 1;
-FSDFlag   = 'KNM2_0p1eV_cut40eV';
+FSDFlag   = 'KNM2_0p1eV_cut50eV';
 
 %%
 range     = 40;
@@ -31,7 +31,7 @@ if ~strcmp(chi2,'chi2Stat')
     savename = strrep(savename,'.mat',sprintf('_SysBudget%.0f.mat',SysBudget));
 end
 
-if exist(savename,'file')
+if exist(savename,'file')  && 1==2
     load(savename,'FitResult','tFitSec','FSD_E','FSD_P');
 else
     SigmaSq =  0.0124+0.0025;

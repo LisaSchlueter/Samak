@@ -50,9 +50,9 @@ p.addParameter('UseParallelRF','ON',@(x)ismember(x,{'OFF','ON'}));              
 
 % Theory
 p.addParameter('ISCS','Edep',@(x)ismember(x,{'Aseev','Theory','Edep'}));                                  % inelastic scattering cross section
-p.addParameter('DTFSD','BlindingKNM1',@(x)ismember(x,{'OFF','DOSS','BlindingKNM1','HTFSD','TTFSD','Sibille','Sibille0p5eV','SibilleFull','BlindingKNM2','KNM2','KNM2_0p5eV','KNM2_0p1eV','KNM2_0p1eV_cut40eV'}));                % final state distributions
-p.addParameter('HTFSD','BlindingKNM1',@(x)ismember(x,{'OFF','SAENZ','BlindingKNM1','Sibille','Sibille0p5eV','SibilleFull','BlindingKNM2','KNM2','KNM2_0p5eV','KNM2_0p1eV','KNM2_0p1eV_cut40eV'})); 
-p.addParameter('TTFSD','BlindingKNM1',@(x)ismember(x,{'OFF','DOSS','SAENZ','BlindingKNM1','Sibille','Sibille0p5eV','SibilleFull','BlindingKNM2','KNM2','KNM2_0p5eV','KNM2_0p1eV','KNM2_0p1eV_cut40eV'}));
+p.addParameter('DTFSD','BlindingKNM1',@(x)ismember(x,{'OFF','DOSS','BlindingKNM1','HTFSD','TTFSD','Sibille','Sibille0p5eV','SibilleFull','BlindingKNM2','KNM2','KNM2_0p5eV','KNM2_0p1eV','KNM2_0p1eV_cut40eV','KNM2_0p1eV_cut50eV'}));                % final state distributions
+p.addParameter('HTFSD','BlindingKNM1',@(x)ismember(x,{'OFF','SAENZ','BlindingKNM1','Sibille','Sibille0p5eV','SibilleFull','BlindingKNM2','KNM2','KNM2_0p5eV','KNM2_0p1eV','KNM2_0p1eV_cut40eV','KNM2_0p1eV_cut50eV'})); 
+p.addParameter('TTFSD','BlindingKNM1',@(x)ismember(x,{'OFF','DOSS','SAENZ','BlindingKNM1','Sibille','Sibille0p5eV','SibilleFull','BlindingKNM2','KNM2','KNM2_0p5eV','KNM2_0p1eV','KNM2_0p1eV_cut40eV','KNM2_0p1eV_cut50eV'}));
 p.addParameter('ELossFlag','KatrinT2',@(x)ismember(x,{'Aseev','Abdurashitov','CW_GLT','KatrinD2','KatrinT2','KatrinT2A20'})); % description of energy loss in scattering
 p.addParameter('DopplerEffectFlag','OFF',@(x)ismember(x,{'FSD','FSD_Knm1','OFF'}));
 p.addParameter('RadiativeFlag','ON',@(x)ismember(x,{'OFF','ON'}));

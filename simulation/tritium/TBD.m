@@ -577,6 +577,8 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                     ttfsdfilename = [FSDdir,'FSD_KNM2_T2_0p1eV.txt'];
                 case {'KNM2_0p1eV_cut40eV'}
                     ttfsdfilename = [FSDdir,'FSD_KNM2_T2_0p1eV_cut40eV.txt'];
+                case {'KNM2_0p1eV_cut50eV'}
+                    ttfsdfilename = [FSDdir,'FSD_KNM2_T2_0p1eV_cut50eV.txt'];
             end
             %Rebinning
             ttfsdfile_temp=importdata(ttfsdfilename);
@@ -629,6 +631,8 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                     dtfsdfilename = [FSDdir,'FSD_KNM2_DT_0p1eV.txt'];
                 case {'KNM2_0p1eV_cut40eV'}
                     dtfsdfilename = [FSDdir,'FSD_KNM2_DT_0p1eV_cut40eV.txt'];
+                case {'KNM2_0p1eV_cut50eV'}
+                    dtfsdfilename = [FSDdir,'FSD_KNM2_DT_0p1eV_cut50eV.txt'];
             end
             %Rebinning
             dtfsdfile_temp=importdata(dtfsdfilename);
@@ -674,6 +678,8 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                     htfsdfilename = [FSDdir,'FSD_KNM2_HT_0p1eV.txt'];
                 case {'KNM2_0p1eV_cut40eV'}
                     htfsdfilename = [FSDdir,'FSD_KNM2_HT_0p1eV_cut40eV.txt'];
+                case {'KNM2_0p1eV_cut50eV'}
+                    htfsdfilename = [FSDdir,'FSD_KNM2_HT_0p1eV_cut50eV.txt'];
             end
             %Rebinning
             htfsdfile_temp=importdata(htfsdfilename);
@@ -1112,7 +1118,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                 
                 if obj.WGTS_MolFrac_TT>0
                     switch obj.TTFSD
-                        case {'DOSS','SAENZ','SAENZNOEE','ROLL','BlindingKNM1','WGTS100K','Sibille','Sibille0p5eV','SibilleFull','BlindingKNM2','KNM2','KNM2_0p5eV','KNM2_0p1eV','KNM2_0p1eV_cut40eV'}
+                        case {'DOSS','SAENZ','SAENZNOEE','ROLL','BlindingKNM1','WGTS100K','Sibille','Sibille0p5eV','SibilleFull','BlindingKNM2','KNM2','KNM2_0p5eV','KNM2_0p1eV','KNM2_0p1eV_cut40eV','KNM2_0p1eV_cut50eV'}
                             % Ground State
                             [GS,obj.TTexE_G,obj.TTexP_G] = ...
                                 obj.ComputeFSD_GSES(obj.TTexE,obj.TTexP,obj.TTGSTh,'ground');
@@ -1137,7 +1143,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                 
                 if obj.WGTS_MolFrac_DT>0
                     switch obj.DTFSD
-                        case {'DOSS','HTFSD','TTFSD','BlindingKNM1','WGTS100K','Sibille','Sibille0p5eV','SibilleFull','BlindingKNM2','KNM2','KNM2_0p5eV','KNM2_0p1eV','KNM2_0p1eV_cut40eV'}
+                        case {'DOSS','HTFSD','TTFSD','BlindingKNM1','WGTS100K','Sibille','Sibille0p5eV','SibilleFull','BlindingKNM2','KNM2','KNM2_0p5eV','KNM2_0p1eV','KNM2_0p1eV_cut40eV','KNM2_0p1eV_cut50eV'}
                             % Ground State
                             [GS,obj.DTexE_G,obj.DTexP_G] = ...
                                 obj.ComputeFSD_GSES(obj.DTexE,obj.DTexP,obj.DTGSTh,'ground');
@@ -1155,7 +1161,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                 
                 if obj.WGTS_MolFrac_HT>0
                     switch obj.HTFSD
-                        case {'SAENZ','BlindingKNM1','WGTS100K','Sibille','Sibille0p5eV','SibilleFull','BlindingKNM2','KNM2','KNM2_0p5eV','KNM2_0p1eV','KNM2_0p1eV_cut40eV'}
+                        case {'SAENZ','BlindingKNM1','WGTS100K','Sibille','Sibille0p5eV','SibilleFull','BlindingKNM2','KNM2','KNM2_0p5eV','KNM2_0p1eV','KNM2_0p1eV_cut40eV','KNM2_0p1eV_cut50eV'}
                             
                             % Ground State
                             [GS,obj.HTexE_G,obj.HTexP_G] = ...
