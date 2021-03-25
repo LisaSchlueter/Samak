@@ -1,16 +1,12 @@
+% save my contour to .dat file for other fitters to read
 
-% grid search on randomized twins
 % ksn2 calculate chi2 grid search
-
-randMC = 2:100;
-Twin_sin2T4 = 0;
-Twin_mNu4Sq = 0;
+%% settings that might change
 chi2 = 'chi2CMShape';
 DataType = 'Twin';
-freePar = 'E0 Norm Bkg';
-nGridSteps = 25;
+nGridSteps = 50;
 range = 40;
-
+freePar = 'mNu E0 Norm Bkg';
 %% configure RunAnalysis object
 if strcmp(chi2,'chi2Stat')
     NonPoissonScaleFactor = 1;
@@ -24,7 +20,7 @@ RunAnaArg = {'RunList','KNM2_Prompt',...
     'fitter','minuit',...
     'minuitOpt','min;migrad',...
     'RadiativeFlag','ON',...
-    'FSDFlag','KNM2_0p5eV',...
+    'FSDFlag','KNM2_0p1eV',...
     'ELossFlag','KatrinT2A20',...
     'AnaFlag','StackPixel',...
     'chi2',chi2,...
@@ -43,14 +39,31 @@ SterileArg = {'RunAnaObj',A,... % Mother Object: defines RunList, Column Density
     'SmartGrid','OFF',...
     'RecomputeFlag','OFF',...
     'SysEffect','all',...
-    'range',range,...
     'RandMC','OFF',...
-    'Twin_mNu4Sq',Twin_mNu4Sq,...
-    'Twin_sin2T4',Twin_sin2T4};
-
+    'range',range};
 S = SterileAnalysis(SterileArg{:});
 %%
-for i=1:numel(randMC)
-    S.RandMC= randMC(i);
-    S.GridSearch;
-end
+S.LoadGridFile;
+S.InterpMode = 'lin';
+S.Interp1Grid('Maxm4Sq',37^2);
+S.ContourPlot; close;
+
+% S.LoadGridFile
+% S.InterpMode = 'spline';
+% S.Interp1Grid('Maxm4Sq',37^2);
+% S.ContourPlot('HoldOn','ON','LineStyle',':','Color',rgb('Orange')); %close;
+%% export contour
+savedir = sprintf('%sksn2ana/ksn2_FitterCrossCheck/results/',getenv('SamakPath'));
+MakeDir(savedir);
+savename =  sprintf('%sKSN2_contour_Samak%s_%s_40eV_%s',...
+    savedir,DataType,strrep(freePar,' ',''),strrep(chi2,'chi2',''));
+Write2Txt('filename',savename,...
+      'Format','dat','variable',[S.sin2T4_contour;S.mNu4Sq_contour],'nCol',2,'variableName','sinT4Sq m4Sq');
+  %% test
+  d = importdata([savename,'.dat']);
+  plot(d.data(:,1),d.data(:,2));
+  set(gca,'XScale','log');
+  set(gca,'YScale','log');
+  xlim([5e-03,0.5]);
+  ylim([1 40^2]);
+

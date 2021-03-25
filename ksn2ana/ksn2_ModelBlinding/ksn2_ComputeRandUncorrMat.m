@@ -3,7 +3,7 @@
 % relative uncertainties -> fractional
 % mu = mean additional uncertainty
 % sigma = std of addition uncertainty (random over subruns)
-mu    = 0.0005;
+mu    = 0.05;
 sigma = 0.001;
 nSubrun = 38;
 AddCovMatFrac = eye(nSubrun).*(sigma.*randn(nSubrun,1)+mu).^2;

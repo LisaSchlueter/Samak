@@ -10,7 +10,8 @@ classdef SterileAnalysis < handle
         range; % in eV
         
         % randomized MC
-        RandMC;      
+        RandMC;       % 1) if 'OFF' -> Asimov twins. 2) if @(x)isfloat(x) && numel(x)==1 -> randomize twins 
+        RandMC_TBDIS; % external (e.g. randomized) spectrum for grid search -> use together with RandMC isfloat(x) for label
         Twin_mNu4Sq; % for randomized MCs with sterile-nu hypothesis
         Twin_sin2T4; % for randomized MCs with sterile-nu hypothesis
         
@@ -56,6 +57,7 @@ classdef SterileAnalysis < handle
             p.addParameter('RecomputeFlag','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('SysEffect','all',@(x)ischar(x)); % if chi2CMShape: all or only 1
             p.addParameter('RandMC','OFF',@(x)ischar(x) || isfloat(x)); % randomize twins if RandMC is float
+            p.addParameter('RandMC_TBDIS','',@(x)isfloat(x) || isempty(x));
             p.addParameter('range',65,@(x)isfloat(x));
             p.addParameter('ConfLevel',95,@(x)isfloat(x));
             p.addParameter('InterpMode','spline',@(x)ismember(x,{'lin','spline'}));
@@ -70,6 +72,7 @@ classdef SterileAnalysis < handle
             obj.RecomputeFlag = p.Results.RecomputeFlag;
             obj.SysEffect     = p.Results.SysEffect;
             obj.RandMC        = p.Results.RandMC;
+            obj.RandMC_TBDIS  = p.Results.RandMC_TBDIS;
             obj.range         = p.Results.range;
             obj.ConfLevel     = p.Results.ConfLevel;
             obj.InterpMode    = p.Results.InterpMode;
@@ -129,7 +132,11 @@ classdef SterileAnalysis < handle
                 end
                 
                 %% ranomized mc data
-                if strcmp(obj.RunAnaObj.DataType,'Twin') && (isfloat(obj.RandMC)  || (obj.Twin_mNu4Sq~=0 || obj.Twin_sin2T4~=0))
+                if strcmp(obj.RunAnaObj.DataType,'Twin') && isfloat(obj.RandMC) && numel(obj.RandMC_TBDIS)==obj.RunAnaObj.ModelObj.nqU
+                   TBDIS_mc = obj.RandMC_TBDIS;
+                   obj.RunAnaObj.RunData.TBDIS = TBDIS_mc;
+                   obj.RunAnaObj.RunData.TBDISE = sqrt(TBDIS_mc);
+                elseif strcmp(obj.RunAnaObj.DataType,'Twin') && (isfloat(obj.RandMC)  || (obj.Twin_mNu4Sq~=0 || obj.Twin_sin2T4~=0))
                     % 1) twin and isfloat(obj.RandMC) -> randomized data
                     % 2) twin and (obj.Twin_mNu4Sq~=0 || obj.Twin_sin2T4~=0) -> asimov twin with sterile nu-signal
                     obj.RunAnaObj.InitModelObj_Norm_BKG('RecomputeFlag','ON');
@@ -150,7 +157,7 @@ classdef SterileAnalysis < handle
                         % change to randomized MC data
                         TBDIS_mc = mvnrnd(TBDIS_i,obj.RunAnaObj.FitCMShape,1)';
                     else
-                        TBDIS_mc = TBDIS_i;
+                        TBDIS_mc = TBDIS_i';
                     end
                     obj.RunAnaObj.RunData.TBDIS = TBDIS_mc;
                     obj.RunAnaObj.RunData.TBDISE = sqrt(TBDIS_mc);
@@ -243,7 +250,7 @@ classdef SterileAnalysis < handle
                 if min(min(chi2))<obj.RunAnaObj.FitResult.chi2min
                     chi2_ref = min(min(chi2));
                 else
-                    chi2_ref = RunAnaObj.FitResult.chi2min;
+                    chi2_ref = obj.RunAnaObj.FitResult.chi2min;
                 end
                 
                 tCpuHour = (cputime-tStart)/60; % cpu time in hours
@@ -251,6 +258,10 @@ classdef SterileAnalysis < handle
                 save(savefile,'chi2_ref',...%'FitResults_ref'
                     'chi2','mnu4Sq','sin2T4','FitResults','FitResults_Null','tCpuHour');
                 fprintf('save file to %s \n',savefile);
+                
+                if strcmp(obj.RunAnaObj.DataType,'Twin') && isfloat(obj.RandMC)
+                    save(savefile,'TBDIS_mc','-append');
+                end
             end
         end
     end
@@ -316,16 +327,44 @@ classdef SterileAnalysis < handle
         function FindBestFit(obj,varargin)
             % best fit parameters of m4 and sin2t4
             % based on interpolated grid
+            p = inputParser;
+            p.addParameter('Mode','Def',@(x)ismember(x,{'Def','Imp'}));
+            p.parse(varargin{:});
+            Mode = p.Results.Mode;
+           switch Mode 
+               case 'Def'
             if size(obj.mNu4Sq,1)<1e3
                 obj.Interp1Grid;
             end
-            [row, col]    = find(obj.chi2 == min(obj.chi2(:)));
+               case 'Imp'
+                   % improved best fit finding
+                   % WARNING: still in testing phase
+                   % do interpolation only in vicinity of best fit
+                   % to be called after Mode "Def" -> needs first estimateof best fit
+                   obj.LoadGridFile;
+                   nInter = 1e3;
+                   [X,Y] = meshgrid(obj.mNu4Sq(:,1),obj.sin2T4(1,:));
+                   mNu4tmp = logspace(log10(obj.mNu4Sq_bf-1),log10(obj.mNu4Sq_bf+1),nInter);
+                   obj.mNu4Sq = repmat(mNu4tmp,nInter,1);
+                   obj.sin2T4 = repmat(logspace(log10(obj.sin2T4_bf-0.01),log10(obj.sin2T4_bf+0.01),nInter),nInter,1)';
+                   obj.chi2   = reshape(interp2(X,Y,obj.chi2,obj.mNu4Sq,obj.sin2T4,obj.InterpMode),nInter,nInter);
+                   obj.mNuSq  = reshape(interp2(X,Y,obj.mNuSq,obj.mNu4Sq,obj.sin2T4,obj.InterpMode),nInter,nInter);
+                   obj.E0  = reshape(interp2(X,Y,obj.E0,obj.mNu4Sq,obj.sin2T4,obj.InterpMode),nInter,nInter);     
+           end
+           
+           [row, col]    = find(obj.chi2 == min(obj.chi2(:)));
             
-            obj.mNu4Sq_bf =   obj.mNu4Sq(row,col);%obj.mNu4Sq(col,row);
+            obj.mNu4Sq_bf = obj.mNu4Sq(row,col);%obj.mNu4Sq(col,row);
             obj.sin2T4_bf = obj.sin2T4(row,col);
             obj.chi2_bf   = obj.chi2_ref;
-            obj.mNuSq_bf    = obj.mNuSq(row,col);
+            obj.mNuSq_bf  = obj.mNuSq(row,col);
             obj.E0_bf     = obj.E0(row,col);
+            
+            if strcmp(Mode,'Imp')
+                % reload grid and do normal interpolation
+%                 obj.LoadGridFile;
+%                 obj.Interp1Grid;
+            end
         end
         function CompareBestFitNull(obj,varargin)
             if isempty(obj.chi2_bf)
@@ -505,14 +544,17 @@ classdef SterileAnalysis < handle
             end
             
             if numel(CL)>1
-                colormap('cool');
+                cm = colormap('cool');
+                bf_color = cm(1,:);
+            else
+               bf_color = pHandle.LineColor;
             end
             
             % best fit
             if strcmp(BestFit,'ON')
                 obj.FindBestFit;
                 hold on;
-                plot(obj.sin2T4_bf,obj.mNu4Sq_bf,'x','MarkerSize',9,'Color',pHandle.LineColor,'LineWidth',pHandle.LineWidth);
+                plot(obj.sin2T4_bf,obj.mNu4Sq_bf,'x','MarkerSize',9,'Color',bf_color,'LineWidth',pHandle.LineWidth);
             end
             set(gca,'YScale','log');
             set(gca,'XScale','log');
@@ -2019,8 +2061,11 @@ classdef SterileAnalysis < handle
                  if obj.Twin_mNu4Sq~=0
                      extraStr = [extraStr,sprintf('_mNu4Sq%.3g',obj.Twin_mNu4Sq)];
                  end
-
-                 if isfloat(obj.RandMC) && strcmp(obj.RunAnaObj.DataType,'Twin')
+                 
+                 if isfloat(obj.RandMC) && strcmp(obj.RunAnaObj.DataType,'Twin') && numel(obj.RandMC_TBDIS)==obj.RunAnaObj.ModelObj.nqU
+                     extraStr = sprintf('%s_RandMC%.0f_SumCounts%.0f',extraStr,obj.RandMC,sum(obj.RandMC_TBDIS));
+                     savedir = strrep(savedir,'Twin/','TwinExternalMC/');
+                 elseif isfloat(obj.RandMC) && strcmp(obj.RunAnaObj.DataType,'Twin')
                      extraStr = sprintf('%s_RandMC%.0f',extraStr,obj.RandMC);
                      savedir = strrep(savedir,'Twin/','TwinRandomizedMC/');
                  end

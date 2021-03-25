@@ -1,15 +1,16 @@
 % ksn2 proposed model blinding
 % ksn2 calculate chi2 grid search with different settings
 %% settings that might change
-Mode = 'Display'; %'Compute';
-chi2 = 'chi2CMShape';
-DataType = 'Twin';
-nGridSteps = 25;
-range = 40;
+Mode                  = 'Compute'; %'Compute';
+chi2                  = 'chi2CMShape';
+DataType              = 'Twin';
+nGridSteps            = 25;
+range                 = 40;
 NonPoissonScaleFactor = 1.112;
-Twin_mNu4Sq = 10^2;
-Twin_sin2T4 = 0.03;
-SysBudget = [40,440,441,442,443,446];
+Twin_mNu4Sq           = 10^2;
+Twin_sin2T4           = 0.03;
+SysBudget             = [40,446];%,441,442,443];
+RandMC                = 1;
 %% configure RunAnalysis object
 RunAnaArg = {'RunList','KNM2_Prompt',...
     'DataType',DataType,...
@@ -31,6 +32,30 @@ RunAnaArg = {'RunList','KNM2_Prompt',...
     'TwinBias_BKG_PtSlope',3*1e-06,...
     'DopplerEffectFlag','FSD'};
 A = MultiRunAnalysis(RunAnaArg{:});
+
+%% calculate random twin used for all budgets
+savedir = [getenv('SamakPath'),'ksn2ana/ksn2_ModelBlinding/results/'];
+savename = sprintf('%sksn2_RandMCTBDIS_mNu4Sq%.3g_sinT4Sq%.3g_%s_SysBudget%.0f.mat',savedir,Twin_mNu4Sq,Twin_sin2T4,chi2,A.SysBudget);
+if exist(savename,'file')
+    d = importdata(savename);
+    TBDIS_mc = d.TBDIS_mc;
+else
+    A.InitModelObj_Norm_BKG('RecomputeFlag','ON');
+    
+    A.ModelObj.BKG_RateSec_i = A.ModelObj.BKG_RateSec;
+    A.ModelObj.normFit_i = A.ModelObj.normFit;
+    if Twin_mNu4Sq~=0 || Twin_sin2T4~=0
+        A.ModelObj.SetFitBiasSterile(Twin_mNu4Sq,Twin_sin2T4);
+    end
+    A.ModelObj.ComputeTBDDS;
+    A.ModelObj.ComputeTBDIS;
+    TBDIS_i = A.ModelObj.TBDIS';
+    
+    TBDIS_mc = mvnrnd(TBDIS_i,A.FitCMShape,1)';
+    FitCMShape = A.FitCMShape;
+    qU = A.ModelObj.qU;
+    save(savename,'TBDIS_mc','FitCMShape','qU')
+end
 %% configure Sterile analysis object
 SterileArg = {'RunAnaObj',A,... % Mother Object: defines RunList, Column Density, Stacking Cuts,....
     'nGridSteps',nGridSteps,...
@@ -38,9 +63,11 @@ SterileArg = {'RunAnaObj',A,... % Mother Object: defines RunList, Column Density
     'RecomputeFlag','OFF',...
     'SysEffect','all',...
     'range',range,...
-    'RandMC','OFF',...
+    'RandMC',RandMC,...
+    'RandMC_TBDIS',TBDIS_mc,...
     'Twin_mNu4Sq',Twin_mNu4Sq,...
-    'Twin_sin2T4',Twin_sin2T4};
+    'Twin_sin2T4',Twin_sin2T4,...
+    };
 
 %%
 S = SterileAnalysis(SterileArg{:});
@@ -77,8 +104,6 @@ for i=1:numel(SysBudget)
                 legStr{i} = sprintf('\\mu = 0.2 %% \\sigma = 0.1 %%');
             elseif  SysBudget(i)==443
                 legStr{i} = sprintf('\\mu = 0.4 %% \\sigma = 0.1 %%');
-            elseif  SysBudget(i)==446
-                legStr{i} = sprintf('\\mu = 5 %% \\sigma = 0.1 %%');
             end
     end
 end

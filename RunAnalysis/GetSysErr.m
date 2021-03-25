@@ -36,7 +36,7 @@ elseif SysBudget==99 % old First Tritium
     SysErr.is_EOffsetErr = 0;
     SysErr.MACE_VarErr = 0;
     SysErr.MaxSlopeCpsPereV = 15*1e-06;
-      SysErr.BKG_PtSlopeErr = 0;
+     SysErr.BKG_PtSlopeErr = 0;
 elseif SysBudget==1
     SysErr.WGTS_TASR_RelErr = 5e-4;
     SysErr.FSDNorm_RelErr=  0.01;
@@ -516,7 +516,7 @@ elseif SysBudget == 41 % KNM2 unblinding stage 3 (data w unblinded FSD) systemat
     SysErr.MACE_VarErr = sqrt(0.0161^2+(0.0016^2)^2);
     SysErr.MaxSlopeCpsPereV =  [2.22, 2.56, 2.64,2.03].*1e-06;
     SysErr.BKG_PtSlopeErr = 3e-06;
-elseif SysBudget == 440 || SysBudget == 441 || SysBudget == 442 || SysBudget == 443% KNM2 syst. budget (like 40) + addition uncorrelated syst. for blinding
+elseif ismember(SysBudget,440:446)% KNM2 syst. budget (like 40) + addition uncorrelated syst. for blinding
     SysErr.WGTS_TASR_RelErr = 5e-4; % data driven
     SysErr.FSDNorm_RelErr=  0.01;
     SysErr.FSDShapeGS_RelErr= 0.04;
@@ -541,6 +541,12 @@ elseif SysBudget == 440 || SysBudget == 441 || SysBudget == 442 || SysBudget == 
         SysErr.AddCovMatFrac = [0.002,0.001]; % mu ,sigma
     elseif   SysBudget == 443
         SysErr.AddCovMatFrac = [0.004,0.001]; % mu ,sigma
+    elseif   SysBudget == 444
+        SysErr.AddCovMatFrac = [0.01,0.001]; % mu ,sigma
+    elseif   SysBudget == 445
+        SysErr.AddCovMatFrac = [0.02,0.001]; % mu ,sigma
+    elseif   SysBudget == 446
+        SysErr.AddCovMatFrac = [0.05,0.001]; % mu ,sigma
     end
 elseif SysBudget == 66 %TDR-like
     SysErr.WGTS_TASR_RelErr = 0; % data driven

@@ -56,7 +56,7 @@ else
     save(savefile,'FitResult','Real');
 end
 %%
-fprintf('m^2 = %.2f (%.2f +%.2f) eV^2 \n',FitResult.par(1),FitResult.errNeg(1),FitResult.errPos(1))
+fprintf('m^2 = %.3f (%.3f +%.3f) eV^2 \n',FitResult.par(1),FitResult.errNeg(1),FitResult.errPos(1))
 fprintf('E0 = %.3f  (%.3f +%.3f) eV \n',FitResult.par(2)+Real.ModelObj.Q_i,FitResult.errNeg(2),FitResult.errPos(2))
 fprintf('B  = %.1f (%.1f +%.1f) mcps \n',(FitResult.par(3)+Real.ModelObj.BKG_RateSec_i)*1e3,1e3*FitResult.errNeg(3),1e3*FitResult.errPos(3))
 fprintf('chi^2 = %.1f (%.0f dof) \n',FitResult.chi2min,FitResult.dof)

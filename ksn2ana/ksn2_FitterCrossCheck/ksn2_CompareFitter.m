@@ -45,3 +45,4 @@ S = SterileAnalysis(SterileArg{:});
 
 S.InterpMode = 'spline';
 S.PlotFitriumSamak('PlotTot','OFF','SavePlot','png','PlotKafit','ON')
+
