@@ -11,13 +11,13 @@ B_RW_Source = 1.23;%2.52;%
 freePar = 'mNu E0 Norm Bkg';
 range = 40;
 savedir = [getenv('SamakPath'),'ksn2ana/ksn2_Systematics/results/'];
-savename = [savedir,sprintf('ksn2_RWsyst_Fit%s_%.0feV_RWE0shift%.3geV_ScaleRWRate%.2g.mat',strrep(freePar,' ',''),range,E0ShifteV,ScaleRW)];
+savename = [savedir,sprintf('ksn2_RWsyst_Fit%s_%.0feV_RWE0shift%.3geV_ScaleRWRate%.3g.mat',strrep(freePar,' ',''),range,E0ShifteV,ScaleRW)];
 
 if B_RW_Source~=2.52 
    savename =  strrep(savename,'.mat',sprintf('_%.3gWGTS_B_T.mat',B_RW_Source));
 end
 
-if exist(savename,'file') && 1==2
+if exist(savename,'file') 
     load(savename)
     fprintf('Load spectra from file %s \n',savename)
 else
@@ -43,28 +43,31 @@ else
         'DopplerEffectFlag','FSD'};
      A = MultiRunAnalysis(RunAnaArg{:});
      A.exclDataStart = A.GetexclDataStart(range);
-     FitResults= A.InitModelObj_Norm_BKG;
-     A.ModelObj.BKG_RateSec_i = A.ModelObj.BKG_RateSec_i+FitResults.par(3);
+     % init model and save init settings
+     FitResults                 = A.InitModelObj_Norm_BKG;
+     A.ModelObj.BKG_RateSec_i   = A.ModelObj.BKG_RateSec_i+FitResults.par(3);
      A.ModelObj.NormFactorTBDDS = A.ModelObj.NormFactorTBDDS.*(1+FitResults.par(4));
-     A.ModelObj.ComputeTBDDS; A.ModelObj.ComputeTBDIS;
-     
-     TBDIS_wgts = A.ModelObj.TBDIS;
-     Q_i = A.ModelObj.Q_i;
-     WGTS_CD_MolPerCm2_i = A.ModelObj.WGTS_CD_MolPerCm2;
-     NormFactorTBDDS_i = A.ModelObj.NormFactorTBDDS;
+     NormFactorTBDDS_i          = A.ModelObj.NormFactorTBDDS;
+     Bkg_i                      = A.ModelObj.BKG_RateSec_i;
+     Q_i                        = A.ModelObj.Q_i;
+     WGTS_CD_MolPerCm2_i        = A.ModelObj.WGTS_CD_MolPerCm2;
+    
+     % compute TBDIS for regular tritium spectrum (wgts)
+     A.ModelObj.ComputeTBDDS; A.ModelObj.ComputeTBDIS; 
+     TBDIS_wgts           = A.ModelObj.TBDIS;
      %% init rear wall spectrum
      A.ModelObj.KTFFlag = 'RW_WGTSMACE';
      A.ModelObj.WGTS_B_T = B_RW_Source;
      A.ModelObj.ComputeNormFactorTBDDS;
      A.ModelObj.InitializeRF;
-     A.ModelObj.Q_i = Q_i + E0ShifteV;
-     Bkg_i = A.ModelObj.BKG_RateSec_i;
-   
+     
+     NormFactorTBDDS_rw       = A.ModelObj.NormFactorTBDDS; % different norm factor, becauseof B-source
+     A.ModelObj.Q_i           = Q_i + E0ShifteV;
      A.ModelObj.BKG_RateSec_i = 0; % no (additional) background
      A.ModelObj.BKG_PtSlope_i = 0;
-     A.ModelObj.NormFactorTBDDS = NormFactorTBDDS_i*ScaleRW;
+     A.ModelObj.NormFactorTBDDS = NormFactorTBDDS_rw*ScaleRW; % scale to lower activity
+     
      A.ModelObj.ComputeTBDDS; A.ModelObj.ComputeTBDIS;
-    
      TBDIS_rw = A.ModelObj.TBDIS;
     
      %% reset model to regular settings

@@ -1,7 +1,7 @@
 % ksn2 proposed model blinding
 % ksn2 calculate chi2 grid search with different settings
 %% settings that might change
-Mode                  = 'Compute'; %'Compute';
+Mode                  = 'Display'; %'Compute';
 chi2                  = 'chi2CMShape';
 DataType              = 'Twin';
 nGridSteps            = 25;
@@ -9,7 +9,7 @@ range                 = 40;
 NonPoissonScaleFactor = 1.112;
 Twin_mNu4Sq           = 10^2;
 Twin_sin2T4           = 0.03;
-SysBudget             = [40,446];%,441,442,443];
+SysBudget             = [40,441,443,444,446,400];%,446];%,441,442,443];
 RandMC                = 1;
 %% configure RunAnalysis object
 RunAnaArg = {'RunList','KNM2_Prompt',...
@@ -80,7 +80,15 @@ sin2T4_bf = zeros(numel(SysBudget),1);
 
 LineStyles = {'-','-.',':','--','-','-.',':','--','-','-.',':','--','-','-.',':','--','-','-.',':','--'};
 for i=1:numel(SysBudget)
-    A.SysBudget = SysBudget(i);
+    if SysBudget(i)==400
+        A.SysBudget=40;
+        A.ELossFlag = 'Aseev';
+        A.ModelObj.ELossFlag = 'Aseev';
+    else
+         A.ELossFlag = 'KatrinT2A20';
+        A.ModelObj.ELossFlag = 'KatrinT2A20';
+       A.SysBudget = SysBudget(i);
+    end
     switch Mode
         case 'Compute'
             A.ComputeCM;
@@ -90,8 +98,8 @@ for i=1:numel(SysBudget)
             S.Interp1Grid('Maxm4Sq',34.^2,'nInter',1e3);
             pHandle{i} = S.ContourPlot('HoldOn',HoldOn,'BestFit','ON','CL',95,'Color',Colors(i,:),'LineStyle',LineStyles{i});
             HoldOn='ON';
-             S.FindBestFit('Mode','Def')
-             S.FindBestFit('Mode','Imp')
+            % S.FindBestFit('Mode','Def')
+            % S.FindBestFit('Mode','Imp')
             sin2T4_bf(i) = S.sin2T4_bf;
             mNu4Sq_bf(i) = S.mNu4Sq_bf;
             if SysBudget(i)==40
@@ -104,6 +112,14 @@ for i=1:numel(SysBudget)
                 legStr{i} = sprintf('\\mu = 0.2 %% \\sigma = 0.1 %%');
             elseif  SysBudget(i)==443
                 legStr{i} = sprintf('\\mu = 0.4 %% \\sigma = 0.1 %%');
+            elseif  SysBudget(i)==444
+                legStr{i} = sprintf('\\mu = 1 %% \\sigma = 0.1 %%');
+            elseif  SysBudget(i)==445
+                legStr{i} = sprintf('\\mu = 2 %% \\sigma = 0.1 %%');
+            elseif  SysBudget(i)==446
+                legStr{i} = sprintf('\\mu = 5 %% \\sigma = 0.1 %%');
+            elseif SysBudget(i)==400
+                 legStr{i} = sprintf('No additional uncertainty, but {\\itAseev} Energy-loss');
             end
     end
 end
@@ -115,4 +131,9 @@ if strcmp(Mode,'Display')
     leg.Title.FontWeight = 'normal';
     title(sprintf('MC truth: {\\itm}_4^2 = %.3geV^2 , |{\\itU}_{e4}|^2 = %.3g',Twin_mNu4Sq,Twin_sin2T4),...
         'FontWeight','normal','FontSize',get(gca,'FontSize'));
+    plotdir = [getenv('SamakPath'),'ksn2ana/ksn2_ModelBlinding/plots/'];
+    plotname = sprintf('%sksn2_ModelBlinding_RandMC_SomeIdeas.png',plotdir);
+    print(plotname,'-dpng','-r300');
+    fprintf('save plot to %s \n',plotname);
+
 end

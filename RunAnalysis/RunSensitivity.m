@@ -868,6 +868,13 @@ classdef RunSensitivity < handle
                 
                 % Convert Chi2True into Probability
                 Prob_tmp = exp(-Chi2True./2);
+%                 % tmp start
+%                 NormProb1 = 0.5.*simpsons(mNuSq(mNuSq<=mNuSq_t(i)),Prob_tmp(mNuSq<=mNuSq_t(i)));
+%                 NormProb2 = 0.5.*simpsons(mNuSq(mNuSq>mNuSq_t(i)),Prob_tmp(mNuSq>mNuSq_t(i)));
+%                 Prob_tmp(mNuSq<=mNuSq_t(i)) = Prob_tmp(mNuSq<=mNuSq_t(i))./NormProb1;
+%                 Prob_tmp(mNuSq>mNuSq_t(i)) = Prob_tmp(mNuSq>mNuSq_t(i))./NormProb2;
+%                 Prob = Prob_tmp;
+%                 %end
                 Prob = Prob_tmp./simpsons(mNuSq,Prob_tmp); % normalization
                 CumProb = GetCDF(mNuSq,Prob);%CumProb = cumsum(Prob); CumProb = CumProb./max(CumProb);
                 
@@ -937,10 +944,17 @@ classdef RunSensitivity < handle
                 
                 % Convert Chi2True into Probability
                 Prob_tmp = exp(-Chi2True./2);
-                Prob = Prob_tmp./simpsons(mNuSq,Prob_tmp); % normalization
-                %CumProb_tmp = cumsum(Prob); CumProb_tmp = CumProb_tmp./max(CumProb_tmp);
-                CumProb_tmp = GetCDF(mNuSq,Prob);
                 
+                %                 % start new
+                %                 NormProb1 = 0.5.*simpsons(mNuSq(mNuSq<=mNuSq_t(i)),Prob_tmp(mNuSq<=mNuSq_t(i)));
+                %                 NormProb2 = 0.5.*simpsons(mNuSq(mNuSq>mNuSq_t(i)),Prob_tmp(mNuSq>mNuSq_t(i)));
+                %                 Prob_tmp(mNuSq<=mNuSq_t(i)) = Prob_tmp(mNuSq<=mNuSq_t(i))./NormProb1;
+                %                 Prob_tmp(mNuSq>mNuSq_t(i)) = Prob_tmp(mNuSq>mNuSq_t(i))./NormProb2;
+                %                 Prob = Prob_tmp;
+                %                 %end new
+                Prob = Prob_tmp;%./simpsons(mNuSq,Prob_tmp); % normalization
+                
+                CumProb_tmp = GetCDF(mNuSq,Prob);
                 % find acceptance region
                 [CumProb,ia,~] = unique(CumProb_tmp);
                 obj.FC_x1(i) = interp1(CumProb,mNuSq(ia),(1-obj.ConfLevel)/2,'spline');
@@ -948,18 +962,18 @@ classdef RunSensitivity < handle
                     if obj.FC_x1(i)-obj.FC_x1(i-1)<0
                         % should always be more positive! try piecewise
                         % cubic interpolation instead
-                         obj.FC_x1(i) = interp1(CumProb,mNuSq(ia),(1-obj.ConfLevel)/2,'pchip');
+                        obj.FC_x1(i) = interp1(CumProb,mNuSq(ia),(1-obj.ConfLevel)/2,'pchip');
                     end
                 end
                 
                 if obj.FC_x1(i)>0  % --> twosided
-                   obj.FC_x2(i)= interp1(CumProb,mNuSq(ia),(1+obj.ConfLevel)/2,'spline');
+                    obj.FC_x2(i)= interp1(CumProb,mNuSq(ia),(1+obj.ConfLevel)/2,'spline');
                 elseif obj.FC_x1(i)<0 % --> one-sided
                     obj.FC_x2(i) = interp1(CumProb,mNuSq(ia),obj.ConfLevel,'spline');
-                end 
-
+                end
+                
             end
-             %save
+            %save
             obj.FC_mNuSqTrue = mNuSq_t';
         end
     end
@@ -2051,7 +2065,17 @@ classdef RunSensitivity < handle
             else
                 % convert(original chi2, not delta chi2) into likelihood profile
                 y = exp(-obj.FC_Chi2True./2);%exp(-obj.FC_DeltaChi2(Index,:)./2);%exp(-obj.FC_Chi2True./2);
-                y = y./simpsons(x,y);  
+%                 % tmp start
+%                 Prob_tmp = y;
+%                 mNuSq = obj.FC_mNuSqFit(Index,:);
+%                 NormProb1 = 0.5.*simpsons(mNuSq(mNuSq<=mNuSq_t),Prob_tmp(mNuSq<=mNuSq_t));
+%                 NormProb2 = 0.5.*simpsons(mNuSq(mNuSq>mNuSq_t),Prob_tmp(mNuSq>mNuSq_t));
+%                 Prob_tmp(mNuSq<=mNuSq_t) = Prob_tmp(mNuSq<=mNuSq_t)./NormProb1;
+%                 Prob_tmp(mNuSq>mNuSq_t) = Prob_tmp(mNuSq>mNuSq_t)./NormProb2;
+%                 y = Prob_tmp;
+%                 %end
+              %  y = y./simpsons(x,y); 
+                
                 ystr = sprintf('Probability density (eV^{-2})');
                 xstr = sprintf('Measured {\\itm}^2_\\nu (eV^{2})');  
                 AuxLineMax1 =  interp1(x,y,obj.FC_x1(Index),'spline');
