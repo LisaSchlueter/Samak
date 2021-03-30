@@ -3,7 +3,7 @@
 %% settings
 range                 = 40;
 freePar               = 'mNu E0 Bkg Norm';
-chi2                  = 'chi2CMShape';
+chi2                  = 'chi2Stat';
 DataType              = 'Real';
 AnaFlag               = 'StackPixel';
 RingMerge             = 'Full';%'None'; %only relevand when AnaFlag = Ring
@@ -13,7 +13,7 @@ TwinBias_BKG_PtSlope  = 3*1e-06;
 FSDFlag               = 'KNM2_0p1eV';
 PullFlag              = 99;% 99 = no pull
 SysBudget             = 40;
-NonPoissonScaleFactor = 1.112;
+NonPoissonScaleFactor = 1;%.112;
 SigmaSq               =  0.0124+0.0025;
 nFitMax               = 50;
 

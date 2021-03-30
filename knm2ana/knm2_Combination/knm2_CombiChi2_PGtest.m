@@ -6,17 +6,17 @@ chi2 = 'chi2CMShape';
 Knm2AnaFlag = 'Uniform';%MR-4';
 
 %% load chi^2 profiles
-k1file = [getenv('SamakPath'),sprintf('tritium-data/fit/Knm1/Chi2Profile/Uniform/Chi2Profile_%s_UniformScan_mNu_Knm1_UniformFPD_%s_NP1.064_FitParE0BkgNorm_nFit20_min-2_max1.mat',DataType,chi2)];
+k1file = [getenv('SamakPath'),sprintf('tritium-data/fit/Knm1/Chi2Profile/Uniform/Chi2Profile_%s_UniformScan_mNu_Knm1_UniformFPD_%s_NP1.064_FitParE0BkgNorm_nFit20_min-2.6_max1.mat',DataType,chi2)];
 d1 = importdata(k1file); fprintf('load knm1: %s \n',k1file);
 
 if strcmp(Knm2AnaFlag,'Uniform')
-k2file = [getenv('SamakPath'),sprintf('tritium-data/fit/Knm2/Chi2Profile/Uniform/Chi2Profile_%s_UniformScan_mNu_Knm2_UniformFPD_%s_NP1.112_FitParE0BkgNorm_nFit20_min-2_max1.mat',DataType,chi2)];
+k2file = [getenv('SamakPath'),sprintf('tritium-data/fit/Knm2/Chi2Profile/Uniform/Chi2Profile_%s_UniformScan_mNu_Knm2_UniformFPD_%s_NP1.112_FitParE0BkgNorm_nFit20_min-2.6_max1.mat',DataType,chi2)];
 elseif strcmp(Knm2AnaFlag,'MR-4')
-k2file = [getenv('SamakPath'),sprintf('tritium-data/fit/Knm2/Chi2Profile/Ring_Full/Chi2Profile_%s_UniformScan_mNu_Knm2_Ring_FullFPD_%s_NP1.112_FitParE0BkgNormqU_nFit20_min-2_max1.mat',DataType,chi2)];   
+k2file = [getenv('SamakPath'),sprintf('tritium-data/fit/Knm2/Chi2Profile/Ring_Full/Chi2Profile_%s_UniformScan_mNu_Knm2_Ring_FullFPD_%s_NP1.112_FitParE0BkgNormqU_nFit20_min-2.6_max1.mat',DataType,chi2)];   
 end
 d2 = importdata(k2file); fprintf('load knm2: %s \n',k2file)
 
-ksumfile = [getenv('SamakPath'),sprintf('tritium-data/fit/Knm1/Chi2Profile/Uniform/Chi2ProfileCombi_%s_UniformScan_mNu_Knm1KNM2_UniformFPD_%s_FitParE0BkgNorm_nFit20_min-2_max1.mat',DataType,chi2)];
+ksumfile = [getenv('SamakPath'),sprintf('tritium-data/fit/Knm1/Chi2Profile/Uniform/Chi2ProfileCombi_%s_UniformScan_mNu_Knm1KNM2_UniformFPD_%s_FitParE0BkgNorm_nFit20_min-2.6_max1.mat',DataType,chi2)];
 dsum = importdata(ksumfile);
    
 % asign variables

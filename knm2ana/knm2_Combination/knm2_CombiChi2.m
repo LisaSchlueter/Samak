@@ -3,7 +3,7 @@
 DataType = 'Real';
 chi2 = 'chi2CMShape';
 Knm2AnaFlag = 'Uniform';%MR-4';
-
+nFit = 50;
 %% load chi2-profiles (pre-calculated)
 % knm1
 if strcmp(chi2,'chi2CMShape')
@@ -11,8 +11,8 @@ if strcmp(chi2,'chi2CMShape')
 else
      chi2Str1 = chi2;
 end
-k1file = [getenv('SamakPath'),sprintf('tritium-data/fit/Knm1/Chi2Profile/Uniform/Chi2Profile_%s_UniformScan_mNu_Knm1_UniformFPD_%s_NP1.064_FitParE0BkgNorm_nFit20_min-2.6_max1.mat',DataType,chi2Str1)];
-d1 = importdata(k1file); fprintf('load knm1: %s \n',k1file);
+
+d1 = LoadChi2Profile('DataSet','Knm1','DataType',DataType,'chi2',chi2,'AnaStr','Uniform','nFit',nFit,'mNuSqMin',-2.6,'mNuSqMax',1);
 ScanResults1 = d1.ScanResults;
 mNuSq1 =[flipud(ScanResults1.ParScan(:,2));ScanResults1.ParScan(2:end,1)];
 Chi21 = [flipud(ScanResults1.chi2min(:,2));ScanResults1.chi2min(2:end,1)];
@@ -22,21 +22,7 @@ mNuSq1_errPos = ScanResults1.BestFit.errPos;
 Chi21_min     = ScanResults1.BestFit.chi2;
 
 % knm2
-if strcmp(chi2,'chi2CMShape')
-    if strcmp(Knm2AnaFlag,'Uniform')
-        chi2Str2 = 'chi2CMShape_SysBudget40';
-    else
-        chi2Str2 = 'chi2CMShape_SysBudget41';
-    end
-else
-    chi2Str2 = chi2;
-end
-if strcmp(Knm2AnaFlag,'Uniform')
-k2file = [getenv('SamakPath'),sprintf('tritium-data/fit/Knm2/Chi2Profile/Uniform/Chi2Profile_%s_UniformScan_mNu_Knm2_UniformFPD_%s_NP1.112_FitParE0BkgNorm_nFit20_min-2.6_max1.mat',DataType,chi2Str2)];
-elseif strcmp(Knm2AnaFlag,'MR-4')
-k2file = [getenv('SamakPath'),sprintf('tritium-data/fit/Knm2/Chi2Profile/Ring_Full/Chi2Profile_%s_UniformScan_mNu_Knm2_Ring_FullFPD_%s_NP1.112_FitParE0BkgNormqU_nFit20_min-2_max1.mat',DataType,chi2Str2)];   
-end
-d2 = importdata(k2file); fprintf('load knm2: %s \n',k2file)
+d2 = LoadChi2Profile('DataSet','Knm2','DataType',DataType,'chi2',chi2,'AnaStr',Knm2AnaFlag,'nFit',nFit,'mNuSqMin',-2.6,'mNuSqMax',1);
 ScanResults2 = d2.ScanResults;
 mNuSq2 =[flipud(ScanResults2.ParScan(:,2));ScanResults2.ParScan(2:end,1)];
 Chi22 = [flipud(ScanResults2.chi2min(:,2));ScanResults2.chi2min(2:end,1)];
@@ -48,14 +34,12 @@ Chi22_min     = ScanResults2.BestFit.chi2;
 if any(mNuSq2 ~= mNuSq1)
     fprintf('binning not the same - interpolation necessary! \n');
     return
-
 end
 %% interpolate
 mNuSq        = linspace(min(mNuSq1),max(mNuSq1),5e3);
 Chi21_plot   = interp1(mNuSq1,Chi21,mNuSq,'spline');
 Chi22_plot   = interp1(mNuSq1,Chi22,mNuSq,'spline');
 Chi2sum_plot = interp1(mNuSq1,Chi21+Chi22,mNuSq,'spline');
-
 
 %% find common minimum and uncertainty
 

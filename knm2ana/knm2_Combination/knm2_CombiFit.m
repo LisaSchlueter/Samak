@@ -4,9 +4,10 @@ tStart = tic;
 %% KNM-1 Model
 chi2          = 'chi2CMShape';
 DataType      = 'Real';
-
+KNM1SysBudget = 22;
+KNM1Doppler = 'OFF';
 savedir = [getenv('SamakPath'),'knm2ana/knm2_Combination/results/'];
-savename = sprintf('%sknm2_CombiFit_%s_Uniform_%s.mat',savedir,DataType,chi2);
+savename = sprintf('%sknm2_CombiFit_%s_Uniform_%s_Knm1SysBudget%.0f_Knm1DE%s.mat',savedir,DataType,chi2,KNM1SysBudget,KNM1Doppler);
 
 if exist(savename,'file') && strcmp(RecomputeFlag,'OFF')
     d = importdata(savename);
@@ -19,14 +20,16 @@ else
         'chi2',chi2,...
         'DataType',DataType,...
         'fixPar',freePar,... free parameter
-        'RadiativeFlag','ON',...
         'NonPoissonScaleFactor',1.064,...
         'minuitOpt','min ; minos',...
         'FSDFlag','Sibille0p5eV',...
+        'SysBudget',KNM1SysBudget,...
         'ELossFlag','KatrinT2',...
-        'SysBudget',24,...
+        'SynchrotronFlag','ON',...
+        'RadiativeFlag','ON',...
         'AngularTFFlag','OFF',...
-        'DopplerEffectFlag','OFF');
+        'DopplerEffectFlag',KNM1Doppler);
+    
     K1.exclDataStart = K1.GetexclDataStart(range);
     K1.i_qUOffset    = zeros(1,K1.ModelObj.nPixels);
     K1.i_mTSq        = zeros(1,K1.ModelObj.nPixels);
@@ -156,6 +159,8 @@ else
     FitResult = K1.FitResult;
     save(savename,'FitResult','K1','K2','tCPU','F')
 end
+
+
 %% asym err
 ErrNeg  = d.F.RESULTS{end-1};
 ErrPos  = d.F.RESULTS{end};
