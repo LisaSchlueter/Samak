@@ -1983,6 +1983,9 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             if strcmp(Mode,'Uniform')
                 savename = strrep(savename,'.mat',sprintf('_min%.3g_max%.3g.mat',min(min(ScanResults.ParScan)),max(max(ScanResults.ParScan))));
             end
+            if strcmp(obj.chi2,'chi2CMShape')
+                savename = strrep(savename,obj.chi2,sprintf('%s_SysBudget%.0f',obj.chi2,obj.SysBudget));
+            end
             
             if exist(savename,'file')
                 load(savename,'ScanResults')
@@ -2036,19 +2039,66 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                     end
                 end
                 
-                % find parameters (positive and negative), for which chi2 = chi2min + 1
-                ParScanUp = interp1(ScanResults.chi2min(~isnan(ScanResults.chi2min(:,1)),1),...
-                    ScanResults.ParScan(~isnan(ScanResults.chi2min(:,1)),1),chi2min+1,'spline');
-                ParScanDown = interp1(ScanResults.chi2min(~isnan(ScanResults.chi2min(:,2)),2),...
-                    ScanResults.ParScan(~isnan(ScanResults.chi2min(:,2)),2),chi2min+1,'spline');
-                % get asymmetric uncertainties
-                ScanResults.AsymErr(1) = diff([ScanResults.ParScan(1,1),ParScanUp]);
-                ScanResults.AsymErr(2) = diff([ScanResults.ParScan(1,2),ParScanDown]);
+                % find best fit and uncertainties
+                ParScan =[flipud(ScanResults.ParScan(:,2));ScanResults.ParScan(2:end,1)];
+                Chi2 = [flipud(ScanResults.chi2min(:,2));ScanResults.chi2min(2:end,1)];
+                ParScan_inter = linspace(min(ParScan),max(ParScan),1e3);
+                chi2_inter = interp1(ParScan,Chi2,ParScan_inter,'spline');
+                chi2_min = min(chi2_inter);
+                ParScan_bf = ParScan_inter(chi2_inter==chi2_min);
+                ParScanDown = interp1(chi2_inter(ParScan_inter<ParScan_bf),ParScan_inter(ParScan_inter<ParScan_bf),chi2_min+1,'spline');
+                ParScanUp = interp1(chi2_inter(ParScan_inter>ParScan_bf),ParScan_inter(ParScan_inter>ParScan_bf),chi2_min+1,'spline');
+                ParScan_errNeg = abs(diff([ParScanDown,ParScan_bf]));
+                ParScan_errPos = abs(diff([ParScanUp,ParScan_bf]));
+                ParScan_errMean = 0.5*(ParScan_errPos+ParScan_errNeg);
+
+                ScanResults.BestFit.chi2      = chi2_min;
+                ScanResults.BestFit.par       = ParScan_bf;
+                ScanResults.BestFit.parLowLim =  ParScanDown;
+                ScanResults.BestFit.parUpLim  =  ParScanUp;
+                ScanResults.BestFit.errNeg    = ParScan_errNeg;
+                ScanResults.BestFit.errPos    = ParScan_errPos;
+                ScanResults.BestFit.errMean   = ParScan_errMean;
+                
+%                 % find parameters (positive and negative), for which chi2 = chi2min + 1
+%                 ParScanUp = interp1(ScanResults.chi2min(~isnan(ScanResults.chi2min(:,1)),1),...
+%                     ScanResults.ParScan(~isnan(ScanResults.chi2min(:,1)),1),chi2min+1,'spline');
+%                 ParScanDown = interp1(ScanResults.chi2min(~isnan(ScanResults.chi2min(:,2)),2),...
+%                     ScanResults.ParScan(~isnan(ScanResults.chi2min(:,2)),2),chi2min+1,'spline');
+%                 % get asymmetric uncertainties
+%                 ScanResults.AsymErr(1) = diff([ScanResults.ParScan(1,1),ParScanUp]);
+%                 ScanResults.AsymErr(2) = diff([ScanResults.ParScan(1,2),ParScanDown]);
                 
                 MakeDir(savedir);
                 save(savename,'ScanResults','ParScanUp','ParScanDown');
                 fprintf('save results to %s \n',savename);
             end
+            
+            % tmp fix
+            % find best fit and uncertainties
+            if ~isfield(ScanResults,'BestFit')
+                ParScan =[flipud(ScanResults.ParScan(:,2));ScanResults.ParScan(2:end,1)];
+                Chi2 = [flipud(ScanResults.chi2min(:,2));ScanResults.chi2min(2:end,1)];
+                ParScan_inter = linspace(min(ParScan),max(ParScan),1e3);
+                chi2_inter = interp1(ParScan,Chi2,ParScan_inter,'spline');
+                chi2_min = min(chi2_inter);
+                ParScan_bf = ParScan_inter(chi2_inter==chi2_min);
+                ParScanDown = interp1(chi2_inter(ParScan_inter<ParScan_bf),ParScan_inter(ParScan_inter<ParScan_bf),chi2_min+1,'spline');
+                ParScanUp = interp1(chi2_inter(ParScan_inter>ParScan_bf),ParScan_inter(ParScan_inter>ParScan_bf),chi2_min+1,'spline');
+                ParScan_errNeg = abs(diff([ParScanDown,ParScan_bf]));
+                ParScan_errPos = abs(diff([ParScanUp,ParScan_bf]));
+                ParScan_errMean = 0.5*(ParScan_errPos+ParScan_errNeg);
+                
+                ScanResults.BestFit.chi2      = chi2_min;
+                ScanResults.BestFit.par       = ParScan_bf;
+                ScanResults.BestFit.parLowLim =  ParScanDown;
+                ScanResults.BestFit.parUpLim  =  ParScanUp;
+                ScanResults.BestFit.errNeg    = ParScan_errNeg;
+                ScanResults.BestFit.errPos    = ParScan_errPos;
+                ScanResults.BestFit.errMean   = ParScan_errMean;
+                save(savename,'ScanResults','ParScanUp','ParScanDown');
+            end
+            %end
             
             if strcmp(obj.AnaFlag,'StackPixel')
                 % set everything back to previous setting and fit results
@@ -2073,19 +2123,19 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             end
             
             if strcmp(SanityPlot,'ON')
-                obj.PlotChi2Curve;
+                obj.PlotChi2Curve('ScanResult',ScanResults);
             end
         end
         function out = PlotChi2Curve(obj,varargin)
             p=inputParser;
             p.addParameter('Parameter','mNu',@(x)ismember(x,{'mNu','E0'}));
             p.addParameter('ScanResult','',@(x)isstruct(x));
-            p.addParameter('FitResult','',@(x)isstruct(x));
+            p.addParameter('PlotBf','ON',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('HoldOn','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.parse(varargin{:});
             Parameter   = p.Results.Parameter;
             ScanResult  = p.Results.ScanResult;
-            FitResult   = p.Results.FitResult;
+            PlotBf      = p.Results.PlotBf;
             HoldOn      = p.Results.HoldOn;
             
             if isempty(ScanResult)
@@ -2105,7 +2155,9 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             end
             nFitMax = size(ScanResult.chi2min,1);
             if strcmp(HoldOn,'OFF')
-                f4 = figure('Units','normalized','Position',[0.1,0.1,0.5,0.5]);
+                out = figure('Units','normalized','Position',[0.1,0.1,0.5,0.5]);
+            else
+                hold on;
             end
             mypar  = reshape(ScanResult.ParScan,[nFitMax*2,1]);
             mypar = mypar(~isnan(mypar));
@@ -2116,42 +2168,48 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             if ~strcmp(obj.chi2,'chi2Stat')
                 PlotStyle = {'-','LineWidth',3,'Color',rgb('DodgerBlue')};
             else
-                PlotStyle = {'-.','LineWidth',3,'Color',rgb('SkyBlue')};
+                PlotStyle = {'-.','LineWidth',3,'Color',rgb('Orange')};
             end
             
-            if strcmp(obj.DataType,'Real')
-                plot(FitResult.par(ParIndex).*ones(100,1),linspace(0,1e2,1e2),':','LineWidth',2.5,'Color',rgb('Gray'))
+            if strcmp(PlotBf,'ON')
                 hold on;
+                %plot(ScanResult.BestFit.par.*ones(100,1),linspace(0,1e2,1e2),'-','LineWidth',2,'Color',rgb('LightGray'));
+                if strcmp(obj.chi2,'chi2Stat')
+                    ConfInt = area([ScanResult.BestFit.parLowLim,ScanResult.BestFit.parUpLim],[200,200],...
+                        'FaceColor',rgb('Orange'),'FaceAlpha',0.25,'EdgeColor','none');
+                %        
+                else
+                       
+                    ConfInt = area([ScanResult.BestFit.parLowLim,ScanResult.BestFit.parUpLim],[200,200],...
+                        'FaceColor',rgb('DodgerBlue'),'FaceAlpha',0.2,'EdgeColor','none');
+                end
+                %                 pbf = plot(ScanResult.BestFit.par.*ones(100,1),linspace(0,1e2,1e2),':','LineWidth',2.5,'Color',rgb('Gray'));
+                %                 pLow =plot(ScanResult.BestFit.parLowLim.*ones(100,1),linspace(0,100,100),...
+                %                     ':','LineWidth',2,'Color',rgb('Gray'));
+                %                 pUp =plot(ScanResult.BestFit.parUpLim.*ones(100,1),linspace(0,100,100),...
+                %                     ':','LineWidth',2,'Color',rgb('Gray'));
+                %                 %   p3 = plot(linspace(ScanResult.AsymErr(2)+FitResult.par(ParIndex),...
+                %       ScanResult.AsymErr(1)+FitResult.par(ParIndex),100),FitResult.chi2min+ones(1,100),...
+                %       ':','LineWidth',2,'Color',rgb('Gray'));
             end
+            
             pchi2 = plot(mypar,mychi2min,PlotStyle{:});
-            hold on;
-            p1 =plot(FitResult.par(ParIndex)+ScanResult.AsymErr(1).*ones(100,1),linspace(0,100,100),...
-                ':','LineWidth',2,'Color',rgb('Gray'));
-            p2 =plot(FitResult.par(ParIndex)+ScanResult.AsymErr(2).*ones(100,1),linspace(0,100,100),...
-                ':','LineWidth',2,'Color',rgb('Gray'));
-         %   p3 = plot(linspace(ScanResult.AsymErr(2)+FitResult.par(ParIndex),...
-         %       ScanResult.AsymErr(1)+FitResult.par(ParIndex),100),FitResult.chi2min+ones(1,100),...
-         %       ':','LineWidth',2,'Color',rgb('Gray'));
-           
+          
             PrettyFigureFormat('FontSize',24);
             xlabel(sprintf(' %s (%s)',xstr,xUnit));
             ylabel(sprintf('\\chi^2 (%.0f dof)',ScanResult.dof(1,1) - 1 ));
-            
-           if abs(FitResult.par(ParIndex))>0.05
-               parStr = sprintf('%.3f',FitResult.par(ParIndex));
-           else
-               parStr = sprintf('%.3f',FitResult.par(ParIndex));
-           end
-            leg = legend(sprintf('%s = %s (%.3f +%.3f) %s',...
-                xstr,parStr,...
-                ScanResult.AsymErr(2),ScanResult.AsymErr(1),xUnit));
+
+            leg = legend(pchi2,sprintf('%s = %.2f (%.2f +%.2f) %s',...
+                xstr,ScanResult.BestFit.par,...
+                -ScanResult.BestFit.errNeg,ScanResult.BestFit.errPos,xUnit));
             leg.EdgeColor = rgb('Silver');
             leg.Location = 'northwest';
              xlim([min(ScanResult.ParScan(:,2)),max(ScanResult.ParScan(:,1))]);
-            if strcmp(obj.DataType,'Real')
-                ylim([FitResult.chi2min-1 max(max(ScanResult.chi2min))])
+            if strcmp(PlotBf,'ON')
+                xlim([ScanResult.BestFit.parLowLim-0.5*ScanResult.BestFit.errNeg ScanResult.BestFit.parUpLim+0.5*ScanResult.BestFit.errPos]);
+                ylim([ScanResult.BestFit.chi2-0.5 ScanResult.BestFit.chi2+3])
             end
-            out = {pchi2,p1,p2};
+
         end
         function GetPlotColor(obj)
             % Real / Twin Color Flag

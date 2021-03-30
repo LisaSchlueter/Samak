@@ -828,7 +828,7 @@ classdef FITC < handle
                             [errNeg, errPos] = GetAsymmErrMinos(minuitOutputStr);
                             results = {results{:},errNeg, errPos};
                         end
-                        system(['rm ',minuitOutputStr]); % delete txt file 
+                        system(['rm -f ',minuitOutputStr]); % delete txt file 
                 end
               
             else

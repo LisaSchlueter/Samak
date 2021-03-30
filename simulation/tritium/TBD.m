@@ -1896,7 +1896,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                     sprintf('HT%0.5g_Tm%0.5g',obj.WGTS_MolFrac_HT,obj.WGTS_MolFrac_Tm));
             end
             
-            if exist(FullDSIntName,'file') == 2 &&1==2
+            if exist(FullDSIntName,'file') == 2 
                 TempStructFullDS = load(FullDSIntName);
                 FullDSInt = TempStructFullDS.FullDSInt;
             else % if not, calculate it

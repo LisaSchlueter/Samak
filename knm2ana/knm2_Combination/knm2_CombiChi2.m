@@ -3,25 +3,47 @@
 DataType = 'Real';
 chi2 = 'chi2CMShape';
 Knm2AnaFlag = 'Uniform';%MR-4';
+
 %% load chi2-profiles (pre-calculated)
 % knm1
-k1file = [getenv('SamakPath'),sprintf('tritium-data/fit/Knm1/Chi2Profile/Uniform/Chi2Profile_%s_UniformScan_mNu_Knm1_UniformFPD_%s_NP1.064_FitParE0BkgNorm_nFit20_min-2_max1.mat',DataType,chi2)];
+if strcmp(chi2,'chi2CMShape')
+    chi2Str1 = 'chi2CMShape_SysBudget24';
+else
+     chi2Str1 = chi2;
+end
+k1file = [getenv('SamakPath'),sprintf('tritium-data/fit/Knm1/Chi2Profile/Uniform/Chi2Profile_%s_UniformScan_mNu_Knm1_UniformFPD_%s_NP1.064_FitParE0BkgNorm_nFit20_min-2.6_max1.mat',DataType,chi2Str1)];
 d1 = importdata(k1file); fprintf('load knm1: %s \n',k1file);
 ScanResults1 = d1.ScanResults;
 mNuSq1 =[flipud(ScanResults1.ParScan(:,2));ScanResults1.ParScan(2:end,1)];
 Chi21 = [flipud(ScanResults1.chi2min(:,2));ScanResults1.chi2min(2:end,1)];
+mNuSq1_bf    = ScanResults1.BestFit.par;
+mNuSq1_errNeg = ScanResults1.BestFit.errNeg;
+mNuSq1_errPos = ScanResults1.BestFit.errPos;
+Chi21_min     = ScanResults1.BestFit.chi2;
 
 % knm2
+if strcmp(chi2,'chi2CMShape')
+    if strcmp(Knm2AnaFlag,'Uniform')
+        chi2Str2 = 'chi2CMShape_SysBudget40';
+    else
+        chi2Str2 = 'chi2CMShape_SysBudget41';
+    end
+else
+    chi2Str2 = chi2;
+end
 if strcmp(Knm2AnaFlag,'Uniform')
-k2file = [getenv('SamakPath'),sprintf('tritium-data/fit/Knm2/Chi2Profile/Uniform/Chi2Profile_%s_UniformScan_mNu_Knm2_UniformFPD_%s_NP1.112_FitParE0BkgNorm_nFit20_min-2_max1.mat',DataType,chi2)];
+k2file = [getenv('SamakPath'),sprintf('tritium-data/fit/Knm2/Chi2Profile/Uniform/Chi2Profile_%s_UniformScan_mNu_Knm2_UniformFPD_%s_NP1.112_FitParE0BkgNorm_nFit20_min-2.6_max1.mat',DataType,chi2Str2)];
 elseif strcmp(Knm2AnaFlag,'MR-4')
-k2file = [getenv('SamakPath'),sprintf('tritium-data/fit/Knm2/Chi2Profile/Ring_Full/Chi2Profile_%s_UniformScan_mNu_Knm2_Ring_FullFPD_%s_NP1.112_FitParE0BkgNormqU_nFit20_min-2_max1.mat',DataType,chi2)];   
+k2file = [getenv('SamakPath'),sprintf('tritium-data/fit/Knm2/Chi2Profile/Ring_Full/Chi2Profile_%s_UniformScan_mNu_Knm2_Ring_FullFPD_%s_NP1.112_FitParE0BkgNormqU_nFit20_min-2_max1.mat',DataType,chi2Str2)];   
 end
 d2 = importdata(k2file); fprintf('load knm2: %s \n',k2file)
 ScanResults2 = d2.ScanResults;
 mNuSq2 =[flipud(ScanResults2.ParScan(:,2));ScanResults2.ParScan(2:end,1)];
 Chi22 = [flipud(ScanResults2.chi2min(:,2));ScanResults2.chi2min(2:end,1)];
-
+mNuSq2_bf = ScanResults2.BestFit.par;
+mNuSq2_errNeg = ScanResults2.BestFit.errNeg;
+mNuSq2_errPos = ScanResults2.BestFit.errPos;
+Chi22_min     = ScanResults2.BestFit.chi2;
 % check if mNuSq binning is the same: 
 if any(mNuSq2 ~= mNuSq1)
     fprintf('binning not the same - interpolation necessary! \n');
@@ -35,42 +57,9 @@ Chi22_plot   = interp1(mNuSq1,Chi22,mNuSq,'spline');
 Chi2sum_plot = interp1(mNuSq1,Chi21+Chi22,mNuSq,'spline');
 
 
-%% find minimum and uncertainty
-if isfield(d1,'BestFit')
-    Chi21_min = d1.BestFit.chi2;
-    mNuSq1_bf = d1.BestFit.mNuSq;
-    mNuSq1_errNeg = d1.BestFit.mNuSqErrNeg;
-    mNuSq1_errPos = d1.BestFit.mNuSqErrPos;
-    mNuSq1_err = d1.BestFit.mNuSqErr;
-else
-    %knm1
-    Chi21_min = min(Chi21_plot);
-    mNuSq1_bf = mNuSq(Chi21_plot==Chi21_min);
-    mNuSq1_errNeg = interp1(Chi21_plot(mNuSq<mNuSq1_bf),mNuSq(mNuSq<mNuSq1_bf),Chi21_min+1,'spline')-mNuSq1_bf;
-    mNuSq1_errPos = interp1(Chi21_plot(mNuSq>mNuSq1_bf),mNuSq(mNuSq>mNuSq1_bf),Chi21_min+1,'spline')-mNuSq1_bf;
-    mNuSq1_err = 0.5*(mNuSq1_errPos-mNuSq1_errNeg);
-    BestFit = struct('chi2',Chi21_min,'mNuSq',mNuSq1_bf,'mNuSqErrPos',mNuSq1_errPos,'mNuSqErrNeg',mNuSq1_errNeg,'mNuSqErr',mNuSq1_err);
-    save(k1file,'BestFit','-append')
-end
+%% find common minimum and uncertainty
 
-%knm2
-if isfield(d2,'BestFit')
-       Chi22_min  = d2.BestFit.chi2;
-    mNuSq2_bf     = d2.BestFit.mNuSq;
-    mNuSq2_errNeg = d2.BestFit.mNuSqErrNeg;
-    mNuSq2_errPos = d2.BestFit.mNuSqErrPos;
-    mNuSq2_err    = d2.BestFit.mNuSqErr;
-else
-    Chi22_min = min(Chi22_plot);
-    mNuSq2_bf = mNuSq(Chi22_plot==Chi22_min);
-    mNuSq2_errNeg = interp1(Chi22_plot(mNuSq<mNuSq2_bf),mNuSq(mNuSq<mNuSq2_bf),Chi22_min+1,'spline')-mNuSq2_bf;
-    mNuSq2_errPos = interp1(Chi22_plot(mNuSq>mNuSq2_bf),mNuSq(mNuSq>mNuSq2_bf),Chi22_min+1,'spline')-mNuSq2_bf;
-    mNuSq2_err = 0.5*(mNuSq2_errPos-mNuSq2_errNeg);
-    BestFit = struct('chi2',Chi22_min,'mNuSq',mNuSq2_bf,'mNuSqErrPos',mNuSq2_errPos,'mNuSqErrNeg',mNuSq2_errNeg,'mNuSqErr',mNuSq2_err);
-    save(k2file,'BestFit','-append')
-end
-
-ksumfile = [getenv('SamakPath'),sprintf('tritium-data/fit/Knm1/Chi2Profile/Uniform/Chi2ProfileCombi_%s_UniformScan_mNu_Knm1KNM2_UniformFPD_%s_FitParE0BkgNorm_nFit20_min-2_max1.mat',DataType,chi2)];
+ksumfile = [getenv('SamakPath'),sprintf('tritium-data/fit/Knm1/Chi2Profile/Uniform/Chi2ProfileCombi_%s_UniformScan_mNu_Knm1KNM2_UniformFPD_%s_FitParE0BkgNorm_nFit20_min-2.6_max1.mat',DataType,chi2)];
 if exist(ksumfile,'file')
     dsum = importdata(ksumfile);
     Chi2sum_min = dsum.BestFit.chi2;
@@ -105,15 +94,15 @@ psumbf = errorbar(mNuSqsum_bf,Chi2sum_min,0,0,mNuSqsum_errNeg,mNuSqsum_errPos,'.
 PrettyFigureFormat('FontSize',22);
 leg = legend([p1,p2,psum,p1bf,p2bf,psumbf],...
     'KNM-1 (Uniform)',sprintf('KNM-2 (%s)',Knm2AnaFlag),'KNM-1 and KNM-2',...
-    sprintf('best fit: {\\itm}_\\nu^2 = %.2f \\pm %.2f eV^2',mNuSq1_bf,0.5.*(mNuSq1_errPos-mNuSq1_errNeg)),...
-   sprintf('best fit: {\\itm}_\\nu^2 = %.2f \\pm %.2f eV^2',mNuSq2_bf,0.5.*(-mNuSq2_errNeg+mNuSq2_errPos)),...
+    sprintf('best fit: {\\itm}_\\nu^2 = %.2f \\pm %.2f eV^2',mNuSq1_bf,ScanResults1.BestFit.errMean),...
+   sprintf('best fit: {\\itm}_\\nu^2 = %.2f \\pm %.2f eV^2',mNuSq2_bf,ScanResults2.BestFit.errMean),...
     sprintf('best fit: {\\itm}_\\nu^2 = %.2f \\pm %.2f eV^2',mNuSqsum_bf,0.5.*(-mNuSqsum_errNeg+mNuSqsum_errPos)));
 leg.NumColumns = 2;
 leg.FontSize = get(gca,'FontSize')-3;
 xlabel(sprintf('{\\itm}_\\nu^2 (eV^2)'));
 ylabel(sprintf('\\chi^2'));
 PrettyLegendFormat(leg);
-xlim([-2,1])
+xlim([-2.1,1])
 if strcmp(Knm2AnaFlag,'MR-4')
     ylimMax = max(ylim)+33;
     ylim([min(ylim),ylimMax]);

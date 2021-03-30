@@ -2,19 +2,20 @@
 
 %% settings
 range                 = 40;
-freePar               = 'mNu E0 Bkg Norm qU';
+freePar               = 'mNu E0 Bkg Norm';
 chi2                  = 'chi2CMShape';
 DataType              = 'Real';
-AnaFlag               = 'Ring';
+AnaFlag               = 'StackPixel';
 RingMerge             = 'Full';%'None'; %only relevand when AnaFlag = Ring
 DopplerEffectFlag     = 'FSD';
 BKG_PtSlope           = 3*1e-06;
 TwinBias_BKG_PtSlope  = 3*1e-06;
-FSDFlag               = 'KNM2';
+FSDFlag               = 'KNM2_0p1eV';
 PullFlag              = 99;% 99 = no pull
-SysBudget             = 41;
+SysBudget             = 40;
 NonPoissonScaleFactor = 1.112;
 SigmaSq               =  0.0124+0.0025;
+nFitMax               = 50;
 
 % Init Model Object and covariance matrix object
 RunAnaArg = {'RunList','KNM2_Prompt',...
@@ -40,8 +41,10 @@ A = MultiRunAnalysis(RunAnaArg{:});
 A.exclDataStart = A.GetexclDataStart(range);
 %%
 A.ResetFitResults;
-A.FitResult.par(1) = -0.5;
-ScanResults = A.GetAsymFitError('Mode','Uniform','ParScanMax',1.5,'nFitMax',20);
+A.FitResult.par(1) = -0.8;
+ScanResults = A.GetAsymFitError('Mode','Uniform','ParScanMax',1.8,'nFitMax',nFitMax);
+%% plot
+pHandle = A.PlotChi2Curve('Parameter','mNu','ScanResult',ScanResults,'PlotBf','ON','HoldOn','OFF');
 %%
 mNuSq =[flipud(ScanResults.ParScan(:,2));ScanResults.ParScan(2:end,1)];
 Chi2 = [flipud(ScanResults.chi2min(:,2));ScanResults.chi2min(2:end,1)];

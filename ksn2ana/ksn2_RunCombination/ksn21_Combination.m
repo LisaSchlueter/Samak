@@ -50,19 +50,24 @@ S.RunAnaObj.RunData.RunName = 'KNM1';
 S.RunAnaObj.ELossFlag  = 'KatrinT2';
 S.RunAnaObj.AngularTFFlag ='OFF';
 S.RunAnaObj.SysBudget = 24;
+S.RunAnaObj.FSDFlag = 'Sibille0p5eV';
 % stat and syst
 S.RunAnaObj.NonPoissonScaleFactor = 1.064;
 S.RunAnaObj.chi2 = 'chi2CMShape';
 S.LoadGridFile('CheckLarger','ON');
-S.Interp1Grid('RecomputeFlag','ON');
+S.Interp1Grid('RecomputeFlag','ON');%,'Maxm4Sq',34.2^2);
 mNu4Sq_k1 = S.mNu4Sq;
 sin2T4_k1 = S.sin2T4;
 chi2_k1   = S.chi2;
 chi2ref_k1= S.chi2_ref;
-p1tot = S.ContourPlot('BestFit','OFF','CL',95,'HoldOn','OFF','Color',rgb('FireBrick'),'LineStyle',':');
+sum(sum(isnan(S.chi2)))
+S.GridPlot;
+%p1tot = S.ContourPlot('BestFit','OFF','CL',95,'HoldOn','OFF','Color',rgb('FireBrick'),'LineStyle',':');
 
-% load ksn2
-S.nGridSteps = 25;
+
+%% load ksn2
+%S.nGridSteps = 25;
+S.RunAnaObj.FSDFlag = 'KNM2_0p1eV';
 S.RunAnaObj.DataSet = 'Knm2';
 S.RunAnaObj.RunData.RunName = 'KNM2_Prompt';
 S.RunAnaObj.ELossFlag  = 'KatrinT2A20';

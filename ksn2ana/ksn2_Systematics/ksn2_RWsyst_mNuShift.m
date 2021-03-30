@@ -5,9 +5,9 @@
 % 3) Signal normalization
 % 4) No additional background
 % 5) maybe different FSD
-ScaleRW = 0.012/1.181;%0.58*1e-03;%5e-04;
-E0ShifteV = +1.64; % eV
-B_RW_Source = 1.23;%2.52;%
+ScaleRW = 0.58*1e-03;%0.012/1.181;%;
+E0ShifteV = 0;%+1.64; % eV
+B_RW_Source = 1.58;%1.23;%2.52;%
 freePar = 'mNu E0 Norm Bkg';
 range = 40;
 savedir = [getenv('SamakPath'),'ksn2ana/ksn2_Systematics/results/'];
@@ -54,7 +54,7 @@ else
     
      % compute TBDIS for regular tritium spectrum (wgts)
      A.ModelObj.ComputeTBDDS; A.ModelObj.ComputeTBDIS; 
-     TBDIS_wgts           = A.ModelObj.TBDIS;
+     TBDIS_wgts             = A.ModelObj.TBDIS;
      %% init rear wall spectrum
      A.ModelObj.KTFFlag = 'RW_WGTSMACE';
      A.ModelObj.WGTS_B_T = B_RW_Source;

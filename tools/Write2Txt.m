@@ -15,15 +15,20 @@ system(['touch ',filename,'.',Format])
 
 fileID = fopen([filename,'.',Format],'w');
 fprintf(fileID,'%s\n',variableName);
-if nCol==1
-    fprintf(fileID,'%.5g\n',variable);
-elseif nCol==2
-    fprintf(fileID,'%.10e %12.10e\n',variable);
-elseif nCol==3
-    fprintf(fileID,'%.10e %.10e %.10e\n',variable);
-elseif nCol==8
-    fprintf(fileID,'%.10f %.10f %.10f %.10f %.10f %.10f %.10f %.10f\n',variable);
-end
+WriteStr = '%.10f ';
+
+WriteStrNcol = [cell2mat(repmat({WriteStr},1,nCol)),'\n'];
+
+ fprintf(fileID,WriteStrNcol,variable);
+% if nCol==1
+%     fprintf(fileID,'%.5g\n',variable);
+% elseif nCol==2
+%     fprintf(fileID,'%.10e %12.10e\n',variable);
+% elseif nCol==3
+%     fprintf(fileID,'%.10e %.10e %.10e\n',variable);
+% elseif nCol==8
+%     fprintf(fileID,'%.10f %.10f %.10f %.10f %.10f %.10f %.10f %.10f\n',variable);  
+% end
 fclose(fileID);
 fprintf('variables writen to txt file: %s.%s \n',filename,Format)
 end
