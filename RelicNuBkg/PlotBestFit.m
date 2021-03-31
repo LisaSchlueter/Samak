@@ -7,6 +7,7 @@ function PlotBestFit(varargin)
     p.addParameter('Syst','ON',@(x)ismember(x,{'ON','OFF'}));
     p.addParameter('RunList','KNM1',@(x)ischar(x));
     p.addParameter('Plot','ON',@(x)ismember(x,{'ON','OFF'}));
+    p.addParameter('saveplot','OFF',@(x)ismember(x,{'ON','OFF'}));
     p.parse(varargin{:});
     mnuSq    = p.Results.mnuSq;
     pullFlag = p.Results.pullFlag;
@@ -15,6 +16,7 @@ function PlotBestFit(varargin)
     Syst     = p.Results.Syst;
     RunList  = p.Results.RunList;
     Plot     = p.Results.Plot;
+    saveplot = p.Results.saveplot;
 
     
     if exist(sprintf('./EtaFitResult_AllParams_mnuSq%g_Nfit%g.mat',mnuSq,Nfit),'file') && Nfit>1
@@ -37,7 +39,7 @@ function PlotBestFit(varargin)
                     'pullFlag',pullFlag,...
                     'FSDFlag','SibilleFull',...           % final state distribution
                     'ELossFlag','KatrinT2',...            % energy loss function
-                    'SysBudget',22,...                    % defines syst. uncertainties -> in GetSysErr.m;
+                    'SysBudget',24,...                    % defines syst. uncertainties -> in GetSysErr.m;
                     'DopplerEffectFlag','FSD',...
                     'Twin_SameCDFlag','OFF',...
                     'Twin_SameIsotopFlag','OFF',...
@@ -58,7 +60,7 @@ function PlotBestFit(varargin)
                         'pullFlag',pullFlag,...
                         'FSDFlag','SibilleFull',...           % final state distribution
                         'ELossFlag','KatrinT2',...            % energy loss function
-                        'SysBudget',22,...                    % defines syst. uncertainties -> in GetSysErr.m;
+                        'SysBudget',24,...                    % defines syst. uncertainties -> in GetSysErr.m;
                         'DopplerEffectFlag','FSD',...
                         'Twin_SameCDFlag','OFF',...
                         'Twin_SameIsotopFlag','OFF',...
@@ -84,15 +86,15 @@ function PlotBestFit(varargin)
             M.exclDataStart = M.GetexclDataStart(40);
             %M.ModelObj.BKG_RateSec_i=0.292256;
             M.Fit;
-            fitresults(1,j)=M.FitResult.par(1);
-            fitresults(2,j)=M.FitResult.err(1);
+            fitresults(1,j)= M.FitResult.par(1);
+            fitresults(2,j)= M.FitResult.err(1);
             fitresults(3,j)= M.ModelObj.Q_i+M.FitResult.par(2);
             fitresults(4,j)= M.FitResult.err(2);
             fitresults(5,j)= M.ModelObj.BKG_RateSec_i+M.FitResult.par(3);
             fitresults(6,j)= M.FitResult.err(3);
             fitresults(7,j)= M.FitResult.par(3+M.ModelObj.nPixels:3+2*M.ModelObj.nPixels-1) + 1;
             fitresults(8,j)= M.FitResult.err(3+M.ModelObj.nPixels:3+2*M.ModelObj.nPixels-1);
-            fitresults(9,j)=M.FitResult.par(17).*1e10;
+            fitresults(9,j)= M.FitResult.par(17).*1e10;
             fitresults(10,j)=M.FitResult.err(17).*1e10;
             fitresults(11,j)=M.FitResult.chi2min;
             save(sprintf('./EtaFitResult_AllParams_mnuSq%g_Nfit%g.mat',mnuSq,Nfit),'fitresults');
@@ -233,17 +235,30 @@ function PlotBestFit(varargin)
                         D.FitResult.errmat(4,1:4) D.FitResult.errmat(4,17);...
                         D.FitResult.errmat(17,1:4) D.FitResult.errmat(17,17)];
                     
-            fig3=figure(3);
+            fig3=figure('Renderer','painters');
+            set(fig3,'Units','normalized','Position',[0.001 0.001 0.3 0.45]);
             corplot(errormat_M);
             set(gca,'XTickLabel',{'m_\nu^2','E_0','B','N','\eta'});
             set(gca,'YTickLabel',{'m_\nu^2','E_0','B','N','\eta'});
             PrettyFigureFormat;
             
-            fig4=figure(4);
+            fig4=figure('Renderer','painters');
+            set(fig4,'Units','normalized','Position',[0.001 0.001 0.3 0.45]);
             corplot(errormat_D);
             set(gca,'XTickLabel',{'m_\nu^2','E_0','B','N','\eta'});
             set(gca,'YTickLabel',{'m_\nu^2','E_0','B','N','\eta'});
             PrettyFigureFormat;
+            
+            if strcmp(saveplot,'ON')
+                SaveDir = [getenv('SamakPath'),sprintf('RelicNuBkg/Plots/FinalPlots/')];
+                MakeDir(SaveDir);
+                SaveName1='RandomFluctFit.pdf';
+                SaveName2='Corplot_Noeta.pdf';
+                SaveName3='Corplot_eta.pdf';
+                export_fig(fig,[SaveDir,SaveName1]);
+                export_fig(fig3,[SaveDir,SaveName2]);
+                export_fig(fig4,[SaveDir,SaveName3]);
+            end
         end
     end
 
@@ -311,6 +326,46 @@ function PlotBestFit(varargin)
         histfit(fitresults(11,:));
         xlabel('\chi^2');
         PrettyFigureFormat;
+        
+        fig5=figure('Renderer','painters');
+        set(fig5, 'Units', 'normalized', 'Position', [0.001, 0.001,0.45, 0.6]);
+        etalarge = fitresults(9,find(fitresults(9,:)>3.6827e11));
+        histogram(fitresults(9,:),linspace(-6.4e11,5.56e11,14));
+        hold on;
+        histogram(etalarge,[3.72e11 4.64e11 5.56e11],'FaceAlpha',1);
+        a=annotation('line',[0.762 0.762],[0.1 0.9]);
+        a.LineStyle='--';
+        a.LineWidth = 2;
+        a.Color=[0.8500 0.3250 0.0980];
+        legend('\eta best fit distribution \newline (simulated)','Above data best fit','box','off','location','northwest');
+        xlabel('\eta');
+        PrettyFigureFormat;
+        hold off;
+        
+        fig6=figure('Renderer','painters');
+        set(fig6, 'Units', 'normalized', 'Position', [0.001, 0.001,0.45, 0.6]);
+        histogram(fitresults(9,:),linspace(-6.4e11,5.56e11,14));
+        a=annotation('line',[0.425 0.425],[0.1 0.9]);
+        a.LineStyle='--';
+        a.LineWidth=2;
+        a.Color=[0.5 0.5 0.5];
+        b=annotation('line',[0.645 0.645],[0.1 0.9]);
+        b.LineStyle='--';
+        b.LineWidth=2;
+        b.Color=[0.5 0.5 0.5];
+        xlabel('\eta');
+        PrettyFigureFormat;
+        
+        if strcmp(saveplot,'ON')
+                SaveDir = [getenv('SamakPath'),sprintf('RelicNuBkg/Plots/FinalPlots/')];
+                MakeDir(SaveDir);
+                SaveName4='ScatterCorr.pdf';
+                SaveName5='HistetaFrac.pdf';
+                SaveName6='Histeta.pdf';
+                export_fig(fig2,[SaveDir,SaveName4]);
+                export_fig(fig5,[SaveDir,SaveName5]);
+                export_fig(fig6,[SaveDir,SaveName6]);
+        end
     end
 end
 

@@ -1233,10 +1233,17 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             
             [SysErr,~] = GetSysErr(obj.SysBudget);
             
+            if strcmp(obj.DataSet,'Knm1')
+                BkgMode_def = 'SlopeFit';
+            else
+                BkgMode_def = 'Gauss';
+            end
+            
             p = inputParser;
             %RunAnalysis settings
             p.addParameter('InitNormFit','ON',@(x)ismember(x,{'ON','OFF'})); % Init Model Normalization + Background with Fit
             p.addParameter('BkgCM','ON',@(x)ismember(x,{'ON','OFF'}));       % Use Background CovMat ON/OFF
+            p.addParameter('BkgMode',BkgMode_def,@(x)ismember(x,{'SlopeFit','Gauss'}));
             
             % CovMat settings
             p.addParameter('SysEffects',defaultEffects,@(x)isstruct(x));
@@ -1266,7 +1273,6 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             p.addParameter('is_EOffsetErr',SysErr.is_EOffsetErr,@(x)isfloat(x));
             p.addParameter('BkgRingCorrCoeff',0,@(x)isfloat(x));
             p.addParameter('BkgScalingOpt',2,@(x)isfloat(x));
-            p.addParameter('BkgMode','Gauss',@(x)ismember(x,{'SlopeFit','Gauss'}));
             p.parse(varargin{:});
             
             InitNormFit              = p.Results.InitNormFit;

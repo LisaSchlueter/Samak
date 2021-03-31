@@ -41,7 +41,7 @@ function CheckmnuSqDist(varargin)
                         'FSDFlag','SibilleFull',...           % final state distribution
                         'ELossFlag','KatrinT2',...            % energy loss function
                         'SysBudget',22,...                    % defines syst. uncertainties -> in GetSysErr.m;
-                        'DopplerEffectFlag','FSD',...
+                        'DopplerEffectFlag','OFF',...
                         'Twin_SameCDFlag','OFF',...
                         'Twin_SameIsotopFlag','OFF',...
                         'SynchrotronFlag','ON',...
@@ -61,6 +61,7 @@ function CheckmnuSqDist(varargin)
             end
             
             M.exclDataStart = M.GetexclDataStart(40);
+            %M.InitModelObj_Norm_BKG('RecomputeFlag','ON');
             %M.ModelObj.BKG_RateSec_i=0.292256;
             M.Fit;
             fitresults(1,j)= M.FitResult.par(1);

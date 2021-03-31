@@ -1,4 +1,4 @@
-CheckmnuSqDist('Nfit',100);
+CheckmnuSqDist('Nfit',1000);
 
 % Nfit=1000;
 % statfluct   = zeros(numel(M.RunData.qU),Nfit);

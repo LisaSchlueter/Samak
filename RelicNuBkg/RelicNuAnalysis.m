@@ -1369,7 +1369,7 @@ classdef RelicNuAnalysis < handle
                savename    = [savename,sprintf('_%s',fitPar)];
            end
            if DeltaChi2~=2.71
-               savename    = [savename,sprintf('DeltaChi2_%s',DeltaChi2)];
+               savename    = [savename,sprintf('DeltaChi2_%i',DeltaChi2)];
            end
            savename        = [savename,'.mat'];
            
@@ -1442,7 +1442,7 @@ classdef RelicNuAnalysis < handle
                         sprintf('Final Result: eta = %g',eta(i))
                    end
                else
-                   mNu  = linspace(0,MaxmNu,NmNuBins);
+                   mNu  = linspace(0,MaxmNu,NmNuBins).^2;
                    for i=1:NmNuBins
                         U = MultiRunAnalysis('RunList',obj.Params,... % runlist defines which runs are analysed -> set MultiRunAnalysis.m -> function: GetRunList()
                             'chi2',chi2opt,...                 % uncertainties: statistical or stat + systematic uncertainties

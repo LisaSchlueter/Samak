@@ -264,7 +264,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
             p.addParameter('i_qUOffset','',@(x)isfloat(x));
             p.addParameter('Binning','Default',@(x)ismember(x,{'Default','NoB'}));
             p.addParameter('BinningSteps',0.1,@(x)isfloat(x));
-            p.addParameter('eta_i',1,@(x)isfloat(x));
+            p.addParameter('eta_i',0,@(x)isfloat(x));
             p.addParameter('ToggleRelic','ON',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('ToggleES','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('PeakPosition','',@(x)(isfloat(x) && x>=0) || isempty(x));
