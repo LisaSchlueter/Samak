@@ -1976,15 +1976,26 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             end
             
             savedir = sprintf('%stritium-data/fit/%s/Chi2Profile/%s/%s/',getenv('SamakPath'),obj.DataSet,AnaStr);
-            savename = sprintf('%sChi2Profile_%s_%sScan_%s_%s_%sFPD_%s_NP%.3f_FitPar%s_nFit%.0f.mat',...
+            savename = sprintf('%sChi2Profile_%s_%sScan_%s_%s_%sFPD_%s_NP%.3f_FitPar%s_nFit%.0f_%s.mat',...
                 savedir,obj.DataType,Mode,Parameter,obj.DataSet,AnaStr,obj.chi2,obj.NonPoissonScaleFactor(1),...
-                ConvertFixPar('freePar',obj.fixPar,'Mode','Reverse','nPar',obj.nPar,'nPixels',obj.ModelObj.nPixels),nFitMax);
+                ConvertFixPar('freePar',obj.fixPar,'Mode','Reverse','nPar',obj.nPar,'nPixels',obj.ModelObj.nPixels),nFitMax,...
+                obj.FSDFlag);
             
             if strcmp(Mode,'Uniform')
                 savename = strrep(savename,'.mat',sprintf('_min%.3g_max%.3g.mat',min(min(ScanResults.ParScan)),max(max(ScanResults.ParScan))));
             end
             if strcmp(obj.chi2,'chi2CMShape')
                 savename = strrep(savename,obj.chi2,sprintf('%s_SysBudget%.0f',obj.chi2,obj.SysBudget));
+            end
+            
+            if strcmp(obj.DataSet,'Knm1')
+                if strcmp(obj.AngularTFFlag,'ON')
+                    savename = strrep(savename,'.mat','_AngTF.mat');
+                end
+                
+                if ~strcmp(obj.ELossFlag,'KatrinT2')
+                    savename = strrep(savename,'.mat',sprintf('_%s.mat',obj.ELossFlag));
+                end     
             end
             
             if exist(savename,'file')
