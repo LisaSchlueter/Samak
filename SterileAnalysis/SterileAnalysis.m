@@ -1294,21 +1294,27 @@ classdef SterileAnalysis < handle
         
             LineWidth = 2.5;
             %% load samak
+             HoldOn = 'OFF';
             if strcmp(PlotStat,'ON')
                 obj.RunAnaObj.chi2 = 'chi2Stat';
+                obj.SetNPfactor;
                 obj.LoadGridFile('CheckSmallerN','ON');
                 obj.Interp1Grid('RecomputeFlag','ON','Maxm4Sq',38.2^2);
-                pStat = obj.ContourPlot('CL',obj.ConfLevel,'HoldOn','OFF',...
+                pStat = obj.ContourPlot('CL',obj.ConfLevel,'HoldOn',HoldOn,...
                     'Color',rgb('DodgerBlue'),'LineStyle','-','BestFit',BestFit,'PlotSplines','OFF');
                 hold on;
+                HoldOn = 'ON';
             end
             
             if strcmp(PlotTot,'ON')
                 obj.RunAnaObj.chi2 = 'chi2CMShape';
+                 obj.SetNPfactor;
                 obj.LoadGridFile('CheckSmallerN','ON');
                 obj.Interp1Grid('RecomputeFlag','ON');
-                pSys = obj.ContourPlot('CL',obj.ConfLevel,'HoldOn','ON',...
+                pSys = obj.ContourPlot('CL',obj.ConfLevel,'HoldOn',HoldOn,...
                     'Color',rgb('FireBrick'),'LineStyle','-','BestFit',BestFit,'PlotSplines','OFF');
+                hold on;
+                HoldOn = 'ON';
             end
             %% load fitrium
             savedirF = [getenv('SamakPath'),'SterileAnalysis/GridSearchFiles/',obj.RunAnaObj.DataSet,'/Others/'];
@@ -1322,16 +1328,17 @@ classdef SterileAnalysis < handle
             end
            
            if strcmp(PlotStat,'ON')
-               dfStat = importdata(fstat);  
-%                  if strcmp(obj.RunAnaObj.DataSet,'Knm2')
-%                      dfStat.data(:,2) = dfStat.data(:,2);
-%                  end %PowderBlue
+               dfStat = importdata(fstat);
+               %                  if strcmp(obj.RunAnaObj.DataSet,'Knm2')
+               %                      dfStat.data(:,2) = dfStat.data(:,2);
+               %                  end %PowderBlue
                pFStat = plot(dfStat(:,1),dfStat(:,2).^2,'LineStyle','-.','Color',rgb('Orange'),'LineWidth',LineWidth);
            end
            
            if strcmp(PlotTot,'ON')
-                dfSys = importdata(fsys);
-               pFSys  = plot(dfSys.data(:,1),dfSys.data(:,2),'LineStyle','-.','Color',rgb('Orange'),'LineWidth',LineWidth);
+               %                dfSys = importdata(fsys);
+               %                pFSys  = plot(dfSys.data(:,1),dfSys.data(:,2),'LineStyle','-.','Color',rgb('Orange'),'LineWidth',LineWidth);
+               pFSys = plot(NaN,NaN,'LineStyle','-.','Color',rgb('Orange'),'LineWidth',LineWidth);
                if obj.range==95 &&strcmp(obj.RunAnaObj.DataType,'Real')
                    fsys1 = sprintf('%scontour_KSN1_Fitrium_%s_%.0feV_total_95CL_1.txt',savedirF,obj.RunAnaObj.DataType,obj.range);
                    dfSys1 = importdata(fsys1);
@@ -1367,18 +1374,31 @@ classdef SterileAnalysis < handle
                    end
                end
            end
-           
+          
+           %% plot kafit
            if strcmp(PlotKaFit ,'ON')
-             kstat = sprintf('%scontour_KSN2_Kafit_%s_%.0feV_stat_95CL.txt',savedirF,obj.RunAnaObj.DataType,obj.range);
-             dkStat = importdata(kstat);
-             pKStat = plot(dkStat.data(:,1),dkStat.data(:,2),'LineStyle',':','Color',rgb('ForestGreen'),'LineWidth',LineWidth+0.5);
-           
+               kstat = sprintf('%scontour_KSN2_Kafit_%s_%.0feV_stat_95CL.txt',savedirF,obj.RunAnaObj.DataType,obj.range);
+               dkStat = importdata(kstat);
+               if strcmp(PlotStat,'ON')
+                   pKStat = plot(dkStat.data(:,1),dkStat.data(:,2),'LineStyle',':','Color',rgb('ForestGreen'),'LineWidth',LineWidth+0.5);
+               end
+               if strcmp(PlotTot,'ON')
+                   ksyst = sprintf('%scontour_KSN2_Kafit_%s_%.0feV_statsyst_95CL.dat',savedirF,obj.RunAnaObj.DataType,obj.range);
+                   dkSyst = importdata(ksyst);
+                   pKSys = plot(dkSyst.data(:,1),dkSyst.data(:,2),'LineStyle',':','Color',rgb('LimeGreen'),'LineWidth',LineWidth+0.5);
+               end
            end
            
            if strcmp(PlotStat,'ON') && strcmp(PlotTot,'ON')
+               if strcmp(PlotKaFit ,'OFF')
                legStr = {'Samak (stat. only)','Fitrium (stat. only)','Samak (stat. and syst.)','Fitrium (stat. and syst.)'};
                legend([pStat,pFStat,pSys,pFSys],legStr,'EdgeColor',rgb('Silver'),'Location','southwest');
+               else
+               legStr = {'Fitrium (stat. only)','KaFit (stat. only)','Samak (stat. only)','Fitrium (stat. and syst.)','KaFit (stat. and syst.)','Samak (stat. and syst.)'};
+               legend([pFStat,pKStat,pStat,pFSys,pKSys,pSys],legStr,'EdgeColor',rgb('Silver'),'Location','southwest');   
+               end
                extraStr = '';
+               
            elseif strcmp(PlotStat,'ON')
                if strcmp(PlotKaFit ,'ON')
                    legStr = {'Fitrium (stat. only)','KaFit (stat. only)','Samak (stat. only)'};
@@ -1390,8 +1410,8 @@ classdef SterileAnalysis < handle
                end
                extraStr = '_StatOnly';
            elseif strcmp(PlotTot,'ON')
-                legStr = {'Samak (stat. and syst.)','Fitrium (stat. and syst.)'};
-               legend([pSys,pFSys],legStr,'EdgeColor',rgb('Silver'),'Location','southwest');
+                legStr = {'Fitrium (stat. and syst.)','KaFit (stat. and syst.)','Samak (stat. and syst.)'};
+               legend([pFSys,pKSys,pSys],legStr,'EdgeColor',rgb('Silver'),'Location','southwest');
                extraStr = '_Tot';
            end
            

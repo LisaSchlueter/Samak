@@ -24,6 +24,8 @@ Real = MultiRunAnalysis('RunList',RunList,...
     'AngularTFFlag','OFF',...
     'DopplerEffectFlag','OFF');
 Real.exclDataStart = Real.GetexclDataStart(range);
+Real.InitModelObj_Norm_BKG('RecomputeFlag','ON');
+Real.ComputeCM;
 
 %% 
 Real.ResetFitResults;

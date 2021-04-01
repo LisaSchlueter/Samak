@@ -43,7 +43,7 @@ Chi2sum_plot = interp1(mNuSq1,Chi21+Chi22,mNuSq,'spline');
 
 %% find common minimum and uncertainty
 
-ksumfile = [getenv('SamakPath'),sprintf('tritium-data/fit/Knm1/Chi2Profile/Uniform/Chi2ProfileCombi_%s_UniformScan_mNu_Knm1KNM2_UniformFPD_%s_FitParE0BkgNorm_nFit20_min-2.6_max1.mat',DataType,chi2)];
+ksumfile = [getenv('SamakPath'),sprintf('tritium-data/fit/Knm1/Chi2Profile/Uniform/Chi2ProfileCombi_%s_UniformScan_mNu_Knm1KNM2_UniformFPD_%s_FitParE0BkgNorm_nFit%.0f_min-2.6_max1.mat',DataType,chi2,nFit)];
 if exist(ksumfile,'file')
     dsum = importdata(ksumfile);
     Chi2sum_min = dsum.BestFit.chi2;
@@ -98,4 +98,6 @@ savename = sprintf('%sknm2_CombiChi2_%s_Uniform_%s_KNM2%s.png',savedir,DataType,
 print(gcf,savename,'-dpng','-r300');
 fprintf('save plot to %s \n',savename);
 
+fprintf('mnu^2_bf common = %.4f eV2 \n',mNuSqsum_bf);
+fprintf('chi2min common = %.2f \n',Chi2sum_min);
 

@@ -6,7 +6,7 @@ chi2 = 'chi2CMShape';
 DataType = 'Twin';
 nGridSteps = 50;
 range = 40;
-freePar = 'mNu E0 Norm Bkg';
+freePar = 'E0 Norm Bkg';
 %% configure RunAnalysis object
 if strcmp(chi2,'chi2Stat')
     NonPoissonScaleFactor = 1;
@@ -43,27 +43,37 @@ SterileArg = {'RunAnaObj',A,... % Mother Object: defines RunList, Column Density
     'range',range};
 S = SterileAnalysis(SterileArg{:});
 %%
+close all
 S.LoadGridFile;
-S.InterpMode = 'lin';
-S.Interp1Grid('Maxm4Sq',37^2);
-S.ContourPlot; close;
+S.InterpMode = 'spline';
+S.Interp1Grid('Maxm4Sq',38.2^2);
+S.ContourPlot; %close;
 
-% S.LoadGridFile
-% S.InterpMode = 'spline';
-% S.Interp1Grid('Maxm4Sq',37^2);
-% S.ContourPlot('HoldOn','ON','LineStyle',':','Color',rgb('Orange')); %close;
+% S.InterpMode = 'lin';
+% S.LoadGridFile;
+% S.Interp1Grid('Maxm4Sq',38^2);
+% S.ContourPlot('HoldOn','ON','Color',rgb('Orange'),'LineStyle','--'); %close;
+% 
+% mNu4Sq   = linspace(min(S.mNu4Sq_contour),max(S.mNu4Sq_contour),1e4);
+% sin2T4   = interp1(S.mNu4Sq_contour,S.sin2T4_contour,mNu4Sq,'spline');
+% 
+% hold on;
+% plot(sin2T4,mNu4Sq)
+% S.sin2T4_contour = sin2T4;
+% S.mNu4Sq_contour = mNu4Sq;
 %% export contour
+
 savedir = sprintf('%sksn2ana/ksn2_FitterCrossCheck/results/',getenv('SamakPath'));
 MakeDir(savedir);
 savename =  sprintf('%sKSN2_contour_Samak%s_%s_40eV_%s',...
     savedir,DataType,strrep(freePar,' ',''),strrep(chi2,'chi2',''));
 Write2Txt('filename',savename,...
-      'Format','dat','variable',[S.sin2T4_contour;S.mNu4Sq_contour],'nCol',2,'variableName','sinT4Sq m4Sq');
-  %% test
-  d = importdata([savename,'.dat']);
-  plot(d.data(:,1),d.data(:,2));
-  set(gca,'XScale','log');
-  set(gca,'YScale','log');
-  xlim([5e-03,0.5]);
-  ylim([1 40^2]);
+    'Format','dat','variable',[S.sin2T4_contour;S.mNu4Sq_contour],'nCol',2,'variableName','sinT4Sq m4Sq');
+%% test
+d = importdata([savename,'.dat']);
+plot(d.data(:,1),d.data(:,2));
+set(gca,'XScale','log');
+set(gca,'YScale','log');
+xlim([5e-03,0.5]);
+ylim([1 40^2]);
 
