@@ -59,5 +59,5 @@ else
     [FitPar, FitErr, FitChi2min, dof,TBDIS]  = Real.FitTwin('nSamples',nFit);
     
     MakeDir(savedir);
-    save(savefile,'FitResult','Real','FitPar', 'FitErr', 'FitChi2min', 'dof','TBDIS');
+    save(savefile,'Real','FitPar', 'FitErr', 'FitChi2min', 'dof','TBDIS');
 end

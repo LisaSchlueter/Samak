@@ -1,5 +1,5 @@
 % investigate impact of grid size on contour 
-nGridSteps = [50,25,10];
+nGridSteps = [50,25];
 
 %% configure RunAnalysis object
 chi2 = 'chi2Stat';

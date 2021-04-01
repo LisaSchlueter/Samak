@@ -1,8 +1,8 @@
 % ksn2 calculate chi2 grid search
 %% settings that might change
-chi2 = 'chi2Stat';
+chi2 = 'chi2CMShape';
 DataType = 'Real';
-nGridSteps = 25;
+nGridSteps = 50;
 range = 40;
 
 %% configure RunAnalysis object
