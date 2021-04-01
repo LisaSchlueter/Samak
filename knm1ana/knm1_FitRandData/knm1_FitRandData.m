@@ -6,7 +6,7 @@
 % Last Updated: 23/03/2021
 
 %% settings
-nFit = 2;
+nFit = 1000;
 RecomputeFlag = 'OFF';
 Plots        = 'OFF';
 DataType     = 'Twin';

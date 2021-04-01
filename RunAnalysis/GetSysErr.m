@@ -341,6 +341,22 @@ elseif SysBudget == 299 % new KNM1 default + plasma knm1
     SysErr.MACE_VarErr = 0.08^2/3;
     SysErr.MaxSlopeCpsPereV = 5.2*1e-06; % warning: changed 02.May 2020 from 15e-6
     SysErr.BKG_PtSlopeErr = 0;
+elseif SysBudget == 200 % KNM1 Re-Analysis (April 2021)
+    SysErr.WGTS_TASR_RelErr = 5e-4;
+    SysErr.FSDNorm_RelErr=  0.01;
+    SysErr.FSDShapeGS_RelErr= 0.04;
+    SysErr.FSDShapeES_RelErr= 0.18;
+    SysErr.MACE_Ba_T_RelErr= 0.01;
+    SysErr.MACE_Bmax_T_RelErr= 0.001;
+    SysErr.WGTS_B_T_RelErr= 0.017;
+    SysErr.WGTS_CD_MolPerCm2_RelErr= 0.006;
+    SysErr.ISXsection_RelErr= 0; %use rhod sigma together as uncertainty
+    SysErr.DataDriven = 'ON';
+    SysErr.FPDeff_RelErr = 1e-4;
+    SysErr.is_EOffsetErr = 0;
+    SysErr.MACE_VarErr = 0;
+    SysErr.MaxSlopeCpsPereV = 5.2*1e-06; 
+    SysErr.BKG_PtSlopeErr = 4.3.*1e-06;
 elseif SysBudget == 31 % preliminary KNM2 systematics (January 20)
     SysErr.WGTS_TASR_RelErr = 5e-4; % data driven
     SysErr.FSDNorm_RelErr=  0.01;
