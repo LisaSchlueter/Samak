@@ -1,5 +1,3 @@
-
-
 %% 1. likelihood from fit on randomized twins
 nFit = 1000;
 RecomputeFlag = 'OFF';

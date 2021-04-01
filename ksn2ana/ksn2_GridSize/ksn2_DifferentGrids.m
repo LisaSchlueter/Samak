@@ -1,6 +1,7 @@
 % investigate impact of different grid types on contour 
 nGridSteps = 25;
 mNu4SqTestGrid = [1,2,3];
+Mode = 'Compute';
 %% configure RunAnalysis object
 chi2 = 'chi2Stat';
 DataType = 'Twin';
@@ -41,35 +42,25 @@ SterileArg = {'RunAnaObj',A,... % Mother Object: defines RunList, Column Density
     'range',range};
 S = SterileAnalysis(SterileArg{:});
 %%
-for i=1:numel(mNu4SqTestGrid)
-S.GridSearch('mNu4SqTestGrid',mNu4SqTestGrid(i),'ExtmNu4Sq','ON');
-end
 
-S.GridSearch('mNu4SqTestGrid','OFF','ExtmNu4Sq','ON');
-%%
-% HoldOn = 'OFF';
-% Colors = {'DodgerBlue','Orange','ForestGreen','FireBrick'};
-% LineStyles = {'-','-.',':','--'};
-% pHandle = cell(numel(nGridSteps),1);
-% legStr = cell(numel(nGridSteps),1);
-% S.InterpMode = InterpMode;
-% for i=1:numel(nGridSteps)
-% S.nGridSteps = nGridSteps(i);
-% S.LoadGridFile('CheckExtmNu4Sq','ON','CheckLargerN','OFF','CheckSmallerN','OFF');
-% S.Interp1Grid('Maxm4Sq',38.2^2);
-% pHandle{i} = S.ContourPlot('HoldOn',HoldOn,'Color',rgb(Colors{i}),'LineStyle',LineStyles{i});
-% legStr{i} = sprintf('%.0f x %.0f',nGridSteps(i),nGridSteps(i));
-% HoldOn = 'ON';
-% end
-% 
-% leg = legend([pHandle{:}],legStr);
-% PrettyLegendFormat(leg);
-% leg.Title.String = 'Grid size'; leg.Title.FontWeight = 'normal';
-% xlim([7e-3,0.5]);
-% ylim([1,1.6e3])
-% 
-% plotdir = [getenv('SamakPath'),'ksn2ana/ksn2_GridSize/plots/'];
-% plotname = sprintf('%sksn2_DifferentGrids_%s.png',plotdir,InterpMode);
-% MakeDir(plotdir);
-% print(plotname,'-dpng','-r300');
-% fprintf('save plot to %s \n',plotname);
+switch Mode
+    case 'Compute'
+        for i=1:numel(mNu4SqTestGrid)
+            S.GridSearch('mNu4SqTestGrid',mNu4SqTestGrid(i),'ExtmNu4Sq','ON');
+        end
+        S.GridSearch('mNu4SqTestGrid','OFF','ExtmNu4Sq','ON');
+    case 'Display'
+        Color = {'Orange','FireBrick','LimeGreen','ForestGreen'};
+        LineStyle = {'-.',':','--','-','-.',':','--','-'};
+        pHandle = cell(numel(mNu4SqTestGrid)+1,1);
+        S.LoadGridFile('mNu4SqTestGrid','OFF','ExtmNu4Sq','ON');
+        mNu50 = S.mNu4Sq(:,1);
+        S.Interp1Grid('Maxm4Sq',38.2^2)
+        pHandle{1} = S.ContourPlot('HoldOn','OFF');
+        for i=1:numel(mNu4SqTestGrid)
+            S.LoadGridFile('mNu4SqTestGrid',mNu4SqTestGrid(i),'ExtmNu4Sq','ON');
+             mNu25 =S.mNu4Sq(:,1);
+            S.Interp1Grid('Maxm4Sq',38.2^2)
+            pHandle{i+1} = S.ContourPlot('HoldOn','ON','Color',rgb(Color{i}),'LineStyle',LineStyle{i});
+        end
+end
