@@ -17,6 +17,7 @@ ELossFlag             = 'KatrinT2A20';
 AngTF                 = 'ON';
 SysBudget             = 200;
 BKG_PtSlope           = -2.2*1e-06;
+BkgCmMode             = '';%'Gauss';
 
 if strcmp(chi2,'chi2Stat')
     NonPoissonScaleFactor = 1;
@@ -31,10 +32,14 @@ savefile = sprintf('%sknm1_UniformFit_ReAna_%s_%s_NP%.4g_%s_%.0feV_%s_%s_AngTF%s
 
 if strcmp(chi2,'chi2CMShape')
     savefile = strrep(savefile,chi2,sprintf('%s_SysBudget%.0f',chi2,SysBudget));
+    if strcmp(BkgCmMode,'Gauss')
+        savefile = strrep(savefile,'.mat','_BkgCmGauss.mat');
+    end
 end
 if BKG_PtSlope~=0
-      savefile = strrep(savefile,'.mat',sprintf('_BkgPtSlope%.3gmuCpsS.mat',1e6.*BKG_PtSlope));
+    savefile = strrep(savefile,'.mat',sprintf('_BkgPtSlope%.3gmuCpsS.mat',1e6.*BKG_PtSlope));
 end
+
 
 if exist(savefile,'file') && strcmp(RecomputeFlag,'OFF')
     load(savefile);
@@ -69,7 +74,11 @@ else
         Real.InitModelObj_Norm_BKG('RecomputeFlag','ON');
     else
         Real.InitModelObj_Norm_BKG('RecomputeFlag','ON');
-        Real.ComputeCM;
+        if strcmp(BkgCmMode,'Gauss')
+            Real.ComputeCM('BkgMode','Gauss');
+        else
+            Real.ComputeCM;
+        end
     end
     
     Real.Fit;

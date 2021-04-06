@@ -1,5 +1,5 @@
 % investigate impact of grid size on contour 
-nGridSteps = [50,25];
+nGridSteps = [50,30,25,10];
 
 %% configure RunAnalysis object
 chi2 = 'chi2Stat';
@@ -42,14 +42,19 @@ SterileArg = {'RunAnaObj',A,... % Mother Object: defines RunList, Column Density
 S = SterileAnalysis(SterileArg{:});
 %%
 HoldOn = 'OFF';
-Colors = {'DodgerBlue','Orange','ForestGreen','FireBrick'};
-LineStyles = {'-','-.',':','--'};
+Colors = {'DodgerBlue','Orange','LimeGreen','FireBrick'};
+LineStyles = {'-',':','--','-.'};
 pHandle = cell(numel(nGridSteps),1);
 legStr = cell(numel(nGridSteps),1);
 S.InterpMode = InterpMode;
 for i=1:numel(nGridSteps)
+    if nGridSteps(i)==10
+        ExtmNu4Sq = 'OFF';
+    else
+        ExtmNu4Sq = 'ON';
+    end
 S.nGridSteps = nGridSteps(i);
-S.LoadGridFile('CheckExtmNu4Sq','ON','CheckLargerN','OFF','CheckSmallerN','OFF');
+S.LoadGridFile('CheckLargerN','OFF','CheckSmallerN','OFF','IgnoreKnm2FSDbinning','ON','ExtmNu4Sq',ExtmNu4Sq);
 S.Interp1Grid('Maxm4Sq',38.2^2);
 pHandle{i} = S.ContourPlot('HoldOn',HoldOn,'Color',rgb(Colors{i}),'LineStyle',LineStyles{i});
 legStr{i} = sprintf('%.0f x %.0f',nGridSteps(i),nGridSteps(i));

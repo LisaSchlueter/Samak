@@ -202,6 +202,14 @@ classdef SterileAnalysis < handle
                     mnu4SqSmall  = logspace(0,log10((obj.range-11)^2),obj.nGridSteps-10)';
                     mnu4SqLarge  = logspace(log10((obj.range-10)^2),log10((obj.range)^2),10)';
                     mnu4Sq       = sort([mnu4SqSmall;mnu4SqLarge]);
+                elseif mNu4SqTestGrid==4
+                    mnu4SqSmall  = logspace(0,log10((obj.range-11)^2),obj.nGridSteps-5)';
+                    mnu4SqLarge  = logspace(log10((obj.range-10)^2),log10((obj.range)^2),5)';
+                    mnu4Sq       = sort([mnu4SqSmall;mnu4SqLarge]);
+                elseif mNu4SqTestGrid==5
+                    mnu4SqSmall  = logspace(0,log10((obj.range-11)^2),obj.nGridSteps-15)';
+                    mnu4SqLarge  = logspace(log10((obj.range-10)^2),log10((obj.range)^2),15)';
+                    mnu4Sq       = sort([mnu4SqSmall;mnu4SqLarge]);
                 else
                     mnu4Sq      = logspace(0,log10((obj.range)^2),obj.nGridSteps)';
                 end
@@ -1953,6 +1961,7 @@ classdef SterileAnalysis < handle
             p.addParameter('CheckExtmNu4Sq','ON',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('Negsin2T4','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('NegmNu4Sq','OFF',@(x)ismember(x,{'ON','OFF'}));
+            p.addParameter('IgnoreKnm2FSDbinning','OFF',@(x)ismember(x,{'ON','OFF'})); % if OFF -> load file with other binning if available
             p.addParameter('Extsin2T4','OFF',@(x)ismember(x,{'ON','OFF'})); %extended sin2T2 (up to 1)
             p.addParameter('ExtmNu4Sq','OFF',@(x)ismember(x,{'ON','OFF'})); %extended m4Sq (from 0.1)
             p.addParameter('mNu4SqTestGrid','OFF',@(x)strcmp(x,'OFF') || isfloat(x));
@@ -1967,6 +1976,7 @@ classdef SterileAnalysis < handle
             ExtmNu4Sq     = p.Results.ExtmNu4Sq;
             mNu4SqTestGrid = p.Results.mNu4SqTestGrid;
             FixmNuSq      = p.Results.FixmNuSq;
+            IgnoreKnm2FSDbinning = p.Results.IgnoreKnm2FSDbinning;
             
             filename = obj.GridFilename('Negsin2T4',Negsin2T4,'NegmNu4Sq',NegmNu4Sq,...
                                         'Extsin2T4',Extsin2T4,'ExtmNu4Sq',ExtmNu4Sq,...
@@ -1989,6 +1999,30 @@ classdef SterileAnalysis < handle
                     loadSuccess = 1;
                     end
                 end
+            end
+            
+            if strcmp(IgnoreKnm2FSDbinning,'ON')
+                FSD_i = obj.RunAnaObj.FSDFlag;
+                obj.RunAnaObj.FSDFlag = 'KNM2';
+                TestFile = obj.GridFilename('Negsin2T4',Negsin2T4,'NegmNu4Sq',NegmNu4Sq,...
+                    'Extsin2T4',Extsin2T4,'ExtmNu4Sq',ExtmNu4Sq,...
+                    'FixmNuSq',FixmNuSq,'mNu4SqTestGrid',mNu4SqTestGrid);
+                TestFile2 = strrep(TestFile,'FSDKNM2','FSDKNM2_0p1eV');
+                TestFile3 = strrep(TestFile,'FSDKNM2','FSDKNM2_0p5eV');
+                if exist(TestFile,'file')
+                    f = importdata(TestFile);
+                    fprintf('change local FSD to KNM2 - load grid from file %s \n',TestFile)
+                    loadSuccess = 1;
+                elseif exist(TestFile2,'file')
+                    f = importdata(TestFile2);
+                    fprintf('change local FSD to KNM2_0p1eV - load grid from file %s \n',TestFile2)
+                    loadSuccess = 1;
+                elseif exist(TestFile3,'file')
+                    f = importdata(TestFile3);
+                    fprintf('change local FSD to KNM2_0p5eV - load grid from file %s \n',TestFile3)
+                    loadSuccess = 1;
+                end
+               obj.RunAnaObj.FSDFlag = FSD_i;
             end
             
             if strcmp(CheckLargerN,'ON') && loadSuccess == 0
@@ -2020,7 +2054,7 @@ classdef SterileAnalysis < handle
             end
             
             if loadSuccess == 0
-                fprintf('Cannot find grid %s \n',filename);
+                fprintf(2,'Cannot find grid %s \n',filename);
                 f = 0;
             else
                 obj.mNu4Sq = f.mnu4Sq;

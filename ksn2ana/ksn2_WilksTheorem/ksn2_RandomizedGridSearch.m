@@ -2,7 +2,7 @@
 % grid search on randomized twins
 % ksn2 calculate chi2 grid search
 
-randMC = 2:100;
+randMC = 1:500;
 Twin_sin2T4 = 0;
 Twin_mNu4Sq = 0;
 chi2 = 'chi2CMShape';
