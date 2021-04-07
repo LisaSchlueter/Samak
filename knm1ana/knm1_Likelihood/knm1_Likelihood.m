@@ -1,23 +1,7 @@
 %% 1. likelihood from fit on randomized twins
-nFit = 1000;
-RecomputeFlag = 'OFF';
-Plots        = 'OFF';
-DataType     = 'Twin';
-range        = 40;
-chi2         = 'chi2CMShape';
-freePar      = 'mNu E0 Norm Bkg';
-FSDFlag      = 'Sibille0p5eV';
-NonPoissonScaleFactor = 1.064;
-SysBudget    = 24;
-savedir = [getenv('SamakPath'),'knm1ana/knm1_FitRandData/results/'];
-TwinmNuSq = -0.97;
-savefile = sprintf('%sknm1FitRandData_%s_%s_NP%.4g_%s_%.0feV_%s_TwinmNuSq%.3geV2_%.0ffit.mat',...
-    savedir,DataType,chi2,NonPoissonScaleFactor,strrep(freePar,' ',''),range,FSDFlag,TwinmNuSq,nFit);
-if strcmp(chi2,'chi2CMShape')
-    savefile = strrep(savefile,chi2,sprintf('%s_SysBudget%.0f',chi2,SysBudget));
-end
-dfits = importdata(savefile); 
-mNuSq_fit = dfits.FitPar(1,:);
+savedir = [getenv('SamakPath'),'knm1ana/knm1_Likelihood/results/'];
+savename = sprintf('%sknm1_MarginalLikelihood.mat',savedir);
+mNuSq_fit = importdata(savename);
 %h1 = histogram(mNuSq);
 
 %% likelihood from chi2 profile

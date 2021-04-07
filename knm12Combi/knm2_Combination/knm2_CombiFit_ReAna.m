@@ -7,7 +7,7 @@ chi2          = 'chi2CMShape';
 DataType      = 'Real';
 KNM1SysBudget = 200;%4;
 KNM1Doppler   = 'OFF';
-savedir = [getenv('SamakPath'),'knm2ana/knm2_Combination/results/'];
+savedir = [getenv('SamakPath'),'knm12Combi/knm2_Combination/results/'];
 savename = sprintf('%sknm2_CombiFit_ReAna_%s_Uniform_%s_Knm1SysBudget%.0f_Knm1DE%s.mat',savedir,DataType,chi2,KNM1SysBudget,KNM1Doppler);
 
 if exist(savename,'file') && strcmp(RecomputeFlag,'OFF')
@@ -184,7 +184,8 @@ fprintf('N  (KNM-1) = %.2f +- %.2f  \n',(d.FitResult.par(6)+1),d.FitResult.err(6
 fprintf('N  (KNM-2) = %.2f +- %.2f  \n',(d.FitResult.par(7)+1),d.FitResult.err(7));
 fprintf('chi^2_min  = %.1f (%.0f dof)\n',d.FitResult.chi2min,27+28-7)
 fprintf('- ---------------------------------\n');
-
+fprintf('goodness-of-fit: p = %.2f \n',1-chi2cdf(d.FitResult.chi2min,27+28-7));
+fprintf('parameter goodness-of-fit: p = %.2f \n',1-chi2cdf(d.FitResult.chi2min-21.2-27.5,1));
 %% plot spectrum
 
 if strcmp(Plot,'ON')
@@ -236,3 +237,6 @@ if strcmp(Plot,'ON')
     plotname = sprintf('%sknm2_CombiFitUniform.png',plotdir);
     print(gcf,plotname,'-dpng','-r300');
 end
+
+
+%%

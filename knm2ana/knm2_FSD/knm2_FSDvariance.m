@@ -10,27 +10,6 @@ fprintf('40 eV variance:        %.3f eV^2 \n',var(E(E<=40),Prob(E<=40))); % vari
 fprintf('Total variance:        %.3f eV^2 \n', var(E,Prob)); % variance ground state
 
 
-fsddir  = [getenv('SamakPath'),'inputs/FSD/'];
-fsdfile = sprintf('%sFSD_KNM2_HT.txt',fsddir);
-d = importdata(fsdfile);
-E = d(:,1);
-Prob = d(:,2);
-fprintf('----------------HT-----------------\n')
-fprintf('Ground State variance: %.3f eV^2 \n', var(E(E<=8),Prob(E<=8))); % variance ground state
-fprintf('40 eV variance:        %.3f eV^2 \n',var(E(E<=40),Prob(E<=40))); % variance ground state
-fprintf('Total variance:        %.3f eV^2 \n', var(E,Prob)); % variance ground state
-
-fsddir  = [getenv('SamakPath'),'inputs/FSD/'];
-fsdfile = sprintf('%sFSD_KNM2_DT.txt',fsddir);
-d = importdata(fsdfile);
-E = d(:,1);
-Prob = d(:,2);
-fprintf('----------------DT-----------------\n')
-fprintf('Ground State variance: %.3f eV^2 \n', var(E(E<=8),Prob(E<=8))); % variance ground state
-fprintf('40 eV variance:        %.3f eV^2 \n',var(E(E<=40),Prob(E<=40))); % variance ground state
-fprintf('Total variance:        %.3f eV^2 \n', var(E,Prob)); % variance ground state
-
-
 %%
 d = importdata('FSD_KNM2_DT-HT-TT-CovMat_5000Trials_KNM2Prompt_0.01NormErr_0.04GS_0.18ES_ShapeErr.mat');
 E   =  d.obj.StudyObject.TTexE;

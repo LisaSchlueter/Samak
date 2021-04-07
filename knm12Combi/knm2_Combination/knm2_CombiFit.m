@@ -7,7 +7,7 @@ chi2          = 'chi2CMShape';
 DataType      = 'Real';
 KNM1SysBudget = 24;
 KNM1Doppler   = 'OFF';
-savedir = [getenv('SamakPath'),'knm2ana/knm2_Combination/results/'];
+savedir = [getenv('SamakPath'),'knm12Combi/knm2_Combination/results/'];
 savename = sprintf('%sknm2_CombiFit_%s_Uniform_%s_Knm1SysBudget%.0f_Knm1DE%s.mat',savedir,DataType,chi2,KNM1SysBudget,KNM1Doppler);
 
 if exist(savename,'file') && strcmp(RecomputeFlag,'OFF')

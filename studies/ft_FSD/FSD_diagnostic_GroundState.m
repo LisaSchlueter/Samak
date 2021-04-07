@@ -6,20 +6,20 @@ PlotFontSize = 18;
 
 % Configuration
 FSDNorm_RelErr = 0.01;
-FSDShapeGS_RelErr = [0.2, 0.3];%0.01, 0.02, 0.025 0.03, 0.035, 0.04, 0.05, 0.06];%[0.04, 0.04, 0.04, 0.04, 0.04, 0.04, 0.04, 0.04];
+FSDShapeGS_RelErr = 0.04;%0.01, 0.02, 0.025 0.03, 0.035, 0.04, 0.05, 0.06];%[0.04, 0.04, 0.04, 0.04, 0.04, 0.04, 0.04, 0.04];
 FSDShapeES_RelErr = zeros(numel(FSDShapeGS_RelErr),1);
 
-nTrials = 10000;
+nTrials = 1000;
 state = 'ground state';
-%save_name = 'blalala';
-save_name = sprintf('./results/%s_FSDdiagnostic_GroundState_%.0fSamples.mat',Isotopologue,nTrials);
+FSDFlag = 'SAENZ';
+save_name = sprintf('./results/%s_FSDdiagnostic_GroundState_%s_%.0fSamples.mat',Isotopologue,FSDFlag,nTrials);
 if exist(save_name,'file')
     load(save_name);
     close;
 else
 % Set up Model 
-A = MultiRunAnalysis('RunList','StackCD100all');
-
+A = RunAnalysis('RunNr',51531,'FSDFlag',FSDFlag);
+%%
 switch Isotopologue
     case 'DT'
         nProb   = numel(A.ModelObj.DTexP);
@@ -35,6 +35,7 @@ switch Isotopologue
         Energy  = A.ModelObj.HTexE;
         FSDCalc = A.ModelObj.HTFSD;
 end
+
 GSESLimit =A.ModelObj.TTGSTh; %for all same bin
 
 % Init Variables
@@ -52,12 +53,15 @@ switch Isotopologue
     case 'DT'
         FSD_P_theory = [A.ModelObj.DTexP_G*A.ModelObj.DTNormGS_i,A.ModelObj.DTexP_E*A.ModelObj.DTNormES_i]';
         FSD_Norm_i = A.ModelObj.DTNormGS_i;
+        Threshold = A.ModelObj.DTGSTh;
     case 'TT'
         FSD_P_theory = [A.ModelObj.TTexP_G*A.ModelObj.TTNormGS_i,A.ModelObj.TTexP_E*A.ModelObj.TTNormES_i]';
         FSD_Norm_i = A.ModelObj.TTNormGS_i;
+        Threshold = A.ModelObj.TTGSTh;
     case 'HT'
         FSD_P_theory = [A.ModelObj.HTexP_G*A.ModelObj.HTNormGS_i,A.ModelObj.HTexP_E*A.ModelObj.HTNormES_i]';
         FSD_Norm_i = A.ModelObj.HTNormGS_i;
+        Threshold = A.ModelObj.HTGSTh;
 end
 
 for ii=1:numel(FSDShapeGS_RelErr)
@@ -110,7 +114,7 @@ for ii=1:numel(FSDShapeGS_RelErr)
     for i=1:nTrials
         FSDmean(i,ii) = wmean(Energy,FSD_P_norm(:,i,ii)');
         FSDvar(i,ii) = var(Energy,FSD_P_norm(:,i,ii)');
-        FSDvar_GS(i,ii) = var(Energy(1:A.ModelObj.DTGSTh), FSD_P_norm(1:A.ModelObj.DTGSTh,i,ii)');
+        FSDvar_GS(i,ii) = var(Energy(1:Threshold), FSD_P_norm(1:Threshold,i,ii)');
     end
     meanFSDvar(ii)   = mean(FSDvar(:,ii));
     meanFSDvar_GS(ii) = mean(FSDvar_GS(:,ii));
@@ -147,15 +151,15 @@ for ii=1:numel(FSDShapeGS_RelErr)
       
 save_dir = sprintf('./plots/FSD_diagnostic/');
 save_name = sprintf('SampleFSD_GroundStates_%.2gGSerr_%.0fSamples',FSDShapeGS_RelErr(IndexFSDRelErr),nTrials);
-export_fig([save_dir,'png/',save_name,'.png']);
-export_fig([save_dir,'fig/',save_name,'.fig']);
-publish_figurePDF(fig55,[save_dir,'pdf/',save_name,'.pdf'])
-close;
+% export_fig([save_dir,'png/',save_name,'.png']);
+% export_fig([save_dir,'fig/',save_name,'.fig']);
+% publish_figurePDF(fig55,[save_dir,'pdf/',save_name,'.pdf'])
+% close;
 end
 %% Variance distribution 
 close
 fig67 = figure('Name','Variances','Renderer','opengl');
-IndexFSDRelErr = 5;
+IndexFSDRelErr = 1;
 set(fig67, 'Units', 'normalized', 'Position', [0.9, 0.9, 0.75, 0.7]);
     h1 = nhist(FSDvar_GS(:,IndexFSDRelErr),'color',rgb('CadetBlue'),'linewidth',0.01);
     sample_title = sprintf('bin-to-bin uncorrelated uncertainty GS %.1f%% , normalization uncertainty %.0f %%', FSDShapeGS_RelErr(IndexFSDRelErr)*100,FSDNorm_RelErr(1)*100);
@@ -177,10 +181,10 @@ a.FontSize=PlotFontSize;a.FontWeight='bold';
     
 save_dir = sprintf('./plots/FSD_diagnostic/');
 save_name = sprintf('Variance_GroundStates_%.1f_%.0fSamples',FSDShapeGS_RelErr(IndexFSDRelErr)*100,nTrials);
-export_fig([save_dir,'png/',save_name,'.png']);
-export_fig([save_dir,'fig/',save_name,'.fig']);
-publish_figurePDF(fig67,[save_dir,'pdf/',save_name,'.pdf']);
-%close;
+% export_fig([save_dir,'png/',save_name,'.png']);
+% export_fig([save_dir,'fig/',save_name,'.fig']);
+% publish_figurePDF(fig67,[save_dir,'pdf/',save_name,'.pdf']);
+% %close;
 %% Variance in dependence of GS Error
 fig681 = figure(681);
 set(fig681, 'Units', 'normalized', 'Position', [0.9, 0.9, 0.7, 0.7],'Renderer','opengl');
@@ -197,9 +201,9 @@ grid on;
 
 save_dir = sprintf('./plots/FSD_diagnostic/');
 save_name = sprintf('%s_Variance_OverviewRatio_GroundStates_%.0fSamples',Isotopologue,nTrials);
-export_fig([save_dir,'png/',save_name,'.png']);
-export_fig([save_dir,'fig/',save_name,'.fig']);
-publish_figurePDF(fig681,[save_dir,'pdf/',save_name,'.pdf']);
+% export_fig([save_dir,'png/',save_name,'.png']);
+% export_fig([save_dir,'fig/',save_name,'.fig']);
+% publish_figurePDF(fig681,[save_dir,'pdf/',save_name,'.pdf']);
 %close;
 %% std of width of FSD depending in sampling uncertainty Overview
 fig68 = figure('Renderer','opengl');
@@ -239,9 +243,9 @@ linkaxes([s1 s2 s3],'x');
 
 save_dir = sprintf('./plots/FSD_diagnostic/');
 save_name = sprintf('%s_Variance_Overview_GroundStates_%.0fSamples',Isotopologue,nTrials);
-export_fig([save_dir,'png/',save_name,'.png']);
-export_fig([save_dir,'fig/',save_name,'.fig']);
-publish_figurePDF(fig68,[save_dir,'pdf/',save_name,'.pdf']);
-%close;
-
+% export_fig([save_dir,'png/',save_name,'.png']);
+% export_fig([save_dir,'fig/',save_name,'.fig']);
+% publish_figurePDF(fig68,[save_dir,'pdf/',save_name,'.pdf']);
+% %close;
+% 
 
