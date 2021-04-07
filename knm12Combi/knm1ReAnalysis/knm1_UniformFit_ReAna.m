@@ -12,10 +12,10 @@ DataType              = 'Real';
 range                 = 40;
 chi2                  = 'chi2CMShape';
 freePar               = 'mNu E0 Norm Bkg';
-FSDFlag               = 'KNM2_0p1eV';%'Sibille0p5eV';
-ELossFlag             = 'KatrinT2A20';
+FSDFlag               = 'KNM2_0p1eV';%'Sibille0p5eV';%
+ELossFlag             = 'KatrinT2A20';%A20';
 AngTF                 = 'ON';
-SysBudget             = 200;
+SysBudget             = 200;%200;
 BKG_PtSlope           = -2.2*1e-06;
 BkgCmMode             = '';%'Gauss';
 

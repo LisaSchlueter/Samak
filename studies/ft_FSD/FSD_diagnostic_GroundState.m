@@ -107,15 +107,15 @@ varFSDvar  = zeros(numel(FSDShapeGS_RelErr),1);     % variance of FSD variance(=
 varFSDvar_GS = zeros(numel(FSDShapeGS_RelErr),1);
 
 for ii=1:numel(FSDShapeGS_RelErr)
-for i=1:nTrials
-    FSDmean(i,ii) = wmean(Energy,FSD_P_norm(:,i,ii)');
-    FSDvar(i,ii) = var(Energy,FSD_P_norm(:,i,ii)');
-    FSDvar_GS(i,ii) = var(Energy(1:A.ModelObj.DTGSTh), FSD_P_norm(1:A.ModelObj.DTGSTh,i,ii)');
-end
-meanFSDvar(ii)   = mean(FSDvar(:,ii));
-meanFSDvar_GS(ii) = mean(FSDvar_GS(:,ii));
-varFSDvar(ii)    = var(FSDvar(:,ii));
-varFSDvar_GS(ii) = var(FSDvar_GS(:,ii));
+    for i=1:nTrials
+        FSDmean(i,ii) = wmean(Energy,FSD_P_norm(:,i,ii)');
+        FSDvar(i,ii) = var(Energy,FSD_P_norm(:,i,ii)');
+        FSDvar_GS(i,ii) = var(Energy(1:A.ModelObj.DTGSTh), FSD_P_norm(1:A.ModelObj.DTGSTh,i,ii)');
+    end
+    meanFSDvar(ii)   = mean(FSDvar(:,ii));
+    meanFSDvar_GS(ii) = mean(FSDvar_GS(:,ii));
+    varFSDvar(ii)    = var(FSDvar(:,ii));
+    varFSDvar_GS(ii) = var(FSDvar_GS(:,ii));
 end
 
 FSD_P_norm_std  = squeeze(std(permute(FSD_P_norm,[2,1,3]))); % standard deviation of samles for plot

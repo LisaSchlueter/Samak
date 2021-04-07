@@ -66,7 +66,7 @@ PrettyLegendFormat(leg);
 leg.Title.String = 'Grid size'; leg.Title.FontWeight = 'normal';
 xlim([7e-3,0.5]);
 ylim([1,1.6e3])
-
+%%
 plotdir = [getenv('SamakPath'),'ksn2ana/ksn2_GridSize/plots/'];
 plotname = sprintf('%sksn2_GridSize_%s.png',plotdir,InterpMode);
 MakeDir(plotdir);

@@ -1,7 +1,7 @@
 % investigate impact of different grid types on contour 
 nGridSteps = 30;
-mNu4SqTestGrid = [2,3];
-Mode = 'Compute';
+mNu4SqTestGrid = [4,2,5];
+Mode = 'Display';%'Compute';
 %% configure RunAnalysis object
 chi2 = 'chi2Stat';
 DataType = 'Twin';
@@ -53,66 +53,53 @@ switch Mode
         S.GridSearch('mNu4SqTestGrid','OFF','ExtmNu4Sq','ON');
     case 'Display'
         Color = {'DodgerBlue','Orange','FireBrick','SkyBlue','LimeGreen'};
-        LineStyle = {'--',':','-.','-.','-.',':','--','-'};
-        pHandle = cell(numel(mNu4SqTestGrid)+4,1);
-        legStr = cell(numel(mNu4SqTestGrid)+4,1);
+        LineStyle = {'--','-.',':',':',':',':','--'};
+        pHandle = cell(numel(mNu4SqTestGrid)+2,1);
+        legStr = cell(numel(mNu4SqTestGrid)+2,1);
         
-        % 50 grid
+        % 50 grid log-log
         S.nGridSteps= 50;  
         S.LoadGridFile('mNu4SqTestGrid','OFF','ExtmNu4Sq','ON','IgnoreKnm2FSDbinning','ON','CheckLargerN','OFF');
         mNu50 = S.mNu4Sq(:,1);
         S.Interp1Grid('Maxm4Sq',38.2^2)
         pHandle{1} = S.ContourPlot('HoldOn','OFF','Color',rgb('Black'));
         legStr{1} = sprintf('50 \\times 50 log-log grid (%.0f points for {\\itm}_4^2\\geq900 eV^2)',sum(mNu50>=29.999^2));
-       
-        % 30 grid
+        pHandle{1}.LineWidth = 3.5;
+        
+        % 30 grids log-log
         S.nGridSteps= 30;
         S.LoadGridFile('mNu4SqTestGrid','OFF','CheckExtmNu4Sq','ON','CheckLargerN','OFF','IgnoreKnm2FSDbinning','ON','ExtmNu4Sq','ON');
         mNu30 = S.mNu4Sq(:,1);
         S.Interp1Grid('Maxm4Sq',38^2)
-        pHandle{2} = S.ContourPlot('HoldOn','ON','Color',rgb('Black'),'LineStyle','-.');
+        pHandle{2} = S.ContourPlot('HoldOn','ON','Color',rgb('SlateGray'),'LineStyle','-.');
         legStr{2} = sprintf('30 \\times 30 log-log grid (%.0f points for {\\itm}_4^2\\geq900 eV^2)',sum(mNu30>=29.999^2));
-     
-        S.LoadGridFile('mNu4SqTestGrid',2,'ExtmNu4Sq','ON','IgnoreKnm2FSDbinning','ON','CheckLargerN','OFF','ExtmNu4Sq','ON');
-        mNu30 = S.mNu4Sq(:,1);
-        S.Interp1Grid('Maxm4Sq',38.2^2)
-        pHandle{3} = S.ContourPlot('HoldOn','ON','Color',rgb(Color{1}),'LineStyle','-.');
-        legStr{3} = sprintf('30 \\times 30 with %.0f points for {\\itm}_4^2\\geq900 eV^2',sum(mNu30>=29.999^2));
-     
-        % 25 grid
-        S.nGridSteps= 25;   
-        S.LoadGridFile('mNu4SqTestGrid','OFF','ExtmNu4Sq','OFF','IgnoreKnm2FSDbinning','ON','CheckLargerN','OFF','ExtmNu4Sq','ON');
-        mNu25reg = S.mNu4Sq(:,1);
-        S.Interp1Grid('Maxm4Sq',38.2^2)
-        pHandle{4} = S.ContourPlot('HoldOn','ON','Color',rgb('Black'),'LineStyle',':');
-        legStr{4} = sprintf('25 \\times 25 log-log grid (%.0f points for {\\itm}_4^2\\geq900 eV^2)',sum(mNu25reg>=(29.999)^2));
-       
        
         for i=1:numel(mNu4SqTestGrid)
             S.LoadGridFile('mNu4SqTestGrid',mNu4SqTestGrid(i),'ExtmNu4Sq','ON','IgnoreKnm2FSDbinning','ON','CheckLargerN','OFF');
-             mNu25 =S.mNu4Sq(:,1);
+            mNu25 =S.mNu4Sq(:,1);
             S.Interp1Grid('Maxm4Sq',38.2^2)
-            pHandle{i+4} = S.ContourPlot('HoldOn','ON','Color',rgb(Color{i+1}),'LineStyle',LineStyle{i});
-            legStr{i+4} = sprintf('25 \\times 25 with %.0f points for {\\itm}_4^2\\geq900 eV^2',sum(mNu25>=29.999^2));
+            pHandle{i+2} = S.ContourPlot('HoldOn','ON','Color',rgb(Color{i}),'LineStyle',LineStyle{i});
+            legStr{i+2} = sprintf('%.0f \\times %.0f with %.0f points for {\\itm}_4^2\\geq900 eV^2',nGridSteps,nGridSteps,sum(mNu25>=29.999^2));
         end
 end
 
-%leg = legend([pHandle{:}],legStr);
-OrderIdx = [4,2,1,5,3,6];
-leg = legend([pHandle{OrderIdx}],legStr{OrderIdx});
+leg = legend([pHandle{:}],legStr);
+%OrderIdx = [4,2,1,5,3,6];
+%leg = legend([pHandle{OrderIdx}],legStr{OrderIdx});
 PrettyLegendFormat(leg);
 
 %% save
 plotdir = [getenv('SamakPath'),'ksn2ana/ksn2_GridSize/plots/'];
-plotname = sprintf('%sksn2_DifferentGrids_%s.png',plotdir,InterpMode);
+plotname = sprintf('%sksn2_DifferentGrids_%.0fGrids_%s.png',plotdir,nGridSteps,InterpMode);
 MakeDir(plotdir);
 print(plotname,'-dpng','-r300');
 fprintf('save plot to %s \n',plotname);
 
 %% save zoom: large m4^2
-ylim([800 1400])
+ylim([900 1400])
 xlim([0.05,0.50])
-plotname = sprintf('%sksn2_DifferentGrids_Zoom_%s.png',plotdir,InterpMode);
+%%
+plotname = sprintf('%sksn2_DifferentGrids_%.0fGrids_Zoom_%s.png',plotdir,nGridSteps,InterpMode);
 MakeDir(plotdir);
-print(plotname,'-dpng','-r300');
+print(plotname,'-dpng','-r600');
 fprintf('save plot to %s \n',plotname);

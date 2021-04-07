@@ -44,5 +44,5 @@ SterileArg = {'RunAnaObj',A,... % Mother Object: defines RunList, Column Density
 S = SterileAnalysis(SterileArg{:});
 
 S.InterpMode = 'spline';
-S.PlotFitriumSamak('PlotTot','ON','PlotStat','OFF','SavePlot','png','PlotKafit','ON')
+S.PlotFitriumSamak('PlotTot','OFF','PlotStat','ON','SavePlot','png','PlotKafit','ON')
 

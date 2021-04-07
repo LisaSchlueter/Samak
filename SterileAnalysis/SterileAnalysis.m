@@ -1315,10 +1315,11 @@ classdef SterileAnalysis < handle
             if strcmp(PlotStat,'ON')
                 obj.RunAnaObj.chi2 = 'chi2Stat';
                 obj.SetNPfactor;
-                obj.LoadGridFile('CheckSmallerN','ON');
+                obj.nGridSteps = 30;
+                obj.LoadGridFile('CheckSmallerN','ON','mNu4SqTestGrid',2,'IgnoreKnm2FSDbinning','ON','ExtmNu4Sq','ON');
                 obj.Interp1Grid('RecomputeFlag','ON','Maxm4Sq',38.2^2);
                 pStat = obj.ContourPlot('CL',obj.ConfLevel,'HoldOn',HoldOn,...
-                    'Color',rgb('DodgerBlue'),'LineStyle','-','BestFit',BestFit,'PlotSplines','OFF');
+                    'Color',rgb('FireBrick'),'LineStyle','-','BestFit',BestFit,'PlotSplines','OFF');
                 hold on;
                 HoldOn = 'ON';
             end
@@ -1340,8 +1341,8 @@ classdef SterileAnalysis < handle
                 fsys = sprintf('%scontour_KSN1_Fitrium_%s_%.0feV_total_95CL_0.txt',savedirF,obj.RunAnaObj.DataType,obj.range);   
             else
                 fstat = sprintf('%scontour_KSN2_Fitrium_%s_%.0feV_stat_95CL.dat',savedirF,obj.RunAnaObj.DataType,obj.range);
-                fsys = sprintf('%scontour_KSN2_Fitrium_%s_%.0feV_total_95CL.dat',savedirF,obj.RunAnaObj.DataType,obj.range);   
-        
+               % fsys = sprintf('%scontour_KSN2_Fitrium_%s_%.0feV_total_95CL.dat',savedirF,obj.RunAnaObj.DataType,obj.range);  
+                fsys = sprintf('%scontour_KSN2_Fitrium_%s_%.0feV_sys_no_penning_95CL.dat',savedirF,obj.RunAnaObj.DataType,obj.range);
             end
            
            if strcmp(PlotStat,'ON')
@@ -1353,8 +1354,8 @@ classdef SterileAnalysis < handle
            end
            
            if strcmp(PlotTot,'ON')
-               %                dfSys = importdata(fsys);
-               %                pFSys  = plot(dfSys.data(:,1),dfSys.data(:,2),'LineStyle','-.','Color',rgb('Orange'),'LineWidth',LineWidth);
+               dfSys = importdata(fsys);
+               pFSys  = plot(dfSys.data(:,1),dfSys.data(:,2),'LineStyle','-.','Color',rgb('Orange'),'LineWidth',LineWidth);
                pFSys = plot(NaN,NaN,'LineStyle','-.','Color',rgb('Orange'),'LineWidth',LineWidth);
                if obj.range==95 &&strcmp(obj.RunAnaObj.DataType,'Real')
                    fsys1 = sprintf('%scontour_KSN1_Fitrium_%s_%.0feV_total_95CL_1.txt',savedirF,obj.RunAnaObj.DataType,obj.range);
@@ -1397,12 +1398,12 @@ classdef SterileAnalysis < handle
                kstat = sprintf('%scontour_KSN2_Kafit_%s_%.0feV_stat_95CL.txt',savedirF,obj.RunAnaObj.DataType,obj.range);
                dkStat = importdata(kstat);
                if strcmp(PlotStat,'ON')
-                   pKStat = plot(dkStat.data(:,1),dkStat.data(:,2),'LineStyle',':','Color',rgb('ForestGreen'),'LineWidth',LineWidth+0.5);
+                   pKStat = plot(dkStat.data(:,1),dkStat.data(:,2),'LineStyle',':','Color',rgb('DodgerBlue'),'LineWidth',LineWidth+0.5);
                end
                if strcmp(PlotTot,'ON')
                    ksyst = sprintf('%scontour_KSN2_Kafit_%s_%.0feV_statsyst_95CL.dat',savedirF,obj.RunAnaObj.DataType,obj.range);
                    dkSyst = importdata(ksyst);
-                   pKSys = plot(dkSyst.data(:,1),dkSyst.data(:,2),'LineStyle',':','Color',rgb('LimeGreen'),'LineWidth',LineWidth+0.5);
+                   pKSys = plot(dkSyst.data(:,1),dkSyst.data(:,2),'LineStyle',':','Color',rgb('DodgerBlue'),'LineWidth',LineWidth+0.5);
                end
            end
            
@@ -1416,20 +1417,28 @@ classdef SterileAnalysis < handle
                end
                extraStr = '';
                
-           elseif strcmp(PlotStat,'ON')
-               if strcmp(PlotKaFit ,'ON')
-                   legStr = {'Fitrium (stat. only)','KaFit (stat. only)','Samak (stat. only)'};
-                   leg = legend([pFStat,pKStat,pStat],legStr,'EdgeColor',rgb('Silver'),'Location','southwest');
-                   PrettyLegendFormat(leg)
-               else
-                   legStr = {'Samak (stat. only)','Fitrium (stat. only)'};
-                   legend([pStat,pFStat],legStr,'EdgeColor',rgb('Silver'),'Location','southwest');
+           elseif strcmp(PlotStat,'ON') || strcmp(PlotTot,'ON')
+               if strcmp(PlotTot,'ON')
+                   pF = pFSys; pK = pKSys; pS = pSys;
+                   extraStr = '_Tot';
+                   legTitle = sprintf('Stat. and syst.');
+               elseif strcmp(PlotStat,'ON')
+                   pF = pFStat; pK = pKStat; pS = pStat;
+                    extraStr = '_StatOnly';
+                    legTitle = sprintf('Stat. only');
                end
-               extraStr = '_StatOnly';
-           elseif strcmp(PlotTot,'ON')
-                legStr = {'Fitrium (stat. and syst.)','KaFit (stat. and syst.)','Samak (stat. and syst.)'};
-               legend([pFSys,pKSys,pSys],legStr,'EdgeColor',rgb('Silver'),'Location','southwest');
-               extraStr = '_Tot';
+               
+               if strcmp(PlotKaFit ,'ON')
+                   legStr = {'Fitrium','KaFit','Samak'};
+                   legPlt = [pF,pK,pS];   
+               else
+                   legStr = {'Samak)','Fitrium'};
+                   legPlt = [pF,pS];     
+               end
+                  leg = legend(legPlt,legStr,'Location','southwest'); 
+                  PrettyLegendFormat(leg)
+                  leg.Title.String = legTitle;
+                  leg.Title.FontWeight = 'normal';
            end
            
            obj.RunAnaObj.chi2 = chi2_i;
