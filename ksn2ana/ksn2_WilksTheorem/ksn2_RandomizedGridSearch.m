@@ -2,7 +2,7 @@
 % grid search on randomized twins
 % ksn2 calculate chi2 grid search
 
-randMC = 1:752;
+randMC = 888;%1:752;
 Twin_sin2T4 = 0;
 Twin_mNu4Sq = 0;
 chi2 = 'chi2CMShape';
@@ -51,6 +51,8 @@ SterileArg = {'RunAnaObj',A,... % Mother Object: defines RunList, Column Density
 S = SterileAnalysis(SterileArg{:});
 %%
 for i=1:numel(randMC)
+    A = MultiRunAnalysis(RunAnaArg{:});
+    S = SterileAnalysis(SterileArg{:});
     S.RandMC= randMC(i);
-    S.GridSearch;
+    S.GridSearch('mNu4SqTestGrid',2);
 end

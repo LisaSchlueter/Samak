@@ -148,14 +148,18 @@ classdef SterileAnalysis < handle
                         obj.RunAnaObj.ModelObj.ComputeTBDIS;
                         TBDIS_i = obj.RunAnaObj.ModelObj.TBDIS';
                     else
-                        obj.RunAnaObj.ModelObj.ComputeTBDDS;
-                        obj.RunAnaObj.ModelObj.ComputeTBDIS;
-                        TBDIS_i = obj.RunAnaObj.RunData.TBDIS';
+%                         obj.RunAnaObj.ModelObj.ComputeTBDDS;
+%                         obj.RunAnaObj.ModelObj.ComputeTBDIS;
+                        TBDIS_i = obj.RunAnaObj.ModelObj.TBDIS';
                     end
                     
                     if isfloat(obj.RandMC)
                         % change to randomized MC data
-                        TBDIS_mc = mvnrnd(TBDIS_i,obj.RunAnaObj.FitCMShape,1)';
+                        TBDIS_mc = zeros(obj.RunAnaObj.ModelObj.nqU,1);
+                        TBDIS_mc(obj.RunAnaObj.exclDataStart:end) = ...
+                            mvnrnd(TBDIS_i(obj.RunAnaObj.exclDataStart:end),...
+                            obj.RunAnaObj.FitCMShape(obj.RunAnaObj.exclDataStart:end,obj.RunAnaObj.exclDataStart:end),1)';
+                        %TBDIS_mc = mvnrnd(TBDIS_i,obj.RunAnaObj.FitCMShape,1)';
                     else
                         TBDIS_mc = TBDIS_i';
                     end
@@ -358,15 +362,45 @@ classdef SterileAnalysis < handle
                    % WARNING: still in testing phase
                    % do interpolation only in vicinity of best fit
                    % to be called after Mode "Def" -> needs first estimateof best fit
+                   
+                   % location of old best fit
+                   [row, col]    = find(obj.chi2 == min(obj.chi2(:)));
+                   rowIdx_min = row-2;
+                   rowIdx_max = row+2;
+                   colIdx_min = col-2;
+                   colIdx_max = col+2;
+
+                   if row > size(obj.mNu4Sq,1)-2
+                       % upper edge Ue4^2
+                       rowIdx_max = size(obj.mNu4Sq,1);
+                   elseif row<=2
+                       % lower edge Ue4^2
+                      rowIdx_min = 1;
+                   end
+                   
+                   if col <=2
+                      colIdx_min = 1; 
+                   elseif col > size(obj.mNu4Sq,1)-2
+                        colIdx_min = size(obj.mNu4Sq,1);   
+                   end
+                   
+                   mNu4Sq_inter_min = obj.mNu4Sq(row,colIdx_min);%obj.mNu4Sq(col,row);
+                   mNu4Sq_inter_max = obj.mNu4Sq(row,colIdx_max);
+                   sin2T4_inter_min = obj.sin2T4(rowIdx_min,col);
+                   sin2T4_inter_max = obj.sin2T4(rowIdx_max,col);
+                   
                    obj.LoadGridFile;
                    nInter = 1e3;
                    [X,Y] = meshgrid(obj.mNu4Sq(:,1),obj.sin2T4(1,:));
-                   mNu4tmp = logspace(log10(obj.mNu4Sq_bf-1),log10(obj.mNu4Sq_bf+1),nInter);
+                   %mNu4tmp = logspace(log10(obj.mNu4Sq_bf-1),log10(obj.mNu4Sq_bf+1),nInter);
+                   
+                   mNu4tmp = linspace(mNu4Sq_inter_min,mNu4Sq_inter_max,nInter);
                    obj.mNu4Sq = repmat(mNu4tmp,nInter,1);
-                   obj.sin2T4 = repmat(logspace(log10(obj.sin2T4_bf-0.01),log10(obj.sin2T4_bf+0.01),nInter),nInter,1)';
-                   obj.chi2   = reshape(interp2(X,Y,obj.chi2,obj.mNu4Sq,obj.sin2T4,obj.InterpMode),nInter,nInter);
-                   obj.mNuSq  = reshape(interp2(X,Y,obj.mNuSq,obj.mNu4Sq,obj.sin2T4,obj.InterpMode),nInter,nInter);
-                   obj.E0  = reshape(interp2(X,Y,obj.E0,obj.mNu4Sq,obj.sin2T4,obj.InterpMode),nInter,nInter);     
+                   % obj.sin2T4 = repmat(logspace(log10(obj.sin2T4_bf-0.01),log10(obj.sin2T4_bf+0.01),nInter),nInter,1)';
+                   obj.sin2T4 = repmat(linspace(sin2T4_inter_min,sin2T4_inter_max,nInter),nInter,1)';
+                   obj.chi2   = reshape(interp2(X,Y,obj.chi2,obj.mNu4Sq,obj.sin2T4,'spline'),nInter,nInter);
+                   obj.mNuSq  = reshape(interp2(X,Y,obj.mNuSq,obj.mNu4Sq,obj.sin2T4,'spline'),nInter,nInter);
+                   obj.E0  = reshape(interp2(X,Y,obj.E0,obj.mNu4Sq,obj.sin2T4,'spline'),nInter,nInter);
            end
            
            [row, col]    = find(obj.chi2 == min(obj.chi2(:)));

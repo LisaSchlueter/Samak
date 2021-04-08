@@ -668,7 +668,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                TBDIS = mvnrnd(obj.RunData.TBDIS(:)',obj.FitCMShape,nSamples)';
                % End Modif Thierry - 30/3/2020
            end
-           
+            
             % init
             FitPar     = zeros(obj.nPar,nSamples);
             FitErr     = zeros(obj.nPar,nSamples);
