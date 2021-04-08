@@ -484,7 +484,7 @@ classdef FITC < handle
                 PullTerm = PullTerm + (par(1)-0)^2/mNuSqtol^2;
             end
             
-            if any(ismember(obj.pullFlag,18)) % nu-mass pull: 3 eV^2
+            if any(ismember(obj.pullFlag,18)) % nu-mass pull: 0.5 eV^2
                 mNuSqtol =  0.5; % eV^2
                 PullTerm = PullTerm + (par(1)-0)^2/mNuSqtol^2;
             end
@@ -533,6 +533,12 @@ classdef FITC < handle
             if any(ismember(obj.pullFlag,25)) % background subrun time slope from penning trap pull
                 PullTerm = PullTerm + (par(4*obj.SO.nPixels+13)-0)^2/BkgPTSlopetol25^2;
             end
+            
+             if any(ismember(obj.pullFlag,26)) % nu-mass pull: mainz&troitzk
+                mNuSqtol_KNM1 =  1.1; % eV^2 KATRIN KNM-1
+                PullTerm = PullTerm + (par(1)-0)^2/mNuSqtol_KNM1^2;
+             end
+            
         end
         function chi2 = chi2function(obj,par)
             

@@ -383,7 +383,7 @@ classdef SterileAnalysis < handle
 %                 obj.Interp1Grid;
             end
         end
-        function CompareBestFitNull(obj,varargin)
+        function [DeltaChi2, SignificanceBF] = CompareBestFitNull(obj,varargin)
             if isempty(obj.chi2_bf)
                 obj.FindBestFit;
             end
@@ -397,6 +397,7 @@ classdef SterileAnalysis < handle
             x = linspace(10,99,1e2);
             y =GetDeltaChi2(x,2);
             SignificanceBF = interp1(y,x,obj.chi2_Null-obj.chi2_bf,'spline');
+            DeltaChi2 = obj.chi2_Null-obj.chi2_bf;
             fprintf('Delta chi2 = %.2f -> %.1f%% C.L. significance \n',obj.chi2_Null-obj.chi2_bf,SignificanceBF);
           
         end
@@ -2170,9 +2171,15 @@ classdef SterileAnalysis < handle
                       extraStr = [extraStr,sprintf('_FixmNuSq%.2feV2',FixmNuSq)];
                   end
                   
-                  if strcmp(obj.RunAnaObj.DataSet,'Knm1') ...
-                          && obj.RunAnaObj.NonPoissonScaleFactor~=1 && obj.RunAnaObj.NonPoissonScaleFactor~=1.064
+                  if strcmp(obj.RunAnaObj.DataSet,'Knm1') 
+                      if  obj.RunAnaObj.NonPoissonScaleFactor~=1 && obj.RunAnaObj.NonPoissonScaleFactor~=1.064
                       extraStr = [extraStr,sprintf('_NP%.3f',obj.RunAnaObj.NonPoissonScaleFactor)];
+                      end
+                      if obj.RunAnaObj.ModelObj.BKG_PtSlope ~=0
+                          % twin (KNM-2): twin or model BKG_PtSlope not default 3e-06
+                          extraStr = [extraStr,sprintf('_BkgPtSlope%.3gmuCpsS',...
+                              1e6.*obj.RunAnaObj.ModelObj.BKG_PtSlope)];
+                      end
                   elseif strcmp(obj.RunAnaObj.DataSet,'Knm2')
                       if strcmp(obj.RunAnaObj.chi2,'chi2Stat') && obj.RunAnaObj.NonPoissonScaleFactor~=1
                           extraStr = [extraStr,sprintf('_NP%.3g',obj.RunAnaObj.NonPoissonScaleFactor)];
