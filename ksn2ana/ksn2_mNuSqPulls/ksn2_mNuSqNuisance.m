@@ -2,7 +2,7 @@
 % compare m2 free, m2 nuisance parameter
 %% settings that might change
 chi2 = 'chi2CMShape';
-DataType = 'Twin';
+DataType = 'Real';
 nGridSteps = 25;
 range = 40;
 %% configure RunAnalysis object
@@ -42,7 +42,7 @@ SterileArg = {'RunAnaObj',A,... % Mother Object: defines RunList, Column Density
 
 %%
 S = SterileAnalysis(SterileArg{:});
-
+S.InterpMode = 'lin';
 %%
 S.PlotmNuSqOverview('PullmNuSq','OFF','SavePlot','png')
 %%
@@ -69,7 +69,7 @@ hold on;
 [~,~] = contour3(S.sin2T4,S.mNu4Sq,PlotPar,[0,0],'Color',rgb('Silver'),'ShowText','on','LineWidth',1.5);
  [~,~] = contour3(S.sin2T4,S.mNu4Sq,PlotPar,[0.5,0.5],'Color',rgb('Silver'),'ShowText','on','LineWidth',1.5);
 
-[pFree,pFix] = S.PlotmNuSqOverview('PullmNuSq','OFF','SavePlot','OFF','HoldOn','ON');
+[pFree,pFix] = S.PlotmNuSqOverview('PullmNuSq','OFF','SavePlot','OFF','HoldOn','ON','BestFit','ON');
  view(2)
  grid off
  

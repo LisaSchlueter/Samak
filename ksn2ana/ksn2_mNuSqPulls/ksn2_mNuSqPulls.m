@@ -6,7 +6,7 @@ DataType = 'Twin';
 nGridSteps = 30;
 range = 40;
 
-mNuSqPullFlag =  [26,12,18:-1:15];
+mNuSqPullFlag =  [99,26,12,18:-1:15];
 
 % 12 -> 1.94 eV^2 mainz&troitzk
 % 15 -> 1 eV^2

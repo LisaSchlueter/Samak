@@ -1,15 +1,17 @@
 % do combi fit knm1+2 for sterile neutrinos
+% with new ksn1 model 
+% does only make sense for data (other twins have to be re-calculated)
 RecomputeFlag = 'OFF';
 
 %% KNM-1 Model
 chi2          = 'chi2CMShape';
-DataType      = 'Twin';
+DataType      = 'Real';
 nGridSteps    = 1;
-freePar               = 'mNu E0 Bkg Norm';
-range = 40;
+freePar       = 'mNu E0 Bkg Norm';
+range         = 40;
 savedir = [getenv('SamakPath'),'/SterileAnalysis/GridSearchFiles/Combi/',DataType,'/'];
 MakeDir(savedir)
-savename = sprintf('%sKSN12Combi_GridSearch_%s_%s_Uniform_%s.mat',savedir,DataType,strrep(freePar,' ',''),chi2);
+savename = sprintf('%sKSN12Combi_ReAna_GridSearch_%s_%s_Uniform_%s.mat',savedir,DataType,strrep(freePar,' ',''),chi2);
 
 if exist(savename,'file') && strcmp(RecomputeFlag,'OFF')
     d = importdata(savename);
@@ -24,11 +26,13 @@ else
         'RadiativeFlag','ON',...
         'NonPoissonScaleFactor',1.064,...
         'minuitOpt','min ; minos',...
-        'FSDFlag','Sibille0p5eV',...
-        'ELossFlag','KatrinT2',...
-        'SysBudget',24,...
-        'AngularTFFlag','OFF',...
-        'DopplerEffectFlag','OFF');
+        'FSDFlag','KNM2_0p5eV',...
+        'ELossFlag','KatrinT2A20',...
+        'SysBudget',200,...
+        'AngularTFFlag','ON',...
+        'DopplerEffectFlag','FSD',...
+        'BKG_PtSlope',-2.2.*1e-06);
+    
     K1.exclDataStart = K1.GetexclDataStart(range);
     K1.i_qUOffset    = zeros(1,K1.ModelObj.nPixels);
     K1.i_mTSq        = zeros(1,K1.ModelObj.nPixels);
@@ -236,7 +240,7 @@ sin2T4_Grid    = reshape(sin2T4',nGridSteps^2,1);
     
     tCpuHour = (cputime-tStart)/60; % cpu time in hours
     %% save
-    save(savename,'chi2_ref',...
+    save(savename,'chi2_ref',...%'FitResults_ref'
         'chi2','mnu4Sq','sin2T4','FitResults','FitResults_Null','tCpuHour');
     fprintf('save file to %s \n',savename);
 

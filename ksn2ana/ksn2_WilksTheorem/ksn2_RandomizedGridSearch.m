@@ -54,5 +54,5 @@ for i=1:numel(randMC)
     A = MultiRunAnalysis(RunAnaArg{:});
     S = SterileAnalysis(SterileArg{:});
     S.RandMC= randMC(i);
-    S.GridSearch('mNu4SqTestGrid',2);
+    S.GridSearch('mNu4SqTestGrid',2,'ExtmNu4Sq','ON')
 end

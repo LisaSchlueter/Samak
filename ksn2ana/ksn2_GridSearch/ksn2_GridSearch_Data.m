@@ -2,7 +2,7 @@
 %% settings that might change
 chi2 = 'chi2CMShape';
 DataType = 'Real';
-nGridSteps = 25;
+nGridSteps = 30;
 range = 40;
 
 %% configure RunAnalysis object
@@ -38,16 +38,13 @@ SterileArg = {'RunAnaObj',A,... % Mother Object: defines RunList, Column Density
     'RecomputeFlag','OFF',...
     'SysEffect','all',...
     'RandMC','OFF',...
-    'range',range};
+    'range',range,...
+    'LoadGridArg',{'ExtmNu4Sq','ON','mNu4SqTestGrid',2}};
 
 %%
-S = SterileAnalysis(SterileArg{:});
-%S.GridSearch('ExtmNu4Sq','ON');
-%%
-A.chi2 = 'chi2CMShape';
-S.SetNPfactor;
-A.fixPar ='fix 5 ;fix 6 ;fix 7 ;fix 8 ;fix 9 ;fix 10 ;fix 11 ;fix 12 ;fix 13 ;fix 14 ;fix 15 ;fix 16 ;fix 17 ;';
-S.LoadGridFile('ExtmNu4Sq','OFF');
+%S = SterileAnalysis(SterileArg{:});
+
+S.LoadGridFile('ExtmNu4Sq','ON','mNu4SqTestGrid',2);
 
 if strcmp(A.DataType,'Real')
     S.InterpMode = 'spline';
@@ -56,8 +53,9 @@ else
     S.InterpMode = 'spline';
    BF = 'OFF';
 end
-S.Interp1Grid('RecomputeFlag','ON','Maxm4Sq',39^2);
+S.Interp1Grid('RecomputeFlag','ON','Maxm4Sq',40^2);
+
 S.GridPlot('Contour','ON','BestFit',BF,'SavePlot','OFF','CL',95)
-%S.ContourPlot('BestFit','OFF','CL',95)
+S.ContourPlot('BestFit',BF,'CL',95)
 % S.PlotStatandSys('SavePlot','png')
 %S.PlotmNuSqOverview('PullmNuSq','OFF','SavePlot','png')

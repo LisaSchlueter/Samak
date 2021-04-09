@@ -1,8 +1,9 @@
 % ksn2 calculate chi2 grid search
+% 4 quadrants
 %% settings that might change
 chi2 = 'chi2CMShape';
 DataType = 'Real';
-nGridSteps = 25;
+nGridSteps = 30;
 range = 40;
 
 %% configure RunAnalysis object
@@ -30,34 +31,35 @@ RunAnaArg = {'RunList','KNM2_Prompt',...
     'BKG_PtSlope',3*1e-06,...
     'TwinBias_BKG_PtSlope',3*1e-06,...
     'DopplerEffectFlag','FSD'};
-A = MultiRunAnalysis(RunAnaArg{:});
 %% configure Sterile analysis object
-SterileArg = {'RunAnaObj',A,... % Mother Object: defines RunList, Column Density, Stacking Cuts,....
+SterileArg = {... % Mother Object: defines RunList, Column Density, Stacking Cuts,....
     'nGridSteps',nGridSteps,...
     'SmartGrid','OFF',...
     'RecomputeFlag','OFF',...
     'SysEffect','all',...
     'RandMC','OFF',...
     'range',range};
-
+CommonArg = {'ExtmNu4Sq','ON','mNu4SqTestGrid',2};
 %%
-S = SterileAnalysis(SterileArg{:});
-%S.GridSearch('ExtmNu4Sq','ON');
-%%
-A.chi2 = 'chi2CMShape';
-S.SetNPfactor;
-A.fixPar ='fix 5 ;fix 6 ;fix 7 ;fix 8 ;fix 9 ;fix 10 ;fix 11 ;fix 12 ;fix 13 ;fix 14 ;fix 15 ;fix 16 ;fix 17 ;';
-S.LoadGridFile('ExtmNu4Sq','OFF');
+A = MultiRunAnalysis(RunAnaArg{:});
+S = SterileAnalysis('RunAnaObj',A,SterileArg{:});
+S.GridSearch(CommonArg {:},'Extsin2T4','ON');
 
-if strcmp(A.DataType,'Real')
-    S.InterpMode = 'spline';
-    BF = 'ON';
-else
-    S.InterpMode = 'spline';
-   BF = 'OFF';
-end
-S.Interp1Grid('RecomputeFlag','ON','Maxm4Sq',39^2);
-S.GridPlot('Contour','ON','BestFit',BF,'SavePlot','OFF','CL',95)
-%S.ContourPlot('BestFit','OFF','CL',95)
-% S.PlotStatandSys('SavePlot','png')
-%S.PlotmNuSqOverview('PullmNuSq','OFF','SavePlot','png')
+A = MultiRunAnalysis(RunAnaArg{:});
+S = SterileAnalysis('RunAnaObj',A,SterileArg{:});
+S.GridSearch(CommonArg {:},'Negsin2T4','ON','Extsin2T4','OFF');
+
+A = MultiRunAnalysis(RunAnaArg{:});
+S = SterileAnalysis('RunAnaObj',A,SterileArg{:});
+S.GridSearch(CommonArg {:},'NegmNu4Sq','ON','Extsin2T4','ON');
+
+A = MultiRunAnalysis(RunAnaArg{:});
+S = SterileAnalysis('RunAnaObj',A,SterileArg{:});
+S.GridSearch(CommonArg {:},'Negsin2T4','ON','NegmNu4Sq','ON','Extsin2T4','OFF');
+
+%% NE quadrant, but extended m4sq and sin2t4
+A = MultiRunAnalysis(RunAnaArg{:});
+S = SterileAnalysis('RunAnaObj',A,SterileArg{:});
+S.GridSearch('ExtmNu4Sq','0.01','mNu4SqTestGrid',2,'Extsin2T4','ON');
+
+% merge quadrant files: tbd

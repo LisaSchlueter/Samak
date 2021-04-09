@@ -8,6 +8,7 @@ classdef SterileAnalysis < handle
         RecomputeFlag;
         SysEffect; 
         range; % in eV
+        LoadGridArg;
         
         % randomized MC
         RandMC;       % 1) if 'OFF' -> Asimov twins. 2) if @(x)isfloat(x) && numel(x)==1 -> randomize twins 
@@ -63,7 +64,8 @@ classdef SterileAnalysis < handle
             p.addParameter('InterpMode','spline',@(x)ismember(x,{'lin','spline'}));
             p.addParameter('Twin_mNu4Sq',0,@(x)isfloat(x)); % for randomized MCs with sterile-nu hypothesis
             p.addParameter('Twin_sin2T4',0,@(x)isfloat(x)); % for randomized MCs with sterile-nu hypothesis
-          
+            p.addParameter('LoadGridArg','',@(x)iscell(x) ||isempty(x));
+            
             p.parse(varargin{:});
             
             obj.RunAnaObj = p.Results.RunAnaObj;
@@ -78,6 +80,7 @@ classdef SterileAnalysis < handle
             obj.InterpMode    = p.Results.InterpMode;
             obj.Twin_sin2T4   = p.Results.Twin_sin2T4;
             obj.Twin_mNu4Sq   = p.Results.Twin_mNu4Sq;
+            obj.LoadGridArg   = p.Results.LoadGridArg;
             
             if isempty(obj.RunAnaObj)
                 fprintf(2,'RunAnaObj has to be specified! \n');
@@ -97,7 +100,7 @@ classdef SterileAnalysis < handle
             p.addParameter('Negsin2T4','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('NegmNu4Sq','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('Extsin2T4','OFF',@(x)ismember(x,{'ON','OFF'})); %extended sin2T2 (up to 1)
-            p.addParameter('ExtmNu4Sq','OFF',@(x)ismember(x,{'ON','OFF'})); %extended m4Sq (from 0.1)
+            p.addParameter('ExtmNu4Sq','OFF',@(x)ismember(x,{'ON','OFF','0.01'})); %extended m4Sq (from 0.1)
             p.addParameter('mNu4SqTestGrid','OFF',@(x) strcmp(x,'OFF') || isfloat(x)); % different grid..
             p.addParameter('FixmNuSq',0,@(x)isfloat(x)); % if light nu-mass fixed (eV^2)
              p.parse(varargin{:});
@@ -192,6 +195,10 @@ classdef SterileAnalysis < handle
                     mnu4Sq_ex = [0.1;0.35;0.7];%;logspace(0,log10((obj.range)^2),obj.nGridSteps-3)'];
                     nGridSteps_i = obj.nGridSteps;
                     obj.nGridSteps = nGridSteps_i-3;
+                elseif strcmp(ExtmNu4Sq,'0.01')
+                    mnu4Sq_ex = [0.01;0.05;0.1;0.35;0.7];%;logspace(0,log10((obj.range)^2),obj.nGridSteps-3)'];
+                    nGridSteps_i = obj.nGridSteps;
+                    obj.nGridSteps = nGridSteps_i-5;
                 end
                 
                 if mNu4SqTestGrid==1
@@ -218,7 +225,7 @@ classdef SterileAnalysis < handle
                     mnu4Sq      = logspace(0,log10((obj.range)^2),obj.nGridSteps)';
                 end
                 
-                if strcmp(ExtmNu4Sq,'ON')
+                if ismember(ExtmNu4Sq,{'ON','0.01'})
                     mnu4Sq = [mnu4Sq_ex;mnu4Sq];%;logspace(0,log10((obj.range)^2),obj.nGridSteps-3)'];
                     obj.nGridSteps = nGridSteps_i;
                 end
@@ -389,7 +396,7 @@ classdef SterileAnalysis < handle
                    sin2T4_inter_min = obj.sin2T4(rowIdx_min,col);
                    sin2T4_inter_max = obj.sin2T4(rowIdx_max,col);
                    
-                   obj.LoadGridFile;
+                   obj.LoadGridFile(obj.LoadGridArg{:});
                    nInter = 1e3;
                    [X,Y] = meshgrid(obj.mNu4Sq(:,1),obj.sin2T4(1,:));
                    %mNu4tmp = logspace(log10(obj.mNu4Sq_bf-1),log10(obj.mNu4Sq_bf+1),nInter);
@@ -470,7 +477,7 @@ classdef SterileAnalysis < handle
                 
                 obj.RunAnaObj.chi2 = 'chi2Stat';
                 obj.RunAnaObj.NonPoissonScaleFactor = 1;
-                obj.LoadGridFile('CheckSmallerN','OFF','CheckLargerN','OFF');
+                obj.LoadGridFile('CheckSmallerN','OFF','CheckLargerN','OFF',obj.LoadGridArg{:});
                 obj.Interp1Grid('RecomputeFlag','ON','nInter',1e3);
                 [M,c]= contour(obj.sin2T4,obj.mNu4Sq,obj.chi2-obj.chi2_ref,...
                     [DeltaChi2_1Par DeltaChi2_1Par]);
@@ -480,7 +487,7 @@ classdef SterileAnalysis < handle
                 
                 obj.RunAnaObj.chi2 = 'chi2CMShape';
                 obj.SetNPfactor;
-                obj.LoadGridFile('CheckSmallerN','OFF','CheckLargerN','OFF');
+                obj.LoadGridFile('CheckSmallerN','OFF','CheckLargerN','OFF',obj.LoadGridArg{:});
                 obj.Interp1Grid('RecomputeFlag','ON','nInter',1e3);
                 [M,c]= contour(obj.sin2T4,obj.mNu4Sq,obj.chi2-obj.chi2_ref,...
                     [DeltaChi2_1Par DeltaChi2_1Par]);
@@ -799,7 +806,7 @@ classdef SterileAnalysis < handle
                 obj.RunAnaObj.AngularTFFlag = 'ON';
                 obj.RunAnaObj.ELossFlag = 'KatrinT2A20';
                 obj.RunAnaObj.SysBudget = 66;
-                obj.LoadGridFile('CheckSmallerN','ON');
+                obj.LoadGridFile('CheckSmallerN','ON',obj.LoadGridArg{:});
                 obj.Interp1Grid('RecomputeFlag','ON');
                 
                 PlotArg = {'LineWidth',2,'LineStyle',':','LineColor',rgb('SteelBlue')};
@@ -1094,7 +1101,7 @@ classdef SterileAnalysis < handle
          for i=1:numel(Ranges)
              progressbar(i/numel(Ranges));
              obj.range = Ranges(i);
-             obj.LoadGridFile('CheckSmallerN','ON');
+             obj.LoadGridFile('CheckSmallerN','ON',obj.LoadGridArg{:});
              obj.Interp1Grid('RecomputeFlag','ON');
              PlotArg = {'Color',Colors(i,:),'LineStyle',obj.PlotLines{i},'BestFit',BestFit};
              if i>1
@@ -1153,7 +1160,7 @@ classdef SterileAnalysis < handle
             %% 1. nuissance nu-mass without pull
             obj.RunAnaObj.fixPar = 'mNu E0 Norm Bkg'; obj.RunAnaObj.InitFitPar;
             obj.RunAnaObj.pullFlag = 99;
-            obj.LoadGridFile('CheckSmallerN','ON');
+            obj.LoadGridFile('CheckSmallerN','ON',obj.LoadGridArg{:});
             obj.Interp1Grid('RecomputeFlag','ON');
             pFree = obj.ContourPlot('CL',obj.ConfLevel,'HoldOn',HoldOn,...
                 'Color',rgb('ForestGreen'),'LineStyle','-','BestFit',BestFit);
@@ -1161,7 +1168,7 @@ classdef SterileAnalysis < handle
             %%  nuissance nu-mass + pull
             if strcmp(PullmNuSq,'ON')
                 obj.RunAnaObj.pullFlag = 12;
-                obj.LoadGridFile('CheckSmallerN','ON');
+                obj.LoadGridFile('CheckSmallerN','ON',obj.LoadGridArg{:});
                 obj.Interp1Grid('RecomputeFlag','ON');
                 pPull = obj.ContourPlot('CL',obj.ConfLevel,'HoldOn','ON',...
                     'Color',rgb('Orange'),'LineStyle','-.','BestFit',BestFit);
@@ -1170,7 +1177,7 @@ classdef SterileAnalysis < handle
             %% fixed nu-mass
             obj.RunAnaObj.fixPar = 'E0 Norm Bkg'; obj.RunAnaObj.InitFitPar;
             obj.RunAnaObj.pullFlag = 99;
-            obj.LoadGridFile('CheckSmallerN','ON');
+            obj.LoadGridFile('CheckSmallerN','ON',obj.LoadGridArg{:});
             obj.Interp1Grid('RecomputeFlag','ON');
             [pFix,pfixmin] = obj.ContourPlot('CL',obj.ConfLevel,'HoldOn','ON',...
                 'Color',rgb('DodgerBlue'),'LineStyle',':','BestFit',BestFit);
@@ -1225,7 +1232,7 @@ classdef SterileAnalysis < handle
             %%  95CL - Wilks Theorem
             obj.RunAnaObj.fixPar = 'E0 Norm Bkg'; obj.RunAnaObj.InitFitPar;
             obj.RunAnaObj.pullFlag = 99;
-            obj.LoadGridFile('CheckSmallerN','ON');
+            obj.LoadGridFile('CheckSmallerN','ON',obj.LoadGridArg{:});
             obj.Interp1Grid('RecomputeFlag','ON');
             pFix1 = obj.ContourPlot('CL',95,'HoldOn','OFF',...
                 'Color',rgb('Orange'),'LineStyle','-.','BestFit',BestFit);
@@ -1233,7 +1240,7 @@ classdef SterileAnalysis < handle
             %% 95CL - Wilks Theorem Corrected wia MC simulation
             obj.RunAnaObj.fixPar = 'E0 Norm Bkg'; obj.RunAnaObj.InitFitPar;
             obj.RunAnaObj.pullFlag = 99;
-            obj.LoadGridFile('CheckSmallerN','ON');
+            obj.LoadGridFile('CheckSmallerN','ON',obj.LoadGridArg{:});
             obj.Interp1Grid('RecomputeFlag','ON');
             
             if obj.range==95
@@ -1291,14 +1298,14 @@ classdef SterileAnalysis < handle
             
             % twins
             obj.RunAnaObj.DataType = 'Twin';
-            obj.LoadGridFile('CheckSmallerN','ON');
+            obj.LoadGridFile('CheckSmallerN','ON',obj.LoadGridArg{:});
             obj.Interp1Grid('RecomputeFlag','ON');
             [pTwin,sin2T4_Twinmin] = obj.ContourPlot('CL',obj.ConfLevel,'HoldOn','OFF',...
                 'Color',rgb('Orange'),'LineStyle','-.','BestFit','OFF');
             
             % data
             obj.RunAnaObj.DataType = 'Real';
-            obj.LoadGridFile('CheckSmallerN','ON');
+            obj.LoadGridFile('CheckSmallerN','ON',obj.LoadGridArg{:});
             obj.Interp1Grid('RecomputeFlag','ON');
             [pData,sin2T4_Datamin] = obj.ContourPlot('CL',obj.ConfLevel,'HoldOn','ON',...
                 'Color',rgb('DodgerBlue'),'LineStyle','-','BestFit',BestFit);
@@ -1362,7 +1369,7 @@ classdef SterileAnalysis < handle
             if strcmp(PlotTot,'ON')
                 obj.RunAnaObj.chi2 = 'chi2CMShape';
                  obj.SetNPfactor;
-                obj.LoadGridFile('CheckSmallerN','ON');
+                obj.LoadGridFile('CheckSmallerN','ON',obj.LoadGridArg{:});
                 obj.Interp1Grid('RecomputeFlag','ON');
                 pSys = obj.ContourPlot('CL',obj.ConfLevel,'HoldOn',HoldOn,...
                     'Color',rgb('FireBrick'),'LineStyle','-','BestFit',BestFit,'PlotSplines','OFF');
@@ -1528,14 +1535,14 @@ classdef SterileAnalysis < handle
             %% load stat and syst
             obj.RunAnaObj.chi2 = 'chi2Stat';
             obj.SetNPfactor;
-            obj.LoadGridFile('CheckSmallerN','ON');
+            obj.LoadGridFile('CheckSmallerN','ON',obj.LoadGridArg{:});
             obj.Interp1Grid('RecomputeFlag','ON');
             pStat = obj.ContourPlot('CL',obj.ConfLevel,'HoldOn','OFF',...
                 'Color',rgb('DodgerBlue'),'LineStyle','-','BestFit',BestFit,'PlotSplines','OFF');
             
             obj.RunAnaObj.chi2 = 'chi2CMShape';
             obj.SetNPfactor;
-            obj.LoadGridFile('CheckSmallerN','ON');
+            obj.LoadGridFile('CheckSmallerN','ON',obj.LoadGridArg{:});
             obj.Interp1Grid('RecomputeFlag','ON');
             [pSys,pSysMin] = obj.ContourPlot('CL',obj.ConfLevel,'HoldOn','ON',...
                 'Color',rgb('Orange'),'LineStyle','-','BestFit',BestFit,'PlotSplines','OFF');
@@ -1634,7 +1641,7 @@ classdef SterileAnalysis < handle
                 obj.RunAnaObj.DataType = 'Twin';
                 obj.RunAnaObj.fixPar = 'E0 Norm Bkg'; obj.RunAnaObj.InitFitPar;
                 obj.RunAnaObj.pullFlag = 99;
-                obj.LoadGridFile('CheckSmallerN','ON');
+                obj.LoadGridFile('CheckSmallerN','ON',obj.LoadGridArg{:});
                 obj.Interp1Grid('RecomputeFlag','ON');
                 pFixSensi = obj.ContourPlot('CL',obj.ConfLevel,'HoldOn','ON',...
                     'Color',rgb('Silver'),'LineStyle','-','BestFit','OFF');
@@ -1648,7 +1655,7 @@ classdef SterileAnalysis < handle
             %% fixed nu-mass
             obj.RunAnaObj.fixPar = 'E0 Norm Bkg'; obj.RunAnaObj.InitFitPar;
             obj.RunAnaObj.pullFlag = 99;
-            obj.LoadGridFile('CheckSmallerN','ON');
+            obj.LoadGridFile('CheckSmallerN','ON',obj.LoadGridArg{:});
             obj.Interp1Grid('RecomputeFlag','ON');
             pFix = obj.ContourPlot('CL',obj.ConfLevel,'HoldOn','ON',...
                 'Color',rgb('DodgerBlue'),'LineStyle','-','BestFit',BestFit);
@@ -1661,7 +1668,7 @@ classdef SterileAnalysis < handle
                 obj.InterpMode = 'lin';
                 obj.RunAnaObj.fixPar = 'mNu E0 Norm Bkg'; obj.RunAnaObj.InitFitPar;
                 obj.RunAnaObj.pullFlag = 99;
-                obj.LoadGridFile('CheckSmallerN','ON');
+                obj.LoadGridFile('CheckSmallerN','ON',obj.LoadGridArg{:});
                 obj.Interp1Grid('RecomputeFlag','ON');
                 pfree = obj.ContourPlot('CL',obj.ConfLevel,'HoldOn','ON',...
                     'Color',rgb('Navy'),'LineStyle',':','BestFit',BestFit);
@@ -1677,7 +1684,7 @@ classdef SterileAnalysis < handle
                 %%  nuissance nu-mass + pull
                 obj.RunAnaObj.fixPar = 'mNu E0 Norm Bkg'; obj.RunAnaObj.InitFitPar;
                 obj.RunAnaObj.pullFlag = 12;
-                obj.LoadGridFile('CheckSmallerN','ON');
+                obj.LoadGridFile('CheckSmallerN','ON',obj.LoadGridArg{:});
                 obj.Interp1Grid('RecomputeFlag','ON');
                 pPull = obj.ContourPlot('CL',obj.ConfLevel,'HoldOn','ON',...
                     'Color',rgb('Navy'),'LineStyle',':','BestFit',BestFit);
@@ -1692,7 +1699,7 @@ classdef SterileAnalysis < handle
                  %%  nuissance nu-mass + pull
                 obj.RunAnaObj.fixPar = 'mNu E0 Norm Bkg'; obj.RunAnaObj.InitFitPar;
                 obj.RunAnaObj.pullFlag = AddPull;
-                obj.LoadGridFile('CheckSmallerN','ON');
+                obj.LoadGridFile('CheckSmallerN','ON',obj.LoadGridArg{:});
                 obj.Interp1Grid('RecomputeFlag','ON');
                 pAddPull = obj.ContourPlot('CL',obj.ConfLevel,'HoldOn','ON',...
                     'Color',rgb('CadetBlue'),'LineStyle','-.','BestFit',BestFit);
@@ -1733,7 +1740,7 @@ classdef SterileAnalysis < handle
                 obj.RunAnaObj.AngularTFFlag = 'ON';
                 obj.RunAnaObj.ELossFlag = 'KatrinT2A20';
                 obj.RunAnaObj.SysBudget = 66;
-                obj.LoadGridFile('CheckSmallerN','ON');
+                obj.LoadGridFile('CheckSmallerN','ON',obj.LoadGridArg{:});
                 obj.Interp1Grid('RecomputeFlag','ON');
                 pFull = obj.ContourPlot('CL',obj.ConfLevel,'HoldOn','ON',...
                     'Color',rgb('LightGreen'),'LineStyle','-','BestFit',BestFit);
@@ -2124,7 +2131,7 @@ classdef SterileAnalysis < handle
             p.addParameter('Negsin2T4','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('NegmNu4Sq','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('Extsin2T4','OFF',@(x)ismember(x,{'ON','OFF'})); %extended sin2T2 (up to 1)
-            p.addParameter('ExtmNu4Sq','OFF',@(x)ismember(x,{'ON','OFF'}));
+            p.addParameter('ExtmNu4Sq','OFF',@(x)ismember(x,{'ON','OFF','0.01'}));
             p.addParameter('mNu4SqTestGrid','OFF',@(x)strcmp(x,'OFF') || isfloat(x));
             p.addParameter('FixmNuSq',0,@(x)isfloat(x)); % if light nu-mass fixed (eV^2)
             
@@ -2195,6 +2202,10 @@ classdef SterileAnalysis < handle
                  
                   if strcmp(ExtmNu4Sq,'ON')
                       extraStr = [extraStr,'_ExtmNu4Sq'];
+                  end
+                  
+                  if strcmp(ExtmNu4Sq,'0.01')
+                      extraStr = [extraStr,'_ExtmNu4Sq0.01'];
                   end
                   
                   if isfloat(mNu4SqTestGrid)
