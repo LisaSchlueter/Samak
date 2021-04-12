@@ -1,7 +1,7 @@
 % investigate effect of pull terms
 % ksn2 calculate chi2 grid search
 %% settings that might change
-Mode = 'Display';
+Mode = 'Compute';
 chi2 = 'chi2CMShape';
 DataType = 'Twin';
 nGridSteps = 30;

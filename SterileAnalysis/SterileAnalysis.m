@@ -1436,8 +1436,8 @@ classdef SterileAnalysis < handle
                 fsys = sprintf('%scontour_KSN1_Fitrium_%s_%.0feV_total_95CL_0.txt',savedirF,obj.RunAnaObj.DataType,obj.range);   
             else
                 fstat = sprintf('%scontour_KSN2_Fitrium_%s_%.0feV_stat_95CL.dat',savedirF,obj.RunAnaObj.DataType,obj.range);
-               % fsys = sprintf('%scontour_KSN2_Fitrium_%s_%.0feV_total_95CL.dat',savedirF,obj.RunAnaObj.DataType,obj.range);  
-                fsys = sprintf('%scontour_KSN2_Fitrium_%s_%.0feV_sys_no_penning_95CL.dat',savedirF,obj.RunAnaObj.DataType,obj.range);
+                fsys = sprintf('%scontour_KSN2_Fitrium_%s_%.0feV_total_95CL.dat',savedirF,obj.RunAnaObj.DataType,obj.range);  
+              %  fsys = sprintf('%scontour_KSN2_Fitrium_%s_%.0feV_sys_no_penning_95CL.dat',savedirF,obj.RunAnaObj.DataType,obj.range);
             end
            
            if strcmp(PlotStat,'ON')
@@ -1450,8 +1450,10 @@ classdef SterileAnalysis < handle
            
            if strcmp(PlotTot,'ON')
                dfSys = importdata(fsys);
-               pFSys  = plot(dfSys.data(:,1),dfSys.data(:,2),'LineStyle','-.','Color',rgb('Orange'),'LineWidth',LineWidth);
-               pFSys = plot(NaN,NaN,'LineStyle','-.','Color',rgb('Orange'),'LineWidth',LineWidth);
+         %      pFSys  = plot(dfSys.data(:,1),dfSys.data(:,2),'LineStyle','-.','Color',rgb('Orange'),'LineWidth',LineWidth);
+                pFSys  = plot(dfSys(:,1),dfSys(:,2),'LineStyle','-.','Color',rgb('Orange'),'LineWidth',LineWidth);
+             
+             %  pFSys = plot(NaN,NaN,'LineStyle','-.','Color',rgb('Orange'),'LineWidth',LineWidth);
                if obj.range==95 &&strcmp(obj.RunAnaObj.DataType,'Real')
                    fsys1 = sprintf('%scontour_KSN1_Fitrium_%s_%.0feV_total_95CL_1.txt',savedirF,obj.RunAnaObj.DataType,obj.range);
                    dfSys1 = importdata(fsys1);
@@ -1500,6 +1502,9 @@ classdef SterileAnalysis < handle
                    dkSyst = importdata(ksyst);
                    pKSys = plot(dkSyst.data(:,1),dkSyst.data(:,2),'LineStyle',':','Color',rgb('DodgerBlue'),'LineWidth',LineWidth+0.5);
                end
+           else
+               pKStat = 0;
+                pKSys = 0;
            end
            
            if strcmp(PlotStat,'ON') && strcmp(PlotTot,'ON')
@@ -1527,7 +1532,7 @@ classdef SterileAnalysis < handle
                    legStr = {'Fitrium','KaFit','Samak'};
                    legPlt = [pF,pK,pS];   
                else
-                   legStr = {'Samak)','Fitrium'};
+                   legStr = {'Samak','Fitrium'};
                    legPlt = [pF,pS];     
                end
                   leg = legend(legPlt,legStr,'Location','southwest'); 
@@ -2466,11 +2471,11 @@ classdef SterileAnalysis < handle
                      extraStr = [extraStr,'_Extsin2T4'];
                  end
                  
-                  if strcmp(ExtmNu4Sq,'ON') && strcmp(obj.DataType,'Real')
+                  if strcmp(ExtmNu4Sq,'ON') && strcmp(obj.RunAnaObj.DataType,'Real')
                       extraStr = [extraStr,'_ExtmNu4Sq'];
                   end
                   
-                  if strcmp(ExtmNu4Sq,'0.01') && strcmp(obj.DataType,'Real')
+                  if strcmp(ExtmNu4Sq,'0.01') && strcmp(obj.RunAnaObj.DataType,'Real')
                       extraStr = [extraStr,'_ExtmNu4Sq0.01'];
                   end
                   

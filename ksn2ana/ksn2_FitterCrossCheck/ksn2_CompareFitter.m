@@ -2,7 +2,7 @@
 %% settings that might change
 chi2 = 'chi2CMShape';
 DataType = 'Twin';
-nGridSteps = 50;
+nGridSteps = 30;
 range = 40;
 
 %% configure RunAnalysis object
@@ -42,8 +42,13 @@ SterileArg = {'RunAnaObj',A,... % Mother Object: defines RunList, Column Density
     'LoadGridArg',...
     {'mNu4SqTestGrid',5,'CheckSmallerN','ON','mNu4SqTestGrid',5,'IgnoreKnm2FSDbinning','ON','ExtmNu4Sq','ON'}};
 
+if strcmp(DataType,'Real')
+    LoadGridArg = {'mNu4SqTestGrid',5,'IgnoreKnm2FSDbinning','ON','ExtmNu4Sq','ON'};
+else
+    LoadGridArg = {'mNu4SqTestGrid',5,'IgnoreKnm2FSDbinning','ON','ExtmNu4Sq','OFF'};
+end
 S = SterileAnalysis(SterileArg{:});
 
 S.InterpMode = 'spline';
-S.PlotFitriumSamak('PlotTot','ON','PlotStat','OFF','SavePlot','png','PlotKafit','ON')
+S.PlotFitriumSamak('PlotTot','ON','PlotStat','OFF','SavePlot','png','PlotKafit','OFF')
 

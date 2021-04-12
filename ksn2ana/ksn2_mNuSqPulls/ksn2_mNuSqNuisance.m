@@ -5,6 +5,7 @@ chi2 = 'chi2CMShape';
 DataType = 'Real';
 nGridSteps = 30;
 range = 40;
+Mode = 'Compute';
 %% configure RunAnalysis object
 if strcmp(chi2,'chi2Stat')
     NonPoissonScaleFactor = 1;
@@ -41,7 +42,8 @@ SterileArg = {'RunAnaObj',A,... % Mother Object: defines RunList, Column Density
     'range',range,...
      'LoadGridArg',{'ExtmNu4Sq','ON','mNu4SqTestGrid',5}};
 
-%%
+
+
 S = SterileAnalysis(SterileArg{:});
 S.InterpMode = 'spline';
 S.LoadGridFile(S.LoadGridArg{:}); 
