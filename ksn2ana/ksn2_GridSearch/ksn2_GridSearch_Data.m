@@ -44,7 +44,7 @@ SterileArg = {'RunAnaObj',A,... % Mother Object: defines RunList, Column Density
 %%
 S = SterileAnalysis(SterileArg{:});
 S.GridSearch('ExtmNu4Sq','ON','mNu4SqTestGrid',5,'Extsin2T4','ON');
- S.GridSearch('ExtmNu4Sq','ON','mNu4SqTestGrid',5,'Extsin2T4','OFF');
+S.GridSearch('ExtmNu4Sq','ON','mNu4SqTestGrid',5,'Extsin2T4','OFF');
 
 %    BF = 'OFF';
 % end

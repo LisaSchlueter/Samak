@@ -234,7 +234,7 @@ classdef SterileAnalysis < handle
                     sin2T4      = logspace(log10(0.5),log10(1),obj.nGridSteps);
                 elseif strcmp(Extsin2T4,'ON') && obj.nGridSteps<50
                     % add more points are large mixing
-                    sin2T4      = sort(logspace(-3,log10(sin2T4Max),obj.nGridSteps-3),0.55,0.7,0.9);
+                    sin2T4      = sort([logspace(-3,log10(sin2T4Max),obj.nGridSteps-3),0.55,0.7,0.9]);
                     
                 else
                     sin2T4      = logspace(-3,log10(sin2T4Max),obj.nGridSteps);
