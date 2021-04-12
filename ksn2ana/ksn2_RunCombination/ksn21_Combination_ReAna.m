@@ -3,9 +3,10 @@
 % with KSN-1 Re-Ana chi2 map
 %% settings that might change
 chi2Name = 'chi2CMShape';
-DataType = 'Twin';
+DataType = 'Real';
 nGridSteps = 50;
 range = 40;
+BF = 'ON';
 %% configure RunAnalysis object
 if strcmp(chi2Name,'chi2Stat')
     NonPoissonScaleFactor = 1;
@@ -43,7 +44,7 @@ SterileArg = {'RunAnaObj',A,... % Mother Object: defines RunList, Column Density
 
 %%
 S = SterileAnalysis(SterileArg{:});
-%% load ksn
+%% load ksn1
 S.RunAnaObj.ModelObj.BKG_PtSlope = -2.2*1e-06;
 S.RunAnaObj.DataSet = 'Knm1';
 S.RunAnaObj.RunData.RunName = 'KNM1';
@@ -55,19 +56,24 @@ S.RunAnaObj.FSDFlag = 'KNM2_0p1eV';
 S.RunAnaObj.NonPoissonScaleFactor = 1.064;
 S.RunAnaObj.chi2 = 'chi2CMShape';
 S.nGridSteps = 30;
-S.LoadGridFile('CheckLarger','ON','ExtmNu4Sq','OFF','mNu4SqTestGrid',2);
+S.LoadGridArg = {'CheckLarger','ON','ExtmNu4Sq','OFF','mNu4SqTestGrid',2};
+S.LoadGridFile(S.LoadGridArg{:});
 S.Interp1Grid('RecomputeFlag','ON');%,'Maxm4Sq',34.2^2);
+
+%S.GridPlot;
+p1tot = S.ContourPlot('BestFit',BF,'CL',95,'HoldOn','OFF','Color',rgb('FireBrick'),'LineStyle',':');
+
+% load again with same binning as KSN-1 (restricted)
+S.LoadGridFile(S.LoadGridArg{:}); 
+S.Interp1Grid('RecomputeFlag','ON','Minm4Sq',1,'Maxm4Sq',38^2);
 mNu4Sq_k1 = S.mNu4Sq;
 sin2T4_k1 = S.sin2T4;
 chi2_k1   = S.chi2;
 chi2ref_k1= S.chi2_ref;
 sum(sum(isnan(S.chi2)))
-%S.GridPlot;
-p1tot = S.ContourPlot('BestFit','OFF','CL',95,'HoldOn','OFF','Color',rgb('FireBrick'),'LineStyle',':');
-
-
 %% load ksn2
-S.nGridSteps = 50;
+S.nGridSteps = 30;
+S.RunAnaObj.ModelObj.BKG_PtSlope = 3*1e-06;
 S.RunAnaObj.FSDFlag = 'KNM2_0p1eV';
 S.RunAnaObj.DataSet = 'Knm2';
 S.RunAnaObj.RunData.RunName = 'KNM2_Prompt';
@@ -78,21 +84,39 @@ S.RunAnaObj.NonPoissonScaleFactor = 1.112;
 
 % stat and syst
 S.RunAnaObj.chi2 = 'chi2CMShape';
-S.LoadGridFile('CheckLarger','ON');            
+S.LoadGridArg = {'CheckLarger','ON','mNu4SqTestGrid',5,'ExtmNu4Sq','ON'};
+S.LoadGridFile(S.LoadGridArg{:});            
 S.Interp1Grid('RecomputeFlag','ON');
+% mNu4Sq_k2 = S.mNu4Sq;
+% sin2T4_k2 = S.sin2T4;
+% chi2_k2   = S.chi2;
+% chi2ref_k2= S.chi2_ref;
+[p2tot,sinMin] = S.ContourPlot('BestFit',BF,'CL',95,'HoldOn','ON','Color',rgb('Orange'),'LineStyle','-.');
+mNu4Sq_k2_contour = S.mNu4Sq_contour;
+sin2T4_k2_contour = S.sin2T4_contour;
+
+%load again with same binning as KSN-1 (restricted)
+S.LoadGridFile(S.LoadGridArg{:}); 
+S.Interp1Grid('RecomputeFlag','ON','Minm4Sq',1,'Maxm4Sq',38^2);
 mNu4Sq_k2 = S.mNu4Sq;
 sin2T4_k2 = S.sin2T4;
 chi2_k2   = S.chi2;
 chi2ref_k2= S.chi2_ref;
-mNu4Sq_k2_contour = S.mNu4Sq_contour;
-sin2T4_k2_contour = S.sin2T4_contour;
-[p2tot,sinMin] = S.ContourPlot('BestFit','OFF','CL',95,'HoldOn','ON','Color',rgb('Orange'),'LineStyle','-.');
 
+%% check if they have same binning
+ if sum(sum(sin2T4_k2~=sin2T4_k1))>0 || sum(sum(mNu4Sq_k1~=mNu4Sq_k2))>0
+     fprintf(2, 'KSN-1 and KSN-2 do not have  the same binning - return \n');
+     return;
+ end
+%% combi 
 % sum
 chi2_sum = chi2_k1+chi2_k2;
 S.chi2 = chi2_sum;
 S.chi2_ref = chi2ref_k1+chi2ref_k2;
-[p12tot,sinMin] = S.ContourPlot('BestFit','OFF','CL',95,'HoldOn','ON','Color',rgb('DodgerBlue'),'LineStyle','-');
+[p12tot,sinMin] = S.ContourPlot('BestFit','ON','CL',95,'HoldOn','ON','Color',rgb('DodgerBlue'),'LineStyle','-');
+
+% find best fit;
+
 
 leg = legend([p1tot,p2tot,p12tot],'KSN-1','KSN-2','KSN-1 and KSN-2 combined');
 PrettyLegendFormat(leg);
@@ -101,6 +125,10 @@ title([S.GetPlotTitle, sprintf(' , {\\itm}_\\nu^2 = 0 eV^2')],'FontWeight','norm
 xlim([5e-03,0.5]);
 plotname = [extractBefore(S.DefPlotName,'Grid'),sprintf('KSN12_Combination_E0NormBkg_%s.png',chi2Name)];
 print(gcf,plotname,'-dpng','-r300');
+
+
+
+return;
 %%  plot sum
 DeltaChi2 = GetDeltaChi2(95,2);
 chi2grid_k1 = chi2_k1;% S.chi2;
@@ -113,6 +141,9 @@ grid off
 set(gca,'XScale','log')
 set(gca,'YScale','log')
 view([0 0 1])
+
+
+
 %%
 PlotGrid = 'OFF';
 if strcmp(PlotGrid,'ON')
@@ -169,7 +200,6 @@ S.RunAnaObj.NonPoissonScaleFactor = 1.064;
 S.RunAnaObj.chi2 = 'chi2CMShape';
 S.LoadGridFile('CheckLarger','ON');
 S.Interp1Grid('RecomputeFlag','ON');
-S.GridPlot;
 
 hold on;
 %%

@@ -1,6 +1,6 @@
 % Test of Wilk's theorem (coverage)
 % chi2min distribution (best fit chi2): Kolmogorov-Smirnov Test
-NrandMC = 752;
+NrandMC = 7;
 Twin_sin2T4 = 0;
 Twin_mNu4Sq = 0;
 savedir = [getenv('SamakPath'),'ksn2ana/ksn2_WilksTheorem/results/'];
@@ -23,6 +23,8 @@ end
 dof = 23;
 chi2min    = sort(chi2_bf);
 Chi2CDFEmp = arrayfun(@(x) sum(chi2min<=x)./numel(chi2min),chi2min); % empirical cdf
+
+
 Chi2CDFTheo = chi2cdf(chi2min,dof);                                  % theoretical cdf
 [h,p,ksstat,cv] = kstest(chi2min,'CDF',[chi2min,Chi2CDFTheo]);
 
@@ -30,7 +32,8 @@ Chi2CDFTheo = chi2cdf(chi2min,dof);                                  % theoretic
 GetFigure;
 pEmp =plot(chi2min,Chi2CDFEmp,'-.','LineWidth',2);
 hold on;
-pTheo = plot(chi2min,Chi2CDFTheo,'-','LineWidth',2);
+x = linspace(0,max(chi2_bf),1e3);
+pTheo = plot(x,chi2cdf(x,dof),'-','LineWidth',2);
 PrettyFigureFormat('FontSize',22);
 xlabel(sprintf('\\chi^2_{min} (%.0f dof)',dof));
 ylabel(sprintf('Cumulative probability'));

@@ -1,0 +1,56 @@
+% fit to ksn2 with mNu4Sq and sin2t4 as (free) fit parameters
+
+%% settings that might change
+chi2 = 'chi2CMShape';
+DataType = 'Real';
+range = 40;
+pullFlag = 29;%27
+freePar = 'E0 Norm Bkg mnu4Sq sin2T4';
+savedir = [getenv('SamakPath'),'ksn2ana/ksn2_FitSteriles/results/'];
+
+savename = sprintf('%sksn2_FitSteriles_%s_%s_%.0feV_%s_pull%.0f.mat',savedir,DataType,chi2,range,strrep(freePar,' ',''),pullFlag);
+if exist(savename,'file')
+    load(savename);
+     fprintf('load result from file %s \n',savename);
+else
+    %% configure RunAnalysis object
+    if strcmp(chi2,'chi2Stat')
+        NonPoissonScaleFactor = 1;
+    elseif  strcmp(chi2,'chi2CMShape')
+        NonPoissonScaleFactor = 1.112;
+    end
+    RunAnaArg = {'RunList','KNM2_Prompt',...
+        'DataType',DataType,...
+        'fixPar',freePar,...%free par
+        'SysBudget',40,...
+        'fitter','minuit',...
+        'minuitOpt','min;migrad',...
+        'RadiativeFlag','ON',...
+        'FSDFlag','KNM2_0p5eV',...
+        'ELossFlag','KatrinT2A20',...
+        'AnaFlag','StackPixel',...
+        'chi2',chi2,...
+        'NonPoissonScaleFactor',NonPoissonScaleFactor,...
+        'FSD_Sigma',sqrt(0.0124+0.0025),...
+        'TwinBias_FSDSigma',sqrt(0.0124+0.0025),...
+        'TwinBias_Q',18573.7,...
+        'PullFlag',pullFlag,...
+        'BKG_PtSlope',3*1e-06,...
+        'TwinBias_BKG_PtSlope',3*1e-06,...
+        'DopplerEffectFlag','FSD'};
+    A = MultiRunAnalysis(RunAnaArg{:});
+    A.exclDataStart = A.GetexclDataStart(range);
+    
+    A.Fit;
+    FitResult = A.FitResult;
+    
+    MakeDir(savedir);
+    save(savename,'RunAnaArg','FitResult','A');
+    fprintf('save result to %s \n',savename);
+end
+fprintf('m4^2   = %.2g +- %.2g eV^2 \n',FitResult.par(15),FitResult.err(15));
+fprintf('sin2t4 = %.2g +- %.2g \n',FitResult.par(16),FitResult.err(16))
+%fprintf('m^2    = %.2f +- %.2f  eV^2 \n',FitResult.par(1),FitResult.err(1))
+%fprintf('E0     = %.2f +- %.2f eV \n',FitResult.par(2)+A.ModelObj.Q_i,FitResult.err(2))
+%fprintf('B      = %.1f +- %.1f  mcps \n',(FitResult.par(3)+A.ModelObj.BKG_RateSec_i)*1e3,1e3*FitResult.err(3))
+fprintf('chi^2  = %.1f (%.0f dof) \n',FitResult.chi2min,FitResult.dof)

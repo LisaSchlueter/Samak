@@ -1,5 +1,5 @@
 % ksn2 chi2 grid - non physical parameter space 4 quadrants
-% ksn2 plot chi2 grid search
+% ksn2 plot chi2 grid search: 1 at a time to cross check
 % 4 quadrants
 %% settings that might change
 chi2 = 'chi2CMShape';
@@ -44,8 +44,24 @@ SterileArg = {... % Mother Object: defines RunList, Column Density, Stacking Cut
     'LoadGridArg',{'ExtmNu4Sq','ON','mNu4SqTestGrid',5},...
     'InterpMode','lin'};
 S = SterileAnalysis('RunAnaObj',A,SterileArg{:});
+
 %%
-S.PlotQuadrant('SavePlot','OFF')
+S.InterpMode = 'spline';
+Quadrant = 'SE';
+switch Quadrant
+    case 'NW'
+        GridArg = {'NegmNu4Sq','OFF','Negsin2T4','ON','Extsin2T4','OFF'};
+    case 'NE'
+         GridArg = {'NegmNu4Sq','OFF','Negsin2T4','OFF','Extsin2T4','ON'};
+    case 'SW'
+         GridArg = {'NegmNu4Sq','ON','Negsin2T4','ON','Extsin2T4','OFF'};
+    case 'SE'
+         GridArg = {'NegmNu4Sq','ON','Negsin2T4','OFF','Extsin2T4','ON'};
+end
+S.LoadGridFile(S.LoadGridArg{:},GridArg{:});
+S.Interp1Grid('Maxm4Sq',34^2);
+S.GridPlot('BestFit','ON');
+
 % load
 
 % find best fit

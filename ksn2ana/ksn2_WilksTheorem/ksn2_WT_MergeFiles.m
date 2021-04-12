@@ -1,6 +1,6 @@
 % create smaller file for result of grids searches on randomized data
 RecomputeFlag = 'ON';
-randMC = 1:50;%752;
+randMC = 1:7;%752;
 Twin_sin2T4 = 0;
 Twin_mNu4Sq = 0;
 savedir = [getenv('SamakPath'),'ksn2ana/ksn2_WilksTheorem/results/'];
@@ -67,16 +67,18 @@ else
     sin2T4_contour = cell(numel(randMC),1);
     
     S.InterpMode = 'lin';
+    S.LoadGridArg = {'mNu4SqTestGrid',2,'ExtmNu4Sq','ON'};
+    
     % load files
     for i=1:numel(randMC)
         progressbar(i/numel(randMC));
         S.RandMC= randMC(i);
-        S.LoadGridFile;
+        S.LoadGridFile(S.LoadGridArg{:});
         S.Interp1Grid;%('Maxm4Sq',40^2);
         S.ContourPlot; close;
        
         S.FindBestFit('Mode','Def');
-        %S.FindBestFit('Mode','Imp');
+        S.FindBestFit('Mode','Imp');
         
         mNu4Sq_bf(i) = S.mNu4Sq_bf;
         sin2T4_bf(i) = S.sin2T4_bf;
@@ -94,7 +96,7 @@ else
     S.InterpMode = 'spline';
     S.RandMC= 'OFF';
     S.nGridSteps = 50;
-    S.LoadGridFile('IgnoreKnm2FSDbinning','ON','ExtmNu4Sq','ON')
+    S.LoadGridFile('IgnoreKnm2FSDbinning','ON','ExtmNu4Sq','ON');
     S.Interp1Grid;
     S.ContourPlot; close;
     mNu4Sq_contour_Asimov = S.mNu4Sq_contour;

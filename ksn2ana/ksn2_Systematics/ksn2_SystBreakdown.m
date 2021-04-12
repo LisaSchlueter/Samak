@@ -43,6 +43,7 @@ SterileArg = {'RunAnaObj',A,... % Mother Object: defines RunList, Column Density
 
 %%
 S = SterileAnalysis(SterileArg{:});
+S.InterpMode = 'lin';
 S.RunAnaObj.chi2 = 'chi2CMShape';
 S.RunAnaObj.NonPoissonScaleFactor = 1;
 SysEffectsAll   = {'Stat','FSD','BkgPT','Bkg','NP','LongPlasma','TASR','RF_EL',...
@@ -69,7 +70,7 @@ for i=1:numel(SysEffectsAll)
       %  S.GridSearch;
         
         S.LoadGridFile;
-        S.Interp1Grid;
+        S.Interp1Grid('Maxm4Sq',35^2);
         
         S.RunAnaObj.chi2 = 'chi2CMShape';
         S.RunAnaObj.NonPoissonScaleFactor = 1;
@@ -78,7 +79,7 @@ for i=1:numel(SysEffectsAll)
      %   S.GridSearch;
         
         S.LoadGridFile;
-        S.Interp1Grid;
+        S.Interp1Grid('Maxm4Sq',35^2);
     end
 
     pHandle{i} =  S.ContourPlot('HoldOn',HoldOn,'SavePlot','OFF','Color',Colors(i*floor(256/numel(SysEffectsAll)),:),'LineStyle',LineStyle{i});

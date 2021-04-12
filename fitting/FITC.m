@@ -422,16 +422,7 @@ classdef FITC < handle
             end
 
             % 9: mixing angle pull
-            if any(ismember(obj.pullFlag,9)) % sterile pull I
-%               PullTerm = PullTerm + (par(4*obj.SO.nPixels+12))^2/sin2T4tol^2 + exp(-500*par(4*obj.SO.nPixels+12));
-%                 PullTerm = PullTerm + ...
-%                     exp(500*(par(4*obj.SO.nPixels+12)-0.5)) + ...   % sin2T4
-%                     exp(-500*par(4*obj.SO.nPixels+12)) + ...
-%                     exp(500*( par(4*obj.SO.nPixels+11)-90^2)) + ... % m4
-%                     exp(-500*par(4*obj.SO.nPixels+11)) + ...
-%                     (par(1)-0)^2/1^2;                               % nu-mass
-%                PullTerm = PullTerm + (par(4*obj.SO.nPixels+12))^2/sin2T4tol^2 + exp(-500*par(4*obj.SO.nPixels+12));
-          
+            if any(ismember(obj.pullFlag,9)) % sterile pull I 
             range =  ceil(abs(obj.SO.qU(min(obj.exclDataStart))-18574));
                     PullTerm = PullTerm + ...
                     exp(1e3*(par(4*obj.SO.nPixels+12)-(0.5+1e-02))) + ...  % sin2t4 upper bound 
@@ -538,7 +529,38 @@ classdef FITC < handle
                 mNuSqtol_KNM1 =  1.1; % eV^2 KATRIN KNM-1
                 PullTerm = PullTerm + (par(1)-0)^2/mNuSqtol_KNM1^2;
              end
-            
+             
+           % 27: mixing angle pull
+           if any(ismember(obj.pullFlag,[27,28,29,30])) % sterile pull KSN-2 I
+               range =  ceil(abs(obj.SO.qU(min(obj.exclDataStart))-18574));
+               if obj.pullFlag == 27
+                   sinU = 0.5;     % sin2t4 upper bound
+                   sinD = 0;       % sin2t4 lower bound
+                   m4U   = range^2; % mSq4 upper bound
+                   m4D   = 0;       % mSq4 lower bound
+               elseif obj.pullFlag == 28
+                   sinU = 1;     % sin2t4 upper bound
+                   sinD = 0;       % sin2t4 lower bound
+                   m4U   = range^2; % mSq4 upper bound
+                   m4D   = 0;       % mSq4 lower bound
+               elseif obj.pullFlag == 29
+                   sinU = 1;     % sin2t4 upper bound
+                   sinD = -1;       % sin2t4 lower bound
+                   m4U   = range^2; % mSq4 upper bound
+                   m4D   = -range^2;       % mSq4 lower bound
+               elseif obj.pullFlag == 30
+                   sinU = 0;     % sin2t4 upper bound
+                   sinD = -1;       % sin2t4 lower bound
+                   m4U   = range^2; % mSq4 upper bound
+                   m4D   = 0;       % mSq4 lower bound
+               end
+               PullTerm = PullTerm + ...
+                   exp(1e3*(par(4*obj.SO.nPixels+12)-sinU-0.01)) + ...    % sin2t4 upper bound
+                   exp(-1e3*(par(4*obj.SO.nPixels+12)-sinD+0.01)) + ...     % sin2t4 lower bound
+                   exp(-1e3*(par(4*obj.SO.nPixels+11)-m4D+0.01)) + ... % mSq4 lower bound
+                   exp(1e3*(par(4*obj.SO.nPixels+11)-m4U-0.01));       % mSq4 upper bound
+           end
+           
         end
         function chi2 = chi2function(obj,par)
             
@@ -910,7 +932,7 @@ classdef FITC < handle
             cprintf('blue',' - - - - - - - - - - - - - - - - - - - - - - - \n');
             if (mnu4Sq_fit_err~=0) || (sin2T4_fit_err~=0)
                 cprintf('blue','  mnu4Sq    = %g +/- %g eV\n', mnu4Sq_fit + obj.SO.mnu4Sq_i,mnu4Sq_fit_err);
-                cprintf('blue','  sin2T4    = %g +/- %g eV\n', sin2T4_fit + obj.SO.sin2T4_i,sin2T4_fit_err);
+                cprintf('blue','  sin2T4    = %g +/- %g \n', sin2T4_fit + obj.SO.sin2T4_i,sin2T4_fit_err);
                 cprintf('blue',' - - - - - - - - - - - - - - - - - - - - - - - \n');
             end
             cprintf('blue','  (E0)eff   = %0.9g +/- %g eV\n', obj.SO.Q_i+e0_fit,err(2));
