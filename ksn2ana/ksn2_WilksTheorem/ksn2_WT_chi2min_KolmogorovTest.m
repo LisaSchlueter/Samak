@@ -1,6 +1,6 @@
 % Test of Wilk's theorem (coverage)
 % chi2min distribution (best fit chi2): Kolmogorov-Smirnov Test
-NrandMC = 7;
+NrandMC = 473;
 Twin_sin2T4 = 0;
 Twin_mNu4Sq = 0;
 savedir = [getenv('SamakPath'),'ksn2ana/ksn2_WilksTheorem/results/'];

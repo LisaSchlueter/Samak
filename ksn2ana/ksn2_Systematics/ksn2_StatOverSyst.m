@@ -3,7 +3,7 @@
 %% settings that might change
 chi2 = 'chi2Stat';
 DataType = 'Twin';
-nGridSteps = 50;
+nGridSteps = 30;
 range = 40;
 %% configure RunAnalysis object
 if strcmp(chi2,'chi2Stat')

@@ -1,6 +1,6 @@
 % Test of Wilk's theorem (coverage)
 % plot best fits on contour plot
-NrandMC = 50;%752;
+NrandMC = 473;%752;
 Twin_sin2T4 = 0;
 Twin_mNu4Sq = 0;
 savedir = [getenv('SamakPath'),'ksn2ana/ksn2_WilksTheorem/results/'];

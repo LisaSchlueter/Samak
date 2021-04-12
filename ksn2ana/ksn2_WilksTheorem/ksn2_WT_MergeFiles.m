@@ -1,6 +1,6 @@
 % create smaller file for result of grids searches on randomized data
 RecomputeFlag = 'ON';
-randMC = 1:7;%752;
+randMC = [1:380,467:500,644:700,999,1e3];%752;
 Twin_sin2T4 = 0;
 Twin_mNu4Sq = 0;
 savedir = [getenv('SamakPath'),'ksn2ana/ksn2_WilksTheorem/results/'];

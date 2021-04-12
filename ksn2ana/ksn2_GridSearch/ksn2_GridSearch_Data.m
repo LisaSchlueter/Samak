@@ -18,7 +18,7 @@ RunAnaArg = {'RunList','KNM2_Prompt',...
     'fitter','minuit',...
     'minuitOpt','min;migrad',...
     'RadiativeFlag','ON',...
-    'FSDFlag','KNM2_0p1eV',...
+    'FSDFlag','KNM2_0p5eV',...
     'ELossFlag','KatrinT2A20',...
     'AnaFlag','StackPixel',...
     'chi2',chi2,...
@@ -39,42 +39,37 @@ SterileArg = {'RunAnaObj',A,... % Mother Object: defines RunList, Column Density
     'SysEffect','all',...
     'RandMC','OFF',...
     'range',range,...
-    'LoadGridArg',{'ExtmNu4Sq','ON','mNu4SqTestGrid',2}};
+    'LoadGridArg',{'ExtmNu4Sq','ON','mNu4SqTestGrid',5}};
 
 %%
 S = SterileAnalysis(SterileArg{:});
-S.nGridSteps = 30;
-S.LoadGridFile('ExtmNu4Sq','ON','mNu4SqTestGrid',5,'Extsin2T4','OFF');
+S.GridSearch('ExtmNu4Sq','ON','mNu4SqTestGrid',5,'Extsin2T4','ON');
+ S.GridSearch('ExtmNu4Sq','ON','mNu4SqTestGrid',5,'Extsin2T4','OFF');
 
-if strcmp(A.DataType,'Real')
-    S.InterpMode = 'spline';
-    BF = 'ON';
-else
-    S.InterpMode = 'spline';
-   BF = 'OFF';
-end
-S.Interp1Grid('RecomputeFlag','ON','Maxm4Sq',33^2);
-%S.GridPlot('Contour','ON','BestFit',BF,'SavePlot','png','CL',95)
-S.FindBestFit;
-S.FindBestFit('Mode','Imp');
-
-mNu4Sq_bf = S.mNu4Sq_bf;
-sin2T4_bf = S.sin2T4_bf;
-chi2_bf = S.chi2_bf;
-%% enlarge sin2t4
-S.LoadGridFile('ExtmNu4Sq','ON','mNu4SqTestGrid',5,'Extsin2T4','ON','IgnoreKnm2FSDbinning','ON');
-
-if strcmp(A.DataType,'Real')
-    S.InterpMode = 'spline';
-    BF = 'ON';
-else
-    S.InterpMode = 'spline';
-   BF = 'OFF';
-end
-S.Interp1Grid('RecomputeFlag','ON','Maxm4Sq',34^2);
-S.GridPlot('Contour','ON','BestFit',BF,'SavePlot','png','CL',95)
-S.FindBestFit;
-S.FindBestFit('Mode','Imp');
-mNu4Sq_bf2 = S.mNu4Sq_bf;
-sin2T4_bf2 = S.sin2T4_bf;
-chi2_bf2 = S.chi2_bf;
+%    BF = 'OFF';
+% end
+% S.Interp1Grid('RecomputeFlag','ON','Maxm4Sq',33^2);
+% %S.GridPlot('Contour','ON','BestFit',BF,'SavePlot','png','CL',95)
+% S.FindBestFit;
+% S.FindBestFit('Mode','Imp');
+% 
+% mNu4Sq_bf = S.mNu4Sq_bf;
+% sin2T4_bf = S.sin2T4_bf;
+% chi2_bf = S.chi2_bf;
+% %% enlarge sin2t4
+% S.LoadGridFile('ExtmNu4Sq','ON','mNu4SqTestGrid',5,'Extsin2T4','ON','IgnoreKnm2FSDbinning','ON');
+% 
+% if strcmp(A.DataType,'Real')
+%     S.InterpMode = 'spline';
+%     BF = 'ON';
+% else
+%     S.InterpMode = 'spline';
+%    BF = 'OFF';
+% end
+% S.Interp1Grid('RecomputeFlag','ON','Maxm4Sq',34^2);
+% S.GridPlot('Contour','ON','BestFit',BF,'SavePlot','png','CL',95)
+% S.FindBestFit;
+% S.FindBestFit('Mode','Imp');
+% mNu4Sq_bf2 = S.mNu4Sq_bf;
+% sin2T4_bf2 = S.sin2T4_bf;
+% chi2_bf2 = S.chi2_bf;

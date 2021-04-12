@@ -217,7 +217,7 @@ classdef SterileAnalysis < handle
                     mnu4SqSmall  = logspace(0,log10((obj.range-11)^2),obj.nGridSteps-5)';
                     mnu4SqLarge  = logspace(log10((obj.range-10)^2),log10((obj.range)^2),5)';
                     mnu4Sq       = sort([mnu4SqSmall;mnu4SqLarge]);
-                elseif mNu4SqTestGrid==5
+                elseif mNu4SqTestGrid==5 || mNu4SqTestGrid==5.5
                     mnu4SqSmall  = logspace(0,log10((obj.range-11)^2),obj.nGridSteps-15)';
                     mnu4SqLarge  = logspace(log10((obj.range-10)^2),log10((obj.range)^2),15)';
                     mnu4Sq       = sort([mnu4SqSmall;mnu4SqLarge]);
@@ -230,7 +230,16 @@ classdef SterileAnalysis < handle
                     obj.nGridSteps = nGridSteps_i;
                 end
                 
-                sin2T4      = logspace(-3,log10(sin2T4Max),obj.nGridSteps);
+                if mNu4SqTestGrid==5.5
+                    sin2T4      = logspace(log10(0.5),log10(1),obj.nGridSteps);
+                elseif strcmp(Extsin2T4,'ON') && obj.nGridSteps<50
+                    % add more points are large mixing
+                    sin2T4      = sort(logspace(-3,log10(sin2T4Max),obj.nGridSteps-3),0.55,0.7,0.9);
+                    
+                else
+                    sin2T4      = logspace(-3,log10(sin2T4Max),obj.nGridSteps);
+                end
+                
                 mnu4Sq      = repmat(mnu4Sq,1,obj.nGridSteps);
                 sin2T4      = repmat(sin2T4,obj.nGridSteps,1);
                 
@@ -1402,7 +1411,7 @@ classdef SterileAnalysis < handle
                 obj.RunAnaObj.chi2 = 'chi2Stat';
                 obj.SetNPfactor;
                 obj.nGridSteps = 30;
-                obj.LoadGridFile('CheckSmallerN','ON','mNu4SqTestGrid',2,'IgnoreKnm2FSDbinning','ON','ExtmNu4Sq','ON');
+                obj.LoadGridFile(obj.LoadGridArg{:});
                 obj.Interp1Grid('RecomputeFlag','ON','Maxm4Sq',38.2^2);
                 pStat = obj.ContourPlot('CL',obj.ConfLevel,'HoldOn',HoldOn,...
                     'Color',rgb('FireBrick'),'LineStyle','-','BestFit',BestFit,'PlotSplines','OFF');
@@ -1413,7 +1422,7 @@ classdef SterileAnalysis < handle
             if strcmp(PlotTot,'ON')
                 obj.RunAnaObj.chi2 = 'chi2CMShape';
                  obj.SetNPfactor;
-                obj.LoadGridFile('CheckSmallerN','ON',obj.LoadGridArg{:});
+                obj.LoadGridFile(obj.LoadGridArg{:});
                 obj.Interp1Grid('RecomputeFlag','ON');
                 pSys = obj.ContourPlot('CL',obj.ConfLevel,'HoldOn',HoldOn,...
                     'Color',rgb('FireBrick'),'LineStyle','-','BestFit',BestFit,'PlotSplines','OFF');
@@ -2445,7 +2454,7 @@ classdef SterileAnalysis < handle
                      extraStr = sprintf('%s_pull%.0f',extraStr,obj.RunAnaObj.pullFlag);
                  end
                  
-                 if strcmp(NegmNu4Sq,'ON')
+                 if strcmp(NegmNu4Sq,'ON') 
                      extraStr = [extraStr,'_NegmNu4Sq'];
                  end
                  
@@ -2457,16 +2466,16 @@ classdef SterileAnalysis < handle
                      extraStr = [extraStr,'_Extsin2T4'];
                  end
                  
-                  if strcmp(ExtmNu4Sq,'ON')
+                  if strcmp(ExtmNu4Sq,'ON') && strcmp(obj.DataType,'Real')
                       extraStr = [extraStr,'_ExtmNu4Sq'];
                   end
                   
-                  if strcmp(ExtmNu4Sq,'0.01')
+                  if strcmp(ExtmNu4Sq,'0.01') && strcmp(obj.DataType,'Real')
                       extraStr = [extraStr,'_ExtmNu4Sq0.01'];
                   end
                   
                   if isfloat(mNu4SqTestGrid)
-                      extraStr = [extraStr,sprintf('_mNu4SqTestGrid%.0f',mNu4SqTestGrid)];
+                      extraStr = [extraStr,sprintf('_mNu4SqTestGrid%.2g',mNu4SqTestGrid)];
                   end
                   
                   if FixmNuSq~=0
