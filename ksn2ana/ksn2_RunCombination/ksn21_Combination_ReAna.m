@@ -4,7 +4,7 @@
 %% settings that might change
 chi2Name = 'chi2CMShape';
 DataType = 'Real';
-nGridSteps = 50;
+nGridSteps = 30;
 range = 40;
 BF = 'ON';
 %% configure RunAnalysis object
@@ -40,7 +40,8 @@ SterileArg = {'RunAnaObj',A,... % Mother Object: defines RunList, Column Density
     'RecomputeFlag','OFF',...
     'SysEffect','all',...
     'RandMC','OFF',...
-    'range',range};
+    'range',range,...
+    'LoadGridArg',{'mNu4SqTestGrid',5,'ExtmNu4Sq','ON'}};
 
 %%
 S = SterileAnalysis(SterileArg{:});
@@ -59,8 +60,6 @@ S.nGridSteps = 30;
 S.LoadGridArg = {'CheckLarger','ON','ExtmNu4Sq','OFF','mNu4SqTestGrid',2};
 S.LoadGridFile(S.LoadGridArg{:});
 S.Interp1Grid('RecomputeFlag','ON');%,'Maxm4Sq',34.2^2);
-
-%S.GridPlot;
 p1tot = S.ContourPlot('BestFit',BF,'CL',95,'HoldOn','OFF','Color',rgb('FireBrick'),'LineStyle',':');
 
 % load again with same binning as KSN-1 (restricted)
@@ -74,7 +73,7 @@ sum(sum(isnan(S.chi2)))
 %% load ksn2
 S.nGridSteps = 30;
 S.RunAnaObj.ModelObj.BKG_PtSlope = 3*1e-06;
-S.RunAnaObj.FSDFlag = 'KNM2_0p1eV';
+S.RunAnaObj.FSDFlag = 'KNM2_0p5eV';
 S.RunAnaObj.DataSet = 'Knm2';
 S.RunAnaObj.RunData.RunName = 'KNM2_Prompt';
 S.RunAnaObj.ELossFlag  = 'KatrinT2A20';
@@ -84,24 +83,39 @@ S.RunAnaObj.NonPoissonScaleFactor = 1.112;
 
 % stat and syst
 S.RunAnaObj.chi2 = 'chi2CMShape';
-S.LoadGridArg = {'CheckLarger','ON','mNu4SqTestGrid',5,'ExtmNu4Sq','ON'};
-S.LoadGridFile(S.LoadGridArg{:});            
-S.Interp1Grid('RecomputeFlag','ON');
+S.LoadGridArg = {'mNu4SqTestGrid',5,'ExtmNu4Sq','ON'};
+% load extended grid to get best fit
+S.LoadGridFile(S.LoadGridArg{:},'Extsin2T4','ON');            
+S.Interp1Grid('RecomputeFlag','ON','Maxm4Sq',35^2);
+S.FindBestFit;
+chi2_ref = S.chi2_ref;
+mNuSq_bf = S.mNuSq_bf;
+sin2T4_bf = S.sin2T4_bf;
+mNu4Sq_bf = S.mNu4Sq_bf;
+% load extended grid to get niceer plot
+S.LoadGridFile(S.LoadGridArg{:},'Extsin2T4','OFF');  
+S.Interp1Grid('RecomputeFlag','ON','Maxm4Sq',38^2);
+S.chi2_ref  = chi2_ref;
+S.mNuSq_bf  = mNuSq_bf ;
+S.sin2T4_bf = sin2T4_bf;
+S.mNu4Sq_bf = mNu4Sq_bf;
+[p2tot,sinMin] = S.ContourPlot('BestFit',BF,'ReCalcBF','OFF','CL',95,'HoldOn','ON','Color',rgb('Orange'),'LineStyle','-.');
+
+
 % mNu4Sq_k2 = S.mNu4Sq;
 % sin2T4_k2 = S.sin2T4;
 % chi2_k2   = S.chi2;
 % chi2ref_k2= S.chi2_ref;
-[p2tot,sinMin] = S.ContourPlot('BestFit',BF,'CL',95,'HoldOn','ON','Color',rgb('Orange'),'LineStyle','-.');
 mNu4Sq_k2_contour = S.mNu4Sq_contour;
 sin2T4_k2_contour = S.sin2T4_contour;
 
-%load again with same binning as KSN-1 (restricted)
+% load again with same binning as KSN-1 (restricted)
 S.LoadGridFile(S.LoadGridArg{:}); 
 S.Interp1Grid('RecomputeFlag','ON','Minm4Sq',1,'Maxm4Sq',38^2);
 mNu4Sq_k2 = S.mNu4Sq;
 sin2T4_k2 = S.sin2T4;
 chi2_k2   = S.chi2;
-chi2ref_k2= S.chi2_ref;
+chi2ref_k2= chi2_ref;
 
 %% check if they have same binning
  if sum(sum(sin2T4_k2~=sin2T4_k1))>0 || sum(sum(mNu4Sq_k1~=mNu4Sq_k2))>0
@@ -122,7 +136,7 @@ leg = legend([p1tot,p2tot,p12tot],'KSN-1','KSN-2','KSN-1 and KSN-2 combined');
 PrettyLegendFormat(leg);
 % save
 title([S.GetPlotTitle, sprintf(' , {\\itm}_\\nu^2 = 0 eV^2')],'FontWeight','normal')
-xlim([5e-03,0.5]);
+xlim([2e-03,0.5]);
 plotname = [extractBefore(S.DefPlotName,'Grid'),sprintf('KSN12_Combination_E0NormBkg_%s.png',chi2Name)];
 print(gcf,plotname,'-dpng','-r300');
 

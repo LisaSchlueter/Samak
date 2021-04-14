@@ -1,6 +1,7 @@
 % ksn2
 % m2 nuisance parameter unconstrained
 % closer look at area [0.5,1] and compare
+% no interpolation
 %% settings that might change
 chi2 = 'chi2Stat';
 DataType = 'Twin';
@@ -47,68 +48,87 @@ end
 %%
 switch Mode
     case 'Compute'
-        S.GridSearch('ExtmNu4Sq',ExtmNu4Sq,'mNu4SqTestGrid',5); 
+        S.GridSearch('ExtmNu4Sq',ExtmNu4Sq,'mNu4SqTestGrid',5);
         A = MultiRunAnalysis(RunAnaArg{:});
-        S = SterileAnalysis(SterileArg{:});    
+        S = SterileAnalysis(SterileArg{:});
         S.GridSearch('ExtmNu4Sq',ExtmNu4Sq,'mNu4SqTestGrid',5.5);
     case 'Display'
+        
+        % grid 1
         S.LoadGridFile('ExtmNu4Sq',ExtmNu4Sq,'mNu4SqTestGrid',5,'CheckLargerN','ON');
-        S.InterpMode = 'spline';
-         S.InterpMode = 'lin';
-        mNu4Sq1 =  S.mNu4Sq;
-        sin2T41 =  S.sin2T4;
-        chi21 =  S.chi2;
-        mNuSq1 =  S.mNuSq;
-        E01   = S.E0;
-        S.Interp1Grid;
+        mNu4Sq1  =  S.mNu4Sq;
+        sin2T41  =  S.sin2T4;
+        chi21    =  S.chi2;
+        mNuSq1   =  S.mNuSq;
+        E01      = S.E0;
         PlotPar1 = S.mNuSq;
         
-        % isolines
-        IsoVec = [-10,-5,-1,0,0.3,1.1,2,10,20];
-        GetFigure;
-        
-        for i=1:numel(ContourVec)
-            [~,p1] = contour3(S.sin2T4,S.mNu4Sq,PlotPar1,[IsoVec(i),IsoVec(i)],...
-                'Color',rgb('Silver'),'ShowText','on','LineWidth',1.5,'LabelSpacing',380);
-            hold on;
-        end
-        view(2)
-        grid off
-        preg = S.ContourPlot('HoldON','ON');
-        
-     %  
+        % grid 2
         S.LoadGridFile('ExtmNu4Sq',ExtmNu4Sq,'mNu4SqTestGrid',5.5);
         mNu4Sq2 =  S.mNu4Sq;
-        mNuSq2 =  S.mNuSq;
-        E02   = S.E0;
+        mNuSq2  =  S.mNuSq;
+        E02     = S.E0;
         sin2T42 =  S.sin2T4;
-        chi22 =  S.chi2;
-        %
-        S.Interp1Grid;%('Maxm4Sq',10^2);
-          PlotPar2 = S.mNuSq;
-        for i=1:numel(ContourVec)
-            [~,p1] = contour3(S.sin2T4,S.mNu4Sq,PlotPar2,[IsoVec(i),IsoVec(i)],...
-                'Color',rgb('Silver'),'ShowText','on','LineWidth',1.5,'LabelSpacing',380);
-            hold on;
-        end
-        pext= S.ContourPlot('HoldOn','ON','LineStyle','-.','Color',rgb('Orange'));
-        set(gca,'XScale','lin')
-        xlim([0 1])
+        chi22   =  S.chi2;
         
-        return
         %% merge
-        S.InterpMode = 'lin';
         S.mNu4Sq = repmat(mNu4Sq1(:,1),1,S.nGridSteps*2-1);
         S.sin2T4 = repmat([sin2T41(1,:),sin2T42(1,2:end)],S.nGridSteps,1);
         S.chi2  = [chi21',chi22(2:end,:)']';
         S.mNuSq = [mNuSq1',mNuSq2(2:end,:)']';
-     
         S.E0 = [E01',E02(2:end,:)']';
-        % chi2g(chi2g>5.99)=NaN;
-        %  S.GridPlot;
-        S.Interp1Grid
-            S.mNuSq(abs(S.mNuSq)>10) = NaN;
-            S.GridPlotFitPar
+        
+        S.InterpMode = 'spline';
+        S.Interp1Grid('Maxm4Sq',38^2)
+        
+        
+        
+        f1 = figure('Units','normalized','Position',[0.1,0.1,0.7,0.55]);
+        % subplot 2
+        subplot(1,2,2)
+        
+        
+        ContourVec = [-700 -300 -100 -50 -10 -3];
+        S.IsoPlotFitPar('HoldOn','ON','ContourVec',ContourVec);
+        title('')
+        legKeep = get(gca,'Legend');
+        
+        set(gca,'XScale','lin')
+        xlim([0.5 1])
+        ylabel(''); xlabel('');
+        ax1 = gca;
+        yticklabels('');
+        
+        
+        % only first grid
+        subplot(1,2,1)
+        
+        S.mNu4Sq = mNu4Sq1;
+        S.sin2T4 = sin2T41;
+        S.chi2  = chi21;
+        S.mNuSq = mNuSq1;
+        S.E0 = E01;
+        S.InterpMode = 'spline';
+        S.Interp1Grid('Maxm4Sq',38^2)
+        
+        S.IsoPlotFitPar('HoldOn','ON','ContourVec',[-10 -3 -1 -0.1 0 0.1 0.3 1 5 10]);
+        leg = get(gca,'Legend');
+        leg.delete;
+        title('')
+        
+        ax2 = gca;
+        ax2.Position(3) = 0.35;  ax1.Position(3) =  ax2.Position(3);
+        ax2.Position(4) = 0.65;  ax1.Position(4) =  ax2.Position(4);
+        ax2.Position(1) = 0.1;   ax1.Position(1) = 0.452;
+        ax2.Position(2) = 0.16;  ax1.Position(2) = ax2.Position(2);
+        ax2.XLabel.Position(1) = 0.5;
+        legKeep.Position(1) = 0.36;
+        legKeep.Position(2) = 0.83;
+        %%
+        pltname = [S.DefPlotName,sprintf('Extsin2T4_GridPlt_Txt%s_NegmNuSq%s.png',ContourTxt,NegmNuSq)];
+        print(pltname,'-dpng','-r350');
 end
+
+        
 
 

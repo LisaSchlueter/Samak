@@ -1,14 +1,14 @@
 % investigate effect of pull terms
 % ksn2 calculate chi2 grid search
 %% settings that might change
-Mode = 'Compute';
+Mode = 'Display';
 chi2 = 'chi2CMShape';
-DataType = 'Twin';
+DataType = 'Real';
 nGridSteps = 30;
 range = 40;
 switch DataType
     case 'Real'
-        FSDFlag = 'KNM2_0p1eV';
+        FSDFlag = 'KNM2_0p5eV';
     case 'Twin'
         FSDFlag = 'KNM2_0p5eV';
 end
@@ -75,7 +75,7 @@ switch Mode
                 'range',range};
             
             %%
-            S = SterileAnalysis(SterileArg{:},'LoadGridArg',{'ExtmNu4Sq','ON','mNu4SqTestGrid',5,'IgnoreKnm2FSDbinning','ON'});
+            S = SterileAnalysis(SterileArg{:},'LoadGridArg',{'ExtmNu4Sq','ON','mNu4SqTestGrid',5,'IgnoreKnm2FSDbinning','OFF'});
             if strcmp(A.DataType,'Real')
                 S.PlotmNuSqOverview('BestFit','ON','SavePlot','png')
             else

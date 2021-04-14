@@ -42,24 +42,7 @@ SterileArg = {'RunAnaObj',A,... % Mother Object: defines RunList, Column Density
     'range',range,...
     'LoadGridArg',{'mNu4SqTestGrid',5,'ExtmNu4Sq','ON'}};
 
-%%
 S = SterileAnalysis(SterileArg{:});
-%S.GridSearch('ExtmNu4Sq','ON');
 %%
-A.chi2 = 'chi2CMShape';
-S.SetNPfactor;
-A.fixPar ='fix 5 ;fix 6 ;fix 7 ;fix 8 ;fix 9 ;fix 10 ;fix 11 ;fix 12 ;fix 13 ;fix 14 ;fix 15 ;fix 16 ;fix 17 ;';
-S.LoadGridFile('ExtmNu4Sq','OFF');
+S.PlotTwinData('BestFit','ON','SavePlot','ON')
 
-if strcmp(A.DataType,'Real')
-    S.InterpMode = 'spline';
-    BF = 'ON';
-else
-    S.InterpMode = 'spline';
-   BF = 'OFF';
-end
-S.Interp1Grid('RecomputeFlag','ON','Maxm4Sq',39^2);
-S.GridPlot('Contour','ON','BestFit',BF,'SavePlot','OFF','CL',95)
-%S.ContourPlot('BestFit','OFF','CL',95)
-% S.PlotStatandSys('SavePlot','png')
-%S.PlotmNuSqOverview('PullmNuSq','OFF','SavePlot','png')

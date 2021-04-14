@@ -1,5 +1,6 @@
-% ksn2 calculate chi2 grid search
-% compare m2 free, m2 nuisance parameter
+% ksn2 extract systematic contribution
+% raster scan
+% compare variances
 %% settings that might change
 chi2 = 'chi2Stat';
 DataType = 'Twin';
@@ -19,7 +20,7 @@ RunAnaArg = {'RunList','KNM2_Prompt',...
     'fitter','minuit',...
     'minuitOpt','min;migrad',...
     'RadiativeFlag','ON',...
-    'FSDFlag','KNM2_0p1eV',...
+    'FSDFlag','KNM2_0p5eV',...
     'ELossFlag','KatrinT2A20',...
     'AnaFlag','StackPixel',...
     'chi2',chi2,...
@@ -39,8 +40,23 @@ SterileArg = {'RunAnaObj',A,... % Mother Object: defines RunList, Column Density
     'RecomputeFlag','OFF',...
     'SysEffect','all',...
     'RandMC','OFF',...
-    'range',range};
+    'range',range,...
+    'LoadGridArg',{'mNu4SqTestGrid',5}};
 
 %%
 S = SterileAnalysis(SterileArg{:});
-S.PlotStatandSys;
+%%
+[Ratio,StatDomFraction,mNu4Sq,sin2t4_Stat,sin2t4_Tot,sin2t4_Sys] = S.StatOverSysKsn2('RasterScan','ON');
+
+%%
+ close all;
+ GetFigure;
+hold on;
+plot(mNu4Sq,Ratio,'LineWidth',3);
+ylabel('Variance ratio');
+ylabel(sprintf('\\sigma_{syst.}^2 / \\sigma_{total}^2'))
+xlabel(sprintf('{\\itm}_4^2 (eV^2)'));
+set(gca,'XScale','log');
+PrettyFigureFormat('FontSize',22);
+
+

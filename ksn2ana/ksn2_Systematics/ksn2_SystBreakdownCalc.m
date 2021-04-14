@@ -1,17 +1,11 @@
 % ksn2 calculate chi2 grid search
+% compare m2 free, m2 nuisance parameter
 %% settings that might change
-chi2 = 'chi2CMShape';
-DataType = 'Real';
+chi2 = 'chi2Stat';
+DataType = 'Twin';
 nGridSteps = 30;
 range = 40;
-
 %% configure RunAnalysis object
-if strcmp(chi2,'chi2Stat')
-    NonPoissonScaleFactor = 1;
-elseif  strcmp(chi2,'chi2CMShape')
-    NonPoissonScaleFactor = 1.112;
-end
-
 RunAnaArg = {'RunList','KNM2_Prompt',...
     'DataType',DataType,...
     'fixPar','E0 Norm Bkg',...%free par
@@ -23,7 +17,7 @@ RunAnaArg = {'RunList','KNM2_Prompt',...
     'ELossFlag','KatrinT2A20',...
     'AnaFlag','StackPixel',...
     'chi2',chi2,...
-    'NonPoissonScaleFactor',NonPoissonScaleFactor,...
+    'NonPoissonScaleFactor',1,...
     'FSD_Sigma',sqrt(0.0124+0.0025),...
     'TwinBias_FSDSigma',sqrt(0.0124+0.0025),...
     'TwinBias_Q',18573.7,...
@@ -39,27 +33,31 @@ SterileArg = {'RunAnaObj',A,... % Mother Object: defines RunList, Column Density
     'RecomputeFlag','OFF',...
     'SysEffect','all',...
     'RandMC','OFF',...
-    'range',range,...
-    'LoadGridArg',{'mNu4SqTestGrid',5,'ExtmNu4Sq','ON'}};
+    'range',range};
 
 %%
 S = SterileAnalysis(SterileArg{:});
-%S.GridSearch('ExtmNu4Sq','ON');
-%%
-A.chi2 = 'chi2CMShape';
-S.SetNPfactor;
-A.fixPar ='fix 5 ;fix 6 ;fix 7 ;fix 8 ;fix 9 ;fix 10 ;fix 11 ;fix 12 ;fix 13 ;fix 14 ;fix 15 ;fix 16 ;fix 17 ;';
-S.LoadGridFile('ExtmNu4Sq','OFF');
+S.RunAnaObj.chi2 = 'chi2CMShape';
+SysEffectsAll   = {'Stat','FSD','BkgPT','Bkg','NP','LongPlasma','TASR','RF_EL',...
+    'RF_BF','RF_RX','FPDeff','Stack','TCoff_OTHER'}; 
 
-if strcmp(A.DataType,'Real')
-    S.InterpMode = 'spline';
-    BF = 'ON';
-else
-    S.InterpMode = 'spline';
-   BF = 'OFF';
+for i=1:numel(SysEffectsAll)
+    S.SysEffect = SysEffectsAll{i};
+    
+    if strcmp(SysEffectsAll{i},'NP') || strcmp(SysEffectsAll{i},'Stat')
+        S.RunAnaObj.chi2 = 'chi2Stat';
+        if strcmp(SysEffectsAll{i},'NP')
+            S.RunAnaObj.NonPoissonScaleFactor = 1.112;
+        end
+        S.GridSearch('mNu4SqTestGrid',5);
+        
+        S.RunAnaObj.chi2 = 'chi2CMShape';
+        S.RunAnaObj.NonPoissonScaleFactor = 1;
+        
+    else
+        S.RunAnaObj.chi2 = 'chi2CMShape';
+        S.RunAnaObj.NonPoissonScaleFactor = 1;
+        S.GridSearch('mNu4SqTestGrid',5);
+    end
 end
-S.Interp1Grid('RecomputeFlag','ON','Maxm4Sq',39^2);
-S.GridPlot('Contour','ON','BestFit',BF,'SavePlot','OFF','CL',95)
-%S.ContourPlot('BestFit','OFF','CL',95)
-% S.PlotStatandSys('SavePlot','png')
-%S.PlotmNuSqOverview('PullmNuSq','OFF','SavePlot','png')
+
