@@ -21,7 +21,7 @@ RunAnaArg = {'RunList','KNM2_Prompt',...
     'fitter','minuit',...
     'minuitOpt','min;migrad',...
     'RadiativeFlag','ON',...
-    'FSDFlag','KNM2_0p1eV',...
+    'FSDFlag','KNM2_0p5eV',...
     'ELossFlag','KatrinT2A20',...
     'AnaFlag','StackPixel',...
     'chi2',chi2,...
@@ -42,25 +42,33 @@ SterileArg = {'RunAnaObj',A,... % Mother Object: defines RunList, Column Density
     'SysEffect','all',...
     'RandMC','OFF',...
     'range',range,...
-    'LoadGridArg',{'ExtmNu4Sq','ON','mNu4SqTestGrid',2}};
+    'LoadGridArg',{'ExtmNu4Sq','ON','mNu4SqTestGrid',5}};
 
 %%
 S = SterileAnalysis(SterileArg{:});
-S.LoadGridFile('ExtmNu4Sq','ON','mNu4SqTestGrid',5,'Extsin2T4','OFF');
+S.LoadGridFile(S.LoadGridArg{:});
 
 if strcmp(A.DataType,'Real')
     S.InterpMode = 'spline';
     BF = 'ON';
+    % Find Best Fit
+    S.LoadGridFile(S.LoadGridArg{:});
+    S.Interp1Grid('RecomputeFlag','ON','Maxm4Sq',40^2);
+    S.FindBestFit;
+    S.FindBestFit('Mode','Imp');
+    fprintf('Imp. Best fit: sin2T4 = %.3f m4Sq = %.2feV^2 mNuSq = %.2feV^2 chi2min = %.2f (%.0f dof) \n',...
+        S.sin2T4_bf,S.mNu4Sq_bf,S.mNuSq_bf,S.chi2_bf,S.dof);
 else
     S.InterpMode = 'spline';
     BF = 'OFF';
 end
+
+S.LoadGridFile(S.LoadGridArg{:});
 S.Interp1Grid('RecomputeFlag','ON','Maxm4Sq',40^2);
-S.FindBestFit;
 if strcmp(GridPlot,'ON')
     S.GridPlot('BestFit',BF,'Contour','ON','SavePlot','png')
 end
-
+%%
 if strcmp(ContourPlot,'ON')
     PlotPar = S.mNuSq;
     
@@ -68,7 +76,7 @@ if strcmp(ContourPlot,'ON')
     
     [~,p1] = contour3(S.sin2T4,S.mNu4Sq,PlotPar,[-1,-1],'Color',rgb('Silver'),'ShowText','on','LineWidth',1.5);
     hold on;
-    [~,~] = contour3(S.sin2T4,S.mNu4Sq,PlotPar,[1.1,1.1],'Color',rgb('Silver'),'ShowText','on','LineWidth',1.5);
+    [~,~] = contour3(S.sin2T4,S.mNu4Sq,PlotPar,[1,1],'Color',rgb('Silver'),'ShowText','on','LineWidth',1.5);
     [~,~] = contour3(S.sin2T4,S.mNu4Sq,PlotPar,[2,2],'Color',rgb('Silver'),'ShowText','on','LineWidth',1.5);
     %[~,~] = contour3(S.sin2T4,S.mNu4Sq,PlotPar,[5,5],'Color',rgb('Silver'),'ShowText','on','LineWidth',1.5);
     [~,~] = contour3(S.sin2T4,S.mNu4Sq,PlotPar,[10,10],'Color',rgb('Silver'),'ShowText','on','LineWidth',1.5);
@@ -79,7 +87,7 @@ if strcmp(ContourPlot,'ON')
     %
     view(2);
     grid off;
-    ylim([1 36^2]);
+    ylim([1 40^2]);
     xlim([2e-03 0.5]);
     % save
     leg = legend([p1,pcontour],...
@@ -93,3 +101,6 @@ if strcmp(ContourPlot,'ON')
     print(gcf,plotname,'-dpng','-r450');
     fprintf('save plot to %s \n',plotname);
 end
+
+%%
+

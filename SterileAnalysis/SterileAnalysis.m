@@ -37,7 +37,6 @@ classdef SterileAnalysis < handle
         
         % null hypothesis
         chi2_Null; 
-        
         DeltaChi2;
         ConfLevel;
         dof;
@@ -47,6 +46,7 @@ classdef SterileAnalysis < handle
         PlotColors;
         PlotLines;
         InterpMode; %lin or spline
+        NullHypothesis;
     end
     
     methods % constructor
@@ -65,7 +65,7 @@ classdef SterileAnalysis < handle
             p.addParameter('Twin_mNu4Sq',0,@(x)isfloat(x)); % for randomized MCs with sterile-nu hypothesis
             p.addParameter('Twin_sin2T4',0,@(x)isfloat(x)); % for randomized MCs with sterile-nu hypothesis
             p.addParameter('LoadGridArg','',@(x)iscell(x) ||isempty(x));
-            
+             p.addParameter('NullHypothesis','OFF',@(x)ismember(x,{'ON','OFF'})); % use NH instead of global minimum
             p.parse(varargin{:});
             
             obj.RunAnaObj = p.Results.RunAnaObj;
@@ -81,6 +81,7 @@ classdef SterileAnalysis < handle
             obj.Twin_sin2T4   = p.Results.Twin_sin2T4;
             obj.Twin_mNu4Sq   = p.Results.Twin_mNu4Sq;
             obj.LoadGridArg   = p.Results.LoadGridArg;
+            obj.NullHypothesis = p.Results.NullHypothesis;
             
             if isempty(obj.RunAnaObj)
                 fprintf(2,'RunAnaObj has to be specified! \n');
@@ -324,56 +325,87 @@ classdef SterileAnalysis < handle
                 return
             end
             
-            %% define maximum m4:
-            if isempty(Maxm4Sq)
-                  Maxm4Sq = (obj.range)^2;
-%                 if  strcmp(obj.InterpMode,'lin')
-%                     Maxm4Sq = obj.range^2;
-%                 else
-%                     if obj.range==65
-%                         Maxm4Sq = 59^2;
-%                     elseif obj.range==95 && strcmp(obj.RunAnaObj.DataType,'Real')
-%                         freePar = ConvertFixPar('freePar',obj.RunAnaObj.fixPar,'Mode','Reverse');
-%                         if contains(freePar,'mNu')
-%                             Maxm4Sq = 83^2;
-%                         else
-%                             Maxm4Sq =  90^2;%84.5^2;
-%                         end
-%                     elseif obj.range==40 && strcmp(obj.RunAnaObj.DataType,'Real')
-%                         Maxm4Sq =  36^2;%(obj.range-3)^2;
-%                     elseif obj.range==40 && strcmp(obj.RunAnaObj.DataType,'Fake')
-%                         Maxm4Sq =  (obj.range-3.3)^2;
-%                     else
-%                         Maxm4Sq =  (38.2).^2;%(obj.range-5)^2;
-%                     end
-%                 end
+            if strcmp(obj.InterpMode,'Mix')
+                % test new method:
+                % spline interpolation up to Maxm4Sq
+                % lin interpolation up to range^2
+                if isempty(Maxm4Sq)
+                    Maxm4Sq = (obj.range-4)^2;
+                end
+                
+                nInter1 = 700;
+                nInter2 = 300;
+                
+                % first part: spline
+                LogIdx = obj.mNu4Sq(:,1)<Maxm4Sq;
+                [X1,Y1] = meshgrid(obj.mNu4Sq(LogIdx,1),obj.sin2T4(1,:));
+                Z1 = obj.chi2(:,LogIdx);
+                mNu4tmp = logspace(log10(min(obj.mNu4Sq(LogIdx,1))),log10(max(obj.mNu4Sq(LogIdx,1))),nInter1);
+                mNu4Sq_1 = repmat(mNu4tmp,nInter,1);
+                sin2T4_1 = repmat(logspace(log10(min(min(obj.sin2T4))),log10(max(max(obj.sin2T4))),nInter),nInter1,1)'; 
+                chi2_1  = reshape(interp2(X1,Y1,Z1,mNu4Sq_1,sin2T4_1,'spline'),nInter,nInter1);
+                chi2_1(chi2_1<0) = NaN;
+                chi2_ref_1 = min(min(chi2_1));
+                mNuSq_1 = reshape(interp2(X1,Y1,obj.mNuSq(:,LogIdx),mNu4Sq_1,sin2T4_1,'spline'),nInter,nInter1);
+                E0_1 = reshape(interp2(X1,Y1,obj.E0(:,LogIdx),mNu4Sq_1,sin2T4_1,'spline'),nInter,nInter1);
+               
+                
+                % second part: lin
+                LogIdx = obj.mNu4Sq(:,1)>=Maxm4Sq;
+                [X2,Y2] = meshgrid(obj.mNu4Sq(LogIdx,1),obj.sin2T4(1,:));
+                Z2 = obj.chi2(:,LogIdx);
+                mNu4tmp = logspace(log10(min(obj.mNu4Sq(LogIdx,1))),log10(max(obj.mNu4Sq(LogIdx,1))),nInter2);
+                mNu4Sq_2 = repmat(mNu4tmp,nInter,1);
+                sin2T4_2 = repmat(logspace(log10(min(min(obj.sin2T4))),log10(max(max(obj.sin2T4))),nInter),nInter2,1)'; 
+                chi2_2  = reshape(interp2(X2,Y2,Z2,mNu4Sq_2,sin2T4_2,'lin'),nInter,nInter2);
+                chi2_2(chi2_2<0) = NaN;
+                chi2_ref_2 = min(min(chi2_2));
+                mNuSq_2 = reshape(interp2(X2,Y2,obj.mNuSq(:,LogIdx),mNu4Sq_2,sin2T4_2,'lin'),nInter,nInter2);
+                E0_2 = reshape(interp2(X2,Y2,obj.E0(:,LogIdx),mNu4Sq_2,sin2T4_2,'lin'),nInter,nInter2);
+              
+                
+                % merge
+                obj.mNu4Sq   = [mNu4Sq_1,mNu4Sq_2];
+                obj.sin2T4   = [sin2T4_1,sin2T4_2];
+                obj.chi2     = [chi2_1,chi2_2];
+                obj.chi2_ref = min([chi2_ref_1,chi2_ref_2]);
+                obj.mNuSq    = [mNuSq_1,mNuSq_2];    % best fit results (nuisance parameter)
+                obj.E0       = [E0_1,E0_2];          % best fit results (nuisance parameter)
+     
+            else
+                %% define maximum m4:
+                if isempty(Maxm4Sq)
+                    Maxm4Sq = (obj.range)^2;
+                end
+                
+                [X,Y] = meshgrid(obj.mNu4Sq(:,1),obj.sin2T4(1,:));
+                
+                % define fine interpolation grid
+                % negative quadrants make this complicated
+                if  obj.mNu4Sq(1,1)<0
+                    Minm4Sq = min(min(-obj.mNu4Sq));
+                    mNu4tmp = logspace(log10(Minm4Sq),log10(Maxm4Sq),nInter);
+                    mNu4tmp = - mNu4tmp;
+                else
+                    mNu4tmp = logspace(log10(Minm4Sq),log10(Maxm4Sq),nInter);
+                end
+                obj.mNu4Sq = repmat(mNu4tmp,nInter,1);
+                if obj.sin2T4(1,1)<0
+                    obj.sin2T4 = repmat(logspace(log10(min(min(-obj.sin2T4))),log10(max(max(-obj.sin2T4))),nInter),nInter,1)';
+                    obj.sin2T4 = - obj.sin2T4;
+                else
+                    obj.sin2T4 = repmat(logspace(log10(min(min(obj.sin2T4))),log10(max(max(obj.sin2T4))),nInter),nInter,1)';
+                end
+                obj.chi2   = reshape(interp2(X,Y,obj.chi2,obj.mNu4Sq,obj.sin2T4,obj.InterpMode),nInter,nInter);
+                
+                % best fit results (nuisance parameter)
+                obj.mNuSq  = reshape(interp2(X,Y,obj.mNuSq,obj.mNu4Sq,obj.sin2T4,obj.InterpMode),nInter,nInter);
+                obj.E0  = reshape(interp2(X,Y,obj.E0,obj.mNu4Sq,obj.sin2T4,obj.InterpMode),nInter,nInter);
+                
+                obj.chi2(obj.chi2<0) = NaN;
+                obj.chi2_ref = min(min(obj.chi2));
             end
             
-            [X,Y] = meshgrid(obj.mNu4Sq(:,1),obj.sin2T4(1,:));
-            if  obj.mNu4Sq(1,1)<0
-                Minm4Sq = min(min(-obj.mNu4Sq));
-                mNu4tmp = logspace(log10(Minm4Sq),log10(Maxm4Sq),nInter);
-                mNu4tmp = - mNu4tmp;
-            else
-                mNu4tmp = logspace(log10(Minm4Sq),log10(Maxm4Sq),nInter);
-            end
-            obj.mNu4Sq = repmat(mNu4tmp,nInter,1);
-            if obj.sin2T4(1,1)<0
-                  obj.sin2T4 = repmat(logspace(log10(min(min(-obj.sin2T4))),log10(max(max(-obj.sin2T4))),nInter),nInter,1)';
-                   obj.sin2T4 = - obj.sin2T4;
-            else
-            obj.sin2T4 = repmat(logspace(log10(min(min(obj.sin2T4))),log10(max(max(obj.sin2T4))),nInter),nInter,1)';
-            end
-            obj.chi2   = reshape(interp2(X,Y,obj.chi2,obj.mNu4Sq,obj.sin2T4,obj.InterpMode),nInter,nInter);
-           
-            % best fit results (nuisance parameter)
-            obj.mNuSq  = reshape(interp2(X,Y,obj.mNuSq,obj.mNu4Sq,obj.sin2T4,obj.InterpMode),nInter,nInter);
-            obj.E0  = reshape(interp2(X,Y,obj.E0,obj.mNu4Sq,obj.sin2T4,obj.InterpMode),nInter,nInter);
-          
-            obj.chi2(obj.chi2<0) = NaN;
-
-            
-             obj.chi2_ref = min(min(obj.chi2));
             fprintf('Grid interpolation sucessfull \n');
         end
         function FindBestFit(obj,varargin)
@@ -609,9 +641,10 @@ classdef SterileAnalysis < handle
             p.addParameter('LineStyle',obj.PlotLines{1},@(x) ischar(x));
             p.addParameter('PlotSplines','OFF',@(x) ismember(x,{'ON','OFF'}));
             p.addParameter('SavePlot','OFF',@(x)ismember(x,{'ON','OFF','png'}));
+            p.addParameter('ExtraStr','',@(x)ischar(x)); % for plot label    
             p.addParameter('RasterScan','OFF',@(x) ismember(x,{'ON','OFF'})); % 1 par instead of 2 par
-            p.addParameter('NullHypothesis','OFF',@(x)ismember(x,{'ON','OFF'}));
-           
+            p.addParameter('NullHypothesis',obj.NullHypothesis,@(x)ismember(x,{'ON','OFF'}));
+            
             p.parse(varargin{:});  
             CL          = p.Results.CL;      % also works with vector
             HoldOn      = p.Results.HoldOn;
@@ -620,9 +653,10 @@ classdef SterileAnalysis < handle
             BestFit     = p.Results.BestFit;
             PlotSplines = p.Results.PlotSplines;
             SavePlot    = p.Results.SavePlot;
+            ExtraStr    = p.Results.ExtraStr;
             RasterScan  = p.Results.RasterScan;
             ReCalcBF    = p.Results.ReCalcBF;
-            NullHypothesis = p.Results.NullHypothesis;
+            NullHypothesis_local = p.Results.NullHypothesis;
             
             if strcmp(HoldOn,'ON')
                 hold on;
@@ -630,7 +664,7 @@ classdef SterileAnalysis < handle
                 GetFigure;
             end
             
-            if strcmp(NullHypothesis,'ON')
+            if strcmp(NullHypothesis_local,'ON')
                 chi2_ref_local = obj.chi2_Null;
             else
                 chi2_ref_local = obj.chi2_ref;
@@ -711,11 +745,12 @@ classdef SterileAnalysis < handle
             legend(legStr(1:end-1),'EdgeColor',rgb('Silver'),'Location','southwest');
             
               if ~strcmp(SavePlot,'OFF')
+                  plotname = sprintf('%s_Contour_%.2gCL%s',obj.DefPlotName,obj.ConfLevel,ExtraStr);       
                  if strcmp(SavePlot,'ON')
-                     plotname = sprintf('%s_Contour_%.2gCL.pdf',obj.DefPlotName,obj.ConfLevel);
+                     plotname = [plotname,'.pdf'];
                      export_fig(gcf,plotname);
                  elseif strcmp(SavePlot,'png')
-                     plotname = sprintf('%s_Contour_%.2gCL.png',obj.DefPlotName,obj.ConfLevel);
+                     plotname = [plotname,'.png'];
                      print(gcf,plotname,'-dpng','-r450');
                  end
                  fprintf('save plot to %s \n',plotname);
@@ -966,13 +1001,14 @@ classdef SterileAnalysis < handle
             p.addParameter('BestFit','OFF',@(x) ismember(x,{'ON','OFF'}));
             p.addParameter('Contour','OFF',@(x)ismember(x,{'ON','OFF'}));  
             p.addParameter('SavePlot','OFF',@(x)ismember(x,{'ON','OFF','png'}));
+            p.addParameter('ExtraStr','',@(x)ischar(x));
             p.parse(varargin{:});
             CL       = p.Results.CL;
             HoldOn   = p.Results.HoldOn;
             BestFit  = p.Results.BestFit;
             Contour  = p.Results.Contour;
             SavePlot = p.Results.SavePlot;
-                 
+            ExtraStr = p.Results.ExtraStr;
             if CL<1
                 CL = CL*100;
             end
@@ -1040,10 +1076,10 @@ classdef SterileAnalysis < handle
            if ~strcmp(SavePlot,'OFF')
                name_i = obj.DefPlotName;
                if strcmp(SavePlot,'ON')
-                   plotname = sprintf('%s_GridPlot_%.2gCL.pdf',name_i,obj.ConfLevel);
+                   plotname = sprintf('%s_GridPlot_%.2gCL%s.pdf',name_i,obj.ConfLevel,ExtraStr);
                    export_fig(gcf,plotname);
                elseif strcmp(SavePlot,'png')
-                   plotname = sprintf('%s_GridPlot_%.2gCL.png',name_i,obj.ConfLevel);
+                   plotname = sprintf('%s_GridPlot_%.2gCL%s.png',name_i,obj.ConfLevel,ExtraStr);
                    print(gcf,plotname,'-dpng','-r450');
                end
                fprintf('save plot to %s \n',plotname);
@@ -1191,7 +1227,7 @@ classdef SterileAnalysis < handle
            end
         end
         function IsoPlotFitPar(obj,varargin)
-              p = inputParser;
+             p = inputParser;
             p.addParameter('CL',obj.ConfLevel,@(x)isfloat(x));
             p.addParameter('HoldOn','OFF',@(x) ismember(x,{'ON','OFF'}));
             p.addParameter('BestFit','OFF',@(x) ismember(x,{'ON','OFF'}));
@@ -1222,12 +1258,14 @@ classdef SterileAnalysis < handle
                 end
                 PlotPar = obj.mNuSq;
                 Plot_bf = obj.mNuSq_bf; 
+                LegStr = sprintf('{\\itm}_\\nu^2');
             elseif strcmp(FitPar,'E0')
                 PlotPar = obj.E0-obj.E0_bf;
                 Plot_bf = obj.E0_bf;
                 if isempty(ContourVec)
                     ContourVec = [-0.2 -0.5 0 0.5];%+obj.RunAnaObj.ModelObj.Q_i;
-                end  
+                end 
+                LegStr = sprintf('{\\itE}_0^{fit}');
             end
             
             %% best fit
@@ -1248,10 +1286,10 @@ classdef SterileAnalysis < handle
             PrettyFigureFormat('FontSize',22)
 
             if strcmp(BestFit,'ON')
-                leg = legend([pContour,pbf],sprintf('Isoline {\\itm}_\\nu^2 best fit'),'Best fit',...
+                leg = legend([pContour,pbf],sprintf('Isoline %s best fit',LegStr),'Best fit',...
                     'Location','northwest', 'FontSize',get(gca,'FontSize'));
             else
-                leg = legend(pContour,sprintf('Isoline {\\itm}_\\nu^2 best fit'),...
+                leg = legend(pContour,sprintf('Isoline %s best fit',LegStr),...
                     'Location','northwest', 'FontSize',get(gca,'FontSize'));
             end
             PrettyLegendFormat(leg,'alpha',0.95);
@@ -1398,18 +1436,32 @@ classdef SterileAnalysis < handle
             obj.RunAnaObj.fixPar = 'E0 Norm Bkg'; obj.RunAnaObj.InitFitPar;
             obj.RunAnaObj.pullFlag = 99;
             if strcmp(obj.RunAnaObj.DataSet,'Knm2') &&  strcmp(obj.RunAnaObj.DataType,'Real')
-                obj.LoadGridFile('CheckSmallerN','ON',obj.LoadGridArg{:},'Extsin2T4','ON','IgnoreKnm2FSDbinning','ON');
-                 obj.Interp1Grid('RecomputeFlag','ON','Maxm4Sq',34^2);
-            elseif strcmp(obj.RunAnaObj.DataSet,'Knm2') 
-                  obj.LoadGridFile('CheckSmallerN','ON',obj.LoadGridArg{:},'Extsin2T4','OFF','IgnoreKnm2FSDbinning','ON');
-                 obj.Interp1Grid('RecomputeFlag','ON');
-            else
-            obj.LoadGridFile('CheckSmallerN','ON',obj.LoadGridArg{:});
-             obj.Interp1Grid('RecomputeFlag','ON');
+                % best fit is at sin2t4=1, but grid looks better for sin2t4 up to 0.5
+                % load first sin2t4=1 file, get best fit, then load regular file
+                obj.LoadGridFile(obj.LoadGridArg{:},'Extsin2T4','ON','IgnoreKnm2FSDbinning','ON');
+                obj.Interp1Grid('RecomputeFlag','ON','Maxm4Sq',34^2);
+                obj.FindBestFit;
+                chi2_ref_ExtSin2T4 = obj.chi2_ref;
+                mNuSq_bf_ExtSin2T4 = obj.mNuSq_bf;
+                sin2T4_bf_ExtSin2T4 = obj.sin2T4_bf;
+                mNu4Sq_bf_ExtSin2T4 = obj.mNu4Sq_bf;
             end
-          
+            
+            obj.LoadGridFile(obj.LoadGridArg{:});
+            obj.Interp1Grid('RecomputeFlag','ON');
+            
+
+            if strcmp(obj.RunAnaObj.DataSet,'Knm2') &&  strcmp(obj.RunAnaObj.DataType,'Real')
+                obj.chi2_ref  = chi2_ref_ExtSin2T4;
+                obj.mNuSq_bf  = mNuSq_bf_ExtSin2T4 ;
+                obj.sin2T4_bf = sin2T4_bf_ExtSin2T4;
+                obj.mNu4Sq_bf = mNu4Sq_bf_ExtSin2T4;
+            else
+                obj.FindBestFit;
+            end
+            
             [pFix,pfixmin] = obj.ContourPlot('CL',obj.ConfLevel,'HoldOn','ON',...
-                'Color',rgb('DodgerBlue'),'LineStyle',':','BestFit',BestFit);
+                'Color',rgb('DodgerBlue'),'LineStyle',':','BestFit',BestFit,'ReCalcBF','OFF');
             
             PrettyFigureFormat('FontSize',22);
             if strcmp(PullmNuSq,'ON') && strcmp(obj.RunAnaObj.DataSet,'Knm1')
@@ -1541,30 +1593,20 @@ classdef SterileAnalysis < handle
                 'Color',rgb('Orange'),'LineStyle','-.','BestFit','OFF');
             
             % data
-             obj.RunAnaObj.DataType = 'Real';
-            if strcmp(obj.RunAnaObj.DataSet,'Knm2') && contains(obj.RunAnaObj.fixPar,'fix 1 ;') 
-                obj.LoadGridFile('CheckSmallerN','ON',obj.LoadGridArg{:},'Extsin2T4','ON');
-                obj.Interp1Grid('RecomputeFlag','ON','Maxm4Sq',35^2);
-                obj.FindBestFit;
-                chi2_ref = obj.chi2_ref;
-                mNuSq_bf = obj.mNuSq_bf;
-                sin2T4_bf = obj.sin2T4_bf;
-                mNu4Sq_bf = obj.mNu4Sq_bf;
-            end
-            
-            obj.LoadGridFile('CheckSmallerN','ON',obj.LoadGridArg{:});
-            obj.Interp1Grid('RecomputeFlag','ON');
-            
+            obj.RunAnaObj.DataType = 'Real';
             if strcmp(obj.RunAnaObj.DataSet,'Knm2') && contains(obj.RunAnaObj.fixPar,'fix 1 ;')
-                obj.chi2_ref  = chi2_ref;
-                obj.mNuSq_bf  = mNuSq_bf ;
-                obj.sin2T4_bf = sin2T4_bf;
-                obj.mNu4Sq_bf = mNu4Sq_bf;
+                InterpMode_i = obj.InterpMode;
+                obj.InterpMode = 'Mix';
+                obj.LoadGridFile('CheckSmallerN','ON',obj.LoadGridArg{:},'Extsin2T4','ON');
+                obj.Interp1Grid('RecomputeFlag','ON','Maxm4Sq',36^2);
+                obj.InterpMode = InterpMode_i;
             else
-                obj.FindBestFit;
+                obj.LoadGridFile('CheckSmallerN','ON',obj.LoadGridArg{:});
+                obj.Interp1Grid('RecomputeFlag','ON');
             end
+            
             [pData,sin2T4_Datamin] = obj.ContourPlot('CL',obj.ConfLevel,'HoldOn','ON',...
-                'Color',rgb('DodgerBlue'),'LineStyle','-','BestFit',BestFit,'ReCalcBF','OFF');
+                'Color',rgb('DodgerBlue'),'LineStyle','-','BestFit',BestFit);
             
             titleStr = sprintf('%.0f%% C.L. , %.0feV range (%s)',obj.ConfLevel,obj.range,obj.GetPlotTitle('Mode','chi2'));
             title(titleStr,'FontWeight','normal','FontSize',get(gca,'FontSize'));
@@ -1595,15 +1637,13 @@ classdef SterileAnalysis < handle
             p.addParameter('PlotStat','ON',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('PlotTot','ON',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('PlotKaFit','OFF',@(x)ismember(x,{'ON','OFF'}));
-            p.addParameter('NullHypothesis','OFF',@(x)ismember(x,{'ON','OFF'}));
-            
+                   
             p.parse(varargin{:});
             SavePlot = p.Results.SavePlot;
             PlotStat = p.Results.PlotStat;
             PlotTot  = p.Results.PlotTot;
             PlotKaFit = p.Results.PlotKaFit;
-            NullHypothesis = p.Results.NullHypothesis;
-            
+             
             chi2_i   = obj.RunAnaObj.chi2;
             if strcmp(obj.RunAnaObj.DataType,'Real')
                 BestFit = 'ON';
@@ -1621,7 +1661,7 @@ classdef SterileAnalysis < handle
                 obj.Interp1Grid('RecomputeFlag','ON','Maxm4Sq',40^2);
                 pStat = obj.ContourPlot('CL',obj.ConfLevel,'HoldOn',HoldOn,...
                     'Color',rgb('FireBrick'),'LineStyle','-','BestFit',BestFit,...
-                    'PlotSplines','OFF','NullHypothesis',NullHypothesis);
+                    'PlotSplines','OFF');
                 hold on;
                 HoldOn = 'ON';
             end
@@ -1631,12 +1671,9 @@ classdef SterileAnalysis < handle
                 obj.SetNPfactor;
                 obj.LoadGridFile(obj.LoadGridArg{:});
                 obj.Interp1Grid('RecomputeFlag','ON');
-                if strcmp(NullHypothesis,'ON')
-                    obj.chi2_ref = obj.chi2_Null;
-                end
                 pSys = obj.ContourPlot('CL',obj.ConfLevel,'HoldOn',HoldOn,...
                     'Color',rgb('FireBrick'),'LineStyle','-','BestFit',BestFit,...
-                    'PlotSplines','OFF','NullHypothesis',NullHypothesis);
+                    'PlotSplines','OFF');
                 hold on;
                 HoldOn = 'ON';
             end
@@ -1779,7 +1816,7 @@ classdef SterileAnalysis < handle
            if ~strcmp(SavePlot,'OFF')
                name_i = strrep(obj.DefPlotName,sprintf('_%s',chi2_i),'');
                
-               if strcmp(NullHypothesis,'ON')
+               if strcmp(obj.NullHypothesis,'ON')
                    extraStr = [extraStr,'_NH'];
                end
                
@@ -2770,6 +2807,9 @@ classdef SterileAnalysis < handle
                 plotdir = strrep(savedir,'Twin/','TwinRandomizedMC/'); 
             end
             
+            if strcmp(obj.NullHypothesis,'ON')
+                filename = [filename,'_NH'];
+            end
             
              plotname = sprintf('%s%s',plotdir,filename{:});
         end

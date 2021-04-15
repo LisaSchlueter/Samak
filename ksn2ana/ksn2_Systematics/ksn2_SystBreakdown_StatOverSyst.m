@@ -116,6 +116,7 @@ plotdir = strrep(savedir,'results','plots');
 plotname = sprintf('%sksn2_SysBreakdown_StatOverSyst_Ratio_RasterScan%s.png',plotdir,RasterScan);
 print(fRatio,plotname,'-dpng','-r400');
 fprintf('save plot to %s \n',plotname);
+export_fig(fRatio,strrep(plotname,'png','pdf'));
 %% plot 2. only systematics contribution in contour plot style
 pHandle = cell(numel(SysEffectsAll),1);
 LineStyle = {'-','-.',':','--','-','-.',':','--','-','-.',':','--','-.','-','--','-.',':','--','-.',':','--'};
@@ -152,3 +153,4 @@ plotdir = strrep(savedir,'results','plots');
 plotname = sprintf('%sksn2_SysBreakdown_SystOnly_RasterScan%s.png',plotdir,RasterScan);
 print(fSyst,plotname,'-dpng','-r400');
 fprintf('save plot to %s \n',plotname);
+export_fig(fSyst,strrep(plotname,'png','pdf'));

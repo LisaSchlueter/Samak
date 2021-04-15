@@ -1,6 +1,6 @@
 % Test of Wilk's theorem (coverage)
 % chi2 distribution of best fits
-NrandMC = 473;
+NrandMC = 606;
 Twin_sin2T4 = 0;
 Twin_mNu4Sq = 0;
 savedir = [getenv('SamakPath'),'ksn2ana/ksn2_WilksTheorem/results/'];

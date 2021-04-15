@@ -50,7 +50,7 @@ S.LoadGridFile(S.LoadGridArg{:});
 S.Interp1Grid('nInter',1e3);
 PlotPar = S.mNuSq;
 
-ContourVec = [-1,0,0.3,1.1,2,10];
+ContourVec = [-1,0,0.3,1,2,10];
 Splines = 'ON';
 GetFigure;
 for i=1:numel(ContourVec)

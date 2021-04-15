@@ -18,7 +18,11 @@ if exist(savename,'file') && strcmp(RecomputeFlag,'OFF')
     fprintf('load results from file %s \n',savename)
 else
     tStart = tic;
-    RunList = 'KNM1';
+    FSDFlag           = 'KNM2_0p5eV';
+    RunList           = 'KNM1';
+    DopplerEffectFlag = 'FSD';
+    PullFlag          = 99;
+    
     K1 = MultiRunAnalysis('RunList',RunList,...
         'chi2',chi2,...
         'DataType',DataType,...
@@ -26,12 +30,13 @@ else
         'RadiativeFlag','ON',...
         'NonPoissonScaleFactor',1.064,...
         'minuitOpt','min ; minos',...
-        'FSDFlag','KNM2_0p5eV',...
+        'FSDFlag',FSDFlag,...
         'ELossFlag','KatrinT2A20',...
         'SysBudget',200,...
         'AngularTFFlag','ON',...
-        'DopplerEffectFlag','FSD',...
-        'BKG_PtSlope',-2.2.*1e-06);
+        'DopplerEffectFlag',DopplerEffectFlag,...
+        'BKG_PtSlope',-2.2.*1e-06,...
+        'PullFlag',PullFlag);
     
     K1.exclDataStart = K1.GetexclDataStart(range);
     K1.i_qUOffset    = zeros(1,K1.ModelObj.nPixels);
@@ -39,12 +44,8 @@ else
     
     %% KNM-2 Model
     AnaFlag               = 'StackPixel';
-    RingMerge             = 'Full';%'None'; %only relevand when AnaFlag = Ring
-    DopplerEffectFlag     = 'FSD';
     BKG_PtSlope           = 3*1e-06;
     TwinBias_BKG_PtSlope  = 3*1e-06;
-    FSDFlag               = 'KNM2';
-    PullFlag              = 99;% 99 = no pull
     SysBudget             = 40;
     NonPoissonScaleFactor = 1.112;
     SigmaSq               =  0.0124+0.0025;
@@ -153,14 +154,19 @@ else
       'chi2min',F.RESULTS{3},...
       'errmat',F.RESULTS{4},...
       'dof',F.RESULTS{5});
+  
+  % define grid
+  sin2T4Max = 0.5;
+  if nGridSteps<4 % for testing
+      mnu4Sq = logspace(0,log10((range)^2),nGridSteps)';
+  else
+      mNu4Sq_ex = [0.1;0.35;0.7];
+      nGridSteps = nGridSteps-3;
+      mnu4SqSmall  = logspace(0,log10((range-11)^2),nGridSteps-10)';
+      mnu4SqLarge  = logspace(log10((range-10)^2),log10((range)^2),10)';
+      mnu4Sq       = sort([mNu4Sq_ex;mnu4SqSmall;mnu4SqLarge]);
+  end
 
-% define grid
-sin2T4Max = 0.5;
-if nGridSteps<4 % for testing
-    mnu4Sq = logspace(0,log10((range)^2),nGridSteps)';
-else
-    mnu4Sq = [0.1;0.35;0.7;logspace(0,log10((range)^2),nGridSteps-3)'];
-end
 sin2T4      = logspace(-3,log10(sin2T4Max),nGridSteps);
 mnu4Sq      = repmat(mnu4Sq,1,nGridSteps);
 sin2T4      = repmat(sin2T4,nGridSteps,1);

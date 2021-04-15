@@ -49,5 +49,6 @@ else
 end
 %%
 S.InterpMode = 'spline';
-S.PlotFitriumSamak('NullHypothesis','ON','PlotTot','OFF','PlotStat','ON','SavePlot','png','PlotKafit','ON')
+S.NullHypothesis = 'ON';
+S.PlotFitriumSamak('PlotTot','ON','PlotStat','OFF','SavePlot','png','PlotKafit','ON')
 

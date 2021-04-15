@@ -47,14 +47,17 @@ S = SterileAnalysis(SterileArg{:});
 %%
 S.InterpMode = 'spline';
 if ~contains(freePar,'mNu') && strcmp(NH,'OFF') 
-    S.LoadGridFile(S.LoadGridArg{:},'Extsin2T4','ON');
+    GridArg_i = S.LoadGridArg;
+    S.LoadGridArg = {GridArg_i{:},'Extsin2T4','ON'};
+    S.LoadGridFile(S.LoadGridArg{:});
     S.Interp1Grid('RecomputeFlag','ON','Maxm4Sq',33^2);
     S.FindBestFit;
+    S.FindBestFit('Mode','Imp');
     chi2_ref = S.chi2_ref;
     mNuSq_bf = S.mNuSq_bf;
     sin2T4_bf = S.sin2T4_bf;
     mNu4Sq_bf = S.mNu4Sq_bf;
-    
+    S.LoadGridArg = GridArg_i;
 end
 
 S.LoadGridFile(S.LoadGridArg{:});
@@ -67,11 +70,15 @@ if ~contains(freePar,'mNu') && strcmp(NH,'OFF')
     S.mNu4Sq_bf = mNu4Sq_bf;
 else
     S.FindBestFit;
+    S.FindBestFit('Mode','Imp');
+    
+    S.LoadGridFile(S.LoadGridArg{:});
+    S.Interp1Grid('Maxm4Sq',40^2);
+    
 end
 
-%%
-S.ContourPlot('NullHypothesis',NH); 
-%S.ContourPlot('HoldOn','ON','NullHypothesis','ON','Color',rgb('Orange')); 
+%
+S.ContourPlot('NullHypothesis',NH,'ReCalcBF','OFF'); 
 
 %% export contour
 
@@ -96,8 +103,13 @@ end
 %% test plot
 d = importdata([savename,'.dat']);
 plot(d.data(:,1),d.data(:,2));
+if strcmp(DataType,'Real')  && strcmp(NH,'OFF')
+    dbf = importdata([savename,'_bf.dat']);
+    hold on;
+    plot(dbf.data(2),dbf.data(3),'x','LineWidth',2);
+end
 set(gca,'XScale','log');
 set(gca,'YScale','log');
 xlim([1e-03,0.5]);
 ylim([1 40^2]);
-
+xlabel('sint4^2'); ylabel('m4^2');

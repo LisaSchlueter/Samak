@@ -4,7 +4,7 @@ chi2 = 'chi2CMShape';
 DataType = 'Real';
 nGridSteps = 30;
 range = 40;
-
+freePar = 'E0 Norm Bkg';
 %% configure RunAnalysis object
 if strcmp(chi2,'chi2Stat')
     NonPoissonScaleFactor = 1;
@@ -13,7 +13,7 @@ elseif  strcmp(chi2,'chi2CMShape')
 end
 RunAnaArg = {'RunList','KNM2_Prompt',...
     'DataType',DataType,...
-    'fixPar','E0 Norm Bkg',...%free par
+    'fixPar',freePar,...%free par
     'SysBudget',40,...
     'fitter','minuit',...
     'minuitOpt','min;migrad',...
@@ -45,11 +45,31 @@ SterileArg = {'RunAnaObj',A,... % Mother Object: defines RunList, Column Density
 S = SterileAnalysis(SterileArg{:});
 S.LoadGridFile('ExtmNu4Sq','ON','mNu4SqTestGrid',5,'Extsin2T4','OFF');
 S.Interp1Grid('Maxm4Sq',40^2);
-S.ContourPlot('BestFit','ON');
+S.ContourPlot('BestFit','ON','SavePlot','ON');
+S.GridPlot('Contour','ON','BestFit','ON','SavePlot','png');
+%%
+S.FindBestFit;
+fprintf('Best fit: sin2T4 = %.2f m4Sq = %.2feV^2 mNuSq = %.2feV^2 chi2min = %.2f (%.0f dof) \n',...
+    S.sin2T4_bf,S.mNu4Sq_bf,S.mNuSq_bf,S.chi2_bf,S.dof);
+S.FindBestFit('Mode','Imp');
+fprintf('Imp. Best fit: sin2T4 = %.2f m4Sq = %.2feV^2 mNuSq = %.2feV^2 chi2min = %.2f (%.0f dof) \n',...
+    S.sin2T4_bf,S.mNu4Sq_bf,S.mNuSq_bf,S.chi2_bf,S.dof);
+
 %% 
+if ~contains(freePar,'mNu')
 S.LoadGridFile('ExtmNu4Sq','ON','mNu4SqTestGrid',5,'Extsin2T4','ON');
+S.InterpMode = 'Mix';
 S.Interp1Grid('Maxm4Sq',36^2);
- S.ContourPlot('BestFit','ON');
+ S.ContourPlot('BestFit','ON','SavePlot','ON','ExtraStr','_Extsin2T4');
+ S.GridPlot('Contour','ON','BestFit','ON','SavePlot','png','ExtraStr','_Extsin2T4');
+ S.FindBestFit;
+fprintf('Best fit: sin2T4 = %.2f m4Sq = %.2feV^2 mNuSq = %.2feV^2 chi2min = %.2f (%.0f dof) \n',...
+    S.sin2T4_bf,S.mNu4Sq_bf,S.mNuSq_bf,S.chi2_bf,S.dof);
+S.FindBestFit('Mode','Imp');
+fprintf('Imp. Best fit: sin2T4 = %.2f m4Sq = %.2feV^2 mNuSq = %.2feV^2 chi2min = %.2f (%.0f dof) \n',...
+    S.sin2T4_bf,S.mNu4Sq_bf,S.mNuSq_bf,S.chi2_bf,S.dof);
+
+end
 %    BF = 'OFF';
 % end
 % S.Interp1Grid('RecomputeFlag','ON','Maxm4Sq',33^2);
