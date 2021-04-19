@@ -1,6 +1,6 @@
 % Test of Wilk's theorem (coverage)
 % chi2 distribution of best fits
-NrandMC = 848;
+NrandMC = 1e3;
 Twin_sin2T4 = 0;
 Twin_mNu4Sq = 0;
 savedir = [getenv('SamakPath'),'ksn2ana/ksn2_WilksTheorem/results/'];
@@ -33,7 +33,7 @@ x = linspace(0,dof*10,1e3);
 y = chi2pdf(x,dof);
 pchi2 = plot(x,y*hchi2.BinWidth,'Color',rgb('Black'),'LineWidth',2);
 PrettyFigureFormat('FontSize',22);
-xlabel(sprintf('\\chi^2_{min} (%.0f dof)',dof));
+xlabel(sprintf('\\chi^2_{null} - \\chi^2_{min} (%.0f dof)',dof));
 ylabel('Frequency');
 %title(resultsStr,'FontWeight','normal','FontSize',get(gca,'FontSize'))
 leg = legend([hchi2,pchi2],sprintf('%.0f pseudo-experiments',numel(chi2_bf)),...

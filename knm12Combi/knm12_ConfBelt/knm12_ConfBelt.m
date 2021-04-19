@@ -4,7 +4,7 @@
 % Re-Analysis with updated model parameters + uncerainties
 % Lisa Schlüter, 2021
 %% settings
-Mode        = 'FC';  % FC = Feldman Cousin, LT = Lokov Tkachov
+Mode        = 'LT';  % FC = Feldman Cousin, LT = Lokov Tkachov
 Sensitivity = 'OFF'; % OFF= show best fit, ON = show sensitivity only
 SavePlot    = 'OFF';
 
@@ -42,6 +42,8 @@ switch Mode
         S.PlotFCBelt('HoldOn','OFF','Sensitivity',Sensitivity,'SavePlot',SavePlot);
     case 'LT'
         S.ComputeLokhov_Asimov('mNuSq_t',mNuSq);
-        S.PlotFCBelt('Lokov','ON','Sensitivity',Sensitivity,'SavePlot',SavePlot);
+      %  S.PlotFCBelt('Lokov','ON','Sensitivity',Sensitivity,'SavePlot',SavePlot);
 end
 
+%%
+S.FC_x2
