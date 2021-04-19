@@ -70,6 +70,7 @@ sin2T4_k1 = S.sin2T4;
 chi2_k1   = S.chi2;
 chi2ref_k1= S.chi2_ref;
 sum(sum(isnan(S.chi2)))
+dof1 = S.dof;
 %% load ksn2
 S.nGridSteps = 30;
 S.RunAnaObj.ModelObj.BKG_PtSlope = 3*1e-06;
@@ -116,7 +117,7 @@ mNu4Sq_k2 = S.mNu4Sq;
 sin2T4_k2 = S.sin2T4;
 chi2_k2   = S.chi2;
 chi2ref_k2= chi2_ref;
-
+dof2 = S.dof;
 %% check if they have same binning
  if sum(sum(sin2T4_k2~=sin2T4_k1))>0 || sum(sum(mNu4Sq_k1~=mNu4Sq_k2))>0
      fprintf(2, 'KSN-1 and KSN-2 do not have  the same binning - return \n');
@@ -216,5 +217,12 @@ S.LoadGridFile('CheckLarger','ON');
 S.Interp1Grid('RecomputeFlag','ON');
 
 hold on;
+
 %%
 p2 =plot3(sin2T4_k2_contour, mNu4Sq_k2_contour,S.DeltaChi2.*ones(size(mNu4Sq_k2_contour)));
+
+
+% %% save results
+% savedir = [getenv('SamakPath'),'ksn2ana/ksn2_RunCombination/results/'];
+% savefile = sprintf('%sksn21_Combination_ReAna.mat',savedir)
+% save(savefile,'chi2_k1','chi2_k2','chi2_sum','chi2ref_tot','chi2ref_k1','chi2ref_k2','dof1','dof2');

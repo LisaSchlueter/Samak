@@ -493,10 +493,11 @@ classdef SterileAnalysis < handle
             
             % null 
             fprintf('Null hypothesis: chi2 = %.3f (%.0f dof) -> p-value = %.2f\n',obj.chi2_Null,obj.dof+2,1-chi2cdf(obj.chi2_Null,obj.dof));
-            x = linspace(10,99,1e2);
-            y =GetDeltaChi2(x,2);
-            SignificanceBF = interp1(y,x,obj.chi2_Null-obj.chi2_bf,'spline');
+          %  x = linspace(10,99,1e2);
+          %  y = GetDeltaChi2(x,2);
             DeltaChi2 = obj.chi2_Null-obj.chi2_bf;
+            SignificanceBF = chi2cdf(DeltaChi2,2);%interp1(y,x, DeltaChi2,'spline');
+            
             fprintf('Delta chi2 = %.2f -> %.1f%% C.L. significance \n',obj.chi2_Null-obj.chi2_bf,SignificanceBF);
           
         end
@@ -631,7 +632,7 @@ classdef SterileAnalysis < handle
     
     %% Plotting
     methods
-        function [pHandle,sin2T4_min] = ContourPlot(obj,varargin)
+        function [pHandle,sin2T4_min,PlotHandleBf] = ContourPlot(obj,varargin)
             p = inputParser;
             p.addParameter('BestFit','OFF',@(x) ismember(x,{'ON','OFF'}));
             p.addParameter('ReCalcBF','ON',@(x) ismember(x,{'ON','OFF'}));
@@ -730,7 +731,9 @@ classdef SterileAnalysis < handle
                     % obj.FindBestFit('Mode','Imp');
                 end
                 hold on;
-                plot(obj.sin2T4_bf,obj.mNu4Sq_bf,'x','MarkerSize',9,'Color',bf_color,'LineWidth',pHandle.LineWidth);
+                PlotHandleBf= plot(obj.sin2T4_bf,obj.mNu4Sq_bf,'x','MarkerSize',9,'Color',bf_color,'LineWidth',pHandle.LineWidth);
+            else 
+                PlotHandleBf = 0;
             end
             set(gca,'YScale','log');
             set(gca,'XScale','log');
@@ -828,8 +831,8 @@ classdef SterileAnalysis < handle
             end
             %% Prospect
             if strcmp(Prospect,'ON')
-                filenameProspect = sprintf('%scoord_Prospect_95CL.mat',savedirOther);
-%                filenameProspect = sprintf('%scoord_Prospect2020_95CL.mat',savedirOther);
+               % outdated filenameProspect = sprintf('%scoord_Prospect_95CL.mat',savedirOther);
+                filenameProspect = sprintf('%scoord_Prospect2020_95CL.mat',savedirOther);
                 dProspect = importdata(filenameProspect);
                 pProspect = plot(dProspect.SinSquare2Theta_X,dProspect.DmSquare41_Y,'-','LineWidth',1,'Color',rgb('PowderBlue'));
                 legHandle{numel(legHandle)+1} = pProspect;
@@ -865,8 +868,8 @@ classdef SterileAnalysis < handle
             end
             %% Stereo
             if strcmp(Stereo,'ON')
-                filenameStereo = sprintf('%scoord_Stereo_95CL.mat',savedirOther); % old stereo 2019
-     %           filenameStereo = sprintf('%scoord_STEREOprd102_95CL.mat',savedirOther); % new stereo 2020
+            % outdated    filenameStereo = sprintf('%scoord_Stereo_95CL.mat',savedirOther); % old stereo 2019
+                filenameStereo = sprintf('%scoord_STEREOprd102_95CL.mat',savedirOther); % new stereo 2020
                 dStereo = importdata(filenameStereo);
                 pStereo = plot(dStereo.SinSquare2Theta_X,dStereo.DmSquare41_Y,'-','LineWidth',1,'Color',rgb('Orange'));
 
@@ -1683,13 +1686,18 @@ classdef SterileAnalysis < handle
                 fstat = sprintf('%scontour_KSN1_Fitrium_%s_%.0feV_stat_95CL_0.txt',savedirF,obj.RunAnaObj.DataType,obj.range);
                 fsys = sprintf('%scontour_KSN1_Fitrium_%s_%.0feV_total_95CL_0.txt',savedirF,obj.RunAnaObj.DataType,obj.range);
             else
-                %if strcmp(NullHypothesis,'ON')
+                if contains(ConvertFixPar('freePar',obj.RunAnaObj.fixPar,'Mode','Reverse'),'mNu')
+                    fstat = sprintf('%scontour_KSN2_Fitrium_%s_%.0feV_mNuFree_stat_95CL.dat',savedirF,obj.RunAnaObj.DataType,obj.range);
+                    fsys = NaN;             
+                elseif strcmp(obj.NullHypothesis,'ON')
                     fstat = sprintf('%scontour_KSN2_Fitrium_%s_%.0feV_stat_95CL_NH.dat',savedirF,obj.RunAnaObj.DataType,obj.range);
                     fsys = sprintf('%scontour_KSN2_Fitrium_%s_%.0feV_total_95CL_NH.dat',savedirF,obj.RunAnaObj.DataType,obj.range);
-%                 else
-%                     fstat = sprintf('%scontour_KSN2_Fitrium_%s_%.0feV_stat_95CL.dat',savedirF,obj.RunAnaObj.DataType,obj.range);
-%                     fsys = sprintf('%scontour_KSN2_Fitrium_%s_%.0feV_total_95CL.dat',savedirF,obj.RunAnaObj.DataType,obj.range);
-%                 end
+                 else
+                     fstat = sprintf('%scontour_KSN2_Fitrium_%s_%.0feV_stat_95CL.dat',savedirF,obj.RunAnaObj.DataType,obj.range);
+                     fsys = sprintf('%scontour_KSN2_Fitrium_%s_%.0feV_total_95CL.dat',savedirF,obj.RunAnaObj.DataType,obj.range);
+                end
+                 
+              
             end
             
            if strcmp(PlotStat,'ON')
@@ -1697,7 +1705,13 @@ classdef SterileAnalysis < handle
                %                  if strcmp(obj.RunAnaObj.DataSet,'Knm2')
                %                      dfStat.data(:,2) = dfStat.data(:,2);
                %                  end %PowderBlue
-               pFStat = plot(dfStat(:,1),dfStat(:,2),'LineStyle','-.','Color',rgb('Orange'),'LineWidth',LineWidth);
+               if strcmp(obj.RunAnaObj.DataSet,'Knm2') && strcmp(obj.RunAnaObj.DataType,'Twin') && contains(ConvertFixPar('freePar',obj.RunAnaObj.fixPar,'Mode','Reverse'),'mNu')
+                   pFStat = plot(dfStat(:,1),dfStat(:,2),'LineStyle','-.','Color',rgb('Orange'),'LineWidth',LineWidth);  
+               elseif strcmp(obj.RunAnaObj.DataSet,'Knm2') && strcmp(obj.RunAnaObj.DataType,'Twin')        
+                   pFStat = plot(dfStat(:,1),dfStat(:,2).^2,'LineStyle','-.','Color',rgb('Orange'),'LineWidth',LineWidth);
+               else
+                   pFStat = plot(dfStat(:,1),dfStat(:,2),'LineStyle','-.','Color',rgb('Orange'),'LineWidth',LineWidth);
+               end
            end
            
            if strcmp(PlotTot,'ON')
@@ -1706,7 +1720,7 @@ classdef SterileAnalysis < handle
                 pFSys  = plot(dfSys(:,1),dfSys(:,2),'LineStyle','-.','Color',rgb('Orange'),'LineWidth',LineWidth);
              
              %  pFSys = plot(NaN,NaN,'LineStyle','-.','Color',rgb('Orange'),'LineWidth',LineWidth);
-               if obj.range==95 &&strcmp(obj.RunAnaObj.DataType,'Real')
+               if obj.range==95 && strcmp(obj.RunAnaObj.DataType,'Real')
                    fsys1 = sprintf('%scontour_KSN1_Fitrium_%s_%.0feV_total_95CL_1.txt',savedirF,obj.RunAnaObj.DataType,obj.range);
                    dfSys1 = importdata(fsys1);
                    fsys2 = sprintf('%scontour_KSN1_Fitrium_%s_%.0feV_total_95CL_2.txt',savedirF,obj.RunAnaObj.DataType,obj.range);
@@ -1744,10 +1758,20 @@ classdef SterileAnalysis < handle
           
            %% plot kafit
            if strcmp(PlotKaFit ,'ON')
-               kstat = sprintf('%scontour_KSN2_Kafit_%s_%.0feV_stat_95CL.txt',savedirF,obj.RunAnaObj.DataType,obj.range);
+               if contains(ConvertFixPar('freePar',obj.RunAnaObj.fixPar,'Mode','Reverse'),'mNu')
+                    kstat = sprintf('%scontour_KSN2_Kafit_%s_%.0feV_mNuFree_stat_95CL.txt',savedirF,obj.RunAnaObj.DataType,obj.range);
+            
+               else
+                   kstat = sprintf('%scontour_KSN2_Kafit_%s_%.0feV_stat_95CL.txt',savedirF,obj.RunAnaObj.DataType,obj.range);
+               end
                dkStat = importdata(kstat);
                if strcmp(PlotStat,'ON')
-                   pKStat = plot(dkStat(:,1),dkStat(:,2),'LineStyle',':','Color',rgb('DodgerBlue'),'LineWidth',LineWidth+0.5);
+                   if strcmp(obj.RunAnaObj.DataType,'Real')
+                       pKStat = plot(dkStat(:,1),dkStat(:,2),'LineStyle',':','Color',rgb('DodgerBlue'),'LineWidth',LineWidth+0.5);
+                   else
+                       pKStat = plot(dkStat.data(:,1),dkStat.data(:,2),'LineStyle',':','Color',rgb('DodgerBlue'),'LineWidth',LineWidth+0.5);
+                       
+                   end
                end
                if strcmp(PlotTot,'ON')
                    ksyst = sprintf('%scontour_KSN2_Kafit_%s_%.0feV_statsyst_95CL.txt',savedirF,obj.RunAnaObj.DataType,obj.range);
@@ -1810,8 +1834,13 @@ classdef SterileAnalysis < handle
                 ylim([1 2e4]) 
             end
             
-            title(sprintf('%s , %.0f eV range , %.0f%% C.L.',obj.GetPlotTitle('Mode','data'),obj.range,obj.ConfLevel),'FontWeight','normal','FontSize',get(gca,'FontSize'));
-          
+            %title(sprintf('%s , %.0f eV range , %.0f%% C.L.',obj.GetPlotTitle('Mode','data'),obj.range,obj.ConfLevel),'FontWeight','normal','FontSize',get(gca,'FontSize'));
+            title(obj.GetPlotTitle,'FontWeight','normal','FontSize',get(gca,'FontSize'));
+            if contains(ConvertFixPar('freePar',obj.RunAnaObj.fixPar,'Mode','Reverse'),'mNu')
+                ylim([6 40^2]);
+                xlim([8e-03 0.5]);
+                
+            end
            %% save
            if ~strcmp(SavePlot,'OFF')
                name_i = strrep(obj.DefPlotName,sprintf('_%s',chi2_i),'');
@@ -1980,7 +2009,9 @@ classdef SterileAnalysis < handle
             
             %% free unconstrained nu mass
             if strcmp(FreemNuSq,'ON')
+                if strcmp(obj.RunAnaObj.DataSet,'Knm1')
                 obj.InterpMode = 'lin';
+                end
                 obj.RunAnaObj.fixPar = 'mNu E0 Norm Bkg'; obj.RunAnaObj.InitFitPar;
                 obj.RunAnaObj.pullFlag = 99;
                 obj.LoadGridFile('CheckSmallerN','ON',obj.LoadGridArg{:});
@@ -2032,6 +2063,8 @@ classdef SterileAnalysis < handle
                         pullStr = sprintf('\\sigma({\\itm}_\\nu^{2 }) = 3 eV^2');
                     case 18
                         pullStr = sprintf('\\sigma({\\itm}_\\nu^{2 }) = 0.5 eV^2');
+                    case 26
+                        pullStr = sprintf('\\sigma({\\itm}_\\nu^{2 }) = 1.1 eV^2');
                     otherwise
                         pullStr = '';
                 end
@@ -2087,16 +2120,21 @@ classdef SterileAnalysis < handle
             end
             
             legend boxoff
-            if obj.range==65
-                ylim([1 6e3]);
-                xlim([2e-03 0.5]);
-            elseif obj.range==95
-                ylim([1 1e4]);
-                xlim([9e-04 0.5]);
-            elseif obj.range==40
-                %ylim([1 2e3]);
-                ylim([0.2 2e3]);
-                xlim([6e-03 0.5]);
+            if strcmp(obj.RunAnaObj.DataSet,'Knm1')
+                if obj.range==65
+                    ylim([1 6e3]);
+                    xlim([2e-03 0.5]);
+                elseif obj.range==95
+                    ylim([1 1e4]);
+                    xlim([9e-04 0.5]);
+                elseif obj.range==40
+                    %ylim([1 2e3]);
+                    ylim([0.2 2e3]);
+                    xlim([6e-03 0.5]);
+                end
+            else
+                ylim([1 1600])
+                xlim([4e-03 0.5])
             end
             title('');%remove title
             %grid on
@@ -2402,20 +2440,27 @@ classdef SterileAnalysis < handle
            H0 = obj.RunAnaObj.ModelObj.TBDIS./Time;
            H0Err = sqrt(obj.RunAnaObj.ModelObj.TBDIS)./Time;
            
+           qU_plt = linspace(min(qU),max(qU),1e3)';
+           H0 = interp1(qU,H0,qU_plt,'spline');
+           H0Err = interp1(qU,H0Err,qU_plt,'spline');
+           
           % alt. hypothesis (3+1 sterile)
           if isempty(mNu4Sq_Plot)
               mNu4Sq_Plot = [0,5,10,20,30,40].^2;
               nmNuSq = numel(mNu4Sq_Plot);
-              H1 = zeros(numel(qU),nmNuSq);
-              H1Err = zeros(numel(qU),nmNuSq);
+              H1 = zeros(numel(qU_plt),nmNuSq);
+              H1Err = zeros(numel(qU_plt),nmNuSq);
               for i=1:nmNuSq
                  progressbar(i/nmNuSq)
                   obj.RunAnaObj.ModelObj.SetFitBiasSterile(mNu4Sq_Plot(i),sin2T4_Plot);
                   obj.RunAnaObj.ModelObj.ComputeTBDDS;
                   obj.RunAnaObj.ModelObj.ComputeTBDIS;
-                  H1(:,i) = obj.RunAnaObj.ModelObj.TBDIS./Time;
-                  H1Err(:,i) = sqrt(obj.RunAnaObj.ModelObj.TBDIS)./Time;
+                  H1tmp = obj.RunAnaObj.ModelObj.TBDIS./Time;
+                  H1Errtmp = sqrt(obj.RunAnaObj.ModelObj.TBDIS)./Time;    
+                  H1(:,i) = interp1(qU,H1tmp,qU_plt,'spline');
+                  H1Err(:,i) = interp1(qU,H1Errtmp,qU_plt,'spline');
               end
+              
           else
               nmNuSq = 1;
               obj.RunAnaObj.ModelObj.SetFitBiasSterile(mNu4Sq_Plot,sin2T4_Plot);
@@ -2423,8 +2468,11 @@ classdef SterileAnalysis < handle
               obj.RunAnaObj.ModelObj.ComputeTBDIS;
               H1 = obj.RunAnaObj.ModelObj.TBDIS./Time;
               H1Err = sqrt(obj.RunAnaObj.ModelObj.TBDIS)./Time;
+              H1 = interp1(qU,H1,qU_plt,'spline');
+              H1Err = interp1(qU,H1Err,qU_plt,'spline');
           end
           
+        
           if strcmp(Mode,'Residuals') 
               y = (H1-H0)./H1Err;
               yStr = sprintf('Residuals (\\sigma)');
@@ -2441,7 +2489,7 @@ classdef SterileAnalysis < handle
          %  Colors = flipud(colormap('hsv'));
          p = cell(nmNuSq,1);
           for i=1:nmNuSq
-          p{i} = plot(qU-obj.RunAnaObj.ModelObj.Q_i,y(:,i),'-.','LineWidth',2,...
+          p{i} = plot(qU_plt-obj.RunAnaObj.ModelObj.Q_i,y(:,i),'-.','LineWidth',2,...
               'Color',Colors(i*floor(256/nmNuSq),:),'LineStyle',obj.PlotLines{i},...
               'MarkerSize',15);
           hold on;
@@ -2529,6 +2577,7 @@ classdef SterileAnalysis < handle
            end 
           
         end
+       
     end
     
     % Data stream: labels, loading, saving

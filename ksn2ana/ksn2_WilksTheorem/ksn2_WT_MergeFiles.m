@@ -1,6 +1,6 @@
 % create smaller file for result of grids searches on randomized data
 RecomputeFlag = 'ON';
-randMC = [1:408,467:525,630:700,846:1e3];%752;
+randMC = 1:1e3;
 Twin_sin2T4 = 0;
 Twin_mNu4Sq = 0;
 savedir = [getenv('SamakPath'),'ksn2ana/ksn2_WilksTheorem/results/'];
@@ -74,7 +74,7 @@ else
         progressbar(i/numel(randMC));
         S.RandMC= randMC(i);
         S.LoadGridFile(S.LoadGridArg{:});
-        S.Interp1Grid;%('Maxm4Sq',40^2);
+        S.Interp1Grid('Maxm4Sq',38^2);
         S.ContourPlot; close;
        
         S.FindBestFit('Mode','Def');
@@ -95,8 +95,8 @@ else
     %% also load expected contour from Asimov Twin
     S.InterpMode = 'spline';
     S.RandMC= 'OFF';
-    S.nGridSteps = 50;
-    S.LoadGridFile('IgnoreKnm2FSDbinning','ON','ExtmNu4Sq','ON');
+    S.nGridSteps = 30;
+    S.LoadGridFile('mNu4SqTestGrid',5,'ExtmNu4Sq','ON');
     S.Interp1Grid;
     S.ContourPlot; close;
     mNu4Sq_contour_Asimov = S.mNu4Sq_contour;

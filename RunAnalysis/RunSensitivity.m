@@ -715,14 +715,19 @@ classdef RunSensitivity < handle
                 mNuSq_t,RunName,obj.RunAnaObj.chi2,obj.GetRange,fix_str,nSamples);
             else
                 RunName = obj.RunAnaObj.RunData.RunName;
-                 save_str = sprintf('AsimovDeltaChi2_mNuSq%.3geV2_%s_%s_%.0fbE0_freePar%s_%.0fsamples.mat',...
-                mNuSq_t,RunName,chiStr,obj.GetRange,fix_str,nSamples);
+                save_str = sprintf('AsimovDeltaChi2_mNuSq%.3geV2_%s_%s_%.0fbE0_freePar%s_%.0fsamples.mat',...
+                    mNuSq_t,RunName,chiStr,obj.GetRange,fix_str,nSamples);
             end
-           
+            
             
             if strcmp(obj.RunAnaObj.AnaFlag,'Ring')
                 save_str = strrep(save_str,'.mat',sprintf('_Ring%s.mat',obj.RunAnaObj.RingMerge));
             end
+            
+            if strcmp(obj.RunAnaObj.DataSet,'Knm1') && obj.RunAnaObj.TwinBias_BKG_PtSlope~=0
+                  save_str = strrep(save_str,'.mat',sprintf('_BkgPT%.3gmuCpsS.mat',1e6.*obj.RunAnaObj.TwinBias_BKG_PtSlope));
+            end
+            
             savefile = [savedir,save_str];
             
             % look for file with same or more samples than required

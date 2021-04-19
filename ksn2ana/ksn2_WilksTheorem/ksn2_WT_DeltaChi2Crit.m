@@ -2,7 +2,7 @@
 %  DeltaChi2 distribution (best fit - null chi2)
 % cumulative pdf with critical delta chi2 for 95%CL.
 
-NrandMC = 606;
+NrandMC = 848;
 Twin_sin2T4 = 0;
 Twin_mNu4Sq = 0;
 savedir = [getenv('SamakPath'),'ksn2ana/ksn2_WilksTheorem/results/'];

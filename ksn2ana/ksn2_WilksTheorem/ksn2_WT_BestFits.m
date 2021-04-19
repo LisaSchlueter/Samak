@@ -1,6 +1,6 @@
 % Test of Wilk's theorem (coverage)
 % plot best fits on contour plot
-NrandMC = 473;%752;
+NrandMC = 848;%752;
 Twin_sin2T4 = 0;
 Twin_mNu4Sq = 0;
 savedir = [getenv('SamakPath'),'ksn2ana/ksn2_WilksTheorem/results/'];
@@ -23,12 +23,12 @@ end
 yedge = sort(mNu4Sq_bf);
 xedge = sort(sin2T4_bf);
 GetFigure;
-%h = histogram2(sin2T4_bf,mNu4Sq_bf,xedge,yedge,'FaceColor','flat','Normalization','probability');
+h = histogram2(sin2T4_bf,mNu4Sq_bf,xedge,yedge,'FaceColor','flat','Normalization','probability');
 hold on
-%h = scatter(sin2T4_bf(chi2_bf>50),mNu4Sq_bf(chi2_bf>50),'MarkerFaceColor',rgb('Orange'));
-hold on;
-h = scatter(sin2T4_bf(chi2_bf<50),mNu4Sq_bf(chi2_bf<50),'MarkerFaceColor',rgb('DodgerBlue'));
-hold on;
+h = scatter(sin2T4_bf(ClosedLog95),mNu4Sq_bf(ClosedLog95),'MarkerFaceColor','none');%rgb('Orange'));
+%hold on;
+%h = scatter(sin2T4_bf(chi2_bf<50),mNu4Sq_bf(chi2_bf<50),'MarkerFaceColor',rgb('DodgerBlue'));
+%hold on;
 pAsimov = plot3(sin2T4_contour_Asimov',mNu4Sq_contour_Asimov',ones(numel(mNu4Sq_contour_Asimov),1),'k-','LineWidth',2);
 view([0 0 1])
 grid off

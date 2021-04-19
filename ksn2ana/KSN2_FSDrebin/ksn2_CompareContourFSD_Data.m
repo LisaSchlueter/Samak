@@ -60,11 +60,12 @@ HoldOn = 'ON';
 Colors = {'DodgerBlue','Orange','FireBrick','ForestGreen'};
 LineStyle = {'-','-.','--',':','-'};
 HoldOn = 'OFF';
+tCpuHour = zeros(numel(FSDFlags),1);
 
 for i=1:numel(FSDFlags)
 A.FSDFlag = FSDFlags{i};
 S.LoadGridFile(S.LoadGridArg{:}); 
-dtmp = importdata(S.GridFilename(S.LoadGridArg{:})); tCpuHour0 = dtmp.tCpuHour;
+dtmp = importdata(S.GridFilename(S.LoadGridArg{:})); tCpuHour(i) = dtmp.tCpuHour;
 S.Interp1Grid('maxM4Sq',40^2)
 pHandles{i} = S.ContourPlot('HoldOn',HoldOn,'Color',rgb(Colors{i}),'LineStyle',LineStyle{i});
 legStr{i} = sprintf('%s (%.0f bins)',strrep(FSDFlags{i},'_',' '),nBins(i));

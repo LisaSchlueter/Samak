@@ -1,0 +1,169 @@
+% combine ksn1 and ksn2, nu-mass free
+% plot with ksn1, ksn2, ksn1+2
+chi2          = 'chi2CMShape';
+DataType      = 'Real';
+nGridStepsCommon    = 20;
+freePar       = 'mNu E0 Bkg Norm';
+range         = 40;
+savedir = [getenv('SamakPath'),'/SterileAnalysis/GridSearchFiles/Combi/',DataType,'/'];
+MakeDir(savedir)
+savename = sprintf('%sKSN12Combi_ReAna_GridSearch_%s_%s_Uniform_%s_%.0fnGrid.mat',...
+    savedir,DataType,strrep(freePar,' ',''),chi2,nGridStepsCommon);
+
+% load combi file
+if exist(savename,'file') 
+    d = importdata(savename);
+    fprintf('load results from file %s \n',savename)
+else
+     fprintf('load results from file %s \n',savename)
+    return
+end
+
+savename2 = sprintf('%sKSN12Combi_ReAna_RunAnaObj_%s.mat',savedir,DataType);
+if exist(savename2,'file')
+    A = importdata(savename2);
+else
+    % int obejct for interpolatio and plot
+    RunAnaArg = {'RunList','KNM2_Prompt',...
+        'DataType',DataType,...
+        'fixPar','mNu E0 Norm Bkg',...%free par
+        'SysBudget',40,...
+        'fitter','minuit',...
+        'minuitOpt','min;migrad',...
+        'RadiativeFlag','ON',...
+        'FSDFlag','KNM2_0p1eV',...
+        'ELossFlag','KatrinT2A20',...
+        'AnaFlag','StackPixel',...
+        'chi2',chi2,...
+        'NonPoissonScaleFactor',1.112,...
+        'FSD_Sigma',sqrt(0.0124+0.0025),...
+        'TwinBias_FSDSigma',sqrt(0.0124+0.0025),...
+        'TwinBias_Q',18573.7,...
+        'PullFlag',99,...;%99 = no pull
+        'BKG_PtSlope',3*1e-06,...
+        'TwinBias_BKG_PtSlope',3*1e-06,...
+        'DopplerEffectFlag','FSD'};
+    A = MultiRunAnalysis(RunAnaArg{:});
+    save(savename2,'A');
+end
+
+A.fixPar = ConvertFixPar('freePar','mNu E0 Norm Bkg','nPar',A.nPar,'nPixel',1);
+A.chi2 = chi2;
+
+%% configure Sterile analysis object
+SterileArg = {'RunAnaObj',A,... % Mother Object: defines RunList, Column Density, Stacking Cuts,....
+    'nGridSteps',50,...
+    'SmartGrid','OFF',...
+    'RecomputeFlag','OFF',...
+    'SysEffect','all',...
+    'RandMC','OFF',...
+    'range',range};
+S = SterileAnalysis(SterileArg{:});
+%% load ksn1
+S.nGridSteps = 50;
+
+S.RunAnaObj.DataSet = 'Knm1';
+S.RunAnaObj.RunData.RunName = 'KNM1';
+S.RunAnaObj.ELossFlag  = 'KatrinT2';
+S.RunAnaObj.AngularTFFlag ='OFF';
+S.RunAnaObj.SysBudget = 24;
+S.RunAnaObj.FSDFlag = 'Sibille0p5eV';
+S.RunAnaObj.ModelObj.BKG_PtSlope = 0;
+% stat and syst
+S.RunAnaObj.NonPoissonScaleFactor = 1.064;
+S.RunAnaObj.chi2 = 'chi2CMShape';
+S.LoadGridFile('CheckLarger','ON');
+S.InterpMode = 'lin';
+S.Interp1Grid('RecomputeFlag','ON','Maxm4Sq',40^2);
+mNu4Sq_k1 = S.mNu4Sq;
+sin2T4_k1 = S.sin2T4;
+chi2_k1   = S.chi2;
+chi2ref_k1= S.chi2_ref;
+sum(sum(isnan(S.chi2)))
+%S.GridPlot;
+[p1tot,~,pbf1] = S.ContourPlot('BestFit','ON','CL',95,'HoldOn','OFF','Color',rgb('FireBrick'),'LineStyle',':');
+
+% find significance
+[DeltaChi2_1, SignificanceBF_1] = S.CompareBestFitNull;
+mNu4Sqbf_k1 = S.mNu4Sq_bf;
+sin2T4bf_k1 = S.sin2T4_bf;
+%% load ksn2
+S.InterpMode = 'spline';
+S.nGridSteps = 30;
+S.RunAnaObj.FSDFlag = 'KNM2_0p5eV';
+S.RunAnaObj.DataSet = 'Knm2';
+S.RunAnaObj.RunData.RunName = 'KNM2_Prompt';
+S.RunAnaObj.ELossFlag  = 'KatrinT2A20';
+S.RunAnaObj.AngularTFFlag ='ON';
+S.RunAnaObj.SysBudget = 40;
+S.RunAnaObj.NonPoissonScaleFactor = 1.112;
+S.RunAnaObj.ModelObj.BKG_PtSlope = 3.*1e-06;
+% stat and syst
+S.RunAnaObj.chi2 = 'chi2CMShape';
+S.LoadGridFile('CheckLarger','OFF','mNu4SqTestGrid',5,'ExtmNu4Sq','ON');            
+S.Interp1Grid('RecomputeFlag','ON');
+mNu4Sq_k2 = S.mNu4Sq;
+sin2T4_k2 = S.sin2T4;
+chi2_k2   = S.chi2;
+chi2ref_k2= S.chi2_ref;
+mNu4Sq_k2_contour = S.mNu4Sq_contour;
+sin2T4_k2_contour = S.sin2T4_contour;
+[p2tot,sinMin,pbf2] = S.ContourPlot('BestFit','ON','CL',95,'HoldOn','ON','Color',rgb('Orange'),'LineStyle','-.');
+
+mNu4Sqbf_k2 = S.mNu4Sq_bf;
+sin2T4bf_k2 = S.sin2T4_bf;
+
+% find significance
+[DeltaChi2_2, SignificanceBF_2] = S.CompareBestFitNull;
+%% KSN1+2
+S.sin2T4 = d.sin2T4;
+S.mNu4Sq = d.mnu4Sq;
+S.chi2 = d.chi2;
+S.chi2_ref = d.chi2_ref;
+S.chi2_Null = d.FitResult_Null.chi2min;
+S.mNuSq = cell2mat(cellfun(@(x) x.par(1),d.FitResults,'UniformOutput',0));
+S.E0 = cell2mat(cellfun(@(x) x.par(2),d.FitResults,'UniformOutput',0));
+
+S.InterpMode = 'lin';
+S.Interp1Grid('Maxm4Sq',40^2);%,'Minm4Sq',40);
+[p12tot,~,pbf12] = S.ContourPlot('HoldOn','ON','BestFit','ON','SavePlot','OFF');
+
+mNu4Sqbf_k12 = S.mNu4Sq_bf;
+sin2T4bf_k12 = S.sin2T4_bf;
+
+% find significance
+[DeltaChi2_tot, SignificanceBF_tot] = S.CompareBestFitNull;
+%%
+ExtLeg = 'ON';
+legStr = sprintf('%s: {\\itm}_\\nu^2 free at %.0f%% C.L.',S.GetPlotTitle('Mode','data'),S.ConfLevel);
+if strcmp(ExtLeg,'ON')
+    leg = legend([p1tot,p2tot,p12tot,pbf1,pbf2,pbf12],...
+        'KSN-1','KSN-2','KSN-1 and KSN-2',...
+        sprintf('{\\itm}_4^2 = %.1f eV^2 , |{\\itU}_{e4}|^2 = %.3f (%.1f%% C.L.)',mNu4Sqbf_k1,sin2T4bf_k1,(SignificanceBF_1*100)),...
+        sprintf('{\\itm}_4^2 = %.1f eV^2 , |{\\itU}_{e4}|^2 = %.3f (%.1f%% C.L.)',mNu4Sqbf_k2,sin2T4bf_k2,(SignificanceBF_2*100)),...
+        sprintf('{\\itm}_4^2 = %.1f eV^2 , |{\\itU}_{e4}|^2 = %.3f (%.1f%% C.L.)',mNu4Sqbf_k12,sin2T4bf_k12,(SignificanceBF_tot*100)));
+    leg.NumColumns = 2;
+    title(legStr,'FontWeight','normal','FontSize',get(gca,'FontSize'));
+else
+    leg = legend([p1tot,p2tot,p12tot],'KSN-1','KSN-2','KSN-1 and KSN-2 combined');
+    leg.Title.String = legStr;
+    leg.Title.FontWeight = 'normal';
+    title('');
+end
+PrettyLegendFormat(leg);
+
+xlim([2e-03,0.5]);
+if strcmp(ExtLeg,'ON')
+    ylim([0.5 42^2]);
+else
+    ylim([1 40^2]);
+end
+%%
+% save
+plotname = [extractBefore(S.DefPlotName,'Grid'),sprintf('KSN12_%s_Combination_mNuE0NormBkg_%s.png',...
+    S.GetPlotTitle('Mode','data'),chi2)];
+if strcmp(ExtLeg,'ON')
+    plotname = strrep(plotname,'.png','_BF.png');
+end
+print(gcf,plotname,'-dpng','-r300');
+fprintf('save plot to %s \n',plotname)

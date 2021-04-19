@@ -1,5 +1,5 @@
 % Test of Wilk's theorem (coverage)
-% chi2 distribution of best fits
+% chi2 distribution of null hypothesis
 NrandMC = 848;
 Twin_sin2T4 = 0;
 Twin_mNu4Sq = 0;
@@ -20,20 +20,21 @@ end
 
 %% plot
 % tmp
-dof = 23;
+dof = 25;
 
 plotdir = strrep(savedir,'results','plots');
 MakeDir(plotdir);
 
 GetFigure;
-hchi2 = histogram(chi2_bf,'BinWidth',3,...
+hchi2 = histogram(chi2_null,'BinWidth',3,...
     'FaceAlpha',1,'FaceColor',rgb('DeepSkyBlue'),'EdgeColor',rgb('SteelBlue'),'Normalization','probability');
 hold on;
 x = linspace(0,dof*3,1e3);
 y = chi2pdf(x,dof);
 pchi2 = plot(x,y*hchi2.BinWidth,'Color',rgb('Black'),'LineWidth',2);
+
 PrettyFigureFormat('FontSize',22);
-xlabel(sprintf('\\chi^2_{min} (%.0f dof)',dof));
+xlabel(sprintf('\\chi^2_{NH} (%.0f dof)',dof));
 ylabel('Frequency');
 %title(resultsStr,'FontWeight','normal','FontSize',get(gca,'FontSize'))
 leg = legend([hchi2,pchi2],sprintf('%.0f pseudo-experiments',numel(chi2_bf)),...
@@ -41,7 +42,7 @@ leg = legend([hchi2,pchi2],sprintf('%.0f pseudo-experiments',numel(chi2_bf)),...
                  'EdgeColor',rgb('Silver'));
 %xlim([0 70]);
 
-plotnameChi2 = strrep(strrep(savefile,'results','plots'),'.mat','_Chi2minDist.png');
+plotnameChi2 = strrep(strrep(savefile,'results','plots'),'.mat','_Chi2NullDist.png');
 %print(gcf,plotnameChi2,'-dpng','-r450');
 fprintf('save plot to %s \n',plotnameChi2);
 %export_fig(gcf,strrep(plotnameChi2,'.png','.pdf'));

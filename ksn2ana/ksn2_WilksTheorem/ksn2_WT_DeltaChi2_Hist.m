@@ -20,16 +20,16 @@ end
 
 %% plot
 % tmp
-dof = 23;
+dof = 2;
 
 plotdir = strrep(savedir,'results','plots');
 MakeDir(plotdir);
 
 GetFigure;
-hchi2 = histogram(chi2_bf,'BinWidth',3,...
+hchi2 = histogram(chi2_null-chi2_bf,'BinWidth',0.3,...
     'FaceAlpha',1,'FaceColor',rgb('DeepSkyBlue'),'EdgeColor',rgb('SteelBlue'),'Normalization','probability');
 hold on;
-x = linspace(0,dof*3,1e3);
+x = linspace(0,dof*10,1e3);
 y = chi2pdf(x,dof);
 pchi2 = plot(x,y*hchi2.BinWidth,'Color',rgb('Black'),'LineWidth',2);
 PrettyFigureFormat('FontSize',22);
@@ -39,9 +39,9 @@ ylabel('Frequency');
 leg = legend([hchi2,pchi2],sprintf('%.0f pseudo-experiments',numel(chi2_bf)),...
                  sprintf('\\chi^2 distribution for %.0f dof',dof),...
                  'EdgeColor',rgb('Silver'));
-%xlim([0 70]);
+xlim([0 15]);
 
-plotnameChi2 = strrep(strrep(savefile,'results','plots'),'.mat','_Chi2minDist.png');
+plotnameChi2 = strrep(strrep(savefile,'results','plots'),'.mat','_DeltaChi2Dist.png');
 %print(gcf,plotnameChi2,'-dpng','-r450');
 fprintf('save plot to %s \n',plotnameChi2);
 %export_fig(gcf,strrep(plotnameChi2,'.png','.pdf'));

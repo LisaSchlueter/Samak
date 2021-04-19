@@ -6,12 +6,12 @@ RecomputeFlag = 'OFF';
 %% KNM-1 Model
 chi2          = 'chi2CMShape';
 DataType      = 'Real';
-nGridSteps    = 1;
+nGridSteps    = 10;
 freePar       = 'mNu E0 Bkg Norm';
 range         = 40;
 savedir = [getenv('SamakPath'),'/SterileAnalysis/GridSearchFiles/Combi/',DataType,'/'];
 MakeDir(savedir)
-savename = sprintf('%sKSN12Combi_ReAna_GridSearch_%s_%s_Uniform_%s.mat',savedir,DataType,strrep(freePar,' ',''),chi2);
+savename = sprintf('%sKSN12Combi_ReAna_GridSearch_%s_%s_Uniform_%s_%.0fnGrid.mat',savedir,DataType,strrep(freePar,' ',''),chi2,nGridSteps);
 
 if exist(savename,'file') && strcmp(RecomputeFlag,'OFF')
     d = importdata(savename);
@@ -251,3 +251,4 @@ sin2T4_Grid    = reshape(sin2T4',nGridSteps^2,1);
     fprintf('save file to %s \n',savename);
 
 end
+

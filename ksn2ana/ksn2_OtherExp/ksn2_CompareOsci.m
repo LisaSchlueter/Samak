@@ -1,10 +1,10 @@
 % ksn2 calculate chi2 grid search
 %% settings that might change
-chi2 = 'chi2Stat';
-DataType = 'Twin';
+chi2 = 'chi2CMShape';
+DataType = 'Real';
 nGridSteps = 30;
 range = 40;
-
+freePar = 'E0 Norm Bkg';
 %% configure RunAnalysis object
 if strcmp(chi2,'chi2Stat')
     NonPoissonScaleFactor = 1;
@@ -13,7 +13,7 @@ elseif  strcmp(chi2,'chi2CMShape')
 end
 RunAnaArg = {'RunList','KNM2_Prompt',...
     'DataType',DataType,...
-    'fixPar','mNu E0 Norm Bkg',...%free par
+    'fixPar',freePar,...%free par
     'SysBudget',40,...
     'fitter','minuit',...
     'minuitOpt','min;migrad',...
@@ -38,17 +38,16 @@ SterileArg = {'RunAnaObj',A,... % Mother Object: defines RunList, Column Density
     'RecomputeFlag','OFF',...
     'SysEffect','all',...
     'RandMC','OFF',...
-    'range',range};
-S = SterileAnalysis(SterileArg{:});
+    'range',range,...
+    'LoadGridArg',{'ExtmNu4Sq','ON','mNu4SqTestGrid',5}};
 
-
-if strcmp(DataType,'Real')
-    S.LoadGridArg = {'mNu4SqTestGrid',5,'IgnoreKnm2FSDbinning','OFF','ExtmNu4Sq','ON'};
-else
-    S.LoadGridArg = {'mNu4SqTestGrid',5,'IgnoreKnm2FSDbinning','ON','ExtmNu4Sq','OFF'};
-end
 %%
-S.InterpMode = 'spline';
-S.NullHypothesis = 'OFF';
-S.PlotFitriumSamak('PlotTot','OFF','PlotStat','ON','SavePlot','png','PlotKafit','ON')
+S = SterileAnalysis(SterileArg{:});
+S.LoadGridFile(S.LoadGridArg{:});
+S.Interp1Grid;
+
+%%
+S.ContourPlotOsci('DayaBay','ON','DoubleChooz','ON','SavePlot','ON','Style','PRL','BestFit','ON');
+
+
 
