@@ -180,7 +180,8 @@ classdef SterileAnalysis < handle
                 obj.RunAnaObj.Fit;
                 FitResults_Null = obj.RunAnaObj.FitResult;
                 
-                if strcmp(obj.RunAnaObj.DataType,'Twin') && (isfloat(obj.RandMC)  || (obj.Twin_mNu4Sq~=0 || obj.Twin_sin2T4~=0))    
+                if strcmp(obj.RunAnaObj.DataType,'Twin') && (isfloat(obj.RandMC)  || (obj.Twin_mNu4Sq~=0 || obj.Twin_sin2T4~=0)) 
+                    % re-set sterile parameters in model
                     if obj.Twin_mNu4Sq~=0 || obj.Twin_sin2T4~=0
                         obj.RunAnaObj.SimulateStackRuns;
                     end
@@ -354,7 +355,7 @@ classdef SterileAnalysis < handle
                 LogIdx = obj.mNu4Sq(:,1)>=Maxm4Sq;
                 [X2,Y2] = meshgrid(obj.mNu4Sq(LogIdx,1),obj.sin2T4(1,:));
                 Z2 = obj.chi2(:,LogIdx);
-                mNu4tmp = logspace(log10(min(obj.mNu4Sq(LogIdx,1))),log10(max(obj.mNu4Sq(LogIdx,1))),nInter2);
+                mNu4tmp = logspace(log10(min(obj.mNu4Sq(LogIdx,1))),log10(obj.range.^2),nInter2);%max(obj.mNu4Sq(LogIdx,1))
                 mNu4Sq_2 = repmat(mNu4tmp,nInter,1);
                 sin2T4_2 = repmat(logspace(log10(min(min(obj.sin2T4))),log10(max(max(obj.sin2T4))),nInter),nInter2,1)'; 
                 chi2_2  = reshape(interp2(X2,Y2,Z2,mNu4Sq_2,sin2T4_2,'lin'),nInter,nInter2);
@@ -498,7 +499,7 @@ classdef SterileAnalysis < handle
             DeltaChi2 = obj.chi2_Null-obj.chi2_bf;
             SignificanceBF = chi2cdf(DeltaChi2,2);%interp1(y,x, DeltaChi2,'spline');
             
-            fprintf('Delta chi2 = %.2f -> %.1f%% C.L. significance \n',obj.chi2_Null-obj.chi2_bf,SignificanceBF);
+            fprintf('Delta chi2 = %.2f -> %.1f%% C.L. significance \n',obj.chi2_Null-obj.chi2_bf,100.*SignificanceBF);
           
         end
         function [DeltamNu41Sq,sin2T4Sq] = Convert2Osci(obj,varargin)
@@ -1005,6 +1006,8 @@ classdef SterileAnalysis < handle
             p.addParameter('Contour','OFF',@(x)ismember(x,{'ON','OFF'}));  
             p.addParameter('SavePlot','OFF',@(x)ismember(x,{'ON','OFF','png'}));
             p.addParameter('ExtraStr','',@(x)ischar(x));
+            p.addParameter('xLim','',@(x)isfloat(x));
+            
             p.parse(varargin{:});
             CL       = p.Results.CL;
             HoldOn   = p.Results.HoldOn;
@@ -1012,6 +1015,8 @@ classdef SterileAnalysis < handle
             Contour  = p.Results.Contour;
             SavePlot = p.Results.SavePlot;
             ExtraStr = p.Results.ExtraStr;
+            xLim     = p.Results.xLim;
+            
             if CL<1
                 CL = CL*100;
             end
@@ -1063,12 +1068,16 @@ classdef SterileAnalysis < handle
             xlabel(sprintf('|{\\itU}_{e4}|^2'));
             ylabel(sprintf('{\\itm}_4^2 (eV^2)'));
             zlabel(sprintf('\\Delta\\chi^2'))
-             grid off
+            grid off
             view([0 0 1])
-         
+            
             
             ylim([min(min(obj.mNu4Sq)),max(max(obj.mNu4Sq))]);
-            xlim([min(min(obj.sin2T4)), max(max(obj.sin2T4))]);
+            if isempty(xLim)
+                xlim([min(min(obj.sin2T4)), max(max(obj.sin2T4))]);
+            else
+                xlim(xLim);
+            end
             
             title(sprintf('%s',obj.GetPlotTitle),'FontWeight','normal','FontSize',get(gca,'FontSize'));
             
@@ -1469,13 +1478,13 @@ classdef SterileAnalysis < handle
             PrettyFigureFormat('FontSize',22);
             if strcmp(PullmNuSq,'ON') && strcmp(obj.RunAnaObj.DataSet,'Knm1')
                 leg = legend([pFree,pPull,pFix],...
-                    sprintf('Free {\\itm}_\\nu^2 without pull term'),...
+                    sprintf('Free {\\itm}_\\nu^2 unconstrained'),...
                     sprintf('Free {\\itm}_\\nu^2 with pull term \\sigma({\\itm}_\\nu^2) = 1.94 eV^2'),...
                     sprintf('Fixed {\\itm}_\\nu^2 = 0 eV^2'),...
                     'Location','southwest');
             elseif strcmp(PullmNuSq,'ON') && strcmp(obj.RunAnaObj.DataSet,'Knm2')
                   leg = legend([pFree,pPull,pPullK,pFix],...
-                    sprintf('Free {\\itm}_\\nu^2 without pull term'),...
+                    sprintf('Free {\\itm}_\\nu^2 unconstrained'),...
                     sprintf('Free {\\itm}_\\nu^2 with pull term \\sigma({\\itm}_\\nu^2) = 1.94 eV^2 (Mainz/Troitsk)'),...
                     sprintf('Free {\\itm}_\\nu^2 with pull term \\sigma({\\itm}_\\nu^2) = 1.1 eV^2 (KATRIN KNM-1)'),...
                     sprintf('Fixed {\\itm}_\\nu^2 = 0 eV^2'),...
@@ -1488,6 +1497,7 @@ classdef SterileAnalysis < handle
             end
             
                 PrettyLegendFormat(leg);
+                legend boxoff
                 obj.RunAnaObj.fixPar = fixPar_i;
                 obj.RunAnaObj.pullFlag = pull_i ;
                

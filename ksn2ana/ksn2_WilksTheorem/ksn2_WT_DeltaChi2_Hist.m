@@ -1,8 +1,16 @@
 % Test of Wilk's theorem (coverage)
 % chi2 distribution of best fits
-NrandMC = 1e3;
-Twin_sin2T4 = 0;
-Twin_mNu4Sq = 0;
+Hypothesis = 'H0';
+switch Hypothesis
+    case 'H0'
+        NrandMC = 1e3;
+        Twin_sin2T4 = 0;
+        Twin_mNu4Sq = 0;
+    case 'H1'
+        NrandMC = 439;
+        Twin_sin2T4 = 0.0240;
+        Twin_mNu4Sq = 92.7;
+end
 savedir = [getenv('SamakPath'),'ksn2ana/ksn2_WilksTheorem/results/'];
 if Twin_sin2T4==0 && Twin_mNu4Sq==0
     savefile = sprintf('%sksn2_WilksTheorem_NullHypothesis_%.0fsamples.mat',savedir,NrandMC);
@@ -39,7 +47,7 @@ ylabel('Frequency');
 leg = legend([hchi2,pchi2],sprintf('%.0f pseudo-experiments',numel(chi2_bf)),...
                  sprintf('\\chi^2 distribution for %.0f dof',dof),...
                  'EdgeColor',rgb('Silver'));
-xlim([0 15]);
+%xlim([0 15]);
 
 plotnameChi2 = strrep(strrep(savefile,'results','plots'),'.mat','_DeltaChi2Dist.png');
 %print(gcf,plotnameChi2,'-dpng','-r450');

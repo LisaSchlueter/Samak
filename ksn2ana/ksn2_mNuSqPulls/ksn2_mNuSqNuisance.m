@@ -50,7 +50,7 @@ S.LoadGridFile(S.LoadGridArg{:});
 S.Interp1Grid('nInter',1e3);
 PlotPar = S.mNuSq;
 
-ContourVec = [-1,0,0.3,1,2,10];
+ContourVec = [-0.06,0.58];%[-1,0,0.3,1,2,10];
 Splines = 'ON';
 GetFigure;
 for i=1:numel(ContourVec)
@@ -68,7 +68,7 @@ leg = legend([pFix,pFree,p1],...
     sprintf('ii) Free {\\itm}_\\nu^2 unconstrained'),...
     sprintf('Isoline: {\\itm}_\\nu^2 best fit for ii)'),...
     'EdgeColor',rgb('Silver'),'Location','southwest');
-PrettyLegendFormat(leg);
+PrettyLegendFormat(leg,'alpha',0.9);
 
 ylim([1 40^2]);
 xlim([2e-03 0.5]);
@@ -79,3 +79,4 @@ name_i = strrep(S.DefPlotName,'_mNuE0BkgNorm','');
 plotname = sprintf('%s_mNuSqOverviewmNuSq_%.2gCL.png',name_i,S.ConfLevel);
 print(gcf,plotname,'-dpng','-r450');
 fprintf('save plot to %s \n',plotname);
+export_fig(strrep(plotname,'.png','.pdf'));

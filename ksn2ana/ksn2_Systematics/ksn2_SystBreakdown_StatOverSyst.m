@@ -104,7 +104,7 @@ xlabel(sprintf('{\\itm}_4^2 (eV^2)'));
 set(gca,'XScale','log');
 PrettyFigureFormat('FontSize',22);
 xlim([1 40^2]);
-         
+ ylim([0 0.5])        
 leg = legend([pHandle{:}],SysEffectLabel);
 PrettyLegendFormat(leg);
 leg.Title.String = 'Stystematic effect';

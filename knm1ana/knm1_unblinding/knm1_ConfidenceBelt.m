@@ -3,7 +3,7 @@
 % calculation and plotting takes place in RunSensitivity class
 % Lisa Schlüter, 2019
 %% settings
-Mode        = 'FC';  % FC = Feldman Cousin, LT = Lokov Tkachov
+Mode        = 'LT';  % FC = Feldman Cousin, LT = Lokov Tkachov
 Sensitivity = 'OFF'; % OFF= show best fit, ON = show sensitivity only
 SavePlot    = 'OFF';
 
@@ -29,7 +29,7 @@ mNuSq_2 = [0.11,0.13,0.17,0.25:0.1:0.95,1,1.1,1.3,1.6,1.7,1.8];
 mNuSq_3 = [0.8,1.4];
 mNuSq = sort([mNuSq_1,mNuSq_2,mNuSq_3]);
 %% Compute and Plot Confidence Belt
-S.ConfLevel = 0.6827; % confidence level (0==1 sigma)
+S.ConfLevel = 0.9; % confidence level (0==1 sigma)
 switch Mode
     case 'FC'
         S.ComputeFC_Asimov('mNuSq_t',mNuSq,'nSamplesAsimov',300);
@@ -45,3 +45,9 @@ end
 
 %S.PlotFC_PDF('KNM1Central','OFF','mNuSq_t',0);
 
+saveMiniFile = 'ON';
+if strcmp(saveMiniFile,'ON')
+savedir = [getenv('SamakPath'),'knm1ana/knm1_unblinding/results/'];
+savename = sprintf('%sknm1_ConfidenceBelt_%s.mat',savedir,Mode);
+save(savename,'S');
+end

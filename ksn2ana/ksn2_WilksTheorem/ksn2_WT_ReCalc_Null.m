@@ -1,11 +1,22 @@
+% recalculate chi2 for MC truth
+% something weird must have happened...
 
 % grid search on randomized twins
 % ksn2 calculate chi2 grid search
 
-randMC = 1e3;%1:1e3;%1:752;
-Twin_sin2T4 = 0.024;
-Twin_mNu4Sq = 92.7;
-chi2 = 'chi2Stat';
+Hypothesis = 'H0';
+switch Hypothesis
+    case 'H0'     
+        randMC = 1:1e3;
+        Twin_sin2T4 = 0;
+        Twin_mNu4Sq = 0;
+        chi2 = 'chi2CMShape';
+    case 'H1'
+        randMC = [1:334,384:522];
+        Twin_sin2T4 = 0.0240;
+        Twin_mNu4Sq = 92.7;
+        chi2 = 'chi2Stat';
+end
 DataType = 'Twin';
 freePar = 'E0 Norm Bkg';
 nGridSteps = 25;
@@ -50,9 +61,22 @@ SterileArg = {'RunAnaObj',A,... % Mother Object: defines RunList, Column Density
 
 S = SterileAnalysis(SterileArg{:});
 %%
+ A = MultiRunAnalysis(RunAnaArg{:});
+ A.exclDataStart = A.GetexclDataStart(range);
+
 for i=1:numel(randMC)
-    A = MultiRunAnalysis(RunAnaArg{:});
     S = SterileAnalysis(SterileArg{:});
     S.RandMC= randMC(i);
-    S.GridSearch('mNu4SqTestGrid',2,'ExtmNu4Sq','ON');
+    filename = S.GridFilename('mNu4SqTestGrid',2,'ExtmNu4Sq','ON');
+    d = importdata(filename);
+    A.ModelObj.SetFitBiasSterile(Twin_mNu4Sq,Twin_sin2T4);
+    A.RunData.TBDIS = d.TBDIS_mc;
+    A.Fit;
+   
+    FitResults_NullOld = d.FitResults_Null;
+    FitResults_Null = A.FitResult;
+    
+    save(filename,'FitResults_NullOld','FitResults_Null','-append');
 end
+
+

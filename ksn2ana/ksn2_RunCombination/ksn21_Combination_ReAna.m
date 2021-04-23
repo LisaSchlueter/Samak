@@ -53,16 +53,29 @@ S.RunAnaObj.ELossFlag  = 'KatrinT2A20';
 S.RunAnaObj.AngularTFFlag ='ON';
 S.RunAnaObj.SysBudget = 200;
 S.RunAnaObj.FSDFlag = 'KNM2_0p1eV';
-% stat and syst
 S.RunAnaObj.NonPoissonScaleFactor = 1.064;
 S.RunAnaObj.chi2 = 'chi2CMShape';
 S.nGridSteps = 30;
 S.LoadGridArg = {'CheckLarger','ON','ExtmNu4Sq','OFF','mNu4SqTestGrid',2};
+
+% load grid and plot
 S.LoadGridFile(S.LoadGridArg{:});
 S.Interp1Grid('RecomputeFlag','ON');%,'Maxm4Sq',34.2^2);
-p1tot = S.ContourPlot('BestFit',BF,'CL',95,'HoldOn','OFF','Color',rgb('FireBrick'),'LineStyle',':');
+[p1tot,~,p1bf] = S.ContourPlot('BestFit',BF,'CL',95,'HoldOn','OFF','Color',rgb('FireBrick'),'LineStyle',':');
 
-% load again with same binning as KSN-1 (restricted)
+% store best fit and contour
+S.FindBestFit;
+S.FindBestFit('Mode','Imp')
+chi2_ref_1 = S.chi2_ref;
+chi2_null_1 = S.chi2_Null;
+mNuSq_bf_1 = S.mNuSq_bf;
+sin2T4_bf_1 = S.sin2T4_bf;
+mNu4Sq_bf_1 = S.mNu4Sq_bf;
+% find significance
+[~, SignificanceBF_1] = S.CompareBestFitNull;
+
+% load again 
+% restrict binning to match KSN2
 S.LoadGridFile(S.LoadGridArg{:}); 
 S.Interp1Grid('RecomputeFlag','ON','Minm4Sq',1,'Maxm4Sq',38^2);
 mNu4Sq_k1 = S.mNu4Sq;
@@ -71,6 +84,7 @@ chi2_k1   = S.chi2;
 chi2ref_k1= S.chi2_ref;
 sum(sum(isnan(S.chi2)))
 dof1 = S.dof;
+
 %% load ksn2
 S.nGridSteps = 30;
 S.RunAnaObj.ModelObj.BKG_PtSlope = 3*1e-06;
@@ -81,148 +95,101 @@ S.RunAnaObj.ELossFlag  = 'KatrinT2A20';
 S.RunAnaObj.AngularTFFlag ='ON';
 S.RunAnaObj.SysBudget = 40;
 S.RunAnaObj.NonPoissonScaleFactor = 1.112;
-
-% stat and syst
 S.RunAnaObj.chi2 = 'chi2CMShape';
-S.LoadGridArg = {'mNu4SqTestGrid',5,'ExtmNu4Sq','ON'};
-% load extended grid to get best fit
-S.LoadGridFile(S.LoadGridArg{:},'Extsin2T4','ON');            
-S.Interp1Grid('RecomputeFlag','ON','Maxm4Sq',35^2);
+LoadGridArg_i = {'mNu4SqTestGrid',5,'ExtmNu4Sq','ON'};
+S.LoadGridArg = {LoadGridArg_i{:},'Extsin2T4','ON'};
+
+% load grid and plo
+S.LoadGridFile(S.LoadGridArg{:});
+S.InterpMode = 'Mix';
+S.Interp1Grid('RecomputeFlag','ON','Maxm4Sq',36^2);
+[p2tot,sinMin,p2bf] = S.ContourPlot('BestFit',BF,'CL',95,'HoldOn','ON','Color',rgb('Orange'),'LineStyle','-.');
+
+% store best fit and contour
 S.FindBestFit;
-chi2_ref = S.chi2_ref;
-mNuSq_bf = S.mNuSq_bf;
-sin2T4_bf = S.sin2T4_bf;
-mNu4Sq_bf = S.mNu4Sq_bf;
-% load extended grid to get niceer plot
-S.LoadGridFile(S.LoadGridArg{:},'Extsin2T4','OFF');  
-S.Interp1Grid('RecomputeFlag','ON','Maxm4Sq',38^2);
-S.chi2_ref  = chi2_ref;
-S.mNuSq_bf  = mNuSq_bf ;
-S.sin2T4_bf = sin2T4_bf;
-S.mNu4Sq_bf = mNu4Sq_bf;
-[p2tot,sinMin] = S.ContourPlot('BestFit',BF,'ReCalcBF','OFF','CL',95,'HoldOn','ON','Color',rgb('Orange'),'LineStyle','-.');
-
-
-% mNu4Sq_k2 = S.mNu4Sq;
-% sin2T4_k2 = S.sin2T4;
-% chi2_k2   = S.chi2;
-% chi2ref_k2= S.chi2_ref;
+S.FindBestFit('Mode','Imp')
+chi2_ref_2 = S.chi2_ref;
+chi2_null_2 = S.chi2_Null;
+mNuSq_bf_2 = S.mNuSq_bf;
+sin2T4_bf_2 = S.sin2T4_bf;
+mNu4Sq_bf_2 = S.mNu4Sq_bf;
 mNu4Sq_k2_contour = S.mNu4Sq_contour;
 sin2T4_k2_contour = S.sin2T4_contour;
+% find significance
+[~, SignificanceBF_2] = S.CompareBestFitNull;
 
-% load again with same binning as KSN-1 (restricted)
+% load again with same binning as KSN-1 (restricted) to sum chi^2 maps
+S.LoadGridArg = {LoadGridArg_i{:},'Extsin2T4','OFF'};
 S.LoadGridFile(S.LoadGridArg{:}); 
+S.InterpMode = 'spline';
 S.Interp1Grid('RecomputeFlag','ON','Minm4Sq',1,'Maxm4Sq',38^2);
 mNu4Sq_k2 = S.mNu4Sq;
 sin2T4_k2 = S.sin2T4;
 chi2_k2   = S.chi2;
-chi2ref_k2= chi2_ref;
+chi2ref_k2= chi2_ref_2;
 dof2 = S.dof;
 %% check if they have same binning
  if sum(sum(sin2T4_k2~=sin2T4_k1))>0 || sum(sum(mNu4Sq_k1~=mNu4Sq_k2))>0
      fprintf(2, 'KSN-1 and KSN-2 do not have  the same binning - return \n');
      return;
  end
+ 
 %% combi 
 % sum
 chi2_sum = chi2_k1+chi2_k2;
 S.chi2 = chi2_sum;
-S.chi2_ref = chi2ref_k1+chi2ref_k2;
-[p12tot,sinMin] = S.ContourPlot('BestFit','ON','CL',95,'HoldOn','ON','Color',rgb('DodgerBlue'),'LineStyle','-');
+S.chi2_ref = min(min(chi2_sum));%chi2ref_k1+chi2ref_k2;
+[p12tot,sinMin,p12bf] = S.ContourPlot('BestFit','ON','CL',95,'HoldOn','ON','Color',rgb('DodgerBlue'),'LineStyle','-');
 
 % find best fit;
+S.FindBestFit;
+chi2_ref_12 = S.chi2_ref;
+chi2_null_12 =  chi2_null_1+chi2_null_2;
+mNuSq_bf_12 = S.mNuSq_bf;
+sin2T4_bf_12 = S.sin2T4_bf;
+mNu4Sq_bf_12 = S.mNu4Sq_bf;
+S.chi2_Null = chi2_null_12;
+% find significance
+[~, SignificanceBF_12] = S.CompareBestFitNull;
+ %% plot best fits on top (KSN-1 is hidden otherwise)
+pbf1 = plot(sin2T4_bf_1,mNu4Sq_bf_1,'x','MarkerSize',9,'Color',p1tot.Color,'LineWidth',p1tot.LineWidth);
 
-
-leg = legend([p1tot,p2tot,p12tot],'KSN-1','KSN-2','KSN-1 and KSN-2 combined');
-PrettyLegendFormat(leg);
-% save
-title([S.GetPlotTitle, sprintf(' , {\\itm}_\\nu^2 = 0 eV^2')],'FontWeight','normal')
-xlim([2e-03,0.5]);
-plotname = [extractBefore(S.DefPlotName,'Grid'),sprintf('KSN12_Combination_E0NormBkg_%s.png',chi2Name)];
-print(gcf,plotname,'-dpng','-r300');
-
-
-
-return;
-%%  plot sum
-DeltaChi2 = GetDeltaChi2(95,2);
-chi2grid_k1 = chi2_k1;% S.chi2;
-chi2grid_k1((chi2grid_k1-S.chi2_ref)>DeltaChi2) =  NaN;%DeltaChi2+chi2_ref;% NaN;
-zlimMax = DeltaChi2;
-GetFigure;
-
-surf(sin2T4_k1,mNu4Sq_k1,chi2grid_k1-S.chi2_ref,'EdgeColor','interp','FaceColor','interp');
-grid off
-set(gca,'XScale','log')
-set(gca,'YScale','log')
-view([0 0 1])
-
-
-
-%%
-PlotGrid = 'OFF';
-if strcmp(PlotGrid,'ON')
-GetFigure;
-
-% prepare
-chi2grid_k1 = chi2_k1;
-chi2grid_k1((chi2grid_k1-chi2ref_k1)>S.DeltaChi2) =  NaN;
-chi2grid_k2 = chi2_k2;
-chi2grid_k2((chi2grid_k2-chi2ref_k2)>S.DeltaChi2) =  NaN;
-chi2grid_tot = chi2_sum;
-chi2ref_tot = chi2ref_k1+chi2ref_k2;
-chi2grid_tot((chi2grid_tot-chi2ref_tot)>S.DeltaChi2) =  NaN;
-
-% plot
-%surf(sin2T4_k1,mNu4Sq_k1,chi2grid_k1-chi2ref_k1,'EdgeColor','interp','FaceColor','interp')
-%hold on;
-%surf(sin2T4_k2,mNu4Sq_k2,chi2grid_k2-chi2ref_k2,'EdgeColor','interp','FaceColor','interp')
-surf(sin2T4_k2,mNu4Sq_k2,chi2grid_tot-chi2ref_tot,'EdgeColor','interp','FaceColor','interp')
-
-
-PrettyFigureFormat('FontSize',20);
-zlimMax = S.DeltaChi2;
-zlim([0 zlimMax])
-set(gca,'XScale','log')
-set(gca,'YScale','log')
-c =colorbar;
-c.Label.String = sprintf('\\Delta\\chi^2');
-c.Label.FontSize = get(gca,'FontSize')+2;
-c.Limits=[0 zlimMax];
-xlabel(sprintf('|{\\itU}_{e4}|^2'));
-ylabel(sprintf('{\\itm}_4^2 (eV^2)'));
-zlabel(sprintf('\\Delta\\chi^2'))
-grid off
-view([0 0 1]);
-
-
-xlim([1e-03,0.5]);
-
+%% legend
+ExtLeg = 'ON';
+if strcmp(ExtLeg,'ON')
+    leg = legend([p1tot,p2tot,p12tot,p1bf,p2bf,p12bf],'KSN-1','KSN-2','KSN-1 and KSN-2',...
+        sprintf('{\\itm}_4^2 = %.1f eV^2 , |{\\itU}_{e4}|^2 = %.3f (%.1f%% C.L.)',mNu4Sq_bf_1,sin2T4_bf_1,(SignificanceBF_1*100)),...
+        sprintf('{\\itm}_4^2 = %.2f eV^2 , |{\\itU}_{e4}|^2 = %.3f (%.1f%% C.L.)',mNu4Sq_bf_2,sin2T4_bf_2,(SignificanceBF_2*100)),...
+        sprintf('{\\itm}_4^2 = %.1f eV^2 , |{\\itU}_{e4}|^2 = %.3f (%.1f%% C.L.)',mNu4Sq_bf_12,sin2T4_bf_12,(SignificanceBF_12*100)));
+    leg.NumColumns = 2;
+    extraStr = '_ExtLeg';
+else
+    leg = legend([p1tot,p2tot,p12tot],'KSN-1','KSN-2','KSN-1 and KSN-2 combined');
+    extraStr = '';
 end
+PrettyLegendFormat(leg);
+legend boxoff
 
-%%
-%% load ksn1
-S.nGridSteps = 50;
+%% save
+title(S.GetPlotTitle,'FontWeight','normal')
+xlim([2e-03,0.5]);
 
-S.RunAnaObj.DataSet = 'Knm1';
-S.RunAnaObj.RunData.RunName = 'KNM1';
-S.RunAnaObj.ELossFlag  = 'KatrinT2';
-S.RunAnaObj.AngularTFFlag ='OFF';
-S.RunAnaObj.SysBudget = 24;
+ %% save plot
+ savedir = [getenv('SamakPath'),'ksn2ana/ksn2_RunCombination/plots/'];
+ MakeDir(savedir);
+ savefile = sprintf('%sksn21_Combination_ReAna%s',savedir,extraStr);
+ print([savefile,'.png'],'-dpng','-r350');
+ export_fig([savefile,'.pdf']);
+ fprintf('save plot to %s \n',savefile);
+ %% save mini result file for compatibility test
+savedir = [getenv('SamakPath'),'ksn2ana/ksn2_RunCombination/results/'];
+MakeDir(savedir)
+savefile = sprintf('%sksn21_Combination_ReAna.mat',savedir);
 
-% stat and syst
-S.RunAnaObj.NonPoissonScaleFactor = 1.064;
-S.RunAnaObj.chi2 = 'chi2CMShape';
-S.LoadGridFile('CheckLarger','ON');
-S.Interp1Grid('RecomputeFlag','ON');
-
-hold on;
-
-%%
-p2 =plot3(sin2T4_k2_contour, mNu4Sq_k2_contour,S.DeltaChi2.*ones(size(mNu4Sq_k2_contour)));
+dof12 = dof1+dof2+2;
+save(savefile,'chi2_ref_1','chi2_ref_2','chi2_ref_12','dof1','dof2','dof12',...
+    'chi2_null_1','chi2_null_2','chi2_null_12',...
+    'mNu4Sq_bf_1','mNu4Sq_bf_2','mNu4Sq_bf_12',...
+    'sin2T4_bf_1','sin2T4_bf_2','sin2T4_bf_12');
 
 
-% %% save results
-% savedir = [getenv('SamakPath'),'ksn2ana/ksn2_RunCombination/results/'];
-% savefile = sprintf('%sksn21_Combination_ReAna.mat',savedir)
-% save(savefile,'chi2_k1','chi2_k2','chi2_sum','chi2ref_tot','chi2ref_k1','chi2ref_k2','dof1','dof2');

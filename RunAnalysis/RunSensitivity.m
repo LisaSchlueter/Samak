@@ -709,16 +709,17 @@ classdef RunSensitivity < handle
             else
                  chiStr = sprintf('%s_SysBudget%.0f',obj.RunAnaObj.chi2,obj.RunAnaObj.SysBudget);
             end
+            
             if strcmp(obj.RunAnaObj.DataSet,'Knm1')
                 RunName = 'KNM1';
                 
                 if strcmp(obj.RunAnaObj.DataSet,'Knm1') && obj.RunAnaObj.TwinBias_BKG_PtSlope~=0
-                     save_str = sprintf('AsimovDeltaChi2_mNuSq%.3geV2_%s_%s_%.0fbE0_freePar%s_BkgPT%.3gmuCpsS_%.0fsamples.mat',...
-                        mNuSq_t,RunName,obj.RunAnaObj.chi2,obj.GetRange,fix_str,1e6.*obj.RunAnaObj.TwinBias_BKG_PtSlope,nSamples);
+                     save_str = sprintf('AsimovDeltaChi2_mNuSq%.3geV2_%s_%s_%.0fbE0_BkgPT%.3gmuCpsS_freePar%s_%.0fsamples.mat',...
+                        mNuSq_t,RunName,chiStr,obj.GetRange,1e6.*obj.RunAnaObj.TwinBias_BKG_PtSlope,fix_str,nSamples);
                 %    save_str = strrep(save_str,'.mat',sprintf('_BkgPT%.3gmuCpsS.mat',1e6.*obj.RunAnaObj.TwinBias_BKG_PtSlope));
                 else
                     save_str = sprintf('AsimovDeltaChi2_mNuSq%.3geV2_%s_%s_%.0fbE0_freePar%s_%.0fsamples.mat',...
-                        mNuSq_t,RunName,obj.RunAnaObj.chi2,obj.GetRange,fix_str,nSamples);
+                        mNuSq_t,RunName,chiStr,obj.GetRange,fix_str,nSamples);
                 end
             else
                 RunName = obj.RunAnaObj.RunData.RunName;
@@ -950,7 +951,7 @@ classdef RunSensitivity < handle
             
             for i=1:numel(mNuSq_t)
                 % Get Delta Chi2 Curve
-                [mNuSq,~,Chi2True,~] = obj.FC_ComputeDeltaChi2LookupTables('mNuSq_t',mNuSq_t(i),'nSamples',nSamplesAsimov);
+                [mNuSq,DeltaChi2,Chi2True,~] = obj.FC_ComputeDeltaChi2LookupTables('mNuSq_t',mNuSq_t(i),'nSamples',nSamplesAsimov);
                 
                 % Convert Chi2True into Probability
                 Prob_tmp = exp(-Chi2True./2);
@@ -982,6 +983,28 @@ classdef RunSensitivity < handle
                     obj.FC_x2(i) = interp1(CumProb,mNuSq(ia),obj.ConfLevel,'spline');
                 end
                 
+                spline = 'ON';
+                switch spline
+                    case 'ON'
+                        interpStyle = 'spline';
+                    case 'OFF'
+                        interpStyle = 'lin';
+                end
+                % save delta chi2 for later
+                obj.FC_mNuSqFit(i,:) = linspace(min(mNuSq),max(mNuSq),nSamples);
+                TestmNuSqTrue = sum(obj.FC_mNuSqFit(i,:) == mNuSq_t(i));
+                if TestmNuSqTrue==0
+                    tmpIndex = find(abs(obj.FC_mNuSqFit(i,:)-mNuSq_t(i))==min(abs(obj.FC_mNuSqFit(i,:)-mNuSq_t(i))),1);
+                    obj.FC_mNuSqFit(i,tmpIndex) = mNuSq_t(i);
+                end
+                
+                obj.FC_DeltaChi2(i,:) = interp1(mNuSq,DeltaChi2,obj.FC_mNuSqFit(i,:),interpStyle);
+                obj.FC_PDF(i,:)       = interp1(mNuSq,Prob,obj.FC_mNuSqFit(i,:),interpStyle);
+                obj.FC_CumProb(i,:)   = interp1(mNuSq(ia),CumProb,obj.FC_mNuSqFit(i,:),interpStyle);
+                obj.FC_CumProb(i,:)   = obj.FC_CumProb(i,:)./max(obj.FC_CumProb(i,:));
+                if mNuSq_t(i)==0
+                    obj.FC_Chi2True = interp1(mNuSq,Chi2True,obj.FC_mNuSqFit(i,:),interpStyle);
+                end
                 
             end
             %save
@@ -2065,7 +2088,7 @@ classdef RunSensitivity < handle
                 return
             end
             
-            %x = obj.FC_mNuSqFit(Index,:);
+            x = obj.FC_mNuSqFit(Index,:);
            
             if strcmp(Mode,'Chi2')
                 % plot chi2-profile

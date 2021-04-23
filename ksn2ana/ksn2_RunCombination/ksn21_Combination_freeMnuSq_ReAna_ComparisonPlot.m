@@ -2,7 +2,7 @@
 % plot with ksn1, ksn2, ksn1+2
 chi2          = 'chi2CMShape';
 DataType      = 'Real';
-nGridStepsCommon    = 20;
+nGridStepsCommon    = 30;
 freePar       = 'mNu E0 Bkg Norm';
 range         = 40;
 savedir = [getenv('SamakPath'),'/SterileAnalysis/GridSearchFiles/Combi/',DataType,'/'];
@@ -59,29 +59,54 @@ SterileArg = {'RunAnaObj',A,... % Mother Object: defines RunList, Column Density
     'RandMC','OFF',...
     'range',range};
 S = SterileAnalysis(SterileArg{:});
-%% load ksn1
-S.nGridSteps = 50;
-
+%% ksn1
+KSN1config = 'New';
 S.RunAnaObj.DataSet = 'Knm1';
 S.RunAnaObj.RunData.RunName = 'KNM1';
-S.RunAnaObj.ELossFlag  = 'KatrinT2';
-S.RunAnaObj.AngularTFFlag ='OFF';
-S.RunAnaObj.SysBudget = 24;
-S.RunAnaObj.FSDFlag = 'Sibille0p5eV';
-S.RunAnaObj.ModelObj.BKG_PtSlope = 0;
-% stat and syst
 S.RunAnaObj.NonPoissonScaleFactor = 1.064;
 S.RunAnaObj.chi2 = 'chi2CMShape';
-S.LoadGridFile('CheckLarger','ON');
-S.InterpMode = 'lin';
-S.Interp1Grid('RecomputeFlag','ON','Maxm4Sq',40^2);
+switch KSN1config
+    case 'Old'
+        % OLD settings (PRL publication)
+        S.nGridSteps = 50;
+        S.RunAnaObj.ELossFlag  = 'KatrinT2';
+        S.RunAnaObj.AngularTFFlag ='OFF';
+        S.RunAnaObj.SysBudget = 24;
+        S.RunAnaObj.FSDFlag = 'Sibille0p5eV';
+        S.RunAnaObj.ModelObj.BKG_PtSlope = 0;
+        S.LoadGridArg = '';
+        S.InterpMode = 'Mix';
+        % load map
+        S.LoadGridFile(S.LoadGridArg{:});
+        S.Interp1Grid('RecomputeFlag','ON','Maxm4Sq',19^2);
+    case 'New'
+        % Re-Analysis
+        S.nGridSteps = 30;
+        S.RunAnaObj.ELossFlag  = 'KatrinT2A20';
+        S.RunAnaObj.AngularTFFlag ='ON';
+        S.RunAnaObj.SysBudget = 200;
+        S.RunAnaObj.FSDFlag = 'KNM2_0p1eV';
+        S.RunAnaObj.ModelObj.BKG_PtSlope = -2.2*1e-06;
+        S.LoadGridArg = {'mNu4SqTestGrid',5};
+        S.InterpMode = 'spline';
+        % load map
+        S.LoadGridFile(S.LoadGridArg{:});
+        S.Interp1Grid('RecomputeFlag','ON','Maxm4Sq',40^2);
+end
+
+
+% store
 mNu4Sq_k1 = S.mNu4Sq;
 sin2T4_k1 = S.sin2T4;
 chi2_k1   = S.chi2;
 chi2ref_k1= S.chi2_ref;
 sum(sum(isnan(S.chi2)))
-%S.GridPlot;
+
+% plot
 [p1tot,~,pbf1] = S.ContourPlot('BestFit','ON','CL',95,'HoldOn','OFF','Color',rgb('FireBrick'),'LineStyle',':');
+mNu4Sq_1_contour = S.mNu4Sq_contour;
+sin2T4_k1_contour = S.sin2T4_contour;
+dof1 = S.dof;
 
 % find significance
 [DeltaChi2_1, SignificanceBF_1] = S.CompareBestFitNull;
@@ -112,7 +137,7 @@ sin2T4_k2_contour = S.sin2T4_contour;
 
 mNu4Sqbf_k2 = S.mNu4Sq_bf;
 sin2T4bf_k2 = S.sin2T4_bf;
-
+dof2 = S.dof;
 % find significance
 [DeltaChi2_2, SignificanceBF_2] = S.CompareBestFitNull;
 %% KSN1+2
@@ -123,10 +148,14 @@ S.chi2_ref = d.chi2_ref;
 S.chi2_Null = d.FitResult_Null.chi2min;
 S.mNuSq = cell2mat(cellfun(@(x) x.par(1),d.FitResults,'UniformOutput',0));
 S.E0 = cell2mat(cellfun(@(x) x.par(2),d.FitResults,'UniformOutput',0));
-
-S.InterpMode = 'lin';
+dof12 = 46;
+S.dof = dof12;
+S.InterpMode = 'spline';
 S.Interp1Grid('Maxm4Sq',40^2);%,'Minm4Sq',40);
 [p12tot,~,pbf12] = S.ContourPlot('HoldOn','ON','BestFit','ON','SavePlot','OFF');
+
+mNu4Sq_k12_contour = S.mNu4Sq_contour;
+sin2T4_k12_contour = S.sin2T4_contour;
 
 mNu4Sqbf_k12 = S.mNu4Sq_bf;
 sin2T4bf_k12 = S.sin2T4_bf;
@@ -159,7 +188,7 @@ else
     ylim([1 40^2]);
 end
 %%
-% save
+% save plot
 plotname = [extractBefore(S.DefPlotName,'Grid'),sprintf('KSN12_%s_Combination_mNuE0NormBkg_%s.png',...
     S.GetPlotTitle('Mode','data'),chi2)];
 if strcmp(ExtLeg,'ON')
@@ -167,3 +196,15 @@ if strcmp(ExtLeg,'ON')
 end
 print(gcf,plotname,'-dpng','-r300');
 fprintf('save plot to %s \n',plotname)
+export_fig(gcf,strrep(plotname,'.png','.pdf'));
+
+%% save combi file
+savedir = sprintf('%sksn2ana/ksn2_RunCombination/results/',getenv('SamakPath'));
+MakeDir(savedir);
+savefile = sprintf('%sksn21_Combi_freemNuSq_ReAna.mat',savedir);
+save(savefile,'chi2ref_k1','chi2ref_k2','DeltaChi2_1','DeltaChi2_2','DeltaChi2_tot',...
+    'mNu4Sq_1_contour','mNu4Sq_k2_contour','sin2T4_k1_contour','sin2T4_k2_contour',...
+    'mNu4Sq_k12_contour','sin2T4_k12_contour','d',...
+    'mNu4Sqbf_k1','mNu4Sqbf_k2','mNu4Sqbf_k12',...
+    'sin2T4bf_k1','sin2T4bf_k2','sin2T4bf_k12',...
+    'dof1','dof2','dof12');
