@@ -4,9 +4,9 @@
 % grid search on randomized twins
 % ksn2 calculae chi2 grid search
 
-Hypothesis = 'H0';
+Hypothesis = 'H1';
 switch Hypothesis
-    case 'H0'
+    case 'H0'     
         randMC = 1:1e3;
         Twin_sin2T4 = 0;
         Twin_mNu4Sq = 0;
@@ -48,7 +48,6 @@ RunAnaArg = {'RunList','KNM2_Prompt',...
     'TwinBias_BKG_PtSlope',3*1e-06,...
     'DopplerEffectFlag','FSD'};
 A = MultiRunAnalysis(RunAnaArg{:});
-A.exclDataStart = A.GetexclDataStart(range);
 %% configure Sterile analysis object
 SterileArg = {'RunAnaObj',A,... % Mother Object: defines RunList, Column Density, Stacking Cuts,....
     'nGridSteps',nGridSteps,...
@@ -58,51 +57,46 @@ SterileArg = {'RunAnaObj',A,... % Mother Object: defines RunList, Column Density
     'range',range,...
     'RandMC','OFF',...
     'Twin_mNu4Sq',Twin_mNu4Sq,...
-    'Twin_sin2T4',Twin_sin2T4,...
-    'InterpMode','Mix'};
-
-S = SterileAnalysis(SterileArg{:});
+    'Twin_sin2T4',Twin_sin2T4};
+ A = MultiRunAnalysis(RunAnaArg{:});
+ A.exclDataStart = A.GetexclDataStart(range);
 %%
-for i=1:numel(randMC)
-    
-    S.RandMC= randMC(i);
-    S.LoadGridFile('mNu4SqTestGrid',2,'ExtmNu4Sq','ON');
-    S.Interp1Grid;
+% for i=1:numel(randMC)
+i = 231; %    % 225 231 318  326  334
+S = SterileAnalysis(SterileArg{:});
+S.RandMC= randMC(i);
+S.RunAnaObj.InitModelObj_Norm_BKG('RecomputeFlag','ON');
+S.RunAnaObj.ModelObj.BKG_RateSec_i = S.RunAnaObj.ModelObj.BKG_RateSec;
+S.RunAnaObj.ModelObj.normFit_i = S.RunAnaObj.ModelObj.normFit;
+S.RunAnaObj.ModelObj.SetFitBiasSterile(S.Twin_mNu4Sq,S.Twin_sin2T4);
+S.RunAnaObj.ModelObj.ComputeTBDDS;
+S.RunAnaObj.ModelObj.ComputeTBDIS;
+
+filename = S.GridFilename('mNu4SqTestGrid',2,'ExtmNu4Sq','ON');
+d = importdata(filename);
+     S.InterpMode = 'lin';
+   S.LoadGridFile('mNu4SqTestGrid',2,'ExtmNu4Sq','ON');
+   S.Interp1Grid('Minm4Sq',1);
     S.FindBestFit;
-    
-    % get randomized spectrum
-    filename = S.GridFilename('mNu4SqTestGrid',2,'ExtmNu4Sq','ON');
-    d = importdata(filename);
-    A.RunData.TBDIS = d.TBDIS_mc;
-    if strcmp(Hypothesis,'H0')
-        FitResults_Null = d.FitResults_NullOld;
-    end
-    
-    % null hypothesis
-    A.ModelObj.SetFitBias(0);
-    A.ModelObj.SetFitBiasSterile(Twin_mNu4Sq,Twin_sin2T4);
-    A.Fit;
-    ReCalc_chi2Null = A.FitResult.chi2min;
-    
-    % best fit
-    A.ModelObj.SetFitBias(0);
-    A.ModelObj.SetFitBiasSterile(S.mNu4Sq_bf,S.sin2T4_bf);
-    A.Fit;
-    ReCalc_chi2Bf = A.FitResult.chi2min;
-    
-    if strcmp(Hypothesis,'H0')
-        FitResults_NullMed = [];
-        FitResults_NullOld = [];
-        save(filename,'ReCalc_chi2Null','ReCalc_chi2Bf',...
-            'FitResults_Null','FitResults_NullMed','FitResults_NullOld','-append');
-    else
-        save(filename,'ReCalc_chi2Null','ReCalc_chi2Bf','-append');
-    end
-end
+   %% null hypothesis
+   A.RunData.TBDIS = d.TBDIS_mc; 
+   A.ModelObj.SetFitBiasSterile(Twin_mNu4Sq,Twin_sin2T4);
+  
+   A.Fit;
 
+   chi2NullFile   = S.chi2_Null;
+   chi2NullReCalc = A.FitResult.chi2min;
+   %% best fit
+   A.ModelObj.SetFitBiasSterile(S.mNu4Sq_bf,S.sin2T4_bf);
+   A.Fit;
+   chi2BfFile   = S.chi2_bf;
+   chi2BfReCalc = A.FitResult.chi2min;
+   
+    %%
+    FitResults_NullOld = d.FitResults_Null;
+    FitResults_Null = A.FitResult;
+    
+%   save(filename,'FitResults_NullOld','FitResults_Null','-append');
+% end
 
-
- 
- 
- 
 

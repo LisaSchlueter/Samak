@@ -1,8 +1,18 @@
 % create smaller file for result of grids searches on randomized data
 RecomputeFlag = 'ON';
-randMC = [1:334,384:521];
-Twin_sin2T4 = 0.024;
-Twin_mNu4Sq = 92.7;
+Hypothesis = 'H1';
+switch Hypothesis
+    case 'H0'
+        randMC = 1:100;
+        Twin_sin2T4 = 0;
+        Twin_mNu4Sq = 0;
+        chi2 = 'chi2CMShape';
+    case 'H1'
+        randMC = [1:340,384:794];
+        Twin_sin2T4 = 0.0240;
+        Twin_mNu4Sq = 92.7;
+        chi2 = 'chi2Stat';
+end
 savedir = [getenv('SamakPath'),'ksn2ana/ksn2_WilksTheorem/results/'];
 if Twin_sin2T4==0 && Twin_mNu4Sq==0
     savefile = sprintf('%sksn2_WilksTheorem_NullHypothesis_%.0fsamples.mat',savedir,numel(randMC));
@@ -14,8 +24,7 @@ if exist(savefile,'file') && strcmp(RecomputeFlag,'OFF')
     fprintf('savefile already created \n');
     d = importdata(savefile);
 else
-    %% configure RunAnalysis object
-    chi2 = 'chi2Stat';
+    %% configure RunAnalysis object 
     DataType = 'Twin';
     freePar = 'E0 Norm Bkg';
     nGridSteps = 25;
@@ -62,11 +71,18 @@ else
     sin2T4_bf      = zeros(numel(randMC),1);
     chi2_bf        = zeros(numel(randMC),1);
     chi2_null      = zeros(numel(randMC),1);
+    chi2_null1  = zeros(numel(randMC),1);
+    chi2_null2  = zeros(numel(randMC),1);
+    chi2_null3  = zeros(numel(randMC),1);
     chi2_delta     = zeros(numel(randMC),1);
     mNu4Sq_contour = cell(numel(randMC),1);
     sin2T4_contour = cell(numel(randMC),1);
     
-    S.InterpMode = 'lin';
+    if strcmp(Hypothesis,'H0')
+        S.InterpMode = 'Mix';
+    else
+        S.InterpMode = 'lin';
+    end
     S.LoadGridArg = {'mNu4SqTestGrid',2,'ExtmNu4Sq','ON'};
     
     % load files
@@ -74,31 +90,34 @@ else
         progressbar(i/numel(randMC));
         S.RandMC= randMC(i);
         S.LoadGridFile(S.LoadGridArg{:});
-        S.Interp1Grid('Maxm4Sq',38^2);
+        S.Interp1Grid('Maxm4Sq',36^2);
         S.ContourPlot('BestFit','ON'); close;
         mNu4Sq_contour{i} = S.mNu4Sq_contour;
         sin2T4_contour{i} = S.sin2T4_contour;
         
-        if i==43
-            a = 1
-        end
-        S.FindBestFit('Mode','Imp');  
+   %    S.FindBestFit('Mode','Imp');
         mNu4Sq_bf(i) = S.mNu4Sq_bf;
         sin2T4_bf(i) = S.sin2T4_bf;
         chi2_bf(i)   = S.chi2_bf;
-        chi2_null(i) = S.chi2_Null;
-        chi2_delta(i) = S.chi2_Null-S.chi2_bf;
         
-     
+         df = S.GridFilename(S.LoadGridArg{:});
+%         d = importdata(df); % d.FitResults_NullOld.chi2min;%
+%         chi2_null1(i) = d.FitResults_NullOld.chi2min;
+%         chi2_null2(i) = d.FitResults_NullMed.chi2min;
+%         chi2_null3(i) = d.FitResults_Null.chi2min;       
+        
+        chi2_null(i) = S.chi2_Null;
+        chi2_delta(i) = chi2_null(i)-S.chi2_bf;
+        
     end
     
     dof = S.dof;
     
     %% also load expected contour from Asimov Twin
-    S.InterpMode = 'spline';
+    S.InterpMode = 'Mix';%'spline';
     S.RandMC= 'OFF';
     S.nGridSteps = 30;
-  
+    
     S.LoadGridFile('mNu4SqTestGrid',5,'ExtmNu4Sq','ON');
     S.Interp1Grid;
     S.ContourPlot; close;
@@ -106,8 +125,8 @@ else
     sin2T4_contour_Asimov = S.sin2T4_contour;
     
     MakeDir(savedir);
-    save(savefile,'mNu4Sq_bf','sin2T4_bf','chi2_bf','chi2_null',...
-        'chi2_delta','mNu4Sq_contour','sin2T4_contour',...
+    save(savefile,'mNu4Sq_bf','sin2T4_bf','chi2_bf','chi2_null',...%'chi2_null_ReCalc',...
+        'chi2_delta','mNu4Sq_contour','sin2T4_contour',...%    'chi2_null1','chi2_null2','chi2_null3',...
         'mNu4Sq_contour_Asimov','sin2T4_contour_Asimov');
     fprintf('save file to %s \n',savefile);
     d = importdata(savefile);

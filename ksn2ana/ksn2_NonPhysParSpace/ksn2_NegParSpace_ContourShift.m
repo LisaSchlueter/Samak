@@ -1,3 +1,4 @@
+% show how contour shifts if global minum would be considered
 % ksn2 chi2 grid - non physical parameter space 4 quadrants
 % ksn2 plot chi2 grid search: 1 at a time to cross check
 % 4 quadrants
@@ -46,24 +47,30 @@ SterileArg = {... % Mother Object: defines RunList, Column Density, Stacking Cut
 S = SterileAnalysis('RunAnaObj',A,SterileArg{:});
 
 %%
+% find global best fit (NW quadrant)
 S.InterpMode = 'spline';
-Quadrant = 'NW';
-switch Quadrant
-    case 'NW'
-        GridArg = {'NegmNu4Sq','OFF','Negsin2T4','ON','Extsin2T4','OFF'};
-    case 'NE'
-         GridArg = {'NegmNu4Sq','OFF','Negsin2T4','OFF','Extsin2T4','ON'};
-    case 'SW'
-         GridArg = {'NegmNu4Sq','ON','Negsin2T4','ON','Extsin2T4','OFF'};
-    case 'SE'
-         GridArg = {'NegmNu4Sq','ON','Negsin2T4','OFF','Extsin2T4','ON'};
-end
+GridArg = {'NegmNu4Sq','OFF','Negsin2T4','ON','Extsin2T4','OFF'};
 S.LoadGridFile(S.LoadGridArg{:},GridArg{:});
-S.Interp1Grid('Maxm4Sq',34^2);
-S.GridPlot('BestFit','ON');
+S.Interp1Grid('Maxm4Sq',36^2);
+S.FindBestFit;
+chi2_bf_NW = S.chi2_bf;
 
-% load
+% load + plot physical region (NE quadrant)
+S.InterpMode = 'Mix';
+GridArg = {'NegmNu4Sq','OFF','Negsin2T4','OFF','Extsin2T4','ON'};
+S.LoadGridFile(S.LoadGridArg{:},GridArg{:});
+S.Interp1Grid('Maxm4Sq',36^2);
+preg= S.ContourPlot('BestFit','ON');
+chi2_bf_NE = S.chi2_bf;
 
-% find best fit
+S.chi2_ref = chi2_bf_NW;
+pglobal = S.ContourPlot('BestFit','OFF','HoldOn','ON','Color',rgb('Orange'),'LineStyle','-.');
 
-% plot
+%% legend
+leg = legend([preg,pglobal],...
+     sprintf('\\chi^2_{min} = %.1f (global \\in physical region)',chi2_bf_NE),...
+     sprintf('\\chi^2_{min} = %.1f (global)',chi2_bf_NW));
+PrettyLegendFormat(leg);
+
+plotname = [extractBefore(S.DefPlotName,'FSD'),'_QuadrantGlobalMin.pdf'];
+export_fig(plotname);

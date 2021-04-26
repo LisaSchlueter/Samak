@@ -1,5 +1,5 @@
 % ksn2 chi2 grid - non physical parameter space 4 quadrants
-% ksn2 plot chi2 grid search: 1 at a time to cross check
+% ksn2 plot chi2 grid search
 % 4 quadrants
 %% settings that might change
 chi2 = 'chi2CMShape';
@@ -42,28 +42,32 @@ SterileArg = {... % Mother Object: defines RunList, Column Density, Stacking Cut
     'RandMC','OFF',...
     'range',range,...
     'LoadGridArg',{'ExtmNu4Sq','ON','mNu4SqTestGrid',5},...
-    'InterpMode','lin'};
+    'InterpMode','spline'};
 S = SterileAnalysis('RunAnaObj',A,SterileArg{:});
-
 %%
-S.InterpMode = 'spline';
-Quadrant = 'NW';
-switch Quadrant
-    case 'NW'
-        GridArg = {'NegmNu4Sq','OFF','Negsin2T4','ON','Extsin2T4','OFF'};
-    case 'NE'
-         GridArg = {'NegmNu4Sq','OFF','Negsin2T4','OFF','Extsin2T4','ON'};
-    case 'SW'
-         GridArg = {'NegmNu4Sq','ON','Negsin2T4','ON','Extsin2T4','OFF'};
-    case 'SE'
-         GridArg = {'NegmNu4Sq','ON','Negsin2T4','OFF','Extsin2T4','ON'};
+S.LoadGridFile(S.LoadGridArg{:});
+S.Interp1Grid;
+p1 = S.ContourPlot;
+
+%
+Chi2Crit = 6.19; % +- 0.12 (from Martin Slezak, H0, 5000 contours)
+myCL = GetCL(Chi2Crit);
+p2 = S.ContourPlot('CL',myCL,'HoldOn','ON','Color',rgb('Skyblue'),'LineStyle','-.');
+
+xlim([5e-03, 0.5]);
+ylim([2, 1600]);
+
+leg = legend([p1,p2],sprintf('\\chi^2_{crit.} = 5.99 (Wilk`s theorem)'),sprintf('\\chi^2_{crit.} = %.2f',Chi2Crit));
+PrettyLegendFormat(leg);
+
+savedir = [getenv('SamakPath'),'ksn2ana/ksn2_WilksTheorem/plots/'];
+MakeDir(savedir);
+pltname = sprintf('%sksn2_WT_ContourShift_Chi2Crit%.2f.pdf',savedir,Chi2Crit);
+export_fig(pltname);
+fprintf('save olot to %s \n',pltname)
+%%
+function cl = GetCL(chi2crit)
+x = linspace(80,99.99,1e3);
+chi2 = GetDeltaChi2(x,2);
+cl = interp1(chi2,x,chi2crit);
 end
-S.LoadGridFile(S.LoadGridArg{:},GridArg{:});
-S.Interp1Grid('Maxm4Sq',34^2);
-S.GridPlot('BestFit','ON');
-
-% load
-
-% find best fit
-
-% plot
