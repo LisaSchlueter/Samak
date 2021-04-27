@@ -1,6 +1,6 @@
 % Test of Wilk's theorem (coverage)
 % chi2 distribution of null hypothesis
-Hypothesis = 'H1';
+Hypothesis = 'H0';
 switch Hypothesis
     case 'H0'
         NrandMC = 1e3;
@@ -29,7 +29,7 @@ end
 %% plot
 % tmp
 dof = 25;
-
+%chi2_null =  chi2_null_ReCalc; 
 plotdir = strrep(savedir,'results','plots');
 MakeDir(plotdir);
 
@@ -51,6 +51,6 @@ leg = legend([hchi2,pchi2],sprintf('%.0f pseudo-experiments',numel(chi2_bf)),...
 %xlim([0 70]);
 
 plotnameChi2 = strrep(strrep(savefile,'results','plots'),'.mat','_Chi2NullDist.png');
-%print(gcf,plotnameChi2,'-dpng','-r450');
+print(gcf,plotnameChi2,'-dpng','-r450');
 fprintf('save plot to %s \n',plotnameChi2);
 %export_fig(gcf,strrep(plotnameChi2,'.png','.pdf'));

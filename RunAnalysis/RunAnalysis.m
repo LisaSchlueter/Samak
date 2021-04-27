@@ -1634,8 +1634,11 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                 RoiStr = '';
             end
             
-            savename = [savedir,sprintf('FitResult_InitModelObj_%s_%s_%s_%.0fpixels%s.mat',...
-                strrep(fixPar_init,' ',''),obj.RunData.RunName,obj.DataType,numel(obj.PixList),RoiStr)];
+            exclDataStart_tmp = find((obj.ModelObj.qU)>=18574-40,1);
+            CountsROI = sum(sum(obj.RunData.TBDIS(exclDataStart_tmp:end)));
+            
+            savename = [savedir,sprintf('FitResult_InitModelObj_%s_%s_%s_%.0fpixels%s_Counts%.3e.mat',...
+                strrep(fixPar_init,' ',''),obj.RunData.RunName,obj.DataType,numel(obj.PixList),RoiStr,CountsROI)];
             if strcmp(obj.AnaFlag,'Ring')
                 savename = strrep(savename,'.mat',sprintf('Ring%s.mat',obj.RingMerge));
             end

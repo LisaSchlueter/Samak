@@ -1,6 +1,6 @@
 % Test of Wilk's theorem (coverage)
 % chi2 distribution of best fits
-Hypothesis = 'H1';
+Hypothesis = 'H0';
 switch Hypothesis
     case 'H0'
         NrandMC = 1e3;
@@ -34,9 +34,8 @@ plotdir = strrep(savedir,'results','plots');
 MakeDir(plotdir);
 
 GetFigure;
-deltachi2 = chi2_null-chi2_bf;
 % deltachi2(deltachi2<0) = 0;
-hchi2 = histogram(deltachi2,'BinWidth',0.3,...
+hchi2 = histogram(chi2_delta,'BinWidth',0.3,...
     'FaceAlpha',1,'FaceColor',rgb('DeepSkyBlue'),'EdgeColor',rgb('SteelBlue'),'Normalization','probability');
 hold on;
 x = linspace(0,dof*10,1e3);
@@ -52,6 +51,6 @@ leg = legend([hchi2,pchi2],sprintf('%.0f pseudo-experiments',numel(chi2_bf)),...
 %xlim([0 15]);
 
 plotnameChi2 = strrep(strrep(savefile,'results','plots'),'.mat','_DeltaChi2Dist.png');
-%print(gcf,plotnameChi2,'-dpng','-r450');
+print(gcf,plotnameChi2,'-dpng','-r450');
 fprintf('save plot to %s \n',plotnameChi2);
 %export_fig(gcf,strrep(plotnameChi2,'.png','.pdf'));

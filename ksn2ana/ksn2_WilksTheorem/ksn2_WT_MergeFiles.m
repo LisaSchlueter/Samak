@@ -1,14 +1,14 @@
 % create smaller file for result of grids searches on randomized data
 RecomputeFlag = 'ON';
-Hypothesis = 'H1';
+Hypothesis = 'H0';
 switch Hypothesis
     case 'H0'
-        randMC = 1:100;
+        randMC = 1:1000;
         Twin_sin2T4 = 0;
         Twin_mNu4Sq = 0;
         chi2 = 'chi2CMShape';
     case 'H1'
-        randMC = [1:340,384:794];
+        randMC = [1:356,384:844];
         Twin_sin2T4 = 0.0240;
         Twin_mNu4Sq = 92.7;
         chi2 = 'chi2Stat';
@@ -71,9 +71,8 @@ else
     sin2T4_bf      = zeros(numel(randMC),1);
     chi2_bf        = zeros(numel(randMC),1);
     chi2_null      = zeros(numel(randMC),1);
-    chi2_null1  = zeros(numel(randMC),1);
-    chi2_null2  = zeros(numel(randMC),1);
-    chi2_null3  = zeros(numel(randMC),1);
+    chi2_null_ReCalc  = zeros(numel(randMC),1);
+    chi2_bf_ReCalc    = zeros(numel(randMC),1);  
     chi2_delta     = zeros(numel(randMC),1);
     mNu4Sq_contour = cell(numel(randMC),1);
     sin2T4_contour = cell(numel(randMC),1);
@@ -90,7 +89,7 @@ else
         progressbar(i/numel(randMC));
         S.RandMC= randMC(i);
         S.LoadGridFile(S.LoadGridArg{:});
-        S.Interp1Grid('Maxm4Sq',36^2);
+        S.Interp1Grid('Maxm4Sq',36^2,'Minm4Sq',1);
         S.ContourPlot('BestFit','ON'); close;
         mNu4Sq_contour{i} = S.mNu4Sq_contour;
         sin2T4_contour{i} = S.sin2T4_contour;
@@ -99,16 +98,14 @@ else
         mNu4Sq_bf(i) = S.mNu4Sq_bf;
         sin2T4_bf(i) = S.sin2T4_bf;
         chi2_bf(i)   = S.chi2_bf;
-        
-         df = S.GridFilename(S.LoadGridArg{:});
-%         d = importdata(df); % d.FitResults_NullOld.chi2min;%
-%         chi2_null1(i) = d.FitResults_NullOld.chi2min;
-%         chi2_null2(i) = d.FitResults_NullMed.chi2min;
-%         chi2_null3(i) = d.FitResults_Null.chi2min;       
-        
         chi2_null(i) = S.chi2_Null;
         chi2_delta(i) = chi2_null(i)-S.chi2_bf;
         
+        % get also re-calc results
+         df = S.GridFilename(S.LoadGridArg{:});
+         d = importdata(df);   
+        chi2_null_ReCalc(i) = d.ReCalc_chi2Null;
+        chi2_bf_ReCalc(i) = d.ReCalc_chi2Bf;
     end
     
     dof = S.dof;
@@ -125,8 +122,9 @@ else
     sin2T4_contour_Asimov = S.sin2T4_contour;
     
     MakeDir(savedir);
-    save(savefile,'mNu4Sq_bf','sin2T4_bf','chi2_bf','chi2_null',...%'chi2_null_ReCalc',...
-        'chi2_delta','mNu4Sq_contour','sin2T4_contour',...%    'chi2_null1','chi2_null2','chi2_null3',...
+    save(savefile,'mNu4Sq_bf','sin2T4_bf','chi2_bf','chi2_null',...
+        'chi2_null_ReCalc','chi2_bf_ReCalc',...
+        'chi2_delta','mNu4Sq_contour','sin2T4_contour',....
         'mNu4Sq_contour_Asimov','sin2T4_contour_Asimov');
     fprintf('save file to %s \n',savefile);
     d = importdata(savefile);

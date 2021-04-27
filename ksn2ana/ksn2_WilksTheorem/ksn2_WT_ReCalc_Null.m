@@ -49,6 +49,7 @@ RunAnaArg = {'RunList','KNM2_Prompt',...
     'DopplerEffectFlag','FSD'};
 A = MultiRunAnalysis(RunAnaArg{:});
 A.exclDataStart = A.GetexclDataStart(range);
+TBDIS_i = A.RunData.TBDIS;
 %% configure Sterile analysis object
 SterileArg = {'RunAnaObj',A,... % Mother Object: defines RunList, Column Density, Stacking Cuts,....
     'nGridSteps',nGridSteps,...
@@ -59,44 +60,44 @@ SterileArg = {'RunAnaObj',A,... % Mother Object: defines RunList, Column Density
     'RandMC','OFF',...
     'Twin_mNu4Sq',Twin_mNu4Sq,...
     'Twin_sin2T4',Twin_sin2T4,...
-    'InterpMode','Mix'};
+    'InterpMode','lin'};
 
 S = SterileAnalysis(SterileArg{:});
 %%
 for i=1:numel(randMC)
-    
-    S.RandMC= randMC(i);
-    S.LoadGridFile('mNu4SqTestGrid',2,'ExtmNu4Sq','ON');
-    S.Interp1Grid;
-    S.FindBestFit;
-    
+    % re-init RunAna
+    A.RunData.TBDIS = TBDIS_i;
+    A.ModelObj.SetFitBias(0);
+    A.ModelObj.SetFitBiasSterile(0,0);
+    A.InitModelObj_Norm_BKG('RecomputeFlag','ON');
+      
     % get randomized spectrum
+    S.RandMC= randMC(i);
     filename = S.GridFilename('mNu4SqTestGrid',2,'ExtmNu4Sq','ON');
     d = importdata(filename);
     A.RunData.TBDIS = d.TBDIS_mc;
-    if strcmp(Hypothesis,'H0')
-        FitResults_Null = d.FitResults_NullOld;
-    end
     
-    % null hypothesis
+    % null hypothesis with init from TBDIS_i
+    A.ModelObj.SetFitBias(0);
+    A.ModelObj.SetFitBiasSterile(Twin_mNu4Sq,Twin_sin2T4);
+    A.Fit;
+    ReCalc_chi2Null_i = A.FitResult.chi2min;
+    
+    % null hypothesis with init from TBDIS_mc
+    A.ModelObj.SetFitBias(0);
+    A.ModelObj.SetFitBiasSterile(0,0);
+    A.InitModelObj_Norm_BKG('RecomputeFlag','ON');
+    
     A.ModelObj.SetFitBias(0);
     A.ModelObj.SetFitBiasSterile(Twin_mNu4Sq,Twin_sin2T4);
     A.Fit;
     ReCalc_chi2Null = A.FitResult.chi2min;
     
-    % best fit
-    A.ModelObj.SetFitBias(0);
-    A.ModelObj.SetFitBiasSterile(S.mNu4Sq_bf,S.sin2T4_bf);
-    A.Fit;
-    ReCalc_chi2Bf = A.FitResult.chi2min;
-    
     if strcmp(Hypothesis,'H0')
-        FitResults_NullMed = [];
-        FitResults_NullOld = [];
-        save(filename,'ReCalc_chi2Null','ReCalc_chi2Bf',...
-            'FitResults_Null','FitResults_NullMed','FitResults_NullOld','-append');
+        ReCalc_chi2Bf = [];
+        save(filename,'ReCalc_chi2Null','ReCalc_chi2Null_i','ReCalc_chi2Bf','-append');
     else
-        save(filename,'ReCalc_chi2Null','ReCalc_chi2Bf','-append');
+        save(filename,'ReCalc_chi2Null','ReCalc_chi2Null_i','-append');
     end
 end
 

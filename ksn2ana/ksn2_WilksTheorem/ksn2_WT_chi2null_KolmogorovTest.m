@@ -1,5 +1,5 @@
 % Test of Wilk's theorem (coverage)
-% chi2min distribution (best fit chi2): Kolmogorov-Smirnov Test
+% chi2null distribution (best fit chi2): Kolmogorov-Smirnov Test
 Hypothesis = 'H0';
 switch Hypothesis
     case 'H0'
@@ -28,31 +28,31 @@ end
 
 
 %% calculate KS-Test for best fit
-dof = 23;
-chi2min    = sort(chi2_bf);
-Chi2CDFEmp = arrayfun(@(x) sum(chi2min<=x)./numel(chi2min),chi2min); % empirical cdf
+dof = 25;
+chi2_null    = sort(chi2_null);
+Chi2CDFEmp = arrayfun(@(x) sum(chi2_null<=x)./numel(chi2_null),chi2_null); % empirical cdf
 
 
-Chi2CDFTheo = chi2cdf(chi2min,dof);                                  % theoretical cdf
-[h,p,ksstat,cv] = kstest(chi2min,'CDF',[chi2min,Chi2CDFTheo]);
+Chi2CDFTheo = chi2cdf(chi2_null,dof);                                  % theoretical cdf
+[h,p,ksstat,cv] = kstest(chi2_null,'CDF',[chi2_null,Chi2CDFTheo]);
 
 % plot cdf
 GetFigure;
-pEmp =plot(chi2min,Chi2CDFEmp,'-.','LineWidth',2);
+pEmp =plot(chi2_null,Chi2CDFEmp,'-.','LineWidth',2);
 hold on;
-x = linspace(0,max(chi2_bf),1e3);
+x = linspace(0,max(chi2_null),1e3);
 pTheo = plot(x,chi2cdf(x,dof),'-','LineWidth',2);
 PrettyFigureFormat('FontSize',22);
-xlabel(sprintf('\\chi^2_{min} (%.0f dof)',dof));
+xlabel(sprintf('\\chi^2_{null} (%.0f dof)',dof));
 ylabel(sprintf('Cumulative probability'));
 resultsStr = sprintf('KS test: p-value = %.2g',p);
 title(resultsStr,'FontWeight','normal','FontSize',get(gca,'FontSize'))
 legend([pTheo,pEmp],sprintf(' \\chi^2 distribution with %.0f dof',dof),...
-    sprintf(' Empirical distribution (%.0f samples)',numel(chi2min)),...
+    sprintf(' Empirical distribution (%.0f samples)',numel(chi2_null)),...
     'EdgeColor',rgb('Silver'),'Location','southeast');
 ylim([-0.05 1.05])
 
 %% save
-plotnameChi2KS = strrep(strrep(savefile,'results','plots'),'.mat','_KStest_Chi2BfCDF.png');
+plotnameChi2KS = strrep(strrep(savefile,'results','plots'),'.mat','_KStest_Chi2NullCDF.png');
 print(gcf,plotnameChi2KS,'-dpng','-r450');
 fprintf('save plot to %s \n',plotnameChi2KS);
