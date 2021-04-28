@@ -8,7 +8,7 @@ switch Hypothesis
         Twin_mNu4Sq = 0;
         chi2 = 'chi2CMShape';
     case 'H1'
-        randMC = [1:356,384:844];
+        randMC = [1:380,384:846,986:1e3];
         Twin_sin2T4 = 0.0240;
         Twin_mNu4Sq = 92.7;
         chi2 = 'chi2Stat';
@@ -71,8 +71,8 @@ else
     sin2T4_bf      = zeros(numel(randMC),1);
     chi2_bf        = zeros(numel(randMC),1);
     chi2_null      = zeros(numel(randMC),1);
-    chi2_null_ReCalc  = zeros(numel(randMC),1);
-    chi2_bf_ReCalc    = zeros(numel(randMC),1);  
+    ReCalc_chi2Null   = zeros(numel(randMC),1); 
+    ReCalc_chi2Null_i = zeros(numel(randMC),1);  
     chi2_delta     = zeros(numel(randMC),1);
     mNu4Sq_contour = cell(numel(randMC),1);
     sin2T4_contour = cell(numel(randMC),1);
@@ -102,10 +102,10 @@ else
         chi2_delta(i) = chi2_null(i)-S.chi2_bf;
         
         % get also re-calc results
-         df = S.GridFilename(S.LoadGridArg{:});
-         d = importdata(df);   
-        chi2_null_ReCalc(i) = d.ReCalc_chi2Null;
-        chi2_bf_ReCalc(i) = d.ReCalc_chi2Bf;
+        df = S.GridFilename(S.LoadGridArg{:});
+        d = importdata(df);
+        ReCalc_chi2Null_i(i) = d.ReCalc_chi2Null_i;
+        ReCalc_chi2Null(i) = d.ReCalc_chi2Null;
     end
     
     dof = S.dof;
@@ -123,7 +123,7 @@ else
     
     MakeDir(savedir);
     save(savefile,'mNu4Sq_bf','sin2T4_bf','chi2_bf','chi2_null',...
-        'chi2_null_ReCalc','chi2_bf_ReCalc',...
+        'ReCalc_chi2Null','ReCalc_chi2Null_i',...
         'chi2_delta','mNu4Sq_contour','sin2T4_contour',....
         'mNu4Sq_contour_Asimov','sin2T4_contour_Asimov');
     fprintf('save file to %s \n',savefile);
