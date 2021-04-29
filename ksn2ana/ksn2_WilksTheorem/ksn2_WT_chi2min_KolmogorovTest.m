@@ -1,13 +1,14 @@
 % Test of Wilk's theorem (coverage)
 % chi2min distribution (best fit chi2): Kolmogorov-Smirnov Test
 Hypothesis = 'H0';
+SavePlt = 'OFF';
+   
+NrandMC = 1e3;
 switch Hypothesis
     case 'H0'
-        NrandMC = 1e3;
         Twin_sin2T4 = 0;
         Twin_mNu4Sq = 0;
     case 'H1'
-        NrandMC = 439;
         Twin_sin2T4 = 0.0240;
         Twin_mNu4Sq = 92.7;
 end
@@ -51,8 +52,10 @@ legend([pTheo,pEmp],sprintf(' \\chi^2 distribution with %.0f dof',dof),...
     sprintf(' Empirical distribution (%.0f samples)',numel(chi2min)),...
     'EdgeColor',rgb('Silver'),'Location','southeast');
 ylim([-0.05 1.05])
-
+xlim([0 max(x)])
 %% save
-plotnameChi2KS = strrep(strrep(savefile,'results','plots'),'.mat','_KStest_Chi2BfCDF.png');
-print(gcf,plotnameChi2KS,'-dpng','-r450');
-fprintf('save plot to %s \n',plotnameChi2KS);
+if strcmp(SavePlt,'ON')
+    plotnameChi2KS = strrep(strrep(savefile,'results','plots'),'.mat','_KStest_Chi2BfCDF.png');
+    print(gcf,plotnameChi2KS,'-dpng','-r450');
+    fprintf('save plot to %s \n',plotnameChi2KS);
+end

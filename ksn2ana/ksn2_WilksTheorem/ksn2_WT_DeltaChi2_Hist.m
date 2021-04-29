@@ -1,13 +1,12 @@
 % Test of Wilk's theorem (coverage)
 % chi2 distribution of best fits
 Hypothesis = 'H0';
+   NrandMC = 1e3;
 switch Hypothesis
     case 'H0'
-        NrandMC = 1e3;
         Twin_sin2T4 = 0;
         Twin_mNu4Sq = 0;
     case 'H1'
-        NrandMC = 751;
         Twin_sin2T4 = 0.0240;
         Twin_mNu4Sq = 92.7;
 end
@@ -32,9 +31,9 @@ dof = 2;
 
 plotdir = strrep(savedir,'results','plots');
 MakeDir(plotdir);
-
+chi2_delta = ReCalc_chi2Null_i- chi2_bf;
 GetFigure;
-% deltachi2(deltachi2<0) = 0;
+% chi2_delta(chi2_delta<0) = 0;
 hchi2 = histogram(chi2_delta,'BinWidth',0.3,...
     'FaceAlpha',1,'FaceColor',rgb('DeepSkyBlue'),'EdgeColor',rgb('SteelBlue'),'Normalization','probability');
 hold on;

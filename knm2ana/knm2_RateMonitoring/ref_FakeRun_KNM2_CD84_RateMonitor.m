@@ -15,7 +15,7 @@ qUmin = mean(qUData)-1000e-3;
 qUmax = mean(qUData)+1000e-3;
 qUtmp    = linspace(qUmin,qUmax,nqU)';
 qU    = [qUtmp' D.qU(6:2:end,1)']';
-nqU   = numel(nqU);
+nqU   = numel(qU);
 
 % qUmin = mean(D.qU_RM)-1000e-3;
 % qUmax = mean(D.qU_RM)+1000e-3;

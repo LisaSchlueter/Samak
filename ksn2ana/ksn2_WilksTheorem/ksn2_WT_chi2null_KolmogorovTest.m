@@ -1,13 +1,13 @@
 % Test of Wilk's theorem (coverage)
 % chi2null distribution (best fit chi2): Kolmogorov-Smirnov Test
 Hypothesis = 'H0';
+SavePlt = 'ON';
+   NrandMC = 1e3;
 switch Hypothesis
     case 'H0'
-        NrandMC = 1e3;
         Twin_sin2T4 = 0;
         Twin_mNu4Sq = 0;
     case 'H1'
-        NrandMC = 439;
         Twin_sin2T4 = 0.0240;
         Twin_mNu4Sq = 92.7;
 end
@@ -29,7 +29,8 @@ end
 
 %% calculate KS-Test for best fit
 dof = 25;
-chi2_null    = sort(chi2_null);
+chi2_null = ReCalc_chi2Null_i;
+chi2_null    =  sort(chi2_null);
 Chi2CDFEmp = arrayfun(@(x) sum(chi2_null<=x)./numel(chi2_null),chi2_null); % empirical cdf
 
 
@@ -53,6 +54,8 @@ legend([pTheo,pEmp],sprintf(' \\chi^2 distribution with %.0f dof',dof),...
 ylim([-0.05 1.05])
 
 %% save
+if strcmp(SavePlt,'ON')
 plotnameChi2KS = strrep(strrep(savefile,'results','plots'),'.mat','_KStest_Chi2NullCDF.png');
 print(gcf,plotnameChi2KS,'-dpng','-r450');
+end
 fprintf('save plot to %s \n',plotnameChi2KS);

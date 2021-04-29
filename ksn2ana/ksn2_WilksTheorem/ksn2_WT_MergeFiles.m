@@ -1,14 +1,13 @@
 % create smaller file for result of grids searches on randomized data
 RecomputeFlag = 'ON';
-Hypothesis = 'H0';
+Hypothesis = 'H1';
+randMC = 1:1e3;
 switch Hypothesis
     case 'H0'
-        randMC = 1:1000;
         Twin_sin2T4 = 0;
         Twin_mNu4Sq = 0;
         chi2 = 'chi2CMShape';
-    case 'H1'
-        randMC = [1:380,384:846,986:1e3];
+    case 'H1' 
         Twin_sin2T4 = 0.0240;
         Twin_mNu4Sq = 92.7;
         chi2 = 'chi2Stat';
@@ -80,28 +79,40 @@ else
     if strcmp(Hypothesis,'H0')
         S.InterpMode = 'Mix';
     else
-        S.InterpMode = 'lin';
+        S.InterpMode = 'Mix';
     end
     S.LoadGridArg = {'mNu4SqTestGrid',2,'ExtmNu4Sq','ON'};
     
     % load files
+    progressbar('Merge files for WT');
     for i=1:numel(randMC)
         progressbar(i/numel(randMC));
         S.RandMC= randMC(i);
         S.LoadGridFile(S.LoadGridArg{:});
         S.Interp1Grid('Maxm4Sq',36^2,'Minm4Sq',1);
+        
+        if strcmp(Hypothesis,'H1')
+            S.FindBestFit;
+            if S.mNu4Sq_bf>1000
+                InterpMode_i = S.InterpMode;
+                S.InterpMode = 'spline';
+                S.LoadGridFile(S.LoadGridArg{:});
+                S.Interp1Grid('Maxm4Sq',500,'Minm4Sq',1);
+                S.InterpMode = InterpMode_i;
+            end
+        end
+        
         S.ContourPlot('BestFit','ON'); close;
         mNu4Sq_contour{i} = S.mNu4Sq_contour;
         sin2T4_contour{i} = S.sin2T4_contour;
         
-   %    S.FindBestFit('Mode','Imp');
+        %    S.FindBestFit('Mode','Imp');
         mNu4Sq_bf(i) = S.mNu4Sq_bf;
         sin2T4_bf(i) = S.sin2T4_bf;
         chi2_bf(i)   = S.chi2_bf;
         chi2_null(i) = S.chi2_Null;
         chi2_delta(i) = chi2_null(i)-S.chi2_bf;
         
-        % get also re-calc results
         df = S.GridFilename(S.LoadGridArg{:});
         d = importdata(df);
         ReCalc_chi2Null_i(i) = d.ReCalc_chi2Null_i;
@@ -109,7 +120,9 @@ else
     end
     
     dof = S.dof;
+    MakeDir(savedir);
     
+        
     %% also load expected contour from Asimov Twin
     S.InterpMode = 'Mix';%'spline';
     S.RandMC= 'OFF';
@@ -118,16 +131,17 @@ else
     S.LoadGridFile('mNu4SqTestGrid',5,'ExtmNu4Sq','ON');
     S.Interp1Grid;
     S.ContourPlot; close;
+    
     mNu4Sq_contour_Asimov = S.mNu4Sq_contour;
     sin2T4_contour_Asimov = S.sin2T4_contour;
-    
-    MakeDir(savedir);
     save(savefile,'mNu4Sq_bf','sin2T4_bf','chi2_bf','chi2_null',...
         'ReCalc_chi2Null','ReCalc_chi2Null_i',...
         'chi2_delta','mNu4Sq_contour','sin2T4_contour',....
         'mNu4Sq_contour_Asimov','sin2T4_contour_Asimov');
+    
     fprintf('save file to %s \n',savefile);
     d = importdata(savefile);
+    
 end
 
 %% to some further calculations

@@ -2,13 +2,12 @@
 %  DeltaChi2 distribution (best fit - null chi2)
 % cumulative pdf with critical delta chi2 for 95%CL.
 Hypothesis = 'H0';
+   NrandMC = 1e3;
 switch Hypothesis
     case 'H0'
-        NrandMC = 1e3;
         Twin_sin2T4 = 0;
         Twin_mNu4Sq = 0;
     case 'H1'
-        NrandMC = 439;
         Twin_sin2T4 = 0.0240;
         Twin_mNu4Sq = 92.7;
 end
@@ -31,6 +30,7 @@ end
 
 %% DeltaChi2 distribution (best fit - null chi2)
 dof = 2;
+chi2_delta = ReCalc_chi2Null_i- chi2_bf;
 PlotDeltaChi2 = sort(chi2_delta);
 DeltaChi2CDF = arrayfun(@(x) sum(PlotDeltaChi2<=x)./numel(PlotDeltaChi2),PlotDeltaChi2);
 
@@ -64,4 +64,4 @@ set(gca,'YMinorTick','on');
 %% save
  plotname = strrep(strrep(savefile,'results','plots'),'.mat','_DeltaChi2Crit.png');
  print(gcf,plotname,'-dpng','-r450');
-% fprintf('save plot to %s \n',plotname);
+ fprintf('save plot to %s \n',plotname);

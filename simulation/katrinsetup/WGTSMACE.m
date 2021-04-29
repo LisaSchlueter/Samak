@@ -1403,6 +1403,12 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
                 EindexStart = find(E>=minE_rf,1)-5;
                 EindexStop  = find(E>=maxE_rf,1)+5;
             end
+            
+            if isempty(EindexStop)
+                EindexStart = 1;
+                EindexStop = numel(E);
+            end
+                
             Eel = E(EindexStart:EindexStop);
             
             if ~strcmp(obj.ISCS,'Edep')

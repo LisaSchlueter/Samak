@@ -4,7 +4,7 @@
 % grid search on randomized twins
 % ksn2 calculae chi2 grid search
 
-Hypothesis = 'H0';
+Hypothesis = 'H1';
 switch Hypothesis
     case 'H0'
         randMC = 1:1e3;
@@ -12,7 +12,7 @@ switch Hypothesis
         Twin_mNu4Sq = 0;
         chi2 = 'chi2CMShape';
     case 'H1'
-        randMC = [1:340,384:794];
+        randMC = [1:860,979:1e3];
         Twin_sin2T4 = 0.0240;
         Twin_mNu4Sq = 92.7;
         chi2 = 'chi2Stat';
