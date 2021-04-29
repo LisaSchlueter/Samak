@@ -75,5 +75,5 @@ for i=1:numel(Idx)
     %%
     df = importdata(S.GridFilename('mNu4SqTestGrid',2,'ExtmNu4Sq','ON'));
     S.RandMC_TBDIS = df.TBDIS_mc;
-    S.GridSearch('mNu4SqTestGrid',5.5,'ExtmNu4Sq','ON');
+    S.GridSearch('mNu4SqTestGrid',6,'ExtmNu4Sq','ON');
 end

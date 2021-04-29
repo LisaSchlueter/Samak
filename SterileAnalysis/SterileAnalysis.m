@@ -223,6 +223,8 @@ classdef SterileAnalysis < handle
                     mnu4SqSmall  = logspace(0,log10((obj.range-11)^2),obj.nGridSteps-15)';
                     mnu4SqLarge  = logspace(log10((obj.range-10)^2),log10((obj.range)^2),15)';
                     mnu4Sq       = sort([mnu4SqSmall;mnu4SqLarge]);
+                elseif mNu4SqTestGrid==6
+                    mnu4Sq      = logspace(0,log10(5),obj.nGridSteps)';
                 else
                     mnu4Sq      = logspace(0,log10((obj.range)^2),obj.nGridSteps)';
                 end
@@ -232,7 +234,7 @@ classdef SterileAnalysis < handle
                     obj.nGridSteps = nGridSteps_i;
                 end
                 
-                if mNu4SqTestGrid==5.5
+                if mNu4SqTestGrid==5.5 || mNu4SqTestGrid==6
                     sin2T4      = logspace(log10(0.5),log10(1),obj.nGridSteps);
                 elseif strcmp(Extsin2T4,'ON') && obj.nGridSteps<50
                     % add more points are large mixing

@@ -117,7 +117,18 @@ if strcmp(SavePlt,'ON')
     fprintf('save plot to %s \n',plotnameContourBf);
 end
 
+
+if strcmp(Hypothesis,'H0') && ~isfield(d,'InOutIdx')
+    save(savefile,'InOutIdx','-append')
+end
 %%
-sum(d.sin2T4_bf==0.5)
-Idx= find(d.sin2T4_bf==0.5);
-histogram(d.mNu4Sq_bf(Idx))
+%sum(d.sin2T4_bf==0.5)
+IdxSinMax1 = find(d.sin2T4_bf==0.5 & d.mNu4Sq_bf<100);
+IdxSinMax2 = find(d.sin2T4_bf==0.5 & d.mNu4Sq_bf>100);
+Idxm4Max   = find( d.mNu4Sq_bf>1000);
+fprintf('==========================================================================\n');
+fprintf('%.0f  (%.0f significant)  best fits with sin2t4=0.5 and m4<100eV^2\n',numel(IdxSinMax1),sum(d.chi2_delta(IdxSinMax1)>5.99));
+fprintf('%.0f   (%.0f significant)  best fits with sin2t4=0.5 and m4>100eV^2\n',numel(IdxSinMax2),sum(d.chi2_delta(IdxSinMax2)>5.99));
+fprintf('%.0f (%.0f significant) best fits with m4>1000eV^2\n',numel(Idxm4Max),sum(d.chi2_delta(Idxm4Max)>5.99))
+fprintf('==========================================================================\n');
+% histogram(d.mNu4Sq_bf(Idx))
