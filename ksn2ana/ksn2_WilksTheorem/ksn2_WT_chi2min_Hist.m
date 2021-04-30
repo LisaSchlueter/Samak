@@ -28,7 +28,6 @@ end
 %% plot
 % tmp
 dof = 23;
-%chi2_bf = chi2_bf_ReCalc;
 plotdir = strrep(savedir,'results','plots');
 MakeDir(plotdir);
 

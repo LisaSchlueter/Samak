@@ -104,7 +104,7 @@ classdef SterileAnalysis < handle
             p.addParameter('ExtmNu4Sq','OFF',@(x)ismember(x,{'ON','OFF','0.01'})); %extended m4Sq (from 0.1)
             p.addParameter('mNu4SqTestGrid','OFF',@(x) strcmp(x,'OFF') || isfloat(x)); % different grid..
             p.addParameter('FixmNuSq',0,@(x)isfloat(x)); % if light nu-mass fixed (eV^2)
-             p.parse(varargin{:});
+            p.parse(varargin{:});
             Negsin2T4     = p.Results.Negsin2T4;
             NegmNu4Sq     = p.Results.NegmNu4Sq;
             Extsin2T4     = p.Results.Extsin2T4;
@@ -125,6 +125,9 @@ classdef SterileAnalysis < handle
                 obj.RunAnaObj.exclDataStart = obj.RunAnaObj.GetexclDataStart(obj.range);
                 
                 % get covariance matrix
+               FitResults_i =  obj.RunAnaObj.InitModelObj_Norm_BKG('RecomputeFlag','ON');
+               nPixels = obj.RunAnaObj.ModelObj.nPixels;
+               Par_i = FitResults_i.par;
                 if strcmp(obj.RunAnaObj.chi2,'chi2CMShape') && strcmp(obj.SysEffect,'Bkg')
                     obj.RunAnaObj.ComputeCM('SysEffect',struct('FSD','OFF'),'BkgCM','ON','BkgPtCM','OFF');
                 elseif strcmp(obj.RunAnaObj.chi2,'chi2CMShape') && strcmp(obj.SysEffect,'BkgPT') 
@@ -137,23 +140,21 @@ classdef SterileAnalysis < handle
                 
                 %% ranomized mc data
                 if strcmp(obj.RunAnaObj.DataType,'Twin') && isfloat(obj.RandMC) && numel(obj.RandMC_TBDIS)==obj.RunAnaObj.ModelObj.nqU
-                   TBDIS_mc = obj.RandMC_TBDIS;
-                   obj.RunAnaObj.RunData.TBDIS = TBDIS_mc;
-                   obj.RunAnaObj.RunData.TBDISE = sqrt(TBDIS_mc);
+                    TBDIS_mc = obj.RandMC_TBDIS;
+                    obj.RunAnaObj.RunData.TBDIS = TBDIS_mc;
+                    obj.RunAnaObj.RunData.TBDISE = sqrt(TBDIS_mc);
                 elseif strcmp(obj.RunAnaObj.DataType,'Twin') && (isfloat(obj.RandMC)  || (obj.Twin_mNu4Sq~=0 || obj.Twin_sin2T4~=0))
                     % 1) twin and isfloat(obj.RandMC) -> randomized data
                     % 2) twin and (obj.Twin_mNu4Sq~=0 || obj.Twin_sin2T4~=0) -> asimov twin with sterile nu-signal
-                    obj.RunAnaObj.InitModelObj_Norm_BKG('RecomputeFlag','ON');
                     if obj.Twin_mNu4Sq~=0 || obj.Twin_sin2T4~=0
-                        obj.RunAnaObj.ModelObj.BKG_RateSec_i = obj.RunAnaObj.ModelObj.BKG_RateSec;
-                        obj.RunAnaObj.ModelObj.normFit_i = obj.RunAnaObj.ModelObj.normFit;
                         obj.RunAnaObj.ModelObj.SetFitBiasSterile(obj.Twin_mNu4Sq,obj.Twin_sin2T4);
-                        obj.RunAnaObj.ModelObj.ComputeTBDDS;
+                        obj.RunAnaObj.ModelObj.ComputeTBDDS(...
+                            'E0_bias',Par_i(2),...
+                            'B_bias',Par_i(3:2+nPixels),...
+                            'N_bias',Par_i(3+nPixels:3+2*nPixels-1));             
                         obj.RunAnaObj.ModelObj.ComputeTBDIS;
                         TBDIS_i = obj.RunAnaObj.ModelObj.TBDIS';
                     else
-%                         obj.RunAnaObj.ModelObj.ComputeTBDDS;
-%                         obj.RunAnaObj.ModelObj.ComputeTBDIS;
                         TBDIS_i = obj.RunAnaObj.ModelObj.TBDIS';
                     end
                     
@@ -184,6 +185,11 @@ classdef SterileAnalysis < handle
                     % re-set sterile parameters in model
                     if obj.Twin_mNu4Sq~=0 || obj.Twin_sin2T4~=0
                         obj.RunAnaObj.SimulateStackRuns;
+                        obj.RunAnaObj.ModelObj.ComputeTBDDS(...
+                            'E0_bias',Par_i(2),...
+                            'B_bias',Par_i(3:2+nPixels),...
+                            'N_bias',Par_i(3+nPixels:3+2*nPixels-1));
+                        
                     end
                 end
                 %% define grid
@@ -267,13 +273,18 @@ classdef SterileAnalysis < handle
                 
                 fixPartmp = obj.RunAnaObj.fixPar;
                 DataTypetmp = obj.RunAnaObj.DataType;
-                
+                E0_i = Par_i(2);  B_i = Par_i(3:2+nPixels);  N_i = Par_i(3+nPixels:3+2*nPixels-1);
                 parfor i= 1:(obj.nGridSteps^2)
                     if strcmp(DataTypetmp,'Fake')
                         D(i).SimulateRun;
                     else
                         D(i).SimulateStackRuns;
                     end
+                    D(i).ModelObj.ComputeTBDDS(...
+                        'E0_bias',E0_i,...
+                        'B_bias',B_i,...
+                        'N_bias',N_i);
+                    
                     if FixmNuSq~=0 && contains(fixPartmp,'fix 1 ;')
                         % if light nu-mass is fixed and shall not be fixed to 0 eV^2
                         D(i).ModelObj.mnuSq_i = FixmNuSq;

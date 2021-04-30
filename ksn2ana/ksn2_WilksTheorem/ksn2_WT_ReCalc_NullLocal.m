@@ -7,12 +7,10 @@
 Hypothesis = 'H0';
 switch Hypothesis
     case 'H0'
-        randMC = 1:1e3;
         Twin_sin2T4 = 0;
         Twin_mNu4Sq = 0;
         chi2 = 'chi2CMShape';
     case 'H1'
-        randMC = [1:340,384:794];
         Twin_sin2T4 = 0.0240;
         Twin_mNu4Sq = 92.7;
         chi2 = 'chi2Stat';
@@ -62,113 +60,135 @@ A = MultiRunAnalysis(RunAnaArg{:});
 A.exclDataStart = A.GetexclDataStart(range);
 A.InitModelObj_Norm_BKG('RecomputeFlag','ON');
 TBDIS_i = A.RunData.TBDIS;
-%%
+S = SterileAnalysis(SterileArg{:});
 
-% index of grid (h0) that have delta chi^2 > 5.99, but are outside of contour (sensitivity)
-myRandMC = [  1
+%% get randomized MC data
+S.RandMC= 3;
+filename = S.GridFilename('mNu4SqTestGrid',2,'ExtmNu4Sq','ON');
+d = importdata(filename);
+
+A.RunData.TBDIS = d.TBDIS_mc;
+%A.ComputeCM
+%
+mNu4SqTest = d.mnu4Sq(4,25);
+sin2T4Test =  d.sin2T4(4,25);
+chi2 = d.chi2';
+chi2Test = chi2(4,25);
+
+%%
+A.RunData.TBDIS = d.TBDIS_mc;
+% A.ComputeCM
+A.ModelObj.SetFitBiasSterile(1,0.5);%mNu4SqTest,sin2T4Test);
+A.Fit;
+chi2_ReCalc = A.FitResult.chi2min;
+
+
+A.RunData.TBDIS = TBDIS_i;
+A.ComputeCM;
+A.ModelObj.SetFitBiasSterile(1,0.5);%mNu4SqTest,sin2T4Test);
+A.RunData.TBDIS = d.TBDIS_mc;
+A.Fit;
+chi2_ReCalc2 = A.FitResult.chi2min;
+
+
+% grid that have best fit at null
+a = [  3
+     8
     17
+    23
+    26
+    28
     48
-    63
-    82
-    132
-    165
-    174
-    176
-    198
-    200
-    232
-    265
-    274
-    276
-    298
-    300
-    307
-    375
-    381
-    422
-    435
-    444
-    446
-    474
-    476
-    498
-    500
-    573
-    590
-    618
-    632
-    665
-    674
-    676
-    698
-    700
-    719
-    759
-    760
-    802
-    864
-    871
-    874
-    896
-    898
-    907
-    940
-    966
-    970
-    980
-    982
-    988
-    1000 ];
-
-chi2NullFile = zeros(numel(myRandMC),1);
-chi2BfFile = zeros(numel(myRandMC),1);
-chi2NullReCalc = zeros(numel(myRandMC),1);
-
-for j=1:1:numel(myRandMC)
-    progressbar(j/numel(myRandMC));
-   
-    % load grid and find best fit & null hypothesis
-    S = SterileAnalysis(SterileArg{:});
-    S.RandMC= myRandMC(j);%randMC(i);
-    S.InterpMode = 'lin';
-    S.LoadGridFile('mNu4SqTestGrid',2,'ExtmNu4Sq','ON');
-    S.Interp1Grid('Minm4Sq',1);
-    S.FindBestFit;
-    chi2NullFile(j)   = S.chi2_Null;
-    chi2BfFile(j)     = S.chi2_bf;
-    
- % load file
-    filename = S.GridFilename('mNu4SqTestGrid',2,'ExtmNu4Sq','ON');
-    d = importdata(filename);
-      
-    %% check null hypothesis with init from TBDIS_i
-    A.RunData.TBDIS = TBDIS_i;
-    A.ModelObj.SetFitBiasSterile(0,0);
-    A.InitModelObj_Norm_BKG('RecomputeFlag','OFF');
-    
-    A.RunData.TBDIS = d.TBDIS_mc;
-    A.ModelObj.SetFitBiasSterile(Twin_mNu4Sq,Twin_sin2T4);
-    
-    A.Fit;
-    chi2NullReCalc(j) = A.FitResult.chi2min;
-    
-end
-
-%%
-chi2deltaFile = chi2NullFile - chi2BfFile;
-SigFracFile = 1e2*sum(chi2deltaFile>=5.99)./numel(chi2deltaFile);
-
-chi2deltaNew = chi2NullReCalc - chi2BfFile;
-SigFracNew =1e2*sum(chi2deltaNew>=5.99)./numel(chi2deltaFile);
-
-%% cross check chi2min from best fit
-% A.ModelObj.SetFitBiasSterile(S.mNu4Sq_bf,S.sin2T4_bf);
-% A.Fit;
-% chi2BfFile   = S.chi2_bf;
-% chi2BfReCalc = A.FitResult.chi2min;
-% 
-% %%
-% FitResults_NullOld = d.FitResults_Null;
-% FitResults_Null = A.FitResult;
-% 
-% 
+    66
+    95
+   119
+   127
+   137
+   144
+   158
+   170
+   207
+   211
+   216
+   227
+   237
+   244
+   258
+   270
+   303
+   317
+   321
+   323
+   351
+   361
+   370
+   375
+   376
+   383
+   388
+   395
+   403
+   410
+   432
+   433
+   434
+   443
+   444
+   449
+   453
+   470
+   502
+   507
+   514
+   522
+   529
+   541
+   543
+   558
+   560
+   566
+   573
+   574
+   582
+   601
+   605
+   606
+   609
+   612
+   628
+   637
+   644
+   658
+   670
+   703
+   705
+   713
+   727
+   734
+   738
+   739
+   748
+   758
+   767
+   769
+   774
+   784
+   788
+   792
+   794
+   804
+   810
+   812
+   813
+   830
+   841
+   849
+   856
+   864
+   902
+   914
+   928
+   935
+   947
+   962
+   975];

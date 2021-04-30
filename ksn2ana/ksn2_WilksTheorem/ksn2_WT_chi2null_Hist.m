@@ -1,7 +1,7 @@
 % Test of Wilk's theorem (coverage)
 % chi2 distribution of null hypothesis
-Hypothesis = 'H0';
-SavePlt = 'OFF';
+Hypothesis = 'H1';
+SavePlt = 'ON';
 NrandMC = 1e3;
 switch Hypothesis
     case 'H0'
@@ -29,13 +29,16 @@ end
 %% plot
 % tmp
 dof = 25;
-%chi2_null =  ReCalc_chi2Null;
+if strcmp(Hypothesis,'H1')
+    chi2_null =  ReCalc_chi2Null_i;
+end
 plotdir = strrep(savedir,'results','plots');
 MakeDir(plotdir);
 
 GetFigure;
 hchi2 = histogram(chi2_null,'BinWidth',3,...
-    'FaceAlpha',1,'FaceColor',rgb('DeepSkyBlue'),'EdgeColor',rgb('SteelBlue'),'Normalization','probability');
+    'FaceAlpha',1,'FaceColor',rgb('DeepSkyBlue'),...
+    'EdgeColor',rgb('SteelBlue'),'Normalization','probability');
 hold on;
 x = linspace(0,dof*3,1e3);
 y = chi2pdf(x,dof);

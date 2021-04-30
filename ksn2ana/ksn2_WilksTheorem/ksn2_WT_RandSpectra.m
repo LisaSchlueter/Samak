@@ -7,7 +7,7 @@ switch Hypothesis
         Twin_mNu4Sq = 0;
         chi2 = 'chi2CMShape';
     case 'H1'
-        randMC = [1:340,384:794];
+        randMC = 1:1e3;
         Twin_sin2T4 = 0.0240;
         Twin_mNu4Sq = 92.7;
         chi2 = 'chi2Stat';
@@ -111,5 +111,17 @@ ylabel('Counts');
 SumCounts    = sum(d.TBDIS_Asimov(exclIdx:end));
 SumCounts_mc = sum(d.TBDIS_mc(:,exclIdx:end),2);
 
-GetFigure;
-histogram(SumCounts_mc)
+% GetFigure;
+% histogram(SumCounts_mc)
+tmpIdx = [    1
+         100
+         300
+         335
+         341
+         351
+         358
+         500
+         501
+         789
+         849
+        1000];
