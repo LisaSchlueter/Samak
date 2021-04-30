@@ -304,12 +304,14 @@ classdef SterileAnalysis < handle
                     chi2_ref = obj.RunAnaObj.FitResult.chi2min;
                 end
                 
+                FitCMShape = obj.RunAnaObj.FitCMShape;            
                 tCpuHour = (cputime-tStart)/60; % cpu time in hours
                 %% save
                 save(savefile,'chi2_ref',...%'FitResults_ref'
-                    'chi2','mnu4Sq','sin2T4','FitResults','FitResults_Null','tCpuHour');
+                    'chi2','mnu4Sq','sin2T4','FitResults','FitResults_Null','tCpuHour',...
+                    'FitCMShape');
                 fprintf('save file to %s \n',savefile);
-                
+
                 if strcmp(obj.RunAnaObj.DataType,'Twin') && isfloat(obj.RandMC)
                     save(savefile,'TBDIS_mc','-append');
                 end
