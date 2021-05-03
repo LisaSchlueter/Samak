@@ -2,7 +2,8 @@
 Hypothesis = 'H0';
 switch Hypothesis
     case 'H0'
-        randMC = 1:1e3;
+         randMC =[1001:1250,1358:1500];
+       % randMC = 1:1e3;
         Twin_sin2T4 = 0;
         Twin_mNu4Sq = 0;
         chi2 = 'chi2CMShape';
@@ -46,6 +47,7 @@ else
         TBDIS_mc(i,:) = d.TBDIS_mc;
     end
     save(savefile,'TBDIS_mc')
+     d = importdata(savefile);
 end
 
 if ~isfield(d,'TBDIS_Asimov')
@@ -93,7 +95,7 @@ if ~isfield(d,'TBDIS_Asimov')
     save(savefile,'TBDIS_Asimov','qU','Time','-append')
     d = importdata(savefile);
 end
-%% display
+%% display spectra with 1sigma band
 TBDIS_Asimov = d.TBDIS_Asimov;
 TBDIS_mc = d.TBDIS_mc;
 exclIdx = 11;
@@ -107,6 +109,18 @@ xlim([-44 50])
 PrettyFigureFormat;
 xlabel('Retarding potential -18574 (eV)');
 ylabel('Counts');
+
+leg = legend([e1,b],'Asimov model',sprintf('1\\sigma error band'));
+PrettyLegendFormat(leg);
+
+%% Are there identical TBDIS_mc?
+TBDIS_diff = d.TBDIS_mc(:,exclIdx:end)-mean(d.TBDIS_mc(:,exclIdx:end));
+%plot(d.qU(exclIdx:end)-18574,TBDIS_diff)
+TBDIS_diffSum = sum(TBDIS_diff,2);
+
+%%
+plot(d.qU(exclIdx:end),d.TBDIS_mc(3,exclIdx:end)-d.TBDIS_mc(25,exclIdx:end))
+
 %%
 SumCounts    = sum(d.TBDIS_Asimov(exclIdx:end));
 SumCounts_mc = sum(d.TBDIS_mc(:,exclIdx:end),2);

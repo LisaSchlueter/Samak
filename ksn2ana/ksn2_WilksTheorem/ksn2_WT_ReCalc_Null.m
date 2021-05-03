@@ -4,7 +4,7 @@
 % grid search on randomized twins
 % ksn2 calculae chi2 grid search
 
-Hypothesis = 'H1';
+Hypothesis = 'H0';
 switch Hypothesis
     case 'H0'
         randMC = 1:1e3;

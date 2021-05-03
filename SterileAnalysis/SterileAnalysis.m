@@ -707,6 +707,7 @@ classdef SterileAnalysis < handle
             
             sin2T4_min = min(M(1,:));
             ExclIndex = find(M(1,:)==obj.DeltaChi2(1));
+            InclIndex = find(M(1,:)~=obj.DeltaChi2(1));
             nContour = numel(ExclIndex);
             if nContour>1
                 PlotSplines = 'OFF';
@@ -729,8 +730,25 @@ classdef SterileAnalysis < handle
                 end
                 pHandle = plot(obj.sin2T4_contour,obj.mNu4Sq_contour,PlotArg{:});
             else
-                obj.sin2T4_contour = M(1,2:end);  % remove information about contour
-                obj.mNu4Sq_contour = M(2,2:end); 
+                if nContour==1
+                    obj.sin2T4_contour = M(1,2:end);  % remove information about contour
+                    obj.mNu4Sq_contour = M(2,2:end);
+                else
+                    nMax = max(diff(ExclIndex))-1;%    max([numel(M(ExclIndex(1)+1:ExclIndex(2)-1)),numel(M(1,ExclIndex(2)+1:end))]);
+                    sin2T4_tmp = NaN.*ones(nContour,nMax);
+                    mNu4Sq_tmp = NaN.*ones(nContour,nMax);
+                    for i=1:nContour
+                        if i==nContour
+                            StopIdx = size(M,2);
+                        else
+                            StopIdx = ExclIndex(i+1)-1;
+                        end
+                        sin2T4_tmp(i,1:numel(ExclIndex(i)+1:StopIdx)) = M(1,ExclIndex(i)+1:StopIdx);
+                        mNu4Sq_tmp(i,1:numel(ExclIndex(i)+1:StopIdx)) = M(2,ExclIndex(i)+1:StopIdx);
+                    end
+                    obj.sin2T4_contour = sin2T4_tmp';%M(1,InclIndex);  % remove information about contour
+                    obj.mNu4Sq_contour = mNu4Sq_tmp';%M(2,InclIndex);
+                end
             end
             
             if numel(CL)>1
@@ -2725,6 +2743,11 @@ classdef SterileAnalysis < handle
                     obj.chi2_Null = f.FitResults_Null.chi2min;
                     obj.dof = f.FitResults_Null.dof-2;
                 end
+                
+                if isfloat(obj.RandMC) && isfield(f,'TBDIS_mc')
+                    obj.RandMC_TBDIS = f.TBDIS_mc;
+                end
+                
             end
             
         end

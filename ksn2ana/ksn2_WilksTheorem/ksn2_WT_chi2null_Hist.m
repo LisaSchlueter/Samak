@@ -1,13 +1,15 @@
 % Test of Wilk's theorem (coverage)
 % chi2 distribution of null hypothesis
-Hypothesis = 'H1';
-SavePlt = 'ON';
-NrandMC = 1e3;
+Hypothesis = 'H0';
+SavePlt = 'OFF';
+
 switch Hypothesis
     case 'H0'
+        NrandMC = 377;
         Twin_sin2T4 = 0;
         Twin_mNu4Sq = 0;
     case 'H1'
+        NrandMC = 1e3;
         Twin_sin2T4 = 0.0240;
         Twin_mNu4Sq = 92.7;
 end

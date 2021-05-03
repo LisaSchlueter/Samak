@@ -1,7 +1,8 @@
 % Test of Wilk's theorem (coverage)
 % chi2 distribution of best fits
 Hypothesis = 'H0';
-   NrandMC = 1e3;
+InterpMode = 'lin';
+ NrandMC = 393;%1e3;
 switch Hypothesis
     case 'H0'
         Twin_sin2T4 = 0;
@@ -12,10 +13,11 @@ switch Hypothesis
 end
 savedir = [getenv('SamakPath'),'ksn2ana/ksn2_WilksTheorem/results/'];
 if Twin_sin2T4==0 && Twin_mNu4Sq==0
-    savefile = sprintf('%sksn2_WilksTheorem_NullHypothesis_%.0fsamples.mat',savedir,NrandMC);
+    savefile = sprintf('%sksn2_WilksTheorem_NullHypothesis_Interp%s_%.0fsamples.mat',savedir,InterpMode,numel(randMC));
 else
-    savefile = sprintf('%sksn2_WilksTheorem_mNu4Sq-%.1feV2_sin2T4-%.3g_%.0fsamples.mat',savedir,Twin_mNu4Sq,Twin_sin2T4,NrandMC);
+    savefile = sprintf('%sksn2_WilksTheorem_mNu4Sq-%.1feV2_sin2T4-%.3g_Interp%s_%.0fsamples.mat',savedir,Twin_mNu4Sq,Twin_sin2T4,InterpMode,numel(randMC));
 end
+
 
 if exist(savefile,'file')
     load(savefile);
@@ -31,7 +33,7 @@ dof = 2;
 
 plotdir = strrep(savedir,'results','plots');
 MakeDir(plotdir);
-chi2_delta = ReCalc_chi2Null_i- chi2_bf;
+%chi2_delta = ReCalc_chi2Null_i- chi2_bf;
 GetFigure;
 % chi2_delta(chi2_delta<0) = 0;
 hchi2 = histogram(chi2_delta,'BinWidth',0.3,...
