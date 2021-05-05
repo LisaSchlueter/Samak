@@ -104,6 +104,8 @@ classdef SterileAnalysis < handle
             p.addParameter('ExtmNu4Sq','OFF',@(x)ismember(x,{'ON','OFF','0.01'})); %extended m4Sq (from 0.1)
             p.addParameter('mNu4SqTestGrid','OFF',@(x) strcmp(x,'OFF') || isfloat(x)); % different grid..
             p.addParameter('FixmNuSq',0,@(x)isfloat(x)); % if light nu-mass fixed (eV^2)
+            p.addParameter('ExtGrid','OFF',@(x)iscell(x) || strcmp(x,'OFF')); % external grid
+           
             p.parse(varargin{:});
             Negsin2T4     = p.Results.Negsin2T4;
             NegmNu4Sq     = p.Results.NegmNu4Sq;
@@ -111,10 +113,12 @@ classdef SterileAnalysis < handle
             ExtmNu4Sq     = p.Results.ExtmNu4Sq;
             mNu4SqTestGrid = p.Results.mNu4SqTestGrid;
             FixmNuSq      = p.Results.FixmNuSq;
-
+            ExtGrid        = p.Results.ExtGrid;
+            
             savefile = obj.GridFilename('Negsin2T4',Negsin2T4,'NegmNu4Sq',NegmNu4Sq,...
                                         'Extsin2T4',Extsin2T4,'ExtmNu4Sq',ExtmNu4Sq,...
-                                        'FixmNuSq',FixmNuSq,'mNu4SqTestGrid',mNu4SqTestGrid);
+                                        'FixmNuSq',FixmNuSq,'mNu4SqTestGrid',mNu4SqTestGrid,...
+                                         'ExtGrid',ExtGrid);
             
             if exist(savefile,'file') && strcmp(obj.RecomputeFlag,'OFF')
                 fprintf('Grid file already exists: %s \nIf you want to load grid into memory call: obj.LoadGridFile() \n',savefile)
@@ -193,60 +197,70 @@ classdef SterileAnalysis < handle
                     end
                 end
                 %% define grid
-                if strcmp(Extsin2T4,'ON')
-                    sin2T4Max = 1;
+                if strcmp(ExtGrid,'OFF')
+                    if strcmp(Extsin2T4,'ON')
+                        sin2T4Max = 1;
+                    else
+                        sin2T4Max = 0.5;
+                    end
+                    
+                    if strcmp(ExtmNu4Sq,'ON')
+                        mnu4Sq_ex = [0.1;0.35;0.7];%;logspace(0,log10((obj.range)^2),obj.nGridSteps-3)'];
+                        nGridSteps_i = obj.nGridSteps;
+                        obj.nGridSteps = nGridSteps_i-3;
+                    elseif strcmp(ExtmNu4Sq,'0.01')
+                        mnu4Sq_ex = [0.01;0.05;0.1;0.35;0.7];%;logspace(0,log10((obj.range)^2),obj.nGridSteps-3)'];
+                        nGridSteps_i = obj.nGridSteps;
+                        obj.nGridSteps = nGridSteps_i-5;
+                    end
+                    
+                    if isfloat(mNu4SqTestGrid)
+                        if mNu4SqTestGrid==1
+                            mnu4SqSmall  = logspace(0,log10((obj.range-11)^2),obj.nGridSteps-5)';
+                            mnu4SqLarge  = logspace(log10((obj.range-10)^2),log10((obj.range)^2),5)';
+                            mnu4Sq       = sort([mnu4SqSmall;mnu4SqLarge]);
+                        elseif mNu4SqTestGrid==2
+                            mnu4SqSmall  = logspace(0,log10((obj.range-11)^2),obj.nGridSteps-7)';
+                            mnu4SqLarge  = logspace(log10((obj.range-10)^2),log10((obj.range)^2),7)';
+                            mnu4Sq       = sort([mnu4SqSmall;mnu4SqLarge]);
+                        elseif mNu4SqTestGrid==3
+                            mnu4SqSmall  = logspace(0,log10((obj.range-11)^2),obj.nGridSteps-10)';
+                            mnu4SqLarge  = logspace(log10((obj.range-10)^2),log10((obj.range)^2),10)';
+                            mnu4Sq       = sort([mnu4SqSmall;mnu4SqLarge]);
+                        elseif mNu4SqTestGrid==4
+                            mnu4SqSmall  = logspace(0,log10((obj.range-11)^2),obj.nGridSteps-5)';
+                            mnu4SqLarge  = logspace(log10((obj.range-10)^2),log10((obj.range)^2),5)';
+                            mnu4Sq       = sort([mnu4SqSmall;mnu4SqLarge]);
+                        elseif mNu4SqTestGrid==5 || mNu4SqTestGrid==5.5
+                            mnu4SqSmall  = logspace(0,log10((obj.range-11)^2),obj.nGridSteps-15)';
+                            mnu4SqLarge  = logspace(log10((obj.range-10)^2),log10((obj.range)^2),15)';
+                            mnu4Sq       = sort([mnu4SqSmall;mnu4SqLarge]);
+                        elseif mNu4SqTestGrid==6
+                            mnu4Sq      = logspace(0,log10(5),obj.nGridSteps)';
+                        else
+                            mnu4Sq      = logspace(0,log10((obj.range)^2),obj.nGridSteps)';
+                        end
+                    else
+                        mnu4Sq      = logspace(0,log10((obj.range)^2),obj.nGridSteps)';
+                    end
+                    
+                    if ismember(ExtmNu4Sq,{'ON','0.01'})
+                        mnu4Sq = [mnu4Sq_ex;mnu4Sq];%;logspace(0,log10((obj.range)^2),obj.nGridSteps-3)'];
+                        obj.nGridSteps = nGridSteps_i;
+                    end
+                    
+                 
+                    if any(mNu4SqTestGrid==5.5) || any(mNu4SqTestGrid==6)
+                        sin2T4      = logspace(log10(0.5),log10(1),obj.nGridSteps);
+                    elseif strcmp(Extsin2T4,'ON') && obj.nGridSteps<50
+                        % add more points are large mixing
+                        sin2T4      = sort([logspace(-3,log10(sin2T4Max),obj.nGridSteps-7),0.5,0.6,0.7,0.85,0.9,0.95,0.98]);
+                    else
+                        sin2T4      = logspace(-3,log10(sin2T4Max),obj.nGridSteps);
+                    end
                 else
-                    sin2T4Max = 0.5;
-                end
-                
-                if strcmp(ExtmNu4Sq,'ON')
-                    mnu4Sq_ex = [0.1;0.35;0.7];%;logspace(0,log10((obj.range)^2),obj.nGridSteps-3)'];
-                    nGridSteps_i = obj.nGridSteps;
-                    obj.nGridSteps = nGridSteps_i-3;
-                elseif strcmp(ExtmNu4Sq,'0.01')
-                    mnu4Sq_ex = [0.01;0.05;0.1;0.35;0.7];%;logspace(0,log10((obj.range)^2),obj.nGridSteps-3)'];
-                    nGridSteps_i = obj.nGridSteps;
-                    obj.nGridSteps = nGridSteps_i-5;
-                end
-                
-                if mNu4SqTestGrid==1
-                    mnu4SqSmall  = logspace(0,log10((obj.range-11)^2),obj.nGridSteps-5)';
-                    mnu4SqLarge  = logspace(log10((obj.range-10)^2),log10((obj.range)^2),5)';
-                    mnu4Sq       = sort([mnu4SqSmall;mnu4SqLarge]);
-                elseif mNu4SqTestGrid==2
-                    mnu4SqSmall  = logspace(0,log10((obj.range-11)^2),obj.nGridSteps-7)';
-                    mnu4SqLarge  = logspace(log10((obj.range-10)^2),log10((obj.range)^2),7)';
-                    mnu4Sq       = sort([mnu4SqSmall;mnu4SqLarge]);
-                elseif mNu4SqTestGrid==3
-                    mnu4SqSmall  = logspace(0,log10((obj.range-11)^2),obj.nGridSteps-10)';
-                    mnu4SqLarge  = logspace(log10((obj.range-10)^2),log10((obj.range)^2),10)';
-                    mnu4Sq       = sort([mnu4SqSmall;mnu4SqLarge]);
-                elseif mNu4SqTestGrid==4
-                    mnu4SqSmall  = logspace(0,log10((obj.range-11)^2),obj.nGridSteps-5)';
-                    mnu4SqLarge  = logspace(log10((obj.range-10)^2),log10((obj.range)^2),5)';
-                    mnu4Sq       = sort([mnu4SqSmall;mnu4SqLarge]);
-                elseif mNu4SqTestGrid==5 || mNu4SqTestGrid==5.5
-                    mnu4SqSmall  = logspace(0,log10((obj.range-11)^2),obj.nGridSteps-15)';
-                    mnu4SqLarge  = logspace(log10((obj.range-10)^2),log10((obj.range)^2),15)';
-                    mnu4Sq       = sort([mnu4SqSmall;mnu4SqLarge]);
-                elseif mNu4SqTestGrid==6
-                    mnu4Sq      = logspace(0,log10(5),obj.nGridSteps)';
-                else
-                    mnu4Sq      = logspace(0,log10((obj.range)^2),obj.nGridSteps)';
-                end
-                
-                if ismember(ExtmNu4Sq,{'ON','0.01'})
-                    mnu4Sq = [mnu4Sq_ex;mnu4Sq];%;logspace(0,log10((obj.range)^2),obj.nGridSteps-3)'];
-                    obj.nGridSteps = nGridSteps_i;
-                end
-                
-                if mNu4SqTestGrid==5.5 || mNu4SqTestGrid==6
-                    sin2T4      = logspace(log10(0.5),log10(1),obj.nGridSteps);
-                elseif strcmp(Extsin2T4,'ON') && obj.nGridSteps<50
-                    % add more points are large mixing
-                    sin2T4      = sort([logspace(-3,log10(sin2T4Max),obj.nGridSteps-7),0.5,0.6,0.7,0.85,0.9,0.95,0.98]);
-                else
-                    sin2T4      = logspace(-3,log10(sin2T4Max),obj.nGridSteps);
+                   mnu4Sq = ExtGrid{1};
+                   sin2T4 = ExtGrid{2};
                 end
                 
                 mnu4Sq      = repmat(mnu4Sq,1,obj.nGridSteps);
@@ -1683,13 +1697,15 @@ classdef SterileAnalysis < handle
             p.addParameter('PlotStat','ON',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('PlotTot','ON',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('PlotKaFit','OFF',@(x)ismember(x,{'ON','OFF'}));
-                   
+            p.addParameter('xLim','',@(x)isfloat(x) || isempty(x));
+                  
             p.parse(varargin{:});
             SavePlot = p.Results.SavePlot;
             PlotStat = p.Results.PlotStat;
             PlotTot  = p.Results.PlotTot;
             PlotKaFit = p.Results.PlotKaFit;
-             
+            xLim      = p.Results.xLim;
+            
             chi2_i   = obj.RunAnaObj.chi2;
             if strcmp(obj.RunAnaObj.DataType,'Real')
                 BestFit = 'ON';
@@ -1817,9 +1833,9 @@ classdef SterileAnalysis < handle
                    end
                end
                if strcmp(PlotTot,'ON')
-                   ksyst = sprintf('%scontour_KSN2_Kafit_%s_%.0feV_statsyst_95CL.txt',savedirF,obj.RunAnaObj.DataType,obj.range);
+                   ksyst = sprintf('%scontour_KSN2_Kafit_%s_%.0feV_statsyst_95CL.dat',savedirF,obj.RunAnaObj.DataType,obj.range);
                    dkSyst = importdata(ksyst);
-                   pKSys = plot(dkSyst(:,1),dkSyst(:,2),'LineStyle',':','Color',rgb('DodgerBlue'),'LineWidth',LineWidth+0.5);
+                   pKSys = plot(dkSyst.data(:,1),dkSyst.data(:,2),'LineStyle',':','Color',rgb('DodgerBlue'),'LineWidth',LineWidth+0.5);
                end
            else
                pKStat = 0;
@@ -1861,22 +1877,27 @@ classdef SterileAnalysis < handle
            end
            
            obj.RunAnaObj.chi2 = chi2_i;
-           if obj.range==65
-               xlim([4e-03 0.5])
-               ylim([1 1e4])
-           elseif obj.range==40
-               if strcmp(obj.RunAnaObj.DataSet,'Knm1')
-                   xlim([1e-02 0.5])
-                   ylim([1 3e3])
-               else
+           if ~isempty(xLim)
+               xlim(xLim);
+               ylim([1 obj.range^2])
+           else
+               if obj.range==65
+                   xlim([4e-03 0.5])
+                   ylim([1 1e4])
+               elseif obj.range==40
+                   if strcmp(obj.RunAnaObj.DataSet,'Knm1')
+                       xlim([1e-02 0.5])
+                       ylim([1 3e3])
+                   else
+                       xlim([3e-03 0.5])
+                       ylim([1 40^2])
+                   end
+               elseif obj.range==95
                    xlim([3e-03 0.5])
-                   ylim([1 40^2])
-               end   
-            elseif obj.range==95
-                xlim([3e-03 0.5])
-                ylim([1 2e4]) 
-            end
-            
+                   ylim([1 2e4])
+               end
+           end
+           
             %title(sprintf('%s , %.0f eV range , %.0f%% C.L.',obj.GetPlotTitle('Mode','data'),obj.range,obj.ConfLevel),'FontWeight','normal','FontSize',get(gca,'FontSize'));
             title(obj.GetPlotTitle,'FontWeight','normal','FontSize',get(gca,'FontSize'));
             if contains(ConvertFixPar('freePar',obj.RunAnaObj.fixPar,'Mode','Reverse'),'mNu')
@@ -1893,6 +1914,7 @@ classdef SterileAnalysis < handle
                end
                
                if strcmp(SavePlot,'ON')
+                   ylabel(sprintf('{\\itm}_4^2 (eV^{ 2})'));
                    plotname = sprintf('%s_CompareFitter_%.2gCL%s.pdf',name_i,obj.ConfLevel,extraStr);
                    export_fig(gcf,plotname);
                elseif strcmp(SavePlot,'png')
@@ -2759,6 +2781,7 @@ classdef SterileAnalysis < handle
             p.addParameter('ExtmNu4Sq','OFF',@(x)ismember(x,{'ON','OFF','0.01'}));
             p.addParameter('mNu4SqTestGrid','OFF',@(x)strcmp(x,'OFF') || isfloat(x));
             p.addParameter('FixmNuSq',0,@(x)isfloat(x)); % if light nu-mass fixed (eV^2)
+            p.addParameter('ExtGrid','OFF',@(x)iscell(x) || strcmp(x,'OFF'));
             
             p.parse(varargin{:});
             Negsin2T4     = p.Results.Negsin2T4;
@@ -2767,6 +2790,7 @@ classdef SterileAnalysis < handle
             ExtmNu4Sq     = p.Results.ExtmNu4Sq;
             mNu4SqTestGrid= p.Results.mNu4SqTestGrid;
             FixmNuSq      = p.Results.FixmNuSq;
+            ExtGrid       = p.Results.ExtGrid;
             
             %% label
             if strcmp(obj.SmartGrid,'ON')
@@ -2813,30 +2837,36 @@ classdef SterileAnalysis < handle
                      extraStr = sprintf('%s_pull%.0f',extraStr,obj.RunAnaObj.pullFlag);
                  end
                  
-                 if strcmp(NegmNu4Sq,'ON') 
-                     extraStr = [extraStr,'_NegmNu4Sq'];
+                 if strcmp(ExtGrid,'OFF')
+                     if strcmp(NegmNu4Sq,'ON')
+                         extraStr = [extraStr,'_NegmNu4Sq'];
+                     end
+                     
+                     if strcmp(Negsin2T4,'ON')
+                         extraStr = [extraStr,'_Negsin2T4'];
+                     end
+                     
+                     if strcmp(Extsin2T4,'ON')
+                         extraStr = [extraStr,'_Extsin2T4'];
+                     end
+                     
+                     if strcmp(ExtmNu4Sq,'ON') && (strcmp(obj.RunAnaObj.DataType,'Real') || isfloat(obj.RandMC) )
+                         extraStr = [extraStr,'_ExtmNu4Sq'];
+                     end
+                     
+                     if strcmp(ExtmNu4Sq,'0.01') && strcmp(obj.RunAnaObj.DataType,'Real')
+                         extraStr = [extraStr,'_ExtmNu4Sq0.01'];
+                     end
+                     
+                     if isfloat(mNu4SqTestGrid)
+                         extraStr = [extraStr,sprintf('_mNu4SqTestGrid%.2g',mNu4SqTestGrid)];
+                     end
+                 else
+                     extraStr = [extraStr,sprintf('_ExtGrid_m4Sq%.1fto%.1feV2_sin2T4%.3fto%.3f',...
+                         min(ExtGrid{1}),max(ExtGrid{1}),min(ExtGrid{2}),max(ExtGrid{2}))];
+                     
                  end
                  
-                 if strcmp(Negsin2T4,'ON')
-                     extraStr = [extraStr,'_Negsin2T4'];
-                 end
-                 
-                 if strcmp(Extsin2T4,'ON')
-                     extraStr = [extraStr,'_Extsin2T4'];
-                 end
-                 
-                  if strcmp(ExtmNu4Sq,'ON') && (strcmp(obj.RunAnaObj.DataType,'Real') || isfloat(obj.RandMC) )
-                      extraStr = [extraStr,'_ExtmNu4Sq'];
-                  end
-                  
-                  if strcmp(ExtmNu4Sq,'0.01') && strcmp(obj.RunAnaObj.DataType,'Real')
-                      extraStr = [extraStr,'_ExtmNu4Sq0.01'];
-                  end
-                  
-                  if isfloat(mNu4SqTestGrid)
-                      extraStr = [extraStr,sprintf('_mNu4SqTestGrid%.2g',mNu4SqTestGrid)];
-                  end
-                  
                   if FixmNuSq~=0
                       extraStr = [extraStr,sprintf('_FixmNuSq%.2feV2',FixmNuSq)];
                   end

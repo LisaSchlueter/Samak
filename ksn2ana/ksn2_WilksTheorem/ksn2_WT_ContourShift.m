@@ -50,14 +50,16 @@ S.Interp1Grid;
 p1 = S.ContourPlot;
 
 %
-Chi2Crit = 6.19; % +- 0.12 (from Martin Slezak, H0, 5000 contours)
+Chi2Crit = 6.36;%6.19; % +- 0.12 (from Martin Slezak, H0, 5000 contours)
+Chi2CritErr = 0.39;
 myCL = GetCL(Chi2Crit);
 p2 = S.ContourPlot('CL',myCL,'HoldOn','ON','Color',rgb('Skyblue'),'LineStyle','-.');
 
 xlim([5e-03, 0.5]);
 ylim([2, 1600]);
 
-leg = legend([p1,p2],sprintf('\\chi^2_{crit.} = 5.99 (Wilk`s theorem)'),sprintf('\\chi^2_{crit.} = %.2f',Chi2Crit));
+leg = legend([p1,p2],sprintf('\\chi^2_{crit.} = 5.99 (Wilk`s theorem)'),...
+    sprintf('\\chi^2_{crit.} = %.2f \\pm %.2f (MC simulation)',Chi2Crit,Chi2CritErr));
 PrettyLegendFormat(leg);
 
 savedir = [getenv('SamakPath'),'ksn2ana/ksn2_WilksTheorem/plots/'];

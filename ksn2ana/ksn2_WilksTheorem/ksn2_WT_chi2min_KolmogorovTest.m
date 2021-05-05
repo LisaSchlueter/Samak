@@ -1,23 +1,34 @@
 % Test of Wilk's theorem (coverage)
 % chi2min distribution (best fit chi2): Kolmogorov-Smirnov Test
 Hypothesis = 'H0';
-SavePlt = 'OFF';
-   
-NrandMC = 1e3;
+SavePlt = 'ON';
+MergeNew = 'ON';
+RmDuplicates = 'ON';
+
 switch Hypothesis
     case 'H0'
+        NrandMC = 377;
         Twin_sin2T4 = 0;
         Twin_mNu4Sq = 0;
+        randMC_new  = [1:96,110:200,406:500];
+        MergeStr = sprintf('_MergeNew%.0f',numel(randMC_new));
     case 'H1'
+        NrandMC = 1e3;
         Twin_sin2T4 = 0.0240;
         Twin_mNu4Sq = 92.7;
+        MergeNew = 'OFF';
+         MergeStr = '';
 end
+
 savedir = [getenv('SamakPath'),'ksn2ana/ksn2_WilksTheorem/results/'];
 if Twin_sin2T4==0 && Twin_mNu4Sq==0
-    savefile = sprintf('%sksn2_WilksTheorem_NullHypothesis_%.0fsamples.mat',savedir,NrandMC);
+    savefile = sprintf('%sksn2_WilksTheorem_NullHypothesis_Interp%s_%.0fsamples%s_RmDouble%s.mat',...
+        savedir,InterpMode,numel(randMC),MergeStr,RmDuplicates);
 else
-    savefile = sprintf('%sksn2_WilksTheorem_mNu4Sq-%.1feV2_sin2T4-%.3g_%.0fsamples.mat',savedir,Twin_mNu4Sq,Twin_sin2T4,NrandMC);
+    savefile = sprintf('%sksn2_WilksTheorem_mNu4Sq-%.1feV2_sin2T4-%.3g_Interp%s_%.0fsamples%s_RmDouble%s.mat',...
+        savedir,Twin_mNu4Sq,Twin_sin2T4,InterpMode,numel(randMC),MergeStr,RmDuplicates);
 end
+
 
 if exist(savefile,'file')
     load(savefile);

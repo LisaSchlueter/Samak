@@ -1,23 +1,42 @@
 % Test of Wilk's theorem (coverage)
 % chi2 distribution of null hypothesis
 Hypothesis = 'H0';
-SavePlt = 'OFF';
+InterpMode = 'lin';
+SavePlt = 'ON';
+MergeNew = 'ON';
+RmDuplicates = 'ON';
 
 switch Hypothesis
     case 'H0'
-        NrandMC = 377;
+        randMC =[1001:1260,1294:1300,1349:1500];%11:1e3;
         Twin_sin2T4 = 0;
         Twin_mNu4Sq = 0;
-    case 'H1'
-        NrandMC = 1e3;
+        chi2 = 'chi2CMShape';
+         randMC_new  = [1:96,110:200,406:500];
+    case 'H1' 
+        randMC = 1:1e3;
         Twin_sin2T4 = 0.0240;
         Twin_mNu4Sq = 92.7;
+        chi2 = 'chi2Stat';
+        MergeNew = 'OFF'; % nothing new
 end
-savedir = [getenv('SamakPath'),'ksn2ana/ksn2_WilksTheorem/results/'];
-if Twin_sin2T4==0 && Twin_mNu4Sq==0
-    savefile = sprintf('%sksn2_WilksTheorem_NullHypothesis_%.0fsamples.mat',savedir,NrandMC);
+
+if strcmp(MergeNew,'ON')
+    MergeStr = sprintf('_MergeNew%.0f',numel(randMC_new));
+      NrandMC = numel(randMC)+numel(randMC_new);
 else
-    savefile = sprintf('%sksn2_WilksTheorem_mNu4Sq-%.1feV2_sin2T4-%.3g_%.0fsamples.mat',savedir,Twin_mNu4Sq,Twin_sin2T4,NrandMC);
+    MergeStr = '';
+    NrandMC = numel(randMC);
+end
+
+savedir = [getenv('SamakPath'),'ksn2ana/ksn2_WilksTheorem/results/'];
+
+if Twin_sin2T4==0 && Twin_mNu4Sq==0
+    savefile = sprintf('%sksn2_WilksTheorem_NullHypothesis_Interp%s_%.0fsamples%s_RmDouble%s.mat',...
+        savedir,InterpMode,numel(randMC),MergeStr,RmDuplicates);
+else
+    savefile = sprintf('%sksn2_WilksTheorem_mNu4Sq-%.1feV2_sin2T4-%.3g_Interp%s_%.0fsamples%s_RmDouble%s.mat',...
+        savedir,Twin_mNu4Sq,Twin_sin2T4,InterpMode,numel(randMC),MergeStr,RmDuplicates);
 end
 
 if exist(savefile,'file')
@@ -31,9 +50,9 @@ end
 %% plot
 % tmp
 dof = 25;
-if strcmp(Hypothesis,'H1')
-    chi2_null =  ReCalc_chi2Null_i;
-end
+% if strcmp(Hypothesis,'H1')
+%     chi2_null =  ReCalc_chi2Null_i;
+% end
 plotdir = strrep(savedir,'results','plots');
 MakeDir(plotdir);
 

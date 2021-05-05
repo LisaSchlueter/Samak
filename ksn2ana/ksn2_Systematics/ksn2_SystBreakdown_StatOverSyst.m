@@ -97,7 +97,7 @@ for i=1:nSys
         PltColor =Colors(floor((i)*256/(nSys)),:);
         LineWidth = 2;
     end
-    pHandle{i} = plot(mNu4Sq(i,:),Ratio(i,:),'LineWidth',LineWidth,'Color',PltColor,'LineStyle',LineStyle{i});
+    pHandle{i} = plot(sqrt(mNu4Sq(i,:)),Ratio(i,:),'LineWidth',LineWidth,'Color',PltColor,'LineStyle',LineStyle{i});
 end
 ylabel(sprintf('\\sigma_{syst.}^2 / \\sigma_{total}^2'))
 xlabel(sprintf('{\\itm}_4^2 (eV^2)'));

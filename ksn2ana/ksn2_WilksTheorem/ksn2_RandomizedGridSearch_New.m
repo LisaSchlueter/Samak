@@ -2,7 +2,7 @@
 % ksn2 calculate chi2 grid search
 % New with respect to ksn2RandomizedGridSearch_New.m : generate random tritium spectra locally and give as input to grid search
 
-randMC = 1:1e3;%
+randMC = 200:-1:1;%1:1e3;%
 Hypothesis = 'H0';
 chi2 = 'chi2CMShape';
 DataType = 'Twin';
@@ -79,6 +79,6 @@ for i=1:numel(randMC)
     A = MultiRunAnalysis(RunAnaArg{:});
     S = SterileAnalysis(SterileArg{:});
     S.RandMC= randMC(i);
-    S.RandMC_TBDIS = d.TBDIS_mc(:,i);
+    S.RandMC_TBDIS = d.TBDIS_mc(:,randMC(i));
     S.GridSearch('mNu4SqTestGrid',2,'ExtmNu4Sq','ON');
 end

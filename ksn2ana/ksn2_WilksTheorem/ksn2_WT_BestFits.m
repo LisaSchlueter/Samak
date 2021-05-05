@@ -1,13 +1,40 @@
 % Test of Wilk's theorem (coverage)
 % plot best fits on contour plot
-NrandMC = 848;%752;
-Twin_sin2T4 = 0;
-Twin_mNu4Sq = 0;
-savedir = [getenv('SamakPath'),'ksn2ana/ksn2_WilksTheorem/results/'];
-if Twin_sin2T4==0 && Twin_mNu4Sq==0
-    savefile = sprintf('%sksn2_WilksTheorem_NullHypothesis_%.0fsamples.mat',savedir,NrandMC);
+Hypothesis = 'H0';
+InterpMode = 'lin';
+SavePlt = 'ON';
+MergeNew = 'ON';
+RmDuplicates = 'ON';
+
+switch Hypothesis
+    case 'H0'
+        randMC =[1001:1260,1294:1300,1349:1500];%11:1e3;
+        Twin_sin2T4 = 0;
+        Twin_mNu4Sq = 0;
+        chi2 = 'chi2CMShape';
+       randMC_new  = [1:96,110:200,406:500];
+    case 'H1' 
+        randMC = 1:1e3;
+        Twin_sin2T4 = 0.0240;
+        Twin_mNu4Sq = 92.7;
+        chi2 = 'chi2Stat';
+        MergeNew = 'OFF'; % nothing new
+end
+
+if strcmp(MergeNew,'ON')
+    MergeStr = sprintf('_MergeNew%.0f',numel(randMC_new));
 else
-    savefile = sprintf('%sksn2_WilksTheorem_mNu4Sq-%.1feV2_sin2T4-%.3g_%.0fsamples.mat',savedir,Twin_mNu4Sq,Twin_sin2T4,NrandMC);
+    MergeStr = '';
+end
+
+savedir = [getenv('SamakPath'),'ksn2ana/ksn2_WilksTheorem/results/'];
+
+if Twin_sin2T4==0 && Twin_mNu4Sq==0
+    savefile = sprintf('%sksn2_WilksTheorem_NullHypothesis_Interp%s_%.0fsamples%s_RmDouble%s.mat',...
+        savedir,InterpMode,numel(randMC),MergeStr,RmDuplicates);
+else
+    savefile = sprintf('%sksn2_WilksTheorem_mNu4Sq-%.1feV2_sin2T4-%.3g_Interp%s_%.0fsamples%s_RmDouble%s.mat',...
+        savedir,Twin_mNu4Sq,Twin_sin2T4,InterpMode,numel(randMC),MergeStr,RmDuplicates);
 end
 
 if exist(savefile,'file')
@@ -18,14 +45,14 @@ else
      return
 end
 
-
+   NrandMC = numel(chi2_bf);
 %% plot with best fits
 yedge = sort(mNu4Sq_bf);
 xedge = sort(sin2T4_bf);
 GetFigure;
 h = histogram2(sin2T4_bf,mNu4Sq_bf,xedge,yedge,'FaceColor','flat','Normalization','probability');
 hold on
-h = scatter(sin2T4_bf(ClosedLog95),mNu4Sq_bf(ClosedLog95),'MarkerFaceColor','none');%rgb('Orange'));
+%h = scatter(sin2T4_bf(ClosedLog95),mNu4Sq_bf(ClosedLog95),'MarkerFaceColor','none');%rgb('Orange'));
 %hold on;
 %h = scatter(sin2T4_bf(chi2_bf<50),mNu4Sq_bf(chi2_bf<50),'MarkerFaceColor',rgb('DodgerBlue'));
 %hold on;
@@ -34,14 +61,21 @@ view([0 0 1])
 grid off
 c = colorbar;
 colormap('cool')
+PrettyFigureFormat('FontSize',22);
 c.Label.String = 'Best fit probability';
 c.Label.FontSize = get(gca,'FontSize');
 set(gca,'YScale','log');
 set(gca,'XScale','log');
-xlabel('|U_{e4}|^2');
+xlabel(sprintf('|{\\itU}_{e4}|^2'));
 ylabel(sprintf('{\\itm}_4^2 (eV^2)'));
 
 xlim([5e-03,0.5]);
-PrettyFigureFormat;
+ylim([0.1,1600]);
 leg = legend([h,pAsimov],sprintf('Best fits %.0f pseudo-experiments',NrandMC),sprintf('Sensitivity (%.0f%% C.L.)',95),'EdgeColor',rgb('Silver'),'Location','southwest');
 PrettyLegendFormat(leg);
+
+if strcmp(SavePlt,'ON')
+    plotnameContourBf = strrep(strrep(savefile,'results','plots'),'.mat','_BestFits.png');
+    print(gcf,plotnameContourBf,'-dpng','-r450');
+    fprintf('save plot to %s \n',plotnameContourBf);
+end

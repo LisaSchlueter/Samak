@@ -1,30 +1,49 @@
 % plot Asimov sensitivity + best fits on randomized contour
 Hypothesis = 'H0';
-SavePlt = 'OFF';
-NrandMC = 1e3;
+InterpMode = 'lin';
+SavePlt = 'ON';
+MergeNew = 'ON';
+RmDuplicates = 'ON';
+
 switch Hypothesis
     case 'H0'
+        randMC =[1001:1260,1294:1300,1349:1500];%11:1e3;
         Twin_sin2T4 = 0;
         Twin_mNu4Sq = 0;
         chi2 = 'chi2CMShape';
-    case 'H1'
+     randMC_new  = [1:51,155:200,451:500];
+    case 'H1' 
+        randMC = 1:1e3;
         Twin_sin2T4 = 0.0240;
         Twin_mNu4Sq = 92.7;
         chi2 = 'chi2Stat';
-end
-savedir = [getenv('SamakPath'),'ksn2ana/ksn2_WilksTheorem/results/'];
-if Twin_sin2T4==0 && Twin_mNu4Sq==0
-    savefile = sprintf('%sksn2_WilksTheorem_NullHypothesis_%.0fsamples.mat',savedir,NrandMC);
-else
-    savefile = sprintf('%sksn2_WilksTheorem_mNu4Sq-%.1feV2_sin2T4-%.3g_%.0fsamples.mat',savedir,Twin_mNu4Sq,Twin_sin2T4,NrandMC);
+        MergeNew = 'OFF'; % nothing new
 end
 
-if exist(savefile,'file') 
-    fprintf('load file %s \n',savefile);
-    d = importdata(savefile);
+if strcmp(MergeNew,'ON')
+    MergeStr = sprintf('_MergeNew%.0f',numel(randMC_new));
+      NrandMC = numel(randMC)+numel(randMC_new);
 else
-     fprintf('file missing %s \n',savefile);
-    return
+    MergeStr = '';
+    NrandMC = numel(randMC);
+end
+
+savedir = [getenv('SamakPath'),'ksn2ana/ksn2_WilksTheorem/results/'];
+
+if Twin_sin2T4==0 && Twin_mNu4Sq==0
+    savefile = sprintf('%sksn2_WilksTheorem_NullHypothesis_Interp%s_%.0fsamples%s_RmDouble%s.mat',...
+        savedir,InterpMode,numel(randMC),MergeStr,RmDuplicates);
+else
+    savefile = sprintf('%sksn2_WilksTheorem_mNu4Sq-%.1feV2_sin2T4-%.3g_Interp%s_%.0fsamples%s_RmDouble%s.mat',...
+        savedir,Twin_mNu4Sq,Twin_sin2T4,InterpMode,numel(randMC),MergeStr,RmDuplicates);
+end
+
+if exist(savefile,'file')
+    d = importdata(savefile);
+    fprintf('load file from %s \n',savefile);
+else
+     fprintf('file does not exist: %s \n',savefile);
+     return
 end
 
 nClosed = sum(d.ClosedLog95);
@@ -60,28 +79,28 @@ for i=1:numel(d.chi2_bf)
        p1.Color = rgb('Orange');
    end
    
-   if strcmp(Hypothesis,'H0')
-       %look if best fit is in our outside
-       sinTmp = interp1(d.mNu4Sq_contour_Asimov,d.sin2T4_contour_Asimov,d.mNu4Sq_bf(i),'spline');
-       InOutIdx(i) = sinTmp<=d.sin2T4_bf(i); % 1 means inside (significant)
-       if InOutIdx(i)
-           p1.Color = rgb('IndianRed');
-           pHandleIn = p1;
-       end
-   elseif strcmp(Hypothesis,'H1')
-%        [Dist, IdxDist] = sort(abs(d.mNu4Sq_bf(i)-d.mNu4Sq_contour_Asimov));
-%        Diff_tmp = abs(diff(IdxDist));
-%        Idx2 = find(Diff_tmp>1,1)+1;
-%        LowerSin = min([d.sin2T4_contour_Asimov(IdxDist(1)),d.sin2T4_contour_Asimov(IdxDist(Idx2))]);
-%        UpperSin = max([d.sin2T4_contour_Asimov(IdxDist(1)),d.sin2T4_contour_Asimov(IdxDist(Idx2))]);
-%        if  d.sin2T4_bf(i) > LowerSin &&  d.sin2T4_bf(i) < UpperSin
-%            
-%        else
-%            InOutIdx(i) = 1;
+%    if strcmp(Hypothesis,'H0')
+%        %look if best fit is in our outside
+%        sinTmp = interp1(d.mNu4Sq_contour_Asimov,d.sin2T4_contour_Asimov,d.mNu4Sq_bf(i),'spline');
+%        InOutIdx(i) = sinTmp<=d.sin2T4_bf(i); % 1 means inside (significant)
+%        if InOutIdx(i)
 %            p1.Color = rgb('IndianRed');
 %            pHandleIn = p1;
-%        end  
-   end
+%        end
+%    elseif strcmp(Hypothesis,'H1')
+% %        [Dist, IdxDist] = sort(abs(d.mNu4Sq_bf(i)-d.mNu4Sq_contour_Asimov));
+% %        Diff_tmp = abs(diff(IdxDist));
+% %        Idx2 = find(Diff_tmp>1,1)+1;
+% %        LowerSin = min([d.sin2T4_contour_Asimov(IdxDist(1)),d.sin2T4_contour_Asimov(IdxDist(Idx2))]);
+% %        UpperSin = max([d.sin2T4_contour_Asimov(IdxDist(1)),d.sin2T4_contour_Asimov(IdxDist(Idx2))]);
+% %        if  d.sin2T4_bf(i) > LowerSin &&  d.sin2T4_bf(i) < UpperSin
+% %            
+% %        else
+% %            InOutIdx(i) = 1;
+% %            p1.Color = rgb('IndianRed');
+% %            pHandleIn = p1;
+% %        end  
+%    end
 end
 
 set(gca,'YScale','log');
@@ -90,23 +109,18 @@ set(gca,'XScale','log');
 xlabel(sprintf('|{\\itU}_{e4}|^2'));
 ylabel(sprintf('{\\itm}_4^2 (eV^2)'));
 PrettyFigureFormat('FontSize',22);
- if strcmp(Hypothesis,'H0')
-    leg = legend([pSens,pref,pHandleOpen,pHandleReg,pHandleIn],...
-        'Sensitivity','Grid boundaries',sprintf('Rand MC: \\Delta\\chi^2 < 5.99 (%.1f%%)',100.*(numel(d.sin2T4_bf)-numel(IdxClosed))./numel(d.sin2T4_bf)),...
-        sprintf('Rand MC: \\Delta\\chi^2 \\geq 5.99 (%.1f%%)',100*numel(IdxClosed)./numel(d.sin2T4_bf)),...
-        sprintf('Rand MC: Best fit inside sensitivity curve (%.1f%%)',100.*sum(InOutIdx)./numel(d.sin2T4_bf)),...
-        'Location','southwest');
- else
+%  if strcmp(Hypothesis,'H0')
+%     leg = legend([pSens,pref,pHandleOpen,pHandleReg,pHandleIn],...
+%         'Sensitivity','Grid boundaries',sprintf('Rand MC: \\Delta\\chi^2 < 5.99 (%.1f%%)',100.*(numel(d.sin2T4_bf)-numel(IdxClosed))./numel(d.sin2T4_bf)),...
+%         sprintf('Rand MC: \\Delta\\chi^2 \\geq 5.99 (%.1f%%)',100*numel(IdxClosed)./numel(d.sin2T4_bf)),...
+%         sprintf('Rand MC: Best fit inside sensitivity curve (%.1f%%)',100.*sum(InOutIdx)./numel(d.sin2T4_bf)),...
+%         'Location','southwest');
+%  else
       leg = legend([pSens,pHandleOpen,pHandleReg],...
         'Sensitivity',sprintf('Rand MC: \\Delta\\chi^2 < 5.99 (%.1f%%)',100.*(numel(d.sin2T4_bf)-numel(IdxClosed))./numel(d.sin2T4_bf)),...
         sprintf('Rand MC: \\Delta\\chi^2 \\geq 5.99 (%.1f%%)',100*numel(IdxClosed)./numel(d.sin2T4_bf)),...
         'Location','southwest');
-%      leg = legend([pSens,pref,pHandleOpen,pHandleReg,pHandleIn],...
-%         'Sensitivity','Grid boundaries',sprintf('Rand MC: \\Delta\\chi^2 < 5.99 (%.1f%%)',100.*(numel(d.sin2T4_bf)-numel(IdxClosed))./numel(d.sin2T4_bf)),...
-%         sprintf('Rand MC: \\Delta\\chi^2 \\geq 5.99 (%.1f%%)',100*numel(IdxClosed)./numel(d.sin2T4_bf)),...
-%         sprintf('Rand MC: Best fit outside sensitivity curve (%.1f%%)',100.*sum(InOutIdx)./numel(d.sin2T4_bf)),...
-%         'Location','southwest');
-end
+%end
 PrettyLegendFormat(leg);
 xlim([8e-04 0.65]);
 ylim([0.07 50^2]);
