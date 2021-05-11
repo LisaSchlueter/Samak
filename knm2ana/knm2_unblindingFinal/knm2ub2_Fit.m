@@ -1,9 +1,9 @@
 % unblinded fit 0.241
 range     = 40;
-freePar   = 'mNu E0 Bkg Norm';
-chi2      = 'chi2Stat';%CMShape';
+freePar   = 'mNu E0 Bkg Norm qU';
+chi2      = 'chi2CMShape';
 DataType  = 'Real';%Real';
-AnaFlag   = 'StackPixel';
+AnaFlag   = 'Ring';%'StackPixel';
 RingMerge = 'Full';%'None';
 FSDFlag = 'KNM2';
 DopplerEffectFlag = 'FSD';
@@ -105,7 +105,7 @@ if strcmp(Plot,'ON')
             'TickDir','In',...
             'YLimRes',[-2.2,2.9],...
             'DisplayStyle','PRL');
-        %A.PlotFitMultiRing('PlotPar','qU','savePlot','ON')
+        A.PlotFitMultiRing('PlotPar','qU','savePlot','ON')
     end
 end
 %  A.FitCM_Obj.PlotCM('qUWindowIndexMax',10,'qUWindowIndexMin',40,'saveplot',...

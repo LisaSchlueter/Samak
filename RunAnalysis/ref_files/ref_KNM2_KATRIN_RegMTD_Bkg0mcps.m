@@ -1,4 +1,4 @@
-function TritiumObject = ref_KNM2_KATRIN_RegMTD_Bkg10mcps(varargin)
+function TritiumObject = ref_KNM2_KATRIN_RegMTD_Bkg0mcps(varargin)
 % regulat KNM2 for reference
 
 TDMode = 'DataTBD';
@@ -56,7 +56,7 @@ p.addParameter('FPD_ROIEff','OFF',@(x)ismember(x,{'ON','OFF'}));
 p.addParameter('FPD_PileUpEff','OFF',@(x)ismember(x,{'ON','OFF'}));
 p.addParameter('BKG_Flag','ON',@(x)ismember(x,{'ON','OFF','XmasData'}));
 p.addParameter('BKG_Type','FLAT',@(x)ismember(x,{'FLAT','SLOPE'}));
-p.addParameter('BKG_RateAllFPDSec',0.01);
+p.addParameter('BKG_RateAllFPDSec',0);
 p.addParameter('BKG_RatePixelSec',''); 
 p.addParameter('BKG_RateRingSec','');
 p.addParameter('FPD_Segmentation','OFF',@(x) ismember(x,{'OFF','SINGLEPIXEL','MULTIPIXEL','RING'}));
