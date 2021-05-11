@@ -4,9 +4,12 @@
 %% settings that might change
 chi2Name = 'chi2CMShape';
 DataType = 'Real';
-nGridSteps = 30;
+nGridSteps = 50;
 range = 40;
 BF = 'ON';
+% savedir = [getenv('SamakPath'),'ksn2ana/ksn2_RunCombinations/results'];
+% savefile = sprintf('%sksn21_Combination_ReAna_%s_%s.mat',DataType,chi2);
+
 %% configure RunAnalysis object
 if strcmp(chi2Name,'chi2Stat')
     NonPoissonScaleFactor = 1;
@@ -55,7 +58,7 @@ S.RunAnaObj.SysBudget = 200;
 S.RunAnaObj.FSDFlag = 'KNM2_0p1eV';
 S.RunAnaObj.NonPoissonScaleFactor = 1.064;
 S.RunAnaObj.chi2 = 'chi2CMShape';
-S.nGridSteps = 30;
+S.nGridSteps = 50;
 S.LoadGridArg = {'CheckLarger','ON','ExtmNu4Sq','OFF','mNu4SqTestGrid',2};
 
 % load grid and plot
@@ -99,7 +102,7 @@ S.RunAnaObj.chi2 = 'chi2CMShape';
 LoadGridArg_i = {'mNu4SqTestGrid',5,'ExtmNu4Sq','ON'};
 S.LoadGridArg = {LoadGridArg_i{:},'Extsin2T4','ON'};
 
-% load grid and plo
+% load grid and plot
 S.LoadGridFile(S.LoadGridArg{:});
 S.InterpMode = 'Mix';
 S.Interp1Grid('RecomputeFlag','ON','Maxm4Sq',36^2);
@@ -155,12 +158,16 @@ S.chi2_Null = chi2_null_12;
 pbf1 = plot(sin2T4_bf_1,mNu4Sq_bf_1,'x','MarkerSize',9,'Color',p1tot.Color,'LineWidth',p1tot.LineWidth);
 
 %% legend
+SigmaBF1 = ConvertCLStd('Mode','CL2Sigma','CL',SignificanceBF_1,'nPar',2);
+SigmaBF2 = ConvertCLStd('Mode','CL2Sigma','CL',SignificanceBF_2,'nPar',2);
+SigmaBF12 = ConvertCLStd('Mode','CL2Sigma','CL',SignificanceBF_12,'nPar',2);
+%
 ExtLeg = 'ON';
 if strcmp(ExtLeg,'ON')
     leg = legend([p1tot,p2tot,p12tot,p1bf,p2bf,p12bf],'KSN-1','KSN-2','KSN-1 and KSN-2',...
-        sprintf('{\\itm}_4^2 = %.1f eV^2 , |{\\itU}_{e4}|^2 = %.3f (%.1f%% C.L.)',mNu4Sq_bf_1,sin2T4_bf_1,(SignificanceBF_1*100)),...
-        sprintf('{\\itm}_4^2 = %.2f eV^2 , |{\\itU}_{e4}|^2 = %.3f (%.1f%% C.L.)',mNu4Sq_bf_2,sin2T4_bf_2,(SignificanceBF_2*100)),...
-        sprintf('{\\itm}_4^2 = %.1f eV^2 , |{\\itU}_{e4}|^2 = %.3f (%.1f%% C.L.)',mNu4Sq_bf_12,sin2T4_bf_12,(SignificanceBF_12*100)));
+        sprintf('{\\itm}_4^2 = %.1f eV^2 , |{\\itU}_{e4}|^2 = %.3f (%.1f \\sigma)',mNu4Sq_bf_1,sin2T4_bf_1,SigmaBF1),...
+        sprintf('{\\itm}_4^2 = %.2f eV^2 , |{\\itU}_{e4}|^2 = %.3f (%.1f \\sigma)',mNu4Sq_bf_2,sin2T4_bf_2,SigmaBF2),...
+        sprintf('{\\itm}_4^2 = %.1f eV^2 , |{\\itU}_{e4}|^2 = %.3f (%.1f \\sigma)',mNu4Sq_bf_12,sin2T4_bf_12,SigmaBF12));
     leg.NumColumns = 2;
     extraStr = '_ExtLeg';
 else
@@ -179,6 +186,8 @@ xlim([2e-03,0.5]);
  MakeDir(savedir);
  savefile = sprintf('%sksn21_Combination_ReAna%s',savedir,extraStr);
  print([savefile,'.png'],'-dpng','-r350');
+ 
+ ylabel(sprintf('{\\itm}_4^2 (eV^{ 2})'));
  export_fig([savefile,'.pdf']);
  fprintf('save plot to %s \n',savefile);
  %% save mini result file for compatibility test

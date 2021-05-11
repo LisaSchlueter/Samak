@@ -3,8 +3,8 @@
 %% settings that might change
 Mode = 'Display';
 chi2 = 'chi2CMShape';
-DataType = 'Twin';
-nGridSteps = 30;
+DataType = 'Real';
+nGridSteps = 40;
 range = 40;
 switch DataType
     case 'Real'
@@ -75,7 +75,7 @@ switch Mode
                 'range',range};
             
             %%
-            S = SterileAnalysis(SterileArg{:},'LoadGridArg',{'ExtmNu4Sq','ON','mNu4SqTestGrid',5,'IgnoreKnm2FSDbinning','OFF'});
+            S = SterileAnalysis(SterileArg{:},'LoadGridArg',{'ExtmNu4Sq','OFF','mNu4SqTestGrid',5});
             if strcmp(A.DataType,'Real')
                 S.PlotmNuSqOverview('BestFit','ON','SavePlot','ON')
             else

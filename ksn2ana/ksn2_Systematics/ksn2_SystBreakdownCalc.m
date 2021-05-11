@@ -2,7 +2,7 @@
 % compare m2 free, m2 nuisance parameter
 %% settings that might change
 chi2 = 'chi2Stat';
-DataType = 'Twin';
+DataType = 'Real';
 nGridSteps = 30;
 range = 40;
 %% configure RunAnalysis object
@@ -39,7 +39,12 @@ SterileArg = {'RunAnaObj',A,... % Mother Object: defines RunList, Column Density
 S = SterileAnalysis(SterileArg{:});
 S.RunAnaObj.chi2 = 'chi2CMShape';
 SysEffectsAll   = {'Stat','FSD','BkgPT','Bkg','NP','LongPlasma','TASR','RF_EL',...
-    'RF_BF','RF_RX','FPDeff','Stack','TCoff_OTHER'}; 
+    'RF_BF','RF_RX','FPDeff','Stack','TCoff_OTHER'};
+if strcmp(DataType,'Real')
+    LoadGridArg = {'mNu4SqTestGrid',5,'ExtmNu4Sq','ON'};
+else
+    LoadGridArg = {'mNu4SqTestGrid',5};
+end
 
 for i=1:numel(SysEffectsAll)
     S.SysEffect = SysEffectsAll{i};
@@ -49,7 +54,7 @@ for i=1:numel(SysEffectsAll)
         if strcmp(SysEffectsAll{i},'NP')
             S.RunAnaObj.NonPoissonScaleFactor = 1.112;
         end
-        S.GridSearch('mNu4SqTestGrid',5);
+        S.GridSearch(LoadGridArg{:});
         
         S.RunAnaObj.chi2 = 'chi2CMShape';
         S.RunAnaObj.NonPoissonScaleFactor = 1;
@@ -57,7 +62,7 @@ for i=1:numel(SysEffectsAll)
     else
         S.RunAnaObj.chi2 = 'chi2CMShape';
         S.RunAnaObj.NonPoissonScaleFactor = 1;
-        S.GridSearch('mNu4SqTestGrid',5);
+        S.GridSearch(LoadGridArg{:});
     end
 end
 

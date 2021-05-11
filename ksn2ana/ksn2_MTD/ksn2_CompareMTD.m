@@ -30,7 +30,7 @@ SterileArg = {'RunAnaObj',F,... % Mother Object: defines RunList, Column Density
     'RandMC','OFF',...
     'range',range};
 S = SterileAnalysis(SterileArg{:});
-S.InterpMode = 'spline';
+S.InterpMode = 'Mix';%'spline';
 %% regular KNM-2 MTD
 S.RunAnaObj.FakeInitFile = @ref_KNM2_KATRIN_RegMTD;
 S.LoadGridFile

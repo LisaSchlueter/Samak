@@ -618,7 +618,7 @@ classdef SterileAnalysis < handle
              obj.RunAnaObj.chi2 = chi2_i;
         end  
         function  [Ratio,StatDomFraction,mNu4Sq_inter,sin2t4_Stat_inter,sin2t4_Tot_inter,sin2t4_Sys_inter] = StatOverSysKsn2(obj,varargin)
-             p = inputParser;
+            p = inputParser;
             p.addParameter('RasterScan','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.parse(varargin{:});
             RasterScan = p.Results.RasterScan;
@@ -670,6 +670,7 @@ classdef SterileAnalysis < handle
             p.addParameter('HoldOn','OFF',@(x) ismember(x,{'ON','OFF'}));
             p.addParameter('Color',obj.PlotColors{1},@(x) isfloat(x));
             p.addParameter('LineStyle',obj.PlotLines{1},@(x) ischar(x));
+             p.addParameter('MarkerStyle','x',@(x) ischar(x));
             p.addParameter('PlotSplines','OFF',@(x) ismember(x,{'ON','OFF'}));
             p.addParameter('SavePlot','OFF',@(x)ismember(x,{'ON','OFF','png'}));
             p.addParameter('ExtraStr','',@(x)ischar(x)); % for plot label    
@@ -688,6 +689,7 @@ classdef SterileAnalysis < handle
             RasterScan  = p.Results.RasterScan;
             ReCalcBF    = p.Results.ReCalcBF;
             NullHypothesis_local = p.Results.NullHypothesis;
+            MarkerStyle = p.Results.MarkerStyle;
             
             if strcmp(HoldOn,'ON')
                 hold on;
@@ -779,7 +781,7 @@ classdef SterileAnalysis < handle
                     % obj.FindBestFit('Mode','Imp');
                 end
                 hold on;
-                PlotHandleBf= plot(obj.sin2T4_bf,obj.mNu4Sq_bf,'x','MarkerSize',9,'Color',bf_color,'LineWidth',pHandle.LineWidth);
+                PlotHandleBf= plot(obj.sin2T4_bf,obj.mNu4Sq_bf,MarkerStyle,'MarkerSize',9,'Color',bf_color,'LineWidth',pHandle.LineWidth);
             else 
                 PlotHandleBf = 0;
             end
@@ -1467,12 +1469,13 @@ classdef SterileAnalysis < handle
             pull_i = obj.RunAnaObj.pullFlag;
 
             %% 1. nuissance nu-mass without pull
+           
             obj.RunAnaObj.fixPar = 'mNu E0 Norm Bkg'; obj.RunAnaObj.InitFitPar;
             obj.RunAnaObj.pullFlag = 99;
             obj.LoadGridFile('CheckSmallerN','ON',obj.LoadGridArg{:});
             obj.Interp1Grid('RecomputeFlag','ON');
             pFree = obj.ContourPlot('CL',obj.ConfLevel,'HoldOn',HoldOn,...
-                'Color',rgb('ForestGreen'),'LineStyle','-','BestFit',BestFit);
+                'Color',rgb('ForestGreen'),'LineStyle','-','BestFit',BestFit,'MarkerStyle','x');
 
             %%  nuissance nu-mass + pull
             if strcmp(PullmNuSq,'ON')
@@ -1480,14 +1483,14 @@ classdef SterileAnalysis < handle
                 obj.LoadGridFile('CheckSmallerN','ON',obj.LoadGridArg{:});
                 obj.Interp1Grid('RecomputeFlag','ON');
                 pPull = obj.ContourPlot('CL',obj.ConfLevel,'HoldOn','ON',...
-                    'Color',rgb('Orange'),'LineStyle','-.','BestFit',BestFit);
+                    'Color',rgb('Orange'),'LineStyle','-.','BestFit',BestFit,'MarkerStyle','*');
                 
                 if strcmp(obj.RunAnaObj.DataSet,'Knm2')
                      obj.RunAnaObj.pullFlag = 26;
                 obj.LoadGridFile('CheckSmallerN','ON',obj.LoadGridArg{:});
                 obj.Interp1Grid('RecomputeFlag','ON');
                 pPullK = obj.ContourPlot('CL',obj.ConfLevel,'HoldOn','ON',...
-                    'Color',rgb('FireBrick'),'LineStyle','--','BestFit',BestFit);
+                    'Color',rgb('FireBrick'),'LineStyle','--','BestFit',BestFit,'MarkerStyle','o');
                 end
             end
             
@@ -1497,18 +1500,22 @@ classdef SterileAnalysis < handle
             if strcmp(obj.RunAnaObj.DataSet,'Knm2') &&  strcmp(obj.RunAnaObj.DataType,'Real')
                 % best fit is at sin2t4=1, but grid looks better for sin2t4 up to 0.5
                 % load first sin2t4=1 file, get best fit, then load regular file
-                obj.LoadGridFile(obj.LoadGridArg{:},'Extsin2T4','ON','IgnoreKnm2FSDbinning','ON');
+                nGridSteps_i = obj.nGridSteps;
+                 obj.nGridSteps = 30;
+                obj.LoadGridFile(obj.LoadGridArg{:},'ExtmNu4Sq','ON','Extsin2T4','ON','IgnoreKnm2FSDbinning','ON');
                 obj.Interp1Grid('RecomputeFlag','ON','Maxm4Sq',34^2);
                 obj.FindBestFit;
                 chi2_ref_ExtSin2T4 = obj.chi2_ref;
                 mNuSq_bf_ExtSin2T4 = obj.mNuSq_bf;
                 sin2T4_bf_ExtSin2T4 = obj.sin2T4_bf;
                 mNu4Sq_bf_ExtSin2T4 = obj.mNu4Sq_bf;
+            else
+                 nGridSteps_i = obj.nGridSteps; 
             end
             
             obj.LoadGridFile(obj.LoadGridArg{:});
             obj.Interp1Grid('RecomputeFlag','ON');
-            
+            obj.nGridSteps = nGridSteps_i;
 
             if strcmp(obj.RunAnaObj.DataSet,'Knm2') &&  strcmp(obj.RunAnaObj.DataType,'Real')
                 obj.chi2_ref  = chi2_ref_ExtSin2T4;
@@ -1520,7 +1527,7 @@ classdef SterileAnalysis < handle
             end
             
             [pFix,pfixmin] = obj.ContourPlot('CL',obj.ConfLevel,'HoldOn','ON',...
-                'Color',rgb('DodgerBlue'),'LineStyle',':','BestFit',BestFit,'ReCalcBF','OFF');
+                'Color',rgb('DodgerBlue'),'LineStyle',':','BestFit',BestFit,'ReCalcBF','OFF','MarkerStyle','d');
             
             PrettyFigureFormat('FontSize',22);
             if strcmp(PullmNuSq,'ON') && strcmp(obj.RunAnaObj.DataSet,'Knm1')
@@ -1532,9 +1539,9 @@ classdef SterileAnalysis < handle
             elseif strcmp(PullmNuSq,'ON') && strcmp(obj.RunAnaObj.DataSet,'Knm2')
                   leg = legend([pFree,pPull,pPullK,pFix],...
                     sprintf('Free {\\itm}_\\nu^2 unconstrained'),...
-                    sprintf('Free {\\itm}_\\nu^2 with pull term \\sigma({\\itm}_\\nu^2) = 1.94 eV^2 (Mainz/Troitsk)'),...
-                    sprintf('Free {\\itm}_\\nu^2 with pull term \\sigma({\\itm}_\\nu^2) = 1.1 eV^2 (KATRIN KNM-1)'),...
-                    sprintf('Fixed {\\itm}_\\nu^2 = 0 eV^2'),...
+                    sprintf('Free {\\itm}_\\nu^2 with pull term \\sigma({\\itm}_\\nu^2) = 1.94 eV^{ 2} (Mainz/Troitsk)'),...
+                    sprintf('Free {\\itm}_\\nu^2 with pull term \\sigma({\\itm}_\\nu^2) = 1.1 eV^{ 2} (KATRIN KNM-1)'),...
+                    sprintf('Fixed {\\itm}_\\nu^2 = 0 eV^{ 2}'),...
                     'Location','southwest');
             else
                 leg =  legend([pFree,pFix],...
@@ -1553,11 +1560,13 @@ classdef SterileAnalysis < handle
                     xlim([2e-03 0.5]);
                 else
                     xlim([pfixmin*0.5,0.5]);
+                    ylim([0.6 obj.range^2]);
                 end
                 %% save
                 if ~strcmp(SavePlot,'OFF')
                     name_i = strrep(obj.DefPlotName,'_mNuE0BkgNorm','');
                     if strcmp(SavePlot,'ON')
+                        ylabel(sprintf('{\\itm}_4^2 (eV^{ 2})'));
                         plotname = sprintf('%s_mNuSqOverview_%.2gCL.pdf',name_i,obj.ConfLevel);
                         export_fig(gcf,plotname);
                     elseif strcmp(SavePlot,'png')
@@ -1740,27 +1749,50 @@ classdef SterileAnalysis < handle
                 HoldOn = 'ON';
             end
             %% load fitrium
-            savedirF = [getenv('SamakPath'),'SterileAnalysis/GridSearchFiles/',obj.RunAnaObj.DataSet,'/Others/'];
+            if strcmp(obj.RunAnaObj.DataType,'Real')
+                DataStr = 'Data';
+            elseif strcmp(obj.RunAnaObj.DataType,'Twin')
+                DataStr = 'MC';
+            end
+            if contains(ConvertFixPar('freePar',obj.RunAnaObj.fixPar,'Mode','Reverse'),'mNu')
+                % free nu-mass
+                nuStr = 'nu_free';
+            else
+                nuStr = 'nu_fix';
+            end
+             if strcmp(obj.NullHypothesis,'ON')
+                 H0Str = '_NH';
+             else
+                 H0Str = '_BF';
+             end
             if strcmp(obj.RunAnaObj.DataSet,'Knm1')
+                 savedirF = [getenv('SamakPath'),'SterileAnalysis/GridSearchFiles/',obj.RunAnaObj.DataSet,'/Others/'];
                 fstat = sprintf('%scontour_KSN1_Fitrium_%s_%.0feV_stat_95CL_0.txt',savedirF,obj.RunAnaObj.DataType,obj.range);
                 fsys = sprintf('%scontour_KSN1_Fitrium_%s_%.0feV_total_95CL_0.txt',savedirF,obj.RunAnaObj.DataType,obj.range);
             else
-                if contains(ConvertFixPar('freePar',obj.RunAnaObj.fixPar,'Mode','Reverse'),'mNu')
-                    fstat = sprintf('%scontour_KSN2_Fitrium_%s_%.0feV_mNuFree_stat_95CL.dat',savedirF,obj.RunAnaObj.DataType,obj.range);
-                    fsys = NaN;             
-                elseif strcmp(obj.NullHypothesis,'ON')
-                    fstat = sprintf('%scontour_KSN2_Fitrium_%s_%.0feV_stat_95CL_NH.dat',savedirF,obj.RunAnaObj.DataType,obj.range);
-                    fsys = sprintf('%scontour_KSN2_Fitrium_%s_%.0feV_total_95CL_NH.dat',savedirF,obj.RunAnaObj.DataType,obj.range);
-                 else
-                     fstat = sprintf('%scontour_KSN2_Fitrium_%s_%.0feV_stat_95CL.dat',savedirF,obj.RunAnaObj.DataType,obj.range);
-                     fsys = sprintf('%scontour_KSN2_Fitrium_%s_%.0feV_total_95CL.dat',savedirF,obj.RunAnaObj.DataType,obj.range);
-                end
-                 
-              
+                savedirF = [getenv('SamakPath'),'SterileAnalysis/GridSearchFiles/Knm2/Others/ksn2_analysis/Fitrium/results/contours/',nuStr,'/',DataStr,'/'];     
+                 fstat = sprintf('%s%s_stat_only_%s%s_cub.dat',savedirF,lower(DataStr),nuStr,H0Str);
+                 fsys = sprintf('%s%s_stat_all_sys_%s%s_cub.dat',savedirF,lower(DataStr),nuStr,H0Str);      
+%                 if contains(ConvertFixPar('freePar',obj.RunAnaObj.fixPar,'Mode','Reverse'),'mNu')
+%                     fstat = sprintf('%scontour_KSN2_Fitrium_%s_%.0feV_mNuFree_stat_95CL.dat',savedirF,obj.RunAnaObj.DataType,obj.range);
+%                     fsys = NaN;             
+%                 elseif strcmp(obj.NullHypothesis,'ON')
+%                     fstat = sprintf('%scontour_KSN2_Fitrium_%s_%.0feV_stat_95CL_NH.dat',savedirF,obj.RunAnaObj.DataType,obj.range);
+%                     fsys = sprintf('%scontour_KSN2_Fitrium_%s_%.0feV_total_95CL_NH.dat',savedirF,obj.RunAnaObj.DataType,obj.range);
+%                  else
+%                      fstat = sprintf('%scontour_KSN2_Fitrium_%s_%.0feV_stat_95CL.dat',savedirF,obj.RunAnaObj.DataType,obj.range);
+%                      fsys = sprintf('%scontour_KSN2_Fitrium_%s_%.0feV_total_95CL.dat',savedirF,obj.RunAnaObj.DataType,obj.range);
+%                 end     
             end
             
            if strcmp(PlotStat,'ON')
+               try
                dfStat = importdata(fstat);
+               catch
+                   fprintf('file nout found %s \n',fstat);
+                   return
+               end
+              
                %                  if strcmp(obj.RunAnaObj.DataSet,'Knm2')
                %                      dfStat.data(:,2) = dfStat.data(:,2);
                %                  end %PowderBlue
@@ -1900,11 +1932,11 @@ classdef SterileAnalysis < handle
            
             %title(sprintf('%s , %.0f eV range , %.0f%% C.L.',obj.GetPlotTitle('Mode','data'),obj.range,obj.ConfLevel),'FontWeight','normal','FontSize',get(gca,'FontSize'));
             title(obj.GetPlotTitle,'FontWeight','normal','FontSize',get(gca,'FontSize'));
-            if contains(ConvertFixPar('freePar',obj.RunAnaObj.fixPar,'Mode','Reverse'),'mNu')
-                ylim([6 40^2]);
-                xlim([8e-03 0.5]);
-                
-            end
+            
+%             if contains(ConvertFixPar('freePar',obj.RunAnaObj.fixPar,'Mode','Reverse'),'mNu')
+%                 ylim([6 40^2]);
+%                 xlim([8e-03 0.5]);               
+%             end
            %% save
            if ~strcmp(SavePlot,'OFF')
                name_i = strrep(obj.DefPlotName,sprintf('_%s',chi2_i),'');
@@ -2659,6 +2691,8 @@ classdef SterileAnalysis < handle
             p.addParameter('ExtmNu4Sq','OFF',@(x)ismember(x,{'ON','OFF'})); %extended m4Sq (from 0.1)
             p.addParameter('mNu4SqTestGrid','OFF',@(x)strcmp(x,'OFF') || isfloat(x));
             p.addParameter('FixmNuSq',0,@(x)isfloat(x)); % if light nu-mass fixed (eV^2)
+            p.addParameter('ExtGrid','OFF',@(x)iscell(x) || strcmp(x,'OFF')); % external grid
+          
             p.parse(varargin{:});
             CheckLargerN  = p.Results.CheckLargerN;
             CheckSmallerN = p.Results.CheckSmallerN;
@@ -2670,10 +2704,12 @@ classdef SterileAnalysis < handle
             mNu4SqTestGrid = p.Results.mNu4SqTestGrid;
             FixmNuSq      = p.Results.FixmNuSq;
             IgnoreKnm2FSDbinning = p.Results.IgnoreKnm2FSDbinning;
+            ExtGrid  = p.Results.ExtGrid;
             
             filename = obj.GridFilename('Negsin2T4',Negsin2T4,'NegmNu4Sq',NegmNu4Sq,...
                                         'Extsin2T4',Extsin2T4,'ExtmNu4Sq',ExtmNu4Sq,...
-                                        'FixmNuSq',FixmNuSq,'mNu4SqTestGrid',mNu4SqTestGrid);
+                                        'FixmNuSq',FixmNuSq,'mNu4SqTestGrid',mNu4SqTestGrid,...
+                                        'ExtGrid',ExtGrid);
             
             loadSuccess = 0;
             
@@ -2897,7 +2933,7 @@ classdef SterileAnalysis < handle
                               extraStr = [extraStr,sprintf('_BkgPtSlope%.3gmuCpsS_TwinPtSlope%.3gmuCpsS',...
                                   1e6.*obj.RunAnaObj.ModelObj.BKG_PtSlope,1e6.*obj.RunAnaObj.TwinBias_BKG_PtSlope)];
                           end
-                      elseif obj.RunAnaObj.ModelObj.BKG_PtSlope ~=3*1e-06
+                      elseif obj.RunAnaObj.ModelObj.BKG_PtSlope ~=3*1e-06 && strcmp(obj.RunAnaObj.DataType,'Real')
                           % data (KNM-2): model BKG_PtSlope not default 3e-06
                           extraStr = [extraStr,sprintf('_BkgPtSlope%.3gmuCpsS',1e6.*obj.RunAnaObj.ModelObj.BKG_PtSlope)];
                       end

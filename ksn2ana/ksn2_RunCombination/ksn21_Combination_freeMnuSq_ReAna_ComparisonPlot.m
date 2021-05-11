@@ -81,17 +81,17 @@ switch KSN1config
         S.Interp1Grid('RecomputeFlag','ON','Maxm4Sq',19^2);
     case 'New'
         % Re-Analysis
-        S.nGridSteps = 30;
+        S.nGridSteps = 50;
         S.RunAnaObj.ELossFlag  = 'KatrinT2A20';
         S.RunAnaObj.AngularTFFlag ='ON';
         S.RunAnaObj.SysBudget = 200;
         S.RunAnaObj.FSDFlag = 'KNM2_0p1eV';
         S.RunAnaObj.ModelObj.BKG_PtSlope = -2.2*1e-06;
-        S.LoadGridArg = {'mNu4SqTestGrid',5};
-        S.InterpMode = 'spline';
+        S.LoadGridArg = {'mNu4SqTestGrid',2};
+        S.InterpMode = 'Mix';
         % load map
         S.LoadGridFile(S.LoadGridArg{:});
-        S.Interp1Grid('RecomputeFlag','ON','Maxm4Sq',40^2);
+        S.Interp1Grid('RecomputeFlag','ON','Maxm4Sq',36^2);
 end
 
 
@@ -114,7 +114,7 @@ mNu4Sqbf_k1 = S.mNu4Sq_bf;
 sin2T4bf_k1 = S.sin2T4_bf;
 %% load ksn2
 S.InterpMode = 'spline';
-S.nGridSteps = 30;
+S.nGridSteps = 50;
 S.RunAnaObj.FSDFlag = 'KNM2_0p5eV';
 S.RunAnaObj.DataSet = 'Knm2';
 S.RunAnaObj.RunData.RunName = 'KNM2_Prompt';
@@ -125,7 +125,7 @@ S.RunAnaObj.NonPoissonScaleFactor = 1.112;
 S.RunAnaObj.ModelObj.BKG_PtSlope = 3.*1e-06;
 % stat and syst
 S.RunAnaObj.chi2 = 'chi2CMShape';
-S.LoadGridFile('CheckLarger','OFF','mNu4SqTestGrid',5,'ExtmNu4Sq','ON');            
+S.LoadGridFile('CheckLarger','OFF','mNu4SqTestGrid',5,'ExtmNu4Sq','OFF');            
 S.Interp1Grid('RecomputeFlag','ON');
 mNu4Sq_k2 = S.mNu4Sq;
 sin2T4_k2 = S.sin2T4;
@@ -133,10 +133,22 @@ chi2_k2   = S.chi2;
 chi2ref_k2= S.chi2_ref;
 mNu4Sq_k2_contour = S.mNu4Sq_contour;
 sin2T4_k2_contour = S.sin2T4_contour;
-[p2tot,sinMin,pbf2] = S.ContourPlot('BestFit','ON','CL',95,'HoldOn','ON','Color',rgb('Orange'),'LineStyle','-.');
-
+%% get best fit from fine grid
+savedir = sprintf('%sksn2ana/ksn2_BestFit/results/',getenv('SamakPath'));
+savefile2 = sprintf('%sksn2_ImpBestFit_%s_%s_%s_nGridStepsFull%.0f_nGridStepsImp%.0f.mat',...
+    savedir,DataType,'mNuE0NormBkg',chi2,40,25);
+if exist(savefile2,'file') 
+    d2 = importdata(savefile2);
+    S.mNu4Sq_bf = d2.mNu4Sq_bf_inter;
+    S.sin2T4_bf = d2.sin2T4_bf_inter;
+    S.chi2_bf = d2.chi2_bf_inter;
+else
+    S.FindBestFit;
+end
 mNu4Sqbf_k2 = S.mNu4Sq_bf;
 sin2T4bf_k2 = S.sin2T4_bf;
+
+[p2tot,sinMin,pbf2] = S.ContourPlot('BestFit','ON','CL',95,'HoldOn','ON','Color',rgb('Orange'),'LineStyle','-.','ReCalcBF','OFF');
 dof2 = S.dof;
 % find significance
 [DeltaChi2_2, SignificanceBF_2] = S.CompareBestFitNull;
@@ -162,15 +174,20 @@ sin2T4bf_k12 = S.sin2T4_bf;
 
 % find significance
 [DeltaChi2_tot, SignificanceBF_tot] = S.CompareBestFitNull;
+
+% convert cl to sigma
+SigmaBF1 = ConvertCLStd('Mode','CL2Sigma','CL',SignificanceBF_1,'nPar',2);
+SigmaBF2 = ConvertCLStd('Mode','CL2Sigma','CL',SignificanceBF_2,'nPar',2);
+SigmaBF12 = ConvertCLStd('Mode','CL2Sigma','CL',SignificanceBF_tot,'nPar',2);
 %%
 ExtLeg = 'ON';
 legStr = sprintf('%s: {\\itm}_\\nu^2 free at %.0f%% C.L.',S.GetPlotTitle('Mode','data'),S.ConfLevel);
 if strcmp(ExtLeg,'ON')
     leg = legend([p1tot,p2tot,p12tot,pbf1,pbf2,pbf12],...
         'KSN-1','KSN-2','KSN-1 and KSN-2',...
-        sprintf('{\\itm}_4^2 = %.1f eV^2 , |{\\itU}_{e4}|^2 = %.3f (%.1f%% C.L.)',mNu4Sqbf_k1,sin2T4bf_k1,(SignificanceBF_1*100)),...
-        sprintf('{\\itm}_4^2 = %.1f eV^2 , |{\\itU}_{e4}|^2 = %.3f (%.1f%% C.L.)',mNu4Sqbf_k2,sin2T4bf_k2,(SignificanceBF_2*100)),...
-        sprintf('{\\itm}_4^2 = %.1f eV^2 , |{\\itU}_{e4}|^2 = %.3f (%.1f%% C.L.)',mNu4Sqbf_k12,sin2T4bf_k12,(SignificanceBF_tot*100)));
+        sprintf('{\\itm}_4^2 = %.1f eV^2 , |{\\itU}_{e4}|^2 = %.3f (%.1f \\sigma)',mNu4Sqbf_k1,sin2T4bf_k1,SigmaBF1),...
+        sprintf('{\\itm}_4^2 = %.1f eV^2 , |{\\itU}_{e4}|^2 = %.3f (%.1f \\sigma)',mNu4Sqbf_k2,sin2T4bf_k2,SigmaBF2),...
+        sprintf('{\\itm}_4^2 = %.1f eV^2 , |{\\itU}_{e4}|^2 = %.3f (%.1f \\sigma)',mNu4Sqbf_k12,sin2T4bf_k12,SigmaBF12));
     leg.NumColumns = 2;
     title(legStr,'FontWeight','normal','FontSize',get(gca,'FontSize'));
 else
@@ -196,6 +213,7 @@ if strcmp(ExtLeg,'ON')
 end
 print(gcf,plotname,'-dpng','-r300');
 fprintf('save plot to %s \n',plotname)
+ ylabel(sprintf('{\\itm}_4^2 (eV^{ 2})'));
 export_fig(gcf,strrep(plotname,'.png','.pdf'));
 
 %% save combi file

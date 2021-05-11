@@ -9,7 +9,7 @@ switch Hypothesis
         NrandMC = 377;
         Twin_sin2T4 = 0;
         Twin_mNu4Sq = 0;
-        randMC_new  = [1:96,110:200,406:500];
+        randMC_new  = [1:1e3];
         MergeStr = sprintf('_MergeNew%.0f',numel(randMC_new));
     case 'H1'
         NrandMC = 1e3;

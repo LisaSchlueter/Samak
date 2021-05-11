@@ -6,8 +6,8 @@ chi2 = 'chi2CMShape';
 DataType = 'Real';
 nGridSteps = 30;
 range = 40;
-freePar = 'mNu E0 Norm Bkg';
-NH = 'OFF';
+freePar = 'E0 Norm Bkg';
+NH = 'ON';
 %% configure RunAnalysis object
 if strcmp(chi2,'chi2Stat')
     NonPoissonScaleFactor = 1;
@@ -42,13 +42,13 @@ SterileArg = {'RunAnaObj',A,... % Mother Object: defines RunList, Column Density
     'SysEffect','all',...
     'RandMC','OFF',...
     'range',range,...
-    'LoadGridArg',{'mNu4SqTestGrid',5,'ExtmNu4Sq','ON'}};
+    'LoadGridArg',{'mNu4SqTestGrid',5}};
 S = SterileAnalysis(SterileArg{:});
 %%
 S.InterpMode = 'spline';
 if ~contains(freePar,'mNu') && strcmp(NH,'OFF') 
     GridArg_i = S.LoadGridArg;
-    S.LoadGridArg = {GridArg_i{:},'Extsin2T4','ON'};
+    S.LoadGridArg = {GridArg_i{:},'Extsin2T4','ON','ExtmNu4Sq','ON'};
     S.LoadGridFile(S.LoadGridArg{:});
     S.Interp1Grid('RecomputeFlag','ON','Maxm4Sq',33^2);
     S.FindBestFit;

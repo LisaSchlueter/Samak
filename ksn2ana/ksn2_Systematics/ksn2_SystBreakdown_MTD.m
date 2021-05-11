@@ -1,119 +1,103 @@
-  %% configure RunAnalysis object
-    RunAnaArg = {'RunList','KNM2_Prompt',...
-        'DataType',DataType,...
-        'fixPar','E0 Norm Bkg',...%free par
-        'SysBudget',40,...
-        'fitter','minuit',...
-        'minuitOpt','min;migrad',...
-        'RadiativeFlag','ON',...
-        'FSDFlag','KNM2_0p5eV',...
-        'ELossFlag','KatrinT2A20',...
-        'AnaFlag','StackPixel',...
-        'chi2','chi2Stat',...
-        'NonPoissonScaleFactor',1,...
-        'FSD_Sigma',sqrt(0.0124+0.0025),...
-        'TwinBias_FSDSigma',sqrt(0.0124+0.0025),...
-        'TwinBias_Q',18573.7,...
-        'PullFlag',99,...;%99 = no pull
-        'BKG_PtSlope',3*1e-06,...
-        'TwinBias_BKG_PtSlope',3*1e-06,...
-        'DopplerEffectFlag','FSD'};
-    A = MultiRunAnalysis(RunAnaArg{:});
-    %%
+% Understanding systematics breakdown
+    
+SavePlt = 'ON';
     savedir = [getenv('SamakPath'),'ksn2ana/ksn2_Systematics/results/'];
     savename = sprintf('%sksn2_SystBreakdown_StatOverSyst_%s_%.0feV_RasterScan%s.mat',savedir,'Twin',40,'ON');
     if exist(savename,'file')
         d = importdata(savename);
         fprintf('load file %s \n',savename);
     else
-        return
-        
+        return    
     end
-    
-    %% relatitive statistical uncertainty
-    
-    Time = A.ModelObj.qUfrac(11:end-5).*A.ModelObj.TimeSec;
-    qU = abs(A.ModelObj.qU(11:end-5)-18574);
-    TBDIS = A.ModelObj.TBDIS(11:end-5);
-    TBDISE = sqrt(A.ModelObj.TBDIS(11:end-5));
-    
-    SigmaSqRel_Stat = 1./TBDISE;
-    SigmaSqAbs_Stat = SigmaSqRel_Stat.*TBDIS;
-    
+   
+    plotdir = strrep(savedir,'results','plots');
+    %%  
     f1 = figure('Units','normalized','Position',[-0.1,0.1,0.5,0.7]);
     s1 = subplot(3,1,1);
-    % plot(qU.^2,SigmaSqRel_Stat.*1e2,'.:','MarkerSize',15);
-    errorbar(qU.^2,TBDIS,TBDISE,'.','MarkerSize',15,'CapSize',0);
-    set(gca,'XScale','log');
-    set(gca,'YScale','log');
+    x = -sqrt(d.mNu4Sq(1,:));
+    Idx = 1; %'LongPlasma','BkgPT' (2,3)
+    pStat = plot(x,d.sin2t4_Stat(1,:).^2./d.sin2t4_Tot(1,:).^2,'LineWidth',3,'Color',rgb('Silver'),'LineStyle','-');
+    hold on;
+    pTot = plot(x,d.sin2t4_Sys(Idx,:).^2./d.sin2t4_Tot(1,:).^2,'-k','LineWidth',3);
+    xlabel(sprintf('- {\\itm}_4^ (eV)'));
+    ylabel(sprintf('\\sigma^2 / \\sigma_{total}^2'));
     PrettyFigureFormat
-    xlabel(sprintf('({\\itqU} - 18574)^2'))
-    % ylabel('Rel. statistic uncertainty (%)')
-    %  ylabel(sprintf('Rel. \\sigma_{stat.}^2 (%%)'));
-    ylabel(sprintf('Counts'));
-    %  ylim([0 0.6]);
-    ylim([3*10^4 10^6]);
-    leg = legend('KNM-2 integral tritium spectrum','Location','northwest');
+    leg = legend('Stat. only','All syst. effects','Location','west');
     PrettyLegendFormat(leg);
+    ylim([0 1])
     
     s2 = subplot(3,1,2);
-%    SigmaSqStat = d.sin2t4_Stat(1,:).^2;   
-%     % syst: constant with m4^2
-%     SigmaSqSys_const = median(d.sin2t4_Sys(1,:).^2);
-%     SigmaSqTot_const = SigmaSqStat+SigmaSqSys_const;
-%     Ratio_const = SigmaSqSys_const./SigmaSqTot_const;
-%     
-%     %syst: linear increase with m4^2
-%      SigmaSqSys_lin = d.mNu4Sq(1,:).*mean(d.sin2t4_Sys(1,:).^2)./max(d.mNu4Sq(1,:));
-%      SigmaSqTot_lin = SigmaSqStat+SigmaSqSys_lin;
-%      Ratio_lin = SigmaSqSys_lin./SigmaSqTot_lin;
-   
-    % plot 2
-    x = d.mNu4Sq(1,:);%sqrt(d.mNu4Sq(1,:));
-    plot(x,d.Ratio(1,:),'-k','LineWidth',2)
-    set(gca,'XScale','log');
-    xlabel(sprintf('{\\itm}_4^2 (eV^2)'));
-    ylabel(sprintf('\\sigma_{syst.}^2 / \\sigma_{total}^2'));
+    bar(d.qU-18574,d.TimeSubRun./(60*60));
     PrettyFigureFormat
-     leg = legend('All syst. effects','Location','northwest');
-     PrettyLegendFormat(leg);
-     ylim([0 0.5])
-     
+    xlabel(sprintf('{\\itqU} - 18574 (eV)'))
+    ylabel(sprintf('Time (hours)'));
+    ylim([0 70]);
+    PrettyLegendFormat(leg);
+    
     s3 = subplot(3,1,3);
-    psys =  plot(x,d.sin2t4_Sys(1,:).^2,'-k','LineWidth',2);
+    plot(d.qU-18574,ones(numel(d.qU),1),'k-','LineWidth',1.5);
     hold on;
-    pstat=  plot(x,d.sin2t4_Stat(1,:).^2,'Color',rgb('DodgerBlue'),'LineWidth',2);
-    ptot = plot(x,d.sin2t4_Tot(1,:).^2,'Color',rgb('Orange'),'LineWidth',2);
-    set(gca,'XScale','log');
+    plot(d.qU-18574,d.TBDIS_Signal./d.BkgCounts,'.-','MarkerSize',18,'LineWidth',2.5);
+    xlabel(sprintf('{\\itqU} - 18574 (eV)'))
+    ylabel('S / B')
     set(gca,'YScale','log');
-    xlabel(sprintf('{\\itm}_4^2 (eV^2)'));
-    ylabel(sprintf('\\sigma^2'));
-     PrettyFigureFormat
-     leg = legend([ptot,pstat,psys],'Total','Stat. only','Syst. only','Location','southwest');
-     PrettyLegendFormat(leg);
-     
-     linkaxes([s1,s2,s3],'x');
-%    %%
-%    SigmaSqRel_Syst_const = 0.0028;
-%    SigmaSqRel_Syst_lin = qU*0.0005;%.*1e-06;
-%    
-%    SigmaSqAbs_Syst_const = SigmaSqRel_Syst_const.*TBDIS;
-%    SigmaSqAbs_Syst_lin = SigmaSqRel_Syst_lin.*TBDIS;
-%    
-%    SigmaSqAbs_Tot_const = SigmaSqAbs_Stat+SigmaSqAbs_Syst_const;
-%     SigmaSqAbs_Tot_lin = SigmaSqAbs_Stat+SigmaSqAbs_Syst_lin;
-%      
-%      plot(d.mNu4Sq(1,:),d.Ratio(1,:))
-%      hold on;
-%      p1 =  plot(qU.^2,SigmaSqAbs_Syst_const./SigmaSqAbs_Tot_const);
-%      hold on;
-%      p2 =  plot(qU.^2,SigmaSqAbs_Syst_lin./SigmaSqAbs_Tot_lin);
-% 
-%     leg = legend(sprintf('\\sigma_{syst.}^2: constant'),sprintf('\\sigma_{syst.}^2: linear increase'));
-%     PrettyLegendFormat(leg);
-%     set(gca,'XScale','log');
-%     xlabel(sprintf('({\\itqU} - 18574)^2'));
-%    ylabel(sprintf('\\sigma_{syst.}^2 / \\sigma_{total}^2'));
-%    
-%    
-%      
+    PrettyFigureFormat
+    ylim([0.005 500])
+    
+    yticks([0.01,1,100]);
+    linkaxes([s1,s2,s3],'x');
+    xlim([-37,0]);
+    if strcmp(SavePlt,'ON')
+        plotname = sprintf('%sksn2_SysBreakdown_MTD_RasterScan%s.png',plotdir,RasterScan);
+        print(f1,plotname,'-dpng','-r400');
+        fprintf('save plot to %s \n',plotname);
+       % export_fig(f1,strrep(plotname,'png','pdf'));
+    end
+%%       alternative plot
+
+f2 = figure('Units','normalized','Position',[-0.1,0.1,0.6,0.6]);
+s1 = subplot(2,3,[1,2,4,5]);
+pstat =plot(d.sin2t4_Stat(1,:),d.mNu4Sq(1,:),'Color',rgb('Silver'),'LineWidth',3);
+hold on;
+ptot =plot(d.sin2t4_Tot(1,:),d.mNu4Sq(1,:),'-.','Color',rgb('Black'),'LineWidth',3);
+leg = legend([pstat,ptot],'Stat. only','Total (stat. and syst.)','Location','northeast'); 
+PrettyLegendFormat(leg); legend boxoff
+set(gca,'XScale','log')
+set(gca,'YScale','log')
+PrettyFigureFormat('FontSize',22);
+ax1 = gca;
+xlabel(sprintf('|{\\itU}_{e4}|^2'));
+ylabel(sprintf('{\\itm}_4^2 (eV)'));
+xlim([5e-03 0.5]);
+
+s2 = subplot(2,3,[3,6]);
+Colors = colormap('jet');
+pTot = plot(d.sin2t4_Sys(1,:).^2./d.sin2t4_Tot(1,:).^2,d.mNu4Sq(1,:),'LineWidth',3,'Color',rgb('Black'));
+hold on;
+pStat= plot(d.sin2t4_Stat(1,:).^2./d.sin2t4_Tot(1,:).^2,d.mNu4Sq(1,:),'LineWidth',3,'Color',rgb('Silver'),'LineStyle','-');
+% pPlasma = plot(d.sin2t4_Sys(2,:).^2./d.sin2t4_Tot(1,:).^2,d.mNu4Sq(2,:),'LineWidth',1.5,'Color',Colors(floor((2)*256/(d.nSys)),:),'LineStyle','-.');
+% pPenning = plot(d.sin2t4_Sys(3,:).^2./d.sin2t4_Tot(1,:).^2,d.mNu4Sq(3,:),'LineWidth',1.5,'Color',Colors(floor((3)*256/(d.nSys)),:),'LineStyle',':');
+% pNonPois = plot(d.sin2t4_Sys(4,:).^2./d.sin2t4_Tot(1,:).^2,d.mNu4Sq(4,:),'LineWidth',1.5,'Color',Colors(floor((4)*256/(d.nSys)),:),'LineStyle','--');
+%leg = legend([pStat,pTot,pPlasma,pPenning,pNonPois],'Stat. only','All syst.','Plasma','Penning bkg','Non-Pois. bkg','Location','northeast');
+leg = legend([pStat,pTot],'Stat. only','All syst.','Location','north');
+
+PrettyLegendFormat(leg);
+PrettyFigureFormat('FontSize',22);
+set(gca,'YScale','log');
+ax2 = gca;
+ax2.YAxisLocation = 'right';
+xlabel(sprintf('\\sigma^2 / \\sigma_{total}^2'));
+xlim([0 1]);
+linkaxes([s1,s2],'y');
+ax1.Position(3) = 0.55;
+ax1.Position(2) = 0.15;
+ax2.Position(2) = ax1.Position(2);
+ax1.Position(1) = 0.1;
+ax2.Position(1) = 0.66;
+
+if strcmp(SavePlt,'ON')
+    plotname = sprintf('%sksn2_SysBreakdown_RatioContour_RasterScan%s.png',plotdir,RasterScan);
+    print(f2,plotname,'-dpng','-r400');
+    fprintf('save plot to %s \n',plotname);
+    %export_fig(f2,strrep(plotname,'png','pdf'));
+end

@@ -1,11 +1,10 @@
 % ksn2 calculate chi2 grid search
 %% settings that might change
-nGridSteps = 30;
+nGridSteps            = 50;
 DataType              = 'Real';
 range                 = 40;
 chi2                  = 'chi2CMShape';
 freePar               = 'E0 Norm Bkg';
-
 %% configure RunAnalysis object
 if strcmp(chi2,'chi2Stat')
     NonPoissonScaleFactor = 1;

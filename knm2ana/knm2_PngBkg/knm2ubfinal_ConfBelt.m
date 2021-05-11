@@ -3,7 +3,7 @@
 % calculation and plotting takes place in RunSensitivity class
 % Lisa Schlüter, 2019
 %% settings
-Mode        = 'FC';  % FC = Feldman Cousin, LT = Lokov Tkachov
+Mode        = 'LT';  % FC = Feldman Cousin, LT = Lokov Tkachov
 Sensitivity = 'OFF'; % OFF= show best fit, ON = show sensitivity only
 SavePlot    = 'OFF';
 range = 40;

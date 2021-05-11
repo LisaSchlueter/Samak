@@ -1,8 +1,8 @@
 % ksn2 calculate chi2 grid search
 %% settings that might change
-chi2 = 'chi2Stat';
+chi2 = 'chi2CMShape';
 DataType = 'Real';
-nGridSteps = 30;
+nGridSteps = 50;
 range = 40;
 
 %% configure RunAnalysis object
@@ -41,44 +41,16 @@ SterileArg = {'RunAnaObj',A,... % Mother Object: defines RunList, Column Density
     'range',range};
 S = SterileAnalysis(SterileArg{:});
 
-
+%%
 if strcmp(DataType,'Real')
-    S.LoadGridArg = {'mNu4SqTestGrid',5,'IgnoreKnm2FSDbinning','OFF','ExtmNu4Sq','ON'};
+    S.LoadGridArg = {'mNu4SqTestGrid',5,'IgnoreKnm2FSDbinning','OFF','ExtmNu4Sq','OFF'};
 else
     S.LoadGridArg = {'mNu4SqTestGrid',5,'IgnoreKnm2FSDbinning','ON','ExtmNu4Sq','OFF'};
 end
+
+
 %%
 S.NullHypothesis = 'ON';
-S.InterpMode = 'spline';
-S.nGridSteps = 35;
-S.LoadGridFile('mNu4SqTestGrid',5,'IgnoreKnm2FSDbinning','OFF','ExtmNu4Sq','OFF');
-S.Interp1Grid;
-p2 = S.ContourPlot('BestFit','ON');
-
-S.nGridSteps = 40;
-S.LoadGridFile('mNu4SqTestGrid',5,'IgnoreKnm2FSDbinning','OFF','ExtmNu4Sq','OFF');
-S.Interp1Grid;
-p1 = S.ContourPlot('BestFit','ON','HoldOn','ON','LineStyle',':','Color',rgb('FireBrick'));
-
-S.nGridSteps = 30;
-S.LoadGridFile('mNu4SqTestGrid',5,'IgnoreKnm2FSDbinning','OFF','ExtmNu4Sq','ON');
-S.Interp1Grid;
-p3 = S.ContourPlot('BestFit','ON','HoldOn','ON','LineStyle','-.','Color',rgb('Orange'));
-
-leg = legend([p3,p2,p1],'30x30','35x35','40x40');
-leg.Title.String = 'Grid size';
-leg.Title.FontWeight = 'normal';
-PrettyLegendFormat(leg);
-
-xlim([5e-03,0.5]);
-ylim([1 1600]);
-%
-savedir = [getenv('SamakPath'),'ksn2ana/ksn2_FitterCrossCheck/plots/'];
-MakeDir(savedir);
-pltname = sprintf('%sksn2_data_mNuSqFree_GridSize_NH.png',savedir);
-print(pltname,'-dpng','-r350');
-%%
-S.NullHypothesis = 'ON';
-S.PlotFitriumSamak('PlotTot','OFF','PlotStat','ON',...
-                  'SavePlot','ON','PlotKafit','ON','xLim',[5e-03,0.5])
+S.PlotFitriumSamak('PlotTot','ON','PlotStat','OFF',...
+                  'SavePlot','png','PlotKafit','OFF','xLim',[2e-03,0.5])
 

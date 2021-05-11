@@ -75,17 +75,22 @@ Real.FSDFlag = 'KNM2_0p1eV';
 Real.ModelObj.BKG_PtSlope = -2.2*1e-06;
 Real.ELossFlag = 'KatrinT2A20';
 S.RunAnaObj.SysBudget = 200;
-S.nGridSteps = 30;
-S.InterpMode = 'spline';
+S.nGridSteps = 50;
+
 
 % load file and interpolate
 if contains(freePar,'mNu')
-    S.LoadGridArg = {'mNu4SqTestGrid',5};
+    S.LoadGridArg = {'mNu4SqTestGrid',2};
+    S.InterpMode = 'Mix';
+    S.LoadGridFile(S.LoadGridArg{:});
+    S.Interp1Grid('Maxm4Sq',36^2);
 else
     S.LoadGridArg = {'mNu4SqTestGrid',2};
+    S.InterpMode = 'spline';
+    S.LoadGridFile(S.LoadGridArg{:});
+    S.Interp1Grid;
 end
-S.LoadGridFile(S.LoadGridArg{:});
-S.Interp1Grid;
+
 
 [p2,~,p2bf] = S.ContourPlot('HoldOn','ON','Color',rgb('Orange'),'LineStyle','-.','BestFit','ON');
 
@@ -100,12 +105,14 @@ chi2_Null_2 = S.chi2_Null;
 ylim([1 40^2]);
 xlim([6e-03 0.5]);
 
+SigmaBF1 = ConvertCLStd('Mode','CL2Sigma','CL',SignificanceBF_1,'nPar',2);
+SigmaBF2 = ConvertCLStd('Mode','CL2Sigma','CL',SignificanceBF_2,'nPar',2);
 %% legend
 ExtLeg = 'OFF';
 if strcmp(ExtLeg,'ON')
     leg = legend([p1,p2,p1bf,p2bf],'PRL-2021','Re-Analysis2021',...
-        sprintf('{\\itm}_4^2 = %.1f eV^2 , |{\\itU}_{e4}|^2 = %.3f (%.1f%% C.L.)',mNu4Sq_bf_1,sin2T4_bf_1,SignificanceBF_1),...
-        sprintf('{\\itm}_4^2 = %.1f eV^2 , |{\\itU}_{e4}|^2 = %.3f (%.1f%% C.L.)',mNu4Sq_bf_2,sin2T4_bf_2,SignificanceBF_2));
+        sprintf('{\\itm}_4^2 = %.1f eV^2 , |{\\itU}_{e4}|^2 = %.3f (%.1f \\sigma)',mNu4Sq_bf_1,sin2T4_bf_1,SigmaBF1),...
+        sprintf('{\\itm}_4^2 = %.1f eV^2 , |{\\itU}_{e4}|^2 = %.3f (%.1f \\sigma)',mNu4Sq_bf_2,sin2T4_bf_2,SigmaBF2));
     leg.NumColumns = 2;
     extraStr = '_ExtLeg';
 else
@@ -118,7 +125,9 @@ PrettyLegendFormat(leg);
 
 
 %% save
-savename = [extractBefore(S.DefPlotName,'FSD'),sprintf('%s_ReAna%s.png',chi2,extraStr)];
+savedir = [getenv('SamakPath'),'ksn1ana/ksn1_ReAna/plots/'];
+MakeDir(savedir);
+savename = [savedir,sprintf('ksn1_ReAna_ComparisonPlt_%s_%s_%.0feV.png',strrep(freePar,' ',''),chi2,range)];
 print(savename,'-dpng','-r350');
 fprintf('save plot to %s \n',savename);
 

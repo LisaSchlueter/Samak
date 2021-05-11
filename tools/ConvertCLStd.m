@@ -1,4 +1,4 @@
-function  ConvertCLStd(varargin)
+function  out = ConvertCLStd(varargin)
 % convert sigma into confidence level and vice versa
 % for 1 and 2 dimension
 p = inputParser;

@@ -19,3 +19,7 @@ fprintf('KSN-12: chiHat^2=%.2f (%.0f dof) p = %.2f \n',Chi2Hat,2,pHat);
 % fprintf('Compare to Null hypothesis DeltaChi^2 = %.2f (%.1f C.L.)\n',...
 %     chi2_null_12-chi2_ref_12,100*chi2cdf(chi2_null_12-chi2_ref_12,2));
  
+% dof for combi map: fixed m^2
+% KSN-1:  dof = 27(nqU)-5(sin2T4,m4Sq,E0,Norm,Bkg) = 22;
+% KSN-2:  dof = 28(nqU)-5(sin2T4,m4Sq,E0,Norm,Bkg) = 23;
+% KSN-12: dof = 55(nqU)-5(sin2T4,m4Sq,E01,Norm1,Bkg1,E02,Norm2,Bkg2) = 47;

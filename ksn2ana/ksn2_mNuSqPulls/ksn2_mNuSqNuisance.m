@@ -3,7 +3,7 @@
 %% settings that might change
 chi2 = 'chi2CMShape';
 DataType = 'Real';
-nGridSteps = 30;
+nGridSteps = 40;
 range = 40;
 Mode = 'Compute';
 %% configure RunAnalysis object
@@ -19,7 +19,7 @@ RunAnaArg = {'RunList','KNM2_Prompt',...
     'fitter','minuit',...
     'minuitOpt','min;migrad',...
     'RadiativeFlag','ON',...
-    'FSDFlag','KNM2_0p1eV',...
+    'FSDFlag','KNM2_0p5eV',...
     'ELossFlag','KatrinT2A20',...
     'AnaFlag','StackPixel',...
     'chi2',chi2,...
@@ -40,24 +40,26 @@ SterileArg = {'RunAnaObj',A,... % Mother Object: defines RunList, Column Density
     'SysEffect','all',...
     'RandMC','OFF',...
     'range',range,...
-     'LoadGridArg',{'ExtmNu4Sq','ON','mNu4SqTestGrid',5}};
-
-
+    'LoadGridArg',{'mNu4SqTestGrid',5}};
 
 S = SterileAnalysis(SterileArg{:});
 S.InterpMode = 'spline';
+%%
 S.LoadGridFile(S.LoadGridArg{:}); 
 S.Interp1Grid('nInter',1e3);
+%%
 PlotPar = S.mNuSq;
 
-ContourVec = [-0.06,0.58];%[-1,0,0.3,1,2,10];
+ContourVec = [-1,0,0.3,1,2,10];
 Splines = 'ON';
 GetFigure;
+%%
 for i=1:numel(ContourVec)
     [~,p1] = contour3(S.sin2T4,S.mNu4Sq,PlotPar,[ContourVec(i),ContourVec(i)],...
         'Color',rgb('LightGreen'),'ShowText','on','LineWidth',1.5,'LabelSpacing',380);
     hold on;
 end
+%%
 [pFree,pFix] = S.PlotmNuSqOverview('PullmNuSq','OFF','SavePlot','OFF','HoldOn','ON','BestFit','ON');
 view(2)
 grid off
@@ -79,4 +81,5 @@ name_i = strrep(S.DefPlotName,'_mNuE0BkgNorm','');
 plotname = sprintf('%s_mNuSqOverviewmNuSq_%.2gCL.png',name_i,S.ConfLevel);
 print(gcf,plotname,'-dpng','-r450');
 fprintf('save plot to %s \n',plotname);
+ylabel(sprintf('{\\itm}_4^2 (eV^{ 2})'));
 export_fig(strrep(plotname,'.png','.pdf'));

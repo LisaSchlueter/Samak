@@ -1,5 +1,5 @@
 % create smaller file for result of grids searches on randomized data
-RecomputeFlag = 'OFF';
+RecomputeFlag = 'ON';
 Hypothesis = 'H0';
 InterpMode = 'lin';
 MergeNew = 'ON';
@@ -11,7 +11,7 @@ switch Hypothesis
         Twin_sin2T4 = 0;
         Twin_mNu4Sq = 0;
         chi2 = 'chi2CMShape';
-        randMC_new  = [1:200,402:500];
+        randMC_new  = [1:1031,1148:1170,1228:1250];
     case 'H1' 
         randMC = 1:1e3;
         Twin_sin2T4 = 0.0240;
@@ -42,6 +42,7 @@ if exist(savefile,'file') && strcmp(RecomputeFlag,'OFF')
     fprintf('savefile already created \n');
     d = importdata(savefile);
 else
+
     %% configure RunAnalysis object 
     DataType = 'Twin';
     freePar = 'E0 Norm Bkg';
@@ -95,39 +96,46 @@ else
     mNu4Sq_contour = cell(NrandMC1,1);
     sin2T4_contour = cell(NrandMC1,1);
     TBDIS_mc      = zeros(NrandMC1,A.ModelObj.nqU);
-     
+    
     S.InterpMode = InterpMode;
     S.LoadGridArg = {'mNu4SqTestGrid',2,'ExtmNu4Sq','ON'};
     
-    % first part: load files
-    progressbar('Merge files for WT');
-    for i=1:NrandMC1
-        progressbar(i/NrandMC1);
-        S.RandMC= randMC(i);
-        S.LoadGridFile(S.LoadGridArg{:});
+    savefileOld = [extractBefore(savefile,'_MergeNew'),'.mat'];
+    if exist(savefileOld,'file')
+        load(savefileOld)
+        fprintf('load %s \n',savefileOld);
+    else
         
-        if strcmp(InterpMode,'Mix')
-            S.Interp1Grid('Maxm4Sq',36^2);% In "Mix" Mode -> Maxm4Sq is threshold for spline/linear interpolation
-        else
-            S.Interp1Grid;
+        % first part: load files
+        progressbar('Merge files for WT');
+        for i=1:NrandMC1
+            progressbar(i/NrandMC1);
+            S.RandMC= randMC(i);
+            S.LoadGridFile(S.LoadGridArg{:});
+            
+            if strcmp(InterpMode,'Mix')
+                S.Interp1Grid('Maxm4Sq',36^2);% In "Mix" Mode -> Maxm4Sq is threshold for spline/linear interpolation
+            else
+                S.Interp1Grid;
+            end
+            
+            S.ContourPlot('BestFit','ON'); close;
+            mNu4Sq_contour{i} = S.mNu4Sq_contour;
+            sin2T4_contour{i} = S.sin2T4_contour;
+            
+            mNu4Sq_bf(i) = S.mNu4Sq_bf;
+            sin2T4_bf(i) = S.sin2T4_bf;
+            chi2_bf(i)   = S.chi2_bf;
+            chi2_null(i) = S.chi2_Null;
+            chi2_delta(i) = chi2_null(i)-S.chi2_bf;
+            TBDIS_mc(i,:) = S.RandMC_TBDIS;
+            
+            S.RandMC_TBDIS = [];
         end
- 
-        S.ContourPlot('BestFit','ON'); close;
-        mNu4Sq_contour{i} = S.mNu4Sq_contour;
-        sin2T4_contour{i} = S.sin2T4_contour;
-       
-        mNu4Sq_bf(i) = S.mNu4Sq_bf;
-        sin2T4_bf(i) = S.sin2T4_bf;
-        chi2_bf(i)   = S.chi2_bf;
-        chi2_null(i) = S.chi2_Null;
-        chi2_delta(i) = chi2_null(i)-S.chi2_bf;
-        TBDIS_mc(i,:) = S.RandMC_TBDIS;
         
-        S.RandMC_TBDIS = []; 
+        dof = S.dof;
+        save(savefileOld,'mNu4Sq_contour','sin2T4_contour','mNu4Sq_bf','chi2_bf','chi2_null','chi2_delta','TBDIS_mc')
     end
-    
-       dof = S.dof;
-       
     %% remove duplicants from first part
     % find grid with idential TBDIS_mc
     if strcmp(RmDuplicates,'ON')
@@ -143,6 +151,7 @@ else
         chi2_delta    = chi2_delta(IdxNonId);
         TBDIS_mc      = TBDIS_mc(IdxNonId,:);  
     end
+    
     
     %% second part
     if strcmp(MergeNew,'ON')

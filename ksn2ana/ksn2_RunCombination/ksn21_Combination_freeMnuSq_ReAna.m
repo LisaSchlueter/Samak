@@ -6,7 +6,7 @@ RecomputeFlag = 'OFF';
 %% KNM-1 Model
 chi2          = 'chi2CMShape';
 DataType      = 'Real';
-nGridSteps    = 10;
+nGridSteps    = 40;
 freePar       = 'mNu E0 Bkg Norm';
 range         = 40;
 savedir = [getenv('SamakPath'),'/SterileAnalysis/GridSearchFiles/Combi/',DataType,'/'];

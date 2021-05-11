@@ -12,7 +12,7 @@ switch Hypothesis
         Twin_sin2T4 = 0;
         Twin_mNu4Sq = 0;
         chi2 = 'chi2CMShape';
-       randMC_new  = [1:96,110:200,406:500];
+      randMC_new  = [1:1e3];
     case 'H1' 
         randMC = 1:1e3;
         Twin_sin2T4 = 0.0240;
