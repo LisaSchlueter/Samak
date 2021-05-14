@@ -3,7 +3,7 @@
 % New with respect to ksn2RandomizedGridSearch_New.m : generate random tritium spectra locally and give as input to grid search
 
 randMC = 200:-1:1;%1:1e3;%
-Hypothesis = 'H0';
+Hypothesis = 'H1';
 chi2 = 'chi2CMShape';
 DataType = 'Twin';
 freePar = 'E0 Norm Bkg';

@@ -184,8 +184,15 @@ classdef SterileAnalysis < handle
                     obj.RunAnaObj.ModelObj.mnuSq_i = FixmNuSq;
                 end
                 
+               
                 %% null hypothesis : no steriles
-                obj.RunAnaObj.Fit;
+                if (obj.Twin_mNu4Sq~=0 || obj.Twin_sin2T4~=0)
+                    obj.RunAnaObj.SetFitBiasSterile(obj.Twin_mNu4Sq,obj.Twin_sin2T4)
+                    obj.RunAnaObj.Fit;
+                    obj.RunAnaObj.SetFitBiasSterile(0,0);
+                else
+                    obj.RunAnaObj.Fit;
+                end
                 FitResults_Null = obj.RunAnaObj.FitResult;
                 
                 if strcmp(obj.RunAnaObj.DataType,'Twin') && (isfloat(obj.RandMC)  || (obj.Twin_mNu4Sq~=0 || obj.Twin_sin2T4~=0)) 
