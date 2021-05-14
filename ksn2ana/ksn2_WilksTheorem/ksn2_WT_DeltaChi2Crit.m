@@ -13,7 +13,7 @@ switch Hypothesis
         Twin_sin2T4 = 0;
         Twin_mNu4Sq = 0;
         chi2 = 'chi2CMShape';
-       randMC_new  = [1:1e3];
+        randMC_new  = 1:1251;
     case 'H1' 
         randMC = 1:1e3;
         Twin_sin2T4 = 0.0240;
@@ -75,7 +75,7 @@ xlim([0 10]);
 ylim([-0.02 1.02]);
 legend([p95,pchi2Theo,pchi2,],sprintf('95%% quantile'),...
     sprintf('\\chi^2 distribution for 2 dof          \\Delta\\chi^2_{crit.} = %.2f',DeltaChi2CrTheo),...
-    sprintf('Empirical cdf (%.0f samples) \\Delta\\chi^2_{crit.} = %.2f',numel(PlotDeltaChi2),DeltaChi2CrApprox),...
+    sprintf('Empirical cdf (%.0f samples) \\Delta\\chi^2_{crit.} = %.2f',numel(PlotDeltaChi2)-1,DeltaChi2CrApprox),...
     'EdgeColor',rgb('Silver'),'Location','southeast');
 t = title(sprintf('\\Delta\\chi^2 = \\chi^2_{null} - \\chi^2_{min} '),'FontWeight','normal','FontSize',get(gca,'FontSize'));
 set(gca,'XMinorTick','on');
@@ -90,3 +90,8 @@ set(gca,'YMinorTick','on');
  %% KS Test
 CDFTheo = chi2cdf(PlotDeltaChi2,2); 
  [h,p,ksstat,cv] = kstest(PlotDeltaChi2,'CDF',[PlotDeltaChi2,CDFTheo]);
+ 
+ %%
+
+
+ 

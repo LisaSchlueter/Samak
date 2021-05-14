@@ -43,10 +43,11 @@ SterileArg = {'RunAnaObj',A,... % Mother Object: defines RunList, Column Density
 
 %%
 S = SterileAnalysis(SterileArg{:});
-S.LoadGridFile('ExtmNu4Sq','ON','mNu4SqTestGrid',5,'Extsin2T4','OFF');
-S.Interp1Grid('Maxm4Sq',40^2);
+S.LoadGridFile('ExtmNu4Sq','ON','mNu4SqTestGrid',5,'Extsin2T4','ON');
+S.InterpMode = 'Mix';
+S.Interp1Grid('Maxm4Sq',36^2);
 S.ContourPlot('BestFit','ON','SavePlot','ON');
-S.GridPlot('Contour','ON','BestFit','ON','SavePlot','png');
+%S.GridPlot('Contour','ON','BestFit','ON','SavePlot','png');
 %%
 S.FindBestFit;
 fprintf('Best fit: sin2T4 = %.2f m4Sq = %.2feV^2 mNuSq = %.2feV^2 chi2min = %.2f (%.0f dof) \n',...

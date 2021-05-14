@@ -2,11 +2,11 @@
 
 % ksn2 calculate chi2 grid search
 %% settings that might change
-chi2 = 'chi2CMShape';
+chi2 = 'chi2Stat';%CMShape';
 DataType = 'Twin';
-nGridSteps = 50;
+nGridSteps = 40;
 range = 40;
-freePar = 'E0 Norm Bkg';
+freePar = 'mNu E0 Norm Bkg';
 %% configure RunAnalysis object
 if strcmp(chi2,'chi2Stat')
     NonPoissonScaleFactor = 1;
@@ -20,7 +20,7 @@ RunAnaArg = {'RunList','KNM2_Prompt',...
     'fitter','minuit',...
     'minuitOpt','min;migrad',...
     'RadiativeFlag','ON',...
-    'FSDFlag','KNM2_0p1eV',...
+    'FSDFlag','KNM2_0p5eV',...
     'ELossFlag','KatrinT2A20',...
     'AnaFlag','StackPixel',...
     'chi2',chi2,...
@@ -44,7 +44,7 @@ SterileArg = {'RunAnaObj',A,... % Mother Object: defines RunList, Column Density
 S = SterileAnalysis(SterileArg{:});
 %%
 close all
-S.LoadGridFile;
+S.LoadGridFile('mNu4SqTestGrid',5);
 S.InterpMode = 'spline';
 S.Interp1Grid('Maxm4Sq',38.2^2);
 S.ContourPlot; %close;

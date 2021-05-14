@@ -1,19 +1,18 @@
 % Understanding systematics breakdown
-    
+    DataType = 'Twin';
 SavePlt = 'ON';
     savedir = [getenv('SamakPath'),'ksn2ana/ksn2_Systematics/results/'];
-    savename = sprintf('%sksn2_SystBreakdown_StatOverSyst_%s_%.0feV_RasterScan%s.mat',savedir,'Twin',40,'ON');
+    savename = sprintf('%sksn2_SystBreakdown_StatOverSyst_%s_%.0feV_RasterScan%s.mat',savedir,DataType,40,'ON');
     if exist(savename,'file')
         d = importdata(savename);
         fprintf('load file %s \n',savename);
     else
         return    
     end
-   
     plotdir = strrep(savedir,'results','plots');
     %%  
-    f1 = figure('Units','normalized','Position',[-0.1,0.1,0.5,0.7]);
-    s1 = subplot(3,1,1);
+    f1 = figure('Units','normalized','Position',[-0.1,0.1,0.5,0.6]);
+    s1 = subplot(4,1,1);
     x = -sqrt(d.mNu4Sq(1,:));
     Idx = 1; %'LongPlasma','BkgPT' (2,3)
     pStat = plot(x,d.sin2t4_Stat(1,:).^2./d.sin2t4_Tot(1,:).^2,'LineWidth',3,'Color',rgb('Silver'),'LineStyle','-');
@@ -21,34 +20,67 @@ SavePlt = 'ON';
     pTot = plot(x,d.sin2t4_Sys(Idx,:).^2./d.sin2t4_Tot(1,:).^2,'-k','LineWidth',3);
     xlabel(sprintf('- {\\itm}_4^ (eV)'));
     ylabel(sprintf('\\sigma^2 / \\sigma_{total}^2'));
-    PrettyFigureFormat
     leg = legend('Stat. only','All syst. effects','Location','west');
     PrettyLegendFormat(leg);
     ylim([0 1])
+    ax1 = gca;
+    PrettyFigureFormat('FontSize',20);
     
-    s2 = subplot(3,1,2);
-    bar(d.qU-18574,d.TimeSubRun./(60*60));
-    PrettyFigureFormat
-    xlabel(sprintf('{\\itqU} - 18574 (eV)'))
-    ylabel(sprintf('Time (hours)'));
+    s2 = subplot(4,1,2);
+    bar(d.qU-18574,d.TimeSubRun./(60*60),'FaceColor',rgb('DodgerBlue'),'EdgeColor','none');
+   % xlabel(sprintf('{\\itqU} - 18574 (eV)'))
+    ylabel(sprintf('Time (h)'));
     ylim([0 70]);
     PrettyLegendFormat(leg);
+    ax2 = gca;
+    xticklabels('');
+    PrettyFigureFormat('FontSize',20);
     
-    s3 = subplot(3,1,3);
+    s3 = subplot(4,1,3);
     plot(d.qU-18574,ones(numel(d.qU),1),'k-','LineWidth',1.5);
     hold on;
-    plot(d.qU-18574,d.TBDIS_Signal./d.BkgCounts,'.-','MarkerSize',18,'LineWidth',2.5);
-    xlabel(sprintf('{\\itqU} - 18574 (eV)'))
-    ylabel('S / B')
+    plot(d.qU-18574,d.TBDIS_Signal./d.BkgCounts,'-','MarkerSize',18,'LineWidth',2.5);
+    %xlabel(sprintf('{\\itqU} - 18574 (eV)'))
+    ylabel(sprintf('{\\itS} / {\\itB}'));
     set(gca,'YScale','log');
-    PrettyFigureFormat
     ylim([0.005 500])
+    yticks([0.01 1 100])
+    xticklabels('');
+    ax3 = gca;
+    PrettyFigureFormat('FontSize',20);
+      
+    s4 = subplot(4,1,4);
+    plot(d.qU-18574,1e-05.*(d.TBDIS_Signal+d.BkgCounts),'.-','LineWidth',2.5,'Color',rgb('DodgerBlue'),'MarkerSize',18);
+    hold on;
+    plot(d.qU-18574,d.BkgCounts.*1e-05,':','LineWidth',2,'Color',rgb('ForestGreen'));
+    xlabel(sprintf('{\\itqU} - 18574 (eV)'))
+    ylabel(sprintf('Counts (10^5)'))
+    ylim([-0.5 5.7]);
+    yticks([1 3 5]);
+    leg = legend(sprintf('{\\itS} + {\\itB}'),sprintf('{\\itB}'),'Location','northeast');
+    leg.NumColumns = 2;
+    PrettyLegendFormat(leg);
+    ax4 = gca;
+     PrettyFigureFormat('FontSize',20);
     
-    yticks([0.01,1,100]);
-    linkaxes([s1,s2,s3],'x');
+    linkaxes([s1,s2,s3,s4],'x');
     xlim([-37,0]);
+    
+    ax1.Position(4) = 0.16;
+    ax2.Position(4) = ax1.Position(4);
+    ax3.Position(4) = ax1.Position(4);
+    ax4.Position(4) = ax1.Position(4);
+    ax1.Position(2) = 0.82;
+    ax2.Position(2) = 0.54;
+    ax3.Position(2) = 0.34;
+    ax4.Position(2) = 0.14;
+    ax1.YLabel.Position(1) = -39.5;
+    ax2.YLabel.Position(1) = ax1.YLabel.Position(1);
+    ax3.YLabel.Position(1) = ax1.YLabel.Position(1);
+    ax4.YLabel.Position(1) = ax1.YLabel.Position(1);
+    %
     if strcmp(SavePlt,'ON')
-        plotname = sprintf('%sksn2_SysBreakdown_MTD_RasterScan%s.png',plotdir,RasterScan);
+        plotname = sprintf('%sksn2_SysBreakdown_MTD_%s_RasterScan%s.png',plotdir,DataType,'ON');
         print(f1,plotname,'-dpng','-r400');
         fprintf('save plot to %s \n',plotname);
        % export_fig(f1,strrep(plotname,'png','pdf'));
@@ -95,8 +127,9 @@ ax2.Position(2) = ax1.Position(2);
 ax1.Position(1) = 0.1;
 ax2.Position(1) = 0.66;
 
+
 if strcmp(SavePlt,'ON')
-    plotname = sprintf('%sksn2_SysBreakdown_RatioContour_RasterScan%s.png',plotdir,RasterScan);
+    plotname = sprintf('%sksn2_SysBreakdown_RatioContour_%s_RasterScan%s.png',plotdir,DataType,'ON');
     print(f2,plotname,'-dpng','-r400');
     fprintf('save plot to %s \n',plotname);
     %export_fig(f2,strrep(plotname,'png','pdf'));

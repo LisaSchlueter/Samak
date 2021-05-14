@@ -12,7 +12,7 @@ switch Hypothesis
         Twin_sin2T4 = 0;
         Twin_mNu4Sq = 0;
         chi2 = 'chi2CMShape';
-        randMC_new  = [1:1000];
+        randMC_new  = 1:1251;
     case 'H1' 
         randMC = 1:1e3;
         Twin_sin2T4 = 0.0240;
@@ -69,10 +69,10 @@ ylabel(sprintf('Cumulative probability'));
 resultsStr = sprintf('KS test: p-value = %.2g',p);
 title(resultsStr,'FontWeight','normal','FontSize',get(gca,'FontSize'))
 legend([pTheo,pEmp],sprintf(' \\chi^2 distribution with %.0f dof',dof),...
-    sprintf(' Empirical distribution (%.0f samples)',numel(chi2_null)),...
+    sprintf(' Empirical distribution (%.0f samples)',numel(chi2_null)-1),...
     'EdgeColor',rgb('Silver'),'Location','southeast');
 ylim([-0.05 1.05])
-
+xlim([0 max(x)])
 %% save
 if strcmp(SavePlt,'ON')
 plotnameChi2KS = strrep(strrep(savefile,'results','plots'),'.mat','_KStest_Chi2NullCDF.png');

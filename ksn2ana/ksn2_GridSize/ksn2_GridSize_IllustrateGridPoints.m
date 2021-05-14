@@ -1,10 +1,11 @@
 % plot: points of original grid  and interpolation grid
 nGridSteps = 30;
 range = 40;
-ExtmNu4Sq = 'ON';
-mNu4SqTestGrid = 5;
+ExtmNu4Sq = 'log';
+mNu4SqTestGrid = 'OFF';%5;
 nInter = 1e3; 
-SavePlt = 'OFF';
+SavePlt = 'ON';
+
 %% define grid
 if strcmp(ExtmNu4Sq,'ON')
     mnu4Sq_ex = [0.1;0.35;0.7];
@@ -28,13 +29,16 @@ elseif mNu4SqTestGrid==4
     mnu4SqSmall  = logspace(0,log10((range-11)^2),nGridSteps-5)';
     mnu4SqLarge  = logspace(log10((range-10)^2),log10((range)^2),5)';
     mNu4Sq       = sort([mnu4SqSmall;mnu4SqLarge]);
-elseif mNu4SqTestGrid==5 || mNu4SqTestGrid==5.5
+elseif any(mNu4SqTestGrid==5) || any(mNu4SqTestGrid==5.5)
     mnu4SqSmall  = logspace(0,log10((range-11)^2),nGridSteps-15)';
     mnu4SqLarge  = logspace(log10((range-10)^2),log10((range)^2),15)';
     mNu4Sq       = sort([mnu4SqSmall;mnu4SqLarge]);
+elseif strcmp(ExtmNu4Sq,'log')
+     mNu4Sq      = logspace(-1,log10((range)^2),nGridSteps)';
 else
     mNu4Sq      = logspace(0,log10((range)^2),nGridSteps)';
 end
+
 if ismember(ExtmNu4Sq,{'ON','0.01'})
     mNu4Sq = [mnu4Sq_ex;mNu4Sq];%;logspace(0,log10((obj.range)^2),obj.nGridSteps-3)'];
     nGridSteps = nGridSteps_i;

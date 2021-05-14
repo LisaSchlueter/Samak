@@ -2,16 +2,15 @@ function d = ksn2_GetRandTritiumSpectrum(Hypothesis)
 % short cut function to load random tritium spectrum file
 %% load random tritium spectra
 range = 40;
-
+ chi2 = 'chi2CMShape';
+ 
 savedir = [getenv('SamakPath'),'ksn2ana/ksn2_WilksTheorem/results/'];
 if strcmp(Hypothesis,'H0')
          Twin_sin2T4 = 0;
-        Twin_mNu4Sq = 0;
-        chi2 = 'chi2CMShape';
+        Twin_mNu4Sq = 0;       
 elseif strcmp(Hypothesis,'H1')
         Twin_sin2T4 = 0.0240;
         Twin_mNu4Sq = 92.7;
-        chi2 = 'chi2Stat';
 end
 
 if Twin_sin2T4==0 && Twin_mNu4Sq==0

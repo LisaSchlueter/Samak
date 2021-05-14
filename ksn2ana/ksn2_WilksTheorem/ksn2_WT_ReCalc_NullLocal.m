@@ -4,16 +4,18 @@
 % grid search on randomized twins
 % ksn2 calculae chi2 grid search
 
-Hypothesis = 'H0';
+Hypothesis = 'H1';
 switch Hypothesis
     case 'H0'
         Twin_sin2T4 = 0;
         Twin_mNu4Sq = 0;
         chi2 = 'chi2CMShape';
     case 'H1'
+           randMC = [1:129,578:748];
         Twin_sin2T4 = 0.0240;
         Twin_mNu4Sq = 92.7;
-        chi2 = 'chi2Stat';
+        chi2 = 'chi2CMShape';
+        MergeNew = 'OFF'; % nothing new
 end
 DataType = 'Twin';
 freePar = 'E0 Norm Bkg';
@@ -63,26 +65,49 @@ TBDIS_i = A.RunData.TBDIS;
 S = SterileAnalysis(SterileArg{:});
 
 %% get randomized MC data
-S.RandMC= 3;
-filename = S.GridFilename('mNu4SqTestGrid',2,'ExtmNu4Sq','ON');
-d = importdata(filename);
+savedir = [getenv('SamakPath'),'ksn2ana/ksn2_WilksTheorem/results/'];
+if Twin_sin2T4==0 && Twin_mNu4Sq==0
+    savefile = sprintf('%sksn2_WilksTheorem_RandomSpectra_%s_%.0feV_NullHypothesis_%.0fsamples.mat',savedir,chi2,range,5000);
+else
+    savefile = sprintf('%sksn2_WilksTheorem_RandomSpectra_%s_%.0feV_mNu4Sq-%.1feV2_sin2T4-%.3g_%.0fsamples.mat',...
+        savedir,chi2,range,Twin_mNu4Sq,Twin_sin2T4,5000);
+end
 
-A.RunData.TBDIS = d.TBDIS_mc;
+if exist(savefile,'file')
+    d = importdata(savefile);
+else
+    fprintf('file %s not found \n',savefile)
+    return
+end
+%% get grid
+S.RandMC = 3;
+S.RandMC_TBDIS = d.TBDIS_mc(:,3);
+S.LoadGridFile('mNu4SqTestGrid',2,'ExtmNu4Sq','ON');
+S.FindBestFit;
+%%
+
+% S.RandMC= 3;
+% filename = S.GridFilename('mNu4SqTestGrid',2,'ExtmNu4Sq','ON');
+% %d = importdata(filename);
+
 %A.ComputeCM
-%
-mNu4SqTest = d.mnu4Sq(4,25);
-sin2T4Test =  d.sin2T4(4,25);
-chi2 = d.chi2';
-chi2Test = chi2(4,25);
+% %
+% mNu4SqTest = d.mnu4Sq(4,25);
+% sin2T4Test =  d.sin2T4(4,25);
+% chi2 = d.chi2';
+% chi2Test = chi2(4,25);
 
 %%
-A.RunData.TBDIS = d.TBDIS_mc;
-% A.ComputeCM
-A.ModelObj.SetFitBiasSterile(1,0.5);%mNu4SqTest,sin2T4Test);
+%A.RunData.TBDIS = d.TBDIS_mc;
+A.RunData.TBDIS = [zeros(10,1)',d.TBDIS_i]';
+A.ComputeCM
+A.RunData.TBDIS = d.TBDIS_mc(:,3);
+A.ModelObj.SetFitBiasSterile(Twin_mNu4Sq,Twin_sin2T4);%mNu4SqTest,sin2T4Test);
 A.Fit;
 chi2_ReCalc = A.FitResult.chi2min;
-
-
+fprintf('chi2null from grid search  : %.2f \n',S.chi2_Null) 
+fprintf('chi2null from recalculating: %.2f \n',chi2_ReCalc) 
+%%
 A.RunData.TBDIS = TBDIS_i;
 A.ComputeCM;
 A.ModelObj.SetFitBiasSterile(1,0.5);%mNu4SqTest,sin2T4Test);

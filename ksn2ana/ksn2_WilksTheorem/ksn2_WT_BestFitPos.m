@@ -1,5 +1,5 @@
 % plot Asimov sensitivity + best fits on randomized contour
-Hypothesis = 'H0';
+Hypothesis = 'H1';
 InterpMode = 'lin';
 SavePlt = 'ON';
 MergeNew = 'ON';
@@ -13,7 +13,7 @@ switch Hypothesis
         chi2 = 'chi2CMShape';
      randMC_new  = [1:1e3];
     case 'H1' 
-        randMC = 1:1e3;
+    randMC = [1:129,578:748];
         Twin_sin2T4 = 0.0240;
         Twin_mNu4Sq = 92.7;
         chi2 = 'chi2Stat';
@@ -34,8 +34,8 @@ if Twin_sin2T4==0 && Twin_mNu4Sq==0
     savefile = sprintf('%sksn2_WilksTheorem_NullHypothesis_Interp%s_%.0fsamples%s_RmDouble%s.mat',...
         savedir,InterpMode,numel(randMC),MergeStr,RmDuplicates);
 else
-    savefile = sprintf('%sksn2_WilksTheorem_mNu4Sq-%.1feV2_sin2T4-%.3g_Interp%s_%.0fsamples%s_RmDouble%s.mat',...
-        savedir,Twin_mNu4Sq,Twin_sin2T4,InterpMode,numel(randMC),MergeStr,RmDuplicates);
+    savefile = sprintf('%sksn2_WilksTheorem_mNu4Sq-%.1feV2_sin2T4-%.3g_Interp%s_%.0fsamples.mat',...
+    savedir,Twin_mNu4Sq,Twin_sin2T4,InterpMode,NrandMC);
 end
 
 if exist(savefile,'file')

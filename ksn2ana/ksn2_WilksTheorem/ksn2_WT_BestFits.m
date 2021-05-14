@@ -12,7 +12,7 @@ switch Hypothesis
         Twin_sin2T4 = 0;
         Twin_mNu4Sq = 0;
         chi2 = 'chi2CMShape';
-       randMC_new  = [1:1e3];
+       randMC_new  = [1:1251];
     case 'H1' 
         randMC = 1:1e3;
         Twin_sin2T4 = 0.0240;
@@ -69,9 +69,9 @@ set(gca,'XScale','log');
 xlabel(sprintf('|{\\itU}_{e4}|^2'));
 ylabel(sprintf('{\\itm}_4^2 (eV^2)'));
 
-xlim([5e-03,0.5]);
-ylim([0.1,1600]);
-leg = legend([h,pAsimov],sprintf('Best fits %.0f pseudo-experiments',NrandMC),sprintf('Sensitivity (%.0f%% C.L.)',95),'EdgeColor',rgb('Silver'),'Location','southwest');
+xlim([1e-03,0.5]);
+ylim([0.1,2000]);
+leg = legend([h,pAsimov],sprintf('Best fits %.0f pseudo-experiments',NrandMC-1),sprintf('Sensitivity (%.0f%% C.L.)',95),'EdgeColor',rgb('Silver'),'Location','southwest');
 PrettyLegendFormat(leg);
 
 if strcmp(SavePlt,'ON')

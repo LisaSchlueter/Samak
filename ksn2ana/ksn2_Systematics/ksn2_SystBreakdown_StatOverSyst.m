@@ -3,7 +3,7 @@
 % compare variances
 % systematics one-by-one
 %% settings that might change
-SavePlt = 'OFF';
+SavePlt = 'ON';
 RasterScan = 'ON';
 DataType = 'Twin';
 nGridSteps = 30;
@@ -37,6 +37,12 @@ else
         'DopplerEffectFlag','FSD'};
     A = MultiRunAnalysis(RunAnaArg{:});
     %% configure Sterile analysis object
+    if strcmp(DataType,'Real')
+    LoadGridArg = {'mNu4SqTestGrid',5,'ExtmNu4Sq','ON'};
+else
+    LoadGridArg = {'mNu4SqTestGrid',5};
+    end
+
     SterileArg = {'RunAnaObj',A,... % Mother Object: defines RunList, Column Density, Stacking Cuts,....
         'nGridSteps',nGridSteps,...
         'SmartGrid','OFF',...
@@ -44,7 +50,7 @@ else
         'SysEffect','all',...
         'RandMC','OFF',...
         'range',range,...
-        'LoadGridArg',{'mNu4SqTestGrid',5}};
+        'LoadGridArg',LoadGridArg};
     
     %%
     S = SterileAnalysis(SterileArg{:});
@@ -105,7 +111,7 @@ ylabel(sprintf('\\sigma_{syst.}^2 / \\sigma_{total}^2'))
 xlabel(sprintf('{\\itm}_4^2 (eV^2)'));
 set(gca,'XScale','log');
 PrettyFigureFormat('FontSize',22);
-xlim([1 40^2]);
+xlim([1.6 40^2]);
  ylim([0 0.5])        
 leg = legend([pHandle{:}],SysEffectLabel);
 PrettyLegendFormat(leg);
@@ -115,7 +121,7 @@ leg.Location = 'eastoutside';
 
 if strcmp(SavePlt,'ON')
     plotdir = strrep(savedir,'results','plots');
-    plotname = sprintf('%sksn2_SysBreakdown_StatOverSyst_Ratio_RasterScan%s.png',plotdir,RasterScan);
+    plotname = sprintf('%sksn2_SysBreakdown_StatOverSyst_Ratio_RasterScan_%s_%s.png',plotdir,DataType,RasterScan);
     print(fRatio,plotname,'-dpng','-r400');
     fprintf('save plot to %s \n',plotname);
     export_fig(fRatio,strrep(plotname,'png','pdf'));

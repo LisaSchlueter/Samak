@@ -1,8 +1,16 @@
-% investigate impact of grid size on contour 
-nGridSteps = [50,30,25,10];
-
+% investigate impact of grid size on contour
+freePar = 'mNu E0 Norm Bkg';
+if contains(freePar,'mNu')
+    nGridSteps = [30,40];
+    chi2 = 'chi2CMShape';
+     LoadGridArg = {'CheckLargerN','OFF','CheckSmallerN','OFF','IgnoreKnm2FSDbinning','ON','mNu4SqTestGrid',5};
+else
+    nGridSteps = [50,30,25,10];
+    chi2 = 'chi2Stat';
+    LoadGridArg = {'CheckLargerN','OFF','CheckSmallerN','OFF','IgnoreKnm2FSDbinning','ON'};
+end
 %% configure RunAnalysis object
-chi2 = 'chi2Stat';
+
 DataType = 'Twin';
 range = 40;
 InterpMode = 'spline';
@@ -13,7 +21,7 @@ elseif  strcmp(chi2,'chi2CMShape')
 end
 RunAnaArg = {'RunList','KNM2_Prompt',...
     'DataType',DataType,...
-    'fixPar','E0 Norm Bkg',...%free par
+    'fixPar',freePar,...%free par
     'SysBudget',40,...
     'fitter','minuit',...
     'minuitOpt','min;migrad',...
@@ -48,13 +56,13 @@ pHandle = cell(numel(nGridSteps),1);
 legStr = cell(numel(nGridSteps),1);
 S.InterpMode = InterpMode;
 for i=1:numel(nGridSteps)
-    if nGridSteps(i)==10
+    if nGridSteps(i)==10 || contains(freePar,'mNu')
         ExtmNu4Sq = 'OFF';
     else
         ExtmNu4Sq = 'ON';
     end
 S.nGridSteps = nGridSteps(i);
-S.LoadGridFile('CheckLargerN','OFF','CheckSmallerN','OFF','IgnoreKnm2FSDbinning','ON','ExtmNu4Sq',ExtmNu4Sq);
+S.LoadGridFile(LoadGridArg{:},'ExtmNu4Sq',ExtmNu4Sq);
 S.Interp1Grid('Maxm4Sq',38.2^2);
 pHandle{i} = S.ContourPlot('HoldOn',HoldOn,'Color',rgb(Colors{i}),'LineStyle',LineStyles{i});
 legStr{i} = sprintf('%.0f x %.0f',nGridSteps(i),nGridSteps(i));
@@ -68,7 +76,7 @@ xlim([7e-3,0.5]);
 ylim([1,1.6e3])
 %%
 plotdir = [getenv('SamakPath'),'ksn2ana/ksn2_GridSize/plots/'];
-plotname = sprintf('%sksn2_GridSize_%s.png',plotdir,InterpMode);
+plotname = sprintf('%sksn2_GridSize_%s_%s.png',plotdir,InterpMode,strrep(freePar,' ',''));
 MakeDir(plotdir);
 print(plotname,'-dpng','-r300');
 fprintf('save plot to %s \n',plotname);

@@ -11,7 +11,7 @@ switch Hypothesis
         Twin_sin2T4 = 0;
         Twin_mNu4Sq = 0;
         chi2 = 'chi2CMShape';
-      randMC_new  = [1:1e3];
+        randMC_new  = 1:1251;
     case 'H1' 
         randMC = 1:1e3;
         Twin_sin2T4 = 0.0240;
@@ -46,23 +46,62 @@ else
      return
 end
 
-%%
-% mean: calculate 95 quantile: interpolation
+%% mean: calculate 95 quantile: interpolation
 PlotDeltaChi2 = sort(chi2_delta);
 DeltaChi2CDF = arrayfun(@(x) sum(PlotDeltaChi2<=x)./numel(PlotDeltaChi2),PlotDeltaChi2);
 [DeltaChi2CDFquantile,ia] = unique(DeltaChi2CDF);
 DeltaChi2Cr = interp1(DeltaChi2CDFquantile,PlotDeltaChi2(ia),0.95,'lin');%quantile(PlotDeltaChi2,0.95);% PlotDeltaChi2(find(abs(DeltaChi2CDF-0.95)==min(abs(DeltaChi2CDF-0.95)),1));
-
+chi2_delta_i = chi2_delta;
 %% bootstrapping error: re-sampling with double counting
+nSamplesMax = [10:20:1500,1500];
+nSteps = numel(nSamplesMax);
+MeanChi2Crit_all = zeros(nSteps,1);
+StdChi2Crit_all   = zeros(nSteps,1);
 nSamples = 5e3;
-tmp = repmat(chi2_delta,1,nSamples);
-chi2_delta_resample = tmp(randi(numel(chi2_delta),numel(chi2_delta),nSamples));
-DeltaChi2Cr_reSample = zeros(nSamples,1);
-for i=1:nSamples
-    chi2_delta_tmp = sort(chi2_delta_resample(:,i));
-    DeltaChi2CDF_tmp = arrayfun(@(x) sum(chi2_delta_tmp<=x)./numel(chi2_delta_tmp),chi2_delta_tmp);
-    [DeltaChi2CDFquantile_tmp,ia] = unique(DeltaChi2CDF_tmp);
-    DeltaChi2Cr_reSample(i) = interp1(DeltaChi2CDFquantile_tmp,chi2_delta_tmp(ia),0.95,'lin');
+savedirConv = [getenv('SamakPath'),'ksn2ana/ksn2_WilksTheorem/results/Chi2CritConv/'];
+MakeDir(savedirConv);
+
+progressbar('WT bootstrap error sample dependence');
+for i=1:nSteps
+    progressbar(i./nSteps)
+    savefileErr = strrep(strrep(savefile,'results/','results/Chi2CritConv/'),'.mat',sprintf('_%.0fResamples__Err_%.0fnSamplesMax.mat',nSamples,nSamplesMax(i)));
+    
+    if   exist(savefileErr,'file')
+        d = importdata(savefileErr);
+        MeanChi2Crit_all(i) =  d.MeanChi2Crit;
+        StdChi2Crit_all(i) = d.StdChi2Crit;
+    elseif ~exist(savefileErr,'file')
+        
+        chi2_delta = chi2_delta_i(1:nSamplesMax(i));
+        
+        tmp = repmat(chi2_delta,1,nSamples);
+        chi2_delta_resample = tmp(randi(numel(chi2_delta),numel(chi2_delta),nSamples))+rand(numel(chi2_delta),nSamples).*1e-10; %
+        DeltaChi2Cr_reSample = zeros(nSamples,1);
+        DeltaChi2Cr_reSample2 = zeros(nSamples,1); % test
+        for j=1:nSamples
+            chi2_delta_tmp = sort(chi2_delta_resample(:,j));
+            DeltaChi2CDF_tmp = arrayfun(@(x) sum(chi2_delta_tmp<=x)./numel(chi2_delta_tmp),chi2_delta_tmp);
+            DeltaChi2Cr_reSample2(j) = quantile(chi2_delta_tmp,0.95);
+            [DeltaChi2CDFquantile_tmp,ia] = unique(DeltaChi2CDF_tmp);
+            DeltaChi2Cr_reSample(j) = interp1(DeltaChi2CDFquantile_tmp,chi2_delta_tmp(ia),0.95,'spline');
+        end
+        MeanChi2Crit = mean(DeltaChi2Cr_reSample);
+        StdChi2Crit =std(DeltaChi2Cr_reSample);
+        
+        MeanChi2Crit_all(i) =  MeanChi2Crit;
+        StdChi2Crit_all(i) = StdChi2Crit;
+        fprintf('delta chi^2 crit = %.2f +- %.2f \n',mean(DeltaChi2Cr_reSample),std(DeltaChi2Cr_reSample))
+        save(savefileErr,'MeanChi2Crit','StdChi2Crit');
+    end
 end
 
-fprintf('delta chi^2 crit = %.2f +- %.2f \n',mean(DeltaChi2Cr_reSample),std(DeltaChi2Cr_reSample))
+%% plot
+GetFigure;
+%errorbar(nSamplesMax,MeanChi2Crit_all,StdChi2Crit_all,'CapSize',1,'LineWidth',2)
+plot(nSamplesMax,StdChi2Crit_all,'LineWidth',2)
+PrettyFigureFormat;
+xlabel('Number of samples')
+ylabel(sprintf('\\Delta\\chi^2_{crit.}'));
+title('Uncertainties via resampling - bootstrap','FontWeight','normal');
+ylim([0.2 0.5])
+print(gcf,[savedirConv,'Chi2CritErr.png'],'-dpng','-r300');

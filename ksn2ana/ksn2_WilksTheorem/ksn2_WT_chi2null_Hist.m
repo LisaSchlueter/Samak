@@ -1,6 +1,6 @@
 % Test of Wilk's theorem (coverage)
 % chi2 distribution of null hypothesis
-Hypothesis = 'H0';
+Hypothesis = 'H1';
 InterpMode = 'lin';
 SavePlt = 'ON';
 MergeNew = 'ON';
@@ -12,12 +12,12 @@ switch Hypothesis
         Twin_sin2T4 = 0;
         Twin_mNu4Sq = 0;
         chi2 = 'chi2CMShape';
-         randMC_new  = [1:96,110:200,406:500];
+         randMC_new  = 1:1251;
     case 'H1' 
-        randMC = 1:1e3;
+        randMC = [1:129,578:748];
         Twin_sin2T4 = 0.0240;
         Twin_mNu4Sq = 92.7;
-        chi2 = 'chi2Stat';
+        chi2 = 'chi2CMShape';
         MergeNew = 'OFF'; % nothing new
 end
 
@@ -25,7 +25,6 @@ if strcmp(MergeNew,'ON')
     MergeStr = sprintf('_MergeNew%.0f',numel(randMC_new));
       NrandMC = numel(randMC)+numel(randMC_new);
 else
-    MergeStr = '';
     NrandMC = numel(randMC);
 end
 
@@ -35,8 +34,8 @@ if Twin_sin2T4==0 && Twin_mNu4Sq==0
     savefile = sprintf('%sksn2_WilksTheorem_NullHypothesis_Interp%s_%.0fsamples%s_RmDouble%s.mat',...
         savedir,InterpMode,numel(randMC),MergeStr,RmDuplicates);
 else
-    savefile = sprintf('%sksn2_WilksTheorem_mNu4Sq-%.1feV2_sin2T4-%.3g_Interp%s_%.0fsamples%s_RmDouble%s.mat',...
-        savedir,Twin_mNu4Sq,Twin_sin2T4,InterpMode,numel(randMC),MergeStr,RmDuplicates);
+    savefile = sprintf('%sksn2_WilksTheorem_mNu4Sq-%.1feV2_sin2T4-%.3g_Interp%s_%.0fsamples.mat',...
+        savedir,Twin_mNu4Sq,Twin_sin2T4,InterpMode,numel(randMC));
 end
 
 if exist(savefile,'file')
@@ -69,7 +68,7 @@ PrettyFigureFormat('FontSize',22);
 xlabel(sprintf('\\chi^2_{NH} (%.0f dof)',dof));
 ylabel('Frequency');
 %title(resultsStr,'FontWeight','normal','FontSize',get(gca,'FontSize'))
-leg = legend([hchi2,pchi2],sprintf('%.0f pseudo-experiments',numel(chi2_bf)),...
+leg = legend([hchi2,pchi2],sprintf('%.0f pseudo-experiments',numel(chi2_bf)-1),...
                  sprintf('\\chi^2 distribution for %.0f dof',dof),...
                  'EdgeColor',rgb('Silver'));
 %xlim([0 70]);

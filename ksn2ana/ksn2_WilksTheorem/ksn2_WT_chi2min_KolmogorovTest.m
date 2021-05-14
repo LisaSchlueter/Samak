@@ -4,13 +4,14 @@ Hypothesis = 'H0';
 SavePlt = 'ON';
 MergeNew = 'ON';
 RmDuplicates = 'ON';
+InterpMode = 'lin';
 
 switch Hypothesis
     case 'H0'
-        NrandMC = 377;
+        NrandMC = 419;
         Twin_sin2T4 = 0;
         Twin_mNu4Sq = 0;
-        randMC_new  = [1:1e3];
+        randMC_new  = 1:1251;
         MergeStr = sprintf('_MergeNew%.0f',numel(randMC_new));
     case 'H1'
         NrandMC = 1e3;
@@ -23,7 +24,7 @@ end
 savedir = [getenv('SamakPath'),'ksn2ana/ksn2_WilksTheorem/results/'];
 if Twin_sin2T4==0 && Twin_mNu4Sq==0
     savefile = sprintf('%sksn2_WilksTheorem_NullHypothesis_Interp%s_%.0fsamples%s_RmDouble%s.mat',...
-        savedir,InterpMode,numel(randMC),MergeStr,RmDuplicates);
+        savedir,InterpMode,NrandMC,MergeStr,RmDuplicates);
 else
     savefile = sprintf('%sksn2_WilksTheorem_mNu4Sq-%.1feV2_sin2T4-%.3g_Interp%s_%.0fsamples%s_RmDouble%s.mat',...
         savedir,Twin_mNu4Sq,Twin_sin2T4,InterpMode,numel(randMC),MergeStr,RmDuplicates);
@@ -60,7 +61,7 @@ ylabel(sprintf('Cumulative probability'));
 resultsStr = sprintf('KS test: p-value = %.2g',p);
 title(resultsStr,'FontWeight','normal','FontSize',get(gca,'FontSize'))
 legend([pTheo,pEmp],sprintf(' \\chi^2 distribution with %.0f dof',dof),...
-    sprintf(' Empirical distribution (%.0f samples)',numel(chi2min)),...
+    sprintf(' Empirical distribution (%.0f samples)',numel(chi2min)-1),...
     'EdgeColor',rgb('Silver'),'Location','southeast');
 ylim([-0.05 1.05])
 xlim([0 max(x)])

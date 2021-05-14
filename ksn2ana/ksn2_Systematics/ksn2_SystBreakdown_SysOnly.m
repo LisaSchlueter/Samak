@@ -1,11 +1,11 @@
 % a la Mainz: (fig. 4) https://arxiv.org/pdf/1210.4194.pdf
 % syst. only  with raster scan
 % 2 Plot Options: (x,y) = (sin2t4,m4Sq) or vice versa
-PltAxism4Sq = 'x';
-SavePlt = 'OFF';
+PltAxism4Sq = 'y';
+SavePlt = 'ON';
 
 RasterScan = 'ON';
-DataType = 'Twin';
+DataType = 'Real';
 range = 40;
 
 savedir = [getenv('SamakPath'),'ksn2ana/ksn2_Systematics/results/'];
@@ -78,7 +78,7 @@ leg.Title.FontWeight ='normal';
 leg.Location = 'eastoutside';
 
 if strcmp(SavePlt,'ON')
-    plotname = sprintf('%sksn2_SysBreakdown_SystOnly_RasterScan%s_%s.png',plotdir,RasterScan,PltAxism4Sq);
+    plotname = sprintf('%sksn2_SysBreakdown_SystOnly_%s_RasterScan%s_%s.png',plotdir,DataType,RasterScan,PltAxism4Sq);
     print(fSyst,plotname,'-dpng','-r400');
     fprintf('save plot to %s \n',plotname);
     export_fig(fSyst,strrep(plotname,'png','pdf'));

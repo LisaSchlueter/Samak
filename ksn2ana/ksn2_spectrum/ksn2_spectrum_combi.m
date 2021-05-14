@@ -1,4 +1,4 @@
-% ksn2 calculate chi2 grid search
+
 %% settings that might change
 
 range = 40;

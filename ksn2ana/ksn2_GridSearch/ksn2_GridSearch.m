@@ -1,7 +1,7 @@
 % ksn2 calculate chi2 grid search
 %% settings that might change
 chi2 = 'chi2CMShape';
-DataType = 'Real';
+DataType = 'Twin';
 nGridSteps = 30;
 range = 40;
 
@@ -40,9 +40,8 @@ SterileArg = {'RunAnaObj',A,... % Mother Object: defines RunList, Column Density
     'SysEffect','all',...
     'RandMC','OFF',...
     'range',range,...
-    'LoadGridArg',{'mNu4SqTestGrid',5,'ExtmNu4Sq','ON'}};
+    'LoadGridArg',{'mNu4SqTestGrid',5,'ExtmNu4Sq','OFF'}};
 
-%%
 S = SterileAnalysis(SterileArg{:});
 %S.GridSearch('ExtmNu4Sq','ON');
 %%

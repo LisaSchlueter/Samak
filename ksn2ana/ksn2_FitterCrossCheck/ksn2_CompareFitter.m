@@ -1,7 +1,7 @@
 % ksn2 calculate chi2 grid search
 %% settings that might change
-chi2 = 'chi2CMShape';
-DataType = 'Real';
+chi2 = 'chi2Stat';%CMShape';
+DataType = 'Twin';
 nGridSteps = 50;
 range = 40;
 
@@ -50,7 +50,14 @@ end
 
 
 %%
-S.NullHypothesis = 'ON';
-S.PlotFitriumSamak('PlotTot','ON','PlotStat','OFF',...
+ S.LoadGridArg = {'mNu4SqTestGrid',5,'IgnoreKnm2FSDbinning','ON','ExtmNu4Sq','OFF'};
+S.nGridSteps = 40;
+S.NullHypothesis = 'OFF';
+S.PlotFitriumSamak('PlotTot','OFF','PlotStat','ON',...
                   'SavePlot','png','PlotKafit','OFF','xLim',[2e-03,0.5])
 
+          
+S.nGridSteps = 30;
+S.LoadGridFile(S.LoadGridArg{:});
+S.Interp1Grid;
+S.ContourPlot('HoldOn','ON','LineStyle',':');

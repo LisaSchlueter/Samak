@@ -140,6 +140,9 @@ classdef SterileAnalysis < handle
                     obj.RunAnaObj.ComputeCM('SysEffect',struct(obj.SysEffect,'ON'),'BkgCM','OFF','BkgPtCM','OFF');
                 elseif strcmp(obj.RunAnaObj.chi2,'chi2CMShape') && strcmp(obj.SysEffect,'all')
                     obj.RunAnaObj.ComputeCM('BkgCM','ON','BkgPtCM','ON');
+                elseif  strcmp(obj.RunAnaObj.chi2,'chi2CMShape') && strcmp(obj.SysEffect,'KSN2Top3')
+                    % for testing: KSN2 top 3 systematics: Plasma, NP, Penning
+                    obj.RunAnaObj.ComputeCM('SysEffect',struct('LongPlasma','ON'),'BkgCM','OFF','BkgPtCM','ON');
                 end
                 
                 %% ranomized mc data
@@ -518,7 +521,7 @@ classdef SterileAnalysis < handle
             end
             
             %  best fit
-            fprintf('Best fit sinTsq = %.3f and m4sq = %.1f eV^2 \n',obj.sin2T4_bf,obj.mNu4Sq_bf);
+            fprintf('Best fit sinTsq = %.3f and m4sq = %.2f eV^2 \n',obj.sin2T4_bf,obj.mNu4Sq_bf);
             fprintf('Best fit:        chi2 = %.3f (%.0f dof) -> p-value = %.2f\n',obj.chi2_bf,obj.dof,1-chi2cdf(obj.chi2_bf,obj.dof));
             
             % null 
@@ -527,8 +530,9 @@ classdef SterileAnalysis < handle
           %  y = GetDeltaChi2(x,2);
             DeltaChi2 = obj.chi2_Null-obj.chi2_bf;
             SignificanceBF = chi2cdf(DeltaChi2,2);%interp1(y,x, DeltaChi2,'spline');
-            
-            fprintf('Delta chi2 = %.2f -> %.1f%% C.L. significance \n',obj.chi2_Null-obj.chi2_bf,100.*SignificanceBF);
+           SignificanceSigma = ConvertCLStd('Mode','CL2Sigma','nPar',2,'CL',SignificanceBF);
+            fprintf('Delta chi2 = %.2f -> %.1f%% C.L. significance (%.1f sigma)\n',...
+                obj.chi2_Null-obj.chi2_bf,100.*SignificanceBF,SignificanceSigma);
           
         end
         function [DeltamNu41Sq,sin2T4Sq] = Convert2Osci(obj,varargin)
@@ -1749,6 +1753,14 @@ classdef SterileAnalysis < handle
                 HoldOn = 'ON';
             end
             %% load fitrium
+            if strcmp(obj.NullHypothesis,'ON') && strcmp(obj.RunAnaObj.DataType,'Real')
+                H0Str = '_NH';
+            elseif strcmp(obj.NullHypothesis,'OFF') &&strcmp(obj.RunAnaObj.DataType,'Real')
+                H0Str = '_BF';
+            else 
+                H0Str = '';
+            end
+            
             if strcmp(obj.RunAnaObj.DataType,'Real')
                 DataStr = 'Data';
             elseif strcmp(obj.RunAnaObj.DataType,'Twin')
@@ -1760,11 +1772,7 @@ classdef SterileAnalysis < handle
             else
                 nuStr = 'nu_fix';
             end
-             if strcmp(obj.NullHypothesis,'ON')
-                 H0Str = '_NH';
-             else
-                 H0Str = '_BF';
-             end
+            
             if strcmp(obj.RunAnaObj.DataSet,'Knm1')
                  savedirF = [getenv('SamakPath'),'SterileAnalysis/GridSearchFiles/',obj.RunAnaObj.DataSet,'/Others/'];
                 fstat = sprintf('%scontour_KSN1_Fitrium_%s_%.0feV_stat_95CL_0.txt',savedirF,obj.RunAnaObj.DataType,obj.range);
@@ -1849,11 +1857,19 @@ classdef SterileAnalysis < handle
           
            %% plot kafit
            if strcmp(PlotKaFit ,'ON')
-               if contains(ConvertFixPar('freePar',obj.RunAnaObj.fixPar,'Mode','Reverse'),'mNu')
-                    kstat = sprintf('%scontour_KSN2_Kafit_%s_%.0feV_mNuFree_stat_95CL.txt',savedirF,obj.RunAnaObj.DataType,obj.range);
-            
-               else
-                   kstat = sprintf('%scontour_KSN2_Kafit_%s_%.0feV_stat_95CL.txt',savedirF,obj.RunAnaObj.DataType,obj.range);
+               if strcmp(obj.RunAnaObj.DataSet,'Knm1')
+                   if contains(ConvertFixPar('freePar',obj.RunAnaObj.fixPar,'Mode','Reverse'),'mNu')
+                       kstat = sprintf('%scontour_KSN2_Kafit_%s_%.0feV_mNuFree_stat_95CL.txt',savedirF,obj.RunAnaObj.DataType,obj.range);
+                   else
+                       kstat = sprintf('%scontour_KSN2_Kafit_%s_%.0feV_stat_95CL.txt',savedirF,obj.RunAnaObj.DataType,obj.range);
+                   end
+               elseif strcmp(obj.RunAnaObj.DataSet,'Knm2')
+                   savedirK = [getenv('SamakPath'),'SterileAnalysis/GridSearchFiles/Knm2/Others/ksn2_analysis/KaFit/results/contours/',nuStr,'/',DataStr,'/'];
+                   if strcmp(nuStr,'nu_free')
+                       kstat = sprintf('%sStatOnly_Free%s.dat',savedirK,H0Str);
+                   else
+                       kstat = sprintf('%sStatOnly.dat',savedirK);
+                   end
                end
                dkStat = importdata(kstat);
                if strcmp(PlotStat,'ON')
@@ -1899,7 +1915,7 @@ classdef SterileAnalysis < handle
                    legStr = {'Fitrium','KaFit','Samak'};
                    legPlt = [pF,pK,pS];   
                else
-                   legStr = {'Samak','Fitrium'};
+                   legStr = {'Fitrium','Samak'};
                    legPlt = [pF,pS];     
                end
                   leg = legend(legPlt,legStr,'Location','southwest'); 
@@ -2623,11 +2639,13 @@ classdef SterileAnalysis < handle
            p = inputParser;
            p.addParameter('mnu4Sq',20^2,@(x)isfloat(x) || isempty(x));
            p.addParameter('sin2T4',0.1,@(x)isfloat(x));
+           p.addParameter('PltSterile','ON',@(x)ismember(x,{'ON','OFF'}));;
            p.addParameter('SavePlot','OFF',@(x)ismember(x,{'ON','OFF'}));
            p.parse(varargin{:});
            mNu4Sq_Plot = p.Results.mnu4Sq;
            sin2T4_Plot = p.Results.sin2T4;
            SavePlot    = p.Results.SavePlot;
+           PltSterile = p.Results.PltSterile;
            
            qU = obj.RunAnaObj.ModelObj.qU;
            Time = obj.RunAnaObj.ModelObj.qUfrac.*obj.RunAnaObj.ModelObj.TimeSec;
@@ -2647,32 +2665,38 @@ classdef SterileAnalysis < handle
            BKG_RateSec = obj.RunAnaObj.ModelObj.BKG_RateSec+0.5.*obj.RunAnaObj.ModelObj.BKG_PtSlope.*Time./obj.RunAnaObj.nRuns;
            GetFigure;
            p0 = plot(qU-obj.RunAnaObj.ModelObj.Q,(1-sin2T4_Plot).*(H0-BKG_RateSec)+BKG_RateSec,'LineWidth',2.5,'Color',rgb('DodgerBlue'));
-           hold on;
-           p1 = plot(qU-obj.RunAnaObj.ModelObj.Q,sin2T4_Plot.*(H1-BKG_RateSec)+BKG_RateSec,'-.','LineWidth',2.5,'Color',rgb('ForestGreen'));
-           p2 = plot(qU-obj.RunAnaObj.ModelObj.Q,sin2T4_Plot.*(H1-BKG_RateSec)+BKG_RateSec+...
-               (1-sin2T4_Plot).*(H0-BKG_RateSec),':','LineWidth',2.5,'Color',rgb('Orange'));
+           if strcmp(PltSterile,'ON')
+               hold on;
+               p1 = plot(qU-obj.RunAnaObj.ModelObj.Q,sin2T4_Plot.*(H1-BKG_RateSec)+BKG_RateSec,'-.','LineWidth',2.5,'Color',rgb('ForestGreen'));
+               p2 = plot(qU-obj.RunAnaObj.ModelObj.Q,sin2T4_Plot.*(H1-BKG_RateSec)+BKG_RateSec+...
+                   (1-sin2T4_Plot).*(H0-BKG_RateSec),':','LineWidth',2.5,'Color',rgb('Orange'));
+           end
            set(gca,'YScale','log')
            PrettyFigureFormat('FontSize',22);
            ylabel('Rate');
            xlabel(sprintf('Retarding energy - {\\itE}_0 (eV)'));
-           leg = legend([p0,p1,p2],sprintf('Active branch'),...
-               sprintf('Sterile branch: {\\itm}_4 = %.3g eV , |{\\itU}_{e4}|^2 = %.3g',sqrt(mNu4Sq_Plot),sin2T4_Plot),...
-               'Active + Sterile branch');
+           if strcmp(PltSterile,'ON')
+               leg = legend([p0,p1,p2],sprintf('Active branch'),...
+                   sprintf('Sterile branch: {\\itm}_4 = %.3g eV , |{\\itU}_{e4}|^2 = %.3g',sqrt(mNu4Sq_Plot),sin2T4_Plot),...
+                   'Active + Sterile branch');
+           else
+               leg = legend(p0,sprintf('Active branch'));
+           end
            PrettyLegendFormat(leg);
-          
+           
            ylim([0.1,1e2])
            xlim([-42,5])
            title('Integral spectrum','FontWeight','normal','FontSize',get(gca,'FontSize'));
            
            if strcmp(SavePlot,'ON')
-              plotdir = [getenv('SamakPath'),sprintf('SterileAnalysis/plots/%s/spectra/',obj.RunAnaObj.DataSet)];
-              MakeDir(plotdir)
-              plotname = sprintf('%sTririumSpectrum_%s_%.3geVm4_%.3gsint4Sq.png',...
-                  plotdir,obj.RunAnaObj.DataSet,sqrt(mNu4Sq_Plot),sin2T4_Plot);
-              print(plotname,'-dpng','-r300');
-              fprintf('save plot to %s \n',plotname);
-           end 
-          
+               plotdir = [getenv('SamakPath'),sprintf('SterileAnalysis/plots/%s/spectra/',obj.RunAnaObj.DataSet)];
+               MakeDir(plotdir)
+               plotname = sprintf('%sTririumSpectrum_%s_%.3geVm4_%.3gsint4Sq_Sterile%s.png',...
+                   plotdir,obj.RunAnaObj.DataSet,sqrt(mNu4Sq_Plot),sin2T4_Plot,PltSterile);
+               print(plotname,'-dpng','-r300');
+               fprintf('save plot to %s \n',plotname);
+           end
+           
         end
        
     end

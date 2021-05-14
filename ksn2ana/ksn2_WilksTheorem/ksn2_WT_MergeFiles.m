@@ -1,24 +1,13 @@
 % create smaller file for result of grids searches on randomized data
 RecomputeFlag = 'ON';
-Hypothesis = 'H0';
 InterpMode = 'lin';
 MergeNew = 'ON';
 RmDuplicates = 'ON';
-
-switch Hypothesis
-    case 'H0'
-        randMC =[1001:1260,1294:1300,1349:1500];%11:1e3;
-        Twin_sin2T4 = 0;
-        Twin_mNu4Sq = 0;
-        chi2 = 'chi2CMShape';
-        randMC_new  = [1:1031,1148:1170,1228:1250];
-    case 'H1' 
-        randMC = 1:1e3;
-        Twin_sin2T4 = 0.0240;
-        Twin_mNu4Sq = 92.7;
-        chi2 = 'chi2Stat';
-        MergeNew = 'OFF'; % nothing new
-end
+randMC =[1001:1260,1294:1300,1349:1500];
+randMC_new  = 1:1250;
+Twin_sin2T4 = 0;
+Twin_mNu4Sq = 0;
+chi2 = 'chi2CMShape';
 %%
 if strcmp(MergeNew,'ON')
     MergeStr = sprintf('_MergeNew%.0f',numel(randMC_new));
@@ -166,7 +155,7 @@ else
         sin2T4_contour2 = cell(NrandMC2,1);
         TBDIS_mc2      = zeros(NrandMC2,A.ModelObj.nqU);
         
-        dspectra = ksn2_GetRandTritiumSpectrum(Hypothesis);
+        dspectra = ksn2_GetRandTritiumSpectrum('H0');
         progressbar('Merge files for WT - part 2');   
         for i=1:NrandMC2
             progressbar(i/NrandMC2);

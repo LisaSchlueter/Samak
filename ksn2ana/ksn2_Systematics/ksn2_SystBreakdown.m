@@ -33,6 +33,12 @@ RunAnaArg = {'RunList','KNM2_Prompt',...
     'DopplerEffectFlag','FSD'};
 A = MultiRunAnalysis(RunAnaArg{:});
 %% configure Sterile analysis object
+if strcmp(DataType,'Real')
+    LoadGridArg = {'mNu4SqTestGrid',5,'ExtmNu4Sq','ON'};
+else
+    LoadGridArg = {'mNu4SqTestGrid',5};
+end
+
 SterileArg = {'RunAnaObj',A,... % Mother Object: defines RunList, Column Density, Stacking Cuts,....
     'nGridSteps',nGridSteps,...
     'SmartGrid','OFF',...
@@ -40,17 +46,18 @@ SterileArg = {'RunAnaObj',A,... % Mother Object: defines RunList, Column Density
     'SysEffect','all',...
     'RandMC','OFF',...
     'range',range,...
-    'LoadGridArg',{'mNu4SqTestGrid',5}};
+    'LoadGridArg',LoadGridArg};
 
 %%
 S = SterileAnalysis(SterileArg{:});
+
 S.InterpMode = 'spline';
 S.RunAnaObj.chi2 = 'chi2CMShape';
 S.RunAnaObj.NonPoissonScaleFactor = 1;
 SysEffectsAll   = {'Stat','LongPlasma','BkgPT','NP','FSD', 'RF_BF','Bkg','TASR','RF_EL',...
                      'RF_RX','FPDeff','Stack','TCoff_OTHER','all'}; 
-
-HoldOn = 'OFF';
+fRatio = figure('Units','normalized','Position',[0.1,0.1,0.7,0.5]);
+HoldOn = 'ON';
 pHandle = cell(numel(SysEffectsAll),1);
 LineStyle = {'-','-.',':','--','-','-.',':','--','-','-.',':','--','-.','-','--','-.',':','--','-.',':','--'};
 Colors = colormap('jet');
@@ -107,7 +114,21 @@ for i=1:numel(SysEffectsAll)
     end
 end
 
-xlim([7e-03,0.5])
+%%
+set(gca,'XScale','log');
+set(gca,'YScale','log');
+xlabel(sprintf('|{\\itU}_{e4}|^2'));
+ylabel(sprintf('{\\itm}_4^2 (eV^2)'));
+PrettyFigureFormat('FontSize',22);
+title(sprintf('%s',S.GetPlotTitle),'FontWeight','normal','FontSize',get(gca,'FontSize'));
+
+if strcmp(DataType,'Twin')
+    xlim([7e-03,0.5])
+    ylim([1 2000]);
+else
+    xlim([3e-03,0.5])
+    ylim([0.1 2000]);
+end
 SysEffectLeg    = {'Stat. only'; 'Plasma';'Penning background';'Non-Poisson background';...
                      'Final-state distribution'; 'Magnetic fields';'Background qU-slope';...
                      'Tritium activity fluctuations';'Energy-loss function';...
@@ -118,14 +139,21 @@ leg = legend([pHandle{:}],SysEffectLeg);
 PrettyLegendFormat(leg);
 leg.Title.String = 'Stat. + 1 syst.';
 leg.Title.FontWeight ='normal';
-leg.Location = 'east';
+leg.Location = 'eastoutside';
+leg.NumColumns = 1;
+
 % save 
 plotname123 = sprintf('%sBudget%.0f_SystBreakdown.png',extractBefore(S.DefPlotName,'Budget'),A.SysBudget);
 print(gcf,plotname123,'-dpng','-r300');
 fprintf('save plot to %s \n',plotname123)
 %% save zoom
-ylim([100 800])
-xlim([8.5e-03 0.017])
+if strcmp(DataType,'Twin')
+    ylim([100 800])
+    xlim([8.5e-03 0.017])
+else
+    ylim([100 800])
+    xlim([4.5e-03 0.02])
+end
 set(gca,'XScale','lin');
 plotname123 = sprintf('%sBudget%.0f_SystBreakdownZoom.png',extractBefore(S.DefPlotName,'Budget'),A.SysBudget);
 print(gcf,plotname123,'-dpng','-r300');

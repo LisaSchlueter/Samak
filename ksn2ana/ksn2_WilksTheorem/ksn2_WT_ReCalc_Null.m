@@ -4,7 +4,7 @@
 % grid search on randomized twins
 % ksn2 calculae chi2 grid search
 
-Hypothesis = 'H0';
+Hypothesis = 'H1';
 switch Hypothesis
     case 'H0'
         randMC = 1:1e3;
@@ -12,15 +12,31 @@ switch Hypothesis
         Twin_mNu4Sq = 0;
         chi2 = 'chi2CMShape';
     case 'H1'
-        randMC = [1:860,979:1e3];
+        randMC = [1:129,578:748];
         Twin_sin2T4 = 0.0240;
         Twin_mNu4Sq = 92.7;
-        chi2 = 'chi2Stat';
+        chi2 = 'chi2CMShape';
 end
-DataType = 'Twin';
-freePar = 'E0 Norm Bkg';
-nGridSteps = 25;
-range = 40;
+DataType    = 'Twin';
+freePar     = 'E0 Norm Bkg';
+nGridSteps  = 25;
+range       = 40;
+
+%% get randomized MC data
+savedir = [getenv('SamakPath'),'ksn2ana/ksn2_WilksTheorem/results/'];
+if Twin_sin2T4==0 && Twin_mNu4Sq==0
+    savefile = sprintf('%sksn2_WilksTheorem_RandomSpectra_%s_%.0feV_NullHypothesis_%.0fsamples.mat',savedir,chi2,range,5000);
+else
+    savefile = sprintf('%sksn2_WilksTheorem_RandomSpectra_%s_%.0feV_mNu4Sq-%.1feV2_sin2T4-%.3g_%.0fsamples.mat',...
+        savedir,chi2,range,Twin_mNu4Sq,Twin_sin2T4,5000);
+end
+
+if exist(savefile,'file')
+    d = importdata(savefile);
+else
+    fprintf('file %s not found \n',savefile)
+    return
+end
 
 %% configure RunAnalysis object
 if strcmp(chi2,'chi2Stat')
@@ -65,29 +81,16 @@ SterileArg = {'RunAnaObj',A,... % Mother Object: defines RunList, Column Density
 S = SterileAnalysis(SterileArg{:});
 %%
 for i=1:numel(randMC)
-    % re-init RunAna
-    A.RunData.TBDIS = TBDIS_i;
-    A.ModelObj.SetFitBias(0);
-    A.ModelObj.SetFitBiasSterile(0,0);
-    A.InitModelObj_Norm_BKG('RecomputeFlag','ON');
-      
-    % get randomized spectrum
-    S.RandMC= randMC(i);
+    S.RandMC = randMC(i);
+    S.RandMC_TBDIS =   d.TBDIS_mc(:,i);
     filename = S.GridFilename('mNu4SqTestGrid',2,'ExtmNu4Sq','ON');
-    d = importdata(filename);
-    A.RunData.TBDIS = d.TBDIS_mc;
-    
-    % null hypothesis with init from TBDIS_i
-    A.ModelObj.SetFitBias(0);
-    A.ModelObj.SetFitBiasSterile(Twin_mNu4Sq,Twin_sin2T4);
-    A.Fit;
-    ReCalc_chi2Null_i = A.FitResult.chi2min;
-    
-    % null hypothesis with init from TBDIS_mc
-    A.ModelObj.SetFitBias(0);
-    A.ModelObj.SetFitBiasSterile(0,0);
+
+    % re-init RunAna
     A.InitModelObj_Norm_BKG('RecomputeFlag','ON');
+    A.ComputeCM;
+    A.RunData.TBDIS = d.TBDIS_mc(:,i);
     
+    % null hypothesis with recalculated
     A.ModelObj.SetFitBias(0);
     A.ModelObj.SetFitBiasSterile(Twin_mNu4Sq,Twin_sin2T4);
     A.Fit;
@@ -97,7 +100,7 @@ for i=1:numel(randMC)
         ReCalc_chi2Bf = [];
         save(filename,'ReCalc_chi2Null','ReCalc_chi2Null_i','ReCalc_chi2Bf','-append');
     else
-        save(filename,'ReCalc_chi2Null','ReCalc_chi2Null_i','-append');
+        save(filename,'ReCalc_chi2Null','-append');
     end
 end
 

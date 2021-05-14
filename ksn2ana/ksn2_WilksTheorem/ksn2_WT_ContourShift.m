@@ -50,8 +50,8 @@ S.Interp1Grid;
 p1 = S.ContourPlot;
 
 %
-Chi2Crit = 6.36;%6.19; % +- 0.12 (from Martin Slezak, H0, 5000 contours)
-Chi2CritErr = 0.39;
+Chi2Crit = 6.31;%6.19; % +- 0.12 (from Martin Slezak, H0, 5000 contours)
+Chi2CritErr = 0.30;
 myCL = GetCL(Chi2Crit);
 p2 = S.ContourPlot('CL',myCL,'HoldOn','ON','Color',rgb('Skyblue'),'LineStyle','-.');
 
