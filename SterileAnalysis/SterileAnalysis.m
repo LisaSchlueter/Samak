@@ -185,12 +185,13 @@ classdef SterileAnalysis < handle
                 end
                 
                
-                %% null hypothesis : no steriles
+                %% null hypothesis : MC truth 
                 if (obj.Twin_mNu4Sq~=0 || obj.Twin_sin2T4~=0)
-                    obj.RunAnaObj.SetFitBiasSterile(obj.Twin_mNu4Sq,obj.Twin_sin2T4)
+                    obj.RunAnaObj.ModelObj.SetFitBiasSterile(obj.Twin_mNu4Sq,obj.Twin_sin2T4)
                     obj.RunAnaObj.Fit;
-                    obj.RunAnaObj.SetFitBiasSterile(0,0);
+                    obj.RunAnaObj.ModelObj.SetFitBiasSterile(0,0);
                 else
+                   %  no steriles
                     obj.RunAnaObj.Fit;
                 end
                 FitResults_Null = obj.RunAnaObj.FitResult;

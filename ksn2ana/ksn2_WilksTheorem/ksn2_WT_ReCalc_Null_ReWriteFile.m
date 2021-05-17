@@ -1,22 +1,11 @@
-% recalculate chi2 for MC truth
-% something weird must have happened...
-
-% grid search on randomized twins
-% ksn2 calculae chi2 grid search
+% recalculate chi2 for MC truth were re-calculated
+% look and results and overwrite file
 
 Hypothesis = 'H1';
-switch Hypothesis
-    case 'H0'
-        randMC = 1:1e3;
-        Twin_sin2T4 = 0;
-        Twin_mNu4Sq = 0;
-        chi2 = 'chi2CMShape';
-    case 'H1'
-        randMC = [1:139,577:757];
-        Twin_sin2T4 = 0.0240;
-        Twin_mNu4Sq = 92.7;
-        chi2 = 'chi2CMShape';
-end
+randMC = [1:139,577:757];%130;%[1:201,534:748]; % still need to be re-calc: 130-139,534:748
+Twin_sin2T4 = 0.0240;
+Twin_mNu4Sq = 92.7;
+chi2 = 'chi2CMShape';
 DataType    = 'Twin';
 freePar     = 'E0 Norm Bkg';
 nGridSteps  = 25;
@@ -24,12 +13,8 @@ range       = 40;
 
 %% get randomized MC data
 savedir = [getenv('SamakPath'),'ksn2ana/ksn2_WilksTheorem/results/'];
-if Twin_sin2T4==0 && Twin_mNu4Sq==0
-    savefile = sprintf('%sksn2_WilksTheorem_RandomSpectra_%s_%.0feV_NullHypothesis_%.0fsamples.mat',savedir,chi2,range,5000);
-else
-    savefile = sprintf('%sksn2_WilksTheorem_RandomSpectra_%s_%.0feV_mNu4Sq-%.1feV2_sin2T4-%.3g_%.0fsamples.mat',...
-        savedir,chi2,range,Twin_mNu4Sq,Twin_sin2T4,5000);
-end
+savefile = sprintf('%sksn2_WilksTheorem_RandomSpectra_%s_%.0feV_mNu4Sq-%.1feV2_sin2T4-%.3g_%.0fsamples.mat',...
+    savedir,chi2,range,Twin_mNu4Sq,Twin_sin2T4,5000);
 
 if exist(savefile,'file')
     d = importdata(savefile);
@@ -80,35 +65,42 @@ SterileArg = {'RunAnaObj',A,... % Mother Object: defines RunList, Column Density
 
 S = SterileAnalysis(SterileArg{:});
 %%
+
+ReCalc_chi2Null = zeros(numel(randMC),1);
+chi2Null        = zeros(numel(randMC),1);
+
+progressbar('rewrite files')
 for i=1:numel(randMC)
+    progressbar(i/numel(randMC));
     S.RandMC = randMC(i);
     S.RandMC_TBDIS =   d.TBDIS_mc(:,randMC(i));
     filename = S.GridFilename('mNu4SqTestGrid',2,'ExtmNu4Sq','ON');
-    d = importdata(filename);
+
+    dtmp = importdata(filename);
+    ReCalc_chi2Null(i) = dtmp.ReCalc_chi2Null;
+    chi2Null(i) = dtmp.FitResults_Null.chi2min;
     
-    % re-init RunAna
-    A.InitModelObj_Norm_BKG('RecomputeFlag','ON');
-   % A.ComputeCM;
-    A.FitCMShape = d.FitCMShape;
-    A.RunData.TBDIS = d.TBDIS_mc(:,randMC(i));
+    % change file
+    FitResults_Null = dtmp.FitResults_Null;
+    FitResults_Null.chi2min = ReCalc_chi2Null(i);
+    chi2_H0 = chi2Null(i);
     
-    % null hypothesis with recalculated
-    A.ModelObj.SetFitBias(0);
-    A.ModelObj.SetFitBiasSterile(Twin_mNu4Sq,Twin_sin2T4);  
-    A.Fit;
-    ReCalc_chi2Null = A.FitResult.chi2min;
-    
-    if strcmp(Hypothesis,'H0')
-        ReCalc_chi2Bf = [];
-        save(filename,'ReCalc_chi2Null','ReCalc_chi2Null_i','ReCalc_chi2Bf','-append');
-    else
-        save(filename,'ReCalc_chi2Null','-append');
-    end
+    save(filename,'FitResults_Null','chi2_H0','-append');
 end
 
 
-
- 
+%%
+dof = dtmp.FitResults{1}.dof;
+GetFigure;
+histogram(chi2Null,'Normalization','probability','BinWidth',3);
+hold on;
+hchi2 = histogram(ReCalc_chi2Null,'Normalization','probability','BinWidth',3);
+x = linspace(0,dof*3,1e3);
+y = chi2pdf(x,dof);
+pchi2 = plot(x,y*hchi2.BinWidth,'Color',rgb('Black'),'LineWidth',2);
+PrettyFigureFormat('FontSize',22);
+xlabel(sprintf('\\chi^2_{null} (%.0f dof)',dof));
+ylabel('Frequency');
  
  
 

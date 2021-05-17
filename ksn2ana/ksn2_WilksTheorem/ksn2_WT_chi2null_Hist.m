@@ -14,7 +14,9 @@ switch Hypothesis
         chi2 = 'chi2CMShape';
          randMC_new  = 1:1251;
     case 'H1' 
-        randMC = [1:129,578:748];
+        randMC = [1:317,417:873];
+       % excl = [1:139,577:757];
+%randMC = randMC(~ismember(randMC,excl));
         Twin_sin2T4 = 0.0240;
         Twin_mNu4Sq = 92.7;
         chi2 = 'chi2CMShape';

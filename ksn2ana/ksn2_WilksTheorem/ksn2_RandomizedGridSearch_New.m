@@ -75,6 +75,7 @@ SterileArg = {'RunAnaObj',A,... % Mother Object: defines RunList, Column Density
 
 S = SterileAnalysis(SterileArg{:});
 %%
+randMC = 400;
 for i=1:numel(randMC)
     A = MultiRunAnalysis(RunAnaArg{:});
     S = SterileAnalysis(SterileArg{:});

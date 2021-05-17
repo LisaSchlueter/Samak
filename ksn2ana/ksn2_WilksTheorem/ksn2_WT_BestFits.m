@@ -1,7 +1,7 @@
 % Test of Wilk's theorem (coverage)
 % plot best fits on contour plot
-Hypothesis = 'H0';
-InterpMode = 'lin';
+Hypothesis = 'H1';
+InterpMode = 'Mix';
 SavePlt = 'ON';
 MergeNew = 'ON';
 RmDuplicates = 'ON';

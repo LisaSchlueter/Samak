@@ -1,8 +1,8 @@
 % Test of Wilk's theorem (coverage)
 %  DeltaChi2 distribution (best fit - null chi2)
 % cumulative pdf with critical delta chi2 for 95%CL.
-Hypothesis = 'H0';
-InterpMode = 'lin';
+Hypothesis = 'H1';
+InterpMode = 'Mix';
 SavePlt = 'ON';
 MergeNew = 'ON';
 RmDuplicates = 'ON';
@@ -14,11 +14,13 @@ switch Hypothesis
         Twin_mNu4Sq = 0;
         chi2 = 'chi2CMShape';
         randMC_new  = 1:1251;
-    case 'H1' 
-        randMC = 1:1e3;
+    case 'H1'
+        randMC = [1:317,417:873];
+         excl = [1:139,577:757];
+         randMC = randMC(~ismember(randMC,excl));
         Twin_sin2T4 = 0.0240;
         Twin_mNu4Sq = 92.7;
-        chi2 = 'chi2Stat';
+        chi2 = 'chi2CMShape';
         MergeNew = 'OFF'; % nothing new
 end
 
@@ -36,8 +38,8 @@ if Twin_sin2T4==0 && Twin_mNu4Sq==0
     savefile = sprintf('%sksn2_WilksTheorem_NullHypothesis_Interp%s_%.0fsamples%s_RmDouble%s.mat',...
         savedir,InterpMode,numel(randMC),MergeStr,RmDuplicates);
 else
-    savefile = sprintf('%sksn2_WilksTheorem_mNu4Sq-%.1feV2_sin2T4-%.3g_Interp%s_%.0fsamples%s_RmDouble%s.mat',...
-        savedir,Twin_mNu4Sq,Twin_sin2T4,InterpMode,numel(randMC),MergeStr,RmDuplicates);
+    savefile = sprintf('%sksn2_WilksTheorem_mNu4Sq-%.1feV2_sin2T4-%.3g_Interp%s_%.0fsamples.mat',...
+        savedir,Twin_mNu4Sq,Twin_sin2T4,InterpMode,numel(randMC));
 end
 
 if exist(savefile,'file')
@@ -50,6 +52,7 @@ end
 
 %% DeltaChi2 distribution (best fit - null chi2)
 dof = 2;
+chi2_delta(chi2_delta<0) = 0;
 PlotDeltaChi2 = sort(chi2_delta);%unique(chi2_delta);%
 DeltaChi2CDF = arrayfun(@(x) sum(PlotDeltaChi2<=x)./numel(PlotDeltaChi2),PlotDeltaChi2);
 

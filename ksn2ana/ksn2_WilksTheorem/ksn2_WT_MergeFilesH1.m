@@ -1,9 +1,11 @@
 % create smaller file for result of grids searches on randomized data
 RecomputeFlag = 'ON';
 Hypothesis = 'H1';
-InterpMode = 'lin';
+InterpMode = 'Mix';
 chi2 = 'chi2CMShape';
-randMC = [1:129,578:748];
+randMC = [1:317,417:873];
+excl = [1:139,577:757];
+randMC = randMC(~ismember(randMC,excl));
 NrandMC = numel(randMC);
 Twin_sin2T4 = 0.0240;
 Twin_mNu4Sq = 92.7;
@@ -107,16 +109,24 @@ else
     S.LoadGridFile('mNu4SqTestGrid',5,'ExtmNu4Sq','ON');
     S.Interp1Grid;
     S.ContourPlot; close;
-     
-    % tmp fix
+
     mNu4Sq_contour_Asimov = S.mNu4Sq_contour;
     sin2T4_contour_Asimov =  S.sin2T4_contour;
     
+    if strcmp(Hypothesis,'H1')
+        S.FindBestFit;
+        mNu4Sq_contour_Asimov_bf = S.mNu4Sq_bf;
+        sin2T4_contour_Asimov_bf =  S.sin2T4_bf;
+    end
     %% save
      MakeDir(savedir);
     save(savefile,'mNu4Sq_bf','sin2T4_bf','chi2_bf','chi2_null',...
         'chi2_delta','mNu4Sq_contour','sin2T4_contour',....
         'mNu4Sq_contour_Asimov','sin2T4_contour_Asimov','TBDIS_mc');
+    
+    if strcmp(Hypothesis,'H1')
+        save(savefile,'mNu4Sq_contour_Asimov_bf','sin2T4_contour_Asimov_bf','-append');
+    end
     
     fprintf('save file to %s \n',savefile);
     d = importdata(savefile);
