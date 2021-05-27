@@ -2,7 +2,7 @@
 %% settings that might change
 chi2 = 'chi2CMShape';
 DataType = 'Real';
-nGridSteps = 30;
+nGridSteps = 40;
 range = 40;
 freePar = 'E0 Norm Bkg';
 %% configure RunAnalysis object

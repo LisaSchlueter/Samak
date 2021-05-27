@@ -1,7 +1,7 @@
 % Test of Wilk's theorem (coverage)
 % plot best fits on contour plot
-Hypothesis = 'H1';
-InterpMode = 'Mix';
+Hypothesis = 'H0';
+InterpMode = 'lin';
 SavePlt = 'ON';
 MergeNew = 'ON';
 RmDuplicates = 'ON';
@@ -12,13 +12,14 @@ switch Hypothesis
         Twin_sin2T4 = 0;
         Twin_mNu4Sq = 0;
         chi2 = 'chi2CMShape';
-       randMC_new  = [1:1251];
+       randMC_new  = [1:1250];
     case 'H1' 
-        randMC = 1:1e3;
+        randMC = [1:1500];
         Twin_sin2T4 = 0.0240;
         Twin_mNu4Sq = 92.7;
-        chi2 = 'chi2Stat';
+        chi2 = 'chi2CMShape';
         MergeNew = 'OFF'; % nothing new
+        NrandMC = numel(randMC);
 end
 
 if strcmp(MergeNew,'ON')
@@ -33,8 +34,8 @@ if Twin_sin2T4==0 && Twin_mNu4Sq==0
     savefile = sprintf('%sksn2_WilksTheorem_NullHypothesis_Interp%s_%.0fsamples%s_RmDouble%s.mat',...
         savedir,InterpMode,numel(randMC),MergeStr,RmDuplicates);
 else
-    savefile = sprintf('%sksn2_WilksTheorem_mNu4Sq-%.1feV2_sin2T4-%.3g_Interp%s_%.0fsamples%s_RmDouble%s.mat',...
-        savedir,Twin_mNu4Sq,Twin_sin2T4,InterpMode,numel(randMC),MergeStr,RmDuplicates);
+    savefile = sprintf('%sksn2_WilksTheorem_mNu4Sq-%.1feV2_sin2T4-%.3g_Interp%s_%.0fsamples.mat',...
+        savedir,Twin_mNu4Sq,Twin_sin2T4,InterpMode,NrandMC);
 end
 
 if exist(savefile,'file')
@@ -71,7 +72,7 @@ ylabel(sprintf('{\\itm}_4^2 (eV^2)'));
 
 xlim([1e-03,0.5]);
 ylim([0.1,2000]);
-leg = legend([h,pAsimov],sprintf('Best fits %.0f pseudo-experiments',NrandMC-1),sprintf('Sensitivity (%.0f%% C.L.)',95),'EdgeColor',rgb('Silver'),'Location','southwest');
+leg = legend([h,pAsimov],sprintf('Best fits %.0f pseudo-experiments',NrandMC),sprintf('Sensitivity (%.0f%% C.L.)',95),'EdgeColor',rgb('Silver'),'Location','southwest');
 PrettyLegendFormat(leg);
 
 if strcmp(SavePlt,'ON')

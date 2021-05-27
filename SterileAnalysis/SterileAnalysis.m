@@ -2049,7 +2049,7 @@ classdef SterileAnalysis < handle
                fprintf('save plot to %s \n',plotname);
            end
         end
-        function PlotPRL1(obj,varargin)
+        function [legHandle,legStr] = PlotPRL1(obj,varargin)
             % prl plot 1: comparison with mainz & troitsk
             p = inputParser;
             p.addParameter('BestFit','OFF',@(x)ismember(x,{'ON','OFF'}));
@@ -2209,18 +2209,19 @@ classdef SterileAnalysis < handle
                 obj.RunAnaObj.AngularTFFlag = 'ON';
                 obj.RunAnaObj.ELossFlag = 'KatrinT2A20';
                 obj.RunAnaObj.SysBudget = 66;
-                obj.LoadGridFile('CheckSmallerN','ON',obj.LoadGridArg{:});
-                obj.Interp1Grid('RecomputeFlag','ON');
+                obj.LoadGridFile('CheckSmallerN','ON');%,obj.LoadGridArg{:});
+                obj.InterpMode = 'Mix';
+                obj.Interp1Grid('RecomputeFlag','ON','MaxM4Sq',36.5^2);
                 pFull = obj.ContourPlot('CL',obj.ConfLevel,'HoldOn','ON',...
                     'Color',rgb('LightGreen'),'LineStyle','-','BestFit',BestFit);
                 
                 legHandle{numel(legHandle)+1} = pFull;
                 obj.RunAnaObj.DataType= DataType_i ;
-                obj.RunAnaObj.DataSet = 'Knm1';
+                obj.RunAnaObj.DataSet = 'Knm2';
                 obj.RunAnaObj.AngularTFFlag = AngTF;
                 obj.RunAnaObj.ELossFlag = ElossFlag;
                 obj.RunAnaObj.SysBudget = Budget;
-                legStr = [legStr,sprintf('KATRIN Final %.0f%% C.L. :  {\\itm}_\\nu^2 = 0 eV^2)',obj.ConfLevel)];
+                legStr = [legStr,sprintf('KATRIN Final %.0f%% C.L. :  {\\itm}_\\nu^2 = 0 eV^2',obj.ConfLevel)];
             end
             
             
@@ -2254,7 +2255,7 @@ classdef SterileAnalysis < handle
                     xlim([6e-03 0.5]);
                 end
             else
-                ylim([1 1600])
+                ylim([0.2 1800])
                 xlim([4e-03 0.5])
             end
             title('');%remove title
@@ -2265,7 +2266,11 @@ classdef SterileAnalysis < handle
             end
             %% save
             if ~strcmp(SavePlot,'OFF')
+                if isfloat(AddPull)
                 name_i = extractBefore(strrep(obj.DefPlotName,'_mNuE0BkgNorm',''),'_pull');
+                else
+                      name_i = strrep(obj.DefPlotName,'_mNuE0BkgNorm','');
+                end
                 if strcmp(FinalSensitivity,'ON')
                     name_i = [name_i,'_FinalSensi'];
                 end
@@ -2918,7 +2923,7 @@ classdef SterileAnalysis < handle
                          extraStr = [extraStr,'_Extsin2T4'];
                      end
                      
-                     if strcmp(ExtmNu4Sq,'ON') && (strcmp(obj.RunAnaObj.DataType,'Real') || isfloat(obj.RandMC) )
+                     if strcmp(ExtmNu4Sq,'ON') || isfloat(obj.RandMC) %&& (strcmp(obj.RunAnaObj.DataType,'Real') 
                          extraStr = [extraStr,'_ExtmNu4Sq'];
                      end
                      

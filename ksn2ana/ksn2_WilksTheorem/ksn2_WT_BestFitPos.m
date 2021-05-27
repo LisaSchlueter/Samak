@@ -1,5 +1,5 @@
 % plot Asimov sensitivity + best fits on randomized contour
-Hypothesis = 'H1';
+Hypothesis = 'H0';
 InterpMode = 'lin';
 SavePlt = 'ON';
 MergeNew = 'ON';
@@ -11,9 +11,9 @@ switch Hypothesis
         Twin_sin2T4 = 0;
         Twin_mNu4Sq = 0;
         chi2 = 'chi2CMShape';
-     randMC_new  = [1:1e3];
+     randMC_new  = 1:1251;
     case 'H1' 
-    randMC = [1:129,578:748];
+    randMC = 1:1e3;%[1:129,578:748];
         Twin_sin2T4 = 0.0240;
         Twin_mNu4Sq = 92.7;
         chi2 = 'chi2Stat';

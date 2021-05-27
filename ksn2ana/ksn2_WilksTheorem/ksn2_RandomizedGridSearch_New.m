@@ -2,8 +2,8 @@
 % ksn2 calculate chi2 grid search
 % New with respect to ksn2RandomizedGridSearch_New.m : generate random tritium spectra locally and give as input to grid search
 
-randMC = 200:-1:1;%1:1e3;%
-Hypothesis = 'H1';
+randMC = 1:1000;
+Hypothesis = 'H2';
 chi2 = 'chi2CMShape';
 DataType = 'Twin';
 freePar = 'E0 Norm Bkg';
@@ -14,9 +14,15 @@ switch Hypothesis
     case 'H0'
         Twin_sin2T4 = 0;
         Twin_mNu4Sq = 0;
+        mNu4SqTestGrid = 2;
     case 'H1'
         Twin_sin2T4 = 0.0240;
         Twin_mNu4Sq = 92.7;
+        mNu4SqTestGrid = 2;
+    case 'H2'
+        Twin_sin2T4 = 0.07;
+        Twin_mNu4Sq = 20;
+        mNu4SqTestGrid = 'OFF';
 end
 
 %% load random tritium spectra
@@ -75,11 +81,10 @@ SterileArg = {'RunAnaObj',A,... % Mother Object: defines RunList, Column Density
 
 S = SterileAnalysis(SterileArg{:});
 %%
-randMC = 400;
 for i=1:numel(randMC)
     A = MultiRunAnalysis(RunAnaArg{:});
     S = SterileAnalysis(SterileArg{:});
     S.RandMC= randMC(i);
     S.RandMC_TBDIS = d.TBDIS_mc(:,randMC(i));
-    S.GridSearch('mNu4SqTestGrid',2,'ExtmNu4Sq','ON');
+    S.GridSearch('mNu4SqTestGrid',mNu4SqTestGrid,'ExtmNu4Sq','ON');
 end

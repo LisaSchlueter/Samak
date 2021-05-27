@@ -1,18 +1,18 @@
 % Test of Wilk's theorem (coverage)
 % chi2 distribution of best fits
-Hypothesis = 'H1';
+Hypothesis = 'H0';
 MergeNew = 'ON';
 RmDuplicates = 'ON';
-InterpMode = 'Mix';
+InterpMode = 'lin';
 switch Hypothesis
     case 'H0'
         NrandMC = 419;
         Twin_sin2T4 = 0;
         Twin_mNu4Sq = 0;
-        randMC_new  = 1:1251;
+        randMC_new  = 1:1250;
         MergeStr = sprintf('_MergeNew%.0f',numel(randMC_new));
     case 'H1'
-          randMC = [1:317,417:873];
+         randMC = [1:1500];
        % excl = [1:139,577:757];
        % randMC = randMC(~ismember(randMC,excl));
         Twin_sin2T4 = 0.0240;
@@ -56,7 +56,7 @@ PrettyFigureFormat('FontSize',22);
 xlabel(sprintf('\\chi^2_{min} (%.0f dof)',dof));
 ylabel('Frequency');
 %title(resultsStr,'FontWeight','normal','FontSize',get(gca,'FontSize'))
-leg = legend([hchi2,pchi2],sprintf('%.0f pseudo-experiments',numel(chi2_bf)-1),...
+leg = legend([hchi2,pchi2],sprintf('%.0f pseudo-experiments',numel(chi2_bf)),...
                  sprintf('\\chi^2 distribution for %.0f dof',dof),...
                  'EdgeColor',rgb('Silver'));
 %xlim([0 70]);

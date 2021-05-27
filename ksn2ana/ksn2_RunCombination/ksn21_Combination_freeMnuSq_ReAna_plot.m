@@ -1,10 +1,10 @@
 %% plot with combined ksn1+2 free nu-mass
 chi2          = 'chi2CMShape';
 DataType      = 'Real';
-nGridSteps    = 20;
+nGridSteps    = 30;
 freePar       = 'mNu E0 Bkg Norm';
 range         = 40;
-savedir = [getenv('SamakPath'),'/SterileAnalysis/GridSearchFiles/Combi/',DataType,'/'];
+savedir = [getenv('SamakPath'),'SterileAnalysis/GridSearchFiles/Combi/',DataType,'/'];
 MakeDir(savedir)
 savename = sprintf('%sKSN12Combi_ReAna_GridSearch_%s_%s_Uniform_%s_%.0fnGrid.mat',savedir,DataType,strrep(freePar,' ',''),chi2,nGridSteps);
 
@@ -66,9 +66,13 @@ S.mNuSq = cell2mat(cellfun(@(x) x.par(1),d.FitResults,'UniformOutput',0));
 S.E0 = cell2mat(cellfun(@(x) x.par(2),d.FitResults,'UniformOutput',0));
 
 
-S.InterpMode = 'lin';
-S.Interp1Grid('Maxm4Sq',40^2);%,'Minm4Sq',40);
-%S.GridPlot('CL',99.999999999999)
+S.InterpMode = 'spline';
+S.Interp1Grid('Maxm4Sq',40^2);
 S.ContourPlot('BestFit','ON','SavePlot','OFF');
-
+sin2T4_contour  = S.sin2T4_contour;
+mNu4Sq_contour  = S.mNu4Sq_contour;
+sin2T4_bf       = S.sin2T4_bf;
+mNu4Sq_bf       = S.mNu4Sq_bf;
+% append contour
+%save(savename,'sin2T4_contour','mNu4Sq_contour','sin2T4_bf','mNu4Sq_bf','-append');
 

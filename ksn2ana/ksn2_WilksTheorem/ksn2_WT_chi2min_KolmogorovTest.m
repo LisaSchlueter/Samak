@@ -1,6 +1,6 @@
 % Test of Wilk's theorem (coverage)
 % chi2min distribution (best fit chi2): Kolmogorov-Smirnov Test
-Hypothesis = 'H1';
+Hypothesis = 'H0';
 SavePlt = 'ON';
 MergeNew = 'ON';
 RmDuplicates = 'ON';
@@ -11,10 +11,10 @@ switch Hypothesis
         NrandMC = 419;
         Twin_sin2T4 = 0;
         Twin_mNu4Sq = 0;
-        randMC_new  = 1:1251;
+        randMC_new  = 1:1250;
         MergeStr = sprintf('_MergeNew%.0f',numel(randMC_new));
     case 'H1'
-        randMC = [1:317,417:873];
+        randMC = [1:1500];
   Twin_sin2T4 = 0.0240;
         Twin_mNu4Sq = 92.7;
         chi2 = 'chi2CMShape';
@@ -62,7 +62,7 @@ ylabel(sprintf('Cumulative probability'));
 resultsStr = sprintf('KS test: p-value = %.2g',p);
 title(resultsStr,'FontWeight','normal','FontSize',get(gca,'FontSize'))
 legend([pTheo,pEmp],sprintf(' \\chi^2 distribution with %.0f dof',dof),...
-    sprintf(' Empirical distribution (%.0f samples)',numel(chi2min)-1),...
+    sprintf(' Empirical distribution (%.0f samples)',numel(chi2min)),...
     'EdgeColor',rgb('Silver'),'Location','southeast');
 ylim([-0.05 1.05])
 xlim([0 max(x)])

@@ -2,12 +2,12 @@
 %% settings that might change
 chi2 = 'chi2CMShape';
 DataType = 'Real';
-nGridSteps = 30;
+nGridSteps = 40;
 range = 40;
 pullFlag = 99;
 
 GridPlot = 'ON';
-ContourPlot = 'OFF';
+ContourPlot = 'ON';
 %% configure RunAnalysis object
 if strcmp(chi2,'chi2Stat')
     NonPoissonScaleFactor = 1;
@@ -74,21 +74,22 @@ if strcmp(ContourPlot,'ON')
     
     GetFigure;
     
-    [~,p1] = contour3(S.sin2T4,S.mNu4Sq,PlotPar,[-1,-1],'Color',rgb('Silver'),'ShowText','on','LineWidth',1.5);
+    [~,p1] = contour3(S.sin2T4,S.mNu4Sq,PlotPar,[-1,-1],'Color',rgb('Silver'),'ShowText','on','LineWidth',2);
     hold on;
-    [~,~] = contour3(S.sin2T4,S.mNu4Sq,PlotPar,[1,1],'Color',rgb('Silver'),'ShowText','on','LineWidth',1.5);
-    [~,~] = contour3(S.sin2T4,S.mNu4Sq,PlotPar,[2,2],'Color',rgb('Silver'),'ShowText','on','LineWidth',1.5);
-    %[~,~] = contour3(S.sin2T4,S.mNu4Sq,PlotPar,[5,5],'Color',rgb('Silver'),'ShowText','on','LineWidth',1.5);
-    [~,~] = contour3(S.sin2T4,S.mNu4Sq,PlotPar,[10,10],'Color',rgb('Silver'),'ShowText','on','LineWidth',1.5);
-    [~,~] = contour3(S.sin2T4,S.mNu4Sq,PlotPar,[0,0],'Color',rgb('Silver'),'ShowText','on','LineWidth',1.5);
-    [~,~] = contour3(S.sin2T4,S.mNu4Sq,PlotPar,[0.3,0.3],'Color',rgb('Silver'),'ShowText','on','LineWidth',1.5);
+ %  [~,p1] = contour3(S.sin2T4,S.mNu4Sq,PlotPar,[-0.5,-0.5],'Color',rgb('LimeGreen'),'ShowText','on','LineWidth',1.5);  
+    [~,~] = contour3(S.sin2T4,S.mNu4Sq,PlotPar,[1,1],'Color',rgb('Silver'),'ShowText','on','LineWidth',p1.LineWidth);
+    [~,~] = contour3(S.sin2T4,S.mNu4Sq,PlotPar,[2,2],'Color',rgb('Silver'),'ShowText','on','LineWidth',p1.LineWidth);
+    %[~,~] = contour3(S.sin2T4,S.mNu4Sq,PlotPar,[5,5],'Color',rgb('Silver'),'ShowText','on','LineWidth',p1.LineWidth);
+    [~,~] = contour3(S.sin2T4,S.mNu4Sq,PlotPar,[10,10],'Color',rgb('Silver'),'ShowText','on','LineWidth',p1.LineWidth);
+    [~,~] = contour3(S.sin2T4,S.mNu4Sq,PlotPar,[0,0],'Color',rgb('Silver'),'ShowText','on','LineWidth',p1.LineWidth);
+    [~,~] = contour3(S.sin2T4,S.mNu4Sq,PlotPar,[0.3,0.3],'Color',rgb('Silver'),'ShowText','on','LineWidth',p1.LineWidth);
     
-    pcontour = S.ContourPlot('HoldOn','ON','BestFit',BF,'SavePlot','OFF','CL',95);
-    %
+    pcontour = S.ContourPlot('HoldOn','ON','BestFit',BF,'SavePlot','OFF','CL',95,'Color',rgb('ForestGreen'));
+    pcontour.LineWidth = 3;
     view(2);
     grid off;
-    ylim([1 40^2]);
-    xlim([2e-03 0.5]);
+    ylim([0.1 40^2]);
+    xlim([1e-03 0.5]);
     % save
     leg = legend([p1,pcontour],...
         sprintf('{\\itm}_\\nu^2 best fit isoline'),...

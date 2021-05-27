@@ -1,27 +1,25 @@
 % Test of Wilk's theorem (coverage)
 %  DeltaChi2 distribution (best fit - null chi2)
 % cumulative pdf with critical delta chi2 for 95%CL.
-Hypothesis = 'H1';
-InterpMode = 'Mix';
-SavePlt = 'ON';
-MergeNew = 'ON';
+Hypothesis   = 'H1';
+InterpMode   = 'Mix';
+SavePlt      = 'ON';
+MergeNew     = 'ON';
 RmDuplicates = 'ON';
 
 switch Hypothesis
     case 'H0'
-        randMC =[1001:1260,1294:1300,1349:1500];%11:1e3;
+        randMC      = [1001:1260,1294:1300,1349:1500];%11:1e3;
         Twin_sin2T4 = 0;
         Twin_mNu4Sq = 0;
-        chi2 = 'chi2CMShape';
-        randMC_new  = 1:1251;
+        chi2        = 'chi2CMShape';
+        randMC_new  = 1:1250;
     case 'H1'
-        randMC = [1:317,417:873];
-         excl = [1:139,577:757];
-         randMC = randMC(~ismember(randMC,excl));
+        randMC      = 1:1500;
         Twin_sin2T4 = 0.0240;
         Twin_mNu4Sq = 92.7;
-        chi2 = 'chi2CMShape';
-        MergeNew = 'OFF'; % nothing new
+        chi2        = 'chi2CMShape';
+        MergeNew    = 'OFF'; % nothing new
 end
 
 if strcmp(MergeNew,'ON')
@@ -75,10 +73,10 @@ PrettyFigureFormat('FontSize',22);
 xlabel(sprintf('\\Delta \\chi^2'));
 ylabel(sprintf('Cumulative probability'));
 xlim([0 10]);
-ylim([-0.02 1.02]);
+ylim([0 1.02]);
 legend([p95,pchi2Theo,pchi2,],sprintf('95%% quantile'),...
     sprintf('\\chi^2 distribution for 2 dof          \\Delta\\chi^2_{crit.} = %.2f',DeltaChi2CrTheo),...
-    sprintf('Empirical cdf (%.0f samples) \\Delta\\chi^2_{crit.} = %.2f',numel(PlotDeltaChi2)-1,DeltaChi2CrApprox),...
+    sprintf('Empirical cdf (%.0f samples) \\Delta\\chi^2_{crit.} = %.2f',numel(PlotDeltaChi2),DeltaChi2CrApprox),...
     'EdgeColor',rgb('Silver'),'Location','southeast');
 t = title(sprintf('\\Delta\\chi^2 = \\chi^2_{null} - \\chi^2_{min} '),'FontWeight','normal','FontSize',get(gca,'FontSize'));
 set(gca,'XMinorTick','on');
@@ -88,7 +86,6 @@ set(gca,'YMinorTick','on');
  plotname = strrep(strrep(savefile,'results','plots'),'.mat','_DeltaChi2Crit.png');
  print(gcf,plotname,'-dpng','-r450');
  fprintf('save plot to %s \n',plotname);
- 
  
  %% KS Test
 CDFTheo = chi2cdf(PlotDeltaChi2,2); 

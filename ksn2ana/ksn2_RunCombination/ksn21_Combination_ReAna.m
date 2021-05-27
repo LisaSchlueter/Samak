@@ -65,6 +65,9 @@ S.LoadGridArg = {'CheckLarger','ON','ExtmNu4Sq','OFF','mNu4SqTestGrid',2};
 S.LoadGridFile(S.LoadGridArg{:});
 S.Interp1Grid('RecomputeFlag','ON');%,'Maxm4Sq',34.2^2);
 [p1tot,~,p1bf] = S.ContourPlot('BestFit',BF,'CL',95,'HoldOn','OFF','Color',rgb('FireBrick'),'LineStyle',':');
+% contour
+sin2T4_contour_1  = S.sin2T4_contour;
+mNu4Sq_contour_1  = S.mNu4Sq_contour;
 
 % store best fit and contour
 S.FindBestFit;
@@ -107,6 +110,9 @@ S.LoadGridFile(S.LoadGridArg{:});
 S.InterpMode = 'Mix';
 S.Interp1Grid('RecomputeFlag','ON','Maxm4Sq',36^2);
 [p2tot,sinMin,p2bf] = S.ContourPlot('BestFit',BF,'CL',95,'HoldOn','ON','Color',rgb('Orange'),'LineStyle','-.');
+% contour
+sin2T4_contour_2  = S.sin2T4_contour;
+mNu4Sq_contour_2  = S.mNu4Sq_contour;
 
 % store best fit and contour
 S.FindBestFit;
@@ -154,6 +160,11 @@ mNu4Sq_bf_12 = S.mNu4Sq_bf;
 S.chi2_Null = chi2_null_12;
 % find significance
 [~, SignificanceBF_12] = S.CompareBestFitNull;
+
+% contour
+sin2T4_contour_12  = S.sin2T4_contour;
+mNu4Sq_contour_12  = S.mNu4Sq_contour;
+
  %% plot best fits on top (KSN-1 is hidden otherwise)
 pbf1 = plot(sin2T4_bf_1,mNu4Sq_bf_1,'x','MarkerSize',9,'Color',p1tot.Color,'LineWidth',p1tot.LineWidth);
 
@@ -199,6 +210,8 @@ dof12 = dof1+dof2+2;
 save(savefile,'chi2_ref_1','chi2_ref_2','chi2_ref_12','dof1','dof2','dof12',...
     'chi2_null_1','chi2_null_2','chi2_null_12',...
     'mNu4Sq_bf_1','mNu4Sq_bf_2','mNu4Sq_bf_12',...
-    'sin2T4_bf_1','sin2T4_bf_2','sin2T4_bf_12');
-
+    'sin2T4_bf_1','sin2T4_bf_2','sin2T4_bf_12',...
+    'sin2T4_contour_1','mNu4Sq_contour_1',...
+    'sin2T4_contour_2','mNu4Sq_contour_2',...
+    'sin2T4_contour_12','mNu4Sq_contour_12');
 

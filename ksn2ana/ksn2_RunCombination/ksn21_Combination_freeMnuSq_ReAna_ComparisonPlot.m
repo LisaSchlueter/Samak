@@ -136,7 +136,7 @@ sin2T4_k2_contour = S.sin2T4_contour;
 %% get best fit from fine grid
 savedir = sprintf('%sksn2ana/ksn2_BestFit/results/',getenv('SamakPath'));
 savefile2 = sprintf('%sksn2_ImpBestFit_%s_%s_%s_nGridStepsFull%.0f_nGridStepsImp%.0f.mat',...
-    savedir,DataType,'mNuE0NormBkg',chi2,40,25);
+    savedir,DataType,'mNuE0NormBkg',chi2,50,40);
 if exist(savefile2,'file') 
     d2 = importdata(savefile2);
     S.mNu4Sq_bf = d2.mNu4Sq_bf_inter;

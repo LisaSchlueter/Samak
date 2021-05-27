@@ -2,7 +2,7 @@
 % chi2 distribution of best fits
 Hypothesis = 'H1';
 InterpMode = 'Mix';
-SavePlt = 'OFF';
+SavePlt = 'ON';
 MergeNew = 'ON';
 RmDuplicates = 'ON';
 
@@ -12,12 +12,9 @@ switch Hypothesis
         Twin_sin2T4 = 0;
         Twin_mNu4Sq = 0;
         chi2 = 'chi2CMShape';
-      randMC_new  = 1:1251;
+        randMC_new  = 1:1250;
     case 'H1' 
-            randMC = [1:317,417:873];
-      %      excl = [1:139,577:757];
-%randMC = randMC(~ismember(randMC,excl));
-
+       randMC = 1:1500;
         Twin_sin2T4 = 0.0240;
         Twin_mNu4Sq = 92.7;
         chi2 = 'chi2CMShape';
@@ -70,7 +67,7 @@ PrettyFigureFormat('FontSize',22);
 xlabel(sprintf('\\chi^2_{null} - \\chi^2_{min} (%.0f dof)',dof));
 ylabel('Frequency');
 %title(resultsStr,'FontWeight','normal','FontSize',get(gca,'FontSize'))
-leg = legend([hchi2,pchi2],sprintf('%.0f pseudo-experiments',numel(chi2_bf)-1),...
+leg = legend([hchi2,pchi2],sprintf('%.0f pseudo-experiments',numel(chi2_bf)),...
                  sprintf('\\chi^2 distribution for %.0f dof',dof),...
                  'EdgeColor',rgb('Silver'));
 xlim([0 15]);

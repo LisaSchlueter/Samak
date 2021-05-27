@@ -84,12 +84,12 @@ for i=1:numel(randMC)
     S.RandMC = randMC(i);
     S.RandMC_TBDIS =   d.TBDIS_mc(:,randMC(i));
     filename = S.GridFilename('mNu4SqTestGrid',2,'ExtmNu4Sq','ON');
-    d = importdata(filename);
+    dtmp = importdata(filename);
     
     % re-init RunAna
     A.InitModelObj_Norm_BKG('RecomputeFlag','ON');
    % A.ComputeCM;
-    A.FitCMShape = d.FitCMShape;
+    A.FitCMShape = dtmp.FitCMShape;
     A.RunData.TBDIS = d.TBDIS_mc(:,randMC(i));
     
     % null hypothesis with recalculated

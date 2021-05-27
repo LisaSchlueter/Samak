@@ -5,7 +5,7 @@ chi2 = 'chi2CMShape';
 DataType = 'Twin';
 range = 40;
 
-Hypothesis = 'H1';
+Hypothesis = 'H2';
 switch Hypothesis
     case 'H0'
         Twin_sin2T4 = 0;
@@ -13,6 +13,9 @@ switch Hypothesis
     case 'H1'
         Twin_sin2T4 = 0.0240;
         Twin_mNu4Sq = 92.7;
+    case 'H2'
+        Twin_sin2T4 = 0.07;
+        Twin_mNu4Sq = 20;
 end
 
 savedir = [getenv('SamakPath'),'ksn2ana/ksn2_WilksTheorem/results/'];

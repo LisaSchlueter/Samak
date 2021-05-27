@@ -1,8 +1,8 @@
-% ksn2 calculate chi2 grid search
+% ksn2 compare results in Mainz/Troitsk
 %% settings that might change
 chi2 = 'chi2CMShape';
 DataType = 'Real';
-nGridSteps = 30;
+nGridSteps = 40;
 range = 40;
 freePar = 'E0 Norm Bkg';
 %% configure RunAnalysis object
@@ -43,7 +43,8 @@ SterileArg = {'RunAnaObj',A,... % Mother Object: defines RunList, Column Density
 
 %%
 S = SterileAnalysis(SterileArg{:});
-S.PlotPRL1('FreemNuSq','ON','AddPull',26,'Style','PRL','SavePlot','ON');
+S.PlotPRL1('FreemNuSq','ON','AddPull','','Style','PRL','SavePlot','ON',...
+    'Sensitivity','OFF','FinalSensitivity','OFF');
 
 
 

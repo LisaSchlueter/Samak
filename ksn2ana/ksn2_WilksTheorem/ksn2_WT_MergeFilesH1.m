@@ -1,11 +1,9 @@
 % create smaller file for result of grids searches on randomized data
 RecomputeFlag = 'ON';
 Hypothesis = 'H1';
-InterpMode = 'Mix';
+InterpMode = 'lin';%'lin';
 chi2 = 'chi2CMShape';
-randMC = [1:317,417:873];
-excl = [1:139,577:757];
-randMC = randMC(~ismember(randMC,excl));
+randMC = [1:1500];
 NrandMC = numel(randMC);
 Twin_sin2T4 = 0.0240;
 Twin_mNu4Sq = 92.7;
@@ -73,17 +71,22 @@ else
     TBDIS_mc      = zeros(NrandMC,A.ModelObj.nqU);
     
     S.InterpMode = InterpMode;
-    S.LoadGridArg = {'mNu4SqTestGrid',2,'ExtmNu4Sq','ON'};
+ 
     
     dspectra = ksn2_GetRandTritiumSpectrum('H1');
     progressbar('Merge files for WT');
     for i=1:NrandMC
         progressbar(i/NrandMC);
         S.RandMC= randMC(i);
+        if randMC(i)>1000
+            S.LoadGridArg = {'mNu4SqTestGrid','OFF','ExtmNu4Sq','ON'};
+        else
+            S.LoadGridArg = {'mNu4SqTestGrid',2,'ExtmNu4Sq','ON'};
+        end
         S.RandMC_TBDIS = dspectra.TBDIS_mc(:,randMC(i));
         S.LoadGridFile(S.LoadGridArg{:});
         if strcmp(InterpMode,'Mix')
-            S.Interp1Grid('Maxm4Sq',36^2);% In "Mix" Mode -> Maxm4Sq is threshold for spline/linear interpolation
+            S.Interp1Grid('Maxm4Sq',700);% In "Mix" Mode -> Maxm4Sq is threshold for spline/linear interpolation
         else
             S.Interp1Grid('Maxm4Sq',36^2);
         end
@@ -101,7 +104,7 @@ else
         
         S.RandMC_TBDIS = [];
     end
-    %% also load expected contour from Asimov Twin
+    % also load expected contour from Asimov Twin
     S.InterpMode = 'Mix';%'spline';
     S.RandMC= 'OFF';
     S.nGridSteps = 30;
@@ -118,7 +121,7 @@ else
         mNu4Sq_contour_Asimov_bf = S.mNu4Sq_bf;
         sin2T4_contour_Asimov_bf =  S.sin2T4_bf;
     end
-    %% save
+    % save
      MakeDir(savedir);
     save(savefile,'mNu4Sq_bf','sin2T4_bf','chi2_bf','chi2_null',...
         'chi2_delta','mNu4Sq_contour','sin2T4_contour',....
@@ -133,7 +136,7 @@ else
     
 end
 
-%% to some further calculations
+% to some further calculations
 if ~isfield(d,'ClosedLog95')
     % number of significant best fits
     nContours = numel(mNu4Sq_bf);

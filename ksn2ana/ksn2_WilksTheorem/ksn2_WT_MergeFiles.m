@@ -1,5 +1,5 @@
 % create smaller file for result of grids searches on randomized data
-RecomputeFlag = 'ON';
+RecomputeFlag = 'OFF';
 InterpMode = 'lin';
 MergeNew = 'ON';
 RmDuplicates = 'ON';

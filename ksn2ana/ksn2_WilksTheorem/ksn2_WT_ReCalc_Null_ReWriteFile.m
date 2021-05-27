@@ -78,14 +78,14 @@ for i=1:numel(randMC)
 
     dtmp = importdata(filename);
     ReCalc_chi2Null(i) = dtmp.ReCalc_chi2Null;
-    chi2Null(i) = dtmp.FitResults_Null.chi2min;
+ %   chi2Null(i) = dtmp.FitResults_Null.chi2min;
     
     % change file
     FitResults_Null = dtmp.FitResults_Null;
     FitResults_Null.chi2min = ReCalc_chi2Null(i);
-    chi2_H0 = chi2Null(i);
+ %   chi2_H0 = chi2Null(i);
     
-    save(filename,'FitResults_Null','chi2_H0','-append');
+    save(filename,'FitResults_Null','-append'); %,'chi2_H0'
 end
 
 

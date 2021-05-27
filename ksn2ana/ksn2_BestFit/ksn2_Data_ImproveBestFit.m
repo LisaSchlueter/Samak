@@ -3,15 +3,15 @@
 %% settings that might change
 chi2 = 'chi2CMShape';
 DataType = 'Real';
-nGridSteps_FullGrid   = 40;
-nGridSteps_BfImp = 25;
+nGridSteps_FullGrid   = 50;
+nGridSteps_BfImp = 40;
 
 freePar = 'mNu E0 Norm Bkg';
 
 savedir = sprintf('%sksn2ana/ksn2_BestFit/results/',getenv('SamakPath'));
 savefile = sprintf('%sksn2_ImpBestFit_%s_%s_%s_nGridStepsFull%.0f_nGridStepsImp%.0f.mat',...
     savedir,DataType,strrep(freePar,' ',''),chi2,nGridSteps_FullGrid,nGridSteps_BfImp);
-if exist(savefile,'file') 
+if exist(savefile,'file')
     load(savefile)
 else  
     LoadGridArg = {'ExtmNu4Sq','OFF','mNu4SqTestGrid',5};
@@ -77,6 +77,7 @@ else
     
     %% load grid in vicinity of best fit
     S.nGridSteps = nGridSteps_BfImp;
+ %   S.GridSearch('ExtGrid',ExternalGrid);
     S.LoadGridFile('ExtGrid',ExternalGrid);
     [row, col]    = find(S.chi2 == min(S.chi2(:)));
     mNu4Sq_bf = S.mNu4Sq(col,1);
@@ -123,7 +124,6 @@ p1 = plot3(sin2T4Full_bf,mNu4SqFull_bf,99,'x','MarkerSize',10,'LineWidth',2,'Col
 p1_inter = plot3(sin2T4Full_bf_inter,mNu4SqFull_bf_inter,99,'o','MarkerSize',10,'LineWidth',2,'Color',rgb('White'));
 p2 = plot3(sin2T4_bf,mNu4Sq_bf,99,'x','MarkerSize',10,'LineWidth',2,'Color',rgb('IndianRed'));
 p2_inter = plot3(sin2T4_bf_inter,mNu4Sq_bf_inter,99,'o','MarkerSize',10,'LineWidth',2,'Color',rgb('IndianRed'));
-
 
 xlabel(sprintf('|{\\itU}_{e4}|^2'));
 ylabel(sprintf('{\\itm}_4^2 (eV^2)'));
