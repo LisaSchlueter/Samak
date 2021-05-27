@@ -436,7 +436,7 @@ classdef FITC < handle
                 PullTerm = PullTerm + par(3*obj.SO.nPixels+9)^2/obj.pulls.^2;
             end
             
-            if any(ismember(obj.pullFlag,11)) % sterile pull II
+            if any(ismember(obj.pullFlag,11)) % gaussian sterile pull II
                 sin4Central = 0; sin4Tol = 10;
                 m4Central = 0;   m4Tol   = 1e4;
                 PullTerm = PullTerm + ...
@@ -530,7 +530,7 @@ classdef FITC < handle
                 PullTerm = PullTerm + (par(1)-0)^2/mNuSqtol_KNM1^2;
              end
              
-           % 27: mixing angle pull
+           % 27: exponential mixing angle + m4Sq pull
            if any(ismember(obj.pullFlag,[27,28,29,30])) % sterile pull KSN-2 I
                range =  ceil(abs(obj.SO.qU(min(obj.exclDataStart))-18574));
                if obj.pullFlag == 27
