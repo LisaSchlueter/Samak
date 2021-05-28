@@ -112,7 +112,7 @@ classdef SterileAnalysis < handle
             Extsin2T4     = p.Results.Extsin2T4;
             ExtmNu4Sq     = p.Results.ExtmNu4Sq;
             mNu4SqTestGrid = p.Results.mNu4SqTestGrid;
-            FixmNuSq      = p.Results.FixmNuSq;
+            FixmNuSq       = p.Results.FixmNuSq;
             ExtGrid        = p.Results.ExtGrid;
             
             savefile = obj.GridFilename('Negsin2T4',Negsin2T4,'NegmNu4Sq',NegmNu4Sq,...

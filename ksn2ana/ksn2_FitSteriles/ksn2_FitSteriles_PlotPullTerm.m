@@ -44,3 +44,9 @@ ax2.XColor = rgb('DodgerBlue');
 xlabel(sprintf('|{\\itU}_{e4}|^2'));
  ax2.YLim = [-0.2 5];
 xlim([-0.1 sinU+0.1]);
+pltdir = sprintf('%sksn2ana/ksn2_FitSteriles/plots/',getenv('SamakPath'));
+MakeDir(pltdir);
+pltname = sprintf('%sksn2_FitSteriles_PlotPullTerm.png',pltdir);
+print(gcf,pltname,'-dpng','-r350');
+
+%%

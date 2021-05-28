@@ -47,7 +47,7 @@ A = MultiRunAnalysis(RunAnaArg{:});
 A.exclDataStart = A.GetexclDataStart(40);
 
 mNu4Sq_i      = repmat(mNu4Sq_i,nGridSteps,1);
-sin2T4_i      = repmat(sin2T4_i',1,nGridSteps);
+sin2dT4_i      = repmat(sin2T4_i',1,nGridSteps);
 
 mNu4Sq_grid    = reshape(mNu4Sq_i,nGridSteps^2,1);
 sin2T4_grid    = reshape(sin2T4_i,nGridSteps^2,1);
@@ -61,24 +61,31 @@ savedir = [getenv('SamakPath'),'ksn2ana/ksn2_NuMassSensitivity/results/'];
 savefile = sprintf('%sksn2_NuMassSensitivityFits_%s_Pull%.0f_%s_mNuSqMin%.2f_mNuSqMax%.2f_mNuSteps%.0f_Grid%.0f.mat',...
     savedir,DataType,PullFlag,chi2,min(mNuSq),max(mNuSq),numel(mNuSq),nGridSteps);
 
-FitResults = cell(numel(mNuSq),nGridSteps^2);
+FitResults = cell(nGridSteps^2,1);
 chi2min    = zeros(numel(mNuSq),nGridSteps^2);
 
 
-parfor j =1:nGridSteps^2
+for j =1:nGridSteps^2
     mNu4Sq_par = mNu4Sq_grid(j); % 95;%logspace(-1,log10(40^2),nGridSteps);
     sin2T4_par = sin2T4_grid(j);%0.02;%logspace(-3,log10(0.5),nGridSteps);
 
     progressbar('Nu-mass sensitivity...');
+    
+    FitResults_tmp = cell(numel(mNuSq),1);
+    chi2min_tmp = zeros(numel(mNuSq),1);
+     D(j).SimulateStackRuns;
+     
     for i = 1:numel(mNuSq)
         progressbar((i-1)./numel(mNuSq));
         D(j).ModelObj.SetFitBias(0); % reset
         D(j).ModelObj.SetFitBiasSterile(mNu4Sq_par,sin2T4_par);
         D(j).ModelObj.mnuSq_i = mNuSq(i);
         D(j).Fit;
-        FitResults{i,j} = D(j).FitResult;
-        chi2min(i,j) = D(j).FitResult.chi2min;
+        FitResults_tmp{i} = D(j).FitResult;
+        chi2min_tmp(i)  = D(j).FitResult.chi2min;
+        
     end
-   
+    FitResults{j} = FitResults_tmp;
+    chi2min(:,j) = chi2min_tmp;
 end
- save(savefile,'FitResults','mNuSq','chi2min','RunAnaArg','mNu4Sq_i','sin2T4_i');
+ save(savefile,'FitResults','mNuSq','chi2min','RunAnaArg','mNu4Sq_i','sin2T4_i','nGridSteps');
