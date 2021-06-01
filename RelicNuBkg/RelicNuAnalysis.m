@@ -152,7 +152,7 @@ classdef RelicNuAnalysis < handle
               if ~(strcmp(SystSelect,'BkgCM') || strcmp(SystSelect,'None'))
                   obj.M.ComputeCM('SysEffects',struct(SystSelect,'ON'),'BkgCM','OFF');
               elseif strcmp(SystSelect,'BkgCM')
-                  obj.M.ComputeCM('BkgCm','ON');
+                  obj.M.ComputeCM('SysEffects',struct(),'BkgCm','ON');
               elseif strcmp(SystSelect,'None')
                   obj.M.NonPoissonScaleFactor = 1;
                   obj.M.ComputeCM('SysEffects',struct(),'BkgCM','OFF');
@@ -307,6 +307,8 @@ classdef RelicNuAnalysis < handle
                 initfile=@ref_RelicNuBkg_DesignReport;
                 TwinBias_Q=18575;
                 RingList=1:14;
+                SysBudget=67;
+                NonPoissonScaleFactor=1;
             elseif strcmp(obj.Params,'Formaggio')
                 initfile=@ref_RelicNuBkg_Formaggio;
                 TwinBias_Q=18575;
@@ -315,6 +317,7 @@ classdef RelicNuAnalysis < handle
                 initfile=@ref_RelicNuBkg_KNM1;
                 TwinBias_Q=18573.73;
                 RingList=1:12;
+                SysBudget=24;
                 NonPoissonScaleFactor=1.064;
             elseif strcmp(obj.Params,'KNM2')
                 initfile=@ref_RelicNuBkg_KNM2;
@@ -343,7 +346,7 @@ classdef RelicNuAnalysis < handle
                     'pullFlag',pullFlag,...
                     'FSDFlag','SibilleFull',...          % final state distribution                        !!check ob initfile hier überschrieben wird
                     'ELossFlag','KatrinT2',...            % energy loss function
-                    'SysBudget',22,...                    % defines syst. uncertainties -> in GetSysErr.m;
+                    'SysBudget',SysBudget,...                    % defines syst. uncertainties -> in GetSysErr.m;
                     'DopplerEffectFlag','FSD',...
                     'SynchrotronFlag','OFF',...
                     'AngularTFFlag','OFF');
@@ -362,7 +365,7 @@ classdef RelicNuAnalysis < handle
                     'pullFlag',pullFlag,...
                     'FSDFlag','SibilleFull',...          % final state distribution                        !!check ob initfile hier überschrieben wird
                     'ELossFlag','KatrinT2',...            % energy loss function
-                    'SysBudget',22,...                    % defines syst. uncertainties -> in GetSysErr.m;
+                    'SysBudget',SysBudget,...                    % defines syst. uncertainties -> in GetSysErr.m;
                     'DopplerEffectFlag','FSD',...
                     'SynchrotronFlag','OFF',...
                     'AngularTFFlag','OFF');
@@ -485,7 +488,7 @@ classdef RelicNuAnalysis < handle
                             'pullFlag',pullFlag,...
                             'FSDFlag','SibilleFull',...          % final state distribution                        !!check ob initfile hier überschrieben wird
                             'ELossFlag','KatrinT2',...            % energy loss function
-                            'SysBudget',22,...                    % defines syst. uncertainties -> in GetSysErr.m;
+                            'SysBudget',SysBudget,...                    % defines syst. uncertainties -> in GetSysErr.m;
                             'DopplerEffectFlag','FSD',...
                             'SynchrotronFlag','OFF',...
                             'AngularTFFlag','OFF');
@@ -504,7 +507,7 @@ classdef RelicNuAnalysis < handle
                             'pullFlag',pullFlag,...
                             'FSDFlag','SibilleFull',...          % final state distribution                        !!check ob initfile hier überschrieben wird
                             'ELossFlag','KatrinT2',...            % energy loss function
-                            'SysBudget',22,...                    % defines syst. uncertainties -> in GetSysErr.m;
+                            'SysBudget',SysBudget,...                    % defines syst. uncertainties -> in GetSysErr.m;
                             'DopplerEffectFlag','FSD',...
                             'SynchrotronFlag','OFF',...
                             'AngularTFFlag','OFF');
@@ -1499,6 +1502,122 @@ classdef RelicNuAnalysis < handle
        end
    end
    methods
+       function FakeSystBreakdown(obj,varargin)
+           p=inputParser;
+           p.addParameter('TwinBias_mnuSq',0,@(x)isfloat(x));
+           p.addParameter('range',40,@(x)isfloat(x));
+           p.addParameter('Init_Opt','',@(x)iscell(x) || isempty(x));
+           p.addParameter('Plot','ON',@(x)ismember(x,{'ON','OFF'}));
+           p.addParameter('Recompute','OFF',@(x)ismember(x,{'ON','OFF'}));
+           p.parse(varargin{:});
+           TwinBias_mnuSq = p.Results.TwinBias_mnuSq;
+           range          = p.Results.range;
+           Init_Opt       = p.Results.Init_Opt;
+           Plot           = p.Results.Plot;
+           Recompute      = p.Results.Recompute;
+           
+           matFilePath = [getenv('SamakPath'),sprintf('RelicNuBkg/Misc/')];
+           savename = [matFilePath,sprintf('FakeSensitivityBreakdown_%s_mnuSq%g_range%g',obj.Params,TwinBias_mnuSq,range)];
+           savename = [savename,'.mat'];
+           
+           if strcmp(obj.Params,'TDR')
+                initfile=@ref_RelicNuBkg_DesignReport;
+                TwinBias_Q=18575;
+                RingList=1:14;
+                SysBudget=67;
+                NonPoissonScaleFactor=1;
+            elseif strcmp(obj.Params,'Formaggio')
+                initfile=@ref_RelicNuBkg_Formaggio;
+                TwinBias_Q=18575;
+                RingList=1:14;
+            elseif strcmp(obj.Params,'KNM1')
+                initfile=@ref_RelicNuBkg_KNM1;
+                TwinBias_Q=18573.73;
+                RingList=1:12;
+                SysBudget=24;
+                NonPoissonScaleFactor=1.064;
+            elseif strcmp(obj.Params,'KNM2')
+                initfile=@ref_RelicNuBkg_KNM2;
+                TwinBias_Q=18573.7;
+                RingList=1:12;
+                NonPoissonScaleFactor=1.1120;
+            end
+
+           if exist(savename,'file') && strcmp(Recompute,'OFF')
+               load(savename,'X','Y');
+           else
+           
+               A = RunAnalysis('RunNr',10,...             
+                    'FakeInitFile',initfile,...
+                    'Init_Opt',Init_Opt,...
+                    'RecomputeFakeRun','ON',...
+                    'chi2','chi2CMShape',...                 % uncertainties: statistical or stat + systematic uncertainties
+                    'NonPoissonScaleFactor',NonPoissonScaleFactor,...
+                    'DataType','Fake',...                 % can be 'Real' or 'Twin' -> Monte Carlo
+                    'RingList',RingList,...
+                    'TwinBias_Q',TwinBias_Q,...
+                    'fixPar','mNu E0 Norm Bkg eta',...                   % free Parameter!!
+                    'minuitOpt','min ; minos',...         % technical fitting options (minuit)
+                    'FSDFlag','SibilleFull',...          % final state distribution                        !!check ob initfile hier überschrieben wird
+                    'ELossFlag','KatrinT2',...            % energy loss function
+                    'SysBudget',SysBudget,...                    % defines syst. uncertainties -> in GetSysErr.m;
+                    'DopplerEffectFlag','FSD',...
+                    'SynchrotronFlag','OFF',...
+                    'AngularTFFlag','OFF');
+                    
+               A.exclDataStart = A.GetexclDataStart(range);
+               A.ModelObj.mnuSq_i = A.TwinBias_mnuSq;
+               obj.M = A;
+
+               A.Fit;
+               ErrTotal = A.FitResult.err(17)*1e10;
+               A.ComputeCM('SysEffects',struct(),'BkgCM','OFF');
+               A.Fit;
+               ErrNP = A.FitResult.err(17)*1e10;
+               A.NonPoissonScaleFactor = 1;
+               A.ComputeCM('SysEffects',struct(),'BkgCM','OFF');
+               A.Fit;
+               ErrStat = A.FitResult.err(17)*1e10;
+               A.ComputeCM('SysEffects',struct('FSD','ON'),'BkgCM','OFF');
+               A.Fit;
+               ErrFSD = A.FitResult.err(17)*1e10;
+               A.ComputeCM('SysEffects',struct('RF','ON'),'BkgCM','OFF');
+               A.Fit;
+               ErrRF = A.FitResult.err(17)*1e10;
+               A.ComputeCM('SysEffects',struct('TASR','ON'),'BkgCM','OFF');
+               A.Fit;
+               ErrTASR = A.FitResult.err(17)*1e10;
+               A.ComputeCM('SysEffects',struct('Stack','ON'),'BkgCM','OFF');
+               A.Fit;
+               ErrStack = A.FitResult.err(17)*1e10;
+               A.ComputeCM('SysEffects',struct('FPDeff','ON'),'BkgCM','OFF');
+               A.Fit;
+               ErrFPD = A.FitResult.err(17)*1e10;
+               A.ComputeCM('SysEffects',struct('TC','ON'),'BkgCM','OFF');
+               A.Fit;
+               ErrTC = A.FitResult.err(17)*1e10;
+               A.ComputeCM('SysEffects',struct(),'BkgCM','ON');
+               A.Fit;
+               ErrBkg = A.FitResult.err(17)*1e10;
+               ErrFSD = sqrt(ErrFSD.^2-ErrStat.^2);
+               ErrRF = sqrt(ErrRF.^2-ErrStat.^2);
+               ErrTASR = sqrt(ErrTASR.^2-ErrStat.^2);
+               ErrStack = sqrt(ErrStack.^2-ErrStat.^2);
+               ErrFPD = sqrt(ErrFPD.^2-ErrStat.^2);
+               ErrTC = sqrt(ErrTC.^2-ErrStat.^2);
+               ErrBkg = sqrt(ErrBkg.^2-ErrStat.^2);
+               ErrNP = sqrt(ErrNP.^2-ErrStat.^2);
+
+               X = categorical({'Total','Stat','FSD','RF','TASR','Stack','FPD','TC','Bkg','NP'});
+               X = reordercats(X,{'Total','Stat','FSD','RF','TASR','Stack','FPD','TC','Bkg','NP'});
+               Y = [ErrTotal ErrStat ErrFSD ErrRF ErrTASR ErrStack ErrFPD ErrTC ErrBkg ErrNP];
+               save(savename,'X','Y');
+           end
+           if strcmp(Plot,'ON')
+               bar(X,Y);
+           end
+           PrettyFigureFormat;
+       end
        function SystBreakdown(obj,varargin)
            p=inputParser;
            p.addParameter('TwinBias_mnuSq',0,@(x)isfloat(x));
@@ -1576,7 +1695,7 @@ classdef RelicNuAnalysis < handle
                A.ComputeCM('SysEffects',struct('TC','ON'),'BkgCM','OFF');
                A.Fit;
                ErrTC = obj.CorrectErr('Parameter','eta','value',A.FitResult.par(17)*1e10,'eta',A.FitResult.par(17)*1e10,'minchi2',A.FitResult.chi2min,'factor',1.5,'SystSelect','TC');
-               A.ComputeCM('BkgCM','ON');
+               A.ComputeCM('SysEffects',struct(),'BkgCM','ON');
                A.Fit;
                ErrBkg = obj.CorrectErr('Parameter','eta','value',A.FitResult.par(17)*1e10,'eta',A.FitResult.par(17)*1e10,'minchi2',A.FitResult.chi2min,'factor',1.5,'SystSelect','BkgCM');
                ErrFSD = sqrt(ErrFSD.^2-ErrStat.^2);

@@ -1,4 +1,4 @@
-CheckmnuSqDist('Nfit',1000);
+%CheckmnuSqDist('Nfit',1000);
 
 % Nfit=1000;
 % statfluct   = zeros(numel(M.RunData.qU),Nfit);
@@ -46,69 +46,209 @@ CheckmnuSqDist('Nfit',1000);
 %  PrettyFigureFormat;
 %  hold off;
 
-% N=100;
-% G=6.67428e-11;
-% rho2=linspace(1,11342/2.2,N);  %kg/m³
-% rho1=11342; %kg/m³
-% R1=3092700; %m
-% R2=linspace(1,5400000,N);
-% r2=R1+R2+1612e3;
-% m1=4*pi./3.*R1^3.*rho1; %kg
-% m2=4.*pi./3.*R2.^3.*rho2; %linspace(1,7.117e24,N);
-% mu=1-1./(1+sqrt(m2./m1));
-% T=2.*pi.*sqrt(r2.^3./(G.*(m1+m2)));
-% v_o=(2.*pi.*0.5.*r2)./T;
+%% INFO:
+    % - rL=R1 line (v=0): plot(R2,m1.*(r2-R1).^2./R1.^2)
+    % - correct order of surf plot for rL, v: surf(R2,m2,v)
+    % - rotating potential contour plot: contour(x,y,U',50)
+close all;
+%clear all;
+%startangle=linspace(140,190,10);
+%launchangle=linspace(-25,25,10);
+%v=TransitVel('rho2',4000,'R2',8660000,'startangle',startangle,'launchangle',launchangle);
+TransitVel('rho2',4000,'R2',8660000,'startangle',157,'launchangle',-14);
+%TransitVel('rho2',5000,'R2',30927000);
+%TransitVel('startangle',168,'launchangle',-14);
+% N=10;
+% rho2=linspace(3000,11342,N);
+% R2  =linspace(0.5*3092700,10*3092700,N);
+% v=zeros(N,N);
 % for i=1:N
-% %     if r2(i)<R1+R2(i)
-% %         r2(i)=R1+R2;
-% %     end
 %     for j=1:N
-%         rL(i,j)=r2(j)./(1+sqrt(m2(i)/m1));
-%         v(i,j)=sqrt(-2*G*(m1./rL(i,j)+m2(i)./(r2(j)-rL(i,j))-m1./R1-m2(i)./(r2(j)-R1)));
-%         if m2(i)>m1.*(r2(j)-R1).^2/R1.^2
-%             v(i,j)=0;
-%         end
-%         vnull(i,j)=sqrt(-2*G*(m1./rL(i,j)-m1./R1));
+%         v(i,j)=TransitVel('rho2',rho2(i),'R2',R2(j),'plot','OFF');
 %     end
 % end
-% x=linspace(-2*R1,2*R1,300);
-% y=linspace(-r2,r2,300);
-% vx=[0 0 0];
-% for i=1:numel(x)
-%     for j=1:numel(y)
-%         U(i,j)=-G.*m1./(sqrt(x(i).^2+(y(j)+0.5.*r2).^2))-G.*m2./(sqrt(x(i).^2+(y(j)-0.5.*r2).^2));
-%         v_r(i,j)=(2.*pi.*sqrt(x(i)^2+y(j)^2))./T;
-%         F(i,j,:)=G.*m1./(x(i).^2+(y(j)+0.5*r2).^2).*[-x(i) -y(j)-r2/2]./sqrt(x(i)^2+(-y(j)-r2/2)^2)+...
-%             G.*m2./(x(i).^2+(y(j)-0.5*r2).^2).*[-x(i) -y(j)+r2/2]./sqrt(x(i)^2+(y(j)-r2/2)^2)+...
-%             v_r(i,j).^2./sqrt(x(i)^2+y(j)^2).*[-x(i) -y(j)]./sqrt(x(i)^2+y(j)^2)+...
-%             2.*[2*pi./T.*vx(2) -vx(1).*2*pi./T];                                  %F(x,y)=[F(x,y,1),F(x,y,2)]
-%         if x(i)^2+(y(j)+0.5*r2)^2<R1^2 || (y(j)-0.5*r2)^2+x(i)^2<R2^2
-%             U(i,j)=0;
-%             F(i,j,:)=0;
-%         end
-%         %hold on;
-%         %plot([x(i) x(i)+1e5*F(i,j,1)],[y(j) y(j)+1e5*F(i,j,2)]);
-%     end
-% end
-% for i=1:10
-%     for j=1:10
-%         hold on;
-%         plot([x(100*i-99) x(100*i-99)+1e5*F(100*i-99,100*j-99,1)],[y(100*j-99) y(100*j-99)+1e5*F(100*i-99,100*j-99,2)]);
-%     end
-% end
-%plot(R2,v);
-%hold on;
-%plot(R2,vnull);
-%plot(R2,r2-R2);
-%plot(R2,rL);
-%plot([R2(1) R2(end)],[R1 R1]);
-%sprintf('Transit velocity: %g m/s',v)
-% x=linspace(0,r2,1000);
-% y1=sqrt(R1^2-(x-r2).^2);
-% y2=sqrt(R2^2-x.^2);
-% plot(x,y1);hold on;plot(x,y2);
-
-
+function vel=TransitVel(varargin)
+    p=inputParser;
+    p.addParameter('rho2',11342,@(x)isfloat(x));
+    p.addParameter('R2',3092700,@(x)isfloat(x));
+    p.addParameter('launchangle',0,@(x)isfloat(x));
+    p.addParameter('startangle',180,@(x)isfloat(x));
+    p.addParameter('Plot','ON',@(x)ismember(x,{'ON','OFF'}));
+    p.parse(varargin{:});
+    %% Settings
+    rho2        = p.Results.rho2;
+    R2          = p.Results.R2; %eV²
+    launchangle = p.Results.launchangle;
+    startangle  = p.Results.startangle;
+    Plot        = p.Results.Plot;
+    
+    G=6.67428e-11;
+    rho1=11342; %kg/m³
+    R1=3092700; %m
+    r2=R1+R2+1612e3;
+    m1=4*pi./3.*R1^3.*rho1; %kg
+    m2= 4.*pi./3.*R2.^3.*rho2;%linspace(0,100*7.117e24,N);
+    T=2.*pi.*sqrt(r2.^3./(G.*(m1+m2)));
+    r_B=r2.*m2./(m1+m2); %barycentre
+    rL=r2./(1+sqrt(m2/m1));
+    v=sqrt(-2*G*(m1./rL+m2./(r2-rL+1e-100)-m1./R1-m2./(r2-R1)));
+    if m2>m1.*(r2-R1).^2/R1.^2
+        v=0;
+    end
+    vnull=sqrt(-2*G*(m1./rL-m1./R1));
+    
+    Ngrid=1000;
+    x=linspace(-2*R2,2*R2,Ngrid);
+    y=linspace(-r2./2-r_B,1.5.*r2-r_B,Ngrid);
+    v_r=zeros(Ngrid,Ngrid);
+    U=zeros(Ngrid,Ngrid);
+    U_L=zeros(Ngrid,Ngrid);
+    F=zeros(Ngrid,Ngrid,2);
+    vx=[0 0 0];
+    for i=1:numel(x)
+        for j=1:numel(y)
+            v_r(i,j)=(2.*pi.*sqrt(x(i)^2+(y(j))^2))./T;
+            U(i,j)=-G.*m1./(sqrt(x(i).^2+(y(j)+r_B).^2))-G.*m2./(sqrt(x(i).^2+(y(j)-(r2-r_B)).^2))-...
+                v_r(i,j).^2./2;
+            U_L(i,j)=U(i,j);
+            F(i,j,:)=G.*m1./(x(i).^2+(y(j)+r_B).^2).*[-x(i) -y(j)-r_B]./sqrt(x(i)^2+(-y(j)-r_B)^2)+...
+                G.*m2./(x(i).^2+(y(j)-(r2-r_B)).^2).*[-x(i) -y(j)+(r2-r_B)]./sqrt(x(i)^2+(y(j)-(r2-r_B))^2)+...
+                v_r(i,j).^2./sqrt(x(i)^2+(y(j))^2).*[x(i) y(j)]./sqrt(x(i)^2+(y(j))^2)+...
+                2.*[2*pi./T.*vx(2) -vx(1).*2*pi./T];                                  %F(x,y)=[F(x,y,1),F(x,y,2)]
+            if x(i)^2+(y(j)+r_B)^2<R1^2 || (y(j)-(r2-r_B))^2+x(i)^2<R2^2
+                U(i,j)=0;
+                F(i,j,:)=0;
+            end
+        end
+    end
+    if strcmp(Plot,'ON')
+        figure(1);
+        hold on;
+        Nplot=20;
+        for i=1:Nplot
+            for j=1:Nplot
+                plot([x(Ngrid/Nplot*i-(Ngrid/Nplot-1)) x(Ngrid/Nplot*i-(Ngrid/Nplot-1))+1e5*F(Ngrid/Nplot*i-Ngrid/Nplot+1,Ngrid/Nplot*j-Ngrid/Nplot+1,1)],...
+                    [y(Ngrid/Nplot*j-Ngrid/Nplot+1) y(Ngrid/Nplot*j-Ngrid/Nplot+1)+1e5*F(Ngrid/Nplot*i-Ngrid/Nplot+1,Ngrid/Nplot*j-Ngrid/Nplot+1,2)]);
+            end
+        end
+        contour(x,y,U');
+    end
+    sprintf('Transit velocity (static): %g m/s',v)
+    
+    Force=@(x,y,vx) G.*m1./(x.^2+(y+r_B).^2).*[-x -y-r_B]./sqrt(x^2+(-y-r_B)^2)+...
+                G.*m2./(x.^2+(y-(r2-r_B)).^2).*[-x -y+(r2-r_B)]./sqrt(x^2+(y-(r2-r_B))^2)+...
+                ((2.*pi.*sqrt(x^2+(y)^2))./T).^2./sqrt(x^2+(y)^2).*[x y]./sqrt(x^2+(y)^2)+...
+                2.*[2*pi./T.*vx(2) -vx(1).*2*pi./T];
+    Potential=@(x,y) -G.*m1./(sqrt(x.^2+(y+r_B).^2))-G.*m2./(sqrt(x.^2+(y-(r2-r_B)).^2))-...
+                ((2.*pi.*sqrt(x^2+(y)^2))./T).^2./2;
+    PotentialDiffL1=zeros(1,Ngrid);
+    PotentialDiffL2=zeros(1,Ngrid);
+    L1range=linspace(-r_B+R1,-r_B+R1+1612e3,Ngrid+1);
+    L2range=linspace(y(1),-r_B-R1,Ngrid+1);
+    for i=2:Ngrid+1
+       PotentialDiffL1(i-1)=abs(Potential(0,L1range(i))-Potential(0,L1range(i-1)));
+       PotentialDiffL2(i-1)=abs(Potential(0,L2range(i))-Potential(0,L2range(i-1)));
+    end
+    L1Pos=L1range((PotentialDiffL1)==min((PotentialDiffL1)));
+    L2Pos=L2range((PotentialDiffL2)==min((PotentialDiffL2)));
+    L1=Potential(0,L1Pos(end));
+    L2=Potential(0,L2Pos(end));
+    if strcmp(Plot,'ON')
+        contour(x,y,U_L',[L1 L2]);
+    end
+    phi=linspace(0,2*pi,3600);
+    for i=1:numel(phi)
+        surface(i,:)=[R1.*sin(phi(i)) -r_B-R1.*cos(phi(i))];
+        SurfF(i,:)=Force(R1.*sin(phi(i)),-r_B-R1.*cos(phi(i)),[0 0]);
+        g(i)=sqrt(SurfF(i,1).^2+SurfF(i,2).^2);
+        slope(i)=acos((SurfF(i,1)*(-surface(i,1))+SurfF(i,2)*(-surface(i,2)-r_B))./(sqrt(SurfF(i,1).^2+SurfF(i,2).^2)*sqrt(surface(i,1).^2+(-surface(i,2)-r_B).^2)));
+    end
+    TimeStep=0.1;
+    if v==0
+        v=100;
+    end
+    v_0=v;
+    for i=1:numel(startangle)
+        for j=1:numel(launchangle)
+            Position=[R1.*sin(phi(10*round(startangle(i)))) -r_B-R1.*cos(phi(10*round(startangle(i))))];
+            velocity=[v_0*sin(pi/180*launchangle(j)) v_0*cos(pi/180*launchangle(j))];
+            cntr2=1;
+            while (Position(2)-(r2-r_B))^2+Position(1)^2>R2^2 && abs(Position(1))<x(end)
+                v_0=cntr2*v;
+                Position=[R1.*sin(phi(10*round(startangle(i)))) -r_B-R1.*cos(phi(10*round(startangle(i))))];
+                velocity=[v_0*sin(pi/180*launchangle(j)) v_0*cos(pi/180*launchangle(j))];
+                cntr=1;
+                clear trajectory;
+                clear velcurve;
+                while (Position(1)^2+(Position(2)+r_B)^2>R1^2 && (Position(2)-(r2-r_B))^2+Position(1)^2>R2^2 && abs(Position(1))<x(end)) || cntr==1
+                    acc=Force(Position(1),Position(2),velocity);
+                    Position=Position+TimeStep.*velocity;
+                    velocity=velocity+TimeStep.*acc;
+                    trajectory(cntr,:)=Position;
+                    velcurve(cntr,:)=velocity;
+                    cntr=cntr+1;
+                end
+                cntr2=cntr2+1;
+            end
+            cntr3=1;
+            Position=[R1.*sin(phi(10*round(startangle(i)))) -r_B-R1.*cos(phi(10*round(startangle(i))))];
+            velocity=[v_0*sin(pi/180*launchangle(j)) v_0*cos(pi/180*launchangle(j))];
+            while (Position(2)-(r2-r_B))^2+Position(1)^2>R2^2 && cntr3<11
+                v_0=(cntr2-2+0.1*cntr3)*v;
+                Position=[R1.*sin(phi(10*round(startangle(i)))) -r_B-R1.*cos(phi(10*round(startangle(i))))];
+                velocity=[v_0*sin(pi/180*launchangle(j)) v_0*cos(pi/180*launchangle(j))];
+                cntr=1;
+                clear trajectory;
+                clear velcurve;
+                while (Position(1)^2+(Position(2)+r_B)^2>R1^2 && (Position(2)-(r2-r_B))^2+Position(1)^2>R2^2 && abs(Position(1))<x(end)) || cntr==1
+                    acc=Force(Position(1),Position(2),velocity);
+                    Position=Position+TimeStep.*velocity;
+                    velocity=velocity+TimeStep.*acc;
+                    trajectory(cntr,:)=Position;
+                    velcurve(cntr,:)=velocity;
+                    cntr=cntr+1;
+                end
+                cntr3=cntr3+1;
+            end
+            cntr4=1;
+            Position=[R1.*sin(phi(10*round(startangle(i)))) -r_B-R1.*cos(phi(10*round(startangle(i))))];
+            velocity=[v_0*sin(pi/180*launchangle(j)) v_0*cos(pi/180*launchangle(j))];
+            while (Position(2)-(r2-r_B))^2+Position(1)^2>R2^2 && cntr4<11
+                v_0=(cntr2-2+0.1*(cntr3-2)+0.01*cntr4)*v;
+                Position=[R1.*sin(phi(10*round(startangle(i)))) -r_B-R1.*cos(phi(10*round(startangle(i))))];
+                velocity=[v_0*sin(pi/180*launchangle(j)) v_0*cos(pi/180*launchangle(j))];
+                cntr=1;
+                clear trajectory;
+                clear velcurve;
+                while (Position(1)^2+(Position(2)+r_B)^2>R1^2 && (Position(2)-(r2-r_B))^2+Position(1)^2>R2^2 && abs(Position(1))<x(end)) || cntr==1
+                    acc=Force(Position(1),Position(2),velocity);
+                    Position=Position+TimeStep.*velocity;
+                    velocity=velocity+TimeStep.*acc;
+                    trajectory(cntr,:)=Position;
+                    velcurve(cntr,:)=velocity;
+                    cntr=cntr+1;
+                end
+                cntr4=cntr4+1;
+            end
+            vel(i,j)=(cntr2-2+0.1*(cntr3-2)+0.01*(cntr4-1))*v;
+            traveltime(i,j)=(cntr*TimeStep)/60;
+        end
+    end
+    if strcmp(Plot,'ON')
+        plot(trajectory(:,1),trajectory(:,2),'LineWidth',2);
+        hold off;
+        figure(2);
+        plot(phi.*(180/pi),g,'LineWidth',2);
+        xlabel('Latitude (degrees)');
+        ylabel('Local g');
+        figure(3);
+        plot(phi.*(180/pi),slope.*(180/pi),'LineWidth',2);
+        xlabel('Latitude (degrees)');
+        ylabel('Local apparent slope (degrees)');
+    end
+    sprintf('Transit velocity (rotating): %g m/s',min(min(vel)))
+    sprintf('Travel time: %g min',min(min(traveltime)))
+end
 
 % D = MultiRunAnalysis('RunList','KNM1',...         % runlist defines which runs are analysed -> set MultiRunAnalysis.m -> function: GetRunList()
 %             'chi2','chi2CMShape',...              % uncertainties: statistical or stat + systematic uncertainties

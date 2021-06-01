@@ -1,8 +1,8 @@
-Mode = 'Ringwise';
+Mode = 'Periodwise';
+load('SamakKNM2_CratemVequivalentInRW123PSR1234.mat');
+load('SamakKNM2_CratemVequivalentSlopesAndFitsInRW123PSR1234.mat');
+load('SamakKNM2_ShiftDriftInRW123PSR1234_mVperDay.mat');
 if strcmp(Mode,'Ringwise')
-    load('SamakKNM2_CratemVequivalentInRW123PSR1234.mat');
-    load('SamakKNM2_CratemVequivalentSlopesAndFitsInRW123PSR1234.mat');
-    load('SamakKNM2_ShiftDriftInRW123PSR1234_mVperDay.mat');
     for j=1:3
         pause(1);
         RunList   = ['KNM2_RW' num2str(j)];
@@ -72,7 +72,7 @@ if strcmp(Mode,'Ringwise')
             leg=legend([hnc hc],...
                 sprintf('before correction'),...
                 sprintf('after correction'),...
-                'location','northeast');
+                'location','eastoutside');
             leg.Color = 'none'; legend boxoff;
             PrettyFigureFormat
         end
@@ -206,4 +206,51 @@ if strcmp(Mode,'Ringwise')
     zlabel('mV-equivalent / day'); %zlim([0 10]);
     PrettyFigureFormat
     ht.FontSize=16;
+elseif strcmp(Mode,'Periodwise')
+    KNM1correction  = [ 1.0000    0.9992    0.9975    0.9961];
+    fig1      = figure('Name',sprintf('KATRIN - Scanwise Background'),...
+            'NumberTitle','off','rend','painters','pos',[10 10 1400 1000]);
+    for j=1:3
+        pause(1);
+        RunList   = ['KNM2_RW' num2str(j)];
+         RunAnaArg = {'RunList',RunList,'DataType','Real',...
+             'FSDFlag','BlindingKNM2','ELossFlag','KatrinT2',...
+             'AnaFlag','StackPixel','RingMerge','Full'};
+         R        = MultiRunAnalysis(RunAnaArg{:});
+         count  = R.SingleRunData.TBDIS_RM;
+         count  = count./(28/117.*KNM1correction(1)+36/117.*KNM1correction(2)+34/117.*KNM1correction(3)+19/117.*KNM1correction(4));
+         sstime = R.SingleRunData.qUfrac_RM.*R.SingleRunData.TimeSec;
+         rateRawPeriod = rateRaw{j,1} + rateRaw{j,2} + rateRaw{j,3} + rateRaw{j,4}; %count./sstime; 
+         R.RMCorrection('QAplots','OFF','qUCorrection','OFF');
+         count  = R.SingleRunData.TBDIS_RM;
+         count  = count./(28/117.*KNM1correction(1)+36/117.*KNM1correction(2)+34/117.*KNM1correction(3)+19/117.*KNM1correction(4));
+         sstime = R.SingleRunData.qUfrac_RM.*R.SingleRunData.TimeSec;
+         rateA  = count./sstime;
+         RV        = MultiRunAnalysis(RunAnaArg{:});
+         RV.RMCorrection('QAplots','OFF');
+         count  = RV.SingleRunData.TBDIS_RM;
+         count  = count./(28/117.*KNM1correction(1)+36/117.*KNM1correction(2)+34/117.*KNM1correction(3)+19/117.*KNM1correction(4));
+         sstime = RV.SingleRunData.qUfrac_RM.*RV.SingleRunData.TimeSec;
+         ratePeriod    =  rate{j,1} + rate{j,2} + rate{j,3} + rate{j,4}; %count./sstime;
+        %% Rate Evolution --> mV equivalent
+        myMainTitle = sprintf('KATRIN - KNM2 RW%s - FPD Rate Evolution 300eV below Endpoint',num2str(j));
+        maintitle   = myMainTitle;
+        savefile1    = sprintf('plots/KNM2_RM300_EffectivePotentialFluctuation_RW%.0f_PseudoRings_1.png',j);
+        %a=annotation('textbox', [0 0.9 1 0.1], 'String', maintitle,'EdgeColor', 'none','HorizontalAlignment', 'center');
+        %a.FontSize=24;a.FontWeight='bold';
+        subplot(3,1,j);
+        hnc=plot(OverallStartTimeStamp{j},rateRawPeriod,'s--','Color',rgb('Green'),'LineWidth',1,'MarkerSize',8,'markerfacecolor',rgb('DarkGreen'));
+        hold on
+        hc=plot(OverallStartTimeStamp{j},ratePeriod,'s--','Color',rgb('Red'),'LineWidth',1,'MarkerSize',12,'markerfacecolor',rgb('IndianRed'));
+        %ha=plot(OverallStartTimeStamp{j},rateA,'s--','Color',rgb('Blue'),'LineWidth',1,'MarkerSize',12,'markerfacecolor',rgb('Blue'));
+        hold off
+        ylabel('cps');
+        xlabel('Scan Start Time');
+        leg=legend([hnc hc],...
+            sprintf('before correction'),...
+            sprintf('after correction \n (mean rate: %.3g cps)',mean(ratePeriod)),...
+            'location','eastoutside');
+        leg.Color = 'none'; legend boxoff;
+        PrettyFigureFormat
+    end
 end

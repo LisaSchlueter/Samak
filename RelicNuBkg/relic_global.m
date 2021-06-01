@@ -307,14 +307,14 @@ function relic_global(varargin)
        d.Head1Length=20;
        d.Head2Length=20;
        text(s2,8,1,'B','FontSize',FontSize,'FontWeight','bold','Color',[0.9290 0.6940 0.1250]);
-       e=annotation('doublearrow',[0.665 0.665],[0.48 0.4]);
+       e=annotation('doublearrow',[0.61 0.61],[0.48 0.42]);
        e.Color=[81 126 102]/255;
        e.LineWidth=15;
        e.Head1Width=50;
        e.Head2Width=50;
        e.Head1Length=20;
        e.Head2Length=20;
-       text(s2,-6,1.01,'\eta','FontSize',FontSize,'FontWeight','bold','Color',[81 126 102]/255);
+       text(s2,-8.5,1.01,'\eta','FontSize',FontSize,'FontWeight','bold','Color',[81 126 102]/255);
     end
 
     % save

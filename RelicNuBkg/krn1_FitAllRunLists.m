@@ -37,11 +37,12 @@ for i=16:19
     fitresults(11,i) = M.FitResult.chi2min;
 end
 
+
+fitresults_ring=zeros(11,4);
 M = MultiRunAnalysis('RunList','KNM1',...         % runlist defines which runs are analysed -> set MultiRunAnalysis.m -> function: GetRunList()
         'chi2','chi2CMShape',...              % uncertainties: statistical or stat + systematic uncertainties
         'DataType','Real',...                 % can be 'Real' or 'Twin' -> Monte Carlo
         'fixPar','mNu E0 Norm Bkg eta',...        % free Parameter!!
-        'AnaFlag','Ring',...
         'RadiativeFlag','ON',...              % theoretical radiative corrections applied in model
         'NonPoissonScaleFactor',1.064,...     % background uncertainty are enhanced
         'minuitOpt','min ; minos',...         % technical fitting options (minuit)
@@ -50,5 +51,23 @@ M = MultiRunAnalysis('RunList','KNM1',...         % runlist defines which runs a
         'SysBudget',24,...                    % defines syst. uncertainties -> in GetSysErr.m;
         'DopplerEffectFlag','FSD',...
         'SynchrotronFlag','ON',...
-        'AngularTFFlag','OFF');
-M.FitAllRings;
+        'AngularTFFlag','OFF',...
+        'RingMerge','Full');
+A=RingAnalysis('RunAnaObj',M,'RingList',1:4);
+
+for i=1:4
+    M=A.MultiObj(i);
+    M.exclDataStart = M.GetexclDataStart(40);
+    M.Fit;
+    fitresults_ring(1,i)  = M.FitResult.par(1);
+    fitresults_ring(2,i)  = M.FitResult.err(1);
+    fitresults_ring(3,i)  = M.ModelObj.Q_i+M.FitResult.par(2);
+    fitresults_ring(4,i)  = M.FitResult.err(2);
+    fitresults_ring(5,i)  = M.ModelObj.BKG_RateSec_i+M.FitResult.par(3);
+    fitresults_ring(6,i)  = M.FitResult.err(3);
+    fitresults_ring(7,i)  = M.FitResult.par(3+M.ModelObj.nPixels:3+2*M.ModelObj.nPixels-1) + 1;
+    fitresults_ring(8,i)  = M.FitResult.err(3+M.ModelObj.nPixels:3+2*M.ModelObj.nPixels-1);
+    fitresults_ring(9,i)  = M.FitResult.par(17).*1e10;
+    fitresults_ring(10,i) = M.FitResult.err(17).*1e10;
+    fitresults_ring(11,i) = M.FitResult.chi2min;
+end

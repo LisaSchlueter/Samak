@@ -252,9 +252,13 @@ function PlotBestFit(varargin)
             if strcmp(saveplot,'ON')
                 SaveDir = [getenv('SamakPath'),sprintf('RelicNuBkg/Plots/FinalPlots/')];
                 MakeDir(SaveDir);
-                SaveName1='RandomFluctFit.pdf';
-                SaveName2='Corplot_Noeta.pdf';
-                SaveName3='Corplot_eta.pdf';
+                if strcmp(DataType,'Twin')
+                    SaveName1='RandomFluctFit.pdf';
+                else
+                    SaveName1='BestFit.pdf';
+                end
+                SaveName2='Corplot_eta.pdf';
+                SaveName3='Corplot_Noeta.pdf';
                 export_fig(fig,[SaveDir,SaveName1]);
                 export_fig(fig3,[SaveDir,SaveName2]);
                 export_fig(fig4,[SaveDir,SaveName3]);

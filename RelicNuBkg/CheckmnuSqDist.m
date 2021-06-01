@@ -64,15 +64,15 @@ function CheckmnuSqDist(varargin)
             %M.InitModelObj_Norm_BKG('RecomputeFlag','ON');
             %M.ModelObj.BKG_RateSec_i=0.292256;
             M.Fit;
-            fitresults(1,j)= M.FitResult.par(1);
-            fitresults(2,j)= M.FitResult.err(1);
-            fitresults(3,j)= M.ModelObj.Q_i+M.FitResult.par(2);
-            fitresults(4,j)= M.FitResult.err(2);
-            fitresults(5,j)= M.ModelObj.BKG_RateSec_i+M.FitResult.par(3);
-            fitresults(6,j)= M.FitResult.err(3);
-            fitresults(7,j)= M.FitResult.par(3+M.ModelObj.nPixels:3+2*M.ModelObj.nPixels-1) + 1;
-            fitresults(8,j)= M.FitResult.err(3+M.ModelObj.nPixels:3+2*M.ModelObj.nPixels-1);
-            fitresults(9,j)= M.FitResult.chi2min;
+            fitresults(1,j)= M.FitResult.par(1);                                                    %neutrino mass
+            fitresults(2,j)= M.FitResult.err(1);                                                    %neutrino mass error
+            fitresults(3,j)= M.ModelObj.Q_i+M.FitResult.par(2);                                     %endpoint
+            fitresults(4,j)= M.FitResult.err(2);                                                    %endpoint error
+            fitresults(5,j)= M.ModelObj.BKG_RateSec_i+M.FitResult.par(3);                           %background
+            fitresults(6,j)= M.FitResult.err(3);                                                    %background error
+            fitresults(7,j)= M.FitResult.par(3+M.ModelObj.nPixels:3+2*M.ModelObj.nPixels-1) + 1;    %normalization
+            fitresults(8,j)= M.FitResult.err(3+M.ModelObj.nPixels:3+2*M.ModelObj.nPixels-1);        %normalization error
+            fitresults(9,j)= M.FitResult.chi2min;                                                   %chi^2
             save(sprintf('./mNuFitResult_AllParams_mnuSq%g_Nfit%g.mat',mnuSq,Nfit),'fitresults');
         end
     end

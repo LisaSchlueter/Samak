@@ -1461,6 +1461,9 @@ classdef CovarianceMatrix < handle
                 fprintf('load is prob. lookup table from file %s \n',is_filename)
             else
                 ISXsection = obj.StudyObject.ISXsection(Energy);
+                if numel(ISXsection)==1
+                    ISXsection=repmat(ISXsection,[1,numel(Energy)]);
+                end
                 % load Grid
                 if obj.StudyObject.WGTS_CD_MolPerCm2<(2*1e17)
                     DataSet = 'Knm1';

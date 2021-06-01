@@ -328,7 +328,7 @@ if strcmp(Mode,'Periodwise')
         count  = R.SingleRunData.TBDIS_RM + HVdriftPerPixel.*numel(R.PixList).*R.SingleRunData.qUfrac_RM.*R.SingleRunData.TimeSec;
 
         % Correct for KNM1 Radial Effect
-        count  = count./(28/118.*KNM1correction(1)+36/117.*KNM1correction(2)+34/117.*KNM1correction(3)+19/117.*KNM1correction(4));
+        count  = count./(28/117.*KNM1correction(1)+36/117.*KNM1correction(2)+34/117.*KNM1correction(3)+19/117.*KNM1correction(4));
 
         % Rate uncorrected for activity and qU
         rateRaw = count./sstime;
@@ -342,7 +342,7 @@ if strcmp(Mode,'Periodwise')
         % Correct for activity and qU
         R.RMCorrection('saveplot','ON','QAplots','OFF','Mode',CorrMode);
         count  = R.SingleRunData.TBDIS_RM + HVdriftPerPixel.*numel(R.PixList).*R.SingleRunData.qUfrac_RM.*R.SingleRunData.TimeSec;
-        count  = count./(28/118.*KNM1correction(1)+36/117.*KNM1correction(2)+34/117.*KNM1correction(3)+19/117.*KNM1correction(4));
+        count  = count./(28/117.*KNM1correction(1)+36/117.*KNM1correction(2)+34/117.*KNM1correction(3)+19/117.*KNM1correction(4));
 
         rate   = count./sstime;
         rateE  = sqrt(count)./sstime;

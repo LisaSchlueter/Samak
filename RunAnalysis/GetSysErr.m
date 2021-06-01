@@ -469,6 +469,21 @@ elseif SysBudget == 66 %TDR-like
     SysErr.is_EOffsetErr = 0;
     SysErr.MACE_VarErr = 0;
     SysErr.MaxSlopeCpsPereV = 0;
+elseif SysBudget == 67 %updated TDR-like
+    SysErr.WGTS_TASR_RelErr = 3e-6;
+    SysErr.FSDNorm_RelErr=  0.01;
+    SysErr.FSDShapeGS_RelErr= 0.04;
+    SysErr.FSDShapeES_RelErr= 0.18;
+    SysErr.MACE_Ba_T_RelErr   = 0.002;
+    SysErr.MACE_Bmax_T_RelErr = 0.002;
+    SysErr.WGTS_B_T_RelErr    = 0.002;
+    SysErr.WGTS_CD_MolPerCm2_RelErr= 0.001;
+    SysErr.ISXsection_RelErr = 0; %use rhod sigma together as uncertainty
+    SysErr.DataDriven = 'OFF';
+    SysErr.FPDeff_RelErr = 0;
+    SysErr.is_EOffsetErr = 0;
+    SysErr.MACE_VarErr = 0;
+    SysErr.MaxSlopeCpsPereV = 0.5e-6;
 end
 
 CMArg = {'WGTS_CD_MolPerCm2_RelErr',SysErr.WGTS_CD_MolPerCm2_RelErr,...

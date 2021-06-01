@@ -4,7 +4,7 @@ Detrend = 'OFF';
 NBoot   = 1000;
 ROIstr  = 'Default';
 Corr    = 'Fabian';
-Mode    = 'Ringwise';
+Mode    = 'Periodwise';
 
 if strcmp(Mode,'Ringwise')
     %% Rate Evolution --> mV equivalent
@@ -410,6 +410,7 @@ elseif strcmp(Mode,'Uniform')                                                   
     PrettyFigureFormat
     set(gca,'FontSize',12);
     disp(pdG.sigma/sqrt(pdN.lambda));
+    ylim([0 10e-5]);
     
     save('SamakKNM2_NPBroadeningsInRW123uniform_mV.mat','NP','Broadenings');
 end

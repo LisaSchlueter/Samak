@@ -121,8 +121,9 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
         
         % Beta Spectrum - Differential
         PhaseSpace;      % Primitive Beta Spectrum
-        TBDDS;           % Differential Beta Spectrum
-        TBDDS_R;
+        TBDDS_beta;      % Differential Beta Spectrum
+        TBDDS_R;         % Differential Relic Spectrum
+        TBDDS;
         TBDDSE;          % Error on Differential Beta Spectrum
         NormFactorTBDDS; % Normalization Factor
         NormFactorTBDDS_R;
@@ -266,7 +267,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
             p.addParameter('BinningSteps',0.1,@(x)isfloat(x));
             p.addParameter('eta_i',0,@(x)isfloat(x));
             p.addParameter('ToggleRelic','ON',@(x)ismember(x,{'ON','OFF'}));
-            p.addParameter('ToggleES','OFF',@(x)ismember(x,{'ON','OFF'}));
+            p.addParameter('ToggleES','OFF',@(x)ismember(x,{'ON','OFF'}));               % ATTENTION: very slow
             p.addParameter('PeakPosition','',@(x)(isfloat(x) && x>=0) || isempty(x));
 
             % TBD: Flag for Theoretical Corrections
@@ -524,6 +525,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
             p.addParameter('SanityPlot','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('ZoomPlot','OFF',@(x)ismember(x,{'ON','OFF'})); % save also zoom to 1 final state
             p.addParameter('Dist','Gauss',@(x)ismember(x,{'Gauss','Rect'}));
+            p.addParameter('mnuSq_local',obj.mnuSq_i,@(x)isfloat(x));
             p.parse(varargin{:});
             
             Sigma              = p.Results.Sigma;
@@ -533,6 +535,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
             SanityPlot         = p.Results.SanityPlot;
             ZoomPlot           = p.Results.ZoomPlot;
             Dist               = p.Results.Dist; 
+            mnuSq_local        = p.Results.mnuSq_local;
             
             nPseudoRings = numel(obj.MACE_Ba_T);
             
@@ -614,7 +617,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                     'filename',ttfsdfilename);
                 if strcmp(obj.ToggleES,'ON')
                      [obj.TTexE_R,obj.TTexP_R] = FSD_Convfun_relic(obj.TTexE,obj.TTexP,...
-                        squeeze(Sigma(1,:,:)),'mnu',sqrt(obj.mnuSq_i),'BinVec',obj.Te-obj.Q_i,...
+                        squeeze(Sigma(1,:,:)),'mnu',sqrt(mnuSq_local),'BinVec',obj.Te-obj.Q_i,...
                         'SanityPlot',SanityPlot,'ZoomPlot',ZoomPlot,...
                         'filename',ttfsdfilename);
                 end
@@ -665,7 +668,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                                                   FSDConvArg{:},'filename',dtfsdfilename);
                 if strcmp(obj.ToggleES,'ON')
                     [obj.DTexE_R,obj.DTexP_R] = FSD_Convfun_relic(obj.DTexE,obj.DTexP,...
-                        squeeze(Sigma(1,:,:)),'mnu',sqrt(obj.mnuSq_i),'BinVec',obj.Te-obj.Q_i,...
+                        squeeze(Sigma(1,:,:)),'mnu',sqrt(mnuSq_local),'BinVec',obj.Te-obj.Q_i,...
                         'SanityPlot',SanityPlot,'ZoomPlot',ZoomPlot,...
                         'filename',ttfsdfilename);
                 end
@@ -712,7 +715,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                                        FSDConvArg{:},'filename',htfsdfilename);
                 if strcmp(obj.ToggleES,'ON')
                     [obj.HTexE_R,obj.HTexP_R] = FSD_Convfun_relic(obj.HTexE,obj.HTexP,...
-                        squeeze(Sigma(1,:,:)),'mnu',sqrt(obj.mnuSq_i),'BinVec',obj.Te-obj.Q_i,...
+                        squeeze(Sigma(1,:,:)),'mnu',sqrt(mnuSq_local),'BinVec',obj.Te-obj.Q_i,...
                         'SanityPlot',SanityPlot,'ZoomPlot',ZoomPlot,...
                         'filename',ttfsdfilename);
                 end
@@ -1811,14 +1814,14 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                 end
               
                 % Phase Space - Negative Mass Squared....
-                TBDDS_beta = zeros(numel(obj.Te),1);
+                obj.TBDDS_beta = zeros(numel(obj.Te),1);
                 TBDDS_Capture = zeros(numel(obj.Te),1);
                 switch obj.PS_Wein93
                     case 'ON'
                         obj.ComputePhaseSpaceWei93();
                     case 'OFF'
                         obj.ComputePhaseSpace('BetaDecay');
-                        TBDDS_beta = obj.PhaseSpace;
+                        obj.TBDDS_beta = obj.PhaseSpace;
                         switch obj.ToggleRelic
                             case 'ON'
                                 switch obj.ToggleES
@@ -1849,6 +1852,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                                             obj.ComputePhaseSpace('NuCapture');
                                         end
                                     case 'ON'
+                                        if ~(strcmp(obj.TTFSD,'OFF') && strcmp(obj.DTFSD,'OFF') && strcmp(obj.HTFSD,'OFF')) LoadFSD(obj,'mnuSq_local',obj.mnuSq); end
                                         obj.ComputePhaseSpace('NuCapture');
                                 end
 
@@ -1857,41 +1861,41 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                 end
                 
                 % Apply Fermi Function
-                TBDDS_beta =  TBDDS_beta .* obj.ComputeFermiCorr();
+                obj.TBDDS_beta =  obj.TBDDS_beta .* obj.ComputeFermiCorr();
                 
                 % Corrections to the allowed diff. beta spectrum
                 switch obj.RadiativeFlag
                     case 'ON'
-                        TBDDS_beta = TBDDS_beta .* real(obj.ComputeRadiativeCorr());
+                        obj.TBDDS_beta = obj.TBDDS_beta .* real(obj.ComputeRadiativeCorr());
                 end
                 switch obj.RecoilWmVmAFlag
                     case 'ON'
-                        TBDDS_beta = TBDDS_beta .* obj.ComputeRecoilWmVmACorr() ;
+                        obj.TBDDS_beta = obj.TBDDS_beta .* obj.ComputeRecoilWmVmACorr() ;
                 end
                 switch obj.FiniteExtChargeFlag
                     case 'ON'
-                        TBDDS_beta = TBDDS_beta .* obj.ComputeFiniteExtChargeCorr() ;
+                        obj.TBDDS_beta = obj.TBDDS_beta .* obj.ComputeFiniteExtChargeCorr() ;
                 end
                 switch obj.EEexchangeFlag
                     case 'ON'
-                        TBDDS_beta = TBDDS_beta .* obj.ComputeEEexchangeCorr(2) ;
+                        obj.TBDDS_beta = obj.TBDDS_beta .* obj.ComputeEEexchangeCorr(2) ;
                 end
                 switch obj.ScreeningFlag
                     case 'ON'
-                        TBDDS_beta = TBDDS_beta .* obj.ComputeScreeningCorr();
+                        obj.TBDDS_beta = obj.TBDDS_beta .* obj.ComputeScreeningCorr();
                 end
                 switch obj.WintFiniteSizeFlag
                     case 'ON'
-                        TBDDS_beta = TBDDS_beta .* obj.ComputeWintFiniteSizeCorr() ;
+                        obj.TBDDS_beta = obj.TBDDS_beta .* obj.ComputeWintFiniteSizeCorr() ;
                 end
                 switch obj.RecoilCoulombFlag
                     case 'ON'
-                        TBDDS_beta = TBDDS_beta .* obj.ComputeRecoilCoulombCorr() ;
+                        obj.TBDDS_beta = obj.TBDDS_beta .* obj.ComputeRecoilCoulombCorr() ;
                 end
                 switch obj.DopplerEffectFlag
                     case {'matConv','numConv'}
-                        TBDDS_beta = obj.KernelSpectrumConv(TBDDS_beta);
-                        TBDDS_beta = obj.restoreSpectrum(TBDDS_beta);
+                        obj.TBDDS_beta = obj.KernelSpectrumConv(obj.TBDDS_beta);
+                        obj.TBDDS_beta = obj.restoreSpectrum(obj.TBDDS_beta);
                 end
 
                 
@@ -1932,10 +1936,11 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                         end
 
                 end
+                obj.TBDDS_R = TBDDS_Capture;
             end
             
             if strcmp(NormFlag,'ON')
-                TBDDS_beta  = (1+obj.normFit).*(TBDDS_beta./simpsons(obj.Te,TBDDS_beta)).*obj.NormFactorTBDDS;
+                obj.TBDDS_beta  = (1+obj.normFit).*(obj.TBDDS_beta./simpsons(obj.Te,obj.TBDDS_beta)).*obj.NormFactorTBDDS;
                 switch obj.ToggleRelic
                     case 'ON'
                         switch obj.FPD_Segmentation
@@ -1953,26 +1958,27 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                                     .*(obj.FPD_MeanEff*obj.FPD_Coverage)...                         %detector efficiency and coverage
                                     .*nPix/148;
                         end
-                        NormGS = obj.WGTS_MolFrac_TT*obj.TTNormGS+obj.WGTS_MolFrac_DT*obj.DTNormGS+obj.WGTS_MolFrac_HT*obj.HTNormGS;
-                        TBDDS_Capture = (TBDDS_Capture./simpsons(obj.Te,TBDDS_Capture)).*obj.NormFactorTBDDS_R;
+                        if simpsons(obj.Te,obj.TBDDS_R)~=0
+                            obj.TBDDS_R = (obj.TBDDS_R./simpsons(obj.Te,obj.TBDDS_R)).*obj.NormFactorTBDDS_R;
+                        end
                         if ~strcmp(obj.TTFSD,'OFF') || ~strcmp(obj.DTFSD,'OFF') || ~strcmp(obj.HTFSD,'OFF')
+                            NormGS = obj.WGTS_MolFrac_TT*obj.TTNormGS+obj.WGTS_MolFrac_DT*obj.DTNormGS+obj.WGTS_MolFrac_HT*obj.HTNormGS;
                             switch obj.ToggleES
                                 case 'ON'
                                     EnergyRange = obj.Te-obj.Q;
                                     lowerbound=find(abs(EnergyRange+10-obj.mnuSq)<abs(EnergyRange(2)-EnergyRange(1))/2);
-                                    if simpsons(TBDDS_Capture)~=0
-                                        GSFrac = simpsons(TBDDS_Capture(lowerbound:end))/simpsons(TBDDS_Capture);
-                                        TBDDS_Capture = TBDDS_Capture.*NormGS/GSFrac;       %fraction of captures happening inside the considered energy range
+                                    if simpsons(obj.TBDDS_R)~=0
+                                        GSFrac = simpsons(obj.TBDDS_R(lowerbound:end))/simpsons(obj.TBDDS_R);
+                                        obj.TBDDS_R = obj.TBDDS_R.*NormGS/GSFrac;       %fraction of captures happening inside the considered energy range
                                     end
                                 case'OFF'
-                                    TBDDS_Capture = TBDDS_Capture.*mean(NormGS);
+                                    obj.TBDDS_R = obj.TBDDS_R.*mean(NormGS);
                             end
                         end
                 end
             end
             
-            obj.TBDDS_R = TBDDS_Capture;
-            obj.TBDDS = TBDDS_beta + TBDDS_Capture;
+            obj.TBDDS = obj.TBDDS_beta + obj.TBDDS_R;
             
             if any(obj.qUOffset~=0)
                 % shift differential spectrum in case qUOffset changed in fit
