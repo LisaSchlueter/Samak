@@ -1,18 +1,18 @@
 % interpolate Stereo Chi^2 Map to match KATRIN grid
 % sanity plots
 InterpMode = 'spline';
-Maxm4Sq = 40^2;
-DataType = 'Real';
- SanityPlt = 'ON';
+Maxm4Sq    = 36^2;
+DataType   = 'Real';
+SanityPlt  = 'ON';
 
 savedir = [getenv('SamakPath'),'ksn2ana/ksn2_NuMassSensitivity/results/'];
 savefile = sprintf('%sksn2_%s_InterpStereo_%s_Max%.0feV2.mat',...
     savedir,DataType,InterpMode,Maxm4Sq);
 
-if exist(savefile,'file') && 1==2
+if exist(savefile,'file')  
     fprintf('file exist %s \n',savefile);
 else
-   
+    
     chi2 = 'chi2CMShape';
     
     %% settings that might change
@@ -22,7 +22,7 @@ else
         LoadGridArg = {'mNu4SqTestGrid',5,'ExtmNu4Sq','ON'};
     else
         nGridSteps = 40;
-        LoadGridArg =   {'mNu4SqTestGrid',5,'ExtmNu4Sq','OFF'};
+        LoadGridArg =   {'mNu4SqTestGrid',5,'ExtmNu4Sq','ON'};
     end
     %% configure RunAnalysis object
     if strcmp(chi2,'chi2Stat')
@@ -61,7 +61,7 @@ else
         'range',range,...
         'LoadGridArg',LoadGridArg};
     %% load KATRIN (interpolated) grid
-   
+    
     S = SterileAnalysis(SterileArg{:});
     S.LoadGridFile(S.LoadGridArg{:});
     S.InterpMode = InterpMode;
@@ -89,7 +89,7 @@ else
         % sanity plot: show which part of KATRIN parameter space is also
         % covered with STEREO
         GetFigure;
-        surf(sin2T4_Katrin_Osc,mNu4Sq_Katrin,InterIdx,'EdgeColor','none')
+        surf(sin2T4_Katrin,mNu4Sq_Katrin,InterIdx,'EdgeColor','none')
         grid off
         view(2)
         set(gca,'Xscale','log')
@@ -100,7 +100,7 @@ else
         title('yellow = Stereo parameter space')
         ylim([0 40^2])
         xlim([0 1]);
-        pltdir = [getenv('SamakPath'),'ksn2ana/ksn2_CombinedStereo/plots/']; 
+        pltdir = [getenv('SamakPath'),'ksn2ana/ksn2_CombinedStereo/plots/'];
         MakeDir(pltdir);
         print(gcf,[pltdir,'StereoParSpace.png'],'-dpng','-r300');
         
@@ -110,15 +110,15 @@ else
     IdxmNu = find(InterIdx(1000,:));%,1,'last');%find(InterIdx(:,1),1);
     Idxsin = find(InterIdx(:,10));%,1);
     mNu4Sq_tmp = mNu4Sq_Katrin(1,IdxmNu);%
-    sin2T4_tmp = sin2T4_Katrin_Osc(Idxsin,1);% 
+    sin2T4_tmp = sin2T4_Katrin_Osc(Idxsin,1);%
     mNu4Sq_inter = repmat(mNu4Sq_tmp,numel(sin2T4_tmp),1); % part of KATRIN that is interpolated
-    sin2T4_inter = repmat(sin2T4_tmp,1,numel(mNu4Sq_tmp));  
+    sin2T4_inter = repmat(sin2T4_tmp,1,numel(mNu4Sq_tmp));
     [X,Y] = meshgrid(ds.mNu41Sq(1,:),ds.sin2TSq(:,1));
     
     % stereo only
-    chi2_inter = interp2(ds.mNu41Sq,ds.sin2TSq,ds.chi2,mNu4Sq_inter,sin2T4_inter,'lin');
-    chi2crit_inter = interp2(ds.mNu41Sq,ds.sin2TSq,ds.chi2crit,mNu4Sq_inter,sin2T4_inter,'lin');
-
+    chi2_inter = interp2(ds.mNu41Sq,ds.sin2TSq,ds.chi2,mNu4Sq_inter,sin2T4_inter,'spline');
+    chi2crit_inter = interp2(ds.mNu41Sq,ds.sin2TSq,ds.chi2crit,mNu4Sq_inter,sin2T4_inter,'spline');
+    
     %% show interpolation of STEREO
     
     if strcmp(SanityPlt,'ON')
@@ -151,7 +151,7 @@ else
         c2.Label.String = sprintf('\\Delta\\chi^2');
         c2.Label.FontSize = get(gca,'FontSize');
         title('STEREO interpolated','FontSize',15,'FontWeight','normal');
-          
+        
         linkaxes([s1,s2],'xy');
         pltdir = [getenv('SamakPath'),'ksn2ana/ksn2_CombinedStereo/plots/'];
         MakeDir(pltdir);
@@ -171,13 +171,13 @@ else
     chi2critStereo(logical(InterIdx)) = chi2crit_inter;
     
     if strcmp(SanityPlt,'ON')
-        figure('Units','normalized','Position',[0.1,0.1,0.8,0.5]); 
+        figure('Units','normalized','Position',[0.1,0.1,0.8,0.5]);
         s1=  subplot(1,2,1);
         surf(sin2T4_Katrin,mNu4Sq_Katrin,chi2_Katrin,'EdgeColor','none')
         hold on;
-       pcontour =plot3(sin2T4_Katrin_contour,mNu4Sq_Katrin_contour,ones(numel(mNu4Sq_Katrin_contour),1).*1e4,...
-         'LineWidth',2,'Color',rgb('White'));
-       pbf = plot3(sin2T4_Katrin_bf,mNu4Sq_Katrin_bf,1e4,'wx','LineWidth',2);
+        pcontour =plot3(sin2T4_Katrin_contour,mNu4Sq_Katrin_contour,ones(numel(mNu4Sq_Katrin_contour),1).*1e4,...
+            'LineWidth',2,'Color',rgb('White'));
+        pbf = plot3(sin2T4_Katrin_bf,mNu4Sq_Katrin_bf,1e4,'wx','LineWidth',2);
         grid off
         view(2)
         set(gca,'Xscale','log')
@@ -214,7 +214,7 @@ else
         
         pltdir = [getenv('SamakPath'),'ksn2ana/ksn2_CombinedStereo/plots/'];
         MakeDir(pltdir);
-        print(gcf,[pltdir,'KATRINandStereo.png'],'-dpng','-r300');  
+        print(gcf,[pltdir,'KATRINandStereo.png'],'-dpng','-r300');
     end
     
     % combine
@@ -225,7 +225,7 @@ else
     InterIdx = logical(InterIdx);
     Chi2_refCombi =  min(min(chi2Combi(InterIdx)));
     chi2Combi(InterIdx) = chi2Combi(InterIdx)- Chi2_refCombi;
-   
+    
     %%
     save(savefile,'chi2Combi','chi2CombiAbs','Chi2_refCombi',...%combi
         'chi2Stereo','chi2critStereo','chi2StereoAbs',...%STEREO only
@@ -233,7 +233,7 @@ else
         'mNu4Sq_Katrin_bf','mNu4Sq_Katrin_contour','sin2T4_Katrin_bf',...%KARTIN Only
         'sin2T4_Katrin_contour','sin2T4_Katrin_Osc',...%KARTIN Only
         'InterIdx');%information which part is covered in STEREO (in 1000x1000 matrix)
-        
+    
 end
 
 

@@ -1,18 +1,14 @@
 % combine ksn1 and ksn2, nu-mass fixed
 % simply add chi2-map2
 % with KSN-1 Re-Ana chi2 map
+% ksn2 & ksn1 can be either twin or data (mixed display)
 %% settings that might change
 chi2Name = 'chi2CMShape';
-DataType = 'Real';
+DataType_1 = 'Real';
+DataType_2 = 'Twin';
 nGridSteps = 50;
 range = 40;
-if strcmp(DataType,'Real')
-    BF = 'ON';
-else
-    BF = 'OFF';
-end
-% savedir = [getenv('SamakPath'),'ksn2ana/ksn2_RunCombinations/results'];
-% savefile = sprintf('%sksn21_Combination_ReAna_%s_%s.mat',DataType,chi2);
+BF = 'OFF';
 
 %% configure RunAnalysis object
 if strcmp(chi2Name,'chi2Stat')
@@ -21,7 +17,7 @@ elseif  strcmp(chi2Name,'chi2CMShape')
     NonPoissonScaleFactor = 1.112;
 end
 RunAnaArg = {'RunList','KNM2_Prompt',...
-    'DataType',DataType,...
+    'DataType',DataType_1,...
     'fixPar','E0 Norm Bkg',...%free par
     'SysBudget',40,...
     'fitter','minuit',...
@@ -53,6 +49,7 @@ SterileArg = {'RunAnaObj',A,... % Mother Object: defines RunList, Column Density
 %%
 S = SterileAnalysis(SterileArg{:});
 %% load ksn1
+S.RunAnaObj.DataType = DataType_1;
 S.RunAnaObj.ModelObj.BKG_PtSlope = -2.2*1e-06;
 S.RunAnaObj.DataSet = 'Knm1';
 S.RunAnaObj.RunData.RunName = 'KNM1';
@@ -68,7 +65,7 @@ S.LoadGridArg = {'CheckLarger','ON','ExtmNu4Sq','OFF','mNu4SqTestGrid',2};
 % load grid and plot
 S.LoadGridFile(S.LoadGridArg{:});
 S.Interp1Grid('RecomputeFlag','ON');%,'Maxm4Sq',34.2^2);
-[p1tot,~,p1bf] = S.ContourPlot('BestFit',BF,'CL',95,'HoldOn','OFF','Color',rgb('FireBrick'),'LineStyle',':','Marker','*');
+[p1tot,~,p1bf] = S.ContourPlot('BestFit',BF,'CL',95,'HoldOn','OFF','Color',rgb('FireBrick'),'LineStyle',':');
 % contour
 sin2T4_contour_1  = S.sin2T4_contour;
 mNu4Sq_contour_1  = S.mNu4Sq_contour;
@@ -84,10 +81,10 @@ mNu4Sq_bf_1 = S.mNu4Sq_bf;
 % find significance
 [~, SignificanceBF_1] = S.CompareBestFitNull;
 
-%% load again 
+%% load again
 % restrict binning to match KSN2
 S.LoadGridFile(S.LoadGridArg{:});
-if strcmp(DataType,'Real')
+if strcmp(DataType_1,'Real')
     S.InterpMode = 'spline';
 else
     S.InterpMode = 'lin';
@@ -102,6 +99,7 @@ sum(sum(isnan(S.chi2)))
 dof1 = S.dof;
 S.InterpMode = 'spline';
 %% load ksn2
+S.RunAnaObj.DataType = DataType_2;
 S.nGridSteps = 30;
 S.RunAnaObj.ModelObj.BKG_PtSlope = 3*1e-06;
 S.RunAnaObj.FSDFlag = 'KNM2_0p5eV';
@@ -113,22 +111,24 @@ S.RunAnaObj.SysBudget = 40;
 S.RunAnaObj.NonPoissonScaleFactor = 1.112;
 S.RunAnaObj.chi2 = 'chi2CMShape';
 
-if strcmp(DataType,'Real')
+if strcmp(DataType_2,'Real')
     LoadGridArg_i = {'mNu4SqTestGrid',5,'ExtmNu4Sq','ON'};
     S.LoadGridArg = {LoadGridArg_i{:},'Extsin2T4','ON'};
     S.InterpMode = 'Mix';
     Maxm4Sq = 36^2;
+    LegStr2 = 'data';
 else
     LoadGridArg_i = {'mNu4SqTestGrid',5,'ExtmNu4Sq','OFF'};
     S.LoadGridArg = {LoadGridArg_i{:},'Extsin2T4','OFF'};
     S.InterpMode = 'spline';
     Maxm4Sq = 38^2;
+    LegStr2 = 'twin';
 end
 % load grid and plot
 S.LoadGridFile(S.LoadGridArg{:});
 
 S.Interp1Grid('RecomputeFlag','ON','Maxm4Sq',Maxm4Sq);
-[p2tot,sinMin,p2bf] = S.ContourPlot('BestFit',BF,'CL',95,'HoldOn','ON','Color',rgb('Orange'),'LineStyle','-.','Marker','x');
+[p2tot,sinMin,p2bf] = S.ContourPlot('BestFit',BF,'CL',95,'HoldOn','ON','Color',rgb('Orange'),'LineStyle','-.');
 % contour
 sin2T4_contour_2  = S.sin2T4_contour;
 mNu4Sq_contour_2  = S.mNu4Sq_contour;
@@ -152,25 +152,23 @@ S.LoadGridFile(S.LoadGridArg{:});
 S.InterpMode = 'spline';
 S.Interp1Grid('RecomputeFlag','ON','Minm4Sq',1,'Maxm4Sq',38^2);
 
-
 mNu4Sq_k2 = S.mNu4Sq;
 sin2T4_k2 = S.sin2T4;
 chi2_k2   = S.chi2;
 chi2ref_k2= chi2_ref_2;
 dof2 = S.dof;
 %% check if they have same binning
- if sum(sum(sin2T4_k2~=sin2T4_k1))>0 || sum(sum(mNu4Sq_k1~=mNu4Sq_k2))>0
-     fprintf(2, 'KSN-1 and KSN-2 do not have  the same binning - return \n');
-     return;
- end
- 
-%% combi 
+if sum(sum(sin2T4_k2~=sin2T4_k1))>0 || sum(sum(mNu4Sq_k1~=mNu4Sq_k2))>0
+    fprintf(2, 'KSN-1 and KSN-2 do not have  the same binning - return \n');
+    return;
+end
+
+%% combi
 % sum
 chi2_sum = chi2_k1+chi2_k2;
 S.chi2 = chi2_sum;
 S.chi2_ref = min(min(chi2_sum));%chi2ref_k1+chi2ref_k2;
-[p12tot,sinMin,p12bf] = S.ContourPlot('BestFit',BF,'CL',95,'HoldOn',...
-    'ON','Color',rgb('DodgerBlue'),'LineStyle','-','Marker','o');
+[p12tot,sinMin,p12bf] = S.ContourPlot('BestFit',BF,'CL',95,'HoldOn','ON','Color',rgb('DodgerBlue'),'LineStyle','-');
 
 % find best fit;
 S.FindBestFit;
@@ -187,41 +185,19 @@ S.chi2_Null = chi2_null_12;
 sin2T4_contour_12  = S.sin2T4_contour;
 mNu4Sq_contour_12  = S.mNu4Sq_contour;
 
-
 %% legend
 SigmaBF1 = ConvertCLStd('Mode','CL2Sigma','CL',SignificanceBF_1,'nPar',2);
 SigmaBF2 = ConvertCLStd('Mode','CL2Sigma','CL',SignificanceBF_2,'nPar',2);
 SigmaBF12 = ConvertCLStd('Mode','CL2Sigma','CL',SignificanceBF_12,'nPar',2);
 %
-if strcmp(DataType,'Real')
-    ExtLeg = 'ON';
-     % plot best fits on top (KSN-1 is hidden otherwise)
-    pbf1 = plot(sin2T4_bf_1,mNu4Sq_bf_1,'*','MarkerSize',9,'Color',p1tot.Color,'LineWidth',p1tot.LineWidth);
+if strcmp(DataType_1,'Real')
+    pbf1 = plot(sin2T4_bf_1,mNu4Sq_bf_1,'x','MarkerSize',9,'Color',p1tot.Color,'LineWidth',p1tot.LineWidth);
+    LegStr1 = 'data';
 else
-    ExtLeg = 'OFF';
+    LegStr1 = 'twin';
 end
 
-if strcmp(ExtLeg,'ON')
-    leg = legend([p1tot,p2tot,p12tot,p1bf,p2bf,p12bf],'KSN-1','KSN-2','KSN-1 and KSN-2',...
-        sprintf('{\\itm}_4^2 = %.1f eV^2 , |{\\itU}_{e4}|^2 = %.3f (%.1f \\sigma)',mNu4Sq_bf_1,sin2T4_bf_1,SigmaBF1),...
-        sprintf('{\\itm}_4^2 = %.2f eV^2 , |{\\itU}_{e4}|^2 = %.3f (%.1f \\sigma)',mNu4Sq_bf_2,sin2T4_bf_2,SigmaBF2),...
-        sprintf('{\\itm}_4^2 = %.1f eV^2 , |{\\itU}_{e4}|^2 = %.3f (%.1f \\sigma)',mNu4Sq_bf_12,sin2T4_bf_12,SigmaBF12));
-    leg.NumColumns = 2;
-    extraStr = '_ExtLeg';
-else
-    leg = legend([p1tot,p2tot,p12tot],'KSN-1','KSN-2','KSN-1 and KSN-2 combined');
-    extraStr = '';
-end
-PrettyLegendFormat(leg);
-legend boxoff
-
-%% save
-title(S.GetPlotTitle,'FontWeight','normal')
-xlim([2e-03,0.5]);
-ylim([1,1600]);
-
-%%
-N4 = 'OFF';
+N4 = 'ON';
 if strcmp(N4,'ON')
     extraStr = '_N4';
     savedirOther = [getenv('SamakPath'),'SterileAnalysis/GridSearchFiles/Knm1/Others/'];
@@ -230,30 +206,30 @@ if strcmp(N4,'ON')
     % convet 2 tritium par space
     sin2T4_N4 = sin(asin(sqrt(dN4.SinSquare2Theta_X_2sigma))./2).^2;
     pN4 = plot(sin2T4_N4,dN4.DmSquare41_Y_2sigma,'k-','LineWidth',2);
-    leg = legend([p1tot,p2tot,p12tot,pN4],'KSN-1','KSN-2','KSN-1 and KSN-2 combined',sprintf('Neutrino-4 (2\\sigma)'));
-    PrettyLegendFormat(leg);
-     leg.NumColumns = 1;
+    leg = legend([p1tot,p2tot,p12tot,pN4],...
+        sprintf('KSN-1 (%s)',LegStr1),...
+        sprintf('KSN-2 (%s)',LegStr2),...
+        'KSN-1 and KSN-2 combined',...
+        sprintf('Neutrino-4 (2\\sigma)') );
+else
+    extraStr = '';
+    leg = legend([p1tot,p2tot,p12tot],...
+        sprintf('KSN-1 (%s)',LegStr1),...
+        sprintf('KSN-2 (%s)',LegStr2),...
+        'KSN-1 and KSN-2 combined');
 end
- %% save plot
- savedir = [getenv('SamakPath'),'ksn2ana/ksn2_RunCombination/plots/'];
- MakeDir(savedir);
- savefile = sprintf('%sksn21_Combination_ReAna%s_%s',savedir,extraStr,DataType);
- print([savefile,'.png'],'-dpng','-r350');
- 
- ylabel(sprintf('{\\itm}_4^2 (eV^{ 2})'));
- export_fig([savefile,'.pdf']);
- fprintf('save plot to %s \n',savefile);
- %% save mini result file for compatibility test
-savedir = [getenv('SamakPath'),'ksn2ana/ksn2_RunCombination/results/'];
-MakeDir(savedir)
-savefile = sprintf('%sksn21_Combination_ReAna_%s.mat',savedir,DataType);
+PrettyLegendFormat(leg);
+legend boxoff
+%% save
+title(S.GetPlotTitle,'FontWeight','normal')
+xlim([2e-03,0.5]);
+ylim([1,1600]);
+%% save plot
+savedir = [getenv('SamakPath'),'ksn2ana/ksn2_RunCombination/plots/'];
+MakeDir(savedir);
+savefile = sprintf('%sksn21_Combination_ReAna_KSN1%s_KSN2%s%s',savedir,DataType_1,DataType_2,extraStr);
+print([savefile,'.png'],'-dpng','-r350');
 
-dof12 = dof1+dof2+2;
-save(savefile,'chi2_ref_1','chi2_ref_2','chi2_ref_12','dof1','dof2','dof12',...
-    'chi2_null_1','chi2_null_2','chi2_null_12',...
-    'mNu4Sq_bf_1','mNu4Sq_bf_2','mNu4Sq_bf_12',...
-    'sin2T4_bf_1','sin2T4_bf_2','sin2T4_bf_12',...
-    'sin2T4_contour_1','mNu4Sq_contour_1',...
-    'sin2T4_contour_2','mNu4Sq_contour_2',...
-    'sin2T4_contour_12','mNu4Sq_contour_12');
-
+ylabel(sprintf('{\\itm}_4^2 (eV^{ 2})'));
+export_fig([savefile,'.pdf']);
+fprintf('save plot to %s \n',savefile);

@@ -45,7 +45,8 @@ SterileArg = {... % Mother Object: defines RunList, Column Density, Stacking Cut
     'InterpMode','lin'};
 S = SterileAnalysis('RunAnaObj',A,SterileArg{:});
 %%
-S.PlotQuadrant('SavePlot','OFF')
+[sin2T4_bf,mNu4Sq_bf,chi2_bf,DeltaChi2,Sigma] = S.PlotQuadrant('SavePlot','OFF');
+% NE,NW,SW,SE
 % load
 
 % find best fit

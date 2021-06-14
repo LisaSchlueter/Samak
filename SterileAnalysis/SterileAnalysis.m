@@ -40,7 +40,7 @@ classdef SterileAnalysis < handle
         DeltaChi2;
         ConfLevel;
         dof;
-        
+        FitResults_Null;
         
         % plot
         PlotColors;
@@ -523,7 +523,7 @@ classdef SterileAnalysis < handle
 %                 obj.Interp1Grid;
             end
         end
-        function [DeltaChi2, SignificanceBF] = CompareBestFitNull(obj,varargin)
+        function [DeltaChi2, SignificanceBF,SignificanceSigma] = CompareBestFitNull(obj,varargin)
             if isempty(obj.chi2_bf)
                 obj.FindBestFit;
             end
@@ -539,7 +539,7 @@ classdef SterileAnalysis < handle
             DeltaChi2 = obj.chi2_Null-obj.chi2_bf;
             SignificanceBF = chi2cdf(DeltaChi2,2);%interp1(y,x, DeltaChi2,'spline');
            SignificanceSigma = ConvertCLStd('Mode','CL2Sigma','nPar',2,'CL',SignificanceBF);
-            fprintf('Delta chi2 = %.2f -> %.1f%% C.L. significance (%.1f sigma)\n',...
+            fprintf('Delta chi2 = %.2f -> %.2f%% C.L. significance (%.2f sigma)\n',...
                 obj.chi2_Null-obj.chi2_bf,100.*SignificanceBF,SignificanceSigma);
           
         end
@@ -1110,11 +1110,11 @@ classdef SterileAnalysis < handle
             end
                
             if strcmp(Contour,'ON')  && strcmp(BestFit,'ON')
-                leg = legend([pContour,pbf],sprintf('%.3g%% C.L.',CL),'Best fit',...
+                leg = legend([pContour,pbf],sprintf('%.5g%% C.L.',CL),'Best fit',...
                    'Location','southwest','FontSize',get(gca,'FontSize')); 
                PrettyLegendFormat(leg,'alpha',0.6);
             elseif strcmp(Contour,'ON')
-                 leg = legend(pContour,sprintf('%.3g%% C.L.',CL),...
+                 leg = legend(pContour,sprintf('%.5g%% C.L.',CL),...
                    'Location','southwest','FontSize',get(gca,'FontSize'));   
                PrettyLegendFormat(leg,'alpha',0.6);
             end
@@ -2329,9 +2329,9 @@ classdef SterileAnalysis < handle
             
             
         end
-        function PlotQuadrant(obj,varargin)
+        function [sin2T4_bf,mNu4Sq_bf,chi2_bf,DeltaChi2,Sigma] = PlotQuadrant(obj,varargin)
             % plot 4 quadrant grid  plot of physical and nonphysical parameter space
-             p = inputParser;
+            p = inputParser;
             p.addParameter('SavePlot','ON',@(x)ismember(x,{'ON','OFF','png'}));
             p.parse(varargin{:});
             SavePlot = p.Results.SavePlot;
@@ -2346,9 +2346,12 @@ classdef SterileAnalysis < handle
             obj.DeltaChi2 = GetDeltaChi2(CL,2);
             zlimMax = obj.DeltaChi2;
                 
-            mNuSq_bf  = zeros(4,1);
+            mNu4Sq_bf  = zeros(4,1);
             sin2T4_bf = zeros(4,1);
             chi2_bf   = zeros(4,1);
+            Sigma     = zeros(4,1);
+            DeltaChi2 = zeros(4,1);
+            
             pbf = cell(4,1);
             
             GetFigure; 
@@ -2380,15 +2383,17 @@ classdef SterileAnalysis < handle
             obj.Interp1Grid('Maxm4Sq',34^2); 
             obj.FindBestFit; 
             obj.InterpMode = 'lin';
-            mNuSq_bf(1)  = obj.mNu4Sq_bf;
+            mNu4Sq_bf(1)  = obj.mNu4Sq_bf;
             sin2T4_bf(1) = obj.sin2T4_bf;
             chi2_bf(1)    = obj.chi2_bf;
             if chi2_bf(1)<obj.chi2_Null
                 hold on;
-                pbf{1} = plot3(sin2T4_bf(1),mNuSq_bf(1),2,'x','Color',rgb('White'),'LineWidth',2,'MarkerSize',8);
+                pbf{1} = plot3(sin2T4_bf(1),mNu4Sq_bf(1),2,'x','Color',rgb('White'),'LineWidth',2,'MarkerSize',8);
                 leg = legend(pbf{1},sprintf('Best fit \\chi^2 = %.1f',chi2_bf(1)),'Location','southeast');
                 PrettyLegendFormat(leg);   
             end
+            [DeltaChi2(1),~,Sigma(1)] =obj.CompareBestFitNull;
+            
             % 2. NE
             obj.LoadGridFile(obj.LoadGridArg{:},'Extsin2T4','ON');
             obj.Interp1Grid;
@@ -2418,15 +2423,16 @@ classdef SterileAnalysis < handle
             obj.FindBestFit; 
             obj.InterpMode = 'lin';
             
-            mNuSq_bf(2)  = obj.mNu4Sq_bf;
+            mNu4Sq_bf(2)  = obj.mNu4Sq_bf;
             sin2T4_bf(2) = obj.sin2T4_bf;
             chi2_bf(2)    = obj.chi2_bf;
             if chi2_bf(2)<obj.chi2_Null
                 hold on;
-                pbf{2} = plot3(sin2T4_bf(2),mNuSq_bf(2),2,'x','Color',rgb('White'),'LineWidth',2,'MarkerSize',8);
+                pbf{2} = plot3(sin2T4_bf(2),mNu4Sq_bf(2),2,'x','Color',rgb('White'),'LineWidth',2,'MarkerSize',8);
                 leg = legend(pbf{2},sprintf('Best fit \\chi^2 = %.1f',chi2_bf(2)),'Location','southwest');
                 PrettyLegendFormat(leg);
             end
+            [DeltaChi2(2),~,Sigma(2)] =obj.CompareBestFitNull;
             
             % 3. SW
             obj.LoadGridFile(obj.LoadGridArg{:},'NegmNu4Sq','ON','Negsin2T4','ON');
@@ -2457,16 +2463,17 @@ classdef SterileAnalysis < handle
             obj.FindBestFit; 
             obj.InterpMode = 'lin';
             
-            mNuSq_bf(3)  = obj.mNu4Sq_bf;
+            mNu4Sq_bf(3)  = obj.mNu4Sq_bf;
             sin2T4_bf(3) = obj.sin2T4_bf;
             chi2_bf(3)    = obj.chi2_bf;
              if chi2_bf(3)<obj.chi2_Null
             hold on;
-            pbf{3} = plot3(sin2T4_bf(3),mNuSq_bf(3),2,'x','Color',rgb('White'),'LineWidth',2,'MarkerSize',8);
+            pbf{3} = plot3(sin2T4_bf(3),mNu4Sq_bf(3),2,'x','Color',rgb('White'),'LineWidth',2,'MarkerSize',8);
              leg = legend(pbf{3},sprintf('Best fit \\chi^2 = %.1f',chi2_bf(3)),'Location','northeast');
                 PrettyLegendFormat(leg); 
              end
-             
+            [DeltaChi2(3),~,Sigma(3)] =obj.CompareBestFitNull;
+            
             % 4.SE
             obj.LoadGridFile(obj.LoadGridArg{:},'NegmNu4Sq','ON','Extsin2T4','ON');
             obj.Interp1Grid;
@@ -2494,15 +2501,17 @@ classdef SterileAnalysis < handle
             obj.Interp1Grid('Maxm4Sq',34^2); 
             obj.FindBestFit; 
             obj.InterpMode = 'lin'; 
-            mNuSq_bf(4)  = obj.mNu4Sq_bf;
+            mNu4Sq_bf(4)  = obj.mNu4Sq_bf;
             sin2T4_bf(4) = obj.sin2T4_bf;
             chi2_bf(4)    = obj.chi2_bf;
              if chi2_bf(4)<obj.chi2_Null
             hold on;
-            pbf{4} = plot3(sin2T4_bf(4),mNuSq_bf(4),2,'x','Color',rgb('White'),'LineWidth',2,'MarkerSize',8);
+            pbf{4} = plot3(sin2T4_bf(4),mNu4Sq_bf(4),2,'x','Color',rgb('White'),'LineWidth',2,'MarkerSize',8);
              leg = legend(pbf{1},sprintf('Best fit \\chi^2 = %.1f',chi2_bf(4)),'Location','southwest');
                 PrettyLegendFormat(leg); 
              end
+            [DeltaChi2(4),~,Sigma(4)] =obj.CompareBestFitNull;
+            
             %% find global minimum
             MinIdx = find(chi2_bf==min(chi2_bf));
             pbf{MinIdx}.Color = rgb('IndianRed');
@@ -2837,6 +2846,7 @@ classdef SterileAnalysis < handle
                 if isfield(f,'FitResults_Null')
                     obj.chi2_Null = f.FitResults_Null.chi2min;
                     obj.dof = f.FitResults_Null.dof-2;
+                    obj.FitResults_Null = f.FitResults_Null;
                 end
                 
                 if isfloat(obj.RandMC) && isfield(f,'TBDIS_mc')

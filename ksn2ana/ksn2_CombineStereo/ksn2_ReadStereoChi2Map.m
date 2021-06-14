@@ -2,7 +2,7 @@
 % transform into mat file for later use
 
 matfile = [getenv('SamakPath'),'ksn2ana/ksn2_CombineStereo/results/StereoMaps.mat'];
-if exist(matfile,'file')
+if exist(matfile,'file') &&1==2
     load(matfile)
 else
     Sfile = [getenv('SamakPath'),'ksn2ana/ksn2_CombineStereo/results/Stereo_Chi2Map.csv'];

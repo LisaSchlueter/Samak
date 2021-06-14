@@ -1,104 +1,108 @@
 % ksn2 compare results in Mainz/Troitsk
-%% settings that might change
+% also with ksn1+2 combination
+% load results fro MiniFiles
 chi2 = 'chi2CMShape';
 DataType = 'Real';
-nGridSteps = 40;
 range = 40;
-freePar = 'E0 Norm Bkg';
-%% configure RunAnalysis object
-if strcmp(chi2,'chi2Stat')
-    NonPoissonScaleFactor = 1;
-elseif  strcmp(chi2,'chi2CMShape')
-    NonPoissonScaleFactor = 1.112;
+Mainz = 'ON';
+Troitsk = 'ON';
+%% load ksn-2 only results
+savedir = [getenv('SamakPath'),'SterileAnalysis/MiniFiles/KSN2/'];
+savefilemNuFix = sprintf('%sKSN2contour_%s_%s_%s_%.0feV.mat',savedir,DataType,'E0NormBkg',chi2,range);
+d = importdata(savefilemNuFix);
+fprintf('load %s \n',savefilemNuFix);
+
+savefilemNuFree = sprintf('%sKSN2contour_%s_%s_%s_%.0feV.mat',savedir,DataType,'mNuE0NormBkg',chi2,range);
+dmNu = importdata(savefilemNuFree);
+fprintf('load %s \n',savefilemNuFree);
+
+%% load combined results
+savedirCombi = sprintf('%sksn2ana/ksn2_RunCombination/results/',getenv('SamakPath'));
+
+savefileCombimNuFix = sprintf('%sksn21_Combination_ReAna_%s.mat',savedirCombi,DataType);                            
+dCombi = importdata(savefileCombimNuFix);
+fprintf('load %s \n',savefileCombimNuFix);
+
+savefileCombimNuFree = sprintf('%sksn21_Combi_freemNuSq_ReAna_%s.mat',savedirCombi,DataType);
+dCombimNu = importdata(savefileCombimNuFree);
+fprintf('load %s \n',savefileCombimNuFree);
+
+legHandle = cell(0,0);
+legStr = '';
+GetFigure;
+%% load others
+  savedirOther = [getenv('SamakPath'),'SterileAnalysis/GridSearchFiles/Knm1/Others/'];   
+if strcmp(Mainz,'ON')
+    filenameMainz = sprintf('%scoord_Mainz_95CL.mat',savedirOther);
+    dMainz = importdata(filenameMainz);
+    sinTsq = 0.5*(1-sqrt(1-dMainz.SinSquare2Theta_X));
+    pMainz = plot(sinTsq,dMainz.DmSquare41_Y,'-.','LineWidth',1.5,'Color',rgb('LimeGreen'));
+    hold on;
 end
-RunAnaArg = {'RunList','KNM2_Prompt',...
-    'DataType',DataType,...
-    'fixPar',freePar,...%free par
-    'SysBudget',40,...
-    'fitter','minuit',...
-    'minuitOpt','min;migrad',...
-    'RadiativeFlag','ON',...
-    'FSDFlag','KNM2_0p5eV',...
-    'ELossFlag','KatrinT2A20',...
-    'AnaFlag','StackPixel',...
-    'chi2',chi2,...
-    'NonPoissonScaleFactor',NonPoissonScaleFactor,...
-    'FSD_Sigma',sqrt(0.0124+0.0025),...
-    'TwinBias_FSDSigma',sqrt(0.0124+0.0025),...
-    'TwinBias_Q',18573.7,...
-    'PullFlag',99,...;%99 = no pull
-    'BKG_PtSlope',3*1e-06,...
-    'TwinBias_BKG_PtSlope',3*1e-06,...
-    'DopplerEffectFlag','FSD'};
-A = MultiRunAnalysis(RunAnaArg{:});
-%% configure Sterile analysis object
-SterileArg = {'RunAnaObj',A,... % Mother Object: defines RunList, Column Density, Stacking Cuts,....
-    'nGridSteps',nGridSteps,...
-    'SmartGrid','OFF',...
-    'RecomputeFlag','OFF',...
-    'SysEffect','all',...
-    'RandMC','OFF',...
-    'range',range,...
-    'LoadGridArg',{'ExtmNu4Sq','ON','mNu4SqTestGrid',5}};
-
-%%
-S = SterileAnalysis(SterileArg{:});
-[pHandle,legStr] = S.PlotPRL1('FreemNuSq','ON','AddPull','','Style','PRL','SavePlot','ON');
-            
-% load combi- free mNuSq
-savedir = [getenv('SamakPath'),'SterileAnalysis/GridSearchFiles/Combi/',DataType,'/'];
-MakeDir(savedir)
-savename_free = sprintf('%sKSN12Combi_ReAna_GridSearch_%s_%s_Uniform_%s_%.0fnGrid.mat',...
-    savedir,DataType,'mNuE0BkgNorm','chi2CMShape',30);
-
-% load file
-if exist(savename_free,'file') 
-    dfree = importdata(savename_free);
-    fprintf('load results from file %s \n',savename_free)
-else
-     fprintf('load results from file %s \n',savename_free)
-    return
+%% Troitsk
+if strcmp(Troitsk,'ON')
+    filenameTroitsk = sprintf('%scoord_Troitsk_95CL.mat',savedirOther);
+    dTroitsk = importdata(filenameTroitsk);
+    pTroitsk = plot(dTroitsk.SinSquareTheta_X,dTroitsk.m4Square_Y,'--','LineWidth',1.5,...
+        'Color',rgb('DarkGreen')); % Orange
+    hold on;
 end
 
-mNu4Sq_free    = dfree.mNu4Sq_contour;
-sin2T4Sq_free  = dfree.sin2T4_contour;%4*dfree.sin2T4_contour.*(1-dfree.sin2T4_contour);
+set(gca,'YScale','log');
+set(gca,'XScale','log');
+xlabel(sprintf('|{\\itU}_{e4}|^2'));
+ylabel(sprintf('{\\itm}_4^2 (eV^{ 2})'));
+PrettyFigureFormat('FontSize',22);
 
-% load combi fixed m_nu
-savedir_fix = [getenv('SamakPath'),'ksn2ana/ksn2_RunCombination/results/'];
-MakeDir(savedir)
-savefile_fix = sprintf('%sksn21_Combination_ReAna.mat',savedir_fix);
+%% plot KATRIN
+pmNuFix = plot(d.sin2T4_contour,d.mNu4Sq_contour,'-','LineWidth',3,'Color',rgb('DodgerBlue')); hold on;
+pmNuFree = plot(dmNu.sin2T4_contour,dmNu.mNu4Sq_contour,'-','LineWidth',3,'Color',rgb('Salmon'));
+pCombimNuFix = plot(dCombi.sin2T4_contour_12,dCombi.mNu4Sq_contour_12,':','LineWidth',2.5,'Color',rgb('Navy'));
+pCombimNuFree = plot(dCombimNu.sin2T4_k12_contour,dCombimNu.mNu4Sq_k12_contour,'-.','LineWidth',2.5,'Color',rgb('FireBrick'));
+xlim([3e-03 0.5]);
+ylim([0.2 2200]);
 
-% load file
-if exist(savefile_fix,'file') 
-    dfix = importdata(savefile_fix);
-    fprintf('load results from file %s \n',savefile_fix)
-else
-     fprintf('load results from file %s \n',savefile_fix)
-    return
+%% legend
+leg = legend([pMainz,pTroitsk,pmNuFix,pmNuFree,pCombimNuFix,pCombimNuFree],...
+    sprintf('Mainz: {\\itm}_\\nu^2 = 0 eV^2'),...
+    sprintf('Troitsk: {\\itm}_\\nu^2 = 0 eV^2'),...
+    sprintf('KSN2: {\\itm}_\\nu^2 = 0 eV^2'),...
+    sprintf('KSN2: {\\itm}_\\nu^2 free'),...
+     sprintf('KSN1+2: {\\itm}_\\nu^2 = 0 eV^2'),...
+    sprintf('KSN1+2: {\\itm}_\\nu^2 free'),...
+    'Location','south');
+PrettyLegendFormat(leg);
+leg.NumColumns = 3;
+leg.FontSize = 15;
+
+pltdir = [getenv('SamakPath'),'ksn2ana/ksn2_OtherExp/plots/'];
+MakeDir(pltdir);
+% pltname = sprintf('%sksn2_CompareMainzTroitskCombi_%s.png',pltdir,DataType);
+% print(gcf,pltname,'-dpng','-r350');
+pltname = sprintf('%sksn2_CompareMainzTroitskCombi_%s.pdf',pltdir,DataType);
+%export_fig(gcf,pltname);
+
+
+%% find differences in sin^2 between ksn-2 and combination
+Case = 'FreemNu';
+if strcmp(Case,'FixmNu')
+    xmin = max([min(dCombi.mNu4Sq_contour_12),min(d.mNu4Sq_contour)]);
+    xmax = min([max(dCombi.mNu4Sq_contour_12),max(d.mNu4Sq_contour)]);
+elseif strcmp(Case,'FreemNu')
+    xmin = max([min(dCombimNu.mNu4Sq_k12_contour),min(dmNu.mNu4Sq_contour)]);
+    xmax = min([max(dCombimNu.mNu4Sq_k12_contour),max(dmNu.mNu4Sq_contour)]);
 end
-
-mNu4Sq_fix   = dfix.mNu4Sq_contour_12;
-sin2T4Sq_fix  = dfix.sin2T4_contour_12;%4*dfix.sin2T4_contour_12.*(1-dfix.sin2T4_contour_12);
-
-%% plot
-% pHandle{1}.Color = rgb('Gray');
-% pHandle{4}.Color = rgb('IndianRed');
-% pHandle{4}.LineStyle = '-';
-
-
-hold on;
-pfix = plot(sin2T4Sq_fix,mNu4Sq_fix,'-','Color',rgb('IndianRed'),'LineWidth',2.5);
-
-%%
-pfree = plot(sin2T4Sq_free,mNu4Sq_free,':','Color',rgb('DarkRed'),'LineWidth',2.5);
-legStrCombi = legStr;
-%legStrCombi{3} = [legStr{3},' (KNM-2)'];
-%legStrCombi{4} = [legStr{4},' (KNM-2)'];
-legStrCombi = {legStrCombi{:},[legStr{3},' (KNM-1&2)'],[legStr{4},' (KNM-1&2)']};
-%%
-leg = legend([pHandle{:},pfix,pfree],legStrCombi);
-
-name_i = strrep(S.DefPlotName,'_mNuE0BkgNorm','');
-plotname = sprintf('%s_PRL1_%.2gCL_Combi.pdf',name_i,S.ConfLevel);
-export_fig(gcf,plotname);
-  export_fig(gcf,plotname);
+mNu4Sq = logspace(log10(xmin),log10(xmax),1e3);
+if strcmp(Case,'FixmNu')
+    sin2T4  = interp1(d.mNu4Sq_contour,d.sin2T4_contour,mNu4Sq,'spline');
+    sin2T4C = interp1(dCombi.mNu4Sq_contour_12,dCombi.sin2T4_contour_12,mNu4Sq,'spline');
+elseif strcmp(Case,'FreemNu')
+    sin2T4  = interp1(dmNu.mNu4Sq_contour,dmNu.sin2T4_contour,mNu4Sq,'spline');
+    sin2T4C = interp1(dCombimNu.mNu4Sq_k12_contour,dCombimNu.sin2T4_k12_contour,mNu4Sq,'spline');
+end
+GetFigure;
+plot(sin2T4-sin2T4C,mNu4Sq,'-','LineWidth',2);
+set(gca,'YScale','log');
+xlabel(sprintf('|{\\itU}_{e4}|^2(KSN2) - |{\\itU}_{e4}|^2(Combi)'));
+ylabel(sprintf('{\\itm}_4^2 (eV^{ 2})'));
+PrettyFigureFormat('FontSize',22);

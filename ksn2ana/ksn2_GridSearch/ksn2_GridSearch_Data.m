@@ -2,9 +2,8 @@
 %% settings that might change
 chi2 = 'chi2CMShape';
 DataType = 'Real';
-nGridSteps = 30;
 range = 40;
-freePar = 'E0 Norm Bkg';
+freePar = 'mNu E0 Norm Bkg';
 %% configure RunAnalysis object
 if strcmp(chi2,'chi2Stat')
     NonPoissonScaleFactor = 1;
@@ -33,7 +32,6 @@ RunAnaArg = {'RunList','KNM2_Prompt',...
 A = MultiRunAnalysis(RunAnaArg{:});
 %% configure Sterile analysis object
 SterileArg = {'RunAnaObj',A,... % Mother Object: defines RunList, Column Density, Stacking Cuts,....
-    'nGridSteps',nGridSteps,...
     'SmartGrid','OFF',...
     'RecomputeFlag','OFF',...
     'SysEffect','all',...
@@ -43,10 +41,19 @@ SterileArg = {'RunAnaObj',A,... % Mother Object: defines RunList, Column Density
 
 %%
 S = SterileAnalysis(SterileArg{:});
-S.LoadGridFile('ExtmNu4Sq','ON','mNu4SqTestGrid',5,'Extsin2T4','ON');
-S.InterpMode = 'Mix';
-S.Interp1Grid('Maxm4Sq',36^2);
-S.ContourPlot('BestFit','ON','SavePlot','ON');
+%%
+if contains(freePar,'mNu')
+    S.nGridSteps = 50;
+    S.LoadGridFile('ExtmNu4Sq','OFF','mNu4SqTestGrid',5,'Extsin2T4','OFF');
+    S.InterpMode = 'spline';
+else
+    S.nGridSteps = 30;
+    S.LoadGridFile('ExtmNu4Sq','ON','mNu4SqTestGrid',5,'Extsin2T4','ON');
+    S.InterpMode = 'Mix';
+end
+S.Interp1Grid;
+S.ContourPlot('BestFit','ON','SavePlot','OFF');
+S.CompareBestFitNull
 %S.GridPlot('Contour','ON','BestFit','ON','SavePlot','png');
 %%
 S.FindBestFit;

@@ -44,22 +44,22 @@ SterileArg = {'RunAnaObj',A,... % Mother Object: defines RunList, Column Density
 
 S = SterileAnalysis(SterileArg{:});
 S.InterpMode = 'spline';
-%%
+%
 S.LoadGridFile(S.LoadGridArg{:}); 
 S.Interp1Grid('nInter',1e3);
-%%
+%
 PlotPar = S.mNuSq;
 
-ContourVec = [-1,0,0.3,1,2,10];
+ContourVec = [-5 -1,0,0.3,0.9,1,2,10];
 Splines = 'ON';
 GetFigure;
-%%
+%
 for i=1:numel(ContourVec)
     [~,p1] = contour3(S.sin2T4,S.mNu4Sq,PlotPar,[ContourVec(i),ContourVec(i)],...
         'Color',rgb('LightGreen'),'ShowText','on','LineWidth',1.5,'LabelSpacing',380);
     hold on;
 end
-%%
+%
 [pFree,pFix] = S.PlotmNuSqOverview('PullmNuSq','OFF','SavePlot','OFF','HoldOn','ON','BestFit','ON');
 view(2)
 grid off

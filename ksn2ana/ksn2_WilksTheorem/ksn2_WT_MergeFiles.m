@@ -1,6 +1,6 @@
 % create smaller file for result of grids searches on randomized data
 RecomputeFlag = 'OFF';
-InterpMode = 'lin';
+InterpMode = 'spline';
 MergeNew = 'ON';
 RmDuplicates = 'ON';
 randMC =[1001:1260,1294:1300,1349:1500];
@@ -8,6 +8,7 @@ randMC_new  = 1:1250;
 Twin_sin2T4 = 0;
 Twin_mNu4Sq = 0;
 chi2 = 'chi2CMShape';
+
 %%
 if strcmp(MergeNew,'ON')
     MergeStr = sprintf('_MergeNew%.0f',numel(randMC_new));
@@ -124,6 +125,7 @@ else
         
         dof = S.dof;
         save(savefileOld,'mNu4Sq_contour','sin2T4_contour','mNu4Sq_bf','chi2_bf','chi2_null','chi2_delta','TBDIS_mc')
+        
     end
     %% remove duplicants from first part
     % find grid with idential TBDIS_mc
@@ -154,7 +156,7 @@ else
         mNu4Sq_contour2 = cell(NrandMC2,1);
         sin2T4_contour2 = cell(NrandMC2,1);
         TBDIS_mc2      = zeros(NrandMC2,A.ModelObj.nqU);
-        
+
         dspectra = ksn2_GetRandTritiumSpectrum('H0');
         progressbar('Merge files for WT - part 2');   
         for i=1:NrandMC2
@@ -191,9 +193,15 @@ else
             TBDIS_mc        = [TBDIS_mc;TBDIS_mc2];
             mNu4Sq_contour  = [mNu4Sq_contour;mNu4Sq_contour2];
             sin2T4_contour = [sin2T4_contour;sin2T4_contour2];
+            
+          
     end   
     %% also load expected contour from Asimov Twin
-    S.InterpMode = 'Mix';%'spline';
+    if strcmp(InterpMode,'spline')
+        S.InterpMode = 'spline';
+    else
+        S.InterpMode = 'Mix';%'spline';
+    end
     S.RandMC= 'OFF';
     S.nGridSteps = 30;
     

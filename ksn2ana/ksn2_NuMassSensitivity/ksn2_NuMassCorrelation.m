@@ -1,8 +1,10 @@
 % investigate the correlation between nu-mass and m4
 DataType = 'Real';
+InterpMode = 'spline'; 
 %% load/compute file
 savedir = [getenv('SamakPath'),'ksn2ana/ksn2_NuMassSensitivity/results/'];
-savefile = [savedir,'ksn2_NuMassCorrelation',DataType,'.mat'];
+savefile = [savedir,'ksn2_NuMassCorrelation',DataType,'_',InterpMode,'.mat'];
+
 if exist(savefile,'file') 
     load(savefile);
 else
@@ -48,6 +50,7 @@ else
         'LoadGridArg',{'mNu4SqTestGrid',5,'ExtmNu4Sq','ON'}};
     %%
     S = SterileAnalysis(SterileArg{:});
+    S.InterpMode = InterpMode;
     S.LoadGridFile(S.LoadGridArg{:});
      mNu4Sq_i = S.mNu4Sq;
     sin2T4_i = S.sin2T4;
@@ -91,7 +94,7 @@ switch InterMode
         y = mNu4Sq(1,:);
         z = sin2T4(:,1);
 end
-PltMode = 'Absolut';%'Gradient';
+PltMode = 'Gradient';
 
 GetFigure;
 for i=1:numel(z)
@@ -156,3 +159,47 @@ pltdir = strrep(savedir,'results','plots');
 pltname = [pltdir,sprintf('ksn2_NuMassCorrelation%s_%s.png',PltMode,DataType)];
 MakeDir(pltdir)
 print(gcf,pltname,'-dpng','-r350');
+
+%% 
+       
+Corr = zeros(1e3,1e3);
+for i=1:numel(z)
+    if strcmp(PltMode,'Absolut')    
+    elseif strcmp(PltMode,'Gradient')
+        Corr(i,:) = diffxy(mNu4Sq(1,:),mNuSq(i,:));
+    end
+end
+%%
+GetFigure;
+%Corr(abs(Corr)<0.1) = NaN;
+s1 = surf(sin2T4,mNu4Sq,Corr,'EdgeColor','none');
+view(2);
+set(gca,'YScale','log')
+set(gca,'XScale','log')
+c = colorbar;
+xlim([1e-03 0.5]);
+ylim([0.1 1600]);
+PrettyFigureFormat('FontSize',22);
+grid off;
+xlabel(sprintf('|{\\itU}_{e4}|^2'))
+ylabel(sprintf('{\\itm}_4^2 (eV^2)'));
+%%
+% Idx = 500;
+% GetFigure
+% s1 =  subplot(2,1,1);
+% plot(mNu4Sq(Idx,:),mNuSq(Idx,:),'LineWidth',2);
+% PrettyFigureFormat('FontSize',22);
+% ylabel(sprintf('{\\itm}_\\nu^2 (eV^2)'));
+% xlabel(sprintf('{\\itm}_4^2 (eV^2)'));
+% set(gca,'XScale','log');
+% 
+% s2 = subplot(2,1,2);
+% plot(mNu4Sq(1,:),diffxy(mNu4Sq(Idx,:),mNuSq(Idx,:)),'LineWidth',2);
+% PrettyFigureFormat('FontSize',22);
+% xlabel(sprintf('{\\itm}_4^2 (eV^2)'));
+% ylabel(sprintf('\\delta{\\itm}_\\nu^2/\\delta{\\itm}_4^2'));
+% 
+% linkaxes([s1,s2],'x');
+% set(gca,'XScale','log');
+% xlim([0.1 1600])
+% sin2T4(Idx,1);

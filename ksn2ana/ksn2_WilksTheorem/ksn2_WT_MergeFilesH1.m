@@ -1,13 +1,19 @@
 % create smaller file for result of grids searches on randomized data
 RecomputeFlag = 'ON';
-Hypothesis = 'H1';
+Hypothesis = 'H2';
 InterpMode = 'lin';%'lin';
 chi2 = 'chi2CMShape';
 randMC = [1:1500];
 NrandMC = numel(randMC);
-Twin_sin2T4 = 0.0240;
-Twin_mNu4Sq = 92.7;
-
+if strcmp(Hypothesis,'H1')
+    Twin_sin2T4 = 0.0240;
+    Twin_mNu4Sq = 92.7;
+    mNu4SqTestGrid = 2;
+else
+    Twin_sin2T4 = 0.07;
+    Twin_mNu4Sq = 20;
+    mNu4SqTestGrid = 'OFF';
+end
 savedir = [getenv('SamakPath'),'ksn2ana/ksn2_WilksTheorem/results/'];
 savefile = sprintf('%sksn2_WilksTheorem_mNu4Sq-%.1feV2_sin2T4-%.3g_Interp%s_%.0fsamples.mat',...
     savedir,Twin_mNu4Sq,Twin_sin2T4,InterpMode,NrandMC);
@@ -81,7 +87,7 @@ else
         if randMC(i)>1000
             S.LoadGridArg = {'mNu4SqTestGrid','OFF','ExtmNu4Sq','ON'};
         else
-            S.LoadGridArg = {'mNu4SqTestGrid',2,'ExtmNu4Sq','ON'};
+            S.LoadGridArg = {'mNu4SqTestGrid',mNu4SqTestGrid,'ExtmNu4Sq','ON'};
         end
         S.RandMC_TBDIS = dspectra.TBDIS_mc(:,randMC(i));
         S.LoadGridFile(S.LoadGridArg{:});
@@ -108,8 +114,11 @@ else
     S.InterpMode = 'Mix';%'spline';
     S.RandMC= 'OFF';
     S.nGridSteps = 30;
-    
-    S.LoadGridFile('mNu4SqTestGrid',5,'ExtmNu4Sq','ON');
+    if strcmp(Hypothesis,'H1')
+        S.LoadGridFile('mNu4SqTestGrid',5,'ExtmNu4Sq','ON');
+    elseif  strcmp(Hypothesis,'H2')
+        S.LoadGridFile('mNu4SqTestGrid','OFF','ExtmNu4Sq','ON');
+    end
     S.Interp1Grid;
     S.ContourPlot; close;
 
