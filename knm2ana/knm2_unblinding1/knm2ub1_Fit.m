@@ -1,8 +1,8 @@
 range   = 40;
-freePar = 'mNu E0 Bkg Norm';
-chi2    = 'chi2Stat';%CMShape';
+freePar = 'mNu E0 Bkg Norm qU';
+chi2    = 'chi2CMShape';
 DataType = 'Real';%Real';
-AnaFlag = 'StackPixel';%Ring';
+AnaFlag = 'Ring';%Ring';
 RingMerge = 'None';%'None';
 
 if strcmp(AnaFlag,'Ring')

@@ -186,29 +186,47 @@ classdef KATRIN < handle %!dont change superclass without modifying parsing rule
         end
         
         function PlotTD(obj,varargin)
-             p = inputParser;
-             p.addParameter('ring',1,@(x)isfloat(x));
-             p.parse(varargin{:});
-             ring      = p.Results.ring;
-            
+            p = inputParser;
+            p.addParameter('ring',1,@(x)isfloat(x));
+            p.addParameter('xLim','',@(x)isfloat(x));
+            p.addParameter('yLim','',@(x)isfloat(x));
+            p.addParameter('Color','Amethyst',@(x)ischar(x));
+            p.parse(varargin{:});
+            ring      = p.Results.ring;
+            Color = p.Results.Color;
+            xLim = p.Results.xLim;
+            yLim = p.Results.yLim;
             f1 = figure('Name','MTD','Renderer','opengl');
             set(f1, 'Units', 'normalized', 'Position', [0.1, 0.1, 0.6, 0.6]);
-            bar(obj.qU(:,ring)-18575, obj.qUfrac(:,ring),'FaceColor',rgb('Amethyst'));
-            title(sprintf('MTD: %s',strrep(obj.TD,'_',' ')));
-            xlabel(sprintf('retarding potential qU - %0.1f (V)',18575));
-            ylabel('time fraction'); 
-            set(gca,'FontSize',16);
-            set(gca,'YScale','lin');
-            ylim([0.0001 max(max(obj.qUfrac))*1.1]);
-            ptlfile = sprintf('MTD-%s',obj.TD); 
-            PrettyFigureFormat;
-            if ~exist('./plots/MTD/png','dir')
-                mkdir ./plots/MTD/png
-                mkdir ./plots/MTD/pdf
+            bar(obj.qU(:,ring)-18574, obj.qUfrac(:,ring),'FaceColor',rgb(Color));
+           PrettyFigureFormat('FontSize',22);
+            %title(sprintf('MTD: %s',strrep(obj.TD,'_',' ')),'FontWeight','normal');
+            leg = legend(sprintf('MTD: %s',strrep(obj.TD,'_',' ')),'Location','northeast');
+            PrettyLegendFormat(leg);
+           % leg.FontSize = get(gca,'FontSize');
+            xlabel(sprintf('Retarding potential qU - %.0f (eV)',18574));
+            ylabel('Time fraction');
+
+         
+         
+            if ~isempty(xLim)
+                xlim(xLim);
             end
-            set(gca,'FontSize',18);
+            
+             if ~isempty(yLim)
+                ylim(yLim);
+             else
+                    ylim([0.000 max(max(obj.qUfrac))*1.1]);
+             end
+            % save 
+               ptlfile = sprintf('MTD-%s',obj.TD);
+          
+            if ~exist('./plots/MTD/','dir')
+                mkdir ./plots/MTD
+            end
             %publish_figurePDF(f1,['plots/MTD/pdf/',ptlfile,'.pdf']);
-            print(f1,['./plots/MTD/png/',ptlfile,'.png'],'-dpng');
+            print(f1,['./plots/MTD/',ptlfile,'.png'],'-dpng','-r250');
+            fprintf('save plot to %s \n',['./plots/MTD/',ptlfile,'.png']);
         end
         
     end

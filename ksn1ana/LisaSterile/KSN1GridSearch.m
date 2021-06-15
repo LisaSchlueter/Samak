@@ -78,7 +78,6 @@ if Twin_sin2T4~=0
     extraStr = [extraStr,sprintf('_sinT4Sq%.3g',Twin_sin2T4)];
 end
 
-
 if Twin_mNu4Sq~=0
     extraStr = [extraStr,sprintf('_mNu4Sq%.1g',Twin_mNu4Sq)];
 end

@@ -1,0 +1,73 @@
+% ksn2 calculate chi2 grid search
+%% settings that might change
+chi2 = 'chi2Stat+';
+DataType = 'Twin';
+nGridSteps = 25;
+range = 40;
+NonPoissonScaleFactor = 1+1.*0.112;
+%% configure RunAnalysis object
+RunAnaArg = {'RunList','KNM2_Prompt',...
+    'DataType',DataType,...
+    'fixPar','E0 Norm Bkg',...%free par
+    'SysBudget',40,...
+    'fitter','minuit',...
+    'minuitOpt','min;migrad',...
+    'RadiativeFlag','ON',...
+    'FSDFlag','KNM2_0p1eV',...
+    'ELossFlag','KatrinT2A20',...
+    'AnaFlag','StackPixel',...
+    'chi2',chi2,...
+    'NonPoissonScaleFactor',NonPoissonScaleFactor,...
+    'FSD_Sigma',sqrt(0.0124+0.0025),...
+    'TwinBias_FSDSigma',sqrt(0.0124+0.0025),...
+    'TwinBias_Q',18573.7,...
+    'PullFlag',99,...;%99 = no pull
+    'BKG_PtSlope',3*1e-06,...
+    'TwinBias_BKG_PtSlope',3*1e-06,...
+    'DopplerEffectFlag','FSD'};
+A = MultiRunAnalysis(RunAnaArg{:});
+%% configure Sterile analysis object
+SterileArg = {'RunAnaObj',A,... % Mother Object: defines RunList, Column Density, Stacking Cuts,....
+    'nGridSteps',nGridSteps,...
+    'SmartGrid','OFF',...
+    'RecomputeFlag','OFF',...
+    'SysEffect','all',...
+    'RandMC','OFF',...
+    'range',range};
+
+%%
+S = SterileAnalysis(SterileArg{:});
+%%
+%S.GridSearch;
+S.InterpMode = 'spline';
+%%
+NPfac = 1+[0,0.1121/0.112,2,5].*0.112;
+pHandle = cell(numel(NPfac),1);
+pStr = cell(numel(NPfac),1);
+Colors = colormap('winter');
+for i=1:numel(NPfac)
+S.RunAnaObj.NonPoissonScaleFactor = NPfac(i);
+S.LoadGridFile;
+S.Interp1Grid('RecomputeFlag','ON');
+if i==1
+    HoldOn = 'OFF';
+else
+    HoldOn = 'ON';
+end
+pHandle{i} = S.ContourPlot('Color',Colors(i*floor(256/numel(NPfac)),:),'HoldOn',HoldOn,'SavePlot','OFF');
+if NPfac(i)==1.1121
+    legStr{i} = sprintf('{\\itB}_{NP} = %.1f%% (KSN-2 default)',(NPfac(i)-1)*1e2);
+else
+    legStr{i} = sprintf('{\\itB}_{NP} = %.1f%%',(NPfac(i)-1)*1e2);
+end
+end
+%
+leg = legend([pHandle{:}],legStr{:});
+xlim([5e-03,0.5])
+PrettyLegendFormat(leg);
+
+%% save
+plotdir = [getenv('SamakPath'),'ksn2ana/ksn2_ModelBlinding/plots/'];
+plotname = sprintf('%sksn2_ModelBlindingNP.png',plotdir);
+print(plotname,'-dpng','-r300');
+fprintf('save plot to %s \n',plotname);

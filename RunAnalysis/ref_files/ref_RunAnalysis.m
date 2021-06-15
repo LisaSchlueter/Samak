@@ -17,6 +17,7 @@ p.PartialMatching= 0;
 p.addParameter('TimeSec',D.TimeSec,@(x)isfloat(x));
 p.addParameter('mnuSq_i',0,@(x)isfloat(x));
 p.addParameter('Q_i',18573.7,@(x)isfloat(x)); 
+p.addParameter('nRuns',1,@(x)isfloat(x));  
 
 % Binning
 p.addParameter('nTeBinningFactor',100,@(x)isfloat(x) && x>0);
@@ -49,9 +50,9 @@ p.addParameter('UseParallelRF','ON',@(x)ismember(x,{'OFF','ON'}));              
 
 % Theory
 p.addParameter('ISCS','Edep',@(x)ismember(x,{'Aseev','Theory','Edep'}));                                  % inelastic scattering cross section
-p.addParameter('DTFSD','BlindingKNM1',@(x)ismember(x,{'OFF','DOSS','BlindingKNM1','HTFSD','TTFSD','Sibille','Sibille0p5eV','SibilleFull','BlindingKNM2'}));                % final state distributions
-p.addParameter('HTFSD','BlindingKNM1',@(x)ismember(x,{'OFF','SAENZ','BlindingKNM1','Sibille','Sibille0p5eV','SibilleFull','BlindingKNM2'})); 
-p.addParameter('TTFSD','BlindingKNM1',@(x)ismember(x,{'OFF','DOSS','SAENZ','BlindingKNM1','Sibille','Sibille0p5eV','SibilleFull','BlindingKNM2'}));
+p.addParameter('DTFSD','BlindingKNM1',@(x)ismember(x,{'OFF','DOSS','BlindingKNM1','HTFSD','TTFSD','Sibille','Sibille0p5eV','SibilleFull','BlindingKNM2','KNM2','KNM2_0p5eV','KNM2_0p1eV','KNM2_0p1eV_cut40eV','KNM2_0p1eV_cut50eV'}));                % final state distributions
+p.addParameter('HTFSD','BlindingKNM1',@(x)ismember(x,{'OFF','SAENZ','BlindingKNM1','Sibille','Sibille0p5eV','SibilleFull','BlindingKNM2','KNM2','KNM2_0p5eV','KNM2_0p1eV','KNM2_0p1eV_cut40eV','KNM2_0p1eV_cut50eV'})); 
+p.addParameter('TTFSD','BlindingKNM1',@(x)ismember(x,{'OFF','DOSS','SAENZ','BlindingKNM1','Sibille','Sibille0p5eV','SibilleFull','BlindingKNM2','KNM2','KNM2_0p5eV','KNM2_0p1eV','KNM2_0p1eV_cut40eV','KNM2_0p1eV_cut50eV'}));
 p.addParameter('ELossFlag','KatrinT2',@(x)ismember(x,{'Aseev','Abdurashitov','CW_GLT','KatrinD2','KatrinT2','KatrinT2A20'})); % description of energy loss in scattering
 p.addParameter('DopplerEffectFlag','OFF',@(x)ismember(x,{'FSD','FSD_Knm1','OFF'}));
 p.addParameter('RadiativeFlag','ON',@(x)ismember(x,{'OFF','ON'}));
@@ -70,13 +71,15 @@ p.addParameter('PixList',1:148,@(x)isfloat(x));
 p.addParameter('RingList',1:12,@(x)isfloat(x));
 p.addParameter('RingMerge','Default',@(x)ismember(x,{'Default','None','Full','Half','Azi','AziHalfNS','AziHalfEW'}));
 p.addParameter('FSD_Sigma','',@(x)isfloat(x) || isempty(x)); % std of gaussian or width of rectangle
-           
+p.addParameter('BKG_PtSlope',0,@(x)isfloat(x));    
+
 p.parse(varargin{:});
 
 %KATRIN General
 mnuSq_i                  = p.Results.mnuSq_i;
 Q_i                      = p.Results.Q_i;
 TimeSec                  = p.Results.TimeSec;
+nRuns                    = p.Results.nRuns;
 
 % WGTS
 WGTS_B_T                 = p.Results.WGTS_B_T;
@@ -112,6 +115,7 @@ BKG_RatePixelSec         = p.Results.BKG_RatePixelSec;
 PixList                  = p.Results.PixList;
 RingList                 = p.Results.RingList;
 RingMerge                = p.Results.RingMerge;
+BKG_PtSlope              = p.Results.BKG_PtSlope;
 
 % Theory
 DopplerEffectFlag        = p.Results.DopplerEffectFlag;
@@ -144,7 +148,8 @@ opt_katrin = {...
     'mnuSq_i',mnuSq_i,...
     'Q_i',Q_i,...
     'qU',qU,...
-    'qUfrac',qUfrac};
+    'qUfrac',qUfrac,...
+    'nRuns',nRuns};
 
 opt_wgts = {...
     'WGTS_MolFrac_TT',WGTS_MolFrac_TT,...
@@ -234,7 +239,8 @@ opt_fpd = {...
     'FPD_ROIEff',FPD_ROIEff,...
     'FPD_ROIlow',FPD_ROIlow,...
     'FPD_PileUpEff',FPD_PileUpEff,...
-    'FPD_RingMerge',RingMerge};
+    'FPD_RingMerge',RingMerge,...
+    'BKG_PtSlope_i',BKG_PtSlope};
 
 opt_bkg = {...
     'BKG_Flag',BKG_Flag,...

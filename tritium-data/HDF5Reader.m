@@ -245,8 +245,7 @@ switch DataSet
         WGTS_MolFrac_HT_SubRun       = WGTS_MolFrac_HT_SubRun(qUstart:end);     
         WGTS_MolFrac_TT_SubRun_error = WGTS_MolFrac_TT_SubRun_error(qUstart:end);
         WGTS_MolFrac_DT_SubRun_error = WGTS_MolFrac_DT_SubRun_error(qUstart:end);
-        WGTS_MolFrac_HT_SubRun_error = WGTS_MolFrac_HT_SubRun_error(qUstart:end);
-        
+        WGTS_MolFrac_HT_SubRun_error = WGTS_MolFrac_HT_SubRun_error(qUstart:end);     
 end
 
 

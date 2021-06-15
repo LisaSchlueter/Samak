@@ -3,9 +3,9 @@
 % calculation and plotting takes place in RunSensitivity class
 % Lisa Schlüter, 2019
 %% settings
-Mode        = 'FC';  % FC = Feldman Cousin, LT = Lokov Tkachov
+Mode        = 'LT';  % FC = Feldman Cousin, LT = Lokov Tkachov
 Sensitivity = 'OFF'; % OFF= show best fit, ON = show sensitivity only
-SavePlot    = 'ON';
+SavePlot    = 'OFF';
 
 RunAnaArg = {'RunList','KNM1',...
     'fixPar','mNu E0 Norm Bkg',...%free par
@@ -17,7 +17,8 @@ RunAnaArg = {'RunList','KNM1',...
     'NonPoissonScaleFactor',1.064,...
     'RadiativeFlag','ON',...
     'ELossFlag','KatrinT2',...
-    'chi2','chi2CMShape'};
+    'chi2','chi2CMShape',...
+    'AngularTF','OFF'};
 
 % set up model 
 D = MultiRunAnalysis(RunAnaArg{:});
@@ -44,3 +45,9 @@ end
 
 %S.PlotFC_PDF('KNM1Central','OFF','mNuSq_t',0);
 
+saveMiniFile = 'ON';
+if strcmp(saveMiniFile,'ON')
+savedir = [getenv('SamakPath'),'knm1ana/knm1_unblinding/results/'];
+savename = sprintf('%sknm1_ConfidenceBelt_%s.mat',savedir,Mode);
+save(savename,'S');
+end

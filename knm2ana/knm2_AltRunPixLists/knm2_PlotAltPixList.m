@@ -9,7 +9,7 @@ AltPixLists = {'Half','AziHalfEW','AziHalfNS'};
 savedir = [getenv('SamakPath'),'knm2ana/knm2_AltRunPixLists/results/'];
 
 %% load random half
-savenameRand = sprintf('%sknm2_PixListRandHalf_%s_%s_%.0feV_%.0ffits.mat',...
+savenameRand = sprintf('%sknm2_PixListRandHalf_%s_%s_%.0feV_%.0ffits_KNM2.mat',...
     savedir,DataType,strrep(freePar,' ',''),range,nFits);
 if exist(savenameRand,'file')
     load(savenameRand);
@@ -23,7 +23,7 @@ nSeg   = zeros(numel(AltPixLists),1);
 nPixel = zeros(numel(AltPixLists),2);
 
 for i=1:numel(AltPixLists)
-    savename = sprintf('%sknm2_PixListAlt_%s_%s_%s_%.0feV.mat',...
+    savename = sprintf('%sknm2_PixListAlt_%s_%s_%s_%.0feV_KNM2.mat',...
         savedir,AltPixLists{i},DataType,strrep(freePar,' ',''),range);
     
     if exist(savename,'file')

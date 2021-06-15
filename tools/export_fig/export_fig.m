@@ -408,7 +408,7 @@ function [imageData, alpha] = export_fig(varargin) %#ok<*STRCL1>
         % TODO - use transparency when exporting to PDF by not passing via print2eps
         msg = 'export_fig currently supports transparent patches/areas only in PNG output. ';
         if options.pdf
-            warning('export_fig:transparency', '%s\nTo export transparent patches/areas to PDF, use the print command:\n print(gcf, ''-dpdf'', ''%s.pdf'');', msg, options.name);
+            %warning('export_fig:transparency', '%s\nTo export transparent patches/areas to PDF, use the print command:\n print(gcf, ''-dpdf'', ''%s.pdf'');', msg, options.name);
         elseif ~options.png && ~options.tif  % issue #168
             warning('export_fig:transparency', '%s\nTo export the transparency correctly, try using the ScreenCapture utility on the Matlab File Exchange: http://bit.ly/1QFrBip', msg);
         end
