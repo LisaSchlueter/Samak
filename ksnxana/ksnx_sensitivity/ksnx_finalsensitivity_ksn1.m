@@ -1,4 +1,4 @@
-nGridSteps = 25;
+nGridSteps = 50;
 chi2       = 'chi2CMShape';
 freePar    = 'E0 Bkg Norm';
 range      = 40;

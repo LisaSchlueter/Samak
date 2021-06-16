@@ -1,7 +1,7 @@
 % Test of Wilk's theorem (coverage)
 %  DeltaChi2 distribution (best fit - null chi2)
 % cumulative pdf with critical delta chi2 for 95%CL.
-Hypothesis   = 'H1';
+Hypothesis   = 'H2';
 InterpMode   = 'Mix';
 SavePlt      = 'ON';
 MergeNew     = 'ON';
@@ -18,6 +18,12 @@ switch Hypothesis
         randMC      = 1:1500;
         Twin_sin2T4 = 0.0240;
         Twin_mNu4Sq = 92.7;
+        chi2        = 'chi2CMShape';
+        MergeNew    = 'OFF'; % nothing new
+    case 'H2'
+         randMC      = 1:1500;
+        Twin_sin2T4 = 0.07;
+        Twin_mNu4Sq = 20;
         chi2        = 'chi2CMShape';
         MergeNew    = 'OFF'; % nothing new
 end

@@ -1,6 +1,6 @@
 % Test of Wilk's theorem (coverage)
 % chi2 distribution of best fits
-Hypothesis = 'H0';
+Hypothesis = 'H2';
 MergeNew = 'ON';
 RmDuplicates = 'ON';
 InterpMode = 'lin';
@@ -19,7 +19,13 @@ switch Hypothesis
         Twin_mNu4Sq = 92.7;
         chi2 = 'chi2CMShape';
         MergeNew = 'OFF'; % nothing new
-         NrandMC = numel(randMC);
+        NrandMC = numel(randMC);
+    case 'H2'
+        randMC      = 1:1500;
+        Twin_sin2T4 = 0.07;
+        Twin_mNu4Sq = 20;
+        chi2        = 'chi2CMShape';
+        MergeNew    = 'OFF'; % nothing new
 end
 
 savedir = [getenv('SamakPath'),'ksn2ana/ksn2_WilksTheorem/results/'];

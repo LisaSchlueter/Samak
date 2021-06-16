@@ -82,7 +82,7 @@ mNuSq_bf_1 = S.mNuSq_bf;
 sin2T4_bf_1 = S.sin2T4_bf;
 mNu4Sq_bf_1 = S.mNu4Sq_bf;
 % find significance
-[~, SignificanceBF_1] = S.CompareBestFitNull;
+[DeltaChi2_1, SignificanceBF_1,SignificanceSigma_1] = S.CompareBestFitNull;
 
 %% load again 
 % restrict binning to match KSN2
@@ -144,7 +144,7 @@ mNu4Sq_bf_2 = S.mNu4Sq_bf;
 mNu4Sq_k2_contour = S.mNu4Sq_contour;
 sin2T4_k2_contour = S.sin2T4_contour;
 % find significance
-[~, SignificanceBF_2] = S.CompareBestFitNull;
+[DeltaChi2_2, SignificanceBF_2,SignificanceSigma_2] = S.CompareBestFitNull;
 
 % load again with same binning as KSN-1 (restricted) to sum chi^2 maps
 S.LoadGridArg = {LoadGridArg_i{:},'Extsin2T4','OFF'};
@@ -181,7 +181,7 @@ sin2T4_bf_12 = S.sin2T4_bf;
 mNu4Sq_bf_12 = S.mNu4Sq_bf;
 S.chi2_Null = chi2_null_12;
 % find significance
-[~, SignificanceBF_12] = S.CompareBestFitNull;
+[DeltaChi2_12, SignificanceBF_12,SignificanceSigma_12]  = S.CompareBestFitNull;
 
 % contour
 sin2T4_contour_12  = S.sin2T4_contour;

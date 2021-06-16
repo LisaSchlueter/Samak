@@ -1,13 +1,13 @@
 % investigate impact of grid size on contour 
-nGridSteps = [30,40];
+nGridSteps = [30,40,50];
 
 %% configure RunAnalysis object
 chi2 = 'chi2CMShape';
 DataType = 'Real';
 range = 40;
 InterpMode = 'spline';
-freePar = 'mNu E0 Norm Bkg';
-PullFlag = 26;
+freePar = 'E0 Norm Bkg';
+PullFlag = 99;%26;
 
 if strcmp(chi2,'chi2Stat')
     NonPoissonScaleFactor = 1;

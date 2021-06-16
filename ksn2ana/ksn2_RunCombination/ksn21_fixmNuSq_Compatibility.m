@@ -2,10 +2,11 @@
 % combine ksn1 and ksn2, nu-mass fix
 % plot with ksn1, ksn2, ksn1+2
 
+DataType = 'Real';
 % load mini combi file
 savedir = [getenv('SamakPath'),'ksn2ana/ksn2_RunCombination/results/'];
 MakeDir(savedir)
-savefile = sprintf('%sksn21_Combination_ReAna.mat',savedir);
+savefile = sprintf('%sksn21_Combination_ReAna_%s.mat',savedir,DataType);
 load(savefile);
 %%
 Chi2Hat = chi2_ref_12-chi2_ref_1-chi2_ref_2;

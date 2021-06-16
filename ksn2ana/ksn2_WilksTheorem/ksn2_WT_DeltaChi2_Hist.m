@@ -1,7 +1,7 @@
 % Test of Wilk's theorem (coverage)
 % chi2 distribution of best fits
-Hypothesis = 'H1';
-InterpMode = 'Mix';
+Hypothesis = 'H2';
+InterpMode = 'lin';
 SavePlt = 'ON';
 MergeNew = 'ON';
 RmDuplicates = 'ON';
@@ -15,10 +15,16 @@ switch Hypothesis
         randMC_new  = 1:1250;
     case 'H1' 
        randMC = 1:1500;
-        Twin_sin2T4 = 0.0240;
-        Twin_mNu4Sq = 92.7;
-        chi2 = 'chi2CMShape';
-        MergeNew = 'OFF'; % nothing new
+       Twin_sin2T4 = 0.0240;
+       Twin_mNu4Sq = 92.7;
+       chi2 = 'chi2CMShape';
+       MergeNew = 'OFF'; % nothing new
+    case 'H2'
+        randMC      = 1:1500;
+        Twin_sin2T4 = 0.07;
+        Twin_mNu4Sq = 20;
+        chi2        = 'chi2CMShape';
+        MergeNew    = 'OFF'; % nothing new
 end
 
 if strcmp(MergeNew,'ON')
