@@ -77,11 +77,17 @@ else
     if strcmp(CombiSTEREO,'ON')
         % load STEREO
         savedir = [getenv('SamakPath'),'ksn2ana/ksn2_CombineStereo/results/'];
-        savefile = sprintf('%sksn2_InterpStereoMini_Max%.0feV2_Min%.2gfeV2.mat',...
-            savedir,Maxm4Sq,0.1);
-        if exist(savefile,'file')
-            fprintf('file exist %s \n',savefile);
-            dS = importdata(savefile);
+        if strcmp(DataType,'Real')
+            savefileSTEREO = sprintf('%sksn2_InterpStereoMini_Max%.0feV2_Min%.2gfeV2.mat',...
+                savedir,Maxm4Sq,0.1);
+        else
+            savefileSTEREO = sprintf('%sksn2_InterpStereoMini_Max%.0feV2_Min%.2gfeV2_Sensitivity.mat',...
+                savedir,Maxm4Sq,0.1);
+        end
+    
+        if exist(savefileSTEREO,'file')
+            fprintf('file exist %s \n',savefileSTEREO);
+            dS = importdata(savefileSTEREO);
         else
             return
         end
@@ -115,39 +121,40 @@ else
 
         if strcmp(CombiSTEREO,'ON')
             chi2_KATRIN = S.chi2;
-%             Deltachi2_Katrin = S.chi2-S.chi2_ref;
-%             Deltachi2_Stereo = d.chi2Stereo-min(min(d.chi2Stereo_cut));
-%             Deltachi2_Stereo(Deltachi2_Stereo<0) = 0;
-%             Deltachi2Sum = Deltachi2_Katrin+Deltachi2_Stereo-min(min(Deltachi2Sum));
-%             
+            
             %% build shared chi^2 map
-            % 2 regions:
-            %1) KATRIN + STEREO
-            Chi2Stereo = dS.chi2Stereo_cut;%-min(min(dStereo.chi2Stereo_cut));
-            Chi2KATRIN  =  chi2_KATRIN(dS.Startrow:dS.Stoprow,dS.Startcol:dS.Stopcol);
-            Chi2Sum = Chi2Stereo + Chi2KATRIN;
-            DeltaChi2Combi_Shared = Chi2Sum - min(min(Chi2Sum));
+            if strcmp(DataType,'Real')
+                % 2 regions:
+                %1) KATRIN + STEREO
+                Chi2Stereo = dS.chi2Stereo_cut;%-min(min(dStereo.chi2Stereo_cut));
+                Chi2KATRIN  =  chi2_KATRIN(dS.Startrow:dS.Stoprow,dS.Startcol:dS.Stopcol);
+                Chi2Sum = Chi2Stereo + Chi2KATRIN;
+                DeltaChi2Combi_Shared = Chi2Sum - min(min(Chi2Sum));
+                
+                % 2) KATRIN only
+                chi2min_Combi(i) = min(min(chi2_KATRIN(~dS.InterIdx)));
+                DeltaChi2Combi_KATRINonly = chi2_KATRIN-min(min(chi2_KATRIN(~dS.InterIdx)));
+                
+                % Combine 1)+2)
+                DeltaChi2Combi = zeros(1e3);
+                DeltaChi2Combi(dS.InterIdx) = DeltaChi2Combi_Shared+1e-05;
+                DeltaChi2Combi(~dS.InterIdx) = DeltaChi2Combi_KATRINonly(~dS.InterIdx);
+              
+            else
+                % sensitivity can be combined just as it is
+                Chi2Sum = dS.chi2Stereo +  chi2_KATRIN;
+                DeltaChi2Combi = Chi2Sum;
+            end
             
-            % 2) KATRIN only
-            chi2min_Combi(i) = min(min(chi2_KATRIN(~dS.InterIdx)));
-            DeltaChi2Combi_KATRINonly = chi2_KATRIN-min(min(chi2_KATRIN(~dS.InterIdx)));
+            S.chi2_ref = min(min(DeltaChi2Combi));
             
-            % Combine 1)+2)
-            DeltaChi2Combi = zeros(1e3);
-            DeltaChi2Combi(dS.InterIdx) = DeltaChi2Combi_Shared+1e-05;
-            DeltaChi2Combi(~dS.InterIdx) = DeltaChi2Combi_KATRINonly(~dS.InterIdx);
-            
-            %%
             % combine with STEREO
-%             S.chi2_ref = chi2min(i);
-%             Deltachi2Sum = d.chi2Stereo+chi2_Katrin;%-S.chi2_ref; % combined Delta-Chi^2 Maps
-            S.chi2_ref = min(min(DeltaChi2Combi)); % 0 by construction
-            S.chi2 = DeltaChi2Combi;%Deltachi2Sum;
+            S.chi2 = DeltaChi2Combi;
             S.GridPlot('BestFit','ON','Contour','ON','CL',99.99,...
                 'SavePlot','OFF',...
                 'ExtraStr',sprintf('STEREOCombi_mNuSq%.2geV2',FixmNuSq));
             close;
-       %     chi2min_Combi(i) = S.chi2_bf;
+            chi2min_Combi(i) = S.chi2_bf;
             mNu4Sq_Combi_bf(i) = S.mNu4Sq_bf;
             sin2T4_Combi_bf(i) = S.sin2T4_bf;
             %%

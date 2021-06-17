@@ -5,17 +5,28 @@
 % sanity plots
 Maxm4Sq    = 36^2;
 Minm4Sq    = 0.1;
+Type = 'Sensitivity';
+RecomputeFlag = 'ON';
 
 savedir = [getenv('SamakPath'),'ksn2ana/ksn2_CombineStereo/results/'];
 savefile = sprintf('%sksn2_InterpStereoMini_Max%.0feV2_Min%.2gfeV2.mat',...
     savedir,Maxm4Sq,Minm4Sq);
+if strcmp(Type,'Sensitivity')
+    savefile = strrep(savefile,'.mat','_Sensitivity.mat');
+end
 
-if exist(savefile,'file') 
+
+if exist(savefile,'file') && strcmp(RecomputeFlag,'OFF')
     fprintf('file already exist %s \n',savefile);
 else
     
     %% load original Stereo
-    StereoFile = [getenv('SamakPath'),'ksn2ana/ksn2_CombineStereo/results/StereoMaps.mat'];
+    if strcmp(Type,'Sensitivity')
+        StereoFile = [getenv('SamakPath'),'ksn2ana/ksn2_CombineStereo/results/StereoMaps_Sensitivity.mat'];
+    else
+        StereoFile = [getenv('SamakPath'),'ksn2ana/ksn2_CombineStereo/results/StereoMaps.mat'];
+    end
+
     ds = importdata(StereoFile);
     
     % KATRIN grid (interpolated)
@@ -38,15 +49,23 @@ else
     sin2T4_Osci_cut = sin2T4_Osci(Startrow:Stoprow,Startcol:Stopcol);%
     chi2Stereo_cut     = interp2(ds.mNu41Sq,ds.sin2TSq,ds.chi2,mNu4Sq_cut,sin2T4_Osci_cut,'spline');
     chi2Stereocrit_cut = interp2(ds.mNu41Sq,ds.sin2TSq,ds.chi2crit,mNu4Sq_cut,sin2T4_Osci_cut,'spline');
-    chi2Stereo_min = min(min(chi2Stereo_cut)); % somehow not zero?
+    chi2Stereo_min = min(min(chi2Stereo_cut)); % not zero, because best-fit not on grid point
     
     % intert into KATRIN par space
     DeltaChi2Wilks = GetDeltaChi2(95,2);
-    chi2Stereo = zeros(nInter,nInter);
+    if strcmp(Type,'Sensitivity')
+        %sensitivity delta-chi^2 map
+        chi2Stereo = chi2Stereo_min.*ones(nInter,nInter);
+    else
+        chi2Stereo = zeros(nInter,nInter);
+    end
+    
     chi2Stereo(InterIdx) = chi2Stereo_cut;
     chi2Stereocrit = DeltaChi2Wilks.*ones(nInter,nInter);
     chi2Stereocrit(InterIdx) = chi2Stereocrit_cut;
     %%
+   
+    
     save(savefile,'mNu4Sq_cut','sin2T4_cut','sin2T4_Osci_cut','chi2Stereo_cut','chi2Stereocrit_cut',...
         'mNu4Sq','sin2T4','sin2T4_Osci','chi2Stereo','chi2Stereocrit',...
         'InterIdx','Startrow','Startcol','Stoprow','Stopcol');
