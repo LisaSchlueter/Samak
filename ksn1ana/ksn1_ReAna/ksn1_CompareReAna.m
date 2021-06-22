@@ -5,7 +5,7 @@
 DataType              = 'Real';
 range                 = 40;
 chi2                  = 'chi2CMShape';
-freePar               = 'mNu E0 Norm Bkg';
+freePar               = 'E0 Norm Bkg';
 
 %% configure RunAnalysis object
 if strcmp(chi2,'chi2Stat')

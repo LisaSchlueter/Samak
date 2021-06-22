@@ -1,4 +1,4 @@
-DataType = 'Twin';
+DataType = 'Real';%'Twin';
 Maxm4Sq    = 38^2; % interpolation
 freePar  = 'E0 Norm Bkg';
 Plt = 'Contour';
@@ -126,24 +126,29 @@ else
     end
     %% build shared chi^2 map
     if strcmp(DataType,'Real')
-        % 2 regions:
-        %1) KATRIN + STEREO
-        Chi2Stereo = dS.chi2Stereo_cut; % already delta-chi^2, but minimum not on grid point
-        Chi2KATRIN  =  chi2_KATRIN(dS.Startrow:dS.Stoprow,dS.Startcol:dS.Stopcol); % absolute
-        Chi2Sum = Chi2Stereo + Chi2KATRIN-min(min(Chi2KATRIN));
-        DeltaChi2Combi_Shared = Chi2Sum - min(min(Chi2Sum));%
+%         % 2 regions:
+%         %1) KATRIN + STEREO
+%         Chi2Stereo = dS.chi2Stereo_cut; % already delta-chi^2, but minimum not on grid point
+%         Chi2KATRIN  =  chi2_KATRIN(dS.Startrow:dS.Stoprow,dS.Startcol:dS.Stopcol); % absolute
+%         Chi2Sum = Chi2Stereo + Chi2KATRIN-min(min(Chi2KATRIN));
+%         DeltaChi2Combi_Shared = Chi2Sum - min(min(Chi2Sum));%
+%         
+%         % 2) KATRIN only
+%         DeltaChi2Combi_KATRINonly = chi2_KATRIN-min(min(chi2_KATRIN(~dS.InterIdx)));
+%         
+%         % Combine 1)+2)
+%         DeltaChi2Combi = zeros(1e3);
+%         DeltaChi2Combi(dS.InterIdx) = DeltaChi2Combi_Shared;
+%         DeltaChi2Combi(~dS.InterIdx) = DeltaChi2Combi_KATRINonly(~dS.InterIdx);
         
-        % 2) KATRIN only
-        DeltaChi2Combi_KATRINonly = chi2_KATRIN-min(min(chi2_KATRIN(~dS.InterIdx)));
-        
-        % Combine 1)+2)
-        DeltaChi2Combi = zeros(1e3);
-        DeltaChi2Combi(dS.InterIdx) = DeltaChi2Combi_Shared;
-        DeltaChi2Combi(~dS.InterIdx) = DeltaChi2Combi_KATRINonly(~dS.InterIdx);
+        Chi2Sum = dS.chi2Stereo+chi2_KATRIN;
+        S.chi2_ref = min(min(Chi2Sum));
+        S.chi2 = Chi2Sum;%DeltaChi2Combi;
+        DeltaChi2Combi =  Chi2Sum-S.chi2_ref;
     else
         % sensitivity can be combined just as it is
-        Chi2Sum = dS.chi2Stereo +  chi2_KATRIN;       % absolute maps here
-        DeltaChi2Combi = Chi2Sum-min(min(Chi2Sum)); % minimum at null hypothesiis
+%         Chi2Sum = dS.chi2Stereo +  chi2_KATRIN-min(min(chi2_KATRIN));       % absolute maps here
+%         DeltaChi2Combi = Chi2Sum-min(min(Chi2Sum)); % minimum at null hypothesiis
     end
     %% get combined contour
     sin2T4_contour_Combi = zeros(1e3,1);

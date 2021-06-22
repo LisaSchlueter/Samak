@@ -7,22 +7,16 @@
 
 
 %% settings for runanalysis
-mNu4Sq_true = 0.2;
-if mNu4Sq_true==0
-FixmNuSq_all = (-1:0.1:1);
-else
-    FixmNuSq_all = (mNu4Sq_true-0.5):0.1:(mNu4Sq_true+0.5);
-end
-
+mNu4Sq_true = 0.5;
+FixmNuSq_all = (mNu4Sq_true-0.5):0.1:(mNu4Sq_true+0.5);
 nGridSteps = 30;
 DataType   = 'Fake';
 chi2       = 'chi2Stat';
-CombiSTEREO = 'OFF';
-RecomputeFlag = 'OFF';
+RecomputeFlag = 'ON';
 savedir = [getenv('SamakPath'),'ksnxana/ksnx_sensitivity/results/'];
 
 savefileCombi = sprintf('%sksnx_%s_%s_NuMassSensitivityGridSearch_CombiSTEREO-%s_mNuTrue%.2feV2.mat',...
-    savedir,DataType,chi2,CombiSTEREO,mNu4Sq_true);
+    savedir,DataType,chi2,'OFF',mNu4Sq_true);
 
 if exist(savefileCombi,'file') && strcmp(RecomputeFlag,'OFF')
     load(savefileCombi);
@@ -83,7 +77,7 @@ else
         S.Interp1Grid('MaxM4Sq',38^2)
         S.GridPlot('BestFit','ON','Contour','ON','SavePlot','OFF',...
             'ExtraStr',sprintf('_mNuSq%.2geV2',FixmNuSq_all(i))); 
-        
+      %  close all
         
         sin2T4_bf(i) = S.sin2T4_bf;
         mNu4Sq_bf(i) = S.mNu4Sq_bf;
@@ -137,11 +131,11 @@ plot(x,y,'LineWidth',2);
 hold on;
 pNone = plot(NaN,NaN,'w.');
 PrettyFigureFormat('FontSize',22);
-leg = legend(sprintf('3\\nu+1 model: {\\itm}_\\nu^2 = 0.0 ^{-%.2f}_{+%.3f} eV^2',mNuSqErrDown,mNuSqErrUp),...
-             sprintf('3\\nu   model: {\\itm}_\\nu^2 = 0.0 ^{- %.3f}_{+%.3f} eV^2',-FitResult_NoSterile_mNuFree.errNeg(1),FitResult_NoSterile_mNuFree.errPos(1)),...
+leg = legend(sprintf('3\\nu+1 model: {\\itm}_\\nu^2 = %.2f ^{-%.2g}_{+%.3f} eV^2',mNuSq_bf,mNuSqErrDown,mNuSqErrUp),...
+             sprintf('3\\nu   model: {\\itm}_\\nu^2 = %.2f ^{- %.3f}_{+%.3f} eV^2',FitResult_NoSterile_mNuFree.par(1),-FitResult_NoSterile_mNuFree.errNeg(1),FitResult_NoSterile_mNuFree.errPos(1)),...
             'Location','northwest');
 PrettyLegendFormat(leg);
 xlabel(sprintf('{\\itm}_\\nu^2 (eV^2)'));
 ylabel(sprintf('\\chi^2 (%.0f dof)',dof));
 ylim([-0.5 25])
-xlim([-0.5 0.5])
+xlim([min(x) max(x)])

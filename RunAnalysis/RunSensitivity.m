@@ -2121,7 +2121,7 @@ classdef RunSensitivity < handle
             if ~strcmp(Mode,'CompareBf')
                 if isnan(obj.FC_x1(Index))
                     FillLog = x<=obj.FC_x2(Index);
-                    xmin = -(obj.FC_x2(Index)+(obj.FC_x2(Index)-mNuSq_t));
+                    xmin = -(obj.FC_x2(Index)+(obj.FC_x2(Index)-mNuSq_t));         
                 else
                     FillLog =x >=obj.FC_x1(Index) & x<=obj.FC_x2(Index);
                     xmin = obj.FC_x1(Index)-(mNuSq_t-obj.FC_x1(Index));
@@ -2209,7 +2209,7 @@ classdef RunSensitivity < handle
                 mNuSqFrac =100.*interp1(x,CumSum,mNuSq_bf,'spline');
                 if mNuSq_bf>0
                     mNuSqFrac =100-mNuSqFrac;
-                     t = text(mNuSq_bf+0.05,0.93,sprintf('{\\itP}({\\itm}_{measured}^2 \\geq {\\itm}_{bf}^2) = %.1f %s',mNuSqFrac,'%'),...
+                     t = text(mNuSq_bf-0.8,0.93,sprintf('{\\itP}({\\itm}^2 \\geq {\\itm}_{bf}^2) = %.0f %s',mNuSqFrac,'%'),...
                         'FontSize',ax.FontSize,'FontWeight',ax.FontWeight,'Color',rgb('DarkBlue'));
                     
                     % make nice arrow

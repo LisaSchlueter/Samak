@@ -1,7 +1,7 @@
 % ksn2 calculate chi2 grid search
 %% settings that might change
 chi2 = 'chi2CMShape';
-DataType = 'Real';
+DataType = 'Twin';
 nGridSteps = 40;
 range = 40;
 freePar = 'E0 Norm Bkg';
@@ -39,15 +39,38 @@ SterileArg = {'RunAnaObj',A,... % Mother Object: defines RunList, Column Density
     'SysEffect','all',...
     'RandMC','OFF',...
     'range',range,...
-    'LoadGridArg',{'ExtmNu4Sq','ON','mNu4SqTestGrid',5}};
+    'LoadGridArg',{'ExtmNu4Sq','ON','mNu4SqTestGrid',2}};
 
-%%
+%
 S = SterileAnalysis(SterileArg{:});
+S.nGridSteps = 30;
 S.LoadGridFile(S.LoadGridArg{:});
 S.Interp1Grid;
 
 %%
+
 S.ContourPlotOsci('DayaBay','ON','DoubleChooz','ON','SavePlot','ON','Style','PRL','BestFit','ON');
 
+%%
+hold on;
+% load combi fixed m_nu
+savedir_fix = [getenv('SamakPath'),'ksn2ana/ksn2_RunCombination/results/'];
+savefile_fix = sprintf('%sksn21_Combination_ReAna_%s.mat',savedir_fix,DataType);
+
+% load file
+if exist(savefile_fix,'file') 
+    dfix = importdata(savefile_fix);
+    fprintf('load results from file %s \n',savefile_fix)
+else
+     fprintf('load results from file %s \n',savefile_fix)
+    return
+end
+
+mNu4Sq_fix   = dfix.mNu4Sq_contour_12;
+sin2T4Sq_fix  = 4*dfix.sin2T4_contour_12.*(1-dfix.sin2T4_contour_12);
+
+%% plot
+hold on;
+pfix = plot(sin2T4Sq_fix,mNu4Sq_fix,':','Color',rgb('Navy'),'LineWidth',2.5);
 
 

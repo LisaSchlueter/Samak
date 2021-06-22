@@ -150,6 +150,9 @@ print(gcf,plotname,'-dpng','-r350');
 %% plot correlation
 GetFigure
 surf(sin2T4_allgrid,mNu4Sq_allgrid,CorrCoeff,'EdgeColor','none');
+% [M,ct] = contourf(sin2T4_allgrid,mNu4Sq_allgrid,CorrCoeff,[-1,-0.9999,0,0.999,1],...
+%     'ShowText','on','LineWidth',1.5,'LabelSpacing',180,'LineColor',rgb('Black'));
+%cl = clabel(M,ct,'FontSize',12);
 set(gca,'XScale','log');
 set(gca,'YScale','log');
 view(2);
@@ -169,7 +172,10 @@ print(gcf,plotname,'-dpng','-r350');
 
 %% plot covariance
 GetFigure
-surf(sin2T4_allgrid,mNu4Sq_allgrid,Covar,'EdgeColor','none');
+%surf(sin2T4_allgrid,mNu4Sq_allgrid,Covar,'EdgeColor','none');
+[M,ct] = contourf(sin2T4_allgrid,mNu4Sq_allgrid,Covar,[-0.7:0.1:0.2,-0.01,0.01,0.05],...
+    'ShowText','on','LineWidth',1.5,'LabelSpacing',250,'LineColor',rgb('Black'));
+cl = clabel(M,ct,'FontSize',14);
 set(gca,'XScale','log');
 set(gca,'YScale','log');
 view(2);

@@ -10,12 +10,12 @@ switch DataType
         FixmNuSq_all = sort(round([-1.0:0.1:2.5],2));
 end
 
-RecomputeFlag = 'ON';
+RecomputeFlag = 'OFF';
 Maxm4Sq    = 36^2; % interpolation
 chi2min = zeros(numel(FixmNuSq_all),1);
 sin2T4_bf =  zeros(numel(FixmNuSq_all),1);
 mNu4Sq_bf =  zeros(numel(FixmNuSq_all),1);
-CombiSTEREO = 'ON';
+CombiSTEREO = 'OFF';
 
 savedir = [getenv('SamakPath'),'ksn2ana/ksn2_NuMassSensitivity/results/'];
 savefileCombi = sprintf('%sksn2_%s_NuMassSensitivityGridSearch_CombiSTEREO-%s.mat',...
@@ -126,30 +126,31 @@ else
             if strcmp(DataType,'Real')
                 % 2 regions:
                 %1) KATRIN + STEREO
-                Chi2Stereo = dS.chi2Stereo_cut;%-min(min(dStereo.chi2Stereo_cut));
-                Chi2KATRIN  =  chi2_KATRIN(dS.Startrow:dS.Stoprow,dS.Startcol:dS.Stopcol);
-                Chi2Sum = Chi2Stereo + Chi2KATRIN;
-                DeltaChi2Combi_Shared = Chi2Sum - min(min(Chi2Sum));
-                
-                % 2) KATRIN only
-                chi2min_Combi(i) = min(min(chi2_KATRIN(~dS.InterIdx)));
-                DeltaChi2Combi_KATRINonly = chi2_KATRIN-min(min(chi2_KATRIN(~dS.InterIdx)));
-                
-                % Combine 1)+2)
-                DeltaChi2Combi = zeros(1e3);
-                DeltaChi2Combi(dS.InterIdx) = DeltaChi2Combi_Shared+1e-05;
-                DeltaChi2Combi(~dS.InterIdx) = DeltaChi2Combi_KATRINonly(~dS.InterIdx);
-              
+%                 Chi2Stereo = dS.chi2Stereo_cut;%-min(min(dS.chi2Stereo_cut));
+%                 Chi2KATRIN  =  chi2_KATRIN(dS.Startrow:dS.Stoprow,dS.Startcol:dS.Stopcol);
+%                 Chi2Sum = Chi2Stereo + Chi2KATRIN;
+%                 DeltaChi2Combi_Shared = Chi2Sum - min(min(Chi2Sum));
+%                 
+%                 % 2) KATRIN only
+%                 chi2min_Combi(i) = min(min(chi2_KATRIN(~dS.InterIdx)));
+%                 DeltaChi2Combi_KATRINonly = chi2_KATRIN-min(min(chi2_KATRIN(~dS.InterIdx)));
+%                 
+%                 % Combine 1)+2)
+%                 DeltaChi2Combi = zeros(1e3);
+%                 DeltaChi2Combi(dS.InterIdx) = DeltaChi2Combi_Shared+1e-05;
+%                 DeltaChi2Combi(~dS.InterIdx) = DeltaChi2Combi_KATRINonly(~dS.InterIdx);
+%       
+                Chi2Sum = dS.chi2Stereo+chi2_KATRIN;
+                S.chi2_ref = min(min(Chi2Sum));
+                S.chi2 = Chi2Sum;%DeltaChi2Combi;
             else
                 % sensitivity can be combined just as it is
                 Chi2Sum = dS.chi2Stereo +  chi2_KATRIN;
                 DeltaChi2Combi = Chi2Sum;
+                S.chi2_ref = min(min(DeltaChi2Combi));
             end
             
-            S.chi2_ref = min(min(DeltaChi2Combi));
-            
             % combine with STEREO
-            S.chi2 = DeltaChi2Combi;
             S.GridPlot('BestFit','ON','Contour','ON','CL',99.99,...
                 'SavePlot','OFF',...
                 'ExtraStr',sprintf('STEREOCombi_mNuSq%.2geV2',FixmNuSq));
@@ -184,11 +185,17 @@ mNuSqErr   = 0.5.*(mNuSqErrDown+mNuSqErrUp);
 if strcmp(CombiSTEREO,'ON')
     chi2_inter_Combi  = interp1(FixmNuSq_all,chi2min_Combi,mNuSq_inter,'spline');
     % best fit
+    
     chi2bf_Combi      = min(chi2_inter_Combi);
     Idx_bf_Combi      = find(chi2_inter_Combi==chi2bf_Combi);
-    mNuSq_bf_Combi    = mNuSq_inter(Idx_bf);
+    mNuSq_bf_Combi    = mNuSq_inter(Idx_bf_Combi);
     % uncertainties
-    mNuSqDown_Combi = interp1(chi2_inter_Combi(mNuSq_inter<mNuSq_bf_Combi),mNuSq_inter(mNuSq_inter<mNuSq_bf_Combi),chi2bf_Combi+1,'spline');
+    if mNuSq_bf_Combi==min(mNuSq_inter)
+        mNuSqDown_Combi = NaN;
+    else
+        mNuSqDown_Combi = interp1(chi2_inter_Combi(mNuSq_inter<mNuSq_bf_Combi),...
+            mNuSq_inter(mNuSq_inter<mNuSq_bf_Combi),chi2bf_Combi+1,'spline');
+    end
     mNuSqUp_Combi   = interp1(chi2_inter_Combi(mNuSq_inter>mNuSq_bf_Combi),mNuSq_inter(mNuSq_inter>mNuSq_bf_Combi),chi2bf_Combi+1,'spline');
     mNuSqErrDown_Combi = mNuSq_bf_Combi-mNuSqDown_Combi;
     mNuSqErrUp_Combi   = mNuSqUp_Combi-mNuSq_bf_Combi;
@@ -230,7 +237,11 @@ if strcmp(DataType,'Twin')
 
 else
     t =  title('Data');
-    ylim([chi2bf-0.3 chi2bf+4]);
+    if strcmp(CombiSTEREO,'ON')
+    ylim([chi2bf-0.3 chi2bf_Combi+10]);
+    else
+         ylim([chi2bf-0.3 chi2bf+4]);
+    end
 end
 t.FontWeight = 'normal'; t.FontSize = get(gca,'FontSize');
 

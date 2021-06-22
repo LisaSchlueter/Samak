@@ -2,7 +2,7 @@
 % plot contour
 SavePlt = 'ON';
 Interp = 'ON';
-Type = 'Sensitivity';
+Type = 'Data';%'Sensitivity';
 
    savedir = [getenv('SamakPath'),'ksn2ana/ksn2_CombineStereo/results/'];
    

@@ -3,9 +3,9 @@
 
 % interpolate Stereo Chi^2 Map to match KATRIN grid
 % sanity plots
-Maxm4Sq    = 36^2;
+Maxm4Sq    = 40^2;
 Minm4Sq    = 0.1;
-Type = 'Sensitivity';
+Type = 'Data';%'Sensitivity';
 RecomputeFlag = 'ON';
 
 savedir = [getenv('SamakPath'),'ksn2ana/ksn2_CombineStereo/results/'];
@@ -57,7 +57,7 @@ else
         %sensitivity delta-chi^2 map
         chi2Stereo = chi2Stereo_min.*ones(nInter,nInter);
     else
-        chi2Stereo = zeros(nInter,nInter);
+        chi2Stereo = chi2Stereo_cut(1,1).*ones(nInter,nInter); % null hypothesis (approx.)
     end
     
     chi2Stereo(InterIdx) = chi2Stereo_cut;
