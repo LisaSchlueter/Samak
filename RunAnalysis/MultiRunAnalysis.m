@@ -41,12 +41,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
         Twin_SameqUfracFlag;
         Twin_SameCDFlag;
         Twin_SameIsotopFlag; % MolFrac_TT, HT,DT
-        
-        % Radiative Corrections Flag
-        RadiativeFlag;
-        
-        RelicPeakPosition;
-        
+
     end
     methods % Constructor
         function obj = MultiRunAnalysis(varargin)
@@ -64,8 +59,6 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             p.addParameter('Twin_SameqUfracFlag','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('Twin_SameCDFlag','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('Twin_SameIsotopFlag','OFF',@(x)ismember(x,{'ON','OFF'}));
-            p.addParameter('RadiativeFlag','ON',@(x)ismember(x,{'ON','OFF'}));
-            p.addParameter('RelicPeakPosition','',@(x)(isfloat(x) && x>=0) || isempty(x));
            
             % Parse unmatched parameters to RunAnalysis.m
             p.KeepUnmatched=1;
@@ -88,8 +81,6 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             obj.Twin_SameqUfracFlag = p.Results.Twin_SameqUfracFlag;
             obj.Twin_SameCDFlag     = p.Results.Twin_SameCDFlag;
             obj.Twin_SameIsotopFlag = p.Results.Twin_SameIsotopFlag;
-            obj.RadiativeFlag       = p.Results.RadiativeFlag;
-            obj.RelicPeakPosition   = p.Results.RelicPeakPosition;
 
             obj.SingleRun_FitResults = struct('chi2Stat','','chi2CMall','','chi2CMcorr','');
             %------------------------------- Parser End----------------------------------------%
@@ -167,7 +158,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             obj.SetNPfactor
             obj.GetPlotColor;
             
-            if ~strcmp(obj.chi2,'chi2Stat') && ~strcmp(obj.chi2,'chi2P')
+            if ~strcmp(obj.chi2,'chi2Stat') && ~strcmp(obj.chi2,'chi2P') && ~strcmp(obj.chi2,'chi2Stat+')
                 switch obj.Debug
                     case 'ON'
                         cprintf('blue','MultiRunAnalysis: ComputeCM\n');
@@ -1756,7 +1747,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                     'DTFSD',DTFSD,'HTFSD',HTFSD,'TTFSD',TTFSD,'DopplerEffectFlag',...
                     obj.DopplerEffectFlag,'RadiativeFlag',obj.RadiativeFlag,'RingMerge',obj.RingMerge,...
                     'AngularTFFlag',obj.AngularTFFlag,'SynchrotronFlag',obj.SynchrotronFlag,...
-                    'FSD_Sigma',obj.FSD_Sigma);
+                    'FSD_Sigma',obj.FSD_Sigma,'BKG_PtSlope',obj.BKG_PtSlope,'nRuns',1);
                 
                 obj.SingleRunObj{r}.ComputeTBDDS; obj.SingleRunObj{r}.ComputeTBDIS;
             end
@@ -1827,7 +1818,9 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                 'NIS',NIS,...
                 'SynchrotronFlag',obj.SynchrotronFlag,...
                 'AngularTFFlag',obj.AngularTFFlag,...
-                'FSD_Sigma',obj.FSD_Sigma};
+                'FSD_Sigma',obj.FSD_Sigma,...
+                'BKG_PtSlope',obj.BKG_PtSlope,...
+                'nRuns',obj.nRuns};
  
             if ~isempty(qU)
                 TBDarg = {TBDarg{:},'qU',qU};
@@ -1854,9 +1847,6 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             end
             if ~isempty(WGTS_B_T)
                 TBDarg = {TBDarg{:},'WGTS_B_T',WGTS_B_T};
-            end
-            if ~isempty(obj.RelicPeakPosition)
-                TBDarg = {TBDarg{:},'PeakPosition',obj.RelicPeakPosition};
             end
             
 %             if strcmp(obj.MosCorrFlag,'ON') 
@@ -2088,6 +2078,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             p.addParameter('YLim','',@(x)isfloat(x) || isempty(x));
             p.addParameter('DispHist','ON',@(x)ismember(x,{'OFF','ON','Separate'}));
             p.addParameter('HideGaps','ON',@(x)ismember(x,{'OFF','ON'}));
+            p.addParameter('ShowRWPeriods','OFF',@(x)ismember(x,{'OFF','ON'}));
             
             p.parse(varargin{:});
             saveplot      = p.Results.saveplot;
@@ -2096,7 +2087,9 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             YLim          = p.Results.YLim; % force ylimits
             DispHist      = p.Results.DispHist;
             HideGaps      = p.Results.HideGaps; % reduce time gaps
-            LocalFontSize = 28;
+            ShowRWPeriods = p.Results.ShowRWPeriods;
+            
+            LocalFontSize = 25;%28;
             
             % Get Fit Results
             switch obj.chi2
@@ -2202,9 +2195,9 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                     end
                     yUnit = sprintf('molecules \\cdot cm^{-2}');
                 case 'T2'
-                    y    = obj.SingleRunData.WGTS_MolFrac_TT;
+                    y    = (obj.SingleRunData.WGTS_MolFrac_TT+0.5.*obj.SingleRunData.WGTS_MolFrac_DT+0.5.*obj.SingleRunData.WGTS_MolFrac_HT);
                     yErr = zeros(numel(y),1);%std(obj.SingleRunData.WGTS_MolFrac_TT_SubRun);
-                    ystr = sprintf('T_2 fraction');
+                    ystr = sprintf('\\epsilon_T');%+ 0.5 \\epsilon_{HT} + 0.5 \\epsilon_{DT}
                     yUnit =''; 
             end
             
@@ -2217,26 +2210,58 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                  set(fig88,'units','normalized','pos',[0.1, 0.1,1.0,0.5]);
             end
             
-            PlotStyle = { 'o','MarkerSize',8,'MarkerFaceColor',rgb('SkyBlue'),...%rgb('IndianRed'),...%
-                'LineWidth',2,'Color',obj.PlotColor};
+            PlotStyle = { '.','MarkerSize',20,'LineWidth',1.5,'MarkerFaceColor',rgb('SkyBlue'),'Color',obj.PlotColor};
             % plot data
+            if strcmp(ShowRWPeriods,'ON')
+                Idx1 = 1:171;   % RW1: 1-171
+                Idx2 = 172:268; % RW2: 172-268
+                Idx3 = 269:361;% RW3: 267:361
+            end
+               
             xmin=min(x)-max(x)*0.02;
             xmax = max(x)*1.02;
             if strcmp(Parameter,'pVal')
                 %l1 = plot(linspace(xmin,xmax,10),0.05*ones(10,1),'--','Color',rgb('Orange'),'LineWidth',4);
             elseif ismember(Parameter,{'T2'})
-                l1 = plot(linspace(xmin,xmax,10),wmean(y(y>0),obj.SingleRunData.TimeSec(y>0))*ones(10,1),'-','Color',rgb('DimGray'),'LineWidth',2);
+                if   strcmp(ShowRWPeriods,'ON')
+                    l1 = plot(linspace(min(x(Idx1)),max(x(Idx1)),10),mean(y(Idx1))*ones(10,1),'-','Color',rgb('DodgerBlue'),'LineWidth',1.5);
+                       hold on;
+                        l2 = plot(linspace(min(x(Idx2)),max(x(Idx2)),10),mean(y(Idx2))*ones(10,1),'-','Color',rgb('Orange'),'LineWidth',1.5);
+                        l3 = plot(linspace(min(x(Idx3)),max(x(Idx3)),10),mean(y(Idx3))*ones(10,1),'-','Color',rgb('ForestGreen'),'LineWidth',1.5);  
+                 
+                else
+                    l1 = plot(linspace(xmin,xmax,10),wmean(y(y>0),obj.SingleRunData.TimeSec(y>0))*ones(10,1),'-','Color',rgb('Black'),'LineWidth',1.5);
+                end
             elseif ismember(Parameter,{'RhoD'})
                 if strcmp(DisplayStyle,'Abs')
-                    l1 = plot(linspace(xmin,xmax,10),wmean(y,obj.SingleRunData.TimeSec)*ones(10,1),'-','Color',rgb('DimGray'),'LineWidth',2);
+                    if   strcmp(ShowRWPeriods,'ON')
+                        l1 = plot(linspace(min(x(Idx1)),max(x(Idx1)),10),mean(y(Idx1))*ones(10,1),'-','Color',rgb('DodgerBlue'),'LineWidth',1.5);
+                       hold on;
+                        l2 = plot(linspace(min(x(Idx2)),max(x(Idx2)),10),mean(y(Idx2))*ones(10,1),'-','Color',rgb('Orange'),'LineWidth',1.5);
+                        l3 = plot(linspace(min(x(Idx3)),max(x(Idx3)),10),mean(y(Idx3))*ones(10,1),'-','Color',rgb('ForestGreen'),'LineWidth',1.5);  
+                    else
+                        l1 = plot(linspace(xmin,xmax,10),wmean(y,obj.SingleRunData.TimeSec)*ones(10,1),'-','Color',rgb('Black'),'LineWidth',1.5);
+                        
+                    end
                 else
                     l1 = plot(linspace(xmin,xmax,10),zeros(10,1),'-','Color',rgb('DimGray'),'LineWidth',2);
                 end
             else
-                l1 = plot(linspace(xmin,xmax,10),wmean(y,1./yErr.^2)*ones(10,1),'-','Color',rgb('DimGray'),'LineWidth',2);
+                l1 = plot(linspace(xmin,xmax,10),wmean(y,1./yErr.^2)*ones(10,1),'-','Color',rgb('Black'),'LineWidth',1.5);
             end
+            
             hold on;
+            if strcmp(ShowRWPeriods,'OFF')
             e1 = errorbar(x,y,yErr,PlotStyle{:});
+            
+            else
+              % only for knm2 and RunList='KNM2_Promp'  
+               e1 = errorbar(x(Idx1),y(Idx1),yErr(Idx1),PlotStyle{:});
+               e2 = errorbar(x(Idx2),y(Idx2),yErr(Idx2),'.','MarkerSize',20,'LineWidth',1.5,'Color',rgb('Orange'));
+               e3 = errorbar(x(Idx3),y (Idx3),yErr(Idx3),'.','MarkerSize',20,'LineWidth',1.5,'Color',rgb('ForestGreen'));
+               e2.CapSize = 0;
+               e3.CapSize = 0;
+            end
             e1.CapSize = 0;
             hold off;
             xlabel('Time (hours)');
@@ -2302,18 +2327,39 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             elseif ismember(Parameter,{'RhoD'})
                  ytmp = obj.SingleRunData.WGTS_CD_MolPerCm2;
                 meanRhoD = wmean(ytmp,obj.SingleRunData.TimeSec);  
-                leg = legend([e1,l1],'Scanwise',...
-                    sprintf('\\langle\\rho{\\itd}\\rangle = %.4g molecules \\cdotcm^{-2} , \\sigma = %.1f %%',...
+                
+                
+                if strcmp(ShowRWPeriods,'ON')
+                    leg = legend([e1,e2,e3,l1,l2,l3],'Scanwise RW1','Scanwise RW2','Scanwise RW3',...
+                        sprintf('\\langle\\rho{\\itd}\\rangle = %.3f\\cdot10^{17} molecules \\cdotcm^{-2} , \\sigma = %.1f %%',1e-17*mean(y(Idx1)),1e2*std(y(Idx1))/mean(y(Idx1))),...
+                        sprintf('\\langle\\rho{\\itd}\\rangle = %.3f\\cdot10^{17} molecules \\cdotcm^{-2} , \\sigma = %.1f %%',1e-17*mean(y(Idx2)),1e2*std(y(Idx2))/mean(y(Idx2))),...
+                        sprintf('\\langle\\rho{\\itd}\\rangle = %.3f\\cdot10^{17} molecules \\cdotcm^{-2} , \\sigma = %.1f %%',1e-17*mean(y(Idx3)),1e2*std(y(Idx3))/mean(y(Idx3))));
+                    leg.NumColumns = 2;
+                else
+                    leg = legend([e1,l1],'Scanwise',...
+                    sprintf('\\langle\\rho{\\itd}\\rangle = %.3g molecules \\cdotcm^{-2} , \\sigma = %.1f %%',...
                     meanRhoD,100*std(ytmp)./meanRhoD));
+                end
+                
             elseif ismember(Parameter,{'T2'})
-                leg = legend([e1,l1],'Scanwise',sprintf('Time weighted mean = %.3f',wmean(y(y>0),obj.SingleRunData.TimeSec(y>0))));
+                if strcmp(ShowRWPeriods,'ON')
+                    leg = legend([e1,e2,e3,l1,l2,l3],'Scanwise RW1','Scanwise RW2','Scanwise RW3',...
+                        sprintf('\\langle\\epsilon_T\\rangle = %.3f , \\sigma = %.1f %%',mean(y(Idx1)),1e2*std(y(Idx1))/mean(y(Idx1))),...
+                        sprintf('\\langle\\epsilon_T\\rangle = %.3f , \\sigma = %.1f %%',mean(y(Idx2)),1e2*std(y(Idx2))/mean(y(Idx2))),...
+                        sprintf('\\langle\\epsilon_T\\rangle = %.3f , \\sigma = %.1f %%',mean(y(Idx3)),1e2*std(y(Idx3))/mean(y(Idx3))));
+                    leg.NumColumns = 2;
+                else
+                    leg = legend([e1,l1],'Scanwise',sprintf('Time weighted mean = %.3f',wmean(y(y>0),obj.SingleRunData.TimeSec(y>0))));
+                end
             else
                 leg = legend([e1,l1],sprintf('Scanwise fits (%s) , \\sigma = %.2f %s',chi2leg,std(y),yUnit),...
                     sprintf('Weighted mean, p-value = %.2f',pval));
             end
-           
-            if ismember(Parameter,{'RhoD','T2'})
+            
+            if ismember(Parameter,{'RhoD'})
                 leg.Location = 'northwest';
+            elseif ismember(Parameter,{'T2'})
+                     leg.Location = 'southwest'; 
             else
                 leg.Location = 'northwest';
                 legpos = leg.Position;
@@ -2322,6 +2368,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             end
             leg.FontSize = get(gca,'FontSize')-2;
             leg.EdgeColor= rgb('Silver');
+            %  PrettyLegendFormat(leg);
             % remove white space around figure
             ax = gca;
             outerpos = ax.OuterPosition;
@@ -2338,7 +2385,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                 
               s2 =  subplot(1,6,6);
                 
-                PlotStyle = { 'FaceColor',obj.PlotColor,...
+                PlotStyle = { 'FaceColor',rgb('Silver'),...%obj.PlotColor,...
                     'FaceAlpha',1};
                
                 h1 = histogram(y,PlotStyle{:});
@@ -2388,6 +2435,9 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                 elseif strcmp(Parameter,'RhoD')
                      ax2.Position(2)=0.17;
                      ax2.Position(4) = 0.74;
+                elseif strcmp(Parameter,'T2')
+                   ax2.Position(4) = 0.785 ;
+                   ax2.Position(2)= 0.13;
                 end
 
                 linkaxes([s1,s2],'y');
@@ -2424,7 +2474,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             
             fig89 = figure('Renderer','opengl');
             set(fig89,'units','normalized','pos',[0.1, 0.1,0.5,0.6]);
-            PlotStyle = { 'FaceColor', rgb('DodgerBlue'),...%obj.PlotColor,...
+            PlotStyle = { 'FaceColor', rgb('Gray'),...%obj.PlotColor,...
                 'FaceAlpha',0.9};
             h1 = histogram(y,PlotStyle{:});
             if ~strcmp(Parameter,{'T2','RhoD'})
@@ -2462,6 +2512,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                 leg.Location = 'northwest';
                 
             end
+           
             PrettyFigureFormat('FontSize',24);
             xlabel(ystr);
             ylabel('Occurrence');
@@ -2776,14 +2827,16 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                 'DataType',obj.DataType,...
                 'FitNBFlag',obj.FitNBFlag,...
                 'FSDFlag',obj.FSDFlag,...
-                'ELossFlag',obj.ELossFlag,...
-                'NonPoissonScaleFactor',obj.NonPoissonScaleFactor,...
+                'ELossFlag',obj.ELossFlag,...   
                 'chi2',obj.chi2,...
                 'NonPoissonScaleFactor',obj.NonPoissonScaleFactor,...
                 'MosCorrFlag',obj.MosCorrFlag,...
                 'ROIFlag',obj.ROIFlag,...
                 'AngularTFFlag',obj.AngularTFFlag,...
-                'SynchrotronFlag',obj.SynchrotronFlag};
+                'SynchrotronFlag',obj.SynchrotronFlag,...
+                'BKG_PtSlope',obj.BKG_PtSlope,...
+                'DopplerEffectFlag',obj.DopplerEffectFlag,...
+                'RadiativeFlag',obj.RadiativeFlag};
             
             obj.InitFitPar;
             parAll     = zeros(numel(obj.RunList),obj.nPar);
@@ -2837,8 +2890,9 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                     parAll(LoadFilesIndex,1:nPartmp)   = cell2mat(arrayfun(@(x) x.FitResult.par,LoadFiles,'UniformOutput',false)); %asign to variables
                     errAll(LoadFilesIndex,1:nPartmp)   = cell2mat(arrayfun(@(x) x.FitResult.err,LoadFiles,'UniformOutput',false));
                 else
-                    parAll(LoadFilesIndex,:)   = cell2mat(arrayfun(@(x) x.FitResult.par',LoadFiles,'UniformOutput',false))'; %asign to variables
-                    errAll(LoadFilesIndex,:)   = cell2mat(arrayfun(@(x) x.FitResult.err',LoadFiles,'UniformOutput',false))';
+                    Par_local = numel(LoadFiles(1).FitResult.par);
+                    parAll(LoadFilesIndex,1:Par_local)   = cell2mat(arrayfun(@(x) x.FitResult.par',LoadFiles,'UniformOutput',false))'; %asign to variables
+                    errAll(LoadFilesIndex,1:Par_local)   = cell2mat(arrayfun(@(x) x.FitResult.err',LoadFiles,'UniformOutput',false))';
                 end
                 chi2minAll(LoadFilesIndex) = cell2mat(arrayfun(@(x) x.FitResult.chi2min,LoadFiles,'UniformOutput',false));
                 dofAll(LoadFilesIndex)     = cell2mat(arrayfun(@(x) x.FitResult.dof,LoadFiles,'UniformOutput',false));

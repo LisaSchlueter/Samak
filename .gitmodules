@@ -1,0 +1,3 @@
+[submodule "SterileAnalysis/GridSearchFiles/Knm2/Others/ksn2_analysis"]
+	path = SterileAnalysis/GridSearchFiles/Knm2/Others/ksn2_analysis
+	url = https://nuserv.uni-muenster.de:8443/ckoehler/ksn2_analysis.git

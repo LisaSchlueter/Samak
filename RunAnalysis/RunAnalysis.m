@@ -34,9 +34,11 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
         FSD_Sigma;
         SynchrotronFlag;
         AngularTFFlag;
+        RadiativeFlag;
         ROIFlag;        % region of interest
         MosCorrFlag;    % correct data qU by monitor spectrometer drift 
         ISCSFlag;       % inel. scattering cross section flag
+        BKG_PtSlope;
         
         %Covariance Matrices
         FitCM_Obj;      % Fit Covariance Matrix Object
@@ -116,7 +118,8 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
         TwinBias_Q;                 % absolute value for endpoint or 'Fit' -> take fit value      
         FitNBFlag;                  % use normlization and background from fit
         TwinBias_FSDSigma;          % broadening of fsd in eV
-        TwinFakeLabel;               % for labeling twin or fake runs with extra info: e.g. qU-bias,...
+        TwinBias_BKG_PtSlope;      % subrun-wise background slope from penning trap
+        TwinFakeLabel;              % for labeling twin or fake runs with extra info: e.g. qU-bias,...
          
         %Fake MC option
         FakeInitFile %name of study -> Init file
@@ -133,17 +136,19 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             p.addParameter('RunNr',[],@(x)(isfloat(x) && x>0));
             p.addParameter('AnaFlag','StackPixel',@(x)ismember(x,{'StackPixel', 'SinglePixel', 'MultiPixel', 'Ring'}));
             p.addParameter('ELossFlag','',@(x)ismember(x,{'Aseev','Abdurashitov','CW_GLT','CW_G2LT','KatrinD2','KatrinT2','KatrinT2A20'}));%default given later
-            p.addParameter('FSDFlag','Sibille0p5eV',@(x)ismember(x,{'SAENZ','BlindingKNM1','Sibille','Sibille0p5eV','OFF','SibilleFull','BlindingKNM2'}));
+            p.addParameter('FSDFlag','Sibille0p5eV',@(x)ismember(x,{'SAENZ','BlindingKNM1','Sibille','Sibille0p5eV','OFF','SibilleFull','BlindingKNM2','KNM2','KNM2_0p5eV','KNM2_0p1eV','KNM2_0p1eV_cut40eV','KNM2_0p1eV_cut50eV'}));
             p.addParameter('FSD_Sigma',0,@(x)isfloat(x));
-            p.addParameter('DopplerEffectFlag','',@(x)ismember(x,{'OFF','FSD','FSD_Knm1'}));%default given later
+            p.addParameter('DopplerEffectFlag','OFF',@(x)ismember(x,{'OFF','FSD','FSD_Knm1'}));%default given later
             p.addParameter('ROIFlag','Default',@(x)ismember(x,{'Default','14keV'})); % default->default counts in RS, 14kev->[14,32]keV ROI
             p.addParameter('MosCorrFlag','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('KTFFlag','WGTSMACE',@(x)ismember(x,{'WGTSMACE','MACE','WGTSMACE_NIS1'}));
             p.addParameter('SynchrotronFlag','ON',@(x)ismember(x,{'OFF','ON'}));
             p.addParameter('AngularTFFlag','ON',@(x)ismember(x,{'OFF','ON'}));
+            p.addParameter('RadiativeFlag','ON',@(x)ismember(x,{'ON','OFF'}));
+          
             p.addParameter('ISCSFlag','Edep',@(x)ismember(x,{'Aseev','Theory','Edep'}));
             % Fit Options
-            p.addParameter('chi2','chi2Stat',@(x)ismember(x,{'chi2Stat', 'chi2CM', 'chi2CMFrac','chi2CMShape', 'chi2P','chi2Nfix'}));
+            p.addParameter('chi2','chi2Stat',@(x)ismember(x,{'chi2Stat', 'chi2CM', 'chi2CMFrac','chi2CMShape', 'chi2P','chi2Nfix','chi2Stat+'}));
             p.addParameter('fitter','minuit',@(x)ismember(x,{'minuit','matlab'}));
             p.addParameter('minuitOpt','min;minos',@(x)ischar(x));
             p.addParameter('exclDataStart',1,@(x)isfloat(x));
@@ -152,9 +157,10 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             p.addParameter('RingList',1:12,@(x)isfloat(x) && all(x>0));
             p.addParameter('fixPar','',@(x)ischar(x)); %default given in constructor: FSD and qUOffset fixed
             p.addParameter('pulls',[],@(x)isfloat(x) && all(x>0));
-            p.addParameter('pullFlag',3);%@(x)ismember(x,{1,2,3}) 
+            p.addParameter('pullFlag',99);%@(x)ismember(x,{1,2,3}) 
             p.addParameter('RingMerge','None',@(x)ismember(x,{'Default','None','Full','Half','Azi','AziHalfNS','AziHalfEW'}));
             p.addParameter('NonPoissonScaleFactor',[],@(x)isfloat(x) && all(x>0)); 
+            p.addParameter('BKG_PtSlope',0,@(x)isfloat(x));     
             p.addParameter('SysBudget','',@(x)isfloat(x)); %if none given-> defined according to data set
 
             % initialization of fitted parameters
@@ -185,6 +191,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             p.addParameter('TwinBias_Q',18573.73,@(x)isfloat(x) || ismember(x,{'Fit'}));  % absolute (eV)
             p.addParameter('FitNBFlag','ON',@(x)ismember(x,{'ON','OFF','NormOnly'}));
             p.addParameter('TwinBias_FSDSigma',0,@(x)isfloat(x));                 % absolute (eV)
+            p.addParameter('TwinBias_BKG_PtSlope',0,@(x)isfloat(x));
            
             %fake MC option
             p.addParameter('FakeInitFile','',@(x)isa(x,'function_handle') || isempty(x));
@@ -212,6 +219,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             obj.KTFFlag           = p.Results.KTFFlag;
             obj.SynchrotronFlag   = p.Results.SynchrotronFlag;
             obj.AngularTFFlag     = p.Results.AngularTFFlag;
+            obj.RadiativeFlag       = p.Results.RadiativeFlag;
             obj.ISCSFlag          = p.Results.ISCSFlag;
             obj.fitter            = p.Results.fitter;
             obj.minuitOpt         = p.Results.minuitOpt;
@@ -240,6 +248,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             obj.ELossFlag     = p.Results.ELossFlag;
             obj.RingMerge     = p.Results.RingMerge;
             obj.SysBudget     = p.Results.SysBudget;
+            obj.BKG_PtSlope   = p.Results.BKG_PtSlope;
             
             % Monte Carlo Twin options
             obj.TwinBias_WGTS_CD_MolPerCm2  = p.Results.TwinBias_WGTS_CD_MolPerCm2; % relative (%) with respect to real data
@@ -254,6 +263,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             obj.TwinBias_mnuSq              = p.Results.TwinBias_mnuSq;
             obj.TwinBias_Q                  = p.Results.TwinBias_Q;
             obj.TwinBias_FSDSigma           = p.Results.TwinBias_FSDSigma;
+            obj.TwinBias_BKG_PtSlope        = p.Results.TwinBias_BKG_PtSlope;
             
            if isempty(obj.TwinBias_qU) && strcmp(obj.AnaFlag,'Ring')
                 obj.TwinBias_qU = zeros(1,numel(obj.RingList));
@@ -328,10 +338,10 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                     if all(~ismember(obj.DataEffCorr,{'OFF','RunSummary'}))
                         obj.ROIPileUpDataCorrection();
                     end
-                    if all(~ismember(obj.chi2,{'chi2Stat','chi2P'}))
+                    if all(~ismember(obj.chi2,{'chi2Stat','chi2P','chi2Stat+'}))
                         obj.ComputeCM('RecomputeFlag','OFF');
                     end
-                    if strcmp(obj.chi2,'chi2Stat')
+                    if strcmp(obj.chi2,'chi2Stat') || strcmp(obj.chi2,'chi2Stat+')
                         [StatCM, StatCMFrac] = obj.ComputeCM_StatPNP(varargin);
                         obj.FitCM = StatCM;            obj.FitCMShape = StatCM;
                         obj.FitCMFrac = StatCMFrac;    obj.FitCMFracShape = StatCMFrac;
@@ -409,8 +419,8 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                     obj.RunData = load(filename);
             end
             
-            obj.RunData.matFilePath = matFilePath;
-            obj.RunData.TimeSec         = mean(obj.RunData.TimeSec(obj.PixList));
+            obj.RunData.matFilePath   = matFilePath;
+            obj.RunData.TimeSec       = mean(obj.RunData.TimeSec(obj.PixList));
             obj.RunData.TBDIS_Default = obj.RunData.TBDIS;
             obj.StackPixel;
             if isfield(obj.RunData,'TBDIS_RM')
@@ -674,7 +684,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                TBDIS = mvnrnd(obj.RunData.TBDIS(:)',obj.FitCMShape,nSamples)';
                % End Modif Thierry - 30/3/2020
            end
-           
+            
             % init
             FitPar     = zeros(obj.nPar,nSamples);
             FitErr     = zeros(obj.nPar,nSamples);
@@ -751,13 +761,14 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                 'HTFSD',HTFSD,...
                 'TTFSD',TTFSD,...
                 'DopplerEffectFlag',obj.DopplerEffectFlag,...
-                'RadiativeFlag','ON',...
+                'RadiativeFlag',obj.RadiativeFlag,...
                 'RingMerge',obj.RingMerge...
                 'KTFFlag',obj.KTFFlag,...
                 'NIS',NIS,...
                 'SynchrotronFlag',obj.SynchrotronFlag,...
                 'AngularTFFlag',obj.AngularTFFlag,...
-                'FSD_Sigma',obj.FSD_Sigma};
+                'FSD_Sigma',obj.FSD_Sigma,...
+                'BKG_PtSlope',obj.BKG_PtSlope};
             
             if ~isempty(qU)
                 TBDarg = {TBDarg{:},'qU',qU};
@@ -1238,13 +1249,12 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             else
                 BkgMode_def = 'Gauss';
             end
-            
+
             p = inputParser;
             %RunAnalysis settings
             p.addParameter('InitNormFit','ON',@(x)ismember(x,{'ON','OFF'})); % Init Model Normalization + Background with Fit
             p.addParameter('BkgCM','ON',@(x)ismember(x,{'ON','OFF'}));       % Use Background CovMat ON/OFF
-            p.addParameter('BkgMode',BkgMode_def,@(x)ismember(x,{'SlopeFit','Gauss'}));
-            
+            p.addParameter('BkgPtCM','ON',@(x)ismember(x,{'ON','OFF'}));      % Use Background CovMat ON/OFF
             % CovMat settings
             p.addParameter('SysEffects',defaultEffects,@(x)isstruct(x));
             p.addParameter('RecomputeFlag','OFF',@(x)ismember(x,{'ON','OFF'}));
@@ -1273,10 +1283,13 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             p.addParameter('is_EOffsetErr',SysErr.is_EOffsetErr,@(x)isfloat(x));
             p.addParameter('BkgRingCorrCoeff',0,@(x)isfloat(x));
             p.addParameter('BkgScalingOpt',2,@(x)isfloat(x));
+            p.addParameter('BkgMode',BkgMode_def,@(x)ismember(x,{'SlopeFit','Gauss'}));
+            p.addParameter('BKG_PtSlopeErr',SysErr.BKG_PtSlopeErr,@(x)isfloat(x));
             p.parse(varargin{:});
             
             InitNormFit              = p.Results.InitNormFit;
             BkgCM                    = p.Results.BkgCM;
+            BkgPtCM                  = p.Results.BkgPtCM;
             SysEffects               = p.Results.SysEffects;
             RecomputeFlag            = p.Results.RecomputeFlag;
             nTrials                  = p.Results.nTrials;
@@ -1304,6 +1317,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             BkgRingCorrCoeff         = p.Results.BkgRingCorrCoeff; % ring to ring correlation coefficient
             BkgScalingOpt            = p.Results.BkgScalingOpt;
             BkgMode                  = p.Results.BkgMode;
+            BKG_PtSlopeErr           = p.Results.BKG_PtSlopeErr;
             % --------------------- END PARSER ---------------------------------%
             
             % --------------------  Initialize Covariance Matrix----------------------------%
@@ -1311,18 +1325,18 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                 nStack =numel(obj.StackedRuns);
             else
                 nStack=1;
-            end
-            
-            % Thierry  - WARNING - 22/2/2019
-            obj.FitCM       = [];
-            obj.FitCMFrac   = [];
-            obj.FitCMShape  = [];
-            obj.FitCMNorm   = [];
+            end    
+            % init
+            obj.FitCM          = zeros(obj.ModelObj.nqU*obj.ModelObj.nPixels,obj.ModelObj.nqU*obj.ModelObj.nPixels);
+            obj.FitCMFrac      = zeros(obj.ModelObj.nqU*obj.ModelObj.nPixels,obj.ModelObj.nqU*obj.ModelObj.nPixels);
+            obj.FitCMShape     = zeros(obj.ModelObj.nqU*obj.ModelObj.nPixels,obj.ModelObj.nqU*obj.ModelObj.nPixels);
+            obj.FitCMNorm      = zeros(obj.ModelObj.nqU*obj.ModelObj.nPixels,obj.ModelObj.nqU*obj.ModelObj.nPixels);
+            obj.FitCMFracShape = zeros(obj.ModelObj.nqU*obj.ModelObj.nPixels,obj.ModelObj.nqU*obj.ModelObj.nPixels);
             
             %Initialize Normalization and Background with a stat. Fit
             if strcmp(InitNormFit,'ON')
                 % 40 eV range, stat only, free parameters: E0, Bkg, Norm
-                obj.InitModelObj_Norm_BKG('RecomputeFlag','ON');
+                obj.InitModelObj_Norm_BKG('RecomputeFlag','OFF');
             end
             
             obj.FitCM_Obj = CovarianceMatrix('StudyObject',obj.ModelObj, 'nTrials',nTrials,...
@@ -1341,7 +1355,8 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                 'RW_MultiPosErr',RW_MultiPosErr,...
                 'NonPoissonScaleFactor',obj.NonPoissonScaleFactor,...
                 'MACE_VarErr',MACE_VarErr,...
-                'is_EOffsetErr',is_EOffsetErr);
+                'is_EOffsetErr',is_EOffsetErr,...
+                'BKG_PtSlopeErr',BKG_PtSlopeErr);
             
             if strcmp(DataDriven,'ON')
                 obj.Get_DataDriven_RelErr_TASR; % replaces default values with Data Driven values
@@ -1351,35 +1366,35 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             % -------------------- Computation of Covariance Matrix -------------------------------%
             % RecomputeFlag=='ON' : Computation of Covariance Matrix
             % RecomputeFlag=='OFF': Read adequard Covariance Matrix if available, otherwise: computation
+            
             if any(structfun(@(x) contains(x,'ON'),SysEffects))
-                obj.FitCM_Obj.ComputeCM('PlotSaveCM',PlotSaveCM);
+                obj.FitCM_Obj.ComputeCM('PlotSaveCM',PlotSaveCM);       
+                
+                % Move to Fit CM and do renormalization with current statistics
+                obj.FitCMFrac = obj.FitCM_Obj.CovMatFrac;
+                TBDIS_NoBKG   = obj.ModelObj.TBDIS-(obj.ModelObj.BKG_RateSec.*obj.ModelObj.TimeSec.*obj.ModelObj.qUfrac);
+                if strcmp(obj.AnaFlag,'Ring')
+                    TBDIS_NoBKG = reshape(TBDIS_NoBKG,[obj.ModelObj.nqU*obj.ModelObj.nRings,1]);
+                end
+                obj.FitCM     = TBDIS_NoBKG.*obj.FitCMFrac.*TBDIS_NoBKG';
+                
+                % Compute Shape only covariance matrix for desired fit range
+                
+                try
+                    if sum(sum(obj.FitCMFrac))~=0
+                        [obj.FitCMShape,obj.FitCMFracShape] = obj.FitCM_Obj.DecomposeCM('CovMatFrac',obj.FitCMFrac,'exclDataStart',obj.exclDataStart);
+                    else
+                        obj.FitCMShape     = zeros(obj.ModelObj.nqU,obj.ModelObj.nqU);
+                        obj.FitCMFracShape = zeros(obj.ModelObj.nqU,obj.ModelObj.nqU);
+                    end
+                catch
+                    fprintf('Decomposition doesnt work - TASR covariance matrix probably too small (Knm2) \n')
+                    fprintf('Temporary fix: take regular covariance matrix instead - no shape only \n')
+                    obj.FitCMShape = obj.FitCM;
+                    obj.FitCMFracShape = obj.FitCMFrac;
+                end
+                
             end
-            
-            %Initialize Normalization and Background with a stat. Fit
-            if strcmp(InitNormFit,'ON')
-                % 40 eV range, stat only, free parameters: E0, Bkg, Norm
-                obj.InitModelObj_Norm_BKG('RecomputeFlag','OFF');
-            end
-            
-            % Move to Fit CM and do renormalization with current statistics
-            obj.FitCMFrac = obj.FitCM_Obj.CovMatFrac;
-            TBDIS_NoBKG   = obj.ModelObj.TBDIS-(obj.ModelObj.BKG_RateSec.*obj.ModelObj.TimeSec.*obj.ModelObj.qUfrac);
-            if strcmp(obj.AnaFlag,'Ring')
-                TBDIS_NoBKG = reshape(TBDIS_NoBKG,[obj.ModelObj.nqU*obj.ModelObj.nRings,1]);
-            end
-            obj.FitCM     = TBDIS_NoBKG.*obj.FitCMFrac.*TBDIS_NoBKG';
-            
-            % Compute Shape only covariance matrix for desired fit range
-            
-            try
-                [obj.FitCMShape,obj.FitCMFracShape] = obj.FitCM_Obj.DecomposeCM('CovMatFrac',obj.FitCMFrac,'exclDataStart',obj.exclDataStart);
-            catch
-                fprintf('Decomposition doesnt work - TASR covariance matrix probably too small (Knm2) \n')
-                fprintf('Temporary fix: take regular covariance matrix instead - no shape only \n')
-                obj.FitCMShape = obj.FitCM;
-                obj.FitCMFracShape = obj.FitCMFrac;
-            end
-          
             % Background Covariance Matrix: Compute and Add to Signal Covariance Matrix
             if strcmp(BkgCM,'ON')
                 obj.FitCM_Obj.ComputeCM_Background('Display',PlotSaveCM,...
@@ -1399,6 +1414,22 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                 cprintf('blue','RunAnalysis:ComputeCM: Background Covariance Matrix = OFF  \n')
             end
             
+            % Penning trap covariance matrix
+            if BKG_PtSlopeErr~=0 && strcmp(BkgPtCM,'ON')
+                obj.ModelObj.nRuns = obj.nRuns;
+                obj.FitCM_Obj.ComputeCM_BackgroundPT('Display',PlotSaveCM,'nTrials_loc',1e4);
+                
+                % add to previous cm
+                obj.FitCM           = obj.FitCM          + obj.FitCM_Obj.CovMat;     % regular covmat:    add background covmat to signal covmat
+                obj.FitCMFrac       = obj.FitCMFrac      + obj.FitCM_Obj.CovMatFrac; % fractional covmat: add background covmat to signal covmat
+               
+                % shape only:
+                [BkgCMPtShape,BkgCMPtFracShape] = obj.FitCM_Obj.DecomposeCM('CovMatFrac',obj.FitCM_Obj.CovMatFrac,...
+                    'exclDataStart',obj.exclDataStart,'BkgCM','PT');
+                obj.FitCMShape      = obj.FitCMShape     + BkgCMPtShape;     % shape only covmat:            add background covmat to signal covmat
+                obj.FitCMFracShape  = obj.FitCMFracShape + BkgCMPtFracShape; % fractional shape only covmat: add background covmat to signal covmat
+            end
+            
             % Compute Statistical Uncertainties,including P/NP fluctuations
             [StatCM, StatCMFrac] = obj.ComputeCM_StatPNP(varargin);
             
@@ -1416,6 +1447,14 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                     obj.FitCMShape     = obj.FitCMShape + StatCM;
             end
             
+            if ~isempty(SysErr.AddCovMatFrac)
+              AddCovMat = TBDIS_NoBKG.*SysErr.AddCovMatFrac.*TBDIS_NoBKG';
+              obj.FitCMShape     = obj.FitCMShape  + AddCovMat;
+              obj.FitCM          = obj.FitCM + AddCovMat;
+              obj.FitCMFracShape = obj.FitCMFracShape + SysErr.AddCovMatFrac;
+              obj.FitCMFrac      =  obj.FitCMFrac + SysErr.AddCovMatFrac;
+              fprintf('KSN-2 model blinding test: + SysErr.AddCovMatFrac ')
+            end
             % Test for PositiveSemiDefinite
             obj.TestCM_PositiveSemiDefinite;
         end    
@@ -1650,7 +1689,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                         'FPDeff','ON');
             end
         end
-        function InitModelObj_Norm_BKG(obj,varargin)
+        function FitResults = InitModelObj_Norm_BKG(obj,varargin)
             % Init Model (Normalization and Background) with Data
             % Should be done before computing Stacking Covariance Matrix
             % -------------------------------------------------------------%
@@ -1670,8 +1709,11 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                 RoiStr = '';
             end
             
-            savename = [savedir,sprintf('FitResult_InitModelObj_%s_%s_%s_%.0fpixels%s.mat',...
-                strrep(fixPar_init,' ',''),obj.RunData.RunName,obj.DataType,numel(obj.PixList),RoiStr)];
+            exclDataStart_tmp = find((obj.ModelObj.qU)>=18574-40,1);
+            CountsROI = sum(sum(obj.RunData.TBDIS(exclDataStart_tmp:end)));
+            
+            savename = [savedir,sprintf('FitResult_InitModelObj_%s_%s_%s_%.0fpixels%s_Counts%.3e.mat',...
+                strrep(fixPar_init,' ',''),obj.RunData.RunName,obj.DataType,numel(obj.PixList),RoiStr,CountsROI)];
             if strcmp(obj.AnaFlag,'Ring')
                 savename = strrep(savename,'.mat',sprintf('Ring%s.mat',obj.RingMerge));
             end
@@ -1751,7 +1793,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
         function Fit(obj,varargin)
             % Fit of the Data/Sim
             % -------------------------------------------------------------%
-
+            
             p = inputParser;
             p.addParameter('CATS','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('InitNB','OFF', @(x) ismember(x,{'ON','OFF'}));
@@ -1784,10 +1826,10 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                 end
                 
                 [StatCM, StatCMFrac] = obj.ComputeCM_StatPNP(varargin);
-               obj.FitCM = StatCM;         
-               obj.FitCMShape = StatCM;
-               obj.FitCMFrac = StatCMFrac; 
-               obj.FitCMFracShape = StatCMFrac;
+                obj.FitCM = StatCM;
+                obj.FitCMShape = StatCM;
+                obj.FitCMFrac = StatCMFrac;
+                obj.FitCMFracShape = StatCMFrac;
             end
             
             F = FITC('SO',obj.ModelObj,'DATA',Data,'fitter',obj.fitter,...
@@ -1824,14 +1866,14 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             
             % Asymmetric uncertainty
             if numel(F.RESULTS)>5 && strcmp(obj.fitter,'minuit') && contains(obj.minuitOpt,'minos')
-                  obj.FitResult.errNeg = F.RESULTS{6}';
-                  obj.FitResult.errPos = F.RESULTS{7}';
+                obj.FitResult.errNeg = F.RESULTS{6}';
+                obj.FitResult.errPos = F.RESULTS{7}';
             end
             
             % Calling CATS
             switch CATS
                 case 'ON'
-                    F.catss; 
+                    F.catss;
                     F.Samakcats_StandResidual_Leverage;
                     F.Samakcats_StandResidualLeverage2D;
                     F.Samakcats_Dffits;
@@ -1864,6 +1906,15 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                 FitResult = obj.FitResult;
                 save(savename,'FitResult');
             end
+        end
+        function ResetFitResults(obj)
+            % delete fit results and set everything to 0
+            obj.FitResult = struct(...
+                'par',zeros(obj.nPar,1),....
+                'err',zeros(obj.nPar,1),....
+                'chi2min',0,...
+                'errmat',zeros(obj.nPar,obj.nPar),...
+                'dof',0);
         end
         function FitBackground(obj,varargin)
             % Fit Background Only
@@ -1948,10 +1999,10 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             % To be run after the regular fit
             p = inputParser;
             p.addParameter('Parameter','mNu',@(x)ismember(x,{'mNu','E0'}));
-            p.addParameter('ScanPrcsn',0.01,@(x)isfloat(x)); % start value
-            p.addParameter('nFitMax',20,@(x)isfloat(x));   % max number of fits
-            p.addParameter('ParScanMax',1,@(x)isfloat(x)); % maximal deviation
-            p.addParameter('Mode','Smart',@(x)ismember(x,{'Smart','Uniform'})); %scanning strategy
+            p.addParameter('ScanPrcsn',0.01,@(x)isfloat(x)); % precision of chi^2 scan (only for smart Mode) 
+            p.addParameter('nFitMax',20,@(x)isfloat(x));     % max number of fits (for uniform: number of fits)
+            p.addParameter('ParScanMax',1,@(x)isfloat(x));   % maximal deviation from current fit result 
+            p.addParameter('Mode','Smart',@(x)ismember(x,{'Smart','Uniform'})); % scanning strategy
             p.addParameter('SanityPlot','OFF',@(x)ismember(x,{'ON','OFF'}));
             
             p.parse(varargin{:});
@@ -1961,8 +2012,16 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             ParScanMax = p.Results.ParScanMax;
             Mode       = p.Results.Mode;
             SanityPlot = p.Results.SanityPlot;
+            
             fixPar_prev = obj.fixPar; % save previous setting
             FitResult_prev = obj.FitResult;
+            
+            switch obj.AnaFlag
+                case 'StackPixel'
+                    AnaStr = 'Uniform';
+                case 'Ring'
+                    AnaStr = sprintf('Ring_%s',obj.RingMerge);
+            end
             
             % init
             ScanResults = struct('ParScan',zeros(nFitMax,2),...% scan vector
@@ -1995,97 +2054,178 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                 ScanResults.ParScan(:,2) = sort(linspace(obj.FitResult.par(ParScanIndex)-ParScanMax,obj.FitResult.par(ParScanIndex),nFitMax),'descend');
             end
             
-            for d=1:2 % direction: upper and lower uncertainty
-                if d==1
-                    progressbar('Calculate uppper fit error with scan');
-                else
-                    progressbar('Calculate lower fit error with scan');
-                end
-                
-                for i=1:nFitMax
-                    progressbar(i/nFitMax);
-                    obj.ModelObj.(ModelPar_i) = ScanResults.ParScan(i,d);
-                    obj.Fit;
-                    ScanResults.par(:,i,d) = obj.FitResult.par;
-                    ScanResults.err(:,i,d) = obj.FitResult.err;
-                    ScanResults.chi2min(i,d) = obj.FitResult.chi2min;
-                    ScanResults.dof(i,d)     = obj.FitResult.dof;
-                    if strcmp(Mode,'Smart')
-                        if i==1
-                            chi2min = obj.FitResult.chi2min;
-                            continue
-                        elseif i==2 % test ParScanMax. if chi2 less than 1 larger than minimal chi2 -> test range not wide enough
-                            if ScanResults.chi2min(i,d)-chi2min<1
-                                fprintf('ParScanMax of %.2g is too close to best fit \n',ParScanMax);
-                                break
-                            end
-                        end
-                        DeltaChi2  = ScanResults.chi2min(i,d)-chi2min;
-                        if  abs(DeltaChi2-1)<ScanPrcsn % exit condition
-                            fprintf('1 sigma uncertainty found - exit scan \n');
-                            ScanResults.ParScan(i+1:end,d)=NaN; % set all not fitted to NaN
-                            ScanResults.chi2min(i+1:end,d) = NaN;
-                            ScanResults.dof(i+1:end,d)     = NaN;
-                            ScanResults.par(:,i+1:end,d)   = NaN;
-                            ScanResults.err(:,i+1:end,d)   = NaN;
-                            break
-                        elseif (DeltaChi2<1 && d==1) || (DeltaChi2>1 && d==2)
-                            ParScanLarger= min(ScanResults.ParScan(ScanResults.ParScan(:,d)>ScanResults.ParScan(i,d),d)); % find next higher ParScan
-                            %ScanResults.ParScan(i+1,d) =  0.5*(ScanResults.ParScan(i,d)+ParScanLarger); % find middle between current and next higher one
-                            ScanResults.ParScan(i+1,d) =  ScanResults.ParScan(i,d) + abs(diff([ScanResults.ParScan(i,d),ParScanLarger])/2);
-                        elseif (DeltaChi2>1 && d==1) || (DeltaChi2<1 && d==2)
-                            ParScanSmaller= max(ScanResults.ParScan(ScanResults.ParScan(:,d)<ScanResults.ParScan(i,d),d)); % find next smaller mNuSq
-                            ScanResults.ParScan(i+1,d) =  ScanResults.ParScan(i,d) - abs(diff([ScanResults.ParScan(i,d),ParScanSmaller])/2);  % find middle between current and next smaller one
-                        end
-                    elseif strcmp(Mode,'Uniform') && i==1 && d==1
-                        chi2min = obj.FitResult.chi2min;
-                    end
-                end
+            savedir = sprintf('%stritium-data/fit/%s/Chi2Profile/%s/%s/',getenv('SamakPath'),obj.DataSet,AnaStr);
+            savename = sprintf('%sChi2Profile_%s_%sScan_%s_%s_%sFPD_%s_NP%.3f_FitPar%s_nFit%.0f_%s.mat',...
+                savedir,obj.DataType,Mode,Parameter,obj.DataSet,AnaStr,obj.chi2,obj.NonPoissonScaleFactor(1),...
+                ConvertFixPar('freePar',obj.fixPar,'Mode','Reverse','nPar',obj.nPar,'nPixels',obj.ModelObj.nPixels),nFitMax,...
+                obj.FSDFlag);
+            
+            if strcmp(Mode,'Uniform')
+                savename = strrep(savename,'.mat',sprintf('_min%.3g_max%.3g.mat',min(min(ScanResults.ParScan)),max(max(ScanResults.ParScan))));
+            end
+            if strcmp(obj.chi2,'chi2CMShape')
+                savename = strrep(savename,obj.chi2,sprintf('%s_SysBudget%.0f',obj.chi2,obj.SysBudget));
             end
             
-            % find parameters (positive and negative), for which chi2 = chi2min + 1
-            ParScanUp = interp1(ScanResults.chi2min(~isnan(ScanResults.chi2min(:,1)),1),...
-                ScanResults.ParScan(~isnan(ScanResults.chi2min(:,1)),1),chi2min+1,'spline');
-            ParScanDown = interp1(ScanResults.chi2min(~isnan(ScanResults.chi2min(:,2)),2),...
-                ScanResults.ParScan(~isnan(ScanResults.chi2min(:,2)),2),chi2min+1,'spline');
-            % get asymmetric uncertainties
-            ScanResults.AsymErr(1) = diff([ScanResults.ParScan(1,1),ParScanUp]);
-            ScanResults.AsymErr(2) = diff([ScanResults.ParScan(1,2),ParScanDown]);
+            if strcmp(obj.DataSet,'Knm1')
+                if strcmp(obj.AngularTFFlag,'ON')
+                    savename = strrep(savename,'.mat','_AngTF.mat');
+                end
+                
+                if ~strcmp(obj.ELossFlag,'KatrinT2')
+                    savename = strrep(savename,'.mat',sprintf('_%s.mat',obj.ELossFlag));
+                end     
+            end
             
-            % set everything back to previous setting and fit results
-            obj.fixPar = fixPar_prev;
-            obj.FitResult = FitResult_prev;
-            nPixels = numel(obj.RunData.MACE_Ba_T);
-            obj.ModelObj.ComputeTBDDS(...
-                'mSq_bias',obj.FitResult.par(1),...
-                'E0_bias',obj.FitResult.par(2),...
-                'B_bias',obj.FitResult.par(3:2+nPixels),...
-                'N_bias',obj.FitResult.par(3+nPixels:3+2*nPixels-1),...
-                'DTGS_bias',obj.FitResult.par(2*nPixels+3),...
-                'DTES_bias',obj.FitResult.par(2*nPixels+4),...
-                'HTGS_bias',obj.FitResult.par(2*nPixels+5),...
-                'HTES_bias',obj.FitResult.par(2*nPixels+6),...
-                'TTGS_bias',obj.FitResult.par(2*nPixels+7),...
-                'TTES_bias',obj.FitResult.par(2*nPixels+8),...
-                'qUOffset_bias',obj.FitResult.par((2*nPixels+9):(3*nPixels+8)),...
-                'BSlope_bias',obj.FitResult.par(3*nPixels+9),...
-                'mTSq_bias',obj.FitResult.par(3*nPixels+10:4*nPixels+9));
-            obj.ModelObj.ComputeTBDIS;
+            if exist(savename,'file')
+                load(savename,'ScanResults')
+                fprintf('load scan results from file %s \n',savename);
+            else
+                for d=1:2 % direction: upper and lower uncertainty
+                    if d==1
+                        progressbar('Calculate uppper fit error with scan');
+                    else
+                        progressbar('Calculate lower fit error with scan');
+                    end
+                    
+                    for i=1:nFitMax
+                        progressbar(i/nFitMax);
+                        obj.ModelObj.(ModelPar_i) = ScanResults.ParScan(i,d);
+                        obj.Fit;
+                        ScanResults.par(:,i,d) = obj.FitResult.par;
+                        ScanResults.err(:,i,d) = obj.FitResult.err;
+                        ScanResults.chi2min(i,d) = obj.FitResult.chi2min;
+                        ScanResults.dof(i,d)     = obj.FitResult.dof;
+                        if strcmp(Mode,'Smart')
+                            if i==1
+                                chi2min = obj.FitResult.chi2min;
+                                continue
+                            elseif i==2 % test ParScanMax. if chi2 less than 1 larger than minimal chi2 -> test range not wide enough
+                                if ScanResults.chi2min(i,d)-chi2min<1
+                                    fprintf('ParScanMax of %.2g is too close to best fit \n',ParScanMax);
+                                    break
+                                end
+                            end
+                            DeltaChi2  = ScanResults.chi2min(i,d)-chi2min;
+                            if  abs(DeltaChi2-1)<ScanPrcsn % exit condition
+                                fprintf('1 sigma uncertainty found - exit scan \n');
+                                ScanResults.ParScan(i+1:end,d)=NaN; % set all not fitted to NaN
+                                ScanResults.chi2min(i+1:end,d) = NaN;
+                                ScanResults.dof(i+1:end,d)     = NaN;
+                                ScanResults.par(:,i+1:end,d)   = NaN;
+                                ScanResults.err(:,i+1:end,d)   = NaN;
+                                break
+                            elseif (DeltaChi2<1 && d==1) || (DeltaChi2>1 && d==2)
+                                ParScanLarger= min(ScanResults.ParScan(ScanResults.ParScan(:,d)>ScanResults.ParScan(i,d),d)); % find next higher ParScan
+                                %ScanResults.ParScan(i+1,d) =  0.5*(ScanResults.ParScan(i,d)+ParScanLarger); % find middle between current and next higher one
+                                ScanResults.ParScan(i+1,d) =  ScanResults.ParScan(i,d) + abs(diff([ScanResults.ParScan(i,d),ParScanLarger])/2);
+                            elseif (DeltaChi2>1 && d==1) || (DeltaChi2<1 && d==2)
+                                ParScanSmaller= max(ScanResults.ParScan(ScanResults.ParScan(:,d)<ScanResults.ParScan(i,d),d)); % find next smaller mNuSq
+                                ScanResults.ParScan(i+1,d) =  ScanResults.ParScan(i,d) - abs(diff([ScanResults.ParScan(i,d),ParScanSmaller])/2);  % find middle between current and next smaller one
+                            end
+                        elseif strcmp(Mode,'Uniform') && i==1 && d==1
+                            chi2min = obj.FitResult.chi2min;
+                        end
+                    end
+                end
+                
+                % find best fit and uncertainties
+                ParScan =[flipud(ScanResults.ParScan(:,2));ScanResults.ParScan(2:end,1)];
+                Chi2 = [flipud(ScanResults.chi2min(:,2));ScanResults.chi2min(2:end,1)];
+                ParScan_inter = linspace(min(ParScan),max(ParScan),1e3);
+                chi2_inter = interp1(ParScan,Chi2,ParScan_inter,'spline');
+                chi2_min = min(chi2_inter);
+                ParScan_bf = ParScan_inter(chi2_inter==chi2_min);
+                ParScanDown = interp1(chi2_inter(ParScan_inter<ParScan_bf),ParScan_inter(ParScan_inter<ParScan_bf),chi2_min+1,'spline');
+                ParScanUp = interp1(chi2_inter(ParScan_inter>ParScan_bf),ParScan_inter(ParScan_inter>ParScan_bf),chi2_min+1,'spline');
+                ParScan_errNeg = abs(diff([ParScanDown,ParScan_bf]));
+                ParScan_errPos = abs(diff([ParScanUp,ParScan_bf]));
+                ParScan_errMean = 0.5*(ParScan_errPos+ParScan_errNeg);
+
+                ScanResults.BestFit.chi2      = chi2_min;
+                ScanResults.BestFit.par       = ParScan_bf;
+                ScanResults.BestFit.parLowLim =  ParScanDown;
+                ScanResults.BestFit.parUpLim  =  ParScanUp;
+                ScanResults.BestFit.errNeg    = ParScan_errNeg;
+                ScanResults.BestFit.errPos    = ParScan_errPos;
+                ScanResults.BestFit.errMean   = ParScan_errMean;
+                
+%                 % find parameters (positive and negative), for which chi2 = chi2min + 1
+%                 ParScanUp = interp1(ScanResults.chi2min(~isnan(ScanResults.chi2min(:,1)),1),...
+%                     ScanResults.ParScan(~isnan(ScanResults.chi2min(:,1)),1),chi2min+1,'spline');
+%                 ParScanDown = interp1(ScanResults.chi2min(~isnan(ScanResults.chi2min(:,2)),2),...
+%                     ScanResults.ParScan(~isnan(ScanResults.chi2min(:,2)),2),chi2min+1,'spline');
+%                 % get asymmetric uncertainties
+%                 ScanResults.AsymErr(1) = diff([ScanResults.ParScan(1,1),ParScanUp]);
+%                 ScanResults.AsymErr(2) = diff([ScanResults.ParScan(1,2),ParScanDown]);
+                
+                MakeDir(savedir);
+                save(savename,'ScanResults','ParScanUp','ParScanDown');
+                fprintf('save results to %s \n',savename);
+            end
+            
+            % tmp fix
+            % find best fit and uncertainties
+            if ~isfield(ScanResults,'BestFit')
+                ParScan =[flipud(ScanResults.ParScan(:,2));ScanResults.ParScan(2:end,1)];
+                Chi2 = [flipud(ScanResults.chi2min(:,2));ScanResults.chi2min(2:end,1)];
+                ParScan_inter = linspace(min(ParScan),max(ParScan),1e3);
+                chi2_inter = interp1(ParScan,Chi2,ParScan_inter,'spline');
+                chi2_min = min(chi2_inter);
+                ParScan_bf = ParScan_inter(chi2_inter==chi2_min);
+                ParScanDown = interp1(chi2_inter(ParScan_inter<ParScan_bf),ParScan_inter(ParScan_inter<ParScan_bf),chi2_min+1,'spline');
+                ParScanUp = interp1(chi2_inter(ParScan_inter>ParScan_bf),ParScan_inter(ParScan_inter>ParScan_bf),chi2_min+1,'spline');
+                ParScan_errNeg = abs(diff([ParScanDown,ParScan_bf]));
+                ParScan_errPos = abs(diff([ParScanUp,ParScan_bf]));
+                ParScan_errMean = 0.5*(ParScan_errPos+ParScan_errNeg);
+                
+                ScanResults.BestFit.chi2      = chi2_min;
+                ScanResults.BestFit.par       = ParScan_bf;
+                ScanResults.BestFit.parLowLim =  ParScanDown;
+                ScanResults.BestFit.parUpLim  =  ParScanUp;
+                ScanResults.BestFit.errNeg    = ParScan_errNeg;
+                ScanResults.BestFit.errPos    = ParScan_errPos;
+                ScanResults.BestFit.errMean   = ParScan_errMean;
+                save(savename,'ScanResults','ParScanUp','ParScanDown');
+            end
+            %end
+            
+            if strcmp(obj.AnaFlag,'StackPixel')
+                % set everything back to previous setting and fit results
+                obj.fixPar = fixPar_prev;
+                obj.FitResult = FitResult_prev;
+                nPixels = numel(obj.RunData.MACE_Ba_T);
+                obj.ModelObj.ComputeTBDDS(...
+                    'mSq_bias',obj.FitResult.par(1),...
+                    'E0_bias',obj.FitResult.par(2),...
+                    'B_bias',obj.FitResult.par(3:2+nPixels),...
+                    'N_bias',obj.FitResult.par(3+nPixels:3+2*nPixels-1),...
+                    'DTGS_bias',obj.FitResult.par(2*nPixels+3),...
+                    'DTES_bias',obj.FitResult.par(2*nPixels+4),...
+                    'HTGS_bias',obj.FitResult.par(2*nPixels+5),...
+                    'HTES_bias',obj.FitResult.par(2*nPixels+6),...
+                    'TTGS_bias',obj.FitResult.par(2*nPixels+7),...
+                    'TTES_bias',obj.FitResult.par(2*nPixels+8),...
+                    'qUOffset_bias',obj.FitResult.par((2*nPixels+9):(3*nPixels+8)),...
+                    'BSlope_bias',obj.FitResult.par(3*nPixels+9),...
+                    'mTSq_bias',obj.FitResult.par(3*nPixels+10:4*nPixels+9));
+                obj.ModelObj.ComputeTBDIS;
+            end
             
             if strcmp(SanityPlot,'ON')
-                obj.PlotChi2Curve;
-            end 
+                obj.PlotChi2Curve('ScanResult',ScanResults);
+            end
         end
         function out = PlotChi2Curve(obj,varargin)
             p=inputParser;
             p.addParameter('Parameter','mNu',@(x)ismember(x,{'mNu','E0'}));
             p.addParameter('ScanResult','',@(x)isstruct(x));
-            p.addParameter('FitResult','',@(x)isstruct(x));
+            p.addParameter('PlotBf','ON',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('HoldOn','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.parse(varargin{:});
             Parameter   = p.Results.Parameter;
             ScanResult  = p.Results.ScanResult;
-            FitResult   = p.Results.FitResult;
+            PlotBf      = p.Results.PlotBf;
             HoldOn      = p.Results.HoldOn;
             
             if isempty(ScanResult)
@@ -2105,7 +2245,9 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             end
             nFitMax = size(ScanResult.chi2min,1);
             if strcmp(HoldOn,'OFF')
-                f4 = figure('Units','normalized','Position',[0.1,0.1,0.5,0.5]);
+                out = figure('Units','normalized','Position',[0.1,0.1,0.5,0.5]);
+            else
+                hold on;
             end
             mypar  = reshape(ScanResult.ParScan,[nFitMax*2,1]);
             mypar = mypar(~isnan(mypar));
@@ -2116,42 +2258,48 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             if ~strcmp(obj.chi2,'chi2Stat')
                 PlotStyle = {'-','LineWidth',3,'Color',rgb('DodgerBlue')};
             else
-                PlotStyle = {'-.','LineWidth',3,'Color',rgb('SkyBlue')};
+                PlotStyle = {'-.','LineWidth',3,'Color',rgb('Orange')};
             end
             
-            if strcmp(obj.DataType,'Real')
-                plot(FitResult.par(ParIndex).*ones(100,1),linspace(0,1e2,1e2),':','LineWidth',2.5,'Color',rgb('Gray'))
+            if strcmp(PlotBf,'ON')
                 hold on;
+                %plot(ScanResult.BestFit.par.*ones(100,1),linspace(0,1e2,1e2),'-','LineWidth',2,'Color',rgb('LightGray'));
+                if strcmp(obj.chi2,'chi2Stat')
+                    ConfInt = area([ScanResult.BestFit.parLowLim,ScanResult.BestFit.parUpLim],[200,200],...
+                        'FaceColor',rgb('Orange'),'FaceAlpha',0.25,'EdgeColor','none');
+                %        
+                else
+                       
+                    ConfInt = area([ScanResult.BestFit.parLowLim,ScanResult.BestFit.parUpLim],[200,200],...
+                        'FaceColor',rgb('DodgerBlue'),'FaceAlpha',0.2,'EdgeColor','none');
+                end
+                %                 pbf = plot(ScanResult.BestFit.par.*ones(100,1),linspace(0,1e2,1e2),':','LineWidth',2.5,'Color',rgb('Gray'));
+                %                 pLow =plot(ScanResult.BestFit.parLowLim.*ones(100,1),linspace(0,100,100),...
+                %                     ':','LineWidth',2,'Color',rgb('Gray'));
+                %                 pUp =plot(ScanResult.BestFit.parUpLim.*ones(100,1),linspace(0,100,100),...
+                %                     ':','LineWidth',2,'Color',rgb('Gray'));
+                %                 %   p3 = plot(linspace(ScanResult.AsymErr(2)+FitResult.par(ParIndex),...
+                %       ScanResult.AsymErr(1)+FitResult.par(ParIndex),100),FitResult.chi2min+ones(1,100),...
+                %       ':','LineWidth',2,'Color',rgb('Gray'));
             end
+            
             pchi2 = plot(mypar,mychi2min,PlotStyle{:});
-            hold on;
-            p1 =plot(FitResult.par(ParIndex)+ScanResult.AsymErr(1).*ones(100,1),linspace(0,100,100),...
-                ':','LineWidth',2,'Color',rgb('Gray'));
-            p2 =plot(FitResult.par(ParIndex)+ScanResult.AsymErr(2).*ones(100,1),linspace(0,100,100),...
-                ':','LineWidth',2,'Color',rgb('Gray'));
-         %   p3 = plot(linspace(ScanResult.AsymErr(2)+FitResult.par(ParIndex),...
-         %       ScanResult.AsymErr(1)+FitResult.par(ParIndex),100),FitResult.chi2min+ones(1,100),...
-         %       ':','LineWidth',2,'Color',rgb('Gray'));
-           
+          
             PrettyFigureFormat('FontSize',24);
             xlabel(sprintf(' %s (%s)',xstr,xUnit));
             ylabel(sprintf('\\chi^2 (%.0f dof)',ScanResult.dof(1,1) - 1 ));
-            
-           if abs(FitResult.par(ParIndex))>0.05
-               parStr = sprintf('%.3f',FitResult.par(ParIndex));
-           else
-               parStr = sprintf('%.3f',FitResult.par(ParIndex));
-           end
-            leg = legend(sprintf('%s = %s (%.3f +%.3f) %s',...
-                xstr,parStr,...
-                ScanResult.AsymErr(2),ScanResult.AsymErr(1),xUnit));
+
+            leg = legend(pchi2,sprintf('%s = %.2f (%.2f +%.2f) %s',...
+                xstr,ScanResult.BestFit.par,...
+                -ScanResult.BestFit.errNeg,ScanResult.BestFit.errPos,xUnit));
             leg.EdgeColor = rgb('Silver');
             leg.Location = 'northwest';
              xlim([min(ScanResult.ParScan(:,2)),max(ScanResult.ParScan(:,1))]);
-            if strcmp(obj.DataType,'Real')
-                ylim([FitResult.chi2min-1 max(max(ScanResult.chi2min))])
+            if strcmp(PlotBf,'ON')
+                xlim([ScanResult.BestFit.parLowLim-0.5*ScanResult.BestFit.errNeg ScanResult.BestFit.parUpLim+0.5*ScanResult.BestFit.errPos]);
+                ylim([ScanResult.BestFit.chi2-0.5 ScanResult.BestFit.chi2+3])
             end
-            out = {pchi2,p1,p2};
+
         end
         function GetPlotColor(obj)
             % Real / Twin Color Flag
@@ -2359,17 +2507,22 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
              elseif strcmp(qUDisp,'Abs')
                  xlim([min(min(qU))*0.9999 max(max(qU))*1.0001]);
              end
-
-                 ax = gca;
-                 mypos = ax.Position;
-                 ax.Position = [mypos(1)+0.05 mypos(2) mypos(3:4)];
+             
+             ax = gca;
+             mypos = ax.Position;
+             ax.Position = [mypos(1)+0.05 mypos(2) mypos(3:4)];
              if strcmp(DisplayStyle,'PRL')
-                 ylim([0.18 2*max(obj.ModelObj.TBDIS(obj.exclDataStart:BkgEnd)./obj.ModelObj.qUfrac(obj.exclDataStart:BkgEnd)./obj.ModelObj.TimeSec)]);
+                 if strcmp(obj.AnaFlag,'Ring')
+                     ylim([0.02 2*max(max(obj.ModelObj.TBDIS(obj.exclDataStart:BkgEnd,ring)./obj.ModelObj.qUfrac(obj.exclDataStart:BkgEnd,ring)./obj.ModelObj.TimeSec(ring)))]);
+                 else
+                     ylim([0.1 2*max(max(obj.ModelObj.TBDIS(obj.exclDataStart:BkgEnd,ring)./obj.ModelObj.qUfrac(obj.exclDataStart:BkgEnd,ring)./obj.ModelObj.TimeSec(ring)))]);
+                     
+                 end
                  PRLFormat;
                  myleg.FontSize = get(gca,'FontSize')+4;
                  mylim = ylim;
                  %    text(-57,log(mean(mylim)),'a)','FontSize',get(gca,'FontSize')+4,'FontName',get(gca,'FontName'));
-                 text(textx,max(mylim)*0.7,'a)','FontSize',get(gca,'FontSize')+4,'FontName',get(gca,'FontName'));
+                 text(textx(1),max(mylim)*0.7,'a)','FontSize',get(gca,'FontSize')+4,'FontName',get(gca,'FontName'));
              elseif contains(obj.DataSet,'FirstTritium')
                  FTpaperFormat;
                  set(gca,'FontSize',LocalFontSize);
@@ -2402,7 +2555,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                  b = axes('Position',[ax1.Position(1) ax1.Position(2)+0.01, ax1.Position(3:4)],...
                      'box','on','xtick',[],'ytick',[],'LineWidth',1.5);% create new, empty axes with box but without ticks
                  axes(a)% set original axes as active
-                % linkaxes([a b]) % link axes in case of zooming
+                 % linkaxes([a b]) % link axes in case of zooming
              end
              %% residuals
              switch ResidualsFlag
@@ -2412,7 +2565,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                      else
                          s2= subplot(3,1,3);
                      end
- 
+                     
                      DataStat = [qU,zeros(size(qU)),sqrt(StatErr(obj.exclDataStart:BkgEnd)./PlotErr(obj.exclDataStart:BkgEnd))];
                      
                      if strcmp(obj.chi2,'chi2Stat')
@@ -2589,7 +2742,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
              if strcmp(DisplayStyle,'PRL')  || strcmp(DisplayMTD,'ON')
                  mylim = ylim;
                  %  text(-57,mean(mylim),'b)','FontSize',get(gca,'FontSize')+4,'FontName',get(gca,'FontName'));
-                text(textx,max(mylim)*0.65,'b)','FontSize',get(gca,'FontSize')+4,'FontName',get(gca,'FontName'));
+                text(textx(1),max(mylim)*0.65,'b)','FontSize',get(gca,'FontSize')+4,'FontName',get(gca,'FontName'));
                    
                  s3= subplot(4,1,4);
                  b1 = bar(qU,obj.RunData.qUfrac(obj.exclDataStart:BkgEnd,ring).*obj.RunData.TimeSec(ring)./(60*60));
@@ -2625,7 +2778,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                 % linkaxes([s1,s2,s3],'x');
                 mylim = ylim;
                 %  text(-57,mean(mylim),'c)','FontSize',get(gca,'FontSize')+4,'FontName',get(gca,'FontName'));
-                text( textx,max(mylim)*0.8,'c)','FontSize',get(gca,'FontSize')+4,...
+                text( textx(1),max(mylim)*0.8,'c)','FontSize',get(gca,'FontSize')+4,...
                     'FontName',get(gca,'FontName'),'FontWeight',get(gca,'FontWeight'));
                 if strcmp(TickDir,'Out')
                     set(gca,'TickDir','out');
@@ -2713,7 +2866,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             
             MarkerSize     = 4;
             LocalFontSize  = 17;
-            LocalLineWidth = 3;
+            LocalLineWidth = 2;
             
             if ~strcmp(obj.AnaFlag,'Ring') 
                 fprintf(2,'PlotResidualsMultiRing: not available for Uniform Fits');
@@ -2728,7 +2881,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             ResStyleArg = {'o','Color','k','LineWidth',1.0,'MarkerFaceColor',rgb('Black'),'MarkerSize',MarkerSize,'Color',rgb('Black')};
             
             % Chi2 Flag
-            for r=1:4
+            for r=1:obj.nRings
                 [StatCM, ~] = obj.ComputeCM_StatPNP;
                 CMdim = ((r-1)*obj.ModelObj.nqU+1):(r*obj.ModelObj.nqU); %ring dimension in covariance matrix
                 StatErr(r,:) = diag(StatCM(CMdim,CMdim));
@@ -2742,9 +2895,21 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                 end
             end
                         
+            RingPreFix = 'Pseudo-';
             % Spectrum + Fit with Residuals
             fig5 = figure('Renderer','painters');
-                set(fig5, 'Units', 'normalized', 'Position', [0.001, 0.001,0.45, 0.7]);
+            if obj.nRings<=4
+                set(fig5, 'Units', 'normalized', 'Position', [0.001, 0.001,0.6, 0.7]);
+                nCol = 1;
+                nRow = obj.nRings;
+            else
+                set(fig5, 'Units', 'normalized', 'Position', [0.001, 0.001,0.7, 0.7]);
+                nCol = 2;
+                nRow = obj.nRings/2;
+                if obj.nRings==12
+                    RingPreFix = '';
+                end
+            end
             
             if strcmp(qUDisp,'Rel')
                 qU = obj.ModelObj.qU(obj.exclDataStart:BkgEnd,:)-obj.ModelObj.Q_i;
@@ -2776,162 +2941,113 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             
             % %            ax1 = gca;
             
-            for r=1:4
-                
-            if strcmp(DisplayStyle,'PRL') || strcmp(DisplayMTD,'ON')
-                s(r)= subplot(5,1,r);
-            else
-                s(r)= subplot(4,1,r);
-            end
-            
-            DataStat = [qU,zeros(size(qU)),(sqrt(StatErr(r,obj.exclDataStart:BkgEnd)./PlotErr(r,obj.exclDataStart:BkgEnd)))'];
-            
-            if strcmp(obj.chi2,'chi2Stat')
-                [lstat , pstat]  = boundedline(DataStat(:,1),DataStat(:,2),DataStat(:,3));
-                lstat.LineStyle= '--'; lstat.Color = rgb('DarkSlateGray'); lstat.LineWidth=LocalLineWidth;
-                pstat.FaceColor = obj.PlotColorLight;
-                
-            elseif ~strcmp(obj.chi2,'chi2Stat') %&& numel(hdata)==1
-                DataSys = [qU,zeros(numel(qU),1), ones(numel(qU),1)];
-                [l,p] = boundedline(DataSys(:,1),DataSys(:,2),DataSys(:,3),...
-                    '-b*',DataStat(:,1),DataStat(:,2),DataStat(:,3),'--ro');
-                lsys = l(1);  lstat = l(2);
-                psys = p(1);  pstat = p(2);
-                
-                pstat.FaceColor = rgb('PowderBlue');
-                if strcmp(Colors,'RGB')
-                    psys.FaceColor =obj.PlotColor; %psys.FaceAlpha=0.3;
-                    lstat.Color = rgb('Silver');
+            for r=1:obj.nRings
+ 
+                if strcmp(DisplayStyle,'PRL') || strcmp(DisplayMTD,'ON')
+                    s(r)= subplot(nRow+1,nCol,r);
                 else
-                    pstat.FaceColor = rgb('Black')';%obj.PlotColor;
-                    psys.FaceColor = rgb('Black'); psys.FaceAlpha=0.4;
-                    lstat.Color = rgb('Black');
+                    s(r)= subplot(nRow,nCol,r);
                 end
-                lsys.LineStyle= 'none';
-                lstat.LineStyle= '--';  lstat.LineWidth=LocalLineWidth;
-                lstat.Marker = 'none'; lsys.Marker = 'none';
-                 leg.FontSize = get(gca,'FontSize')+4;
-            end
-            
-            yres = (obj.RunData.TBDIS(obj.exclDataStart:BkgEnd,r)-obj.ModelObj.TBDIS(obj.exclDataStart:BkgEnd,r))...
-                ./sqrt(PlotErr(r,obj.exclDataStart:BkgEnd)');
-            
-            hold on;
-            pRes = errorbar(qU,yres,...
-                zeros(numel(qU),1),...
-                ResStyleArg{:});
-            pRes.CapSize = 0;
-            
-            pleg = plot(0,0,'Color',rgb('White'));
-            
-            if ~strcmp(obj.chi2,'chi2Stat')
-                leg = legend([pleg,pstat psys],sprintf('Pseudo-Ring %0.f',r),'Stat.',sprintf('Stat. and syst.'),'Location','Northeast'); %hsyst
-            elseif strcmp(obj.chi2,'chi2Stat')
-                leg = legend(pleg,pstat,sprintf('Pseudo-Ring %0.f Stat.',r),'Location','Northeast'); %hsyst
-            end
-            legend('boxoff');
-           %leg.EdgeColor = 'none';
-           % set(leg.BoxFace, 'ColorType','truecoloralpha', 'ColorData',uint8(255*[1;1;1;0.5])); 
-
-            leg.NumColumns = 3;
-            
-            hold off;
-            % xlabel(sprintf('retarding energy - %.1f (eV)',obj.ModelObj.Q_i),'FontSize',LocalFontSize);
-            if strcmp(DisplayStyle,'PRL') || strcmp(DisplayMTD,'ON')
-                % xlabel(sprintf('retarding energy - %.0f (eV)',obj.ModelObj.Q_i));
+                
+                DataStat = [qU,zeros(size(qU)),(sqrt(StatErr(r,obj.exclDataStart:BkgEnd)./PlotErr(r,obj.exclDataStart:BkgEnd)))'];
+                
+                if strcmp(obj.chi2,'chi2Stat')
+                    [lstat , pstat]  = boundedline(DataStat(:,1),DataStat(:,2),DataStat(:,3));
+                    lstat.LineStyle= '--'; lstat.Color = rgb('DarkSlateGray'); lstat.LineWidth=LocalLineWidth;
+                    pstat.FaceColor = obj.PlotColorLight;
+                    
+                elseif ~strcmp(obj.chi2,'chi2Stat') %&& numel(hdata)==1
+                    DataSys = [qU,zeros(numel(qU),1), ones(numel(qU),1)];
+                    [l,p] = boundedline(DataSys(:,1),DataSys(:,2),DataSys(:,3),...
+                        '-b*',DataStat(:,1),DataStat(:,2),DataStat(:,3),'--ro');
+                    lsys = l(1);  lstat = l(2);
+                    psys = p(1);  pstat = p(2);
+                    
+                    pstat.FaceColor = rgb('PowderBlue');
+                    if strcmp(Colors,'RGB')
+                        psys.FaceColor =obj.PlotColor; %psys.FaceAlpha=0.3;
+                        lstat.Color = rgb('Silver');
+                    else
+                        pstat.FaceColor = rgb('Black')';%obj.PlotColor;
+                        psys.FaceColor = rgb('Black'); psys.FaceAlpha=0.4;
+                        lstat.Color = rgb('Black');
+                    end
+                    lsys.LineStyle= 'none';
+                    lstat.LineStyle= '--';  lstat.LineWidth=LocalLineWidth;
+                    lstat.Marker = 'none'; lsys.Marker = 'none';
+                    leg.FontSize = get(gca,'FontSize')+4;
+                end
+                
+                yres = (obj.RunData.TBDIS(obj.exclDataStart:BkgEnd,r)-obj.ModelObj.TBDIS(obj.exclDataStart:BkgEnd,r))...
+                    ./sqrt(PlotErr(r,obj.exclDataStart:BkgEnd)');
+                
+                hold on;
+                pRes = errorbar(qU,yres,...
+                    zeros(numel(qU),1),...
+                    ResStyleArg{:});
+                pRes.CapSize = 0;
+                
+                pleg = plot(0,0,'Color',rgb('White'));
+                
+                if ~strcmp(obj.chi2,'chi2Stat')
+                    leg = legend([pleg,pstat psys],sprintf('%sRing %0.f',RingPreFix,r),'Stat.',sprintf('Stat. and syst.'),'Location','Northeast'); %hsyst
+                elseif strcmp(obj.chi2,'chi2Stat')
+                    leg = legend([pleg,pstat],sprintf('%sRing %0.f Stat.',RingPreFix,r),'Location','Northeast'); %hsyst
+                end
+                legend('boxoff');
+                %leg.EdgeColor = 'none';
+                % set(leg.BoxFace, 'ColorType','truecoloralpha', 'ColorData',uint8(255*[1;1;1;0.5]));
+                
+                leg.NumColumns = 3;
+                
+                hold off;
+                % xlabel(sprintf('retarding energy - %.1f (eV)',obj.ModelObj.Q_i),'FontSize',LocalFontSize);
+                if strcmp(DisplayStyle,'PRL') || strcmp(DisplayMTD,'ON')
+                    % xlabel(sprintf('retarding energy - %.0f (eV)',obj.ModelObj.Q_i));
+                    if ismember(DisplayStyle,'PRL')
+                        PRLFormat;
+                    else
+                        PrettyFigureFormat
+                    end
+                    %pstat.delete; psys.delete;
+                    lstat.Color = rgb('DarkGray');
+                else
+                    if r==4
+                        xlabel(xstr,'FontSize',LocalFontSize);
+                        leg.FontSize = get(gca,'FontSize')+4;
+                    end
+                end
+                
+                %leg.FontSize = 16;%get(gca,'FontSize')-2;
+                ylabel(sprintf('Res. (\\sigma)'));
+                if strcmp(qUDisp,'Rel')
+                    xlim([floor(min(qU))-4 max(qU)*1.04]);
+                elseif strcmp(qUDisp,'Abs')
+                    xlim([min(qU)*0.9999 max(qU)*1.0001]);
+                end
+                ymin = 1.1*min(yres);
+                ymax = 1.8*max(yres);
+                if ymin<=-1 || ymax<=1
+                    ylim([-2.5 2.5]);% ylim([ymin,ymax]);%ylim([-2 2])
+                else
+                    ylim([ymin,ymax]);
+                end
+                
                 if ismember(DisplayStyle,'PRL')
                     PRLFormat;
+                    xlim([-40 max(qU)+1]);
                 else
-                    PrettyFigureFormat
+                    PrettyFigureFormat; set(gca,'FontSize',LocalFontSize);
+                    set(gca,'YMinorTick','off');
+                    set(gca,'XMinorTick','off');
+                    set(gca,'TickLength',[0.01 0.01]);
+                    set(get(gca,'YLabel'),'FontSize',LocalFontSize+4);
+                    set(get(gca,'XLabel'),'FontSize',LocalFontSize+4);
                 end
-                %pstat.delete; psys.delete;
-                lstat.Color = rgb('DarkGray');
-            else
-                if r==4
-                xlabel(xstr,'FontSize',LocalFontSize);
-                leg.FontSize = get(gca,'FontSize')+4;
-                end
-            end
-            
-            %leg.FontSize = 16;%get(gca,'FontSize')-2;
-            ylabel(sprintf('Res. (\\sigma)'));
-            if strcmp(qUDisp,'Rel')
-                xlim([floor(min(qU))-4 max(qU)*1.04]);
-            elseif strcmp(qUDisp,'Abs')
-                xlim([min(qU)*0.9999 max(qU)*1.0001]);
-            end
-            ymin = 1.1*min(yres);
-            ymax = 1.8*max(yres);
-            if ymin<=-1 || ymax<=1
-               ylim([-2.5 2.5]);% ylim([ymin,ymax]);%ylim([-2 2])
-            else
-                ylim([ymin,ymax]);
-            end
-            
-            if ismember(DisplayStyle,'PRL')
-                PRLFormat;
-                xlim([-40 max(qU)+1]);
-            else
-                PrettyFigureFormat; set(gca,'FontSize',LocalFontSize);
-                set(gca,'YMinorTick','off');
-                set(gca,'XMinorTick','off');
-                set(gca,'TickLength',[0.01 0.01]);
-                set(get(gca,'YLabel'),'FontSize',LocalFontSize+4);
-                set(get(gca,'XLabel'),'FontSize',LocalFontSize+4);
-            end
-
-            if ~isempty(YLimRes)
-                ylim([min(YLimRes) max(YLimRes)]);
-            end
-            
-            if strcmp(qUDisp,'Abs')
-                xticks(myxticks);
-                ax = gca;
-                ax.XAxis.Exponent = 0;
-            end
-            
-            if strcmp(qUDisp,'Rel')
-                xlim([min(qU)*1.04 max(qU)*1.04]);
-            elseif strcmp(qUDisp,'Abs')
-                xticks(myxticks);
-                ax = gca;
-                ax.XAxis.Exponent = 0;
-                xlim([min(qU)*0.9999 max(qU)*1.0001]);
-            end
-            ax1 = gca;
-            tmp = get(ax1,'YLabel');
-            tmp2 = get(gca,'YLabel');
-            set(get(gca,'YLabel'),'Position',[tmp.Position(1),tmp2.Position(2),tmp2.Position(3)]);
-            ax = gca; 
-            mypos = ax.Position;
-            ax.Position = [mypos(1)+0.05 mypos(2)+0.01 mypos(3:4)];
-            if ~isempty(XLims)
-                xlim([min(XLims),max(XLims)])
-            end
-            
-            % MTD - optional
-            if strcmp(DisplayStyle,'PRL')  || strcmp(DisplayMTD,'ON')
-                mylim = ylim;
-                %  text(-57,mean(mylim),'b)','FontSize',get(gca,'FontSize')+4,'FontName',get(gca,'FontName'));
-                %text(textx,max(mylim)*0.65,'b)','FontSize',get(gca,'FontSize')+4,'FontName',get(gca,'FontName'));
                 
-                s(5)= subplot(5,1,5);
-                ring=1;
-                b1 = bar(qU,obj.RunData.qUfrac(obj.exclDataStart:BkgEnd,ring).*obj.RunData.TimeSec(ring)./(60*60));
-                b1.FaceColor = obj.PlotColor;
-                b1.EdgeColor = obj.PlotColor;
-                xlabel(xstr);
-                ylabel('Time (h)')
-                ylim([0,max(obj.RunData.qUfrac(obj.exclDataStart:obj.exclDataStop,ring).*obj.RunData.TimeSec(ring))/(60*60)*1.05]);
-                if strcmp(DisplayStyle,'PRL')
-                    PRLFormat;
-                else
-                    PrettyFigureFormat;
+                if ~isempty(YLimRes)
+                    ylim([min(YLimRes) max(YLimRes)]);
                 end
-                tmp = get(ax1,'YLabel');
-                tmp2 = get(gca,'YLabel');
-                set(get(gca,'YLabel'),'Position',[tmp.Position(1),tmp2.Position(2),tmp2.Position(3)]);
-                b1.BarWidth=0.6;
                 
                 if strcmp(qUDisp,'Abs')
                     xticks(myxticks);
@@ -2939,18 +3055,82 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                     ax.XAxis.Exponent = 0;
                 end
                 
-                ax = gca;
-                mypos = ax.Position;
-                ax.Position = [mypos(1)+0.05 mypos(2)+0.01 mypos(3:4)];
+                if strcmp(qUDisp,'Rel')
+                    xlim([min(qU)*1.04 max(qU)*1.04]);
+                elseif strcmp(qUDisp,'Abs')
+                    xticks(myxticks);
+                    ax = gca;
+                    ax.XAxis.Exponent = 0;
+                    xlim([min(qU)*0.9999 max(qU)*1.0001]);
+                end
                 
-                if ~isempty(XLims)
-                    xlim([min(XLims),max(XLims)])
-                end
-            else
-                if r==4
+               
+                    ax1 = gca;
+                    tmp = get(ax1,'YLabel');
+                    tmp2 = get(gca,'YLabel');
+                    set(get(gca,'YLabel'),'Position',[tmp.Position(1),tmp2.Position(2),tmp2.Position(3)]);
+                    ax = gca;
+                    mypos = ax.Position;
+                    if obj.nRings<=4
+                        ax.Position = [mypos(1)+0.05 mypos(2)+0.01 mypos(3:4)];
+                    else
+                        if mod(r,2) % if uneven (left side)
+                            ax.Position = [mypos(1)-0.05 mypos(2)-0.01 mypos(3)+0.08,mypos(4)+0.03]; 
+                        else
+                            ax.Position = [mypos(1) mypos(2)-0.01 mypos(3)+0.08,mypos(4)+0.03];
+                        end
+                        
+                    end
+                    if ~isempty(XLims)
+                        xlim([min(XLims),max(XLims)])
+                    end
+              
+                
+                % MTD - optional
+                if strcmp(DisplayStyle,'PRL')  || strcmp(DisplayMTD,'ON')
+                    mylim = ylim;
+                    %  text(-57,mean(mylim),'b)','FontSize',get(gca,'FontSize')+4,'FontName',get(gca,'FontName'));
+                    %text(textx,max(mylim)*0.65,'b)','FontSize',get(gca,'FontSize')+4,'FontName',get(gca,'FontName'));
+                    
+                    s(5)= subplot(obj.nRings+1,1,obj.nRings+1);
+                    ring=1;
+                    b1 = bar(qU,obj.RunData.qUfrac(obj.exclDataStart:BkgEnd,ring).*obj.RunData.TimeSec(ring)./(60*60));
+                    b1.FaceColor = obj.PlotColor;
+                    b1.EdgeColor = obj.PlotColor;
                     xlabel(xstr);
+                    ylabel('Time (h)')
+                    ylim([0,max(obj.RunData.qUfrac(obj.exclDataStart:obj.exclDataStop,ring).*obj.RunData.TimeSec(ring))/(60*60)*1.05]);
+                    if strcmp(DisplayStyle,'PRL')
+                        PRLFormat;
+                    else
+                        PrettyFigureFormat;
+                    end
+                    tmp = get(ax1,'YLabel');
+                    tmp2 = get(gca,'YLabel');
+                    set(get(gca,'YLabel'),'Position',[tmp.Position(1),tmp2.Position(2),tmp2.Position(3)]);
+                    b1.BarWidth=0.6;
+                    
+                    if strcmp(qUDisp,'Abs')
+                        xticks(myxticks);
+                        ax = gca;
+                        ax.XAxis.Exponent = 0;
+                    end
+                    
+                  
+                    ax = gca;
+                    mypos = ax.Position;
+                    ax.Position = [mypos(1)+0.05 mypos(2)+0.01 mypos(3:4)];
+                    
+                    if ~isempty(XLims)
+                        xlim([min(XLims),max(XLims)])
+                    end
+                else
+                    if obj.nRings==4 && r==4
+                        xlabel(xstr);
+                    elseif nCol==2 && (r==obj.nRings  || r==obj.nRings-1 )
+                         xlabel(xstr);
+                    end
                 end
-            end
             end
             
             if numel(s)==4
@@ -4109,6 +4289,10 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                     str_bias = [str_bias,'_',obj.KTFFlag];
                 end
                 
+                if obj.TwinBias_BKG_PtSlope~=0
+                    str_bias = [str_bias,sprintf('_BkgPtSlope%.1fmuCpsPerS',obj.TwinBias_BKG_PtSlope*1e6)];
+                end
+                
                 filename = [ringfiles,str_bias];
                 switch obj.FitNBFlag
                     case 'OFF'
@@ -4176,7 +4360,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                     case 'FirstTritium.katrin'
                         obj.SysBudget = 0;
                     case 'Knm2'
-                        obj.SysBudget = 32;
+                        obj.SysBudget = 40;
                 end
             end
             
@@ -4196,9 +4380,9 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
         function [TTFSD,DTFSD,HTFSD] = SetDefaultFSD(obj)
             
             % KNM2 blinding: force blind FSDs for all KNM2 analysis
-            if strcmp(obj.DataSet,'Knm2') && ~strcmp(obj.DataType,'Fake')
-                obj.FSDFlag =  'BlindingKNM2';
-            end
+%             if strcmp(obj.DataSet,'Knm2') && ~strcmp(obj.DataType,'Fake')
+%                % obj.FSDFlag =  'BlindingKNM2';
+%             end
             
             switch obj.FSDFlag
                 case 'Sibille'
@@ -4229,10 +4413,30 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                     DTFSD = 'BlindingKNM2';
                     HTFSD = 'BlindingKNM2';
                     TTFSD = 'BlindingKNM2';
+                case 'KNM2'
+                    DTFSD = 'KNM2';
+                    HTFSD = 'KNM2';
+                    TTFSD = 'KNM2';
+                case 'KNM2_0p5eV'
+                    DTFSD = 'KNM2_0p5eV';
+                    HTFSD = 'KNM2_0p5eV';
+                    TTFSD = 'KNM2_0p5eV';
+                case 'KNM2_0p1eV'
+                    DTFSD = 'KNM2_0p1eV';
+                    HTFSD = 'KNM2_0p1eV';
+                    TTFSD = 'KNM2_0p1eV';
+                case 'KNM2_0p1eV_cut40eV'
+                    DTFSD = 'KNM2_0p1eV_cut40eV';
+                    HTFSD = 'KNM2_0p1eV_cut40eV';
+                    TTFSD = 'KNM2_0p1eV_cut40eV';
+                case 'KNM2_0p1eV_cut50eV'
+                    DTFSD = 'KNM2_0p1eV_cut50eV';
+                    HTFSD = 'KNM2_0p1eV_cut50eV';
+                    TTFSD = 'KNM2_0p1eV_cut50eV';
             end
         end
         function InitFitPar(obj)
-            obj.nPar = 4*obj.ModelObj.nPixels+13; % number of avaibale fit parameter
+            obj.nPar = 4*obj.ModelObj.nPixels+14; % number of avaibale fit parameter
             
             if strcmp(obj.AnaFlag,'StackPixel') % number of FPD segmentations
                 nFPDSeg = 1;
@@ -4428,7 +4632,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             
             fig1 = figure('Units','normalized','Position',[0.1,0.1,0.6,0.5]);
             if ismember(PlotPar,{'qU','mTSq'})
-                plot(linspace(-5,5,10),zeros(10,1),'LineWidth',2,'Color',rgb('Silver'));
+                plot(linspace(-5,obj.nRings+1,10),zeros(10,1),'LineWidth',2,'Color',rgb('Silver'));
                 hold on;
             end
             e1 = errorbar(obj.RingList,y,yErr,PlotStyle{:});

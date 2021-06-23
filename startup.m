@@ -6,7 +6,7 @@ if contains(thispath,'iwsatlas') % when on server
     addpath(genpath('../../Samak3.0'));
     addpath(genpath('../Samak3.0'));
 else
-  
+    
     if contains(thispath,'Samak')   % if working with Samak
         GetSamakPath;
         addpath(genpath(getenv('SamakPath')));
@@ -14,7 +14,6 @@ else
         % roplab
         GetRoplabPath;
         addpath(genpath(getenv('RoplabPath')));
-    end    
+    end
 end
-
 

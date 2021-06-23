@@ -125,8 +125,7 @@ classdef RelicNuAnalysis < handle
                     'SynchrotronFlag','ON',...
                     'AngularTFFlag','OFF',...
                     'TwinBias_Q',obj.M.TwinBias_Q,...
-                    'TwinBias_mnuSq',obj.M.TwinBias_mnuSq,...
-                    'RelicPeakPosition',obj.M.RelicPeakPosition);
+                    'TwinBias_mnuSq',obj.M.TwinBias_mnuSq);
                 obj.M.exclDataStart = range;
           end
           
@@ -323,6 +322,7 @@ classdef RelicNuAnalysis < handle
                 initfile=@ref_RelicNuBkg_KNM2;
                 TwinBias_Q=18573.7;
                 RingList=1:12;
+                SysBudget=41;
                 NonPoissonScaleFactor=1.1120;
             end
             
@@ -973,7 +973,7 @@ classdef RelicNuAnalysis < handle
             p=inputParser;
             p.addParameter('Recompute','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('RunList','KNM1',@(x)ischar(x));                          % KNM1 or KNM2
-            p.addParameter('Syst','OFF',@(x)ismember(x,{'ON','OFF'}));
+            p.addParameter('Syst','ON',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('SystBudget',24,@(x)isfloat(x));
             p.addParameter('DataType','Twin',@(x)ismember(x,{'Twin','Real'}));
             p.addParameter('TwinBias_mnuSq',0,@(x)isfloat(x));
@@ -1118,7 +1118,7 @@ classdef RelicNuAnalysis < handle
                 W.exclDataStart = U.GetexclDataStart(range);
                 W.Fit;
                 mnuSq_best    = W.FitResult.par(1);
-                eta_best      = W.FitResult.par(17)*1e10;
+                eta_best      = W.FitResult.par(18)*1e10;
                 GlobalChi2Min = W.FitResult.chi2min;
 
                 mnuScanPoints = linspace(mnuSq_best-Deltamnu,mnuSq_best+Deltamnu,Nmnubins);
@@ -1341,6 +1341,7 @@ classdef RelicNuAnalysis < handle
            p.addParameter('MinmNu',0,@(x)isfloat(x));
            p.addParameter('MaxmNu',2,@(x)isfloat(x));
            p.addParameter('Syst','ON',@(x)ismember(x,{'ON','OFF'}));
+           p.addParameter('SysBudget',24,@(x)isfloat(x));
            p.addParameter('DataType','Twin',@(x)ismember(x,{'Twin','Real'}));
            p.addParameter('Recompute','OFF',@(x)ismember(x,{'ON','OFF'}));
            p.addParameter('Mode','MultimnuSq',@(x)ismember(x,{'MultimnuSq','SinglemnuSq'}));
@@ -1352,6 +1353,7 @@ classdef RelicNuAnalysis < handle
            MinmNu    = p.Results.MinmNu;
            MaxmNu    = p.Results.MaxmNu;
            Syst      = p.Results.Syst;
+           SysBudget =p.Results.SysBudget;
            DataType  = p.Results.DataType;
            Recompute = p.Results.Recompute;
            Mode      = p.Results.Mode;
@@ -1390,7 +1392,16 @@ classdef RelicNuAnalysis < handle
                etaFit    = eta;
                if strcmp(Syst,'ON')
                    chi2opt = 'chi2CMShape';
-                   NPfac   = 1.064;
+                   if strcmp(obj.Params,'KNM1')
+                       SysBudget=24;
+                       NPfac    = 1.064;
+                   elseif strcmp(obj.Params,'KNM2')
+                       SysBudget=41;
+                       NPfac    =1.1102;
+                   elseif strcmp(obj.Params,'TDR')
+                       SysBudget=67;
+                       NPfac    =1;
+                   end
                else
                    chi2opt = 'chi2Stat';
                    NPfac   = 1;
@@ -1409,7 +1420,7 @@ classdef RelicNuAnalysis < handle
                             'minuitOpt','min ; minos',...         % technical fitting options (minuit)
                             'FSDFlag','SibilleFull',...           % final state distribution
                             'ELossFlag','KatrinT2',...            % energy loss function
-                            'SysBudget',24,...                    % defines syst. uncertainties -> in GetSysErr.m;
+                            'SysBudget',SysBudget,...                    % defines syst. uncertainties -> in GetSysErr.m;
                             'DopplerEffectFlag','FSD',...
                             'Twin_SameCDFlag','OFF',...
                             'Twin_SameIsotopFlag','OFF',...
@@ -1425,12 +1436,12 @@ classdef RelicNuAnalysis < handle
                         end
                         obj.M = U;
                         U.Fit;
-                        etaFit(i)=U.FitResult.par(17)*1e10;
+                        etaFit(i)=U.FitResult.par(18)*1e10;
                         eta(i) = obj.CorrectErr('Parameter','eta',...
-                            'value',U.FitResult.par(17)*1e10,...
-                            'eta',U.FitResult.par(17)*1e10,...
+                            'value',U.FitResult.par(18)*1e10,...
+                            'eta',U.FitResult.par(18)*1e10,...
                             'minchi2',U.FitResult.chi2min,...
-                            'factor',(U.FitResult.par(17)+20)./U.FitResult.par(17),...
+                            'factor',U.FitResult.err(18)*1e10,...
                             'fitPar',fitPar,...
                             'DeltaChi2',DeltaChi2);
                         Chi2(i)      = U.FitResult.chi2min;
@@ -1457,7 +1468,7 @@ classdef RelicNuAnalysis < handle
                             'minuitOpt','min ; minos',...         % technical fitting options (minuit)
                             'FSDFlag','SibilleFull',...           % final state distribution
                             'ELossFlag','KatrinT2',...            % energy loss function
-                            'SysBudget',24,...                    % defines syst. uncertainties -> in GetSysErr.m;
+                            'SysBudget',SysBudget,...                    % defines syst. uncertainties -> in GetSysErr.m;
                             'DopplerEffectFlag','FSD',...
                             'Twin_SameCDFlag','OFF',...
                             'Twin_SameIsotopFlag','OFF',...
@@ -1473,12 +1484,12 @@ classdef RelicNuAnalysis < handle
                         end
                         obj.M = U;
                         U.Fit;
-                        etaFit(i)=U.FitResult.par(17)*1e10;
+                        etaFit(i)=U.FitResult.par(18)*1e10;
                         eta(i) = obj.CorrectErr('Parameter','eta',...
-                            'value',U.FitResult.par(17)*1e10,...
-                            'eta',U.FitResult.par(17)*1e10,...
+                            'value',U.FitResult.par(18)*1e10,...
+                            'eta',U.FitResult.par(18)*1e10,...
                             'minchi2',U.FitResult.chi2min,...
-                            'factor',(U.FitResult.par(17)+20)./U.FitResult.par(17),...
+                            'factor',U.FitResult.err(18)*1e10,...
                             'fitPar',fitPar,...
                             'DeltaChi2',DeltaChi2);
                         Chi2(i)      = U.FitResult.chi2min;
@@ -1570,35 +1581,35 @@ classdef RelicNuAnalysis < handle
                obj.M = A;
 
                A.Fit;
-               ErrTotal = A.FitResult.err(17)*1e10;
+               ErrTotal = A.FitResult.err(18)*1e10;
                A.ComputeCM('SysEffects',struct(),'BkgCM','OFF');
                A.Fit;
-               ErrNP = A.FitResult.err(17)*1e10;
+               ErrNP = A.FitResult.err(18)*1e10;
                A.NonPoissonScaleFactor = 1;
                A.ComputeCM('SysEffects',struct(),'BkgCM','OFF');
                A.Fit;
-               ErrStat = A.FitResult.err(17)*1e10;
+               ErrStat = A.FitResult.err(18)*1e10;
                A.ComputeCM('SysEffects',struct('FSD','ON'),'BkgCM','OFF');
                A.Fit;
-               ErrFSD = A.FitResult.err(17)*1e10;
+               ErrFSD = A.FitResult.err(18)*1e10;
                A.ComputeCM('SysEffects',struct('RF','ON'),'BkgCM','OFF');
                A.Fit;
-               ErrRF = A.FitResult.err(17)*1e10;
+               ErrRF = A.FitResult.err(18)*1e10;
                A.ComputeCM('SysEffects',struct('TASR','ON'),'BkgCM','OFF');
                A.Fit;
-               ErrTASR = A.FitResult.err(17)*1e10;
+               ErrTASR = A.FitResult.err(18)*1e10;
                A.ComputeCM('SysEffects',struct('Stack','ON'),'BkgCM','OFF');
                A.Fit;
-               ErrStack = A.FitResult.err(17)*1e10;
+               ErrStack = A.FitResult.err(18)*1e10;
                A.ComputeCM('SysEffects',struct('FPDeff','ON'),'BkgCM','OFF');
                A.Fit;
-               ErrFPD = A.FitResult.err(17)*1e10;
+               ErrFPD = A.FitResult.err(18)*1e10;
                A.ComputeCM('SysEffects',struct('TC','ON'),'BkgCM','OFF');
                A.Fit;
-               ErrTC = A.FitResult.err(17)*1e10;
+               ErrTC = A.FitResult.err(18)*1e10;
                A.ComputeCM('SysEffects',struct(),'BkgCM','ON');
                A.Fit;
-               ErrBkg = A.FitResult.err(17)*1e10;
+               ErrBkg = A.FitResult.err(18)*1e10;
                ErrFSD = sqrt(ErrFSD.^2-ErrStat.^2);
                ErrRF = sqrt(ErrRF.^2-ErrStat.^2);
                ErrTASR = sqrt(ErrTASR.^2-ErrStat.^2);
@@ -1640,6 +1651,16 @@ classdef RelicNuAnalysis < handle
            savename = [savename,'.mat'];
            
            fitter = 'minuit';
+           if strcmp(obj.Params,'KNM1')
+               SysBudget=24;
+               NP       = 1.064;
+           elseif strcmp(obj.Params,'KNM2')
+               SysBudget=41;
+               NP       =1.1102;
+           elseif strcmp(obj.Params,'TDR')
+               SysBudget=67;
+               NP       =1;
+           end
 
            if exist(savename,'file') && strcmp(Recompute,'OFF')
                load(savename,'X','Y');
@@ -1650,12 +1671,12 @@ classdef RelicNuAnalysis < handle
                         'DataType',DataType,...                 % can be 'Real' or 'Twin' -> Monte Carlo
                         'fixPar','mNu E0 Norm Bkg eta',...                   % free Parameter!!
                         'RadiativeFlag','ON',...              % theoretical radiative corrections applied in model
-                        'NonPoissonScaleFactor',1.064,...     % background uncertainty are enhanced
+                        'NonPoissonScaleFactor',NP,...     % background uncertainty are enhanced
                         'fitter',fitter,...
                         'minuitOpt','min ; minos',...         % technical fitting options (minuit)
                         'FSDFlag','SibilleFull',...          % final state distribution
                         'ELossFlag','KatrinT2',...            % energy loss function
-                        'SysBudget',24,...                    % defines syst. uncertainties -> in GetSysErr.m;
+                        'SysBudget',SysBudget,...                    % defines syst. uncertainties -> in GetSysErr.m;
                         'DopplerEffectFlag','FSD',...
                         'Twin_SameCDFlag','OFF',...
                         'Twin_SameIsotopFlag','OFF',...
@@ -1669,35 +1690,35 @@ classdef RelicNuAnalysis < handle
                obj.M = A;
 
                A.Fit;
-               ErrTotal = obj.CorrectErr('Parameter','eta','value',A.FitResult.par(17)*1e10,'eta',A.FitResult.par(17)*1e10,'minchi2',A.FitResult.chi2min,'factor',(1+A.FitResult.err(17)/A.FitResult.par(17)));
+               ErrTotal = obj.CorrectErr('Parameter','eta','value',A.FitResult.par(18)*1e10,'eta',A.FitResult.par(18)*1e10,'minchi2',A.FitResult.chi2min,'factor',(1+A.FitResult.err(18)/A.FitResult.par(18)));
                A.ComputeCM('SysEffects',struct(),'BkgCM','OFF');
                A.Fit;
-               ErrNP = obj.CorrectErr('Parameter','eta','value',A.FitResult.par(17)*1e10,'eta',A.FitResult.par(17)*1e10,'minchi2',A.FitResult.chi2min,'factor',1.5,'SystSelect','NP');
+               ErrNP = obj.CorrectErr('Parameter','eta','value',A.FitResult.par(18)*1e10,'eta',A.FitResult.par(18)*1e10,'minchi2',A.FitResult.chi2min,'factor',1.5,'SystSelect','NP');
                A.NonPoissonScaleFactor = 1;
                A.ComputeCM('SysEffects',struct(),'BkgCM','OFF');
                A.Fit;
-               ErrStat = obj.CorrectErr('Parameter','eta','value',A.FitResult.par(17)*1e10,'eta',A.FitResult.par(17)*1e10,'minchi2',A.FitResult.chi2min,'factor',1.5,'SystSelect','None');
+               ErrStat = obj.CorrectErr('Parameter','eta','value',A.FitResult.par(18)*1e10,'eta',A.FitResult.par(18)*1e10,'minchi2',A.FitResult.chi2min,'factor',1.5,'SystSelect','None');
                A.ComputeCM('SysEffects',struct('FSD','ON'),'BkgCM','OFF');
                A.Fit;
-               ErrFSD = obj.CorrectErr('Parameter','eta','value',A.FitResult.par(17)*1e10,'eta',A.FitResult.par(17)*1e10,'minchi2',A.FitResult.chi2min,'factor',(1+A.FitResult.err(17)/A.FitResult.par(17)),'SystSelect','FSD');
+               ErrFSD = obj.CorrectErr('Parameter','eta','value',A.FitResult.par(18)*1e10,'eta',A.FitResult.par(18)*1e10,'minchi2',A.FitResult.chi2min,'factor',(1+A.FitResult.err(18)/A.FitResult.par(18)),'SystSelect','FSD');
                A.ComputeCM('SysEffects',struct('RF','ON'),'BkgCM','OFF');
                A.Fit;
-               ErrRF = obj.CorrectErr('Parameter','eta','value',A.FitResult.par(17)*1e10,'eta',A.FitResult.par(17)*1e10,'minchi2',A.FitResult.chi2min,'factor',(1+A.FitResult.err(17)/A.FitResult.par(17)),'SystSelect','RF');
+               ErrRF = obj.CorrectErr('Parameter','eta','value',A.FitResult.par(18)*1e10,'eta',A.FitResult.par(18)*1e10,'minchi2',A.FitResult.chi2min,'factor',(1+A.FitResult.err(18)/A.FitResult.par(18)),'SystSelect','RF');
                A.ComputeCM('SysEffects',struct('TASR','ON'),'BkgCM','OFF');
                A.Fit;
-               ErrTASR = obj.CorrectErr('Parameter','eta','value',A.FitResult.par(17)*1e10,'eta',A.FitResult.par(17)*1e10,'minchi2',A.FitResult.chi2min,'factor',(1+A.FitResult.err(17)/A.FitResult.par(17)),'SystSelect','TASR');
+               ErrTASR = obj.CorrectErr('Parameter','eta','value',A.FitResult.par(18)*1e10,'eta',A.FitResult.par(18)*1e10,'minchi2',A.FitResult.chi2min,'factor',(1+A.FitResult.err(18)/A.FitResult.par(18)),'SystSelect','TASR');
                A.ComputeCM('SysEffects',struct('Stack','ON'),'BkgCM','OFF');
                A.Fit;
-               ErrStack = obj.CorrectErr('Parameter','eta','value',A.FitResult.par(17)*1e10,'eta',A.FitResult.par(17)*1e10,'minchi2',A.FitResult.chi2min,'factor',(1+A.FitResult.err(17)/A.FitResult.par(17)),'SystSelect','Stack');
+               ErrStack = obj.CorrectErr('Parameter','eta','value',A.FitResult.par(18)*1e10,'eta',A.FitResult.par(18)*1e10,'minchi2',A.FitResult.chi2min,'factor',(1+A.FitResult.err(18)/A.FitResult.par(18)),'SystSelect','Stack');
                A.ComputeCM('SysEffects',struct('FPDeff','ON'),'BkgCM','OFF');
                A.Fit;
-               ErrFPD = obj.CorrectErr('Parameter','eta','value',A.FitResult.par(17)*1e10,'eta',A.FitResult.par(17)*1e10,'minchi2',A.FitResult.chi2min,'factor',1.5,'SystSelect','FPDeff');
+               ErrFPD = obj.CorrectErr('Parameter','eta','value',A.FitResult.par(18)*1e10,'eta',A.FitResult.par(18)*1e10,'minchi2',A.FitResult.chi2min,'factor',1.5,'SystSelect','FPDeff');
                A.ComputeCM('SysEffects',struct('TC','ON'),'BkgCM','OFF');
                A.Fit;
-               ErrTC = obj.CorrectErr('Parameter','eta','value',A.FitResult.par(17)*1e10,'eta',A.FitResult.par(17)*1e10,'minchi2',A.FitResult.chi2min,'factor',1.5,'SystSelect','TC');
+               ErrTC = obj.CorrectErr('Parameter','eta','value',A.FitResult.par(18)*1e10,'eta',A.FitResult.par(18)*1e10,'minchi2',A.FitResult.chi2min,'factor',1.5,'SystSelect','TC');
                A.ComputeCM('SysEffects',struct(),'BkgCM','ON');
                A.Fit;
-               ErrBkg = obj.CorrectErr('Parameter','eta','value',A.FitResult.par(17)*1e10,'eta',A.FitResult.par(17)*1e10,'minchi2',A.FitResult.chi2min,'factor',1.5,'SystSelect','BkgCM');
+               ErrBkg = obj.CorrectErr('Parameter','eta','value',A.FitResult.par(18)*1e10,'eta',A.FitResult.par(18)*1e10,'minchi2',A.FitResult.chi2min,'factor',1.5,'SystSelect','BkgCM');
                ErrFSD = sqrt(ErrFSD.^2-ErrStat.^2);
                ErrRF = sqrt(ErrRF.^2-ErrStat.^2);
                ErrTASR = sqrt(ErrTASR.^2-ErrStat.^2);
@@ -1755,17 +1776,35 @@ classdef RelicNuAnalysis < handle
                factor = 1.004;
            end
            
-           while Chi2upper-minchi2 < DeltaChi2
-               Chi2lower  = Chi2upper;
-               valuelower = valueupper;
-               obj.SetParam('Parameter',Parameter,'value',abs(factor*value));
-               obj.M.ModelObj.ComputeNormFactorTBDDS;
-               obj.M.ModelObj.ComputeTBDDS;
-               obj.M.ModelObj.ComputeTBDIS;
-               obj.M.Fit;
-               Chi2upper  = obj.M.FitResult.chi2min;
-               valueupper = abs(factor*value);
-               value = valueupper;
+           if strcmp(Parameter,'eta')
+               while Chi2upper-minchi2 < DeltaChi2
+                   Chi2lower  = Chi2upper;
+                   valuelower = valueupper;
+                   obj.SetParam('Parameter',Parameter,'value',abs(factor+value));
+                   obj.M.ModelObj.ComputeNormFactorTBDDS;
+                   obj.M.ModelObj.ComputeTBDDS;
+                   obj.M.ModelObj.ComputeTBDIS;
+                   obj.M.Fit;
+                   valueupper = abs(factor+value);
+                   if (obj.M.FitResult.chi2min-Chi2upper)<0.5*DeltaChi2
+                       factor=2*factor;
+                   end
+                   Chi2upper  = obj.M.FitResult.chi2min;
+                   value = valueupper;
+               end
+           else
+               while Chi2upper-minchi2 < DeltaChi2
+                   Chi2lower  = Chi2upper;
+                   valuelower = valueupper;
+                   obj.SetParam('Parameter',Parameter,'value',abs(factor*value));
+                   obj.M.ModelObj.ComputeNormFactorTBDDS;
+                   obj.M.ModelObj.ComputeTBDDS;
+                   obj.M.ModelObj.ComputeTBDIS;
+                   obj.M.Fit;
+                   Chi2upper  = obj.M.FitResult.chi2min;
+                   valueupper = abs(factor*value);
+                   value = valueupper;
+               end
            end
            while abs(Chi2upper-minchi2-DeltaChi2)>0.01 && abs(Chi2lower-minchi2-DeltaChi2)>0.01
                obj.SetParam('Parameter',Parameter,'value',((valueupper-valuelower)./(Chi2upper-Chi2lower)).*(DeltaChi2+minchi2)-Chi2upper.*((valueupper-valuelower)./(Chi2upper-Chi2lower))+valueupper);

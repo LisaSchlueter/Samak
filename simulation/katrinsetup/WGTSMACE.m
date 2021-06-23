@@ -167,8 +167,8 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             % WGTS Parameters
             p.addParameter('WGTS_Tp',0.95,@(x)isfloat(x) && x>0); %0.95
             p.addParameter('WGTS_DTHTr',0,@(x)isfloat(x) && x>=0);
-            p.addParameter('WGTS_FTR_cm',4.5,@(x)isfloat(x) && x>0);
             p.addParameter('WGTS_CD_MolPerCm2',5e17,@(x)isfloat(x) && x>=0);
+            p.addParameter('WGTS_FTR_cm',4.2,@(x)isfloat(x) && x>0);
             p.addParameter('WGTS_CD_MolPerCm2_SubRun',[]);
             p.addParameter('WGTS_CDDist',0,@(x)isfloat(x) && sum(x)>0 && sum(x)<=148);
             p.addParameter('WGTS_B_T',3.6,@(x)isfloat(x) && x>0); % Source
@@ -191,9 +191,9 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             p.addParameter('WGTS_MolFracRelErr_DT',0.06e-2,@(x)isfloat(x));
             p.addParameter('WGTS_MolFracRelErr_HT',0,@(x)isfloat(x));
             % WGTS: Flags for FSD: T-T / D-T / H-T
-            p.addParameter('TTFSD','BlindingKNM2',@(x)ismember(x,{'OFF','DOSS','SAENZ','SAENZNOEE','ROLL','BlindingKNM1','WGTS100K','Sibille','Sibille0p5eV','SibilleFull','BlindingKNM2'}));
-            p.addParameter('DTFSD','BlindingKNM2',@(x)ismember(x,{'OFF','DOSS','ROLL','HTFSD','TTFSD','BlindingKNM1','WGTS100K','Sibille','Sibille0p5eV','SibilleFull','BlindingKNM2'}));
-            p.addParameter('HTFSD','BlindingKNM2',@(x)ismember(x,{'OFF','SAENZ','ROLL','BlindingKNM1','WGTS100K','Sibille','Sibille0p5eV','SibilleFull','BlindingKNM2'}));
+            p.addParameter('TTFSD','BlindingKNM2',@(x)ismember(x,{'OFF','DOSS','SAENZ','SAENZNOEE','ROLL','BlindingKNM1','WGTS100K','Sibille','Sibille0p5eV','SibilleFull','BlindingKNM2','KNM2','KNM2_0p5eV','KNM2_0p1eV','KNM2_0p1eV_cut40eV','KNM2_0p1eV_cut50eV'}));
+            p.addParameter('DTFSD','BlindingKNM2',@(x)ismember(x,{'OFF','DOSS','ROLL','HTFSD','TTFSD','BlindingKNM1','WGTS100K','Sibille','Sibille0p5eV','SibilleFull','BlindingKNM2','KNM2','KNM2_0p5eV','KNM2_0p1eV','KNM2_0p1eV_cut40eV','KNM2_0p1eV_cut50eV'}));
+            p.addParameter('HTFSD','BlindingKNM2',@(x)ismember(x,{'OFF','SAENZ','ROLL','BlindingKNM1','WGTS100K','Sibille','Sibille0p5eV','SibilleFull','BlindingKNM2','KNM2','KNM2_0p5eV','KNM2_0p1eV','KNM2_0p1eV_cut40eV','KNM2_0p1eV_cut50eV'}));
             p.addParameter('TmFSD','SAENZ',@(x)ismember(x,{'OFF','SAENZ'}));
            
             % MACE Parameters
@@ -421,6 +421,8 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
                     out = @(te,qu,p) 1;
                 case 'WGTSMACE'
                     out = @obj.ComputeRF;
+                case 'RW_WGTSMACE'
+                    out = @obj.ComputeRF;
                 case 'MACE'
                     out = @obj.ComputeMaceTF;
                 otherwise
@@ -474,7 +476,7 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             end
             
         end
-        function out    = ComputeISProb(obj,varargin)
+        function [out,Pis_z]    = ComputeISProb(obj,varargin)
             % Compute:
             % - Inelastic Scattering Probabilities in WGTS
             % If no further arguments: Init KATRIN setting
@@ -514,7 +516,7 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             % - both methods give the same result
             % ---------------------------------------------------------
             
-            if strcmp(Method,'Interp')
+            if strcmp(Method,'Interp') && ~strcmp(obj.KTFFlag,'RW_WGTSMACE')  && WGTS_CD_MolPerCm2_local<=5e17
                 try
                     %fprintf('Interpolation of inel. scattering probabilities ...')
                     out = ISProbInterp('WGTS_CD_MolPerCm2',WGTS_CD_MolPerCm2_local,...
@@ -550,11 +552,11 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             end
             z_wgts = wgtsdp(:,1)/10;
             
-            d = linspace(0,max(z_wgts),WGTS_ZCells); % Faster/Slower... 100 is good
-            dir_lambda = [getenv('SamakPath'),'inputs/WGTSMACE/WGTS_CDProfileIntegral/'];
-            if ~exist(dir_lambda,'dir')
-                system(['mkdir ',dir_lambda]);
-            end
+%             d = linspace(0,max(z_wgts),WGTS_ZCells); % Faster/Slower... 100 is good
+%             dir_lambda = [getenv('SamakPath'),'inputs/WGTSMACE/WGTS_CDProfileIntegral/'];
+%             if ~exist(dir_lambda,'dir')
+%                 system(['mkdir ',dir_lambda]);
+%             end
             
             if strcmp(WGTS_DensityProfile,'Flat')
                 rho_wgt = wgtsdp(1,2).*(WGTS_CD_MolPerCm2_local./5e17);
@@ -584,11 +586,19 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             Pis_z = @(i,z) 1./(1-cos(thetamax)).*simpsons(linspace(0,thetamax,ntmp)',f(i,z,linspace(0,thetamax,ntmp)')); %Integral Mean scattering probability over all angles
             
             % Integratio over z
-            rho_wgt2 = @(z) arrayfun(@(z2) interp1(z_wgts,wgtsdp(:,2)/5e17*WGTS_CD_MolPerCm2_local,z2),z); % uniform
-            Intfun = arrayfun(@(y) @(x) Pis_z(y-1,x).*rho_wgt2(x)./(WGTS_CD_MolPerCm2_local*1e4),1:obj.NIS+1,'UniformOutput',0);
-            Pis_m = cellfun(@(y) 100*integral(y,0,max(z_wgts),'ArrayValued',1),Intfun,'UniformOutput',false)';
-            Pis_m  = squeeze(cell2mat(Pis_m));
-            obj.is_Pv(1:obj.NIS+1) = mean(Pis_m,2);
+            if ~strcmp(obj.KTFFlag,'RW_WGTSMACE')
+                rho_wgt2 = @(z) arrayfun(@(z2) interp1(z_wgts,wgtsdp(:,2)/5e17*WGTS_CD_MolPerCm2_local,z2),z); % uniform
+                Intfun = arrayfun(@(y) @(x) Pis_z(y-1,x).*rho_wgt2(x)./(WGTS_CD_MolPerCm2_local*1e4),1:obj.NIS+1,'UniformOutput',0);
+                Pis_m = cellfun(@(y) 100*integral(y,0,max(z_wgts),'ArrayValued',1),Intfun,'UniformOutput',false)';
+                Pis_m  = squeeze(cell2mat(Pis_m));
+                obj.is_Pv(1:obj.NIS+1) = mean(Pis_m,2);
+                zStr = '';
+            else
+                zStr = '_RW'; 
+                Pis_m = arrayfun(@(x) 100.*Pis_z(x,max(z_wgts)),0:obj.NIS,'UniformOutput',false)';
+                Pis_m  = squeeze(cell2mat(Pis_m));
+                obj.is_Pv(1:obj.NIS+1) = mean(Pis_m,2);
+            end
             
             % Save
             %Pis_mean = mean(Pis_m,2); % Averaged Probabilites
@@ -607,8 +617,8 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
                 else
                     IsXstr = sprintf('%.5g-Xsection',ISXsection_local(E));
                 end
-                mystr = [ISProb_dir,sprintf('IS_%.5g-molPercm2_%s_%.0f-NIS_%.3g-Bmax_%.3g-Bs.mat',...
-                    WGTS_CD_MolPerCm2_local,IsXstr,obj.NIS+1,MACE_Bmax_T_local, WGTS_B_T_local)];
+                mystr = [ISProb_dir,sprintf('IS%s_%.5g-molPercm2_%s_%.0f-NIS_%.3g-Bmax_%.3g-Bs.mat',...
+                    zStr,WGTS_CD_MolPerCm2_local,IsXstr,obj.NIS+1,MACE_Bmax_T_local, WGTS_B_T_local)];
                 ISXsection_local = ISXsection_local(Energy);
                 Energy = squeeze(Energy);
                 save(mystr,'Pis_m','WGTS_CD_MolPerCm2_local','ISXsection_local','Energy','thetamax');
@@ -1316,13 +1326,18 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             Eiscs = 18575+(-maxEis:IsProbBinStep:maxEis);
             
             % IS Probabilities: labeling
+            if strcmp(obj.KTFFlag,'WGTSMACE')
+                zStr = '';
+            else
+                zStr = '_RW';
+            end
             file_pis = cell(numel((obj.NIS+1):11),1);
             if strcmp(obj.ISCS,'Edep')
-                file_pis{1} = [getenv('SamakPath'), sprintf('inputs/WGTSMACE/WGTS_ISProb/IS_%.5g-molPercm2_Edep-Xsection-max%.0feV_Xstep%.1feV_%.0f-NIS_%.3g-Bmax_%.3g-Bs.mat',...
-                    WGTS_CD_MolPerCm2_local,max(Eiscs),IsProbBinStep,obj.NIS+1,MACE_Bmax_T_local,WGTS_B_T_local)];
+                file_pis{1} = [getenv('SamakPath'), sprintf('inputs/WGTSMACE/WGTS_ISProb/IS%s_%.5g-molPercm2_Edep-Xsection-max%.0feV_Xstep%.1feV_%.0f-NIS_%.3g-Bmax_%.3g-Bs.mat',...
+                    zStr,WGTS_CD_MolPerCm2_local,max(Eiscs),IsProbBinStep,obj.NIS+1,MACE_Bmax_T_local,WGTS_B_T_local)];
             else
-                file_pis{1} = [getenv('SamakPath'), sprintf('inputs/WGTSMACE/WGTS_ISProb/IS_%.5g-molPercm2_%.5g-Xsection_%.0f-NIS_%.3g-Bmax_%.3g-Bs.mat',...
-                               WGTS_CD_MolPerCm2_local,ISXsection_local(18575),obj.NIS+1,MACE_Bmax_T_local,WGTS_B_T_local)];
+                file_pis{1} = [getenv('SamakPath'), sprintf('inputs/WGTSMACE/WGTS_ISProb/IS%s_%.5g-molPercm2_%.5g-Xsection_%.0f-NIS_%.3g-Bmax_%.3g-Bs.mat',...
+                               zStr,WGTS_CD_MolPerCm2_local,ISXsection_local(18575),obj.NIS+1,MACE_Bmax_T_local,WGTS_B_T_local)];
             end
             NIStmp = (obj.NIS+2):11;
             for i=1:numel(NIStmp)
@@ -1388,6 +1403,12 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
                 EindexStart = find(E>=minE_rf,1)-5;
                 EindexStop  = find(E>=maxE_rf,1)+5;
             end
+            
+            if isempty(EindexStop)
+                EindexStart = 1;
+                EindexStop = numel(E);
+            end
+                
             Eel = E(EindexStart:EindexStop);
             
             if ~strcmp(obj.ISCS,'Edep')
@@ -1550,7 +1571,7 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             
             % output: out=1 if loading was successful , out=0 if response function is not avaiable
             %% labeling
-            if ~strcmp(obj.KTFFlag,'WGTSMACE')
+            if ~ismember(obj.KTFFlag,{'WGTSMACE','RW_WGTSMACE'})
                 out = 0;
                 return;
             end
@@ -1561,20 +1582,26 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
                 IsXStr = sprintf('%.5gm2',obj.ISXsection(18574));
             end
             
+            if strcmp(obj.KTFFlag,'WGTSMACE')
+                PreStr = 'samakRF';
+            elseif strcmp(obj.KTFFlag,'RW_WGTSMACE')
+                PreStr = 'samakRF_RW'; % tritium on rear wall, different starting pos
+            end
+            
             switch obj.FPD_Segmentation
                 case 'OFF'
-                    RFfile = sprintf('samakRF_Uniform_%.5gcm2_IsX%s_NIS%.0d_Bm%0.3gT_Bs%0.3gT_Ba%0.4gG_Temin%.3f_Temax%.3f_RFBinStep%.3feV_%s_Sync%s_Ang%s.mat',...
-                        obj.WGTS_CD_MolPerCm2,IsXStr,obj.NIS,obj.MACE_Bmax_T,obj.WGTS_B_T,...
+                    RFfile = sprintf('%s_Uniform_%.5gcm2_IsX%s_NIS%.0d_Bm%0.3gT_Bs%0.3gT_Ba%0.4gG_Temin%.3f_Temax%.3f_RFBinStep%.3feV_%s_Sync%s_Ang%s.mat',...
+                        PreStr,obj.WGTS_CD_MolPerCm2,IsXStr,obj.NIS,obj.MACE_Bmax_T,obj.WGTS_B_T,...
                         obj.MACE_Ba_T*1e4,obj.TeMin,obj.TeMax,...
                         obj.RFBinStep,obj.ELossFlag,obj.SynchrotronFlag,obj.AngularTFFlag);
                 case {'MULTIPIXEL','SINGLEPIXEL'}
-                    RFfile = sprintf('samakRF_MultiPix_%0.5gcm2_IsX%s_NIS%.0d_Bm%0.3gT_Bs%0.3gT_Ba%0.4gG_Temin%3.f_Temax%3.f_RFBinStep%.3feV_%s_Sync%s_Ang%s.mat',...
-                        obj.WGTS_CD_MolPerCm2,IsXStr,obj.NIS,obj.MACE_Bmax_T,obj.WGTS_B_T,...
+                    RFfile = sprintf('%s_MultiPix_%0.5gcm2_IsX%s_NIS%.0d_Bm%0.3gT_Bs%0.3gT_Ba%0.4gG_Temin%3.f_Temax%3.f_RFBinStep%.3feV_%s_Sync%s_Ang%s.mat',...
+                        PreStr,obj.WGTS_CD_MolPerCm2,IsXStr,obj.NIS,obj.MACE_Bmax_T,obj.WGTS_B_T,...
                         mean(obj.MACE_Ba_T(obj.FPD_PixList))*1e4,obj.TeMin,obj.TeMax,...
                         obj.RFBinStep,obj.ELossFlag,obj.SynchrotronFlag,obj.AngularTFFlag);
                 case 'RING'
-                    RFfile = sprintf('samakRF_Ring_%s_%0.5gcm2_IsX%s_NIS%.0d_Bm%0.3gT_Bs%0.3gT_Ba%0.4gG_Temin%.3f_Temax%.3f_RFBinStep%.3feV_Sync%s_Ang%s_nring%.0d.mat',...
-                        obj.FPD_RingMerge,obj.WGTS_CD_MolPerCm2,IsXStr,obj.NIS,obj.MACE_Bmax_T,obj.WGTS_B_T,...
+                    RFfile = sprintf('%s_Ring_%s_%0.5gcm2_IsX%s_NIS%.0d_Bm%0.3gT_Bs%0.3gT_Ba%0.4gG_Temin%.3f_Temax%.3f_RFBinStep%.3feV_Sync%s_Ang%s_nring%.0d.mat',...
+                        PreStr,obj.FPD_RingMerge,obj.WGTS_CD_MolPerCm2,IsXStr,obj.NIS,obj.MACE_Bmax_T,obj.WGTS_B_T,...
                         mean(obj.MACE_Ba_T)*1e4,obj.TeMin,obj.TeMax,obj.RFBinStep,obj.SynchrotronFlag,obj.AngularTFFlag,obj.nRings);
             end
             if obj.is_EOffset ~=0

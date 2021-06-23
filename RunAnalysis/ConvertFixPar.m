@@ -91,9 +91,15 @@ if strcmp(Mode,'Normal')
         fixPar_v(findIndex)=[];
     end
     
+        % background slope
+    if contains(freePar,'BkgPTSlope')  % same for whole FPD (==uniform)
+        findIndex = ismember(fixPar_v,4*nPixels+13);
+        fixPar_v(findIndex)=[];
+    end
+    
     %eta
     if contains(freePar,'eta')
-        findIndex = ismember(fixPar_v,4*nPixels+13);
+        findIndex = ismember(fixPar_v,4*nPixels+14);
         fixPar_v(findIndex)=[];
     end
     
@@ -144,12 +150,14 @@ elseif strcmp(Mode,'Reverse')
   if ~contains(freePar,sprintf('fix %.0f ;',4*nPixels+11))
       fixPar = [fixPar,'mnu4Sq'];
   end
-    if ~contains(freePar,sprintf('fix %.0f ;',4*nPixels+12))
+  if ~contains(freePar,sprintf('fix %.0f ;',4*nPixels+12))
       fixPar = [fixPar,'sin2T4'];
-    end
-    if ~contains(freePar,sprintf('fix %.0f ;',4*nPixels+13))
+  end
+  end
+  if ~contains(freePar,sprintf('fix %.0f ;',4*nPixels+13))
+      fixPar = [fixPar,'BkgPTSlope'];
+  end
+  if ~contains(freePar,sprintf('fix %.0f ;',4*nPixels+14))
       fixPar = [fixPar,'eta'];
-    end
-  
-end
+  end
 end

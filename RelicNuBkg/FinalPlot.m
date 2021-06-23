@@ -1,4 +1,4 @@
-saveplot='ON';
+saveplot='OFF';
 
 load('./RelicNuBkg/Refs/RefsFromHeizmannPhD.mat');
 load('./RelicNuBkg/SensVsMnuSq_KNM1_[0_4].mat');
@@ -132,6 +132,7 @@ fig4=figure('Renderer','painters');
 set(fig4, 'Units', 'normalized', 'Position', [0.001, 0.001,0.45, 0.5]);
 A=ref_RelicNuBkg_KNM1('TTFSD','OFF','HTFSD','OFF','DTFSD','OFF','mnuSq_i',2);
 B=ref_RelicNuBkg_KNM1('mnuSq_i',2);
+%A.ComputeTBDDS;B.ComputeTBDDS;
 a=semilogy(A.Te-A.Q,A.TBDDS,'LineWidth',2);
 hold on;
 b=semilogy(A.Te-A.Q,A.TBDDS_R,'LineWidth',2);

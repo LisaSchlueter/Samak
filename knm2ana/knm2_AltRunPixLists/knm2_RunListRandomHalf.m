@@ -6,10 +6,11 @@ nFits = 500;
 freePar = 'mNu E0 Bkg Norm';
 DataType = 'Real';
 range = 40;               % fit range in eV below endpoint
+FSDFlag = 'KNM2';
 %savedir = [getenv('SamakPath'),'knm2ana/knm2_AltRunPixLists/results/'];
 savedir = [getenv('SamakPath'),'knm2ana/knm2_AltRunPixLists/results/'];
-savename = sprintf('%sknm2_RunListRandHalf_%s_%s_%.0feV_%.0ffits.mat',...
-            savedir,DataType,strrep(freePar,' ',''),range,nFits);
+savename = sprintf('%sknm2_RunListRandHalf_%s_%s_%.0feV_%.0ffits_%s.mat',...
+            savedir,DataType,strrep(freePar,' ',''),range,nFits,FSDFlag);
 
 
 if exist(savename,'file')
@@ -21,7 +22,7 @@ else
     RunAnaArg = {'RunList','KNM2_RandHalf',...  % define run number -> see GetRunList
         'fixPar',freePar,...         % free Parameter !!
         'DataType',DataType,...              % Real, Twin or Fake
-        'FSDFlag','BlindingKNM2',...       % final state distribution (theoretical calculation)
+        'FSDFlag',FSDFlag,...       % final state distribution (theoretical calculation)
         'ELossFlag','KatrinT2A20',...         % energy loss function     ( different parametrizations available)
         'AnaFlag','StackPixel',...         % FPD segmentations -> pixel combination
         'chi2','chi2Stat',...              % statistics only

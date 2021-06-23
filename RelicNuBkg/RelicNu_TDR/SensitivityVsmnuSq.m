@@ -2,8 +2,8 @@ function SensitivityVsmnuSq(varargin)
     p=inputParser;
     p.addParameter('mNuBins',5,@(x)isfloat(x));
     p.addParameter('mNuUpper',4,@(x)isfloat(x));
-    p.addParameter('Params','TDR',@(x)ismember(x,{'TDR','KNM1'}));
-    p.addParameter('T','OFF',@(x)ismember(x,{'ON','OFF'}));
+    p.addParameter('Params','TDR',@(x)ismember(x,{'TDR','KNM1','KNM2'}));
+    p.addParameter('T','OFF',@(x)ismember(x,{'ON','OFF'}));             %Atomic Tritium
     p.addParameter('TDRbkg','OFF',@(x)ismember(x,{'ON','OFF'}));
     p.addParameter('MTD','OFF',@(x)ismember(x,{'ON','OFF'}));
     p.parse(varargin{:});
@@ -38,6 +38,13 @@ function SensitivityVsmnuSq(varargin)
     else
         Sensitivities = zeros(1,mNuBins);
         ScanPoints = linspace(0,mNuUpper,mNuBins);
+        if strcmp('Params','TDR')
+            etafactor=1.5;
+            etarange=10;
+        else
+            etafactor=3;
+            etarange=11;
+        end
 
         for i=1:numel(ScanPoints)
             Init_Opt={'mnuSq_i',ScanPoints(i)};
@@ -55,8 +62,8 @@ function SensitivityVsmnuSq(varargin)
             A.Chi2Fake('Recompute','ON',...
                 'RunNr',10,...
                 'range',40,...
-                'etafactor',1.5,...
-                'etarange',10,...
+                'etafactor',etafactor,...
+                'etarange',etarange,...
                 'fitPar','mNu E0 Norm Bkg',...
                 'Syst',Syst,...
                 'Init_Opt',Init_Opt,... %,'TTFSD','OFF','HTFSD','OFF','DTFSD','OFF'},...

@@ -1,4 +1,4 @@
-function  ConvertCLStd(varargin)
+function  out = ConvertCLStd(varargin)
 % convert sigma into confidence level and vice versa
 % for 1 and 2 dimension
 p = inputParser;
@@ -18,8 +18,15 @@ if nPar==1
     GetConf = @(x) arrayfun(@(a)integral(NormDist,-a,a),x);
 elseif nPar==2
     % 2-d gaussian
-    NormDist = @(x1,x2) 1./(2*pi).*exp(-0.5*(x1.^2+x2.^2));
-    GetConf = @(x) arrayfun(@(a)integral2(NormDist,-a,a,-a,a),x);
+    % this would be a square not ellipsoid/cricle
+   % NormDist = @(x1,x2) 1./(2*pi).*exp(-0.5*(x1.^2+x2.^2));
+   % GetConf = @(x) arrayfun(@(a)integral2(NormDist,-a,a,-a,a),x); 
+    
+    % polar coordinates
+   % NormDist = @(r) 1./(2*pi).*exp(-0.5*r.^2);
+    NormDistInt = @(r) r.*exp(-0.5*r.^2);
+    GetConf = @(r) arrayfun(@(a) integral(NormDistInt,0,a),r);% arrayfun(@(a)integral(NormDistInt,0,a),r); 
+  
 end
 
 switch Mode

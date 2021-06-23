@@ -44,6 +44,7 @@ classdef FITC < handle
         
         % Main inputs (necessary)
         SO;             % Study Object
+        SO2;            % 2nd Study Object for knm1+2 combi fit 
         SOCell;         % Study Objects in a cell (for use with the rhoD handle study)
         DATA;           % Data for fit, it could be a cell with three elemnts {qU,counts,errors} or a matrix 3*pixels columns [qU,counts,errors]
         
@@ -75,9 +76,11 @@ classdef FITC < handle
         % initialization of fitted paramaters
         i_mnu;
         i_Q;
+        i_Q2; % second endpoint for knm1+2 combi fit
         i_B;
         i_N;
-        i_BSlope; %background slope
+        i_BSlope;   %background qU slope
+        i_BPTSlope; %background subrun time slope from interspec penning trap
         
         i_DTGS; % DT Ground  State Probability
         i_DTES; % DT Excited State Probability
@@ -125,6 +128,7 @@ classdef FITC < handle
             p = inputParser;
             % Main inputs (necessary)
             p.addParameter('SO',[],@(x) isa(x,'TBD') || isa(x,'RHOD')); %Study Object
+            p.addParameter('SO2',[],@(x) isa(x,'TBD')); %2nd Study Object (optional! for knm1+2 test fit)
             p.addParameter('SOCell',{},@(x) iscell(x)); %Study Objects in cell
             p.addParameter('DATA',[],@(x) (iscell(x) || ismatrix(x)) && (size(x,2) <= 148*3));
             % Main inputs (optional)
@@ -157,6 +161,7 @@ classdef FITC < handle
             % initialization of fitted parameters
             p.addParameter('i_mnu',0,@(x)isfloat(x));
             p.addParameter('i_Q',0,@(x)isfloat(x));
+             p.addParameter('i_Q2',0,@(x)isfloat(x));
             p.addParameter('i_DTGS',0,@(x)isfloat(x));
             p.addParameter('i_DTES',0,@(x)isfloat(x));
             p.addParameter('i_HTGS',0,@(x)isfloat(x));
@@ -167,6 +172,7 @@ classdef FITC < handle
             p.addParameter('i_N',[],@(x)isfloat(x));
             p.addParameter('i_qUOffset',[],@(x)isfloat(x));
             p.addParameter('i_BSlope',0,@(x)isfloat(x));
+            p.addParameter('i_BPTSlope',0,@(x)isfloat(x));
             p.addParameter('i_mTSq',[],@(x)isfloat(x));
             p.addParameter('i_FracTm',[],@(x)isfloat(x));
             p.addParameter('i_mnu4Sq',0,@(x)isfloat(x));
@@ -176,6 +182,7 @@ classdef FITC < handle
             p.parse(varargin{:});
             
             obj.SO              = p.Results.SO;
+            obj.SO2             = p.Results.SO2;
             obj.DATA            = p.Results.DATA;
             obj.COVMAT          = p.Results.COVMAT;
             obj.COVMATFrac      = p.Results.COVMATFrac;
@@ -198,6 +205,7 @@ classdef FITC < handle
             
             obj.i_mnu           = p.Results.i_mnu;
             obj.i_Q             = p.Results.i_Q;
+            obj.i_Q2             = p.Results.i_Q;
             obj.i_B             = p.Results.i_B;
             obj.i_N             = p.Results.i_N;
             obj.i_DTGS          = p.Results.i_DTGS;
@@ -209,6 +217,7 @@ classdef FITC < handle
             obj.i_qUOffset      = p.Results.i_qUOffset;
             obj.i_mTSq          = p.Results.i_mTSq;
             obj.i_BSlope        = p.Results.i_BSlope;
+            obj.i_BPTSlope      = p.Results.i_BPTSlope;
             obj.i_FracTm        = p.Results.i_FracTm;
             obj.UncMPixFlag     = p.Results.UncMPixFlag;
             obj.i_mnu4Sq        = p.Results.i_mnu4Sq;
@@ -234,9 +243,10 @@ classdef FITC < handle
                 readdata(obj);
                 preparevars(obj);
                 obj.RESULTS = startfit(obj);
-
-
-                displayresults(obj);
+                
+                if isempty(obj.SO2)
+                    displayresults(obj);
+                end
             end
             
         end % constructor
@@ -313,8 +323,19 @@ classdef FITC < handle
                                obj.i_FracTm,...
                                obj.i_mnu4Sq,...
                                obj.i_sin2T4,...
-                               obj.i_eta];
-                
+                               obj.i_eta,...
+                               obj.i_BPTSlope];
+                           
+                           if ~isempty(obj.SO2)
+                               obj.i_N = [0,0];
+                               %combi fit with knm1+2
+                               obj.parinit = [obj.i_mnu,...
+                                   obj.i_Q,...
+                                   obj.i_Q2,...
+                                   obj.i_B,...
+                                   obj.i_N];
+                           end
+
                 % initilization for pulls (default all zero)
                 if obj.pulls == 0
                     obj.pulls = inf(1,length(obj.parinit));
@@ -331,13 +352,17 @@ classdef FITC < handle
             % PULLS TOLERANCE:
             FSDtol=1e-03;         % final state distribution PGS-PES
             Normtol=0.0017;        % normalization tolerance from ring to ring
+            NormAbstol =  2;      % asbolute ringwise normalization tolerance (deviation from 0)
             qUOffsettol = 10;     % qUOffset absolute tolerance (eV)
             qUmeanOffsettol = 0.5;  % qUOffset tolerance from ring to ring (eV)
             BkgSlopetol = 4.74.*1e-06;%5*1e-6; % background slope constrain (cps/eV)
+            BkgPTSlopetol24 = 3.*1e-06; % background time slope constrain (cps/s)
+            BkgPTSlopetol25 = 2.5.*1e-06; % background time slope constrain (cps/s)
             mNuSqtol = 1;         % neutrino mass pull tolerance (eV^2)
             mTSqtol = 1;          % tachyonic neutrino mass (nu-mass offset) from ring to ring (eV^2)
             sin2T4tol = 0.5;
-
+           
+            
             PullTerm = 0;
             % 1: neutrino mass pull
             if any(ismember(obj.pullFlag,1))
@@ -377,7 +402,7 @@ classdef FITC < handle
                 %sum((ParqUOffset-zeros(1,length(ParqUOffset))).^2  ./qUOffsettol^2);
             end
             
-              % 6: qU Offsets: small absolute qU Offset 
+            % 6: qU Offsets: small absolute qU Offset
             if any(ismember(obj.pullFlag,6))
                 ParqUOffset = par(2*obj.SO.nPixels+9:3*obj.SO.nPixels+8);
                 PullTerm =  PullTerm + sum(ParqUOffset.^2./qUOffsettol.^2);
@@ -403,16 +428,7 @@ classdef FITC < handle
             end
 
             % 9: mixing angle pull
-            if any(ismember(obj.pullFlag,9)) % sterile pull I
-%               PullTerm = PullTerm + (par(4*obj.SO.nPixels+12))^2/sin2T4tol^2 + exp(-500*par(4*obj.SO.nPixels+12));
-%                 PullTerm = PullTerm + ...
-%                     exp(500*(par(4*obj.SO.nPixels+12)-0.5)) + ...   % sin2T4
-%                     exp(-500*par(4*obj.SO.nPixels+12)) + ...
-%                     exp(500*( par(4*obj.SO.nPixels+11)-90^2)) + ... % m4
-%                     exp(-500*par(4*obj.SO.nPixels+11)) + ...
-%                     (par(1)-0)^2/1^2;                               % nu-mass
-%                PullTerm = PullTerm + (par(4*obj.SO.nPixels+12))^2/sin2T4tol^2 + exp(-500*par(4*obj.SO.nPixels+12));
-          
+            if any(ismember(obj.pullFlag,9)) % sterile pull I 
             range =  ceil(abs(obj.SO.qU(min(obj.exclDataStart))-18574));
                     PullTerm = PullTerm + ...
                     exp(1e3*(par(4*obj.SO.nPixels+12)-(0.5+1e-02))) + ...  % sin2t4 upper bound 
@@ -426,7 +442,7 @@ classdef FITC < handle
                 PullTerm = PullTerm + par(3*obj.SO.nPixels+9)^2/obj.pulls.^2;
             end
             
-            if any(ismember(obj.pullFlag,11)) % sterile pull II
+            if any(ismember(obj.pullFlag,11)) % gaussian sterile pull II
                 sin4Central = 0; sin4Tol = 10;
                 m4Central = 0;   m4Tol   = 1e4;
                 PullTerm = PullTerm + ...
@@ -465,7 +481,7 @@ classdef FITC < handle
                 PullTerm = PullTerm + (par(1)-0)^2/mNuSqtol^2;
             end
             
-            if any(ismember(obj.pullFlag,18)) % nu-mass pull: 3 eV^2
+            if any(ismember(obj.pullFlag,18)) % nu-mass pull: 0.5 eV^2
                 mNuSqtol =  0.5; % eV^2
                 PullTerm = PullTerm + (par(1)-0)^2/mNuSqtol^2;
             end
@@ -496,15 +512,71 @@ classdef FITC < handle
                     (par(4*obj.SO.nPixels+11)-m4Central).^2./m4Tol^2;         % m4
             end
             
-            if any(ismember(obj.pullFlag,22))  %exclude negative neutrino mass squared
+            %22: Normalization: small abs deviation from 0
+            if any(ismember(obj.pullFlag,22))
+                ParNorm = par(3+obj.SO.nPixels:3+2*obj.SO.nPixels-1); % -> ringwise normalizations
+                PullTerm = PullTerm + sum((ParNorm).^2./NormAbstol^2);
+            end
+            
+            if any(ismember(obj.pullFlag,23)) % loose nu-mass pull
+                mNuSqtol_Loose =  100; % eV^2
+                PullTerm = PullTerm + (par(1)-0)^2/mNuSqtol_Loose^2;
+            end
+            
+            if any(ismember(obj.pullFlag,24)) % background subrun time slope from penning trap pull
+                PullTerm = PullTerm + (par(4*obj.SO.nPixels+13)-0)^2/BkgPTSlopetol24^2;
+            end
+            
+            if any(ismember(obj.pullFlag,25)) % background subrun time slope from penning trap pull
+                PullTerm = PullTerm + (par(4*obj.SO.nPixels+13)-0)^2/BkgPTSlopetol25^2;
+            end
+            
+             if any(ismember(obj.pullFlag,26)) % nu-mass pull: mainz&troitzk
+                mNuSqtol_KNM1 =  1.1; % eV^2 KATRIN KNM-1
+                PullTerm = PullTerm + (par(1)-0)^2/mNuSqtol_KNM1^2;
+             end
+             
+           % 27: exponential mixing angle + m4Sq pull
+           if any(ismember(obj.pullFlag,[27,28,29,30])) % sterile pull KSN-2 I
+               range =  ceil(abs(obj.SO.qU(min(obj.exclDataStart))-18574));
+               if obj.pullFlag == 27
+                   sinU = 0.5;     % sin2t4 upper bound
+                   sinD = 0;       % sin2t4 lower bound
+                   m4U   = range^2; % mSq4 upper bound
+                   m4D   = 0;       % mSq4 lower bound
+               elseif obj.pullFlag == 28
+                   sinU = 1;     % sin2t4 upper bound
+                   sinD = 0;       % sin2t4 lower bound
+                   m4U   = range^2; % mSq4 upper bound
+                   m4D   = 0;       % mSq4 lower bound
+               elseif obj.pullFlag == 29
+                   sinU = 1;     % sin2t4 upper bound
+                   sinD = -1;       % sin2t4 lower bound
+                   m4U   = range^2; % mSq4 upper bound
+                   m4D   = -range^2;       % mSq4 lower bound
+               elseif obj.pullFlag == 30
+                   sinU = 0;     % sin2t4 upper bound
+                   sinD = -1;       % sin2t4 lower bound
+                   m4U   = range^2; % mSq4 upper bound
+                   m4D   = 0;       % mSq4 lower bound
+               end
+               PullTerm = PullTerm + ...
+                   exp(1e3*(par(4*obj.SO.nPixels+12)-sinU-0.01)) + ...    % sin2t4 upper bound
+                   exp(-1e3*(par(4*obj.SO.nPixels+12)-sinD+0.01)) + ...     % sin2t4 lower bound
+                   exp(-1e3*(par(4*obj.SO.nPixels+11)-m4D+0.01)) + ... % mSq4 lower bound
+                   exp(1e3*(par(4*obj.SO.nPixels+11)-m4U-0.01));       % mSq4 upper bound
+           end
+           
+           if any(ismember(obj.pullFlag,31))  %exclude negative neutrino mass squared
                 PullTerm = PullTerm + ...
                     exp(-par(1)./1e-3);
             end
             
-            if any(ismember(obj.pullFlag,23))  %exclude negative relic overdensity
+            if any(ismember(obj.pullFlag,32))  %exclude negative relic overdensity
                 PullTerm = PullTerm + ...
-                    exp(-par(17));
+                    exp(-par(18));
             end
+           
         end
         function chi2 = chi2function(obj,par)
             
@@ -517,46 +589,72 @@ classdef FITC < handle
                     par = partmp;
             end
             
-            % Distribute the fitting parameters
-            mnu_fit   = par(1);
-            Q_fit     = par(2);
-            backs_fit = par(3:obj.SO.nPixels+2);
-            norms_fit = par((obj.SO.nPixels+3):(2*obj.SO.nPixels+2));
-            DTGS_fit  = par(2*obj.SO.nPixels+3);
-            DTES_fit  = par(2*obj.SO.nPixels+4);
-            HTGS_fit  = par(2*obj.SO.nPixels+5);%par(4*obj.SO.nPixels+3);
-            HTES_fit  = par(2*obj.SO.nPixels+6);%par(4*obj.SO.nPixels+4);
-            TTGS_fit  = par(2*obj.SO.nPixels+7);%par(6*obj.SO.nPixels+3);
-            TTES_fit  = par(2*obj.SO.nPixels+8);%par(6*obj.SO.nPixels+4);
-            qUOffset_fit = par((2*obj.SO.nPixels+9):(3*obj.SO.nPixels+8));
-            BSlope_fit  = par(3*obj.SO.nPixels+9);
-            mTSq_fit    =par(3*obj.SO.nPixels+10:4*obj.SO.nPixels+9);
-            FracTm_fit = par(4*obj.SO.nPixels+10);
-            mnu4Sq_fit   = par(4*obj.SO.nPixels+11);
-            sin2T4_fit   = par(4*obj.SO.nPixels+12);
-            eta_fit      = par(4*obj.SO.nPixels+13);
+
+            if ~isempty(obj.SO2)
+                % Distribute the fitting parameters
+                mnu_fit   = par(1);
+                Q_fit     = par(2);
+                Q2_fit    = par(3);
+                backs_fit = par(4:5);
+                norms_fit = par(6:7);
+                obj.SO.nPixels = 1;
+                obj.SO.ComputeTBDDS(...
+                    'mSq_bias',mnu_fit,...
+                    'E0_bias',Q_fit,...
+                    'B_bias',backs_fit(1),...
+                    'N_bias',norms_fit(1))
+                obj.SO.ComputeTBDIS;
+                
+                obj.SO2.ComputeTBDDS(...
+                    'mSq_bias',mnu_fit,...
+                    'E0_bias',Q2_fit,...
+                    'B_bias',backs_fit(2),...
+                    'N_bias',norms_fit(2))
+                obj.SO2.ComputeTBDIS;
+            else
+                % Distribute the fitting parameters
+                mnu_fit   = par(1);
+                Q_fit     = par(2);
+                backs_fit = par(3:obj.SO.nPixels+2);
+                norms_fit = par((obj.SO.nPixels+3):(2*obj.SO.nPixels+2));
+                DTGS_fit  = par(2*obj.SO.nPixels+3);
+                DTES_fit  = par(2*obj.SO.nPixels+4);
+                HTGS_fit  = par(2*obj.SO.nPixels+5);%par(4*obj.SO.nPixels+3);
+                HTES_fit  = par(2*obj.SO.nPixels+6);%par(4*obj.SO.nPixels+4);
+                TTGS_fit  = par(2*obj.SO.nPixels+7);%par(6*obj.SO.nPixels+3);
+                TTES_fit  = par(2*obj.SO.nPixels+8);%par(6*obj.SO.nPixels+4);
+                qUOffset_fit = par((2*obj.SO.nPixels+9):(3*obj.SO.nPixels+8));
+                BSlope_fit  = par(3*obj.SO.nPixels+9);
+                mTSq_fit    =par(3*obj.SO.nPixels+10:4*obj.SO.nPixels+9);
+                FracTm_fit = par(4*obj.SO.nPixels+10);
+                mnu4Sq_fit   = par(4*obj.SO.nPixels+11);
+                sin2T4_fit   = par(4*obj.SO.nPixels+12);
+                BPTSlope_fit = par(4*obj.SO.nPixels+13);
+                eta_fit      = par(4*obj.SO.nPixels+14);
+                
+                obj.SO.ComputeTBDDS(...
+                    'mSq_bias',mnu_fit,...
+                    'E0_bias',Q_fit,...
+                    'B_bias',backs_fit,...
+                    'N_bias',norms_fit,...
+                    'DTGS_bias',DTGS_fit,...
+                    'DTES_bias',DTES_fit,...
+                    'HTGS_bias',HTGS_fit,...
+                    'HTES_bias',HTES_fit,...
+                    'TTGS_bias',TTGS_fit,...
+                    'TTES_bias',TTES_fit,...
+                    'qUOffset_bias',qUOffset_fit,...
+                    'BSlope_bias',BSlope_fit,...
+                    'BPTSlope_Bias',BPTSlope_fit,...
+                    'mTSq_bias',mTSq_fit,...
+                    'FracTm_bias',FracTm_fit,...
+                    'mnu4Sq_bias',mnu4Sq_fit,...
+                    'sin2T4_bias',sin2T4_fit,...
+                    'eta_bias',eta_fit*1e10);
+                  obj.SO.ComputeTBDIS();
+            end
             
-            obj.SO.ComputeTBDDS(...
-                'mSq_bias',mnu_fit,...
-                'E0_bias',Q_fit,...
-                'B_bias',backs_fit,...
-                'N_bias',norms_fit,...
-                'DTGS_bias',DTGS_fit,...
-                'DTES_bias',DTES_fit,...
-                'HTGS_bias',HTGS_fit,...
-                'HTES_bias',HTES_fit,...
-                'TTGS_bias',TTGS_fit,...
-                'TTES_bias',TTES_fit,...
-                'qUOffset_bias',qUOffset_fit,...
-                'BSlope_bias',BSlope_fit,...
-                'mTSq_bias',mTSq_fit,...
-                'FracTm_bias',FracTm_fit,...
-                'mnu4Sq_bias',mnu4Sq_fit,...
-                'sin2T4_bias',sin2T4_fit,...
-                'eta_bias',eta_fit*1e10);
-            
-            obj.SO.ComputeTBDIS();
-            
+ 
             % exclude data points: data and model TBDIS
             if numel(obj.exclDataStart)==1
                 IncludeIndices = obj.exclDataStart:obj.exclDataStop;
@@ -636,6 +734,68 @@ classdef FITC < handle
             
         end % chi2function
         
+        function chi2 = chi2function2(obj,par)
+            % chi2 function for combi knm1+2 fit
+            % Distribute the fitting parameters
+            mnu_fit   = par(1);
+            Q_fit     = par(2);
+            Q2_fit    = par(3);
+            backs_fit = par(4:5);
+            norms_fit = par(6:7);
+            obj.SO.nPixels = 1;
+            
+            % model 1 (knm1)
+            obj.SO.ComputeTBDDS(...
+                'mSq_bias',mnu_fit,...
+                'E0_bias',Q_fit,...
+                'B_bias',backs_fit(1),...
+                'N_bias',norms_fit(1))
+            obj.SO.ComputeTBDIS;
+            
+            % model 2 (knm2)
+            obj.SO2.ComputeTBDDS(...
+                'mSq_bias',mnu_fit,...
+                'E0_bias',Q2_fit,...
+                'B_bias',backs_fit(2),...
+                'N_bias',norms_fit(2))
+            obj.SO2.ComputeTBDIS;
+
+            % exclude data points: data and model TBDIS
+            % only 40 eV range possible
+            range = 40;   
+            IncludeIndices = obj.qUdata-18574>=-range;
+            m1tmp = obj.SO.TBDIS(2:end);
+            m1 = m1tmp(IncludeIndices(:,1));%obj.SO.TBDIS(IncludeIndices(:,1)); %model
+            y1 = obj.counts(IncludeIndices(:,1),1);   %data
+            z1 = obj.c_error(IncludeIndices(:,1),1);  %error
+            
+            m2 = obj.SO2.TBDIS(IncludeIndices(:,2)); %model
+            y2 = obj.counts(IncludeIndices(:,2),2);   %data
+            z2 = obj.c_error(IncludeIndices(:,2),2);  %error
+            
+            m = [m1;m2];
+            y = [y1;y2];
+            z = [z1;z2];
+
+            % exclude points in covariance matrix:
+            IncludeIndicesAll = [IncludeIndices(:,1);IncludeIndices(:,2)];
+            CovMatFit = obj.COVMAT(IncludeIndicesAll,IncludeIndicesAll);
+            CovMatShapeFit = obj.COVMATShape(IncludeIndicesAll,IncludeIndicesAll);
+             
+            if any(y==0)
+                sprintf('Cannot fit data with zero counts \n');
+                return
+            end
+            
+            PullTerm = obj.ComputePulls(par);
+ 
+            switch obj.chi2name
+                case {'chi2Stat','chi2CM'}
+                        chi2 = ((y - m)')*(CovMatFit \ (y - m))  + PullTerm;
+                case 'chi2CMShape'
+                    chi2 = ((y - m)')* (CovMatShapeFit  \ (y - m)) + PullTerm;
+            end
+        end
         function results = startfit(obj)
             if obj.preparevarsdone
                 switch obj.fitter
@@ -692,7 +852,11 @@ classdef FITC < handle
                         Args = {obj.parinit, obj, '-c',tmparg};
                         minuitOutputStr = [tempname(pwd),'.txt']; % random string 
                         diary(minuitOutputStr)
-                        [par, err, chi2min, errmat] = fminuit('chi2minuit',Args{:});
+                        if isempty(obj.SO2)
+                            [par, err, chi2min, errmat] = fminuit('chi2minuit',Args{:});
+                        else
+                            [par, err, chi2min, errmat] = fminuit('chi2minuitCombi',Args{:});
+                        end
                         diary off
                         fixpar_local = strrep(obj.fixPar,';','');
                         fixpar_local = strrep(fixpar_local,'fix','');
@@ -711,7 +875,7 @@ classdef FITC < handle
                             [errNeg, errPos] = GetAsymmErrMinos(minuitOutputStr);
                             results = {results{:},errNeg, errPos};
                         end
-                        system(['rm ',minuitOutputStr]); % delete txt file 
+                        system(['rm -f ',minuitOutputStr]); % delete txt file 
                 end
               
             else
@@ -760,8 +924,8 @@ classdef FITC < handle
             qUoffset_fit_err = err(2*obj.SO.nPixels+9:3*obj.SO.nPixels+8);
             
             % background slope
-            Bslope_fit     = par(3*obj.SO.nPixels+9)*1e3;
-            Bslope_fit_err = err(3*obj.SO.nPixels+9)*1e3;
+            Bslope_fit     = par(3*obj.SO.nPixels+9)*1e6;
+            Bslope_fit_err = err(3*obj.SO.nPixels+9)*1e6;
             
             % tachynoc neutrino mass squared
             mTSq_fit      = par(3*obj.SO.nPixels+10:4*obj.SO.nPixels+9);
@@ -777,13 +941,17 @@ classdef FITC < handle
             sin2T4_fit      = par(4*obj.SO.nPixels+12);
             sin2T4_fit_err  = err(4*obj.SO.nPixels+12);
             
+            % background PT slope
+            BPTslope_fit     = (par(4*obj.SO.nPixels+13)+obj.SO.BKG_PtSlope_i).*1e6;
+            BPTslope_fit_err = err(4*obj.SO.nPixels+13).*1e6;
+            
             cprintf('blue','===============================================\n');
             cprintf('blue','  m^2       = %g +/- %g eV^2\n', mnuSq_report,err(1));
             cprintf('blue','  m         = %g +/- %g eV\n', mnu_report,err_mnu);
             cprintf('blue',' - - - - - - - - - - - - - - - - - - - - - - - \n');
             if (mnu4Sq_fit_err~=0) || (sin2T4_fit_err~=0)
                 cprintf('blue','  mnu4Sq    = %g +/- %g eV\n', mnu4Sq_fit + obj.SO.mnu4Sq_i,mnu4Sq_fit_err);
-                cprintf('blue','  sin2T4    = %g +/- %g eV\n', sin2T4_fit + obj.SO.sin2T4_i,sin2T4_fit_err);
+                cprintf('blue','  sin2T4    = %g +/- %g \n', sin2T4_fit + obj.SO.sin2T4_i,sin2T4_fit_err);
                 cprintf('blue',' - - - - - - - - - - - - - - - - - - - - - - - \n');
             end
             cprintf('blue','  (E0)eff   = %0.9g +/- %g eV\n', obj.SO.Q_i+e0_fit,err(2));
@@ -850,11 +1018,16 @@ classdef FITC < handle
                         cprintf('blue','  qU offset                     = %g +/- %g eV \n', qUoffset_fit, qUoffset_fit_err);        
                 end
             end
+            % background qU slope
             if  ~(contains(obj.fixPar,char(string(2*obj.SO.nPixels+10))))
                   cprintf('blue',' - - - - - - - - - - - - - - - - - - - - - - - \n');
-                  cprintf('blue','  B slope  = %.3g +/- %.3g mcps/eV \n',  Bslope_fit, Bslope_fit_err);
+                  cprintf('blue','  B slope  = %.3g +/- %.3g mcps/keV \n',  Bslope_fit, Bslope_fit_err);
             end
-            
+             % background time slope
+            if  ~(contains(obj.fixPar,char(string(4*obj.SO.nPixels+13))))
+                  cprintf('blue',' - - - - - - - - - - - - - - - - - - - - - - - \n');
+                  cprintf('blue','  B PT slope  = %.3g +/- %.3g mucps/s \n',  BPTslope_fit, BPTslope_fit_err);
+            end
             % neutrino mass offsets
             if ~(contains(obj.fixPar,char(string(4*obj.SO.nPixels+9))))
                  cprintf('blue',' - - - - - - - - - - - - - - - - - - - - - - - \n');
@@ -865,6 +1038,7 @@ classdef FITC < handle
                 cprintf('blue',' - - - - - - - - - - - - - - - - - - - - - - - \n');
                 cprintf('blue',' Fraction T^- ion         = %g +/- %g   \n', FracTm_fit, FracTm_fit_err);
             end
+            
             cprintf('blue',' - - - - - - - - - - - - - - - - - - - - - - - \n');
             cprintf('blue','  chi2/dof  = %g/%g\n', chi2min, dof);
             cprintf('blue','  p-value   = %g\n', chi2pvalue(chi2min,dof));
@@ -1582,6 +1756,46 @@ classdef FITC < handle
                 publish_figurePDF(fig,savefile);
             end
             
+            %% plot only mnu
+            fnew = figure('Units','normalized','Position',[0.1,0.1,0.6,0.5]);
+            counter = 1; k=1;
+            l=line([min(round(obj.qUdata(exclIndex)-18574,1))-5 5+max(round(obj.qUdata(exclIndex)-18574,1))],...
+                [BestFitCoeff(k),BestFitCoeff(k)],...
+                'LineStyle','-','LineWidth',1.5,'Color',rgb('Black'));
+            hold on;
+            p=plot(round(obj.qUdata(exclIndex)-18574,1),diffxi(counter,:)+BestFitCoeff(k),...
+                '.-.','MarkerSize',20,'LineWidth',2,'Color',rgb('DodgerBlue'));
+            hold off 
+            ylabel(sprintf('{\\itm}_\\nu^{ 2} (eV^{ 2})'));
+            xlabel('Retarding potential - 18574 (eV)');
+            xlim([min(round(obj.qUdata(exclIndex)-18574,1))-4 4+max(round(obj.qUdata(exclIndex)-18574,1)) ])
+            PrettyFigureFormat;
+            set(gca,'FontSize',18);
+            grid on;
+            
+            if strcmp(savePlot,'ON')
+                publish_figurePDF(fnew,strrep(savefile,'.pdf','_mnu.pdf'));
+            end
+            %% plot only E0 
+             fnew2 = figure('Units','normalized','Position',[0.1,0.1,0.6,0.5]);
+            counter = 2; k=2;
+            l=line([min(round(obj.qUdata(exclIndex)-18574,1))-5 5+max(round(obj.qUdata(exclIndex)-18574,1))],...
+                [0,0],...
+                'LineStyle','-','LineWidth',1.5,'Color',rgb('Black'));
+            hold on;
+            p=plot(round(obj.qUdata(exclIndex)-18574,1),diffxi(counter,:),...
+                '.-.','MarkerSize',20,'LineWidth',2,'Color',rgb('DodgerBlue'));
+            hold off 
+            ylabel(sprintf('{\\itE}_0^{fit} - {\\itE}_0^{bf} (eV)'));
+            xlabel('Retarding potential - 18574 (eV)');
+            xlim([min(round(obj.qUdata(exclIndex)-18574,1))-4 4+max(round(obj.qUdata(exclIndex)-18574,1)) ])
+            PrettyFigureFormat;
+            set(gca,'FontSize',18);
+            grid on;
+            
+            if strcmp(savePlot,'ON')
+                publish_figurePDF(fnew2,strrep(savefile,'.pdf','_E0.pdf'));
+            end
         end
         
         function Samakcats_DMSE(obj,varargin)

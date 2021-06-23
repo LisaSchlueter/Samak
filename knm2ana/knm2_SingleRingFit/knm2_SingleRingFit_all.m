@@ -19,7 +19,7 @@ InputArg = [...
 %     ...
 %     ];
 %%
-knm2_SingleRingFit(InputArg{4,:},'chi2','chi2CMShape')
+R = knm2_SingleRingFit(InputArg{4,:},'chi2','chi2CMShape');
 %%
 % for i=1:size(InputArg,1)
 %     knm2_SingleRingFit(InputArg{i,:},'RecomputeFlag',RecomputeFlag)

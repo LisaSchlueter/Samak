@@ -67,8 +67,7 @@ function PlotBestFit(varargin)
                         'SynchrotronFlag','ON',...
                         'AngularTFFlag','OFF',...
                         'TwinBias_Q',18573.73,...
-                        'TwinBias_mnuSq',mnuSq,...
-                        'RelicPeakPosition','');
+                        'TwinBias_mnuSq',mnuSq);
 
             if strcmp(DataType,'Twin')
                 %M.RunData.TBDIS(end-5:end)=mean(M.RunData.TBDIS(end-5:end)./(M.RunData.qUfrac(end-5:end).*M.RunData.TimeSec)).*M.RunData.qUfrac(end-5:end).*M.RunData.TimeSec;
@@ -94,8 +93,8 @@ function PlotBestFit(varargin)
             fitresults(6,j)= M.FitResult.err(3);
             fitresults(7,j)= M.FitResult.par(3+M.ModelObj.nPixels:3+2*M.ModelObj.nPixels-1) + 1;
             fitresults(8,j)= M.FitResult.err(3+M.ModelObj.nPixels:3+2*M.ModelObj.nPixels-1);
-            fitresults(9,j)= M.FitResult.par(17).*1e10;
-            fitresults(10,j)=M.FitResult.err(17).*1e10;
+            fitresults(9,j)= M.FitResult.par(18).*1e10;
+            fitresults(10,j)=M.FitResult.err(18).*1e10;
             fitresults(11,j)=M.FitResult.chi2min;
             save(sprintf('./EtaFitResult_AllParams_mnuSq%g_Nfit%g.mat',mnuSq,Nfit),'fitresults');
         end
@@ -333,7 +332,9 @@ function PlotBestFit(varargin)
         
         fig5=figure('Renderer','painters');
         set(fig5, 'Units', 'normalized', 'Position', [0.001, 0.001,0.45, 0.6]);
-        etalarge = fitresults(9,find(fitresults(9,:)>3.6827e11));
+        if strcmp(RunList,'KNM1')
+            etalarge = fitresults(9,find(fitresults(9,:)>3.6827e11));
+        end
         histogram(fitresults(9,:),linspace(-6.4e11,5.56e11,14));
         hold on;
         histogram(etalarge,[3.72e11 4.64e11 5.56e11],'FaceAlpha',1);
@@ -423,7 +424,7 @@ end
 %         D.exclDataStart = D.GetexclDataStart(40);
 %         R.Fit;
 %         D.Fit;
-%         etaBestFitVec(i)=R.FitResult.par(17).*1e10;
+%         etaBestFitVec(i)=R.FitResult.par(18).*1e10;
 %         mnufitvec(i)=D.FitResult.par(1);
 %         mnufitveceta(i)=R.FitResult.par(1);
 %         e0fitvec(i)=D.ModelObj.Q_i+D.FitResult.par(2);

@@ -135,6 +135,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
         TBDIS_R;         % Integral Capture Spectrum
         qUOffset; i_qUOffset;
         
+        
         % Screening Correction (electron)
         ScreeningFlag; SCorr; SCorrBias = 0;
         % Finite Extension of Nucleus Charge, L0
@@ -220,6 +221,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
         E0_bias;
         Bkg_Bias;
         BkgSlope_Bias;
+        BkgPTSlope_Bias; 
         Norm_Bias;
         mnu4Sq_Bias;
         sin2T4_Bias;
@@ -521,7 +523,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
             p.addParameter('Sigma',obj.FSD_Sigma,@(x)isfloat(x) || isempty(x));                % broadening of FSD
             p.addParameter('MultiPos',obj.FSD_MultiPos,@(x) isfloat(x) || isempty(x));         %3 gaussians instead of using 1 gaussian per energy (for 3 RW settings): relative position
             p.addParameter('MultiWeights',obj.FSD_MultiWeights,@(x) isfloat(x) || isempty(x)); %3 gaussians instead of using 1 gaussian per energy: relative weight
-            p.addParameter('BinningFactor',2,@(x) isfloat(x) || isempty(x));                   % enhance binning: twice, 3 times,... as much bins
+            p.addParameter('BinningFactor',1,@(x) isfloat(x) || isempty(x));                   % enhance binning: twice, 3 times,... as much bins
             p.addParameter('SanityPlot','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('ZoomPlot','OFF',@(x)ismember(x,{'ON','OFF'})); % save also zoom to 1 final state
             p.addParameter('Dist','Gauss',@(x)ismember(x,{'Gauss','Rect'}));
@@ -601,6 +603,16 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                     ttfsdfilename = [FSDdir,'FSD_KNM1_T2_Doppler0p5eV_FullRange.txt'];    
                 case {'Sibille0p5eV'}
                     ttfsdfilename = [FSDdir,'FSD_KNM1_T2_Doppler0p5eV.txt'];   
+                case {'KNM2'}
+                    ttfsdfilename = [FSDdir,'FSD_KNM2_T2.txt'];
+                case {'KNM2_0p5eV'}
+                    ttfsdfilename = [FSDdir,'FSD_KNM2_T2_0p5eV.txt'];
+                case {'KNM2_0p1eV'}
+                    ttfsdfilename = [FSDdir,'FSD_KNM2_T2_0p1eV.txt'];
+                case {'KNM2_0p1eV_cut40eV'}
+                    ttfsdfilename = [FSDdir,'FSD_KNM2_T2_0p1eV_cut40eV.txt'];
+                case {'KNM2_0p1eV_cut50eV'}
+                    ttfsdfilename = [FSDdir,'FSD_KNM2_T2_0p1eV_cut50eV.txt'];
             end
             %Rebinning
             ttfsdfile_temp=importdata(ttfsdfilename);
@@ -655,6 +667,16 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                     dtfsdfilename = [FSDdir,'FSD_KNM1_DT_Doppler0p5eV_FullRange.txt'];
                 case {'Sibille0p5eV'}
                     dtfsdfilename = [FSDdir,'FSD_KNM1_DT_Doppler0p5eV.txt'];
+                case {'KNM2'}
+                    dtfsdfilename = [FSDdir,'FSD_KNM2_DT.txt'];
+                case {'KNM2_0p5eV'}
+                    dtfsdfilename = [FSDdir,'FSD_KNM2_DT_0p5eV.txt'];
+                case {'KNM2_0p1eV'}
+                    dtfsdfilename = [FSDdir,'FSD_KNM2_DT_0p1eV.txt'];
+                case {'KNM2_0p1eV_cut40eV'}
+                    dtfsdfilename = [FSDdir,'FSD_KNM2_DT_0p1eV_cut40eV.txt'];
+                case {'KNM2_0p1eV_cut50eV'}
+                    dtfsdfilename = [FSDdir,'FSD_KNM2_DT_0p1eV_cut50eV.txt'];
             end
             %Rebinning
             dtfsdfile_temp=importdata(dtfsdfilename);
@@ -702,6 +724,16 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                     htfsdfilename = [FSDdir,'FSD_KNM1_HT_Doppler0p5eV_FullRange.txt'];
                 case {'Sibille0p5eV'}
                     htfsdfilename = [FSDdir,'FSD_KNM1_HT_Doppler0p5eV.txt'];
+                case {'KNM2'}
+                    htfsdfilename = [FSDdir,'FSD_KNM2_HT.txt'];
+                case {'KNM2_0p5eV'}
+                    htfsdfilename = [FSDdir,'FSD_KNM2_HT_0p5eV.txt'];
+                case {'KNM2_0p1eV'}
+                    htfsdfilename = [FSDdir,'FSD_KNM2_HT_0p1eV.txt'];
+                case {'KNM2_0p1eV_cut40eV'}
+                    htfsdfilename = [FSDdir,'FSD_KNM2_HT_0p1eV_cut40eV.txt'];
+                case {'KNM2_0p1eV_cut50eV'}
+                    htfsdfilename = [FSDdir,'FSD_KNM2_HT_0p1eV_cut50eV.txt'];
             end
             %Rebinning
             htfsdfile_temp=importdata(htfsdfilename);
@@ -947,7 +979,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
             end
             %% calculate response function
             if loadSuccess==0
-                tfloc = obj.GetRF(); %function handle of response function
+                tfloc = obj.GetRF(); %function handle of response function     
                 switch obj.FPD_Segmentation
                     case {'SINGLEPIXEL','MULTIPIXEL'}
                         switch obj.UseParallelRF
@@ -1056,13 +1088,10 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
             %
             if flag == 0
                 obj.Q           = obj.Q_i;
-                obj.qUOffset    = obj.i_qUOffset;
-                obj.BKG_RateSecallPixels    = obj.BKG_RateSecallPixels_i;             
+                obj.qUOffset    = obj.i_qUOffset;                            
                 obj.mnuSq_Bias  = 0;
                 obj.E0_bias     = 0;
-                obj.Bkg_Bias    = zeros(1,obj.nPixels);
-                obj.BkgSlope_Bias  = obj.BKG_Slope_i;
-                obj.Norm_Bias   = zeros(1,obj.nPixels);
+                obj.Norm_Bias   = zeros(1,obj.nPixels); 
                 obj.mnu4Sq_Bias = 0;
                 obj.sin2T4_Bias = 0;
                 obj.TTGS_bias   = 0;
@@ -1076,6 +1105,13 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                 obj.FracTm_bias = 0;
                 obj.WGTS_MolFrac_Tm =  obj.WGTS_MolFrac_Tm_i;
                 obj.eta_bias = 0;
+
+                 % background
+                obj.Bkg_Bias              = zeros(1,obj.nPixels);
+                obj.BkgPTSlope_Bias       = 0;
+                obj.BkgSlope_Bias         = obj.BKG_Slope_i;
+                obj.BKG_PtSlope           = obj.BKG_PtSlope_i;
+                obj.BKG_RateSecallPixels  = obj.BKG_RateSecallPixels_i;
             end
             if flag == 1
                 % Add Bias
@@ -1084,6 +1120,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                 obj.normFit     = obj.normFit_i + obj.Norm_Bias;
                 obj.BKG_RateSec = obj.BKG_RateSec_i + obj.Bkg_Bias;
                 obj.BKG_Slope   = obj.BKG_Slope_i + obj.BkgSlope_Bias;
+                obj.BKG_PtSlope = obj.BKG_PtSlope_i + obj.BkgPTSlope_Bias;
                 obj.mnu4Sq      = obj.mnu4Sq_i  + obj.mnu4Sq_Bias;
                 obj.sin2T4      = obj.sin2T4_i  + obj.sin2T4_Bias;
                 obj.TTNormGS    = obj.TTNormGS_i + obj.TTGS_bias;
@@ -1147,7 +1184,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
             % Initialization
             switch obj.FPD_Segmentation
                 case {'OFF'}%,'RING'}
-                    dim = {obj.nTe,1};
+                     dim = {obj.nTe,1};
                  case 'RING'
                      dim = {obj.nTe,obj.nRings}; 
             end
@@ -1180,7 +1217,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                 
                 if obj.WGTS_MolFrac_TT>0
                     switch obj.TTFSD
-                        case {'DOSS','SAENZ','SAENZNOEE','ROLL','BlindingKNM1','WGTS100K','Sibille','Sibille0p5eV','SibilleFull','BlindingKNM2'}
+                        case {'DOSS','SAENZ','SAENZNOEE','ROLL','BlindingKNM1','WGTS100K','Sibille','Sibille0p5eV','SibilleFull','BlindingKNM2','KNM2','KNM2_0p5eV','KNM2_0p1eV','KNM2_0p1eV_cut40eV','KNM2_0p1eV_cut50eV'}
                             % Ground State
                             switch Process
                                 case 'BetaDecay'
@@ -1217,7 +1254,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                 
                 if obj.WGTS_MolFrac_DT>0
                     switch obj.DTFSD
-                        case {'DOSS','HTFSD','TTFSD','BlindingKNM1','WGTS100K','Sibille','Sibille0p5eV','SibilleFull','BlindingKNM2'}
+                        case {'DOSS','HTFSD','TTFSD','BlindingKNM1','WGTS100K','Sibille','Sibille0p5eV','SibilleFull','BlindingKNM2','KNM2','KNM2_0p5eV','KNM2_0p1eV','KNM2_0p1eV_cut40eV','KNM2_0p1eV_cut50eV'}
                             % Ground State
                             switch Process
                                 case 'BetaDecay'
@@ -1247,7 +1284,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                 
                 if obj.WGTS_MolFrac_HT>0
                     switch obj.HTFSD
-                        case {'SAENZ','BlindingKNM1','WGTS100K','Sibille','Sibille0p5eV','SibilleFull','BlindingKNM2'}
+                        case {'SAENZ','BlindingKNM1','WGTS100K','Sibille','Sibille0p5eV','SibilleFull','BlindingKNM2','KNM2','KNM2_0p5eV','KNM2_0p1eV','KNM2_0p1eV_cut40eV','KNM2_0p1eV_cut50eV'}
                             
                             % Ground State
                             switch Process
@@ -1698,6 +1735,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
             p.addParameter('DE_bias',0.,@(x)isfloat(x));
             p.addParameter('B_bias',0.,@(x)isfloat(x));
             p.addParameter('BSlope_bias',0,@(x)isfloat(x));
+            p.addParameter('BPTSlope_bias',0,@(x)isfloat(x));  
             p.addParameter('TTGS_bias',0.,@(x)isfloat(x));
             p.addParameter('TTES_bias',0.,@(x)isfloat(x));
             p.addParameter('DTGS_bias',0.,@(x)isfloat(x));
@@ -1724,6 +1762,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
             obj.DE_Bias          = p.Results.DE_bias;
             obj.Bkg_Bias         = p.Results.B_bias;
             obj.BkgSlope_Bias    = p.Results.BSlope_bias;
+            obj.BkgPTSlope_Bias  = p.Results.BPTSlope_bias;
             obj.TTGS_bias        = p.Results.TTGS_bias;
             obj.TTES_bias        = p.Results.TTES_bias;
             obj.DTGS_bias        = p.Results.DTGS_bias;
@@ -1778,13 +1817,13 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
             Init_condition = (obj.mnuSq_Bias == 0) && ...
                 (obj.E0_bias == 0) && all(obj.Norm_Bias == 0) && ...
                 all(obj.Bkg_Bias == 0) && all(obj.qUOffset_bias == 0) && ...
-                all(obj.BkgSlope_Bias == 0) && all(obj.mTSq_bias == 0) && (obj.FracTm_bias==0);
+                all(obj.BkgSlope_Bias == 0) && all(obj.BkgPTSlope_Bias == 0) && all(obj.mTSq_bias == 0) && (obj.FracTm_bias==0);
             
             % Check if parameters changed, which require recalculation of phace space
             PhaseSpaceChange_condition = ...
                 (mnuSq_prev ~= obj.mnuSq) || ... % neutrino mass
                 (E0_prev ~= obj.Q) || ...        % endpoint
-                any(mTSq_prev ~= obj.mTSq) || ... % neutrino mass offset (TBDDS energy smearing)
+                any(any(mTSq_prev ~= obj.mTSq)) || ... % neutrino mass offset (TBDDS energy smearing)
                 ((~isempty(obj.TTNormGS)) && any(TTGS_prev ~= obj.TTNormGS)) || ... %FSDs
                 ((~isempty(obj.TTNormES)) && any(TTES_prev ~= obj.TTNormES)) || ...
                 ((~isempty(obj.DTNormGS)) && any(DTGS_prev ~= obj.DTNormGS)) || ...
@@ -1985,8 +2024,12 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                 TBDDStmp =  obj.TBDDS; % init
                 for r=1:obj.nRings
                     if obj.qUOffset(r)~=0
-                        %fprintf('Ring %.0f: qUOffset = %.2g eV \n',r,obj.qUOffset(r))
-                        TBDDStmp(:,r) = interp1(obj.Te,obj.TBDDS(:,r),obj.Te+obj.qUOffset(r),'spline','extrap'); 
+                        fprintf('Ring %.0f: qUOffset = %.2g eV \n',r,obj.qUOffset(r))
+                        try
+                            TBDDStmp(:,r) = interp1(obj.Te,obj.TBDDS(:,r),obj.Te+obj.qUOffset(r),'lin','extrap');
+                        catch
+                            a=1;
+                        end
                     end
                 end
                 obj.TBDDS = TBDDStmp;
@@ -2056,19 +2099,34 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                 obj.TBDIS = obj.TBDIS.*RoiCorr.*PileUpCorr;
         end
         
-%         %  apply qU Offset (1 per FPD segmentation e.g. 1 per ring)
-%         if any(obj.qUOffset~=0)
-%             TBDIStmp = zeros(obj.nqU,obj.nPixels);
-%             if obj.nPixels==1
-%                 TBDIStmp = interp1(obj.qU,obj.TBDIS,obj.qU+obj.qUOffset,'spline','extrap');
-%             else
-%                 for p=1:obj.nPixels
-%                     TBDIStmp(:,p) = interp1(obj.qU(:,p),obj.TBDIS(:,p),obj.qU(:,p)+obj.qUOffset(p),'spline','extrap');
-%                 end
-%             end
-%             obj.TBDIS = TBDIStmp;
-%         end
+        %         %  apply qU Offset (1 per FPD segmentation e.g. 1 per ring)
+        %         if any(obj.qUOffset~=0)
+        %             TBDIStmp = zeros(obj.nqU,obj.nPixels);
+        %             if obj.nPixels==1
+        %                 TBDIStmp = interp1(obj.qU,obj.TBDIS,obj.qU+obj.qUOffset,'spline','extrap');
+        %             else
+        %                 for p=1:obj.nPixels
+        %                     TBDIStmp(:,p) = interp1(obj.qU(:,p),obj.TBDIS(:,p),obj.qU(:,p)+obj.qUOffset(p),'spline','extrap');
+        %                 end
+        %             end
+        %             obj.TBDIS = TBDIStmp;
+        %         end
         
+        % background slope from penning trap
+        if obj.BKG_PtSlope ~=0
+            if strcmp(obj.FPD_Segmentation,'RING')
+                BKG_PtSlope_local = obj.BKG_PtSlope.*obj.BKG_RateSec./sum(obj.BKG_RateSec);
+            else
+                BKG_PtSlope_local = obj.BKG_PtSlope;
+            end
+            TimeTotSubrun    = obj.TimeSec.*obj.qUfrac;
+            TimeAvSubrun     = obj.TimeSec.*obj.qUfrac./obj.nRuns;
+            BkgRate_PngSlope = 0.5.*BKG_PtSlope_local.*TimeAvSubrun;
+            Bkg_PtSlope      = BkgRate_PngSlope.*TimeTotSubrun;
+            obj.TBDIS        = obj.TBDIS + Bkg_PtSlope;
+        end
+        
+        % stat. uncertainty
         obj.TBDISE = sqrt(obj.TBDIS);
         end
         
@@ -2124,9 +2182,9 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
             % Check if FSD are included in the spectrum to decide on the
             % filename.
             if contains(obj.TTFSD,'Blinding')
-               FSDlabel = 'Blinding';
+               FSDlabel = obj.TTFSD;%'Blinding';
             else
-               FSDlabel = '';
+               FSDlabel = obj.TTFSD;%'';
             end
             toggleback=0;
             
@@ -2134,7 +2192,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
             % already exists, if yes, load it
             FullDSIntDir = [getenv('SamakPath'),'inputs/CumFrac/'];
             MakeDir( FullDSIntDir);
-            FullDSIntName = sprintf('%sTT%0.5g_DT%0.5g_HT%0.5g_DE%s_Rad%s_RhoD%0.5g%s.mat',...
+            FullDSIntName = sprintf('%sTT%0.5g_DT%0.5g_HT%0.5g_DE%s_Rad%s_RhoD%0.5g_FSD%s.mat',...
                 FullDSIntDir,...
                 obj.WGTS_MolFrac_TT,obj.WGTS_MolFrac_DT,obj.WGTS_MolFrac_HT,...
                 obj.DopplerEffectFlag,obj.RadiativeFlag,obj.WGTS_CD_MolPerCm2,FSDlabel);
@@ -2144,7 +2202,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                     sprintf('HT%0.5g_Tm%0.5g',obj.WGTS_MolFrac_HT,obj.WGTS_MolFrac_Tm));
             end
             
-            if exist(FullDSIntName,'file') == 2
+            if exist(FullDSIntName,'file') == 2 
                 TempStructFullDS = load(FullDSIntName);
                 FullDSInt = TempStructFullDS.FullDSInt;
             else % if not, calculate it
@@ -2160,8 +2218,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                     stepsizeCF = 2;
                 end
                 
-                saveTe = obj.Te;
-                
+                saveTe = obj.Te; 
                 obj.Te = (0.01:stepsizeCF:obj.qUmax)';
                 obj.nTe = length(obj.Te);
                 obj.SetKinVariables();
