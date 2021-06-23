@@ -6,6 +6,7 @@ DataType = 'Real';
 range = 40;
 Mainz = 'ON';
 Troitsk = 'ON';
+BF = 'ON';
 %% load ksn-2 only results
 savedir = [getenv('SamakPath'),'SterileAnalysis/MiniFiles/KSN2/'];
 savefilemNuFix = sprintf('%sKSN2contour_%s_%s_%s_%.0feV.mat',savedir,DataType,'E0NormBkg',chi2,range);
@@ -62,6 +63,14 @@ pCombimNuFree = plot(dCombimNu.sin2T4_k12_contour,dCombimNu.mNu4Sq_k12_contour,'
 xlim([3e-03 0.5]);
 ylim([0.2 2200]);
 
+if strcmp(BF,'ON')
+   pmNuFix_bf = plot(d.sin2T4_bf,d.mNu4Sq_bf,'x','LineWidth',3,'Color',rgb('DodgerBlue'));
+   pmNuFree_bf = plot(dmNu.sin2T4_bf,dmNu.mNu4Sq_bf,'x','LineWidth',3,'Color',pmNuFree.Color,'MarkerSize',8);
+   pCombimNuFix_bf = plot(dCombi.sin2T4_bf_12,dCombi.mNu4Sq_bf_12,'o','LineWidth',2.5,'Color',pCombimNuFix.Color,'MarkerSize',8);
+pCombimNuFree_bf = plot(dCombimNu.sin2T4bf_k12,dCombimNu.mNu4Sqbf_k12,'*','LineWidth',2.5,'Color',pCombimNuFree.Color,'MarkerSize',8);
+
+ 
+end
 %% legend
 leg = legend([pMainz,pTroitsk,pmNuFix,pmNuFree,pCombimNuFix,pCombimNuFree],...
     sprintf('Mainz: {\\itm}_\\nu^2 = 0 eV^2'),...
@@ -80,29 +89,28 @@ MakeDir(pltdir);
 % pltname = sprintf('%sksn2_CompareMainzTroitskCombi_%s.png',pltdir,DataType);
 % print(gcf,pltname,'-dpng','-r350');
 pltname = sprintf('%sksn2_CompareMainzTroitskCombi_%s.pdf',pltdir,DataType);
-%export_fig(gcf,pltname);
+export_fig(gcf,pltname);
 
-
-%% find differences in sin^2 between ksn-2 and combination
-Case = 'FreemNu';
-if strcmp(Case,'FixmNu')
-    xmin = max([min(dCombi.mNu4Sq_contour_12),min(d.mNu4Sq_contour)]);
-    xmax = min([max(dCombi.mNu4Sq_contour_12),max(d.mNu4Sq_contour)]);
-elseif strcmp(Case,'FreemNu')
-    xmin = max([min(dCombimNu.mNu4Sq_k12_contour),min(dmNu.mNu4Sq_contour)]);
-    xmax = min([max(dCombimNu.mNu4Sq_k12_contour),max(dmNu.mNu4Sq_contour)]);
-end
-mNu4Sq = logspace(log10(xmin),log10(xmax),1e3);
-if strcmp(Case,'FixmNu')
-    sin2T4  = interp1(d.mNu4Sq_contour,d.sin2T4_contour,mNu4Sq,'spline');
-    sin2T4C = interp1(dCombi.mNu4Sq_contour_12,dCombi.sin2T4_contour_12,mNu4Sq,'spline');
-elseif strcmp(Case,'FreemNu')
-    sin2T4  = interp1(dmNu.mNu4Sq_contour,dmNu.sin2T4_contour,mNu4Sq,'spline');
-    sin2T4C = interp1(dCombimNu.mNu4Sq_k12_contour,dCombimNu.sin2T4_k12_contour,mNu4Sq,'spline');
-end
-GetFigure;
-plot(sin2T4-sin2T4C,mNu4Sq,'-','LineWidth',2);
-set(gca,'YScale','log');
-xlabel(sprintf('|{\\itU}_{e4}|^2(KSN2) - |{\\itU}_{e4}|^2(Combi)'));
-ylabel(sprintf('{\\itm}_4^2 (eV^{ 2})'));
-PrettyFigureFormat('FontSize',22);
+% %% find differences in sin^2 between ksn-2 and combination
+% Case = 'FreemNu';
+% if strcmp(Case,'FixmNu')
+%     xmin = max([min(dCombi.mNu4Sq_contour_12),min(d.mNu4Sq_contour)]);
+%     xmax = min([max(dCombi.mNu4Sq_contour_12),max(d.mNu4Sq_contour)]);
+% elseif strcmp(Case,'FreemNu')
+%     xmin = max([min(dCombimNu.mNu4Sq_k12_contour),min(dmNu.mNu4Sq_contour)]);
+%     xmax = min([max(dCombimNu.mNu4Sq_k12_contour),max(dmNu.mNu4Sq_contour)]);
+% end
+% mNu4Sq = logspace(log10(xmin),log10(xmax),1e3);
+% if strcmp(Case,'FixmNu')
+%     sin2T4  = interp1(d.mNu4Sq_contour,d.sin2T4_contour,mNu4Sq,'spline');
+%     sin2T4C = interp1(dCombi.mNu4Sq_contour_12,dCombi.sin2T4_contour_12,mNu4Sq,'spline');
+% elseif strcmp(Case,'FreemNu')
+%     sin2T4  = interp1(dmNu.mNu4Sq_contour,dmNu.sin2T4_contour,mNu4Sq,'spline');
+%     sin2T4C = interp1(dCombimNu.mNu4Sq_k12_contour,dCombimNu.sin2T4_k12_contour,mNu4Sq,'spline');
+% end
+% GetFigure;
+% plot(sin2T4-sin2T4C,mNu4Sq,'-','LineWidth',2);
+% set(gca,'YScale','log');
+% xlabel(sprintf('|{\\itU}_{e4}|^2(KSN2) - |{\\itU}_{e4}|^2(Combi)'));
+% ylabel(sprintf('{\\itm}_4^2 (eV^{ 2})'));
+% PrettyFigureFormat('FontSize',22);

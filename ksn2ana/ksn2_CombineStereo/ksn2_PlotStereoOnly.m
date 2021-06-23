@@ -2,11 +2,18 @@
 % plot contour
 SavePlt = 'ON';
 Interp = 'ON';
+Type = 'Data';%'Sensitivity';
 
+   savedir = [getenv('SamakPath'),'ksn2ana/ksn2_CombineStereo/results/'];
+   
 switch Interp
     case 'OFF'
+        if strcmp(Type,'Data')
+            matfile = [savedir,'/StereoMaps.mat'];
+        else
+            matfile = [savedir,'StereoMaps_Sensitivity.mat'];
+        end
         
-        matfile = [getenv('SamakPath'),'ksn2ana/ksn2_CombineStereo/results/StereoMaps.mat'];
         if exist(matfile,'file')
             load(matfile)
             fprintf('load %s \n',matfile);
@@ -15,25 +22,19 @@ switch Interp
             return
         end
     case 'ON'
-        
-        Maxm4Sq = 40^2;
-        DataType = 'Real';
-        
-        
-        savedir = [getenv('SamakPath'),'ksn2ana/ksn2_NuMassSensitivity/results/'];
-        savefile = sprintf('%sksn2_%s_InterpStereo_%s_Max%.0feV2.mat',...
-            savedir,DataType,'spline',Maxm4Sq);
+        Maxm4Sq = 38^2;
+        savefile = sprintf('%sksn2_InterpStereoMini_Max%.0feV2_Min%.2gfeV2.mat',...
+            savedir,Maxm4Sq,0.1);
+        if strcmp(Type,'Sensitivity')
+            savefile = strrep(savefile,'.mat','_Sensitivity.mat');
+        end
         d = importdata(savefile);
-
-        sin2TSq = d.sin2T4_Katrin_Osc;
-        mNu41Sq = d.mNu4Sq_Katrin;
-        chi2crit = d.chi2critStereo;
-        chi2  = d.chi2Stereo;
+        fprintf('import %s \n',savefile)
+        sin2TSq = d.sin2T4_Osci_cut;
+        mNu41Sq = d.mNu4Sq_cut;
+        chi2crit = d.chi2Stereocrit_cut;
+        chi2  = d.chi2Stereo_cut;
         
-        sin2TSq(~d.InterIdx) = NaN;
-        mNu41Sq(~d.InterIdx) = NaN;
-        chi2crit(~d.InterIdx) = NaN;
-        chi2(~d.InterIdx) = NaN;
 end
 %% critical delta chi2
 GetFigure;
@@ -56,7 +57,9 @@ t = title('STEREO:  Phys.Rev.D 102 (2020) 052002','FontSize',15,'FontWeight','no
 pltdir = [getenv('SamakPath'),'ksn2ana/ksn2_CombineStereo/plots/'];
 if strcmp(SavePlt,'ON')
     MakeDir(pltdir);
-    print(gcf,[pltdir,sprintf('StereoChi2Crit_Interp%s.png',Interp)],'-dpng','-r300');
+    pltname = sprintf('%sStereoChi2crit_Interp%s_%s.png',pltdir,Interp,Type);
+    print(gcf,pltname,'-dpng','-r300');
+    fprintf('save plot to %s \n',pltname);
 end
 %%  delta chi2 + contour
 chi2Plot = chi2;%NaN.*ones(size(chi2));
@@ -75,9 +78,15 @@ ylabel(sprintf('{\\itm}_{41}^2 (eV^2)'));
 c = colorbar;
 c.Label.String = sprintf('\\Delta\\chi^2');
 c.Label.FontSize = get(gca,'FontSize');
-t = title('STEREO:  Phys.Rev.D 102 (2020) 052002','FontSize',15,'FontWeight','normal');
+if strcmp(Type,'Sensitivity')
+    t = title('STEREO Sensitivity:  Phys.Rev.D 102 (2020) 052002','FontSize',15,'FontWeight','normal');
+else
+    t = title('STEREO:  Phys.Rev.D 102 (2020) 052002','FontSize',15,'FontWeight','normal');
+end
 if strcmp(SavePlt,'ON')
     MakeDir(pltdir);
-    print(gcf,[pltdir,sprintf('StereoChi2_Interp%s.png',Interp)],'-dpng','-r300');
+    pltname = sprintf('%sStereoChi2_Interp%s_%s.png',pltdir,Interp,Type);
+    print(gcf,pltname,'-dpng','-r300');
+      fprintf('save plot to %s \n',pltname);
 end
 

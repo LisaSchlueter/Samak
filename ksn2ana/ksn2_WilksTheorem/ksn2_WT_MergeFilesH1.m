@@ -1,7 +1,7 @@
 % create smaller file for result of grids searches on randomized data
-RecomputeFlag = 'ON';
+RecomputeFlag = 'OFF';
 Hypothesis = 'H2';
-InterpMode = 'lin';%'lin';
+InterpMode = 'Mix';%'lin';
 chi2 = 'chi2CMShape';
 randMC = [1:1500];
 NrandMC = numel(randMC);
@@ -79,7 +79,7 @@ else
     S.InterpMode = InterpMode;
  
     
-    dspectra = ksn2_GetRandTritiumSpectrum('H1');
+    dspectra = ksn2_GetRandTritiumSpectrum(Hypothesis);
     progressbar('Merge files for WT');
     for i=1:NrandMC
         progressbar(i/NrandMC);
@@ -111,21 +111,25 @@ else
         S.RandMC_TBDIS = [];
     end
     % also load expected contour from Asimov Twin
-    S.InterpMode = 'Mix';%'spline';
+   
     S.RandMC= 'OFF';
     S.nGridSteps = 30;
     if strcmp(Hypothesis,'H1')
+         S.InterpMode = 'Mix';%'spline';
         S.LoadGridFile('mNu4SqTestGrid',5,'ExtmNu4Sq','ON');
+         S.Interp1Grid;
     elseif  strcmp(Hypothesis,'H2')
+         S.InterpMode = 'Mix';
         S.LoadGridFile('mNu4SqTestGrid','OFF','ExtmNu4Sq','ON');
+         S.Interp1Grid('Maxm4Sq',30^2);
     end
-    S.Interp1Grid;
+   
     S.ContourPlot; close;
-
+    
     mNu4Sq_contour_Asimov = S.mNu4Sq_contour;
     sin2T4_contour_Asimov =  S.sin2T4_contour;
     
-    if strcmp(Hypothesis,'H1')
+    if ismember(Hypothesis,{'H1','H2'})
         S.FindBestFit;
         mNu4Sq_contour_Asimov_bf = S.mNu4Sq_bf;
         sin2T4_contour_Asimov_bf =  S.sin2T4_bf;
@@ -136,7 +140,7 @@ else
         'chi2_delta','mNu4Sq_contour','sin2T4_contour',....
         'mNu4Sq_contour_Asimov','sin2T4_contour_Asimov','TBDIS_mc');
     
-    if strcmp(Hypothesis,'H1')
+    if ismember(Hypothesis,{'H1','H2'}) 
         save(savefile,'mNu4Sq_contour_Asimov_bf','sin2T4_contour_Asimov_bf','-append');
     end
     
@@ -145,7 +149,7 @@ else
     
 end
 
-% to some further calculations
+%% to some further calculations
 if ~isfield(d,'ClosedLog95')
     % number of significant best fits
     nContours = numel(mNu4Sq_bf);

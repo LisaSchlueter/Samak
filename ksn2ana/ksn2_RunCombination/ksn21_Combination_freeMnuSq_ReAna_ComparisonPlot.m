@@ -2,13 +2,13 @@
 % combine ksn1 and ksn2, nu-mass free
 % plot with ksn1, ksn2, ksn1+2
 chi2          = 'chi2CMShape';
-DataType      = 'Twin';
+DataType      = 'Real';
 nGridStepsCommon  = 30;
 freePar       = 'mNu E0 Bkg Norm';
 range         = 40;
 extraStr = '_ReAna';
 FixBfK2 = 'OFF';
-N4 = 'ON';
+N4 = 'OFF';
 ExtLeg = 'OFF';
 savedir = [getenv('SamakPath'),'/SterileAnalysis/GridSearchFiles/Combi/',DataType,'/'];
 MakeDir(savedir)
@@ -125,8 +125,8 @@ end
 
 dof1 = S.dof;
 
-% find significance
-[DeltaChi2_1, SignificanceBF_1] = S.CompareBestFitNull;
+% find significance 
+[DeltaChi2_1, SignificanceBF_1,SignificanceSigma_1] = S.CompareBestFitNull;
 mNu4Sqbf_k1 = S.mNu4Sq_bf;
 sin2T4bf_k1 = S.sin2T4_bf;
 %% load ksn2
@@ -172,7 +172,7 @@ sin2T4bf_k2 = S.sin2T4_bf;
 [p2tot,sinMin,pbf2] = S.ContourPlot('BestFit',BF,'CL',95,'HoldOn','ON','Color',rgb('Orange'),'LineStyle','-.','ReCalcBF','OFF');
 dof2 = S.dof;
 % find significance
-[DeltaChi2_2, SignificanceBF_2] = S.CompareBestFitNull;
+[DeltaChi2_2, SignificanceBF_2,SignificanceSigma_2] = S.CompareBestFitNull;
 %% KSN1+2
 S.sin2T4 = d.sin2T4;
 S.mNu4Sq = d.mnu4Sq;
@@ -213,7 +213,7 @@ mNu4Sqbf_k12 = S.mNu4Sq_bf;
 sin2T4bf_k12 = S.sin2T4_bf;
 
 % find significance
-[DeltaChi2_tot, SignificanceBF_tot] = S.CompareBestFitNull;
+[DeltaChi2_tot, SignificanceBF_tot,SignificanceSigma_tot] = S.CompareBestFitNull;
 
 % convert cl to sigma
 SigmaBF1 = ConvertCLStd('Mode','CL2Sigma','CL',SignificanceBF_1,'nPar',2);

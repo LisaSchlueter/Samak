@@ -11,6 +11,9 @@ if strcmp(Hypothesis,'H0')
 elseif strcmp(Hypothesis,'H1')
         Twin_sin2T4 = 0.0240;
         Twin_mNu4Sq = 92.7;
+elseif strcmp(Hypothesis,'H2')
+        Twin_sin2T4 = 0.07;
+        Twin_mNu4Sq = 20;  
 end
 
 if Twin_sin2T4==0 && Twin_mNu4Sq==0

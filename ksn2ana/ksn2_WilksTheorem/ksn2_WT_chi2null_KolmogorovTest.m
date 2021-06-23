@@ -14,13 +14,19 @@ switch Hypothesis
         chi2 = 'chi2CMShape';
         randMC_new  = 1:1250;
     case 'H1' 
-       randMC = 1:1500;
-    %   excl = [1:139,577:757];
-%randMC = randMC(~ismember(randMC,excl));
+        randMC = 1:1500;
+        %   excl = [1:139,577:757];
+        %randMC = randMC(~ismember(randMC,excl));
         Twin_sin2T4 = 0.0240;
         Twin_mNu4Sq = 92.7;
         chi2 = 'chi2CMShape';
         MergeNew = 'OFF'; % nothing new
+    case 'H2'
+        randMC      = 1:1500;
+        Twin_sin2T4 = 0.07;
+        Twin_mNu4Sq = 20;
+        chi2        = 'chi2CMShape';
+        MergeNew    = 'OFF'; % nothing new
 end
 
 if strcmp(MergeNew,'ON')
@@ -63,7 +69,7 @@ Chi2CDFTheo = chi2cdf(chi2_null,dof);                                  % theoret
 GetFigure;
 pEmp =plot(chi2_null,Chi2CDFEmp,'-.','LineWidth',2);
 hold on;
-x = linspace(0,max(chi2_null),1e3);
+x = linspace(0,60,1e3);%max(chi2_null),1e3);
 pTheo = plot(x,chi2cdf(x,dof),'-','LineWidth',2);
 PrettyFigureFormat('FontSize',22);
 xlabel(sprintf('\\chi^2_{null} (%.0f dof)',dof));

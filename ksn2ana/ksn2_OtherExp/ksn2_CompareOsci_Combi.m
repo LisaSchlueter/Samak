@@ -1,7 +1,7 @@
 % ksn2 calculate chi2 grid search
 %% settings that might change
 chi2 = 'chi2CMShape';
-DataType = 'Real';
+DataType = 'Twin';
 nGridSteps = 40;
 range = 40;
 freePar = 'E0 Norm Bkg';

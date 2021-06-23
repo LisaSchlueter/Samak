@@ -2,17 +2,18 @@
 % raster scan
 % compare variances
 % systematics one-by-one
+% without interpolation 
 %% settings that might change
-SavePlt = 'ON';
+SavePlt = 'OFF';
 RasterScan = 'ON';
 DataType = 'Twin';
 nGridSteps = 30;
 range = 40;
-InterpMode = 'spline';
+
 savedir = [getenv('SamakPath'),'ksn2ana/ksn2_Systematics/results/'];
-savename = sprintf('%sksn2_SystBreakdown_StatOverSyst_%s_%.0feV_RasterScan%s_%sInterp.mat',...
-    savedir,DataType,range,RasterScan,InterpMode);
-if exist(savename,'file')  
+savename = sprintf('%sksn2_SystBreakdown_StatOverSyst_Raw_%s_%.0feV_RasterScan%s.mat',...
+    savedir,DataType,range,RasterScan);
+if exist(savename,'file') 
     load(savename);
      fprintf('load file %s \n',savename);
 else
@@ -56,7 +57,7 @@ else
     
     %%
     S = SterileAnalysis(SterileArg{:});
-    S.InterpMode = InterpMode;
+   
     %%
     SysEffectsAll   = {'all','LongPlasma','BkgPT','NP','RF_BF','FSD', 'Bkg', 'RF_RX','FPDeff',...
         'TASR','RF_EL' ,'Stack','TCoff_OTHER'};
@@ -66,11 +67,18 @@ else
         'Tritium activity fluctuations';'Energy-loss function';...
         'HV fluctuations';'Theoretical corrections';};
     nSys = numel(SysEffectsAll);
-    Ratio       = zeros(nSys,1e4);
-    mNu4Sq      = zeros(nSys,1e4);
-    sin2t4_Stat = zeros(nSys,1e4);
-    sin2t4_Sys  = zeros(nSys,1e4);
-    sin2t4_Tot  = zeros(nSys,1e4);
+
+    % stat only
+    S.RunAnaObj.chi2 = 'chi2Stat';
+    S.RunAnaObj.NonPoissonScaleFactor = 1;
+    S.LoadGridFile(S.LoadGridArg{:});
+    S.chi2 = S.chi2';
+    S.ContourPlot('RasterScan',RasterScan); close;
+    mNu4Sq = S.mNu4Sq_contour;
+    sin2t4_Stat = S.sin2T4_contour;
+   
+    sin2t4_Sys  = zeros(nSys,numel(sin2t4_Stat));
+    sin2t4_Tot  = zeros(nSys,numel(sin2t4_Stat));
     
     for i=1:nSys
         S.SysEffect = SysEffectsAll{i};
@@ -80,9 +88,26 @@ else
             S.RunAnaObj.NonPoissonScaleFactor = 1;
         end
         
-        [Ratio(i,:),~,mNu4Sq(i,:),sin2t4_Stat(i,:),sin2t4_Tot(i,:),sin2t4_Sys(i,:)] = S.StatOverSysKsn2('RasterScan',RasterScan);
+        if ~strcmp(S.SysEffect,'NP')
+            S.RunAnaObj.chi2 = 'chi2CMShape';
+        else
+              S.RunAnaObj.chi2 = 'chi2Stat';
+        end
         
+        S.LoadGridFile(S.LoadGridArg{:});
+        S.chi2 = S.chi2';
+        S.ContourPlot('RasterScan',RasterScan); close;
+        mNu4Sq_Tot = S.mNu4Sq_contour;
+        sin2t4_Tot_tmp = S.sin2T4_contour;
+        if i==nSys
+            a =1
+        end
+        % match stat. only
+        sin2t4_Tot(i,:) = interp1(mNu4Sq_Tot,sin2t4_Tot_tmp,mNu4Sq,'lin');
+        sin2t4_Sys(i,:) = sqrt(sin2t4_Tot(i,:).^2-sin2t4_Stat.^2);
     end
+    
+   Ratio = sin2t4_Sys.^2./sin2t4_Tot.^2;
     % save
     MakeDir(savedir);
     save(savename,'Ratio','mNu4Sq','sin2t4_Stat','sin2t4_Tot',...
@@ -106,9 +131,9 @@ for i=1:nSys
         PltColor =Colors(floor((i)*256/(nSys)),:);
         LineWidth = 2;
     end
-    pHandle{i} = plot(mNu4Sq(i,:),sin2t4_Sys(i,:).^2./sin2t4_Tot(1,:).^2,'LineWidth',LineWidth,'Color',PltColor,'LineStyle',LineStyle{i});
+    pHandle{i} = plot(mNu4Sq,sin2t4_Sys(i,:).^2./sin2t4_Tot(1,:).^2,'LineWidth',LineWidth,'Color',PltColor,'LineStyle',LineStyle{i});
 end
-pStat = plot(mNu4Sq(1,:),sin2t4_Stat(1,:).^2./sin2t4_Tot(1,:).^2,'LineWidth',LineWidth,'Color',rgb('Silver'),'LineStyle','-');
+pStat = plot(mNu4Sq,sin2t4_Stat.^2./sin2t4_Tot(1,:).^2,'LineWidth',LineWidth,'Color',rgb('Silver'),'LineStyle','-');
 ylabel(sprintf('\\sigma_{syst.}^2 / \\sigma_{total}^2'))
 xlabel(sprintf('{\\itm}_4^2 (eV^2)'));
 set(gca,'XScale','log');
@@ -128,4 +153,9 @@ if strcmp(SavePlt,'ON')
     print(fRatio,plotname,'-dpng','-r400');
     fprintf('save plot to %s \n',plotname);
     export_fig(fRatio,strrep(plotname,'png','pdf'));
+end
+
+%%
+for i=1:nSys
+fprintf('%.0f mean = %.3f \n',i,nanmean(Ratio(i,:)));
 end
