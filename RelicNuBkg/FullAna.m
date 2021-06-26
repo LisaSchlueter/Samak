@@ -1,15 +1,16 @@
-DataSet='KNM1';
+DataSet='KNM2_Prompt';
+Recompute='OFF';
 
 if strcmp(DataSet,'KNM1')
     SB=24;
-elseif strcmp(DataSet,'KNM2')
+elseif strcmp(DataSet,'KNM2_Prompt')
     SB=40;
 elseif strcmp(DataSet,'TDR')
     SB=67;
 end
 A=RelicNuAnalysis('Params',DataSet);
 
-UpperLimitvsmnuSq('Params',DataSet);                                                                        %Sensitivity limit of twins
+UpperLimitvsmnuSq('Params',DataSet,'Recompute',Recompute);                                                  %Sensitivity limit of twins
 
 A.EtaFit('Mode','SinglemnuSq','SysBudget',SB,'fitPar','E0 Norm Bkg eta');                                   %Raster scan twins
 
@@ -17,7 +18,7 @@ A.Chi2Scan_2D('RunList',DataSet,'SystBudget',SB);                               
 
 A.SystBreakdown('TwinBias_mnuSq',1);                                                                        %Systematics breakdown twins
 
-PlotBestFit('RunList',DataSet,'DataType','Twin','Nfit',1000);                                               %p-value
+%PlotBestFit('RunList',DataSet,'DataType','Twin','Nfit',1000);                                               %p-value
 
 if ~strcmp(DataSet,'TDR')
     PlotBestFit('RunList',DataSet,'DataType','Real','saveplot','ON');                                           %Best fit data

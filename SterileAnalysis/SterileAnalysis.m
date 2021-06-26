@@ -529,6 +529,7 @@ classdef SterileAnalysis < handle
             end
             
             %  best fit
+            fprintf('-------------------------------------------\n');
             fprintf('Best fit sinTsq = %.3f and m4sq = %.2f eV^2 \n',obj.sin2T4_bf,obj.mNu4Sq_bf);
             fprintf('Best fit:        chi2 = %.3f (%.0f dof) -> p-value = %.2f\n',obj.chi2_bf,obj.dof,1-chi2cdf(obj.chi2_bf,obj.dof));
             
@@ -538,7 +539,7 @@ classdef SterileAnalysis < handle
           %  y = GetDeltaChi2(x,2);
             DeltaChi2 = obj.chi2_Null-obj.chi2_bf;
             SignificanceBF = chi2cdf(DeltaChi2,2);%interp1(y,x, DeltaChi2,'spline');
-           SignificanceSigma = ConvertCLStd('Mode','CL2Sigma','nPar',2,'CL',SignificanceBF);
+           SignificanceSigma = sqrt(DeltaChi2);%ConvertCLStd('Mode','CL2Sigma','nPar',2,'CL',SignificanceBF);
             fprintf('Delta chi2 = %.2f -> %.2f%% C.L. significance (%.2f sigma)\n',...
                 obj.chi2_Null-obj.chi2_bf,100.*SignificanceBF,SignificanceSigma);
           

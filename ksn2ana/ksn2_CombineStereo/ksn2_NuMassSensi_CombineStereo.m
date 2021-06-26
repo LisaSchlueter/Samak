@@ -1,7 +1,7 @@
 % impact of 3+1 model extionsion on neutrino mass sensitivity
 % with STEREO as external constraints
 chi2 = 'chi2CMShape';
-DataType = 'Real';
+DataType = 'Twin';
 SavePlt = 'ON';
 if strcmp(DataType,'Real')
 mNuSq = -1:0.01:2.5;
@@ -73,15 +73,29 @@ else
     sin2T4_contour_bf  =  S.sin2T4_bf;
     mNu4Sq_contour_bf = S.mNu4Sq_bf;
     
-    %% load Stereo
-    InterpMode = 'spline';
-    DataType = 'Real';
+    %% load STEREO Minifile
+    savedir = [getenv('SamakPath'),'ksn2ana/ksn2_CombineStereo/results/'];
+    if strcmp(DataType,'Real')
+        savefileSTEREO = sprintf('%sksn2_InterpStereoMini_Max%.0feV2_Min%.2gfeV2.mat',...
+            savedir,Maxm4Sq,min(min(mNu4Sq)));
+    else
+        savefileSTEREO = sprintf('%sksn2_InterpStereoMini_Max%.0feV2_Min%.2gfeV2_Sensitivity.mat',...
+            savedir,Maxm4Sq,min(min(mNu4Sq)));
+    end
     
-    savedir = [getenv('SamakPath'),'ksn2ana/ksn2_NuMassSensitivity/results/'];
-    StereoFile = sprintf('%sksn2_%s_InterpStereo_%s_Max%.0feV2.mat',...
-        savedir,DataType,InterpMode,Maxm4Sq);
+    if exist(savefileSTEREO,'file')
+        fprintf('load file %s \n',savefileSTEREO);
+        dS = importdata(savefileSTEREO);
+    else
+        return
+    end
     
-    ds = importdata(StereoFile);
+    % double check : same binning?
+    if any(any(dS.mNu4Sq~=S.mNu4Sq)) || any(any(dS.sin2T4~=S.sin2T4))
+        fprintf('Stereo and KATRIN dont have same binning! \n');
+        return
+    end 
+    ds = importdata(savefileSTEREO);
     S.chi2 = ds.chi2Combi;%S.chi2-S.chi2_ref+ds.chi2Stereo;
     
     %%

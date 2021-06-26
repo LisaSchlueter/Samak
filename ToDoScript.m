@@ -127,11 +127,13 @@
 % end
 % P=cntr/Nsamp
 
-v_nu=6000e3;
-c=299792458;
-e=1.602176487e-19;
-hbar=1.054571628e-34;
-etamax = (1/(3*pi^2)*(e^2/(c^4*hbar^2)*v_nu^2)^1.5)*0.01^3/56
-E_kin=0.5*e/c^2*v_nu^2;
-lambda=2*pi*hbar/(sqrt(2*E_kin*e/c^2))
-etamaxlambda=(0.01/lambda)^3/56
+% v_nu=6000e3;
+% c=299792458;
+% e=1.602176487e-19;
+% hbar=1.054571628e-34;
+% etamax = (1/(3*pi^2)*(e^2/(c^4*hbar^2)*v_nu^2)^1.5)*0.01^3/56
+% E_kin=0.5*e/c^2*v_nu^2;
+% lambda=2*pi*hbar/(sqrt(2*E_kin*e/c^2))
+% etamaxlambda=(0.01/lambda)^3/56
+
+PlotBestFit('RunList',DataSet,'DataType','Twin','Nfit',1000);

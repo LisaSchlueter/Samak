@@ -13,7 +13,6 @@ PixList = GetPixList('Knm1');
 p = inputParser;
 p.addParameter('eta_i',1);
 p.addParameter('ToggleRelic','ON');
-p.addParameter('FSD_Sigma',0.0001,@(x)isfloat(x) || isempty(x));
 p.addParameter('ToggleES','OFF',@(x)ismember(x,{'ON','OFF'}));
 
 p.addParameter('WGTS_CD_MolPerCm2',1.1099e17,@(x)isfloat(x) && x>0);
@@ -72,7 +71,6 @@ p.addParameter('RadiativeFlag','ON',@(x)ismember(x,{'ON','OFF'}));
 p.parse(varargin{:});
 
 eta_i                    = p.Results.eta_i;
-FSD_Sigma                = p.Results.FSD_Sigma;
 ToggleRelic              = p.Results.ToggleRelic;
 ToggleES                 = p.Results.ToggleES;
 
@@ -217,7 +215,6 @@ opt_corr = {'RadiativeFlag',RadiativeFlag};
 
 opt_relic = {...
     'eta_i',eta_i,...
-    'FSD_Sigma',FSD_Sigma,...
     'ToggleRelic',ToggleRelic,...
     'ToggleES',ToggleES};
 

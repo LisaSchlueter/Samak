@@ -1,6 +1,6 @@
 % Test of Wilk's theorem (coverage)
 % chi2 distribution of null hypothesis
-Hypothesis = 'H0';
+Hypothesis = 'H2';
 InterpMode = 'lin';
 SavePlt = 'ON';
 MergeNew = 'ON';
@@ -21,6 +21,12 @@ switch Hypothesis
         Twin_mNu4Sq = 92.7;
         chi2 = 'chi2CMShape';
         MergeNew = 'OFF'; % nothing new
+    case 'H2'
+        randMC      = 1:1500;
+        Twin_sin2T4 = 0.07;
+        Twin_mNu4Sq = 20;
+        chi2        = 'chi2CMShape';
+        MergeNew    = 'OFF'; % nothing new
 end
 
 if strcmp(MergeNew,'ON')
@@ -73,7 +79,7 @@ ylabel('Frequency');
 leg = legend([hchi2,pchi2],sprintf('%.0f pseudo-experiments',numel(chi2_bf)),...
                  sprintf('\\chi^2 distribution for %.0f dof',dof),...
                  'EdgeColor',rgb('Silver'));
-%xlim([0 70]);
+xlim([0 60]);
 
 if strcmp(SavePlt,'ON')
 plotnameChi2 = strrep(strrep(savefile,'results','plots'),'.mat','_Chi2NullDist.png');

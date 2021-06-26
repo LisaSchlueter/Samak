@@ -1,10 +1,13 @@
 % read original Stereo data
 % transform into mat file for later use
 
+
 matfile = [getenv('SamakPath'),'ksn2ana/ksn2_CombineStereo/results/StereoMaps.mat'];
-if exist(matfile,'file') &&1==2
+
+if exist(matfile,'file')
     load(matfile)
 else
+    
     Sfile = [getenv('SamakPath'),'ksn2ana/ksn2_CombineStereo/results/Stereo_Chi2Map.csv'];
     Scritfile = [getenv('SamakPath'),'ksn2ana/ksn2_CombineStereo/results/Stereo_Chi2CritMap.csv'];
     
@@ -18,7 +21,9 @@ else
     
     % make sure same m4,sin are the same
     if any(datacrit(:,1)~=data(:,1)) ||  any(datacrit(:,2)~=data(:,2))
+         fprintf(2,'chi2 and chi2-crit dont have the same binning \n'
         return
     end
     save(matfile,'sin2TSq','mNu41Sq','chi2','chi2crit');
+      fprintf('save file to %s \n',matfile)
 end

@@ -1,11 +1,11 @@
 % unblinded fit 0.241
 range     = 40;
-freePar   = 'mNu E0 Bkg Norm qU';
+freePar   = 'mNu E0 Bkg Norm';
 chi2      = 'chi2CMShape';
-DataType  = 'Real';%Real';
-AnaFlag   = 'Ring';%'StackPixel';
+DataType  = 'Real';
+AnaFlag   = 'StackPixel';
 RingMerge = 'Full';%'None';
-FSDFlag = 'KNM2';
+FSDFlag = 'KNM2_0p5eV';
 DopplerEffectFlag = 'FSD';
 
 if strcmp(AnaFlag,'Ring')

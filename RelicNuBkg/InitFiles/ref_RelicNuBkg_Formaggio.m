@@ -11,7 +11,6 @@ MTD = importdata('DRFO.mat');
 p = inputParser;
 p.addParameter('eta_i',1);
 p.addParameter('ToggleRelic','ON');
-p.addParameter('FSD_Sigma',0.0001,@(x)isfloat(x) || isempty(x));
 p.addParameter('ToggleES','OFF',@(x)ismember(x,{'ON','OFF'}));
 
 p.addParameter('WGTS_CD_MolPerCm2',5e17,@(x)isfloat(x) && x>0);
@@ -68,7 +67,6 @@ p.addParameter('RingList',1:14);
 p.parse(varargin{:});
 
 eta_i                    = p.Results.eta_i;
-FSD_Sigma                = p.Results.FSD_Sigma;
 ToggleRelic              = p.Results.ToggleRelic;
 ToggleES                 = p.Results.ToggleES;
 
@@ -211,7 +209,6 @@ opt_corr = {'RadiativeFlag','ON'};
 
 opt_relic = {...
     'eta_i',eta_i,...
-    'FSD_Sigma',FSD_Sigma,...
     'ToggleRelic',ToggleRelic,...
     'ToggleES',ToggleES};
 

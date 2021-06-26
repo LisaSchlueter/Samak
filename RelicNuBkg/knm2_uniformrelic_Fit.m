@@ -1,6 +1,6 @@
 % unblinded fit with penning trap background slope
 range     = 40;
-freePar   = 'mNu E0 Bkg Norm';   %qU for multiring fit
+freePar   = 'mNu E0 Bkg Norm eta';   %qU for multiring fit
 chi2      = 'chi2Stat';
 DataType  = 'Real';
 AnaFlag   = 'StackPixel';   
@@ -10,23 +10,11 @@ BKG_PtSlope = 3*1e-06;
 TwinBias_BKG_PtSlope = 3*1e-06;
 FSDFlag   = 'KNM2';     %'KNM2_0p5eV' for faster fit (rebinned FSDs)
 PullFlag = 99;%[7,24]; %24 = 3.0 mucps/s; 99 for no pull
-
-if strcmp(AnaFlag,'Ring') 
-    if strcmp(RingMerge,'Full')
-        AnaStr = AnaFlag;
-         SysBudget = 41;
-    else
-        AnaStr = sprintf('Ring%s',RingMerge);
-         SysBudget = 40;
-    end
-else
-    SysBudget = 40;
-    AnaStr = AnaFlag;
-end
+SysBudget = 40;
 
 savedir = [getenv('SamakPath'),'knm2ana/knm2_PngBkg/results/'];
-savename = sprintf('%sknm2ubfinal_Fit_Bpng-%.1fmucpsPers_%s_%.0feV_%s_%s_%s_%s.mat',...
-    savedir,BKG_PtSlope*1e6,DataType,range,strrep(freePar,' ',''),chi2,AnaStr,FSDFlag);
+savename = sprintf('%sknm2relic_Fit_Bpng-%.1fmucpsPers_%s_%.0feV_%s_%s_%s.mat',...
+    savedir,BKG_PtSlope*1e6,DataType,range,strrep(freePar,' ',''),chi2,FSDFlag);
 
 if strcmp(chi2,'chi2Stat')
     NonPoissonScaleFactor = 1;
@@ -132,40 +120,6 @@ fprintf('m_nu^2 = %.3f + %.3f %.3f eV^2       , ',FitResult.par(1),FitResult.err
 fprintf('mean err = %.3f eV^2 \n',(FitResult.errPos(1)-FitResult.errNeg(1))/2)
 fprintf('E_0 = %.3f + %.3f eV  \n',FitResult.par(2)+A.ModelObj.Q_i,FitResult.err(2))
 fprintf('chi2 = %.3f (%.0f dof), p = %.3f  \n',FitResult.chi2min,FitResult.dof,1-chi2cdf(FitResult.chi2min,FitResult.dof));
-
-%%
-
-Plot = 'OFF';
-if strcmp(Plot,'ON')
-    if strcmp(AnaFlag,'StackPixel')
-        A.PlotFit('LabelFlag','FinalKNM1',...
-            'saveplot','pdf',...
-            'ErrorBarScaling',50,...
-            'YLimRes',[-2.2,2.9],...
-            'Colors','RGB',...
-            'DisplayStyle','PRL',...
-            'FitResultsFlag','OFF',...
-            'qUDisp','Abs',...
-            'TickDir','Out');
-    else
-        % A.PlotResidualsMultiRing('saveplot','ON','YLimRes',[-2.4 2.6])
-        A.PlotFit('ring',1,...
-            'saveplot','pdf',...
-            'ErrorBarScaling',50,...
-            'Colors','RGB',...
-            'FitResultsFlag','OFF',...
-            'qUDisp','Abs',...
-            'TickDir','In',...
-            'YLimRes',[-2.2,2.9],...
-            'DisplayStyle','PRL');
-        %A.PlotFitMultiRing('PlotPar','qU','savePlot','ON')
-    end
-end
-%  A.FitCM_Obj.PlotCM('qUWindowIndexMax',10,'qUWindowIndexMin',40,'saveplot',...
-%         'ON','Convergence','OFF','CovMatInput',A.FitCMFracShape,'PlotEffect','total',...
-%%         %         'savename','KNM2_UB1_MultiRingFull');
-% % A.FitCM_Obj.PlotCorr('qUWindowIndexMax',10,'qUWindowIndexMin',90,'saveplot',...
-% % 'ON','CovMatInput',A.FitCMFracShape,...
-% % 'savename',sprintf('KNM2_Final_%s',AnaFlag));
+fprintf('eta = %.3f + %.3f \n',FitResult.par(18)*1e10,FitResult.err(18)*1e10);
 
 %%

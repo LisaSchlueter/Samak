@@ -1504,9 +1504,19 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                          
                         %take standard error of the mean
                         WGTS_TASR_AbsErr = std(SubRunActivity,0,2)./sqrt(numel(obj.StackedRuns));
+                        for i=1:numel(WGTS_TASR_AbsErr)
+                            if isnan(WGTS_TASR_AbsErr(i))
+                                WGTS_TASR_AbsErr(i)=0;
+                            end
+                        end
                         
                         % relative uncertainty -> fractional covariance
                         WGTS_TASR_RelErr = WGTS_TASR_AbsErr./mean(SubRunActivity,2);
+                        for i=1:numel(WGTS_TASR_RelErr)
+                            if isnan(WGTS_TASR_RelErr(i))
+                                WGTS_TASR_RelErr(i)=0;
+                            end
+                        end
                         
                         % Set Fluctuations to ZERO above enpoint
                         WGTS_TASR_RelErr = WGTS_TASR_RelErr .* TritiumqUIndexes;

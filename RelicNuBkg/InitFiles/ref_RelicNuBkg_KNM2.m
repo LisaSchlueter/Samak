@@ -5,14 +5,13 @@ TDMode = 'DataTBD';
 % use MTD from KNM1 for 30 eV
 MTD = importdata('KNM2_40.mat');
 
-PixList = GetPixList('Knm1');
+PixList = GetPixList('Knm2');
 
 % ---------------------------------------------------------------------- %
 % WGTS
 p = inputParser;
 p.addParameter('eta_i',1);
 p.addParameter('ToggleRelic','ON');
-p.addParameter('FSD_Sigma',0.0001,@(x)isfloat(x) || isempty(x));
 p.addParameter('ToggleES','OFF',@(x)ismember(x,{'ON','OFF'}));
 
 p.addParameter('WGTS_CD_MolPerCm2',4.2260e+17,@(x)isfloat(x) && x>0);
@@ -27,12 +26,13 @@ p.addParameter('WGTS_B_T',2.52,@(x)isfloat(x) && x>0);
 
 % Theory
 p.addParameter('ISCS','Edep',@(x)ismember(x,{'Aseev','Theory','Edep'}));
-p.addParameter('DTFSD','SibilleFull',@(x)ismember(x,{'OFF','DOSS','BlindingKNM1','SibilleFull','Sibille0p5eV','BlindingKNM2'}));
-p.addParameter('HTFSD','SibilleFull',@(x)ismember(x,{'OFF','SAENZ','BlindingKNM1','SibilleFull','Sibille0p5eV','BlindingKNM2'}));
-p.addParameter('TTFSD','SibilleFull',@(x)ismember(x,{'OFF','DOSS','SAENZ','BlindingKNM1','SibilleFull','Sibille0p5eV','BlindingKNM2'}));
-p.addParameter('ELossFlag','KatrinT2',@(x)ismember(x,{'Aseev','Abdurashitov','CW_GLT','KatrinD2','KatrinT2','KatrinT2A20'}));
+p.addParameter('DTFSD','KNM2',@(x)ismember(x,{'OFF','DOSS','BlindingKNM1','SibilleFull','Sibille0p5eV','BlindingKNM2','KNM2'}));
+p.addParameter('HTFSD','KNM2',@(x)ismember(x,{'OFF','SAENZ','BlindingKNM1','SibilleFull','Sibille0p5eV','BlindingKNM2','KNM2'}));
+p.addParameter('TTFSD','KNM2',@(x)ismember(x,{'OFF','DOSS','SAENZ','BlindingKNM1','SibilleFull','Sibille0p5eV','BlindingKNM2','KNM2'}));
+p.addParameter('FSD_Sigma',sqrt(0.0124+0.0025),@(x)isfloat(x));
+p.addParameter('ELossFlag','KatrinT2A20',@(x)ismember(x,{'Aseev','Abdurashitov','CW_GLT','KatrinD2','KatrinT2','KatrinT2A20'}));
 p.addParameter('DopplerEffectFlag','FSD',@(x)ismember(x,{'OFF','FSD'}));
-p.addParameter('AngularTFFlag','OFF',@(x)ismember(x,{'OFF','ON'}));
+p.addParameter('AngularTFFlag','ON',@(x)ismember(x,{'OFF','ON'}));
 p.addParameter('SynchrotronFlag','ON',@(x)ismember(x,{'OFF','ON'}));
 
 % Binning
@@ -62,6 +62,7 @@ p.addParameter('BKG_Type','FLAT',@(x)ismember(x,{'FLAT','SLOPE'}));
 p.addParameter('BKG_RateAllFPDSec',0.3221);
 p.addParameter('BKG_RatePixelSec',''); 
 p.addParameter('BKG_RateRingSec','');
+p.addParameter('BKG_PtSlope',3*1e-06,@(x)isfloat(x));
 p.addParameter('FPD_Segmentation','OFF',@(x) ismember(x,{'OFF','SINGLEPIXEL','MULTIPIXEL','RING'}));
 p.addParameter('PixList',PixList);
 p.addParameter('RingList',1:12);
@@ -103,6 +104,7 @@ ELossFlag                = p.Results.ELossFlag;
 DTFSD                    = p.Results.DTFSD;
 HTFSD                    = p.Results.HTFSD;
 TTFSD                    = p.Results.TTFSD;
+FSD_Sigma                = p.Results.FSD_Sigma;
 DopplerEffectFlag        = p.Results.DopplerEffectFlag;
 AngularTFFlag            = p.Results.AngularTFFlag;
 SynchrotronFlag          = p.Results.SynchrotronFlag;
@@ -116,6 +118,7 @@ FPD_PileUpEff            = p.Results.FPD_PileUpEff;
 BKG_Flag                 = p.Results.BKG_Flag;
 BKG_Type                 = p.Results.BKG_Type;
 BKG_RateAllFPDSec        = p.Results.BKG_RateAllFPDSec;
+BKG_PtSlope              = p.Results.BKG_PtSlope;
 PixList                  = p.Results.PixList;
 RingList                 = p.Results.RingList;
 
@@ -201,12 +204,14 @@ opt_fpd = {...
 opt_bkg = {...
     'BKG_Flag',BKG_Flag,...
     'BKG_Type',BKG_Type,...
-    'BKG_RateAllFPDSec',BKG_RateAllFPDSec};
+    'BKG_RateAllFPDSec',BKG_RateAllFPDSec,...
+    'BKG_PtSlope',BKG_PtSlope};
 
 opt_fsd= {...
     'TTFSD',TTFSD,...
     'DTFSD',DTFSD,...
-    'HTFSD',HTFSD};
+    'HTFSD',HTFSD,...
+    'FSD_Sigma',FSD_Sigma};
 
 opt_doppler = {'DopplerEffectFlag',DopplerEffectFlag};
 
@@ -216,7 +221,6 @@ opt_corr = {'RadiativeFlag',RadiativeFlag};
 
 opt_relic = {...
     'eta_i',eta_i,...
-    'FSD_Sigma',FSD_Sigma,...
     'ToggleRelic',ToggleRelic,...
     'ToggleES',ToggleES};
 

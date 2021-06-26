@@ -3,9 +3,10 @@
 % plot with ksn1, ksn2, ksn1+2
 
 % load mini combi file
+DataType = 'Real';
 savedir = sprintf('%sksn2ana/ksn2_RunCombination/results/',getenv('SamakPath'));
 MakeDir(savedir);
-savefile = sprintf('%sksn21_Combi_freemNuSq_ReAna.mat',savedir);
+savefile = sprintf('%sksn21_Combi_freemNuSq_ReAna_%s.mat',savedir,DataType);
 load(savefile);
 
 %%

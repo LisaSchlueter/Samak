@@ -1,19 +1,14 @@
-function TritiumObject = ref_RelicNuBkg_Heizmann(varargin)
+function TritiumObject = ref_KSNX_KATRIN_Final2(varargin)
 
 
 TDMode = 'DataTBD';
-%FSDMode = 'BlindingKNM2';
-% use MTD from Design report for 30 eV
-MTD = importdata('DR50.mat');
+% use MTD from KNM1
+MTD = importdata([getenv('SamakPath'),'tritium-data/mat/Knm1/51536.mat']);
 
 % ---------------------------------------------------------------------- %
 % WGTS
 p = inputParser;
-p.addParameter('eta_i',0);
-p.addParameter('ToggleRelic','ON');
-p.addParameter('ToggleES','OFF',@(x)ismember(x,{'ON','OFF'}));
-
-p.addParameter('WGTS_CD_MolPerCm2',5e17,@(x)isfloat(x) && x>0);
+p.addParameter('WGTS_CD_MolPerCm2',5*1e17,@(x)isfloat(x) && x>0);
 p.addParameter('WGTS_CD_MolPerCm2_SubRun','',@(x)isfloat(x));
 p.addParameter('WGTS_MolFrac_TT',0.95,@(x)isfloat(x) && x>0);
 p.addParameter('WGTS_MolFrac_TT_SubRun','');
@@ -21,18 +16,17 @@ p.addParameter('WGTS_MolFrac_DT',0.011,@(x)isfloat(x) && x>0);
 p.addParameter('WGTS_MolFrac_DT_SubRun','');
 p.addParameter('WGTS_MolFrac_HT',0.035,@(x)isfloat(x)&& x>0);
 p.addParameter('WGTS_MolFrac_HT_SubRun','');
-p.addParameter('WGTS_B_T',2.52,@(x)isfloat(x) && x>0);  %2.52
-p.addParameter('WGTS_FTR_cm',4.5,@(x)isfloat(x) && x>0);
+p.addParameter('WGTS_B_T',2.52,@(x)isfloat(x) && x>0);
 
 % Theory
-p.addParameter('ISCS','Aseev',@(x)ismember(x,{'Aseev','Theory','Edep'}));
-p.addParameter('DTFSD','DOSS',@(x)ismember(x,{'OFF','DOSS','BlindingKNM1','SibilleFull','Sibille0p5eV','BlindingKNM2'}));
-p.addParameter('HTFSD','SAENZ',@(x)ismember(x,{'OFF','SAENZ','BlindingKNM1','SibilleFull','Sibille0p5eV','BlindingKNM2'}));
-p.addParameter('TTFSD','SAENZ',@(x)ismember(x,{'OFF','DOSS','SAENZ','BlindingKNM1','SibilleFull','Sibille0p5eV','BlindingKNM2'}));
+p.addParameter('ISCS','Edep',@(x)ismember(x,{'Aseev','Theory','Edep'}));
+p.addParameter('DTFSD','KNM2_0p5eV',@(x)ismember(x,{'OFF','DOSS','BlindingKNM1','SibilleFull','Sibille0p5eV','BlindingKNM2','KNM2_0p5eV'}));
+p.addParameter('HTFSD','KNM2_0p5eV',@(x)ismember(x,{'OFF','SAENZ','BlindingKNM1','SibilleFull','Sibille0p5eV','BlindingKNM2','KNM2_0p5eV'}));
+p.addParameter('TTFSD','KNM2_0p5eV',@(x)ismember(x,{'OFF','DOSS','SAENZ','BlindingKNM1','SibilleFull','Sibille0p5eV','BlindingKNM2','KNM2_0p5eV'}));
 p.addParameter('ELossFlag','KatrinT2A20',@(x)ismember(x,{'Aseev','Abdurashitov','CW_GLT','KatrinD2','KatrinT2','KatrinT2A20'}));
 p.addParameter('DopplerEffectFlag','FSD',@(x)ismember(x,{'OFF','FSD'}));
-p.addParameter('AngularTFFlag','OFF',@(x)ismember(x,{'OFF','ON'}));
-p.addParameter('SynchrotronFlag','OFF',@(x)ismember(x,{'OFF','ON'}));
+p.addParameter('AngularTFFlag','ON',@(x)ismember(x,{'OFF','ON'}));
+p.addParameter('SynchrotronFlag','ON',@(x)ismember(x,{'OFF','ON'}));
 
 % Binning
 p.addParameter('nTeBinningFactor',100,@(x)isfloat(x) && x>0);
@@ -40,36 +34,32 @@ p.addParameter('qU',mean(MTD.qU,2),@(x)isfloat(x) && all(x>0));
 p.addParameter('qUfrac',mean(MTD.qUfrac,2),@(x)isfloat(x));
 
 % MACE
-p.addParameter('MACE_Bmax_T',4.2,@(x)isfloat(x) && x>0);   %4.23
-p.addParameter('MACE_Ba_T',6*1e-04,@(x)isfloat(x) && x>0);                    %6.3
+p.addParameter('MACE_Bmax_T',4.23,@(x)isfloat(x) && x>0);
+p.addParameter('MACE_Ba_T',6.3*1e-04,@(x)isfloat(x) && x>0);
 p.addParameter('KTFFlag','WGTSMACE',@(x)ismember(x,{'OFF','MACE','WGTSMACE'}));
 p.addParameter('recomputeRF','OFF',@(x)ismember(x,{'ON','OFF'}));
 p.addParameter('UseParallelRF','ON',@(x)ismember(x,{'OFF','ON'}));
 
 % General
-p.addParameter('TimeSec',3*365.242*24*60*60,@(x)isfloat(x));
-p.addParameter('mnuSq_i',1,@(x)isfloat(x));
-p.addParameter('Q_i',18575,@(x)isfloat(x));
+p.addParameter('TimeSec',750*24*60*60,@(x)isfloat(x));
+p.addParameter('mnuSq_i',0,@(x)isfloat(x));
+p.addParameter('Q_i',18573.7,@(x)isfloat(x));
 
 % FPD
-p.addParameter('FPD_MeanEff',0.9,@(x)isfloat(x) && x>0);  %0.95
+p.addParameter('FPD_MeanEff',0.95,@(x)isfloat(x) && x>0);
 p.addParameter('FPD_ROIlow',14,@(x)isfloat(x) && x>0);
 p.addParameter('FPD_ROIEff','OFF',@(x)ismember(x,{'ON','OFF'}));
 p.addParameter('FPD_PileUpEff','OFF',@(x)ismember(x,{'ON','OFF'}));
 p.addParameter('BKG_Flag','ON',@(x)ismember(x,{'ON','OFF','XmasData'}));
 p.addParameter('BKG_Type','FLAT',@(x)ismember(x,{'FLAT','SLOPE'}));
-p.addParameter('BKG_RateAllFPDSec',0.4); %0.01
+p.addParameter('BKG_RateAllFPDSec',0.130);
 p.addParameter('BKG_RatePixelSec',''); 
 p.addParameter('BKG_RateRingSec','');
 p.addParameter('FPD_Segmentation','OFF',@(x) ismember(x,{'OFF','SINGLEPIXEL','MULTIPIXEL','RING'}));
-p.addParameter('PixList',1:148); %1:124
-p.addParameter('RingList',1:14);
+p.addParameter('PixList',1:136);
+p.addParameter('RingList',1:13);
 
 p.parse(varargin{:});
-
-eta_i                    = p.Results.eta_i;
-ToggleRelic              = p.Results.ToggleRelic;
-ToggleES                 = p.Results.ToggleES;
 
 WGTS_CD_MolPerCm2        = p.Results.WGTS_CD_MolPerCm2;
 WGTS_CD_MolPerCm2_SubRun = p.Results.WGTS_CD_MolPerCm2_SubRun;
@@ -80,7 +70,6 @@ WGTS_MolFrac_DT_SubRun   = p.Results.WGTS_MolFrac_DT_SubRun;
 WGTS_MolFrac_TT          = p.Results.WGTS_MolFrac_TT;
 WGTS_MolFrac_TT_SubRun   = p.Results.WGTS_MolFrac_TT_SubRun;
 WGTS_B_T                 = p.Results.WGTS_B_T;
-WGTS_FTR_cm              = p.Results.WGTS_FTR_cm;
 
 % Parameters: Calculation precision
 nTeBinningFactor         = p.Results.nTeBinningFactor;
@@ -160,7 +149,7 @@ opt_wgts = {...
     'WGTS_MolFracRelErr_DT',std(WGTS_MolFrac_DT_SubRun)/WGTS_MolFrac_DT,...
     'WGTS_MolFracRelErr_HT',std(WGTS_MolFrac_HT_SubRun)/WGTS_MolFrac_HT,...
     'WGTS_DTHTr',1,...
-    'WGTS_FTR_cm',WGTS_FTR_cm...
+    'WGTS_FTR_cm',4.5,...
     'WGTS_CD_MolPerCm2',WGTS_CD_MolPerCm2,...
     'WGTS_CD_MolPerCm2_SubRun',WGTS_CD_MolPerCm2_SubRun,...
     'WGTS_B_T',WGTS_B_T,...
@@ -209,11 +198,6 @@ opt_integration = {'IStype','SIMPFAST'};
 
 opt_corr = {'RadiativeFlag','ON'};
 
-opt_relic = {...
-    'eta_i',eta_i,...
-    'ToggleRelic',ToggleRelic,...
-    'ToggleES',ToggleES};
-
 TritiumObject = TBD(...
     opt_corr{:},...
     opt_calc{:},...
@@ -225,6 +209,7 @@ TritiumObject = TBD(...
     opt_fsd{:},...
     opt_bkg{:},...
     opt_doppler{:},...
-    opt_integration{:},...
-    opt_relic{:});
+    opt_integration{:});
 end
+
+
