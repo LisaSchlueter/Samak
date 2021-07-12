@@ -19,8 +19,8 @@ function PlotBestFit(varargin)
     saveplot = p.Results.saveplot;
 
     
-    if exist(sprintf('./EtaFitResult_AllParams_mnuSq%g_Nfit%g.mat',mnuSq,Nfit),'file') && Nfit>1
-        load(sprintf('./EtaFitResult_AllParams_mnuSq%g_Nfit%g.mat',mnuSq,Nfit));
+    if exist(sprintf('./EtaFitResult_%s_AllParams_mnuSq%g_Nfit%g.mat',RunList,mnuSq,Nfit),'file') && Nfit>1
+        load(sprintf('./EtaFitResult_%s_AllParams_mnuSq%g_Nfit%g.mat',RunList,mnuSq,Nfit));
     else
         if strcmp(Syst,'OFF')
             Chi2opt='chi2Stat';
@@ -154,7 +154,7 @@ function PlotBestFit(varargin)
             fitresults(9,j)= M.FitResult.par(18).*1e10;
             fitresults(10,j)=M.FitResult.err(18).*1e10;
             fitresults(11,j)=M.FitResult.chi2min;
-            save(sprintf('./EtaFitResult_AllParams_mnuSq%g_Nfit%g.mat',mnuSq,Nfit),'fitresults');
+            save(sprintf('./EtaFitResult_%s_AllParams_mnuSq%g_Nfit%g.mat',RunList,mnuSq,Nfit),'fitresults');
         end
         D.exclDataStart = D.GetexclDataStart(40);
         if strcmp(DataType,'Twin')
@@ -393,15 +393,27 @@ function PlotBestFit(varargin)
         set(fig5, 'Units', 'normalized', 'Position', [0.001, 0.001,0.45, 0.6]);
         if strcmp(RunList,'KNM1')
             etalarge = fitresults(9,find(fitresults(9,:)>3.6827e11));
+            low=-6.4e11;
+            high=5.56e11;
+            bins=[3.72e11 4.64e11 5.56e11];
+            linePos=0.762;
+            legPos='northwest';
+        elseif strcmp(RunList,'KNM2_Prompt')
+            etalarge = fitresults(9,find(fitresults(9,:)<-5.802e10));
+            low=-1.5e11;
+            high=1.5e11;
+            bins=[-1.5e11 -1.269e11 -1.038e11 -8.077e10 -5.802e10];
+            linePos=0.38;
+            legPos='northeast';
         end
-        histogram(fitresults(9,:),linspace(-6.4e11,5.56e11,14));
+        histogram(fitresults(9,:),linspace(low,high,14));
         hold on;
-        histogram(etalarge,[3.72e11 4.64e11 5.56e11],'FaceAlpha',1);
-        a=annotation('line',[0.762 0.762],[0.1 0.9]);
+        histogram(etalarge,bins,'FaceAlpha',1);
+        a=annotation('line',[linePos linePos],[0.1 0.9]);
         a.LineStyle='--';
         a.LineWidth = 2;
         a.Color=[0.8500 0.3250 0.0980];
-        legend('\eta best fit distribution \newline (simulated)','Above data best fit','box','off','location','northwest');
+        legend('\eta best fit distribution \newline (simulated)','Above data best fit','box','off','location',legPos);
         xlabel('\eta');
         PrettyFigureFormat;
         hold off;

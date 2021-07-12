@@ -1685,13 +1685,14 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
         
         function FitFSDGroundState(obj)
             if strcmp(obj.ToggleES,'OFF')
-                obj.ComputeTBDDS;
+                sprintf('Please only execute this function when ToggleES is ON');
+                return;
             end
             %GSFrac = simpsons(obj.TBDDS_R(170:end))/simpsons(obj.TBDDS_R);
             NormDist = @(a,b,c,x) a./sqrt(2.*pi.*b.^2).*exp(-(x-c).^2/(2.*b.^2));
             Spectrum = obj.TBDDS_R;
-            Spectrum(1:750) = 0;        %KNM1: 1:200, KNM2: 1:750
-            pd0 = fit((obj.Te-obj.Q),Spectrum,NormDist,'Start',[3.7*1.4358e-14 0.41 -1.7]);
+            Spectrum(1:200) = 0;        %KNM1: 1:200, KNM2: 1:750
+            pd0 = fit((obj.Te-obj.Q),Spectrum,NormDist,'Start',[1.4358e-14 0.41 -1.7]);
 
             hT0 = plot((obj.Te-obj.Q),obj.TBDDS_R,'LineWidth',2,'Color','Black','LineStyle','-');
             hold on;
@@ -1701,8 +1702,9 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
             xlabel('E-E_0 (eV)','FontSize',12);
             str = sprintf('dN/dE (arbitrary scaling)');
             ylabel(str,'FontSize',14);
-            strT1 = sprintf('sigma of fit: %1g',pd0.b);
-            lh1 = legend([hPd],strT1);
+            strT0 = sprintf('FSD ground state');
+            strT1 = sprintf('sigma of fit: %.3g',pd0.b);
+            lh1 = legend([hT0 hPd],strT0,strT1);
             %legend(lh1,'box','off');
             set(lh1,'FontSize',12);
             %axis([-1 2 1e-2 10000])

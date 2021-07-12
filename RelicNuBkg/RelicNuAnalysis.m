@@ -85,7 +85,7 @@ classdef RelicNuAnalysis < handle
           p.addParameter('Parameter','',@(x)ismember(x,{'mNu','E0','Norm','Bkg','eta'}));
           p.addParameter('value',0,@(x)isfloat(x));
           p.addParameter('INIT',0,@(x)isfloat(x));
-          p.addParameter('SystSelect','OFF',@(x)ismember(x,{'RF','TASR','Stack','FSD','TC','FPDeff','LongPlasma','BkgCM','BkgPTCM','NP','None','OFF'}));
+          p.addParameter('SystSelect','OFF',@(x)ismember(x,{'RF','TASR','Stack','FSD','TC','FPDeff','LongPlasma','BkgCM','BkgPtCM','NP','None','OFF'}));
           p.addParameter('fitPar','mNu E0 Norm Bkg',@(x)ischar(x));
           p.parse(varargin{:});
           SystSelect = p.Results.SystSelect;
@@ -134,6 +134,7 @@ classdef RelicNuAnalysis < handle
                     'AngularTFFlag',obj.M.AngularTFFlag,...
                     'TwinBias_Q',obj.M.TwinBias_Q,...
                     'TwinBias_mnuSq',obj.M.TwinBias_mnuSq,...
+                    'BKG_PtSlope',obj.M.BKG_PtSlope,...
                     'TwinBias_BKG_PtSlope',obj.M.TwinBias_BKG_PtSlope,...
                     'TwinBias_FSDSigma',obj.M.TwinBias_FSDSigma);
                 obj.M.exclDataStart = range;
@@ -159,14 +160,16 @@ classdef RelicNuAnalysis < handle
           
           if ~strcmp(SystSelect,'OFF') && strcmp(obj.M.chi2,'chi2CMShape')
               if ~(strcmp(SystSelect,'BkgCM') || strcmp(SystSelect,'None'))
-                  obj.M.ComputeCM('SysEffects',struct(SystSelect,'ON'),'BkgCM','OFF');
+                  obj.M.ComputeCM('SysEffects',struct(SystSelect,'ON'),'BkgCM','OFF','BkgPtCM','OFF');
               elseif strcmp(SystSelect,'BkgCM')
-                  obj.M.ComputeCM('SysEffects',struct(),'BkgCm','ON');
+                  obj.M.ComputeCM('SysEffects',struct(),'BkgCM','ON','BkgPtCM','OFF');
               elseif strcmp(SystSelect,'None')
                   obj.M.NonPoissonScaleFactor = 1;
-                  obj.M.ComputeCM('SysEffects',struct(),'BkgCM','OFF');
+                  obj.M.ComputeCM('SysEffects',struct(),'BkgCM','OFF','BkgPtCM','OFF');
               elseif strcmp(SystSelect,'NP')
-                  obj.M.ComputeCM('SysEffects',struct(),'BkgCM','OFF');
+                  obj.M.ComputeCM('SysEffects',struct(),'BkgCM','OFF','BkgPtCM','OFF');
+              elseif strcmp(SystSelect,'BkgPtCM')
+                  obj.M.ComputeCM('SysEffects',struct(),'BkgCM','OFF','BkgPtCM','ON');
               end
           end
        end
@@ -1041,7 +1044,12 @@ classdef RelicNuAnalysis < handle
             
                 if strcmp(Syst,'ON')
                     Chi2opt='chi2CMShape';
-                    NonPoissonScaleFactor=1.064;
+                    switch RunList
+                        case 'KNM1'
+                            NonPoissonScaleFactor=1.064;
+                        case 'KNM2_Prompt'
+                            NonPoissonScaleFactor=1.112;
+                    end
                 else
                     Chi2opt='chi2Stat';
                     NonPoissonScaleFactor=1;
@@ -1091,7 +1099,7 @@ classdef RelicNuAnalysis < handle
                 elseif strcmp(RunList,'KNM2_Prompt')
                     U = MultiRunAnalysis('RunList',RunList,... % runlist defines which runs are analysed -> set MultiRunAnalysis.m -> function: GetRunList()
                         'chi2',Chi2opt,...                 % uncertainties: statistical or stat + systematic uncertainties
-                        'DataType','Twin',...                 % can be 'Real' or 'Twin' -> Monte Carlo
+                        'DataType',DataType,...                 % can be 'Real' or 'Twin' -> Monte Carlo
                         'fixPar','E0 Norm Bkg',...                   % free Parameter!!
                         'RadiativeFlag','ON',...              % theoretical radiative corrections applied in model
                         'NonPoissonScaleFactor',NonPoissonScaleFactor,...     % background uncertainty are enhanced
@@ -1114,7 +1122,7 @@ classdef RelicNuAnalysis < handle
                         'TwinBias_BKG_PtSlope',3*1e-06);
                     W = MultiRunAnalysis('RunList',RunList,... % runlist defines which runs are analysed -> set MultiRunAnalysis.m -> function: GetRunList()
                         'chi2',Chi2opt,...                 % uncertainties: statistical or stat + systematic uncertainties
-                        'DataType','Twin',...                 % can be 'Real' or 'Twin' -> Monte Carlo
+                        'DataType',DataType,...                 % can be 'Real' or 'Twin' -> Monte Carlo
                         'fixPar','mNu E0 Norm Bkg eta',...                   % free Parameter!!
                         'RadiativeFlag','ON',...              % theoretical radiative corrections applied in model
                         'NonPoissonScaleFactor',NonPoissonScaleFactor,...     % background uncertainty are enhanced
@@ -1375,18 +1383,20 @@ classdef RelicNuAnalysis < handle
            p.addParameter('fitPar','mNu E0 Norm Bkg eta',@(x)ischar(x));
            p.addParameter('TwinmnuSq',0,@(x)isfloat(x));
            p.addParameter('DeltaChi2',1,@(x)isfloat(x));
+           p.addParameter('CorrectErr','ON',@(x)ismember(x,{'ON','OFF'}));
            p.parse(varargin{:});
-           NmNuBins  = p.Results.NmNuBins;
-           MinmNu    = p.Results.MinmNu;
-           MaxmNu    = p.Results.MaxmNu;
-           Syst      = p.Results.Syst;
-           SysBudget =p.Results.SysBudget;
-           DataType  = p.Results.DataType;
-           Recompute = p.Results.Recompute;
-           Mode      = p.Results.Mode;
-           fitPar    = p.Results.fitPar;
-           TwinmnuSq = p.Results.TwinmnuSq;
-           DeltaChi2 = p.Results.DeltaChi2;
+           NmNuBins   = p.Results.NmNuBins;
+           MinmNu     = p.Results.MinmNu;
+           MaxmNu     = p.Results.MaxmNu;
+           Syst       = p.Results.Syst;
+           SysBudget  = p.Results.SysBudget;
+           DataType   = p.Results.DataType;
+           Recompute  = p.Results.Recompute;
+           Mode       = p.Results.Mode;
+           fitPar     = p.Results.fitPar;
+           TwinmnuSq  = p.Results.TwinmnuSq;
+           DeltaChi2  = p.Results.DeltaChi2;
+           CorrectErr = p.Results.CorrectErr;
            
            matFilePath = [getenv('SamakPath'),sprintf('RelicNuBkg/UpperLimits/')];
            if MinmNu~=0
@@ -1489,13 +1499,17 @@ classdef RelicNuAnalysis < handle
                         obj.M = U;
                         U.Fit;
                         etaFit(i)=U.FitResult.par(18)*1e10;
-                        eta(i) = obj.CorrectErr('Parameter','eta',...
-                            'value',U.FitResult.par(18)*1e10,...
-                            'eta',U.FitResult.par(18)*1e10,...
-                            'minchi2',U.FitResult.chi2min,...
-                            'factor',U.FitResult.err(18)*1e10,...
-                            'fitPar',fitPar,...
-                            'DeltaChi2',DeltaChi2);
+                        if strcmp(CorrectErr,'ON') || DeltaChi2~=1
+                            eta(i) = obj.CorrectErr('Parameter','eta',...
+                                'value',U.FitResult.par(18)*1e10,...
+                                'eta',U.FitResult.par(18)*1e10,...
+                                'minchi2',U.FitResult.chi2min,...
+                                'factor',(1+U.FitResult.err(18)/U.FitResult.par(18)),...
+                                'fitPar',fitPar,...
+                                'DeltaChi2',DeltaChi2);
+                        else
+                            eta(i) = U.FitResult.err(18)*1e10;
+                        end
                         Chi2(i)      = U.FitResult.chi2min;
                         mnuSq(i)     = U.ModelObj.mnuSq_i+U.FitResult.par(1);
                         mnuSq_err(i) = U.FitResult.err(1);
@@ -1562,13 +1576,17 @@ classdef RelicNuAnalysis < handle
                         obj.M = U;
                         U.Fit;
                         etaFit(i)=U.FitResult.par(18)*1e10;
-                        eta(i) = obj.CorrectErr('Parameter','eta',...
-                            'value',U.FitResult.par(18)*1e10,...
-                            'eta',U.FitResult.par(18)*1e10,...
-                            'minchi2',U.FitResult.chi2min,...
-                            'factor',U.FitResult.err(18)*1e10,...
-                            'fitPar',fitPar,...
-                            'DeltaChi2',DeltaChi2);
+                        if strcmp(CorrectErr,'ON') || DeltaChi2~=1
+                            eta(i) = obj.CorrectErr('Parameter','eta',...
+                                'value',U.FitResult.par(18)*1e10,...
+                                'eta',U.FitResult.par(18)*1e10,...
+                                'minchi2',U.FitResult.chi2min,...
+                                'factor',(1+U.FitResult.err(18)/U.FitResult.par(18)),...
+                                'fitPar',fitPar,...
+                                'DeltaChi2',DeltaChi2);
+                        else
+                            eta(i) = U.FitResult.err(18)*1e10;
+                        end
                         Chi2(i)      = U.FitResult.chi2min;
                         mnuSq(i)     = U.ModelObj.mnuSq_i+U.FitResult.par(1);
                         mnuSq_err(i) = U.FitResult.err(1);
@@ -1659,32 +1677,32 @@ classdef RelicNuAnalysis < handle
 
                A.Fit;
                ErrTotal = A.FitResult.err(18)*1e10;
-               A.ComputeCM('SysEffects',struct(),'BkgCM','OFF');
+               A.ComputeCM('SysEffects',struct(),'BkgCM','OFF','BkgPtCM','OFF');
                A.Fit;
                ErrNP = A.FitResult.err(18)*1e10;
                A.NonPoissonScaleFactor = 1;
-               A.ComputeCM('SysEffects',struct(),'BkgCM','OFF');
+               A.ComputeCM('SysEffects',struct(),'BkgCM','OFF','BkgPtCM','OFF');
                A.Fit;
                ErrStat = A.FitResult.err(18)*1e10;
-               A.ComputeCM('SysEffects',struct('FSD','ON'),'BkgCM','OFF');
+               A.ComputeCM('SysEffects',struct('FSD','ON'),'BkgCM','OFF','BkgPtCM','OFF');
                A.Fit;
                ErrFSD = A.FitResult.err(18)*1e10;
-               A.ComputeCM('SysEffects',struct('RF','ON'),'BkgCM','OFF');
+               A.ComputeCM('SysEffects',struct('RF','ON'),'BkgCM','OFF','BkgPtCM','OFF');
                A.Fit;
                ErrRF = A.FitResult.err(18)*1e10;
-               A.ComputeCM('SysEffects',struct('TASR','ON'),'BkgCM','OFF');
+               A.ComputeCM('SysEffects',struct('TASR','ON'),'BkgCM','OFF','BkgPtCM','OFF');
                A.Fit;
                ErrTASR = A.FitResult.err(18)*1e10;
-               A.ComputeCM('SysEffects',struct('Stack','ON'),'BkgCM','OFF');
+               A.ComputeCM('SysEffects',struct('Stack','ON'),'BkgCM','OFF','BkgPtCM','OFF');
                A.Fit;
                ErrStack = A.FitResult.err(18)*1e10;
-               A.ComputeCM('SysEffects',struct('FPDeff','ON'),'BkgCM','OFF');
+               A.ComputeCM('SysEffects',struct('FPDeff','ON'),'BkgCM','OFF','BkgPtCM','OFF');
                A.Fit;
                ErrFPD = A.FitResult.err(18)*1e10;
-               A.ComputeCM('SysEffects',struct('TC','ON'),'BkgCM','OFF');
+               A.ComputeCM('SysEffects',struct('TC','ON'),'BkgCM','OFF','BkgPtCM','OFF');
                A.Fit;
                ErrTC = A.FitResult.err(18)*1e10;
-               A.ComputeCM('SysEffects',struct(),'BkgCM','ON');
+               A.ComputeCM('SysEffects',struct(),'BkgCM','ON','BkgPtCM','OFF');
                A.Fit;
                ErrBkg = A.FitResult.err(18)*1e10;
                ErrFSD = sqrt(ErrFSD.^2-ErrStat.^2);
@@ -1713,12 +1731,14 @@ classdef RelicNuAnalysis < handle
            p.addParameter('DataType','Twin',@(x)ismember(x,{'Twin','Real'}));
            p.addParameter('Plot','ON',@(x)ismember(x,{'ON','OFF'}));
            p.addParameter('Recompute','OFF',@(x)ismember(x,{'ON','OFF'}));
+           p.addParameter('CorrectErr','ON',@(x)ismember(x,{'ON','OFF'}));
            p.parse(varargin{:});
            TwinBias_mnuSq = p.Results.TwinBias_mnuSq;
            range          = p.Results.range;
            DataType       = p.Results.DataType;
            Plot           = p.Results.Plot;
            Recompute      = p.Results.Recompute;
+           CorrectErr     = p.Results.CorrectErr;
            
            matFilePath = [getenv('SamakPath'),sprintf('RelicNuBkg/Misc/')];
            savename = [matFilePath,sprintf('SensitivityBreakdown_%s_mnuSq%g_range%g',obj.Params,TwinBias_mnuSq,range)];
@@ -1741,6 +1761,9 @@ classdef RelicNuAnalysis < handle
 
            if exist(savename,'file') && strcmp(Recompute,'OFF')
                load(savename,'X','Y');
+               if strcmp(Plot,'ON')
+                   bar(X,Y);
+               end
            else
            
                if strcmp(obj.Params,'KNM1')
@@ -1792,47 +1815,107 @@ classdef RelicNuAnalysis < handle
                obj.M = A;
 
                A.Fit;
-               ErrTotal = obj.CorrectErr('Parameter','eta','value',A.FitResult.par(18)*1e10,'eta',A.FitResult.par(18)*1e10,'minchi2',A.FitResult.chi2min,'factor',(1+A.FitResult.err(18)/A.FitResult.par(18)));
-               A.ComputeCM('SysEffects',struct(),'BkgCM','OFF');
+               if strcmp(CorrectErr,'ON')
+                   ErrTotal = obj.CorrectErr('Parameter','eta','value',A.FitResult.par(18)*1e10,'eta',A.FitResult.par(18)*1e10,'minchi2',A.FitResult.chi2min,'factor',(1+A.FitResult.err(18)/A.FitResult.par(18)));
+               else
+                   ErrTotal = 1e10*(abs(A.FitResult.errPos(5))+abs(A.FitResult.errNeg(5)))/2;
+               end
+               A.ComputeCM('SysEffects',struct(),'BkgCM','OFF','BkgPtCM','OFF');
                A.Fit;
-               ErrNP = obj.CorrectErr('Parameter','eta','value',A.FitResult.par(18)*1e10,'eta',A.FitResult.par(18)*1e10,'minchi2',A.FitResult.chi2min,'factor',1.5,'SystSelect','NP');
+               if strcmp(CorrectErr,'ON')
+                    ErrNP = obj.CorrectErr('Parameter','eta','value',A.FitResult.par(18)*1e10,'eta',A.FitResult.par(18)*1e10,'minchi2',A.FitResult.chi2min,'factor',1.5,'SystSelect','NP');
+               else
+                   ErrNP = 1e10*(abs(A.FitResult.errPos(5))+abs(A.FitResult.errNeg(5)))/2;
+               end
                A.NonPoissonScaleFactor = 1;
-               A.ComputeCM('SysEffects',struct(),'BkgCM','OFF');
+               A.ComputeCM('SysEffects',struct(),'BkgCM','OFF','BkgPtCM','OFF');
                A.Fit;
-               ErrStat = obj.CorrectErr('Parameter','eta','value',A.FitResult.par(18)*1e10,'eta',A.FitResult.par(18)*1e10,'minchi2',A.FitResult.chi2min,'factor',1.5,'SystSelect','None');
-               A.ComputeCM('SysEffects',struct('FSD','ON'),'BkgCM','OFF');
+               if strcmp(CorrectErr,'ON')
+                    ErrStat = obj.CorrectErr('Parameter','eta','value',A.FitResult.par(18)*1e10,'eta',A.FitResult.par(18)*1e10,'minchi2',A.FitResult.chi2min,'factor',1.5,'SystSelect','None');
+               else
+                   ErrStat = 1e10*(abs(A.FitResult.errPos(5))+abs(A.FitResult.errNeg(5)))/2;
+               end
+               A.ComputeCM('SysEffects',struct('FSD','ON'),'BkgCM','OFF','BkgPtCM','OFF');
                A.Fit;
-               ErrFSD = obj.CorrectErr('Parameter','eta','value',A.FitResult.par(18)*1e10,'eta',A.FitResult.par(18)*1e10,'minchi2',A.FitResult.chi2min,'factor',(1+A.FitResult.err(18)/A.FitResult.par(18)),'SystSelect','FSD');
-               A.ComputeCM('SysEffects',struct('RF','ON'),'BkgCM','OFF');
+               if strcmp(CorrectErr,'ON')
+                    ErrFSD = obj.CorrectErr('Parameter','eta','value',A.FitResult.par(18)*1e10,'eta',A.FitResult.par(18)*1e10,'minchi2',A.FitResult.chi2min,'factor',(1+A.FitResult.err(18)/A.FitResult.par(18)),'SystSelect','FSD');
+               else 
+                   ErrFSD = 1e10*(abs(A.FitResult.errPos(5))+abs(A.FitResult.errNeg(5)))/2;
+               end
+               A.ComputeCM('SysEffects',struct('RF','ON'),'BkgCM','OFF','BkgPtCM','OFF');
                A.Fit;
-               ErrRF = obj.CorrectErr('Parameter','eta','value',A.FitResult.par(18)*1e10,'eta',A.FitResult.par(18)*1e10,'minchi2',A.FitResult.chi2min,'factor',(1+A.FitResult.err(18)/A.FitResult.par(18)),'SystSelect','RF');
-               A.ComputeCM('SysEffects',struct('TASR','ON'),'BkgCM','OFF');
+               if strcmp(CorrectErr,'ON')
+                    ErrRF = obj.CorrectErr('Parameter','eta','value',A.FitResult.par(18)*1e10,'eta',A.FitResult.par(18)*1e10,'minchi2',A.FitResult.chi2min,'factor',(1+A.FitResult.err(18)/A.FitResult.par(18)),'SystSelect','RF');
+               else 
+                   ErrRF = 1e10*(abs(A.FitResult.errPos(5))+abs(A.FitResult.errNeg(5)))/2;
+               end
+               A.ComputeCM('SysEffects',struct('TASR','ON'),'BkgCM','OFF','BkgPtCM','OFF');
                A.Fit;
-               ErrTASR = obj.CorrectErr('Parameter','eta','value',A.FitResult.par(18)*1e10,'eta',A.FitResult.par(18)*1e10,'minchi2',A.FitResult.chi2min,'factor',(1+A.FitResult.err(18)/A.FitResult.par(18)),'SystSelect','TASR');
-               A.ComputeCM('SysEffects',struct('Stack','ON'),'BkgCM','OFF');
+               if strcmp(CorrectErr,'ON')
+                    ErrTASR = obj.CorrectErr('Parameter','eta','value',A.FitResult.par(18)*1e10,'eta',A.FitResult.par(18)*1e10,'minchi2',A.FitResult.chi2min,'factor',(1+A.FitResult.err(18)/A.FitResult.par(18)),'SystSelect','TASR');
+               else
+                   ErrTASR = 1e10*(abs(A.FitResult.errPos(5))+abs(A.FitResult.errNeg(5)))/2;
+               end
+               A.ComputeCM('SysEffects',struct('Stack','ON'),'BkgCM','OFF','BkgPtCM','OFF');
                A.Fit;
-               ErrStack = obj.CorrectErr('Parameter','eta','value',A.FitResult.par(18)*1e10,'eta',A.FitResult.par(18)*1e10,'minchi2',A.FitResult.chi2min,'factor',(1+A.FitResult.err(18)/A.FitResult.par(18)),'SystSelect','Stack');
-               A.ComputeCM('SysEffects',struct('FPDeff','ON'),'BkgCM','OFF');
+               if strcmp(CorrectErr,'ON')
+                    ErrStack = obj.CorrectErr('Parameter','eta','value',A.FitResult.par(18)*1e10,'eta',A.FitResult.par(18)*1e10,'minchi2',A.FitResult.chi2min,'factor',(1+A.FitResult.err(18)/A.FitResult.par(18)),'SystSelect','Stack');
+               else
+                   ErrStack = 1e10*(abs(A.FitResult.errPos(5))+abs(A.FitResult.errNeg(5)))/2;
+               end
+               A.ComputeCM('SysEffects',struct('FPDeff','ON'),'BkgCM','OFF','BkgPtCM','OFF');
                A.Fit;
-               ErrFPD = obj.CorrectErr('Parameter','eta','value',A.FitResult.par(18)*1e10,'eta',A.FitResult.par(18)*1e10,'minchi2',A.FitResult.chi2min,'factor',1.5,'SystSelect','FPDeff');
-               A.ComputeCM('SysEffects',struct('TC','ON'),'BkgCM','OFF');
+               if strcmp(CorrectErr,'ON')
+                    ErrFPD = obj.CorrectErr('Parameter','eta','value',A.FitResult.par(18)*1e10,'eta',A.FitResult.par(18)*1e10,'minchi2',A.FitResult.chi2min,'factor',1.5,'SystSelect','FPDeff');
+               else 
+                   ErrFPD = 1e10*(abs(A.FitResult.errPos(5))+abs(A.FitResult.errNeg(5)))/2;
+               end
+               A.ComputeCM('SysEffects',struct('TC','ON'),'BkgCM','OFF','BkgPtCM','OFF');
                A.Fit;
-               ErrTC = obj.CorrectErr('Parameter','eta','value',A.FitResult.par(18)*1e10,'eta',A.FitResult.par(18)*1e10,'minchi2',A.FitResult.chi2min,'factor',1.5,'SystSelect','TC');
-               A.ComputeCM('SysEffects',struct(),'BkgCM','ON');
+               if strcmp(CorrectErr,'ON')
+                    ErrTC = obj.CorrectErr('Parameter','eta','value',A.FitResult.par(18)*1e10,'eta',A.FitResult.par(18)*1e10,'minchi2',A.FitResult.chi2min,'factor',1.5,'SystSelect','TC');
+               else 
+                   ErrTC = 1e10*(abs(A.FitResult.errPos(5))+abs(A.FitResult.errNeg(5)))/2;
+               end
+               if strcmp(obj.Params,'KNM2_Prompt')
+                   A.ComputeCM('SysEffects',struct('LongPlasma','ON','BkgCM','OFF','BkgPtCM','OFF'));
+                   A.Fit;
+                   if strcmp(CorrectErr,'ON')
+                        ErrPlasma = obj.CorrectErr('Parameter','eta','value',A.FitResult.par(18)*1e10,'eta',A.FitResult.par(18)*1e10,'minchi2',A.FitResult.chi2min,'factor',1.5,'SystSelect','LongPlasma');
+                   else 
+                        ErrPlasma = 1e10*(abs(A.FitResult.errPos(5))+abs(A.FitResult.errNeg(5)))/2;
+                   end 
+                   A.ComputeCM('SysEffects',struct(),'BkgCM','OFF','BkgPtCM','ON');
+                   A.Fit;
+                   if strcmp(CorrectErr,'ON')
+                        ErrPT = obj.CorrectErr('Parameter','eta','value',A.FitResult.par(18)*1e10,'eta',A.FitResult.par(18)*1e10,'minchi2',A.FitResult.chi2min,'factor',1.5,'SystSelect','BkgPtCM');
+                   else 
+                        ErrPT = 1e10*(abs(A.FitResult.errPos(5))+abs(A.FitResult.errNeg(5)))/2;
+                   end 
+               else
+                   ErrPlasma=0;ErrPT=0;
+               end
+               A.ComputeCM('SysEffects',struct(),'BkgCM','ON','BkgPtCM','ON');
                A.Fit;
-               ErrBkg = obj.CorrectErr('Parameter','eta','value',A.FitResult.par(18)*1e10,'eta',A.FitResult.par(18)*1e10,'minchi2',A.FitResult.chi2min,'factor',1.5,'SystSelect','BkgCM');
+               if strcmp(CorrectErr,'ON')
+                    ErrBkg = obj.CorrectErr('Parameter','eta','value',A.FitResult.par(18)*1e10,'eta',A.FitResult.par(18)*1e10,'minchi2',A.FitResult.chi2min,'factor',1.5,'SystSelect','BkgCM');
+               else
+                   ErrBkg = 1e10*(abs(A.FitResult.errPos(5))+abs(A.FitResult.errNeg(5)))/2;
+               end
                ErrFSD = sqrt(ErrFSD.^2-ErrStat.^2);
                ErrRF = sqrt(ErrRF.^2-ErrStat.^2);
                ErrTASR = sqrt(ErrTASR.^2-ErrStat.^2);
                ErrStack = sqrt(ErrStack.^2-ErrStat.^2);
                ErrFPD = sqrt(ErrFPD.^2-ErrStat.^2);
                ErrTC = sqrt(ErrTC.^2-ErrStat.^2);
+               ErrPlasma = sqrt(ErrPlasma.^2-ErrStat.^2);
+               ErrPT = sqrt(ErrPT.^2-ErrStat.^2);
                ErrBkg = sqrt(ErrBkg.^2-ErrStat.^2);
                ErrNP = sqrt(ErrNP.^2-ErrStat.^2);
 
-               X = categorical({'Total','Stat','FSD','RF','TASR','Stack','FPD','TC','Bkg','NP'});
-               X = reordercats(X,{'Total','Stat','FSD','RF','TASR','Stack','FPD','TC','Bkg','NP'});
-               Y = [ErrTotal ErrStat ErrFSD ErrRF ErrTASR ErrStack ErrFPD ErrTC ErrBkg ErrNP];
+               X = categorical({'Total','Stat','FSD','RF','TASR','Stack','FPD','TC','Bkg','NP','Plasma','PT'});
+               X = reordercats(X,{'Total','Stat','FSD','RF','TASR','Stack','FPD','TC','Bkg','NP','Plasma','PT'});
+               Y = [ErrTotal ErrStat ErrFSD ErrRF ErrTASR ErrStack ErrFPD ErrTC ErrBkg ErrNP ErrPlasma ErrPT];
                save(savename,'X','Y');
            end
            if strcmp(Plot,'ON')
@@ -1847,7 +1930,7 @@ classdef RelicNuAnalysis < handle
            p.addParameter('eta',0,@(x)isfloat(x));
            p.addParameter('minchi2',0,@(x)isfloat(x));
            p.addParameter('factor',0,@(x)isfloat(x));
-           p.addParameter('SystSelect','OFF',@(x)ismember(x,{'RF','TASR','Stack','FSD','TC','FPDeff','BkgCM','NP','None','OFF'}));
+           p.addParameter('SystSelect','OFF',@(x)ismember(x,{'RF','TASR','Stack','FSD','TC','FPDeff','LongPlasma','BkgPtCM','BkgCM','NP','None','OFF'}));
            p.addParameter('DeltaChi2',1,@(x)isfloat(x));
            p.addParameter('fitPar','mNu E0 Norm Bkg',@(x)ischar(x));
            p.parse(varargin{:});
@@ -1879,15 +1962,15 @@ classdef RelicNuAnalysis < handle
            end
            
            if strcmp(Parameter,'eta')
-               while Chi2upper-minchi2 < DeltaChi2
+               while Chi2upper-minchi2 < DeltaChi2 && abs(Chi2upper-minchi2-DeltaChi2) > 0.01
                    Chi2lower  = Chi2upper;
                    valuelower = valueupper;
-                   obj.SetParam('Parameter',Parameter,'value',abs(factor+value));
+                   obj.SetParam('Parameter',Parameter,'value',abs(factor*value));
                    obj.M.ModelObj.ComputeNormFactorTBDDS;
                    obj.M.ModelObj.ComputeTBDDS;
                    obj.M.ModelObj.ComputeTBDIS;
                    obj.M.Fit;
-                   valueupper = abs(factor+value);
+                   valueupper = abs(factor*value);
                    if (obj.M.FitResult.chi2min-Chi2upper)<0.5*DeltaChi2
                        factor=2*factor;
                    end

@@ -21,6 +21,7 @@ FindE0Str  = ' 2   Par  #2'; % endpoint
 FindBkgStr = ' 3   Par  #3'; % background
 FindNStr   = ' 4   Par  #4'; % uniform
 FindEndStr = ' 5   Par  #5'; % end str
+FindetaStr = '18   Par #18'; % relic neutrino overdensity
 
 % find index in text
 mNuStartIndex = strfind(dshort,FindmNuStr);
@@ -28,10 +29,11 @@ E0StartIndex  = strfind(dshort,FindE0Str);
 BkgStartIndex = strfind(dshort,FindBkgStr);
 NStartIndex   = strfind(dshort,FindNStr);
 EndIndex      = strfind(dshort,FindEndStr);
+etaStartIndex = strfind(dshort,FindetaStr);
 
 %% extract asymmetric uncertainties
-AsymErrNeg = zeros(4,1);
-AsymErrPos = zeros(4,1);
+AsymErrNeg = zeros(5,1);
+AsymErrPos = zeros(5,1);
 
 try
     [AsymErrNeg(1), AsymErrPos(1)] = GetErr(dshort,mNuStartIndex,E0StartIndex,FindmNuStr);
@@ -50,6 +52,10 @@ end
 
 try
     [AsymErrNeg(4), AsymErrPos(4)] = GetErr(dshort,NStartIndex,EndIndex,FindNStr);
+catch
+end
+try
+    [AsymErrNeg(5), AsymErrPos(5)] = GetErr(dshort,etaStartIndex,etaStartIndex+70,FindetaStr);
 catch
 end
 

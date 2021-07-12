@@ -1,7 +1,7 @@
 % unblinded fit with penning trap background slope
 range     = 40;
 freePar   = 'mNu E0 Bkg Norm';   %qU for multiring fit
-chi2      = 'chi2Stat';
+chi2      = 'chi2CMShape';
 DataType  = 'Real';
 AnaFlag   = 'StackPixel';   
 RingMerge = 'None';%'None';     

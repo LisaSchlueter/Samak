@@ -153,11 +153,11 @@ elseif strcmp(Mode,'Reverse')
   if ~contains(freePar,sprintf('fix %.0f ;',4*nPixels+12))
       fixPar = [fixPar,'sin2T4'];
   end
-  end
   if ~contains(freePar,sprintf('fix %.0f ;',4*nPixels+13))
       fixPar = [fixPar,'BkgPTSlope'];
   end
   if ~contains(freePar,sprintf('fix %.0f ;',4*nPixels+14))
       fixPar = [fixPar,'eta'];
+  end
   end
 end

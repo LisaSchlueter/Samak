@@ -67,7 +67,7 @@ function plotchi2scan(savename)
         
     elseif contains(savename,'EtaFit')
         fig1=figure(10);
-        boundedline(sqrt(mNu),etaFit,[(eta-etaFit); eta-etaFit]');
+        boundedline(sqrt(mNu),etaFit,eta);
         xlabel('m_{\nu} (eV)');
         ylabel('\eta');
         legend('\eta best fit with 90% C.L.','box','off','Location','northwest');

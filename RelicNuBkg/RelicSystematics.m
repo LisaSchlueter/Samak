@@ -19,6 +19,8 @@ function RelicSystematics(saveplot,DataType)
     %Y5=Y;
     load([matFilePath,'FakeSensitivityBreakdown_TDR_mnuSq0_range40.mat']);
     YF=Y;
+    load([matFilePath,'SensitivityBreakdown_KNM2_Prompt_mnuSq1_range40.mat']);
+    Y2=Y;
     %load([matFilePath,'SystEffectOnSensitivity_KNM1_mnuSq0.mat']);
     %Bias0=Y;Bias0(3)=Bias(4);Bias0(4)=Bias(1);Bias0(5)=Bias(2);Bias0(6)=Bias(3);Bias0(7)=Bias(6);Bias0(8)=Bias(5);Bias0(9)=Bias(7);
     %load([matFilePath,'SystEffectOnSensitivity_KNM1_mnuSq1.mat']);
@@ -55,6 +57,9 @@ function RelicSystematics(saveplot,DataType)
             X = reordercats(X,{'Response function','Theoretical corrections','Scan fluctuations','Detector efficiency','Stacking','Final-state distribution','Bkg slope','Bkg rate','Statistical','Total'});
         case 'Twin'
             X = reordercats(X,{'Bkg slope','Final-state distribution','Theoretical corrections','Scan fluctuations','Response function','Stacking','Detector efficiency','Bkg rate','Statistical','Total'});
+        case 'Twin2'
+            X= categorical({'Total','Statistical','Final-state distribution','Response function','Scan fluctuations','Stacking','Detector efficiency','Theoretical corrections','Bkg slope','Bkg rate','Plasma','Penning Trap'});
+            X= reordercats(X,{'Detector efficiency','Penning Trap','Theoretical corrections','Response function','Final-state distribution','Scan fluctuations','Stacking','Plasma','Bkg slope','Bkg rate','Statistical','Total'});
         case 'Fake'
             X = reordercats(X,{'Bkg rate','Detector efficiency','Scan fluctuations','Stacking','Bkg slope','Theoretical corrections','Response function','Final-state distribution','Statistical','Total'});
     end
@@ -63,7 +68,7 @@ function RelicSystematics(saveplot,DataType)
     PlotColor = {rgb('White'),rgb('Navy'),rgb('GoldenRod'),rgb('PowderBlue'),...
                     rgb('CadetBlue'),rgb('DarkOrange'),rgb('FireBrick'),rgb('DarkSlateGray'),...
                     rgb('YellowGreen'),rgb('Magenta'),...
-                    rgb('SeaGreen'),rgb('DodgerBlue')};
+                    rgb('SeaGreen'),rgb('DodgerBlue'),rgb('DarkGreen'),rgb('Red')};
 
     hold on;
     for i=1:numel(X)
@@ -72,6 +77,8 @@ function RelicSystematics(saveplot,DataType)
                 bsingle{i}  = barh(X(i),YD(i));
             case 'Twin'
                 bsingle{i}  = barh(X(i),Y1(i));
+            case 'Twin2'
+                bsingle{i}  = barh(X(i),Y2(i));
             case 'Fake'
                 bsingle{i}  = barh(X(i),YF(i));
         end
@@ -98,13 +105,17 @@ function RelicSystematics(saveplot,DataType)
         effs(i) = bsingle{i}.YEndPoints;
         vals(i) = bsingle{i}.XEndPoints;
         labels(i)=sprintf('%.2g',bsingle{i}.YData);
-        if effs(i)<1e9 && ~strcmp(DataType,'Fake')
+        if effs(i)<1e9 && ~strcmp(DataType,'Fake') && ~strcmp(DataType,'Twin2')
             effs(i)=1e9;
             labels(i)='<1e9';
         end
         if effs(i)<1e6 && strcmp(DataType,'Fake') && i==5
             effs(i)=1e6;
             labels(i)='<1e6';
+        end
+        if effs(i)<1e8 && strcmp(DataType,'Twin2')
+            effs(i)=1e8;
+            labels(i)='<1e8';
         end
     end
     text(effs,vals,labels,'HorizontalAlignment','left',...
@@ -114,6 +125,8 @@ function RelicSystematics(saveplot,DataType)
             xlim([1e9,1e12]);
        case 'Twin'
            xlim([1e9,1e12]);
+       case 'Twin2'
+           xlim([1e8,5e11]);
        case 'Fake'
            ylim(categorical({'Scan fluctuations','Total'}));
            xlim([1e6 2e10]);

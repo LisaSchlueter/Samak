@@ -1,7 +1,7 @@
 % unblinded fit with penning trap background slope
 range     = 40;
 freePar   = 'mNu E0 Bkg Norm eta';   %qU for multiring fit
-chi2      = 'chi2Stat';
+chi2      = 'chi2CMShape';
 DataType  = 'Real';
 AnaFlag   = 'StackPixel';   
 RingMerge = 'None';%'None';     
@@ -82,11 +82,11 @@ else
     end
     
     if  contains(freePar,'BkgPTSlope') && contains(freePar,'BkgSlope')  && strcmp(chi2,'chi2CMShape')
-        A.ComputeCM('BkgPTCM','OFF','BkgCM','OFF');
+        A.ComputeCM('BkgPtCM','OFF','BkgCM','OFF');
     elseif  contains(freePar,'BkgSlope') && strcmp(chi2,'chi2CMShape')
-         A.ComputeCM('BkgPTCM','ON','BkgCM','OFF');
+         A.ComputeCM('BkgPtCM','ON','BkgCM','OFF');
     elseif contains(freePar,'BkgPTSlope') && strcmp(chi2,'chi2CMShape')
-         A.ComputeCM('BkgPTCM','OFF','BkgCM','ON');
+         A.ComputeCM('BkgPtCM','OFF','BkgCM','ON');
     end
     
     if strcmp(RingMerge,'None') && strcmp(chi2,'chi2CMShape') && strcmp(AnaFlag,'Ring')
@@ -103,7 +103,7 @@ else
                         'Stack','OFF',...
                         'FPDeff','ON',...
                         'LongPlasma','ON'),...
-                        'BkgPTCM','ON',...
+                        'BkgPtCM','ON',...
                         'BkgCM','ON');
     else
         
@@ -120,6 +120,7 @@ fprintf('m_nu^2 = %.3f + %.3f %.3f eV^2       , ',FitResult.par(1),FitResult.err
 fprintf('mean err = %.3f eV^2 \n',(FitResult.errPos(1)-FitResult.errNeg(1))/2)
 fprintf('E_0 = %.3f + %.3f eV  \n',FitResult.par(2)+A.ModelObj.Q_i,FitResult.err(2))
 fprintf('chi2 = %.3f (%.0f dof), p = %.3f  \n',FitResult.chi2min,FitResult.dof,1-chi2cdf(FitResult.chi2min,FitResult.dof));
-fprintf('eta = %.3f + %.3f \n',FitResult.par(18)*1e10,FitResult.err(18)*1e10);
+fprintf('eta = %.3fe10 + %.3fe10 - %.3fe10       , ',FitResult.par(18),abs(FitResult.errPos(5)),abs(FitResult.errNeg(5)))
+fprintf('mean err = %.3fe10 \n',(abs(FitResult.errPos(5))+abs(FitResult.errNeg(5)))/2)
 
 %%
