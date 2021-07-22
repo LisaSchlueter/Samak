@@ -7,12 +7,12 @@
 
 
 %% settings for runanalysis
-mNu4Sq_true = 0.5;
+mNu4Sq_true = 0;
 FixmNuSq_all = (mNu4Sq_true-0.5):0.1:(mNu4Sq_true+0.5);
 nGridSteps = 30;
 DataType   = 'Fake';
 chi2       = 'chi2Stat';
-RecomputeFlag = 'ON';
+RecomputeFlag = 'OFF';
 savedir = [getenv('SamakPath'),'ksnxana/ksnx_sensitivity/results/'];
 
 savefileCombi = sprintf('%sksnx_%s_%s_NuMassSensitivityGridSearch_CombiSTEREO-%s_mNuTrue%.2feV2.mat',...
@@ -137,5 +137,5 @@ leg = legend(sprintf('3\\nu+1 model: {\\itm}_\\nu^2 = %.2f ^{-%.2g}_{+%.3f} eV^2
 PrettyLegendFormat(leg);
 xlabel(sprintf('{\\itm}_\\nu^2 (eV^2)'));
 ylabel(sprintf('\\chi^2 (%.0f dof)',dof));
-ylim([-0.5 25])
+ylim([-0.5 5])
 xlim([min(x) max(x)])

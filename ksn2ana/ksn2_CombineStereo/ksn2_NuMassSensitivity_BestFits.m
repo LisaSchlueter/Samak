@@ -6,7 +6,7 @@ chi2 = 'chi2CMShape';
 DataType = 'Real';%
 SavePlt = 'ON';
 
-CombiStereo = 'ON';
+CombiStereo = 'OFF';
 
 if strcmp(DataType,'Real')
 mNuSq = -1:0.01:2.5;

@@ -17,8 +17,10 @@ else
 end
 
 %%
-FontSize = 24;
+FontSize = 20;
 pHandle = cell(d.nSys,1);
+LineStyle = {'-','-.',':','--','-','-.',':','--','-','-.',':','--','-.','-','--','-.',':','--','-.',':','--'};
+Colors = colormap('jet');
 
 f1 = figure('Units','normalized','Position',[-0.1,-0.1,0.7,0.6]);
 s1 = subplot(1,4,[1:2]);
@@ -35,31 +37,33 @@ for i=1:d.nSys
     
 end
 pStat = plot(d.sin2t4_Stat(1,:),d.mNu4Sq(1,:),'LineWidth',3,'Color',rgb('Silver'));
-xlabel(sprintf('\\sigma_{syst.}'))
-ylabel(sprintf('{\\itm}_4^2 (eV^2)'));
+xlabel(sprintf('|{\\itU}_{e4}|^2 sensitivity at 68.3%% C.L. '))%\\sigma_{syst.}
+ylabel(sprintf('{\\itm}_4^2 (eV^{ 2})'));
 xlim([2e-04 0.5]);
 ylim([1.3 38^2])
-PrettyFigureFormat('FontSize',FontSize);
+PRLFormat;
+set(gca,'FontSize',FontSize);
 set(gca,'XScale','log');
 set(gca,'YScale','log');
 ax1 = gca;
 xlim([3e-04 0.5])
 
 % legend
-SysEffectLabel = {'All systematics effects',...
-               'Source-potential variations',...
-           'Scan-step-duration-dependent background',...
-           'Non-Poisson background',...
+SysEffectLabel = {'Statistical uncertainty',...1
+    'Combined systematic uncertainties',...2
+    'Non-Poisson background',...3
+    'Source-potential variations',...
+    'Scan-step-duration-dependent background',...
     'Magnetic fields',...
     'Molecular final-state distribution',...
     sprintf('{\\itqU}-dependent background'),...
     sprintf('Column density \\times inelastic scat. cross-section'),...
-    'Detector efficiency',...
+    'High voltage stability and reproducibility',... % 12
     'Activity fluctuations',...
     'Energy-loss function',...
-    'High voltage stability and reproducibility',...
-    'Theoretical corrections','Statistics only'};
-leg = legend([pHandle{:},pStat],SysEffectLabel);
+    'Detector efficiency',...% 9
+    'Theoretical corrections'};
+leg = legend([pStat,pHandle{1},pHandle{4},pHandle{[2,3,5:8]},pHandle{12},pHandle{[9,10,11,13]}],SysEffectLabel);
 PrettyLegendFormat(leg);
 % leg.Title.String = 'Stystematic effect';
 % leg.Title.FontWeight ='normal';
@@ -68,22 +72,24 @@ leg.Location = 'northoutside';%'eastoutside';
 %% ratio subplot 2
 s2 = subplot(1,4,[3:4]);
 plot(0.5.*ones(10,1),linspace(0.1,2e3,10),'k-','LineWidth',1.5)
-t = text(0.45,40,'stat. = syst.','HorizontalAlignment','center','Rotation',90,'FontSize',18,'FontWeight','normal');
+t = text(0.45,40,'stat. = syst.','HorizontalAlignment','center','Rotation',90,'FontSize',18,'FontWeight','normal',...
+    'FontName','Times New Roman');
 hold on
-for i=1:nSys
-    if strcmp(SysEffectsAll{i},'all')
+for i=1:d.nSys
+    if strcmp(d.SysEffectsAll{i},'all')
         PltColor = rgb('Black');
         LineWidth = 3;
     else
-        PltColor =Colors(floor((i)*256/(nSys)),:);
+        PltColor =Colors(floor((i)*256/(d.nSys)),:);
         LineWidth = 2;
     end
-    plot(sin2t4_Sys(i,:).^2./sin2t4_Tot(1,:).^2,mNu4Sq(i,:),'LineWidth',LineWidth,'Color',PltColor,'LineStyle',LineStyle{i});
+    plot(d.sin2t4_Sys(i,:).^2./d.sin2t4_Tot(1,:).^2,d.mNu4Sq(i,:),'LineWidth',LineWidth,'Color',PltColor,'LineStyle',LineStyle{i});
 end
-pStat = plot(sin2t4_Stat(1,:).^2./sin2t4_Tot(1,:).^2,mNu4Sq(1,:),...
+pStat = plot(d.sin2t4_Stat(1,:).^2./d.sin2t4_Tot(1,:).^2,d.mNu4Sq(1,:),...
     'LineWidth',3,'Color',rgb('Silver'),'LineStyle','-');
 xlabel(sprintf('\\sigma^2 / \\sigma_{total}^2'))
-PrettyFigureFormat('FontSize',FontSize);
+PRLFormat;
+set(gca,'FontSize',FontSize);
 set(gca,'XScale','lin');
 set(gca,'YScale','log');
 linkaxes([s1,s2],'y');
@@ -100,10 +106,15 @@ ax1.Position(2) = 0.15;
 ax2.Position(2) = 0.15;
 
 ax1.Position(3) = 0.5;
-ax2.Position(3) = 0.19;
+ax2.Position(3) = 0.22;%19;
 ax2.Position(1) = 0.61;
 
-leg.NumColumns = 2;
-leg.Position(1) = 0.03;
-
-plotdir = [];
+leg.NumColumns = 3;
+leg.Position(1) = 0.02;%3;
+leg.FontSize = 16.5;
+%%
+plotdir = [getenv('SamakPath'),'ksn2ana/ksn2_Systematics/plots/'];
+pltname = sprintf('%sksn2_SystBreakdown_%s_CombiPlt.pdf',plotdir,DataType);
+export_fig(pltname);
+pltname = sprintf('%sksn2_SystBreakdown_%s_CombiPlt.png',plotdir,DataType);
+print(pltname,'-dpng','-r350');

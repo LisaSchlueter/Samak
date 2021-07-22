@@ -10,7 +10,7 @@ savedir = [getenv('SamakPath'),'SterileAnalysis/MiniFiles/KSN2/'];
 MakeDir(savedir);
 savefile = sprintf('%sKSN2contour_%s_%s_%s_%.0feV.mat',savedir,DataType,strrep(freePar,' ',''),chi2,range);
 
-if exist(savefile,'file')
+if exist(savefile,'file') && 1==2
 else
     %% configure RunAnalysis object
     if strcmp(chi2,'chi2Stat')
@@ -79,12 +79,14 @@ else
         sin2T4_bf      = S.sin2T4_bf;
         mNu4Sq_bf      =  S.mNu4Sq_bf;
         mNuSq_bf       =  S.mNuSq_bf;
+         E0_bf       =  S.E0_bf;
         chi2_bf        = S.chi2_bf;
+        
     end
     
     save(savefile,'sin2T4_contour','mNu4Sq_contour','FitResults_Null');
     if strcmp(DataType,'Real')
-        save(savefile,'sin2T4_bf','mNu4Sq_bf','mNuSq_bf','chi2_bf',....
+        save(savefile,'sin2T4_bf','mNu4Sq_bf','mNuSq_bf','chi2_bf','E0_bf',....
             'SignificanceCL','SignificanceSigma','DeltaChi2','-append')
     end
     fprintf('save to file %s \n',savefile);

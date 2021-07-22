@@ -2,7 +2,7 @@
 % compare m2 free, m2 nuisance parameter
 %% settings that might change
 chi2 = 'chi2CMShape';
-DataType = 'Real';
+DataType = 'Twin';%'Real';
 nGridSteps = 40;
 range = 40;
 Mode = 'Compute';
@@ -50,17 +50,27 @@ S.Interp1Grid('nInter',1e3);
 %
 PlotPar = S.mNuSq;
 
-ContourVec = [-5 -1,0,0.3,0.9,1,2,10];
+if strcmp(DataType,'Real')
+    ContourVec = [-5 -1,0,0.3,0.9,1,2,10];
+    LabelSpacing = 380;
+      BF = 'ON';
+else
+    ContourVec = [-5 -1,-0.3 0,0.3,1,2,10];
+    LabelSpacing = 10000;
+    BF = 'OFF';
+end
 Splines = 'ON';
 GetFigure;
 %
 for i=1:numel(ContourVec)
-    [~,p1] = contour3(S.sin2T4,S.mNu4Sq,PlotPar,[ContourVec(i),ContourVec(i)],...
-        'Color',rgb('LightGreen'),'ShowText','on','LineWidth',1.5,'LabelSpacing',380);
+    [M,p1] = contour3(S.sin2T4,S.mNu4Sq,PlotPar,[ContourVec(i),ContourVec(i)],...
+        'Color',rgb('LightGreen'),'ShowText','off','LineWidth',2,'LabelSpacing',LabelSpacing);
     hold on;
+   % cl = clabel(M,p1,'FontSize',18,'FontName','Times New Roman');
 end
 %
-[pFree,pFix] = S.PlotmNuSqOverview('PullmNuSq','OFF','SavePlot','OFF','HoldOn','ON','BestFit','ON');
+
+[pFree,pFix] = S.PlotmNuSqOverview('PullmNuSq','OFF','SavePlot','OFF','HoldOn','ON','BestFit',BF);
 view(2)
 grid off
 pFix.LineWidth = 2;
@@ -69,9 +79,18 @@ leg = legend([pFix,pFree,p1],...
     sprintf('i)  Fixed {\\itm}_\\nu^2 = 0 eV^2'),...
     sprintf('ii) Free {\\itm}_\\nu^2 unconstrained'),...
     sprintf('Isoline: {\\itm}_\\nu^2 best fit for ii)'),...
-    'EdgeColor',rgb('Silver'),'Location','southwest');
-PrettyLegendFormat(leg,'alpha',0.9);
-
+    'EdgeColor',rgb('Silver'),'Location','southwest','box','off');
+if strcmp(DataType,'Twin')
+    legend boxon
+    PrettyLegendFormat(leg,'alpha',0.5);
+end
+PRLFormat;
+title('');
+ax = gca;
+ax.FontSize =  24;
+leg.FontSize = 24;
+ax.XLabel.FontSize = 28;
+ax.YLabel.FontSize = 28;
 ylim([1 40^2]);
 xlim([2e-03 0.5]);
 set(gca,'YScale','log')

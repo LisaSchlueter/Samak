@@ -2,7 +2,7 @@
 %% settings that might change
 chi2 = 'chi2CMShape';
 DataType = 'Twin';
-nGridSteps = 40;
+
 range = 40;
 freePar = 'E0 Norm Bkg';
 %% configure RunAnalysis object
@@ -33,44 +33,33 @@ RunAnaArg = {'RunList','KNM2_Prompt',...
 A = MultiRunAnalysis(RunAnaArg{:});
 %% configure Sterile analysis object
 SterileArg = {'RunAnaObj',A,... % Mother Object: defines RunList, Column Density, Stacking Cuts,....
-    'nGridSteps',nGridSteps,...
     'SmartGrid','OFF',...
     'RecomputeFlag','OFF',...
     'SysEffect','all',...
     'RandMC','OFF',...
-    'range',range,...
-    'LoadGridArg',{'ExtmNu4Sq','ON','mNu4SqTestGrid',5}};
+    'range',range};
 
 %%
 S = SterileAnalysis(SterileArg{:});
+if strcmp(DataType,'Real')
+    S.nGridSteps = 40;
+    S.LoadGridArg = {'ExtmNu4Sq','ON','mNu4SqTestGrid',5};
+else
+     S.LoadGridArg = {'ExtmNu4Sq','ON','mNu4SqTestGrid',2};
+     S.nGridSteps = 30;
+end
 S.LoadGridFile(S.LoadGridArg{:});
 S.Interp1Grid;
 
-%%
- [legHandle,legStr] = S.ContourPlotOsci('DayaBay','ON','DoubleChooz','ON','SavePlot','ON','Style','PRL','BestFit','ON');
+FinalSensitivity = 'ON';
+ [legHandle,legStr] = S.ContourPlotOsci('DayaBay','ON','DoubleChooz','ON',...
+                             'SavePlot','ON','Style','PRL','BestFit','ON',...
+                             'FinalSensitivity',FinalSensitivity);
 
-% %% load combi- free mNuSq
-% savedir = [getenv('SamakPath'),'SterileAnalysis/GridSearchFiles/Combi/',DataType,'/'];
-% MakeDir(savedir)
-% savename_free = sprintf('%sKSN12Combi_ReAna_GridSearch_%s_%s_Uniform_%s_%.0fnGrid.mat',...
-%     savedir,DataType,'mNuE0BkgNorm','chi2CMShape',30);
-% 
-% % load file
-% if exist(savename_free,'file') 
-%     dfree = importdata(savename_free);
-%     fprintf('load results from file %s \n',savename_free)
-% else
-%      fprintf('load results from file %s \n',savename_free)
-%     return
-% end
-% 
-% mNu4Sq_free    = dfree.mNu4Sq_contour;
-% sin2T4Sq_free  = 4*dfree.sin2T4_contour.*(1-dfree.sin2T4_contour);
-
-% load combi fixed m_nu
+% load combined result for fixed m_nu
 savedir_fix = [getenv('SamakPath'),'ksn2ana/ksn2_RunCombination/results/'];
-MakeDir(savedir)
-savefile_fix = sprintf('%sksn21_Combination_ReAna.mat',savedir_fix);
+MakeDir(savedir_fix)
+savefile_fix = sprintf('%sksn21_Combination_ReAna_%s.mat',savedir_fix,DataType);
 
 % load file
 if exist(savefile_fix,'file') 
@@ -80,22 +69,38 @@ else
      fprintf('load results from file %s \n',savefile_fix)
     return
 end
-
 mNu4Sq_fix   = dfix.mNu4Sq_contour_12;
 sin2T4Sq_fix  = 4*dfix.sin2T4_contour_12.*(1-dfix.sin2T4_contour_12);
+mNu4Sq_fix1   = dfix.mNu4Sq_contour_1;
+sin2T4Sq_fix1  = 4*dfix.sin2T4_contour_1.*(1-dfix.sin2T4_contour_1);
 
-%% plot
+% include n plot
 hold on;
-pfix = plot(sin2T4Sq_fix,mNu4Sq_fix,':','Color',rgb('Navy'),'LineWidth',2.5);
+pfix12 = plot(sin2T4Sq_fix,mNu4Sq_fix,':','Color',rgb('Navy'),'LineWidth',2.5);
+pfix1 = plot(sin2T4Sq_fix1,mNu4Sq_fix1,'-.','Color',rgb('SkyBlue'),'LineWidth',2.5);
 
-%%
-%pfree = plot(sin2T4Sq_free,mNu4Sq_free,':','Color',rgb('DarkRed'),'LineWidth',2.5);
+ax.XLabel.FontSize = 28;
+ax.YLabel.FontSize = 28;
 
+% legend
 legStrCombi = legStr;
-legStrCombi{end} = [legStr{end},' (KNM-2)'];
-legStrCombi = {legStrCombi{:},[legStr{end},' (KNM-1&2)']};
-%%
-leg = legend([legHandle{:},pfix],legStrCombi);
- plotname = sprintf('%s_OsciContour_%.2gCL_Combi.pdf',S.DefPlotName,S.ConfLevel);
-export_fig(gcf,plotname);
+if strcmp(FinalSensitivity,'ON')
+    legStrCombi{end-2} = [legStr{end-2},' (KSN2)'];
+    legStrCombi = {legStrCombi{1:end-3},...
+        [legStr{end-2},' (KSN1)'],...
+        [legStr{end-2},' (KSN2)'],...
+        [legStr{end-2},' (KSN1+2)'],...
+        legStrCombi{end-1:end}};
+    legHandleAll = [legHandle{1:end-3},...
+        pfix1,legHandle{end-2},pfix12,...
+        legHandle{end-1},legHandle{end}];
+else
+    legStrCombi{end} = [legStr{end},' (KSN2)'];
+    legStrCombi = {legStrCombi{1:end-1},[legStr{end},' (KSN1)'],legStrCombi{end},[legStr{end},' (KSN1+2)']};
+    legHandleAll = [legHandle{1:end-1},pfix1,legHandle{end},pfix12];
+end
+
+leg = legend(legHandleAll,legStrCombi);
+plotname = sprintf('%s_OsciContour_%.2gCL_Combi.pdf',S.DefPlotName,S.ConfLevel);
+%export_fig(gcf,plotname);
                   

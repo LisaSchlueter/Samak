@@ -2,15 +2,15 @@
 % perform grid searches for differed nu-masses
 
 %% settings that might change
-DataType = 'Real';
+DataType = 'Twin';
 switch DataType
     case 'Twin'
-        FixmNuSq_all = -1:0.1:1;
+        FixmNuSq_all = -1.1:0.1:2.5;
     case 'Real'
-        FixmNuSq_all = sort(round([-1.0:0.1:2.5],2));
+        FixmNuSq_all = sort(round([-3:0.1:2.5],2));
 end
 
-RecomputeFlag = 'OFF';
+RecomputeFlag = 'ON';
 Maxm4Sq    = 36^2; % interpolation
 chi2min = zeros(numel(FixmNuSq_all),1);
 sin2T4_bf =  zeros(numel(FixmNuSq_all),1);
@@ -144,7 +144,7 @@ else
                 S.chi2_ref = min(min(Chi2Sum));
                 S.chi2 = Chi2Sum;%DeltaChi2Combi;
             else
-                % sensitivity can be combined just as it is
+                % sensitivity cannot be combined 
                 Chi2Sum = dS.chi2Stereo +  chi2_KATRIN;
                 DeltaChi2Combi = Chi2Sum;
                 S.chi2_ref = min(min(DeltaChi2Combi));
@@ -203,20 +203,31 @@ if strcmp(CombiSTEREO,'ON')
 end
 %% plot
 GetFigure;
-plot(mNuSq_inter,chi2bf.*ones(numel(mNuSq_inter),1),'k--','LineWidth',1);
+[l,a] = boundedline(mNuSq_bf.*ones(10,1),linspace(-5,1e2,10),[mNuSqErrDown.*ones(10,1),mNuSqErrUp.*ones(10,1)],...
+    'orientation','horiz');
+l.delete; a.FaceAlpha = 0.3; a.FaceColor = rgb('SkyBlue');
 hold on;
-plot(mNuSq_inter,(chi2bf+1).*ones(numel(mNuSq_inter),1),'k--','LineWidth',1);
-p1inter = plot(mNuSq_inter,smooth(chi2_inter,100),'-','LineWidth',3,'Color',rgb('SkyBlue'));
+if strcmp(CombiSTEREO,'ON')
+    [lS,aS] = boundedline(mNuSq_bf_Combi.*ones(10,1),linspace(-5,1e2,10),[mNuSqErrUp_Combi.*ones(10,1),mNuSqErrUp_Combi.*ones(10,1)],...
+        'orientation','horiz');
+    lS.delete; aS.FaceAlpha = 0.3; aS.FaceColor = rgb('Orange');
+end
+
+plot(mNuSq_inter,zeros(numel(mNuSq_inter),1),'k--','LineWidth',1);
+hold on;
+plot(mNuSq_inter,ones(numel(mNuSq_inter),1),'k--','LineWidth',1);
+y = smooth(chi2_inter,100);
+p1inter = plot(mNuSq_inter,y-min(y),'-','LineWidth',3,'Color',rgb('SkyBlue'));
 %p1 = plot(FixmNuSq_all,chi2min,'.','MarkerSize',15,'Color',rgb('DodgerBlue'));
 
 if strcmp(CombiSTEREO,'ON')  
-    p2Stereo = plot(mNuSq_inter,smooth(chi2_inter_Combi,100),':','LineWidth',3,'Color',rgb('Orange'));
-   % p2 = plot(FixmNuSq_all,chi2min_Combi,'x','MarkerSize',10,'LineWidth',2,'Color',rgb('DarkOrange'));
+    yS = smooth(chi2_inter_Combi,100);
+    p2Stereo = plot(mNuSq_inter,yS-min(yS),':','LineWidth',3,'Color',rgb('Orange'));
 end
 
 dof = 28-4-2;% nqU-freeFitPar
 xlabel(sprintf('{\\itm}_\\nu^2 (eV^2)'));
-ylabel(sprintf('\\chi^2 (%.0f dof)',dof));
+ylabel(sprintf('\\Delta\\chi^2'));
 PrettyFigureFormat('FontSize',22);
 
 if strcmp(CombiSTEREO,'OFF') 
@@ -233,16 +244,18 @@ PrettyLegendFormat(leg);
 
 if strcmp(DataType,'Twin')
     t =  title('MC Twin');
-    ylim([chi2bf-0.5 chi2bf+2]);
+%    ylim([chi2bf-0.5 chi2bf+2]);
 
 else
     t =  title('Data');
-    if strcmp(CombiSTEREO,'ON')
-    ylim([chi2bf-0.3 chi2bf_Combi+10]);
-    else
-         ylim([chi2bf-0.3 chi2bf+4]);
-    end
+%     if strcmp(CombiSTEREO,'ON')
+%     ylim([chi2bf-0.3 chi2bf_Combi+10]);
+%     else
+%          ylim([chi2bf-0.3 chi2bf+4]);
+%     end
 end
+ylim([-0.5 7]);
+xlim([min(FixmNuSq_all),max(FixmNuSq_all)]);
 t.FontWeight = 'normal'; t.FontSize = get(gca,'FontSize');
 
 pltdir = strrep(savedir,'results','plots');

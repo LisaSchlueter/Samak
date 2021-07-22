@@ -14,6 +14,7 @@ p.addParameter('RandMC','OFF',@(x)ischar(x) || isfloat(x)); % randomize twins if
 p.addParameter('pullFlag',99,@(x)isfloat(x)); % if above 12 --> no pull
 p.addParameter('SysBudget',66,@(x)isfloat(x));
 p.addParameter('ELossFlag','KatrinT2A20',@(x)ischar(x));
+p.addParameter('mNu4SqTestGrid','OFF');
 p.addParameter('AngularTFFlag','ON',@(x)ismember(x,{'ON','OFF'}));
 p.parse(varargin{:});
 
@@ -29,6 +30,7 @@ pullFlag      = p.Results.pullFlag;
 SysBudget     = p.Results.SysBudget;
 ELossFlag     = p.Results.ELossFlag;
 AngularTFFlag = p.Results.AngularTFFlag;
+mNu4SqTestGrid = p.Results.mNu4SqTestGrid;
 
 if strcmp(chi2,'chi2CMShape')
     NonPoissonScaleFactor=1;
@@ -65,6 +67,11 @@ end
 if pullFlag<=12
     extraStr = sprintf('%s_pull%.0f',extraStr,pullFlag);
 end
+
+if isfloat(mNu4SqTestGrid)
+    extraStr = [extraStr,sprintf('_mNu4SqTestGrid%.2g',mNu4SqTestGrid)];
+end
+                     
 MakeDir(savedir);
 
 savefile = sprintf('%sKSNX_GridSearch_%s_%s_%s_%.0feVrange_%s_%.0fnGrid%s.mat',...
@@ -137,7 +144,39 @@ else
     
     %% define msq4 - sin2t4 grid
     sin2T4      = logspace(log10(4e-04),log10(0.5),nGridSteps); %linspace(0.001,0.5,nGridSteps)
-    mnu4Sq      = logspace(-1,log10((range+5)^2),nGridSteps)';
+    
+    if isfloat(mNu4SqTestGrid)
+        if mNu4SqTestGrid==1
+            mnu4SqSmall  = logspace(-1,log10((range-11)^2),nGridSteps-5)';
+            mnu4SqLarge  = logspace(log10((range-10)^2),log10((range)^2),5)';
+            mnu4Sq       = sort([mnu4SqSmall;mnu4SqLarge]);
+        elseif mNu4SqTestGrid==2
+            mnu4SqSmall  = logspace(-1,log10((range-11)^2),nGridSteps-7)';
+            mnu4SqLarge  = logspace(log10((range-10)^2),log10((range)^2),7)';
+            mnu4Sq       = sort([mnu4SqSmall;mnu4SqLarge]);
+        elseif mNu4SqTestGrid==3
+            mnu4SqSmall  = logspace(-1,log10((range-11)^2),nGridSteps-10)';
+            mnu4SqLarge  = logspace(log10((range-10)^2),log10((range)^2),10)';
+            mnu4Sq       = sort([mnu4SqSmall;mnu4SqLarge]);
+        elseif mNu4SqTestGrid==4
+            mnu4SqSmall  = logspace(-1,log10((range-11)^2),nGridSteps-5)';
+            mnu4SqLarge  = logspace(log10((range-10)^2),log10((range)^2),5)';
+            mnu4Sq       = sort([mnu4SqSmall;mnu4SqLarge]);
+        elseif mNu4SqTestGrid==5 || mNu4SqTestGrid==5.5
+            mnu4SqSmall  = logspace(-1,log10((range-11)^2),nGridSteps-15)';
+            mnu4SqLarge  = logspace(log10((range-10)^2),log10((range)^2),15)';
+            mnu4Sq       = sort([mnu4SqSmall;mnu4SqLarge]);
+        elseif mNu4SqTestGrid==6
+            mnu4Sq      = logspace(-1,log10(5),nGridSteps)';
+        else
+            mnu4Sq      = logspace(-1,log10((range)^2),nGridSteps)';
+        end
+    else
+        mnu4Sq      = logspace(-1,log10((range)^2),nGridSteps)';
+        %    mnu4Sq      = logspace(-1,log10((range+5)^2),nGridSteps)';
+        
+    end
+    %%
     mnu4Sq      = repmat(mnu4Sq,1,nGridSteps);
     sin2T4      = repmat(sin2T4,nGridSteps,1);
     %% make copy of model for parallel computing

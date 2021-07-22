@@ -41,8 +41,8 @@ A = MultiRunAnalysis(RunAnaArg{:});
 A.exclDataStart = A.GetexclDataStart(range);
 %%
 A.ResetFitResults;
-A.FitResult.par(1) = -0.8;
-ScanResults = A.GetAsymFitError('Mode','Uniform','ParScanMax',1.8,'nFitMax',nFitMax);
+A.FitResult.par(1) = 0;%-0.8;
+ScanResults = A.GetAsymFitError('Mode','Uniform','ParScanMax',2.5,'nFitMax',nFitMax);
 %% plot
 pHandle = A.PlotChi2Curve('Parameter','mNu','ScanResult',ScanResults,'PlotBf','ON','HoldOn','OFF');
 %%

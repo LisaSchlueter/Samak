@@ -3,7 +3,7 @@
 
 % interpolate Stereo Chi^2 Map to match KATRIN grid
 % sanity plots
-Maxm4Sq    = 40^2;
+Maxm4Sq    = 36^2;
 Minm4Sq    = 0.1;
 Type = 'Data';%'Sensitivity';
 RecomputeFlag = 'ON';

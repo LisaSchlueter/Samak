@@ -4,7 +4,7 @@
 range = 40;
 LocalFontSize = 18;
 LocalLineWidth = 1.5;
- sin2T4 = 0.01;    % works for all 
+ sin2T4 = 0.0027;    % works for all 
  mNu4Sq_plt = 10^2; % works from (1:40).^2;
  
  SavePlot = 'ON';

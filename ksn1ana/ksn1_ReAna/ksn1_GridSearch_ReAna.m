@@ -4,7 +4,7 @@ nGridSteps            = 50;
 DataType              = 'Real';
 range                 = 40;
 chi2                  = 'chi2CMShape';
-freePar               = 'mNu E0 Norm Bkg';
+freePar               = 'E0 Norm Bkg';
 %% configure RunAnalysis object
 if strcmp(chi2,'chi2Stat')
     NonPoissonScaleFactor = 1;
@@ -36,5 +36,15 @@ SterileArg = {'RunAnaObj',Real,... % Mother Object: defines RunList, Column Dens
     'range',range};
 
 S = SterileAnalysis(SterileArg{:});
-
 S.GridSearch('ExtmNu4Sq','OFF','mNu4SqTestGrid',2);
+
+
+%% new for ringberg slides
+S.LoadGridFile('ExtmNu4Sq','OFF','mNu4SqTestGrid',2);
+S.Interp1Grid;
+
+S.ContourPlotOsci('DayaBay','ON','DoubleChooz','ON','SavePlot','ON','Style','PRL','BestFit','ON','Color',rgb('SkyBlue'));
+
+%%
+
+

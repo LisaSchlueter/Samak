@@ -21,7 +21,7 @@ d3 = importdata(file3);
 
 %%
 mbbexp = @(phase,mbb3nu,sint4Sq,m4Sq) abs((1-sint4Sq).*mbb3nu+exp(1i*pi*phase).*sqrt(m4Sq).*sint4Sq);
-Mode = 'NH';
+Mode = 'IH';
 if strcmp(Mode,'NH')
     % normal hierarchy: possible values in non-degenerate regime: 0-0.005 eV
     mbb3nu_min = 0;
@@ -40,7 +40,7 @@ m4Sq    = logspace(-1,3.2,nGrid);
 sint4Sq_Osci       = Convert2Osci(sint4Sq);
 sint4SqKATRIN_Osci = Convert2Osci(d1.sinT4Sq);
 %% special cases
-Phase = [-1,-0.5,0,0.5,1];
+Phase = [-1,0,1];
 m4Sq_contourMin = zeros(numel(m4Sq),numel(Phase));
 m4Sq_contourMax = zeros(numel(m4Sq),numel(Phase));
 for i=1:numel(Phase)
@@ -70,8 +70,7 @@ for i=1:numel(Phase)
     elseif Phase(i)==0
         LineStyle = '-';
     end
-    
-    p{i}= plot(sint4Sq_Osci,m4Sq_contourMin(:,i),'LineStyle',LineStyle,'Color',MyColors(i,:),'LineWidth',1);
+    p{i}= plot(sint4Sq_Osci,m4Sq_contourMin(:,i),'LineStyle',':','Color',MyColors(i,:),'LineWidth',1);
     hold on;
     legStr{i} = sprintf('m_{\\beta\\beta}^{3\\nu} = %.3g eV, \\phi = %.1g \\pi',mbb3nu_min,Phase(i));
 end

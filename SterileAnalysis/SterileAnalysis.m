@@ -840,6 +840,8 @@ classdef SterileAnalysis < handle
             p.addParameter('DANSS','ON',@(x) ismember(x,{'ON','OFF'}));
             p.addParameter('DayaBay','ON',@(x) ismember(x,{'ON','OFF'}));
             p.addParameter('DoubleChooz','ON',@(x) ismember(x,{'ON','OFF'}));
+            p.addParameter('Solar','ON',@(x) ismember(x,{'ON','OFF'}));
+            p.addParameter('NuBetaBeta','ON',@(x) ismember(x,{'ON','OFF'}));
             p.addParameter('Stereo','ON',@(x) ismember(x,{'ON','OFF'}));
             p.addParameter('Style','Reg',@(x) ismember(x,{'Reg','PRL'}));
             p.addParameter('FinalSensitivity','OFF',@(x) ismember(x,{'ON','OFF'}));
@@ -858,6 +860,8 @@ classdef SterileAnalysis < handle
             DANSS       = p.Results.DANSS;
             DayaBay     = p.Results.DayaBay;
             DoubleChooz = p.Results.DoubleChooz;
+            Solar       = p.Results.Solar;
+            NuBetaBeta  = p.Results.NuBetaBeta;
             Stereo      = p.Results.Stereo;
             Style       = p.Results.Style;
             FinalSensitivity = p.Results.FinalSensitivity;
@@ -874,6 +878,31 @@ classdef SterileAnalysis < handle
             legHandle = cell(0,0);
             legStr = '';
             savedirOther = [getenv('SamakPath'),'SterileAnalysis/GridSearchFiles/Knm1/Others/'];
+            
+            %% neutrinoless double beta decay
+            if strcmp(NuBetaBeta,'ON')
+                mbb3nu_max = [0.005,0.05];%[0.026,0.049]';%NH, IH
+                mbb4nu_ExpLimit =  0.165;
+                savedir = [getenv('SamakPath'),'ksn2ana/ksn2_NuBetaBeta/results/'];
+                savefileBB = sprintf('%sksn2_NuBetaBeta_mbb3numax_NH%.3feV_IH%.3feV_mbbExpLimit%.3feV.mat',...
+                    savedir,mbb3nu_max(1),mbb3nu_max(2),mbb4nu_ExpLimit);
+                dbb = importdata(savefileBB);
+                xIH = 4.*dbb.sin2T4_IH.*(1-dbb.sin2T4_IH);
+                xNH = 4.*dbb.sin2T4_NH.*(1-dbb.sin2T4_NH);
+                [l,aIH]= boundedline(xIH,dbb.m4Sq_IH_mean,abs(dbb.m4Sq_IH_mean-[dbb.m4Sq_IH_max;dbb.m4Sq_IH_min])');
+                l.delete; aIH.FaceColor = rgb('Gainsboro');
+                hold on;
+                [l,aNH]= boundedline(xNH,dbb.m4Sq_NH_mean,abs(dbb.m4Sq_NH_mean-[dbb.m4Sq_NH_max;dbb.m4Sq_NH_min])');
+                l.delete;
+                aNH.FaceColor = rgb('DarkGray');   
+            end
+            %% solar
+            if strcmp(Solar,'ON')
+                sin2T4_solar = 0.066;
+                xsolar = 4.*sin2T4_solar.*(1-sin2T4_solar);
+                psolar = plot(xsolar.*ones(1e2,1),linspace(1e-4,5e3,1e2),'--','LineWidth',2,'Color',rgb('Amethyst'));        
+                hold on
+            end     
             %% Mainz
             if strcmp(Mainz,'ON')
                 filenameMainz = sprintf('%scoord_Mainz_95CL.mat',savedirOther);
@@ -962,6 +991,18 @@ classdef SterileAnalysis < handle
                 legStr = [legStr,{sprintf('Neutrino-4 2\\sigma')}];
                 hold on;
             end
+        
+            %% just for legend
+            if strcmp(NuBetaBeta,'ON')
+                legHandle{numel(legHandle)+1} = aNH;
+                legHandle{numel(legHandle)+2} = aIH;
+                legStr = [legStr,{sprintf('0\\nu\\beta\\beta NH 90%% C.L.'),...
+                    sprintf('0\\nu\\beta\\beta IH 90%% C.L.')}];
+            end
+            if strcmp(Solar,'ON')
+                legHandle{numel(legHandle)+1} = psolar;
+                legStr = [legStr,{sprintf('Global solar 95%% C.L.')}];
+            end
             %% KATRIN
             PlotArg = {'LineWidth',2.5,'LineStyle',myLineStyle};
             if numel(CL)==1
@@ -990,17 +1031,17 @@ classdef SterileAnalysis < handle
                 obj.RunAnaObj.AngularTFFlag = 'ON';
                 obj.RunAnaObj.ELossFlag = 'KatrinT2A20';
                 obj.RunAnaObj.SysBudget = 66;
-                obj.LoadGridFile('CheckSmallerN','ON',obj.LoadGridArg{:});
-                obj.Interp1Grid('RecomputeFlag','ON');
+                obj.LoadGridFile;%('CheckSmallerN','ON',obj.LoadGridArg{:});
+                obj.Interp1Grid('RecomputeFlag','ON','Maxm4Sq',38.2^2);
                 
-                PlotArg = {'LineWidth',2,'LineStyle',':','LineColor',rgb('SteelBlue')};
+                PlotArg = {'LineWidth',2,'LineStyle','-','LineColor',rgb('SteelBlue')};
                 [DeltamNu41Sq,sin2T4Sq] = obj.Convert2Osci;
                 [~,legHandle{numel(legHandle)+1}]= contour(sin2T4Sq,DeltamNu41Sq,obj.chi2-obj.chi2_ref,...
                     [obj.DeltaChi2 obj.DeltaChi2],...
                     PlotArg{:});
                
                 obj.RunAnaObj.DataType= DataType_i ;
-                obj.RunAnaObj.DataSet = 'Knm1';
+               % obj.RunAnaObj.DataSet = 'Knm1';
                 obj.RunAnaObj.AngularTFFlag = AngTF;
                 obj.RunAnaObj.ELossFlag = ElossFlag;
                 obj.RunAnaObj.SysBudget = Budget;
@@ -1013,8 +1054,8 @@ classdef SterileAnalysis < handle
             %% leg + appearance
             set(gca,'YScale','log');
             set(gca,'XScale','log');
-        %   xlabel(sprintf('{sin}^2(2\\theta_{ee})'));
-             xlabel(sprintf('{sin}^2(2\\theta_{14})'));
+           xlabel(sprintf('{sin}^2(2\\theta_{ee})'));
+        %     xlabel(sprintf('{sin}^2(2\\theta_{14})'));
             ylabel(sprintf('\\Delta{\\itm}_{41}^2 (eV^2)'));    
             leg = legend([legHandle{:}],legStr{:},'EdgeColor','none','Location','northoutside');
             
@@ -1524,6 +1565,7 @@ classdef SterileAnalysis < handle
                 mNu4Sq_bf_ExtSin2T4 = obj.mNu4Sq_bf;
             else
                  nGridSteps_i = obj.nGridSteps; 
+                 obj.nGridSteps = 30;  
             end
             
             obj.LoadGridFile(obj.LoadGridArg{:});

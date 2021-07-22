@@ -1,7 +1,7 @@
 % impact of 3+1 model extionsion on neutrino mass sensitivity
 % with STEREO as external constraints
 chi2 = 'chi2CMShape';
-DataType = 'Twin';
+DataType = 'Real';
 SavePlt = 'ON';
 if strcmp(DataType,'Real')
 mNuSq = -1:0.01:2.5;

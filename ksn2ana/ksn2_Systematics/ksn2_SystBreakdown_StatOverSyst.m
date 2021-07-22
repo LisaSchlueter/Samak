@@ -129,3 +129,6 @@ if strcmp(SavePlt,'ON')
     fprintf('save plot to %s \n',plotname);
     export_fig(fRatio,strrep(plotname,'png','pdf'));
 end
+
+%%
+nanmedian(Ratio')

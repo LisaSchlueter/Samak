@@ -1,24 +1,27 @@
-% ksn2 calculate chi2-prifle for nu-mass
-% perform grid searches for differed nu-masses
+% do with with best fit values for sin2t4 and m412, rest free
 
 %% settings that might change
-FixmNuSq_all = (-1:0.1:1);
+chi2 = 'chi2CMShape';
 DataType = 'Real';
 
-for i=1:numel(FixmNuSq_all)
+savedir = sprintf('%sksn2ana/ksn2_BestFit/results/',getenv('SamakPath'));
+savefile = sprintf('%sksn2_BestFitPar_mNuE0NormBkg_%s_%s.mat',...
+    savedir,DataType,chi2);
+if exist(savefile,'file') 
+    load(savefile)
+else  
+   % best fit from fine grid
+   sin2T4_bf = 0.026742340546809;
+   mNu4Sq_bf = 98.343698856109157;
     %% configure RunAnalysis object
-    nGridSteps = 30;
-    range = 40;
-    chi2 = 'chi2CMShape';
     if strcmp(chi2,'chi2Stat')
         NonPoissonScaleFactor = 1;
     elseif  strcmp(chi2,'chi2CMShape')
         NonPoissonScaleFactor = 1.112;
     end
-    
     RunAnaArg = {'RunList','KNM2_Prompt',...
         'DataType',DataType,...
-        'fixPar','E0 Norm Bkg',...%free par
+        'fixPar','mNu E0 Norm Bkg',...%free par
         'SysBudget',40,...
         'fitter','minuit',...
         'minuitOpt','min;migrad',...
@@ -37,22 +40,11 @@ for i=1:numel(FixmNuSq_all)
         'DopplerEffectFlag','FSD'};
     A = MultiRunAnalysis(RunAnaArg{:});
     %%
-    switch DataType
-        case 'Real'
-            LoadGridArg = {'mNu4SqTestGrid',5,'ExtmNu4Sq','ON'};
-        case 'Twin'
-            LoadGridArg = {'mNu4SqTestGrid',2,'ExtmNu4Sq','ON'};
-    end
-    %% configure Sterile analysis object
-    SterileArg = {'RunAnaObj',A,... % Mother Object: defines RunList, Column Density, Stacking Cuts,....
-        'nGridSteps',nGridSteps,...
-        'SmartGrid','OFF',...
-        'RecomputeFlag','OFF',...
-        'SysEffect','all',...
-        'RandMC','OFF',...
-        'range',range,...
-        'LoadGridArg',LoadGridArg};
-    FixmNuSq = FixmNuSq_all(i);
-    S = SterileAnalysis(SterileArg{:});
-    S.GridSearch(S.LoadGridArg{:},'FixmNuSq',FixmNuSq);
+    A.exclDataStart = A.GetexclDataStart(40);
+    A.ModelObj.SetFitBiasSterile(mNu4Sq_bf,sin2T4_bf);
+    A.Fit;
+    FitResult = A.FitResult;
+    %%
+    save(savefile,'FitResult','mNu4Sq_bf','sin2T4_bf','RunAnaArg');
 end
+  

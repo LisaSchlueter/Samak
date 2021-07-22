@@ -1575,7 +1575,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
         end
         function  defaultEffects = GetDefaultEffects(obj)
             switch obj.DataSet
-                case 'Knm1'
+                case {'Knm1','Fake'}
                     defaultEffects = struct(...
                         'RF_EL','ON',...   % Response Function(RF) EnergyLoss
                         'RF_BF','ON',...   % RF B-Fields
