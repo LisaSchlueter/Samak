@@ -22,7 +22,7 @@ function ProfileLikelihood(varargin)
             cdf(i,2)=sum(P(1:i))./sum(P);
         end
         load('EtaFitResult_KNM2_Prompt_AllParams_mnuSq0_Nfit1000.mat','fitresults');
-        fitresults(9,:)=fitresults(9,:)-1.6e10;
+        %fitresults(9,:)=fitresults(9,:)-1.6e10;
         [~,p]=kstest(fitresults(9,:),'CDF',cdf);
         figure(2);
         cdfplot(fitresults(9,:));

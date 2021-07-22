@@ -587,6 +587,9 @@ classdef FITC < handle
                     partmp = obj.parinitoriginal;
                     partmp(~ismember(1:length(obj.parinitoriginal),fixpar)) = par;
                     par = partmp;
+%                     if ~(fixpar(end)==18)
+%                         par(end)=par(end)*1e10;
+%                     end
             end
             
 
@@ -653,7 +656,7 @@ classdef FITC < handle
                     'eta_bias',eta_fit*1e10);
                   obj.SO.ComputeTBDIS();
             end
-            
+
  
             % exclude data points: data and model TBDIS
             if numel(obj.exclDataStart)==1

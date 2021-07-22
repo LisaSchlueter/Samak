@@ -136,4 +136,8 @@
 % lambda=2*pi*hbar/(sqrt(2*E_kin*e/c^2))
 % etamaxlambda=(0.01/lambda)^3/56
 
-PlotBestFit('RunList','KNM2_Prompt','DataType','Twin','Nfit',1000);
+%PlotBestFit('RunList','KNM2_Prompt','DataType','Twin','Nfit',1000);
+krn2systematicstudies;
+close all;
+clear all;
+FullAna;

@@ -19,7 +19,11 @@ function RelicSystematics(saveplot,DataType)
     %Y5=Y;
     load([matFilePath,'FakeSensitivityBreakdown_TDR_mnuSq0_range40.mat']);
     YF=Y;
-    load([matFilePath,'SensitivityBreakdown_KNM2_Prompt_mnuSq1_range40.mat']);
+    if strcmp(DataType,'Twin2')
+        load([matFilePath,'SensitivityBreakdown_KNM2_Prompt_mnuSq1_range40.mat']);
+    elseif strcmp(DataType,'real2')
+        load([matFilePath,'SensitivityBreakdown_KNM2_Prompt_mnuSq0_range40_RealData.mat']);
+    end
     Y2=Y;
     %load([matFilePath,'SystEffectOnSensitivity_KNM1_mnuSq0.mat']);
     %Bias0=Y;Bias0(3)=Bias(4);Bias0(4)=Bias(1);Bias0(5)=Bias(2);Bias0(6)=Bias(3);Bias0(7)=Bias(6);Bias0(8)=Bias(5);Bias0(9)=Bias(7);
@@ -58,8 +62,11 @@ function RelicSystematics(saveplot,DataType)
         case 'Twin'
             X = reordercats(X,{'Bkg slope','Final-state distribution','Theoretical corrections','Scan fluctuations','Response function','Stacking','Detector efficiency','Bkg rate','Statistical','Total'});
         case 'Twin2'
-            X= categorical({'Total','Statistical','Final-state distribution','Response function','Scan fluctuations','Stacking','Detector efficiency','Theoretical corrections','Bkg slope','Bkg rate','Plasma','Penning Trap'});
-            X= reordercats(X,{'Detector efficiency','Penning Trap','Theoretical corrections','Response function','Final-state distribution','Scan fluctuations','Stacking','Plasma','Bkg slope','Bkg rate','Statistical','Total'});
+            X= categorical({'Total','Statistical','Final-state distribution','Response function','Scan fluctuations','Stacking','Detector efficiency','Theoretical corrections','Bkg slope','Bkg rate','Plasma','Penning trap'});
+            X= reordercats(X,{'Detector efficiency','Penning trap','Theoretical corrections','Response function','Final-state distribution','Scan fluctuations','Stacking','Plasma','Bkg slope','Bkg rate','Statistical','Total'});
+        case 'real2'
+            X= categorical({'Total','Statistical','Final-state distribution','Response function','Scan fluctuations','Stacking','Detector efficiency','Theoretical corrections','Bkg slope','Bkg rate','Plasma','Penning trap'});
+            X= reordercats(X,{'Bkg slope','Scan fluctuations','Theoretical corrections','Stacking','Detector efficiency','Final-state distribution','Response function','Plasma','Penning trap','Bkg rate','Statistical','Total'});
         case 'Fake'
             X = reordercats(X,{'Bkg rate','Detector efficiency','Scan fluctuations','Stacking','Bkg slope','Theoretical corrections','Response function','Final-state distribution','Statistical','Total'});
     end
@@ -78,6 +85,8 @@ function RelicSystematics(saveplot,DataType)
             case 'Twin'
                 bsingle{i}  = barh(X(i),Y1(i));
             case 'Twin2'
+                bsingle{i}  = barh(X(i),Y2(i));
+            case 'real2'
                 bsingle{i}  = barh(X(i),Y2(i));
             case 'Fake'
                 bsingle{i}  = barh(X(i),YF(i));
@@ -105,7 +114,7 @@ function RelicSystematics(saveplot,DataType)
         effs(i) = bsingle{i}.YEndPoints;
         vals(i) = bsingle{i}.XEndPoints;
         labels(i)=sprintf('%.2g',bsingle{i}.YData);
-        if effs(i)<1e9 && ~strcmp(DataType,'Fake') && ~strcmp(DataType,'Twin2')
+        if effs(i)<1e9 && ~strcmp(DataType,'Fake') && ~strcmp(DataType,'Twin2') && ~strcmp(DataType,'real2')
             effs(i)=1e9;
             labels(i)='<1e9';
         end
@@ -113,7 +122,7 @@ function RelicSystematics(saveplot,DataType)
             effs(i)=1e6;
             labels(i)='<1e6';
         end
-        if effs(i)<1e8 && strcmp(DataType,'Twin2')
+        if effs(i)<1e8 && (strcmp(DataType,'Twin2') || strcmp(DataType,'real2'))
             effs(i)=1e8;
             labels(i)='<1e8';
         end
@@ -127,6 +136,8 @@ function RelicSystematics(saveplot,DataType)
            xlim([1e9,1e12]);
        case 'Twin2'
            xlim([1e8,5e11]);
+       case 'real2'
+            xlim([1e8,5e11]);
        case 'Fake'
            ylim(categorical({'Scan fluctuations','Total'}));
            xlim([1e6 2e10]);

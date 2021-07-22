@@ -41,7 +41,7 @@ if any(PullFlag~=99)
     end
 end
 
-if exist(savename,'file')
+if ~exist(savename,'file')
     load(savename,'FitResult','RunAnaArg','A');
 else
     SigmaSq =  0.0124+0.0025;   %broadening durch longitudinale plasmainhomogenität + plasma drift
@@ -56,7 +56,8 @@ else
         'DataType',DataType,...
         'fixPar',freePar,...
         'RadiativeFlag','ON',...
-        'minuitOpt','min ; minos',...
+        'fitter','matlab',...
+        'minuitOpt','min ; imp',...
         'FSDFlag',FSDFlag,...
         'ELossFlag','KatrinT2A20',...   %!different
         'SysBudget',SysBudget,...
@@ -75,6 +76,7 @@ else
     A = MultiRunAnalysis(RunAnaArg{:});
     %%
     A.exclDataStart = A.GetexclDataStart(range);
+    %A.exclDataStop  = A.ModelObj.nqU-1;
     
     if strcmp(DataType,'Twin')
         A.ModelObj.RFBinStep = 0.01;
@@ -108,10 +110,13 @@ else
     else
         
     end
+    A.ModelObj.eta_i = -5.8e10;
+    A.ModelObj.ComputeTBDDS;
+    A.ModelObj.ComputeTBDIS;
     A.Fit;
     FitResult = A.FitResult;
     MakeDir(savedir);
-    save(savename,'FitResult','RunAnaArg','A','SigmaSq')
+    %save(savename,'FitResult','RunAnaArg','A','SigmaSq')
 end
 %%
 

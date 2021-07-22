@@ -3,7 +3,7 @@ function relic_global_twin(varargin)
     %% Settings
     p=inputParser;
     p.addParameter('eta',2e11,@(x)isfloat(x));
-    p.addParameter('RunList','KNM1',@(x)ismember(x,{'KNM1','KNM2'}));
+    p.addParameter('RunList','KNM1',@(x)ismember(x,{'KNM1','KNM2_Prompt'}));
     p.addParameter('fitPar','mNu E0 Norm Bkg',@(x)ischar(x));
     p.addParameter('E0',18573.73,@(x)isfloat(x));                                         % Endpoint in eV
     p.addParameter('mnuSq',0,@(x)isfloat(x));

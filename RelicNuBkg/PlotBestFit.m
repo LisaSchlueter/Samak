@@ -8,6 +8,7 @@ function PlotBestFit(varargin)
     p.addParameter('RunList','KNM1',@(x)ischar(x));
     p.addParameter('Plot','ON',@(x)ismember(x,{'ON','OFF'}));
     p.addParameter('saveplot','OFF',@(x)ismember(x,{'ON','OFF'}));
+    p.addParameter('fitter','minuit',@(x)ismember(x,{'matlab','minuit'}));
     p.parse(varargin{:});
     mnuSq    = p.Results.mnuSq;
     pullFlag = p.Results.pullFlag;
@@ -17,6 +18,7 @@ function PlotBestFit(varargin)
     RunList  = p.Results.RunList;
     Plot     = p.Results.Plot;
     saveplot = p.Results.saveplot;
+    fitter   = p.Results.fitter;
 
     
     if exist(sprintf('./EtaFitResult_%s_AllParams_mnuSq%g_Nfit%g.mat',RunList,mnuSq,Nfit),'file') && Nfit>1
@@ -40,6 +42,7 @@ function PlotBestFit(varargin)
                         'fixPar','mNu E0 Norm Bkg',...        % free Parameter!!
                         'RadiativeFlag','ON',...              % theoretical radiative corrections applied in model
                         'NonPoissonScaleFactor',NP,...     % background uncertainty are enhanced
+                        'fitter',fitter,...
                         'minuitOpt','min ; minos',...         % technical fitting options (minuit)
                         'pullFlag',pullFlag,...
                         'FSDFlag','SibilleFull',...           % final state distribution
@@ -63,6 +66,7 @@ function PlotBestFit(varargin)
                         'RingMerge','None',...
                         'fitter','minuit',...
                         'pullFlag',pullFlag,...
+                        'fitter',fitter,...
                         'minuitOpt','min ; minos',...         % technical fitting options (minuit)
                         'FSDFlag','KNM2',...          % final state distribution
                         'ELossFlag','KatrinT2A20',...            % energy loss function
@@ -89,6 +93,7 @@ function PlotBestFit(varargin)
                             'fixPar','mNu E0 Norm Bkg eta',...    % free Parameter!!
                             'RadiativeFlag','ON',...              % theoretical radiative corrections applied in model
                             'NonPoissonScaleFactor',NP,...     % background uncertainty are enhanced
+                            'fitter',fitter,...
                             'minuitOpt','min ; minos',...         % technical fitting options (minuit)
                             'pullFlag',pullFlag,...
                             'FSDFlag','SibilleFull',...           % final state distribution
@@ -110,7 +115,8 @@ function PlotBestFit(varargin)
                         'NonPoissonScaleFactor',NP,...     % background uncertainty are enhanced
                         'fitter','minuit',...
                         'pullFlag',pullFlag,...
-                        'minuitOpt','min ; minos',...         % technical fitting options (minuit)
+                        'fitter',fitter,...
+                        'minuitOpt','min ; imp',...         % technical fitting options (minuit)
                         'FSDFlag','KNM2',...          % final state distribution
                         'ELossFlag','KatrinT2A20',...            % energy loss function
                         'SysBudget',40,...                    % defines syst. uncertainties -> in GetSysErr.m;
@@ -142,6 +148,7 @@ function PlotBestFit(varargin)
             
             M.exclDataStart = M.GetexclDataStart(40);
             %M.ModelObj.BKG_RateSec_i=0.292256;
+            %M.ModelObj.eta_i=-9.5e10;
             M.Fit;
             fitresults(1,j)= M.FitResult.par(1);
             fitresults(2,j)= M.FitResult.err(1);
@@ -229,7 +236,12 @@ function PlotBestFit(varargin)
         set(get(gca,'XLabel'),'FontSize',LocalFontSize+4);
         set(get(gca,'YLabel'),'FontSize',LocalFontSize+4);
         set(gca, 'YScale', 'log');
-        ylim([0.2 25])
+        switch RunList
+            case 'KNM1'
+                ylim([0.2 25])
+            case 'KNM2_Prompt'
+                ylim([0.1 55])
+        end
 
         % Ratio    - Second Subplot
         s2=subplot(4,1,3);
