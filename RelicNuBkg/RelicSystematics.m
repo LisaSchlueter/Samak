@@ -66,7 +66,7 @@ function RelicSystematics(saveplot,DataType)
             X= reordercats(X,{'Detector efficiency','Penning trap','Theoretical corrections','Response function','Final-state distribution','Scan fluctuations','Stacking','Plasma','Bkg slope','Bkg rate','Statistical','Total'});
         case 'real2'
             X= categorical({'Total','Statistical','Final-state distribution','Response function','Scan fluctuations','Stacking','Detector efficiency','Theoretical corrections','Bkg slope','Bkg rate','Plasma','Penning trap'});
-            X= reordercats(X,{'Bkg slope','Scan fluctuations','Theoretical corrections','Stacking','Detector efficiency','Final-state distribution','Response function','Plasma','Penning trap','Bkg rate','Statistical','Total'});
+            X= reordercats(X,{'Detector efficiency','Penning trap','Theoretical corrections','Final-state distribution','Plasma','Stacking','Scan fluctuations','Response function','Bkg slope','Bkg rate','Statistical','Total'});
         case 'Fake'
             X = reordercats(X,{'Bkg rate','Detector efficiency','Scan fluctuations','Stacking','Bkg slope','Theoretical corrections','Response function','Final-state distribution','Statistical','Total'});
     end

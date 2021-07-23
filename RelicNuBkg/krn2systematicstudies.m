@@ -2,8 +2,6 @@ NScan=30;
 fitter='minuit';
 savename = './RelicNuBkg/Misc/KRN2ExhaustiveSystematics_matlabCorrected.mat';
 savename2= './RelicNuBkg/Misc/KRN2narrowScan.mat';
-if exist(savename,'file')
-    load(savename);
 
 A = MultiRunAnalysis('RunList','KNM2_Prompt',... % runlist defines which runs are analysed -> set MultiRunAnalysis.m -> function: GetRunList()
                             'chi2','chi2CMShape',...                 % uncertainties: statistical or stat + systematic uncertainties
@@ -13,6 +11,7 @@ A = MultiRunAnalysis('RunList','KNM2_Prompt',... % runlist defines which runs ar
                             'NonPoissonScaleFactor',1.112,...     % background uncertainty are enhanced
                             'fitter',fitter,...
                             'minuitOpt','min ; minos',...         % technical fitting options (minuit)
+                            'pullFlag',31,...
                             'FSDFlag','KNM2',...          % final state distribution
                             'ELossFlag','KatrinT2A20',...            % energy loss function
                             'SysBudget',40,...                    % defines syst. uncertainties -> in GetSysErr.m;
@@ -35,6 +34,7 @@ B = MultiRunAnalysis('RunList','KNM2_Prompt',... % runlist defines which runs ar
                             'NonPoissonScaleFactor',1.112,...     % background uncertainty are enhanced
                             'fitter',fitter,...
                             'minuitOpt','min ; imp',...         % technical fitting options (minuit)
+                            'pullFlag',31,...
                             'FSDFlag','KNM2',...          % final state distribution
                             'ELossFlag','KatrinT2A20',...            % energy loss function
                             'SysBudget',40,...                    % defines syst. uncertainties -> in GetSysErr.m;
@@ -53,6 +53,8 @@ A.exclDataStart = A.GetexclDataStart(40);
 B.exclDataStart = B.GetexclDataStart(40);
 %A.exclDataStop  = A.ModelObj.nqU-1;
 %B.exclDataStop  = B.ModelObj.nqU-1;
+if ~exist(savename,'file')
+    load(savename);
 else                      
 SysEffectsList = categorical({'Total','Stat','FSD','RF','TASR','Stack','FPD','TC','Bkg','Plasma','PT','NP'});
 SysEffectsList = reordercats(SysEffectsList,{'Total','Stat','FSD','RF','TASR','Stack','FPD','TC','Bkg','Plasma','PT','NP'});
@@ -115,6 +117,8 @@ for i=1:numel(SysEffectsList)-2
     Syst(i)=sqrt(Error(i+2).^2-Error(2).^2);
 end
 bar(SysEffectsList,[Error(1) Error(2) Syst]);
+Y=[Error(1) Error(2) Syst(1) Syst(2) Syst(3) Syst(4) Syst(5) Syst(6) Syst(7) Syst(10) Syst(8) Syst(9)];
+save('./RelicNuBkg/Misc/SensitivityBreakdown_KNM2_Prompt_mnuSq0_range40_RealData_OneSided.mat','Y');
 
 SaveDir='./RelicNuBkg/Plots/Animation/';
 ErrorBar_narrow = linspace(-9.4e10,-5.4e10,NScan);%linspace(ResultArray(1).par(18)*1e10,-5.4e10,NScan);

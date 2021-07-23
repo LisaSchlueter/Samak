@@ -1876,7 +1876,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                                                 if obj.mnuSq<0
                                                     RelicPeakPosition = Position;
                                                 else
-                                                    RelicPeakPosition = Position+sqrt(obj.mnuSq);
+                                                    RelicPeakPosition = Position+sign(obj.mnuSq)*sqrt(abs(obj.mnuSq));
                                                 end
                                             end
                                             switch obj.FPD_Segmentation

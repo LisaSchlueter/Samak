@@ -400,6 +400,8 @@ b=annotation('rectangle',[0.4975 0.13 0.409 0.32],'FaceColor','magenta','FaceAlp
 text(-0.8,4.5e11,{'Unphysical','neutrino mass'},'FontSize',20,'Color','red','Rotation',-30);
 text(-0.3,-9.4e10,'X','FontWeight','bold','FontSize',16,'Rotation',90);
 d=annotation('textarrow',[0.52 0.38],[0.35 0.16],'String','Global best fit');
+%text(0.05,-5.8e10,'X','FontWeight','bold','FontSize',16,'Rotation',90);
+%d=annotation('textarrow',[0.6 0.52],[0.4 0.29],'String','Global best fit');
 d.FontSize=16;
 PrettyFigureFormat;
 hold off;
@@ -431,6 +433,47 @@ hold off;
 % b.LineWidth = 2;
 % PrettyFigureFormat;
 % hold off;
+
+load('./RelicNuBkg/Chi2Scans/RelicChi2Scan_Twin_BiasmnuSq0_SystON_range40_KNM2_Prompt_2D_Real_CombiFit.mat');
+Chi2_2 = Chi2;
+load('./RelicNuBkg/Chi2Scans/RelicChi2Scan_Twin_BiasmnuSq0_SystON_range40_KNM1_2D_Real_CombiFit.mat');
+Chi2Combi = Chi2 + Chi2_2;
+fig16=figure('Renderer','painters');
+set(fig16, 'Units', 'normalized', 'Position', [0.001, 0.001,0.45, 0.6]);
+hold on;
+[q,t]=contour(mnuScanPoints,etaScanPoints,(Chi2Combi-min(min(Chi2Combi))).',[0 4.61]);
+t.LineWidth = 2;
+[r,u]=contour(mnuScanPoints,etaScanPoints,(Chi2Combi-min(min(Chi2Combi))).',[0 5.99]);
+u.LineWidth = 2;
+[s,v]=contour(mnuScanPoints,etaScanPoints,(Chi2Combi-min(min(Chi2Combi))).',[0 9.21]);
+v.LineWidth = 2;
+v.Color=[0 0.8 0.8];
+[~,w]=contour(mnuScanPoints(15:end),etaScanPoints,(Chi2Combi(15:end,:)-min(min(Chi2Combi))).',[0 9.21]);
+w.LineWidth=4;
+w.Color=[0 0.5 0.5];
+ylabel('\eta','FontSize',12);
+xlabel('m_{\nu}^{2} (eV^{2})','FontSize',12);
+zlabel('\Delta\chi^2','FontSize',12);
+text(0.25,0.45e11,'90% C.L.','FontSize',14,'Rotation',12);
+text(0.25,0.6e11,'95% C.L.','FontSize',14,'Rotation',12);
+text(0.25,0.9e11,'99% C.L.','FontSize',14,'Rotation',12);
+xlim([-0.9,1]);
+ylim([-1e11,1.5e11]);
+s(1,44)=-2;%r(1,17)=-2;q(1,17)=-2;s(2,32)=-2e11;s(1,1)=3;s(2,1)=-8e11;
+j=fill(s(1,:),s(2,:),[0 0.5 0.5],'FaceAlpha',0.2);
+i=fill(r(1,2:end),r(2,2:end),[0 1 1],'FaceAlpha',0.2);
+h=fill(q(1,2:end),q(2,2:end),[50 148 216]/255,'FaceAlpha',0.2);
+a=annotation('rectangle',[0.13 0.13 0.368 0.795],'FaceColor','magenta','FaceAlpha',.2);
+b=annotation('rectangle',[0.4975 0.13 0.409 0.32],'FaceColor','magenta','FaceAlpha',.2);
+text(-0.8,4.5e11,{'Unphysical','neutrino mass'},'FontSize',20,'Color','red','Rotation',-30);
+text(-0.3,-9.4e10,'X','FontWeight','bold','FontSize',16,'Rotation',90);
+d=annotation('textarrow',[0.52 0.38],[0.35 0.16],'String','Global best fit');
+%text(0.05,-5.8e10,'X','FontWeight','bold','FontSize',16,'Rotation',90);
+%d=annotation('textarrow',[0.6 0.52],[0.4 0.29],'String','Global best fit');
+d.FontSize=16;
+PrettyFigureFormat;
+hold off;
+
 
 if strcmp(saveplot,'ON')
     SaveDir = [getenv('SamakPath'),sprintf('RelicNuBkg/Plots/FinalPlots/')];

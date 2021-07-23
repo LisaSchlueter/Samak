@@ -33,8 +33,8 @@ if ~strcmp(DataSet,'TDR')
 
     %A.EtaFit('Mode','SinglemnuSq','SysBudget',SB,'DataType','Real','fitPar','E0 Norm Bkg eta','DeltaChi2',9,'CorrectErr',CorrectErr,'Recompute',Recompute);
 
-    A.Chi2Scan_2D('RunList',DataSet,'SystBudget',SB,'DataType','Real','Nmnubins',50,'Netabins',51,'Recompute',Recompute,'fitter',fitter);
-    B=RelicNuAnalysis('Params','KNM1');B.Chi2Scan_2D('RunList','KNM1','SystBudget',24,'DataType','Real','Nmnubins',50,'Netabins',51,'Recompute',Recompute,'fitter',fitter);%2D scan data
+    A.Chi2Scan_2D('RunList',DataSet,'SystBudget',SB,'DataType','Real','Nmnubins',50,'Netabins',51,'Recompute',Recompute,'fitter',fitter,'pullFlag',31);     %2D scan data
+    B=RelicNuAnalysis('Params','KNM1'); B.Chi2Scan_2D('RunList','KNM1','SystBudget',24,'DataType','Real','Nmnubins',50,'Netabins',51,'Recompute',Recompute,'fitter',fitter,'pullFlag',31);
 
-    %A.SystBreakdown('DataType','Real','CorrectErr',CorrectErr,'Recompute',Recompute);                                                         %Systematics breakdown data
+    A.SystBreakdown('DataType','Real','CorrectErr',CorrectErr,'Recompute',Recompute);                                                         %Systematics breakdown data
 end
