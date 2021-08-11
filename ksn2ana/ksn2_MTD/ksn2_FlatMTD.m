@@ -1,9 +1,9 @@
 % look at sensitivity contour from KNM-2 like simulation with flat MTD
 % (same qU as KNM-2 MTD)
 
-FakeInitFile = @ref_KNM2_KATRIN_FlatMTD;
+FakeInitFile = @ref_KNM2_KATRIN_RegMTD;
 range = 40;
-freePar = 'mNu E0 Norm Bkg';
+freePar = 'E0 Norm Bkg';
 nGridSteps = 25;
 
 %% tritium run model

@@ -9,7 +9,7 @@ range         = 40;
 extraStr = '_ReAna';
 FixBfK2 = 'OFF';
 N4 = 'OFF';
-ExtLeg = 'OFF';
+ExtLeg = 'ON';
 savedir = [getenv('SamakPath'),'/SterileAnalysis/GridSearchFiles/Combi/',DataType,'/'];
 MakeDir(savedir)
 savename = sprintf('%sKSN12Combi%s_GridSearch_%s_%s_Uniform_%s_%.0fnGrid.mat',...

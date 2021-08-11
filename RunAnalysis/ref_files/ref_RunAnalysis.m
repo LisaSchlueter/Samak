@@ -35,7 +35,7 @@ p.addParameter('WGTS_MolFrac_DT',D.WGTS_MolFrac_DT,@(x)isfloat(x) && x>=0);
 p.addParameter('WGTS_MolFrac_DT_SubRun',D.WGTS_MolFrac_DT_SubRun);
 p.addParameter('WGTS_MolFrac_HT',D.WGTS_MolFrac_HT,@(x)isfloat(x)&& x>=0);
 p.addParameter('WGTS_MolFrac_HT_SubRun',D.WGTS_MolFrac_HT_SubRun);
-p.addParameter('WGTS_B_T',2.52,@(x)isfloat(x) && x>0);
+p.addParameter('WGTS_B_T',2.52,@(x)isfloat(x) && x>0);% nominal 3.6
 p.addParameter('NIS',7,@(x)isfloat(x) && x>0);
 p.addParameter('ISXsection',D.ISXsection,@(x)isfloat(x));
 %MACE

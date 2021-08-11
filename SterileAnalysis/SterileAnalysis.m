@@ -794,7 +794,8 @@ classdef SterileAnalysis < handle
                     % obj.FindBestFit('Mode','Imp');
                 end
                 hold on;
-                PlotHandleBf= plot(obj.sin2T4_bf,obj.mNu4Sq_bf,MarkerStyle,'MarkerSize',9,'Color',bf_color,'LineWidth',pHandle.LineWidth);
+                PlotHandleBf= plot(obj.sin2T4_bf,obj.mNu4Sq_bf,MarkerStyle,...
+                    'MarkerSize',10,'Color',bf_color,'LineWidth',pHandle.LineWidth);
             else 
                 PlotHandleBf = 0;
             end
@@ -823,7 +824,7 @@ classdef SterileAnalysis < handle
              end
              
         end
-        function [legHandle,legStr] = ContourPlotOsci(obj,varargin)
+        function [legHandle,legStr,pHandle] = ContourPlotOsci(obj,varargin)
             % contour plot in osicllation parameter space
             p = inputParser;
             p.addParameter('BestFit','OFF',@(x) ismember(x,{'ON','OFF'}));
@@ -871,7 +872,8 @@ classdef SterileAnalysis < handle
             if strcmp(HoldOn,'ON')
                 hold on;
             elseif strcmp(HoldOn,'OFF')
-               pHandle =  figure('Units','normalized','Position',[0.1,0.1,0.382,0.68]);%0.618]);
+            %   pHandle =  figure('Units','normalized','Position',[0.1,0.1,0.382,0.68]);%0.618]);
+               pHandle =  figure('Units','normalized','Position',[0.1,0.1,0.382,0.8]);%0.618]);
             end
             
             obj.DeltaChi2 = GetDeltaChi2(CL,2);
@@ -900,38 +902,12 @@ classdef SterileAnalysis < handle
             if strcmp(Solar,'ON')
                 sin2T4_solar = 0.066;
                 xsolar = 4.*sin2T4_solar.*(1-sin2T4_solar);
-                psolar = plot(xsolar.*ones(1e2,1),linspace(1e-4,5e3,1e2),'--','LineWidth',2,'Color',rgb('Amethyst'));        
+                psolar = plot(xsolar.*ones(1e2,1),linspace(1e-4,5e3,1e2),'--','LineWidth',1.5,...
+                    'Color',rgb('Black'));        
                 hold on
             end     
-            %% Mainz
-            if strcmp(Mainz,'ON')
-                filenameMainz = sprintf('%scoord_Mainz_95CL.mat',savedirOther);
-                dMainz = importdata(filenameMainz);
-                pMainz = plot(dMainz.SinSquare2Theta_X,dMainz.DmSquare41_Y,'-.','LineWidth',1.5,'Color',rgb('Salmon'));
-                legHandle{numel(legHandle)+1} = pMainz;
-                legStr = [legStr,{sprintf('Mainz 95%% C.L.')}];
-                hold on;
-            end
-            %% Troitsk
-            if strcmp(Troitsk,'ON')
-                filenameTroitsk = sprintf('%scoord_Troitsk_95CL.mat',savedirOther);
-                dTroitsk = importdata(filenameTroitsk);
-                pTroitsk = plot(dTroitsk.SinSquare2Theta_X,dTroitsk.DmSquare41_Y,'--','LineWidth',1.5,'Color',rgb('Black'));
-                legHandle{numel(legHandle)+1} = pTroitsk;
-                legStr = [legStr,{sprintf('Troitsk 95%% C.L.')}];
-                hold on;
-            end
-            %% Prospect
-            if strcmp(Prospect,'ON')
-               % outdated filenameProspect = sprintf('%scoord_Prospect_95CL.mat',savedirOther);
-                filenameProspect = sprintf('%scoord_Prospect2020_95CL.mat',savedirOther);
-                dProspect = importdata(filenameProspect);
-                pProspect = plot(dProspect.SinSquare2Theta_X,dProspect.DmSquare41_Y,'-','LineWidth',1,'Color',rgb('PowderBlue'));
-                legHandle{numel(legHandle)+1} = pProspect;
-                legStr = [legStr,{sprintf('Prospect 95%% C.L.')}];
-                hold on;
-            end
-            %% DANSS
+          
+             %% DANSS
             if strcmp(DANSS,'ON')
                 filenameDANSS = sprintf('%scoord_DANSS_95CL.mat',savedirOther);
                 dDANSS = importdata(filenameDANSS);
@@ -940,7 +916,8 @@ classdef SterileAnalysis < handle
                 legStr = [legStr,{sprintf('DANSS 95%% C.L.')}];
                 hold on;
             end
-            %% DayaBay
+            
+               %% DayaBay
             if strcmp(DayaBay,'ON')
                 filenameDayaBay = sprintf('%scoord_DayaBay1230_90CL.mat',savedirOther);
                 dDayaBay = importdata(filenameDayaBay);
@@ -958,6 +935,17 @@ classdef SterileAnalysis < handle
                 legStr = [legStr,{sprintf('Double Chooz 95%% C.L.')}];
                 hold on;
             end
+            %% Prospect
+            if strcmp(Prospect,'ON')
+               % outdated filenameProspect = sprintf('%scoord_Prospect_95CL.mat',savedirOther);
+                filenameProspect = sprintf('%scoord_Prospect2020_95CL.mat',savedirOther);
+                dProspect = importdata(filenameProspect);
+                pProspect = plot(dProspect.SinSquare2Theta_X,dProspect.DmSquare41_Y,'-','LineWidth',1,'Color',rgb('PowderBlue'));
+                legHandle{numel(legHandle)+1} = pProspect;
+                legStr = [legStr,{sprintf('Prospect 95%% C.L.')}];
+                hold on;
+            end
+           
             %% Stereo
             if strcmp(Stereo,'ON')
             % outdated    filenameStereo = sprintf('%scoord_Stereo_95CL.mat',savedirOther); % old stereo 2019
@@ -969,6 +957,17 @@ classdef SterileAnalysis < handle
                 legStr = [legStr,{sprintf('STEREO 95%% C.L.')}];
                 hold on;
             end
+            
+            %% Neutrino 4
+            if strcmp(Neutrino4,'ON')
+                filenameN4 = sprintf('%scoord_Neutrino4_123sigma.mat',savedirOther);
+                dN4 = importdata(filenameN4);
+                pN4 = plot(dN4.SinSquare2Theta_X_2sigma,dN4.DmSquare41_Y_2sigma,'-','LineWidth',1.5,'Color',rgb('FireBrick'));
+                legHandle{numel(legHandle)+1} = pN4;
+                legStr = [legStr,{sprintf('Neutrino-4 2\\sigma')}];
+                hold on;
+            end
+            
             %% RAA
             if strcmp(RAA,'ON')
                 hold on;
@@ -982,16 +981,7 @@ classdef SterileAnalysis < handle
                 legHandle{numel(legHandle)+1} = pRAA;
                 legStr = [legStr,{sprintf('RAA + GA 95%% CL')}];%-PRD 83, 073006 (2011) -
             end
-            %% Neutrino 4
-            if strcmp(Neutrino4,'ON')
-                filenameN4 = sprintf('%scoord_Neutrino4_123sigma.mat',savedirOther);
-                dN4 = importdata(filenameN4);
-                pN4 = plot(dN4.SinSquare2Theta_X_2sigma,dN4.DmSquare41_Y_2sigma,'-','LineWidth',1.5,'Color',rgb('FireBrick'));
-                legHandle{numel(legHandle)+1} = pN4;
-                legStr = [legStr,{sprintf('Neutrino-4 2\\sigma')}];
-                hold on;
-            end
-        
+   
             %% just for legend
             if strcmp(NuBetaBeta,'ON')
                 legHandle{numel(legHandle)+1} = aNH;
@@ -1001,7 +991,26 @@ classdef SterileAnalysis < handle
             end
             if strcmp(Solar,'ON')
                 legHandle{numel(legHandle)+1} = psolar;
-                legStr = [legStr,{sprintf('Global solar 95%% C.L.')}];
+                legStr = [legStr,{sprintf('Solar global 95%% C.L.')}];
+            end
+            
+              %% Mainz
+            if strcmp(Mainz,'ON')
+                filenameMainz = sprintf('%scoord_Mainz_95CL.mat',savedirOther);
+                dMainz = importdata(filenameMainz);
+                pMainz = plot(dMainz.SinSquare2Theta_X,dMainz.DmSquare41_Y,'-.','LineWidth',1.5,'Color',rgb('Salmon'));
+                legHandle{numel(legHandle)+1} = pMainz;
+                legStr = [legStr,{sprintf('Mainz 95%% C.L.')}];
+                hold on;
+            end
+            %% Troitsk
+            if strcmp(Troitsk,'ON')
+                filenameTroitsk = sprintf('%scoord_Troitsk_95CL.mat',savedirOther);
+                dTroitsk = importdata(filenameTroitsk);
+                pTroitsk = plot(dTroitsk.SinSquare2Theta_X,dTroitsk.DmSquare41_Y,'--','LineWidth',1.5,'Color',rgb('HotPink'));
+                legHandle{numel(legHandle)+1} = pTroitsk;
+                legStr = [legStr,{sprintf('Troitsk 95%% C.L.')}];
+                hold on;
             end
             %% KATRIN
             PlotArg = {'LineWidth',2.5,'LineStyle',myLineStyle};
@@ -1032,9 +1041,9 @@ classdef SterileAnalysis < handle
                 obj.RunAnaObj.ELossFlag = 'KatrinT2A20';
                 obj.RunAnaObj.SysBudget = 66;
                 obj.LoadGridFile;%('CheckSmallerN','ON',obj.LoadGridArg{:});
-                obj.Interp1Grid('RecomputeFlag','ON','Maxm4Sq',38.2^2);
+                obj.Interp1Grid('RecomputeFlag','ON','Maxm4Sq',36^2);
                 
-                PlotArg = {'LineWidth',2,'LineStyle','-','LineColor',rgb('SteelBlue')};
+                PlotArg = {'LineWidth',2,'LineStyle',':','LineColor',rgb('SteelBlue')};
                 [DeltamNu41Sq,sin2T4Sq] = obj.Convert2Osci;
                 [~,legHandle{numel(legHandle)+1}]= contour(sin2T4Sq,DeltamNu41Sq,obj.chi2-obj.chi2_ref,...
                     [obj.DeltaChi2 obj.DeltaChi2],...
@@ -1045,7 +1054,7 @@ classdef SterileAnalysis < handle
                 obj.RunAnaObj.AngularTFFlag = AngTF;
                 obj.RunAnaObj.ELossFlag = ElossFlag;
                 obj.RunAnaObj.SysBudget = Budget;
-                legStr = [legStr,'Projected KATRIN final',sprintf('sensitivity %.0f%% C.L.',obj.ConfLevel)];
+                legStr = [legStr,'KATRIN projected final',sprintf('sensitivity %.0f%% C.L.',obj.ConfLevel)];
                 
                 pNone = plot(NaN,NaN,'Color',rgb('White'));
                 legHandle{numel(legHandle)+1} = pNone;
@@ -1064,8 +1073,8 @@ classdef SterileAnalysis < handle
                 leg.FontSize = 12;
             else
                 PRLFormat;
-                set(gca,'FontSize',20);
-                leg.FontSize = 16;%13;
+                set(gca,'FontSize',22);
+                leg.FontSize = 18;%13;
             end
            
           xlim([1.2e-02 1]);
@@ -1526,7 +1535,7 @@ classdef SterileAnalysis < handle
            
             obj.RunAnaObj.fixPar = 'mNu E0 Norm Bkg'; obj.RunAnaObj.InitFitPar;
             obj.RunAnaObj.pullFlag = 99;
-            obj.LoadGridFile('CheckSmallerN','ON',obj.LoadGridArg{:});
+            obj.LoadGridFile('CheckSmallerN','ON',obj.LoadGridArg{:},'ExtmNu4Sq','ON');
             obj.Interp1Grid('RecomputeFlag','ON');
             pFree = obj.ContourPlot('CL',obj.ConfLevel,'HoldOn',HoldOn,...
                 'Color',rgb('ForestGreen'),'LineStyle','-','BestFit',BestFit,'MarkerStyle','x');

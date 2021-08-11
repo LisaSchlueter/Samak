@@ -47,25 +47,26 @@ pCombimNuFree = plot(dCombimNu.sin2T4_k12_contour,dCombimNu.mNu4Sq_k12_contour,'
 
 xlim([3e-03 0.5]);
 ylim([0.3 2200]);
+yticks([0.1,1,10,100,1e3]);
 
 if strcmp(BF,'ON')
-   pmNuFix_bf2 = plot(d.sin2T4_bf,d.mNu4Sq_bf,'x','LineWidth',3,'Color',p2mNuFix.Color);
-   pmNuFree_bf2 = plot(dmNu.sin2T4_bf,dmNu.mNu4Sq_bf,'x','LineWidth',3,'Color',p2mNuFree.Color,'MarkerSize',8);
-   pCombimNuFix_bf = plot(dCombi.sin2T4_bf_12,dCombi.mNu4Sq_bf_12,'o','LineWidth',2.5,'Color',pCombimNuFix.Color,'MarkerSize',8);
-   pCombimNuFree_bf = plot(dCombimNu.sin2T4bf_k12,dCombimNu.mNu4Sqbf_k12,'*','LineWidth',2.5,'Color',pCombimNuFree.Color,'MarkerSize',8);
-   pmNuFix_bf1 = plot(dCombi.sin2T4_bf_1,dCombi.mNu4Sq_bf_1,'s','LineWidth',2.5,'Color',p1mNuFix.Color,'MarkerSize',8);
-  pmNuFree_bf1 = plot(dCombimNu.sin2T4bf_k1,dCombimNu.mNu4Sqbf_k1,'s','LineWidth',2.5,'Color',p1mNuFree.Color,'MarkerSize',8);
+   pmNuFix_bf2 = plot(d.sin2T4_bf,d.mNu4Sq_bf,'x','LineWidth',3,'Color',p2mNuFix.Color,'MarkerSize',11);
+   pmNuFree_bf2 = plot(dmNu.sin2T4_bf,dmNu.mNu4Sq_bf,'x','LineWidth',3,'Color',p2mNuFree.Color,'MarkerSize',11);
+   pCombimNuFix_bf = plot(dCombi.sin2T4_bf_12,dCombi.mNu4Sq_bf_12,'x','LineWidth',2.5,'Color',pCombimNuFix.Color,'MarkerSize',11);
+   pCombimNuFree_bf = plot(dCombimNu.sin2T4bf_k12,dCombimNu.mNu4Sqbf_k12,'x','LineWidth',2.5,'Color',pCombimNuFree.Color,'MarkerSize',11);
+   pmNuFix_bf1 = plot(dCombi.sin2T4_bf_1,dCombi.mNu4Sq_bf_1,'x','LineWidth',2.5,'Color',p1mNuFix.Color,'MarkerSize',11);
+  pmNuFree_bf1 = plot(dCombimNu.sin2T4bf_k1,dCombimNu.mNu4Sqbf_k1,'x','LineWidth',2.5,'Color',p1mNuFree.Color,'MarkerSize',11);
 
 end
 
-pNone = plot(NaN,NaN,'Color',rgb('White'));
-pNone2 = plot(NaN,NaN,'Color',rgb('White'));
+pNone = plot(NaN,NaN,'Color','none');
+pNone2 = plot(NaN,NaN,'Color','none');
 set(gca,'YScale','log');
 set(gca,'XScale','log');
 xlabel(sprintf('|{\\itU}_{e4}|^2'));
-ylabel(sprintf('{\\itm}_4^2 (eV^{ 2})'));
+ylabel(sprintf('{\\itm}_4^2 (eV^{2})'));
 
-%% legend
+% legend
 leg = legend([p1mNuFix,p2mNuFix,pCombimNuFix,p1mNuFree,p2mNuFree,pCombimNuFree],...
   sprintf('KSN1'),...%:     {\\itm}_\\nu^2 = 0 eV^2'),...
    sprintf('KSN2'),...%:     {\\itm}_\\nu^2 = 0 eV^2'),...
@@ -79,23 +80,25 @@ PrettyLegendFormat(leg);
 leg.NumColumns = 2;
 %PrettyFigureFormat('FontSize',22);
 PRLFormat;
+set(gca,'FontSize',30);
 
-ax = gca;
-ax.FontSize =  24;
-leg.FontSize = 24;
-ax.XLabel.FontSize = 28;
-ax.YLabel.FontSize = 28;
+%ax = gca;
+%ax.FontSize =  26;
+leg.FontSize = 26;
+% ax.XLabel.FontSize = 30;
+% ax.YLabel.FontSize = 30;
 
 axleg=axes('Position',get(gca,'Position'),'Visible','Off');
 hl2 = legend(axleg,[pNone,pNone2],...
     sprintf('{\\itm}_\\nu^2 = 0 eV^2'),...
     sprintf('{\\itm}_\\nu^2 free'),...
     'Location','southwest','box','off');
-hl2.FontSize = 24;
+hl2.FontSize = 26;
 hl2.NumColumns = 2;
 PRLFormat;
-hl2.Position(2) = 0.4;
-hl2.Position(1)  = 0.1;
+hl2.Position(2) = 0.46;
+hl2.Position(1)  = 0.125;
+%%
 pltdir = [getenv('SamakPath'),'ksn2ana/ksn2_RunCombination/plots/'];
 MakeDir(pltdir);
 pltname = sprintf('%sksn21_CombiPlot_%s.png',pltdir,DataType);

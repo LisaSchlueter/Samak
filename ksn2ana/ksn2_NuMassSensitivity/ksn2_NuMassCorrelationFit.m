@@ -122,31 +122,67 @@ end
 plotdir = [getenv('SamakPath'),'ksn2ana/ksn2_NuMassSensitivity/plots/'];
 MakeDir(plotdir);
 %% plot slope from linear fit
+close all
 GetFigure
  %surf(sin2T4_allgrid,mNu4Sq_allgrid,SlopeFit,'EdgeColor','none');
 % hold on;
 % [~,ct] = contour3(sin2T4_allgrid,mNu4Sq_allgrid,SlopeFit,[-0.1,0,0.1],'Color',rgb('Black'),...
 %     'ShowText','on','LineWidth',2.5);
 ContourVec = [-2,-1,-0.5,-0.25,-0.1,-0.05,-0.01,0,0.01,0.05,0.1,0.2];
-[M,ct] = contourf(sin2T4_allgrid,mNu4Sq_allgrid,SlopeFit,ContourVec,...
-    'ShowText','on','LineWidth',1.5,'LabelSpacing',180,'LineColor',rgb('Black'));
-cl = clabel(M,ct,'FontSize',12);
+surf(sin2T4_allgrid,mNu4Sq_allgrid,SlopeFit-1e-02,'EdgeColor','interp','FaceColor','interp');
+hold on;
+[M,ct] = contour3(sin2T4_allgrid,mNu4Sq_allgrid,SlopeFit,ContourVec,...
+    'ShowText','off','LineWidth',2.5,'LabelSpacing',180,'LineColor',rgb('Black'));
+%clabel(M,ct,'FontSize',26,'FontName','Times New Roman','Color',ct.LineColor);
 set(gca,'XScale','log');
 set(gca,'YScale','log');
 view(2);
 c = colorbar; 
 c.Ticks = (-1:0.2:0.1);
-c.Label.String = sprintf('Slope {\\ita}  ({\\itm}_\\nu^2 = {\\ita} \\cdot {\\itm}_4^2 + offset)');
+c.Label.String = sprintf('\\alpha_{slope}');%sprintf('Slope {\\ita}  ({\\itm}_\\nu^2 = {\\ita} \\cdot {\\itm}_4^2 + offset)');
 grid off; 
-PrettyFigureFormat('FontSize',22);
-c.Label.FontSize = 18;
+PRLFormat;
+set(gca,'FontSize',30);
+ax = gca;
+c.Label.FontSize = ax.XLabel.FontSize;
+yticks([[0.1,1,10, 1e2 ,1e3]])
 ylim([0.1 1600]);
 xlim([1e-03 0.5])
 xlabel(sprintf('|{\\itU}_{e4}|^2'));
 ylabel(sprintf('{\\itm}_4^2 (eV^2)'));
-plotname = sprintf('%sksn2_NuMassCorrelationFit_%s_%.0fGrid_%.0ffits_LinSlope.png',plotdir,DataType,nStepsAll,nSteps);
-print(gcf,plotname,'-dpng','-r350');
+ax.Position(3) = 0.65;
+ax.Position(1) = 0.165;
 
+% by hand: text boxes:
+% t.delete;
+% t2.delete;
+% t3.delete;
+% t4.delete;
+% t5.delete;
+% t6.delete;
+% t7.delete;
+% t8.delete;
+% t9.delete;
+% t10.delete;
+t = text(0.0086,0.15,0.17,'-0.01','FontSize',28,'FontName','Times New Roman','Rotation',90) ;
+t2 = text(0.041,0.15,0.17,'-0.05','FontSize',28,'FontName','Times New Roman','Rotation',90) ;
+t3 = text(0.078,0.15,0.17,'-0.1','FontSize',28,'FontName','Times New Roman','Rotation',90) ;
+t4 = text(0.168,0.15,0.17,'-0.25','FontSize',28,'FontName','Times New Roman','Rotation',90) ;
+t5 = text(0.275,0.15,0.17,'-0.5','FontSize',28,'FontName','Times New Roman','Rotation',90) ;
+t6 = text(0.415,0.15,0.17,'-1','FontSize',28,'FontName','Times New Roman','Rotation',90) ;
+t7 = text(0.0015,47,0.17,'0','FontSize',28,'FontName','Times New Roman','Rotation',0) ;
+t8 = text(0.025,190,0.17,'0.01','FontSize',28,'FontName','Times New Roman','Rotation',30) ;
+t9 = text(0.115,160,0.17,'0.05','FontSize',28,'FontName','Times New Roman','Rotation',40) ;
+t10 = text(0.225,150,0.17,'0.1','FontSize',28,'FontName','Times New Roman','Rotation',50) ;
+
+%
+plotname = sprintf('%sksn2_NuMassCorrelationFit_%s_%.0fGrid_%.0ffits_LinSlope.pdf',plotdir,DataType,nStepsAll,nSteps);
+export_fig(plotname);
+
+%print(gcf,plotname,'-dpng','-r350');
+
+
+return
 %% plot correlation
 GetFigure
 surf(sin2T4_allgrid,mNu4Sq_allgrid,CorrCoeff,'EdgeColor','none');

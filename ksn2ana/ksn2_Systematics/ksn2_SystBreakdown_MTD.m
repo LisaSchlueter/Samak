@@ -1,6 +1,6 @@
 % Understanding systematics breakdown
     DataType = 'Twin';
-SavePlt = 'ON';
+    SavePlt = 'ON';
     savedir = [getenv('SamakPath'),'ksn2ana/ksn2_Systematics/results/'];
     savename = sprintf('%sksn2_SystBreakdown_StatOverSyst_%s_%.0feV_RasterScan%s.mat',savedir,DataType,40,'ON');
     if exist(savename,'file')

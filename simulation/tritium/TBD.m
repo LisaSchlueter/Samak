@@ -580,23 +580,26 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                 case {'KNM2_0p1eV_cut50eV'}
                     ttfsdfilename = [FSDdir,'FSD_KNM2_T2_0p1eV_cut50eV.txt'];
             end
-            %Rebinning
-            ttfsdfile_temp=importdata(ttfsdfilename);
-            ttfsdfile = ttfsdfile_temp(ttfsdfile_temp(:,2)>(10^-8),[1 2]);
-            %
-            [obj.TTexE, TTexE_index] = sort(ttfsdfile(:,1)); %sort from small to large excitation energies           
-            obj.TTexE = obj.TTexE';
-            obj.TTexP = (ttfsdfile(TTexE_index,2))';
-            
-            if ~isempty(Sigma)   % broaden FSDs
-                [obj.TTexE,obj.TTexP] = FSD_Convfun(obj.TTexE,obj.TTexP,...
-                    squeeze(Sigma(1,:,:)),...
-                    FSDConvArg{:},'SanityPlot',SanityPlot,'ZoomPlot',ZoomPlot,...
-                    'filename',ttfsdfilename);
+            if ~strcmp(obj.TTFSD,'OFF')
+                %Rebinning
+                ttfsdfile_temp=importdata(ttfsdfilename);
+                ttfsdfile = ttfsdfile_temp(ttfsdfile_temp(:,2)>(10^-8),[1 2]);
+                
+                %
+                [obj.TTexE, TTexE_index] = sort(ttfsdfile(:,1)); %sort from small to large excitation energies
+                obj.TTexE = obj.TTexE';
+                obj.TTexP = (ttfsdfile(TTexE_index,2))';
+                
+                if ~isempty(Sigma)   % broaden FSDs
+                    [obj.TTexE,obj.TTexP] = FSD_Convfun(obj.TTexE,obj.TTexP,...
+                        squeeze(Sigma(1,:,:)),...
+                        FSDConvArg{:},'SanityPlot',SanityPlot,'ZoomPlot',ZoomPlot,...
+                        'filename',ttfsdfilename);
+                end
+                obj.TTGSTh = obj.GetFSDTh(obj.TTexE);          % Limit ground / excited states
+                obj.TTNormGS_i = sum(obj.TTexP(:,1:obj.TTGSTh),2);
+                obj.TTNormES_i = sum(obj.TTexP(:,obj.TTGSTh:end),2);
             end
-            obj.TTGSTh = obj.GetFSDTh(obj.TTexE);          % Limit ground / excited states
-            obj.TTNormGS_i = sum(obj.TTexP(:,1:obj.TTGSTh),2);
-            obj.TTNormES_i = sum(obj.TTexP(:,obj.TTGSTh:end),2);
             
             %% D-T FSD
             switch obj.DTFSD
@@ -634,20 +637,23 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                 case {'KNM2_0p1eV_cut50eV'}
                     dtfsdfilename = [FSDdir,'FSD_KNM2_DT_0p1eV_cut50eV.txt'];
             end
-            %Rebinning
-            dtfsdfile_temp=importdata(dtfsdfilename);
-            dtfsdfile = dtfsdfile_temp(dtfsdfile_temp(:,2)>(10^-8),[1 2]);
-            %
-            [obj.DTexE, DTexE_index] = sort(dtfsdfile(:,1));
-            obj.DTexE = obj.DTexE';
-            obj.DTexP = (dtfsdfile(DTexE_index,2))';
-            if ~isempty(Sigma)  %broaden FSDs
-                [obj.DTexE,obj.DTexP] = FSD_Convfun(obj.DTexE,obj.DTexP,squeeze(Sigma(2,:,:)),...
-                                                  FSDConvArg{:},'filename',dtfsdfilename);
+            
+            if ~strcmp(obj.DTFSD,'OFF')
+                %Rebinning
+                dtfsdfile_temp=importdata(dtfsdfilename);
+                dtfsdfile = dtfsdfile_temp(dtfsdfile_temp(:,2)>(10^-8),[1 2]);    
+                %
+                [obj.DTexE, DTexE_index] = sort(dtfsdfile(:,1));
+                obj.DTexE = obj.DTexE';
+                obj.DTexP = (dtfsdfile(DTexE_index,2))';
+                if ~isempty(Sigma)  %broaden FSDs
+                    [obj.DTexE,obj.DTexP] = FSD_Convfun(obj.DTexE,obj.DTexP,squeeze(Sigma(2,:,:)),...
+                        FSDConvArg{:},'filename',dtfsdfilename);
+                end
+                obj.DTGSTh = obj.GetFSDTh(obj.DTexE); % Limit ground / excited states
+                obj.DTNormGS_i = sum(obj.DTexP(:,1:obj.DTGSTh),2);
+                obj.DTNormES_i = sum(obj.DTexP(:,obj.DTGSTh:end),2);
             end
-            obj.DTGSTh = obj.GetFSDTh(obj.DTexE); % Limit ground / excited states
-            obj.DTNormGS_i = sum(obj.DTexP(:,1:obj.DTGSTh),2);
-            obj.DTNormES_i = sum(obj.DTexP(:,obj.DTGSTh:end),2);
             
             %% H-T FSD
             switch obj.HTFSD
@@ -681,20 +687,24 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                 case {'KNM2_0p1eV_cut50eV'}
                     htfsdfilename = [FSDdir,'FSD_KNM2_HT_0p1eV_cut50eV.txt'];
             end
-            %Rebinning
-            htfsdfile_temp=importdata(htfsdfilename);
-            htfsdfile= htfsdfile_temp(htfsdfile_temp(:,2)>(10^-8),[1 2]);
-            %
-            [obj.HTexE, HTexE_index] = sort(htfsdfile(:,1));
-            obj.HTexE = obj.HTexE';
-            obj.HTexP = (htfsdfile(HTexE_index,2))';
-            if ~isempty(Sigma)  %broaden FSDs
-                [obj.HTexE,obj.HTexP] = FSD_Convfun(obj.HTexE,obj.HTexP,squeeze(Sigma(3,:,:)),...
-                                       FSDConvArg{:},'filename',htfsdfilename);
+            
+            if ~strcmp(obj.HTFSD,'OFF')
+                %Rebinning
+                htfsdfile_temp=importdata(htfsdfilename);
+                htfsdfile= htfsdfile_temp(htfsdfile_temp(:,2)>(10^-8),[1 2]);
+                
+                %
+                [obj.HTexE, HTexE_index] = sort(htfsdfile(:,1));
+                obj.HTexE = obj.HTexE';
+                obj.HTexP = (htfsdfile(HTexE_index,2))';
+                if ~isempty(Sigma)  %broaden FSDs
+                    [obj.HTexE,obj.HTexP] = FSD_Convfun(obj.HTexE,obj.HTexP,squeeze(Sigma(3,:,:)),...
+                        FSDConvArg{:},'filename',htfsdfilename);
+                end
+                obj.HTGSTh = obj.GetFSDTh(obj.HTexE);   % Limit ground / excited states
+                obj.HTNormGS_i = sum(obj.HTexP(:,1:obj.HTGSTh),2);
+                obj.HTNormES_i = sum(obj.HTexP(:,obj.HTGSTh:end),2);
             end
-            obj.HTGSTh = obj.GetFSDTh(obj.HTexE);   % Limit ground / excited states
-            obj.HTNormGS_i = sum(obj.HTexP(:,1:obj.HTGSTh),2);
-            obj.HTNormES_i = sum(obj.HTexP(:,obj.HTGSTh:end),2);
            %% T minus ion
             switch obj.TmFSD
                 case 'OFF'

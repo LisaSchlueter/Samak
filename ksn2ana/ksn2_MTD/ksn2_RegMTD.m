@@ -2,9 +2,9 @@
 
 FakeInitFile = @ref_KNM2_KATRIN_RegMTD;
 range = 40;
-freePar = 'mNu E0 Norm Bkg';
+freePar = 'E0 Norm Bkg';
 nGridSteps = 25;
-
+chi2 = 'chi2CMShape';
 %% tritium run model
 F = RunAnalysis('RunNr',1,...
     'DataType','Fake',...

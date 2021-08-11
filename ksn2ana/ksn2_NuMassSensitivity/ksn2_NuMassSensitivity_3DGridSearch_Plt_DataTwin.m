@@ -154,3 +154,5 @@ MakeDir(pltdir);
 pltname = sprintf('%sksn2_NuMassSensitivity.png',pltdir);%strrep(strrep(strrep(savefileCombiR,'results','plots'),'.mat','.png'),'Real','');
 print(gcf,pltname,'-dpng','-r350');
 fprintf('save plot to %s \n',pltname);
+
+export_fig(sprintf('%sksn2_NuMassSensitivity.pdf',pltdir));

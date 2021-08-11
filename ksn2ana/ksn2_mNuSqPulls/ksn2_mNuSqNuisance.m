@@ -2,7 +2,7 @@
 % compare m2 free, m2 nuisance parameter
 %% settings that might change
 chi2 = 'chi2CMShape';
-DataType = 'Twin';%'Real';
+DataType = 'Real';%'Twin';%'Real';
 nGridSteps = 40;
 range = 40;
 Mode = 'Compute';
@@ -45,13 +45,16 @@ SterileArg = {'RunAnaObj',A,... % Mother Object: defines RunList, Column Density
 S = SterileAnalysis(SterileArg{:});
 S.InterpMode = 'spline';
 %
-S.LoadGridFile(S.LoadGridArg{:}); 
+S.LoadGridFile(S.LoadGridArg{:},'ExtmNu4Sq','ON'); 
 S.Interp1Grid('nInter',1e3);
-%
+S.FindBestFit;
+mNu4Sq_bf = S.mNu4Sq_bf;
+sin2T4_bf = S.sin2T4_bf;
+
 PlotPar = S.mNuSq;
 
 if strcmp(DataType,'Real')
-    ContourVec = [-5 -1,0,0.3,0.9,1,2,10];
+    ContourVec = [-5 -1,0,0.28,1,2,10];
     LabelSpacing = 380;
       BF = 'ON';
 else
@@ -60,45 +63,111 @@ else
     BF = 'OFF';
 end
 Splines = 'ON';
-GetFigure;
+f = GetFigure;
+%f.Renderer = 'painters';
 %
 for i=1:numel(ContourVec)
     [M,p1] = contour3(S.sin2T4,S.mNu4Sq,PlotPar,[ContourVec(i),ContourVec(i)],...
-        'Color',rgb('LightGreen'),'ShowText','off','LineWidth',2,'LabelSpacing',LabelSpacing);
+        'Color',rgb('LightSalmon'),...
+        'ShowText','off','LineWidth',2.5,...
+          'LabelSpacing',LabelSpacing,...
+          'LineStyle',':');
     hold on;
    % cl = clabel(M,p1,'FontSize',18,'FontName','Times New Roman');
 end
 %
-
-[pFree,pFix] = S.PlotmNuSqOverview('PullmNuSq','OFF','SavePlot','OFF','HoldOn','ON','BestFit',BF);
+[pFree,pFix] = S.PlotmNuSqOverview('PullmNuSq','OFF','SavePlot','OFF','HoldOn','ON','BestFit','OFF');
+pFree.LineColor = rgb('FireBrick');
+if strcmp(BF,'ON')
+   pbf =  plot3(sin2T4_bf,mNu4Sq_bf,99,...
+       'p','MarkerIndices',[1,1],'MarkerFaceColor','red',...
+       'LineWidth',1,'Color',pFree.Color,'MarkerSize',17,'MarkerFaceColor',pFree.Color);
+end
 view(2)
 grid off
-pFix.LineWidth = 2;
+pFix.LineWidth = 3;
+pFix.LineStyle = '-.';
 pFree.LineWidth = 3;
+
+%
 leg = legend([pFix,pFree,p1],...
     sprintf('i)  Fixed {\\itm}_\\nu^2 = 0 eV^2'),...
     sprintf('ii) Free {\\itm}_\\nu^2 unconstrained'),...
-    sprintf('Isoline: {\\itm}_\\nu^2 best fit for ii)'),...
+    sprintf('Isoline: {\\itm}_\\nu^2 (eV^2) best fit for ii)'),...
     'EdgeColor',rgb('Silver'),'Location','southwest','box','off');
 if strcmp(DataType,'Twin')
     legend boxon
     PrettyLegendFormat(leg,'alpha',0.5);
 end
-PRLFormat;
+%
 title('');
-ax = gca;
-ax.FontSize =  24;
-leg.FontSize = 24;
-ax.XLabel.FontSize = 28;
-ax.YLabel.FontSize = 28;
-ylim([1 40^2]);
+PRLFormat;
+set(gca,'FontSize',30);
+
+leg.FontSize = 26;
+leg.Position(2) = 0.3;
+
+ylim([0.1 2e3]);
+yticks([0.1 1 10 100 1e3])
 xlim([2e-03 0.5]);
 set(gca,'YScale','log')
 set(gca,'XScale','log')
+% make nice labels by hand
+if strcmp(DataType,'Real')
+    BoxArg = { 'Color','Black','EdgeColor','none','FontSize',24,'FontName','Times New Roman'};
+%     t1.delete;
+%     tx1.delete;
+%     t2.delete;
+%     tx2.delete;
+%     t3.delete;
+%     tx3.delete;
+%     t4.delete;
+%     tx4.delete;
+%     t5.delete;
+%     tx5.delete;
+%     t6.delete;
+%     tx6.delete;
+%     t7.delete;
+%     tx7.delete;
+%     t8.delete;
+%     tx8.delete;
+%         t9.delete;
+%     tx9.delete;
+    t1 = annotation('rectangle',[0.82,0.30,0.07,0.04],'FaceColor',rgb('White'),'Color','none');
+    tx1 = annotation('textbox',[0.82,0.302,0.05,0.05],'String',0.28,BoxArg{:});
+    
+    t2 = annotation('ellipse',[0.84,0.38,0.03,0.04],'FaceColor',rgb('White'),'Color','none');
+    tx2 = annotation('textbox',[0.84,0.387,0.05,0.05],'String',0,BoxArg{:});
+    
+%     t3.delete;
+%     tx3.delete;
+    t3 = annotation('ellipse',[0.83,0.45,0.04,0.035],'FaceColor',rgb('White'),'Color','none'); 
+    tx3 = annotation('textbox',[0.83,0.451,0.05,0.05],'String','-1',BoxArg{:});
+   
+    t4 = annotation('rectangle',[0.8,0.589,0.045,0.045],'FaceColor',rgb('White'),'Color','none');
+    tx4 = annotation('textbox',[0.8,0.6,0.05,0.05],'String','-5',BoxArg{:});
+    
+    t5 = annotation('rectangle',[0.735,0.74,0.04,0.04],'FaceColor',rgb('White'),'Color','none');
+    tx5 = annotation('textbox',[0.73,0.74,0.05,0.05],'String','10',BoxArg{:});
+    
+    t6 = annotation('rectangle',[0.53,0.81,0.03,0.04],'FaceColor',rgb('White'),'Color','none');
+    tx6 = annotation('textbox',[0.53,0.81,0.05,0.05],'String','2',BoxArg{:});
+    
+    t7 = annotation('rectangle',[0.425,0.81,0.02,0.03],'FaceColor',rgb('White'),'Color','none');
+    tx7 = annotation('textbox',[0.42,0.81,0.05,0.05],'String','1',BoxArg{:});
+    
+    t8 = annotation('rectangle',[0.302,0.66,0.07,0.05],'FaceColor',rgb('White'),'Color','none');
+    tx8 = annotation('textbox',[0.3,0.655,0.05,0.05],'String','0.28',BoxArg{:});
+    
+    t9 = annotation('rectangle',[0.2,0.88,0.07,0.04],'FaceColor',rgb('White'),'Color','none');
+    tx9 = annotation('textbox',[0.2,0.875,0.05,0.05],'String','0.28',BoxArg{:});
+end
+
 %% save
 name_i = strrep(S.DefPlotName,'_mNuE0BkgNorm','');
 plotname = sprintf('%s_mNuSqOverviewmNuSq_%.2gCL.png',name_i,S.ConfLevel);
-print(gcf,plotname,'-dpng','-r450');
+%print(gcf,plotname,'-dpng','-r450');
 fprintf('save plot to %s \n',plotname);
-ylabel(sprintf('{\\itm}_4^2 (eV^{ 2})'));
-export_fig(strrep(plotname,'.png','.pdf'));
+%
+%ylabel(sprintf('{\\itm}_4^2 (eV^{2})'));
+export_fig(strrep(plotname,'.png','.pdf'),'-opengl');

@@ -2,7 +2,7 @@
 % simply add chi2-map2
 %% settings that might change
 chi2Name = 'chi2CMShape';
-DataType = 'Twin';
+DataType = 'Real';
 nGridSteps = 50;
 range = 40;
 %% configure RunAnalysis object

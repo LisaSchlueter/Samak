@@ -52,9 +52,10 @@ S.LoadGridFile(S.LoadGridArg{:});
 S.Interp1Grid;
 
 FinalSensitivity = 'ON';
- [legHandle,legStr] = S.ContourPlotOsci('DayaBay','ON','DoubleChooz','ON',...
-                             'SavePlot','ON','Style','PRL','BestFit','ON',...
-                             'FinalSensitivity',FinalSensitivity);
+[legHandle,legStr,pHandle] = S.ContourPlotOsci('DayaBay','ON','DoubleChooz','ON',...
+    'Solar','OFF',...
+    'SavePlot','OFF','Style','PRL','BestFit','ON',...
+    'FinalSensitivity',FinalSensitivity);
 
 % load combined result for fixed m_nu
 savedir_fix = [getenv('SamakPath'),'ksn2ana/ksn2_RunCombination/results/'];
@@ -79,8 +80,10 @@ hold on;
 pfix12 = plot(sin2T4Sq_fix,mNu4Sq_fix,':','Color',rgb('Navy'),'LineWidth',2.5);
 pfix1 = plot(sin2T4Sq_fix1,mNu4Sq_fix1,'-.','Color',rgb('SkyBlue'),'LineWidth',2.5);
 
-ax.XLabel.FontSize = 28;
-ax.YLabel.FontSize = 28;
+ax = gca;
+set(gca,'FontSize',24);
+ax.XLabel.FontSize = 26;
+ax.YLabel.FontSize = 26;
 
 % legend
 legStrCombi = legStr;
@@ -101,6 +104,11 @@ else
 end
 
 leg = legend(legHandleAll,legStrCombi);
+leg.FontSize=19;
+leg.Position(1) = 0.005;
+leg.Position(2) = 0.7;
+ax.Position(4) = 0.55;
 plotname = sprintf('%s_OsciContour_%.2gCL_Combi.pdf',S.DefPlotName,S.ConfLevel);
-%export_fig(gcf,plotname);
-                  
+export_fig(gcf,plotname);
+fprintf('save plot to %s \n',plotname)         
+print('KSN2_Osci.png','-dpng','-r300');

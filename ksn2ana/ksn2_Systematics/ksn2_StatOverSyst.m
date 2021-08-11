@@ -2,7 +2,7 @@
 % raster scan
 % compare variances
 %% settings that might change
-chi2 = 'chi2Stat';
+chi2 = 'chi2CMShape';
 DataType = 'Twin';
 nGridSteps = 30;
 range = 40;
@@ -55,6 +55,11 @@ S = SterileAnalysis(SterileArg{:});
 %%
 [Ratio,StatDomFraction,mNu4Sq,sin2t4_Stat,sin2t4_Tot,sin2t4_Sys] = S.StatOverSysKsn2('RasterScan','ON');
 
+savedir = [getenv('SamakPath'),'ksn2ana/ksn2_Systematics/results/'];
+savename = sprintf('%sksn2_StatOverSyst_%s.mat',savedir,DataType);
+if ~exist(savename,'file')
+    save(savename,'mNu4Sq','sin2t4_Stat','sin2t4_Tot','sin2t4_Sys');
+end
 %%
  close all;
  GetFigure;

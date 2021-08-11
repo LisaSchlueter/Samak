@@ -1,10 +1,10 @@
 % look at sensitivity contour from KNM-2 like simulation with flat MTD
 % (same qU as KNM-2 MTD)
 
-FakeInitFile = @ref_KNM2_KATRIN_IsoStatMTD;%LinFlatMTD;
+FakeInitFile = @ref_KNM2_KATRIN_RegMTD;%LinFlatMTD;
 range = 40;
 freePar = 'E0 Norm Bkg';
-nGridSteps = 30;
+nGridSteps = 25;%30;
 
 %% tritium run model
 F = RunAnalysis('RunNr',1,...
@@ -30,7 +30,7 @@ SterileArg = {'RunAnaObj',F,... % Mother Object: defines RunList, Column Density
     'SysEffect','KSN2Top3',...
     'RandMC','OFF',...
     'range',range,...
-    'LoadGridArg',{'mNu4SqTestGrid',2}};
+    'LoadGridArg',{'mNu4SqTestGrid','OFF'}};
 S = SterileAnalysis(SterileArg{:});
 
 S.RunAnaObj.chi2 = 'chi2Stat';
@@ -43,6 +43,10 @@ mNu4Sq_contour_stat = S.mNu4Sq_contour;
 
 S.RunAnaObj.chi2 = 'chi2CMShape';
 S.RunAnaObj.NonPoissonScaleFactor = 1.112;
+S.GridSearch(S.LoadGridArg{:});
+
+return;
+
 S.LoadGridFile(S.LoadGridArg{:});
 S.Interp1Grid('MaxM4Sq',38.^2);
 S.ContourPlot('HoldOn','ON','Color',rgb('Orange'),'LineStyle',':');
@@ -61,8 +65,8 @@ hold on;
 ptot =plot(sin2T4_contour_cm,mNu4Sq_contour_cm,'-.','Color',rgb('Black'),'LineWidth',3);
 leg = legend([pstat,ptot],'Stat. only','Total (stat. and syst.)','Location','northeast'); 
 PrettyLegendFormat(leg); legend boxoff
-set(gca,'XScale','log')
-set(gca,'YScale','log')
+set(gca,'XScale','log');
+set(gca,'YScale','log');
 PrettyFigureFormat('FontSize',22);
 ax1 = gca;
 xlabel(sprintf('|{\\itU}_{e4}|^2'));
@@ -72,9 +76,9 @@ xlim([5e-03 0.5]);
 sysOnly = sqrt(sin2T4_cm.^2-sin2T4_stat.^2);
 
 s2 = subplot(2,3,[3,6]);
-pStat = plot(sysOnly.^2./sin2T4_cm.^2,mNu4Sq,'-k','LineWidth',2)
+pStat = plot(sysOnly.^2./sin2T4_cm.^2,mNu4Sq,'-k','LineWidth',2);
 hold on;
-pTot = plot(sin2T4_stat.^2./sin2T4_cm.^2,mNu4Sq,':','Color',rgb('Silver'),'LineWidth',2)
+pTot = plot(sin2T4_stat.^2./sin2T4_cm.^2,mNu4Sq,':','Color',rgb('Silver'),'LineWidth',2);
 leg = legend([pStat,pTot],'Stat. only','All syst.','Location','north');
 
 PrettyLegendFormat(leg);
