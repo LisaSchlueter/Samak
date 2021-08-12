@@ -136,7 +136,7 @@ classdef SterileAnalysis < handle
                     obj.RunAnaObj.ComputeCM('SysEffect',struct('FSD','OFF'),'BkgCM','ON','BkgPtCM','OFF');
                 elseif strcmp(obj.RunAnaObj.chi2,'chi2CMShape') && strcmp(obj.SysEffect,'BkgPT') 
                     obj.RunAnaObj.ComputeCM('SysEffect',struct('FSD','OFF'),'BkgCM','OFF','BkgPtCM','ON');
-                elseif strcmp(obj.RunAnaObj.chi2,'chi2CMShape') && ~strcmp(obj.SysEffect,'all')
+                elseif strcmp(obj.RunAnaObj.chi2,'chi2CMShape') && ~strcmp(obj.SysEffect,'all') && ~strcmp(obj.SysEffect,'allmBkgPT')
                     obj.RunAnaObj.ComputeCM('SysEffect',struct(obj.SysEffect,'ON'),'BkgCM','OFF','BkgPtCM','OFF');
                 elseif strcmp(obj.RunAnaObj.chi2,'chi2CMShape') && strcmp(obj.SysEffect,'all')
                     obj.RunAnaObj.ComputeCM('BkgCM','ON','BkgPtCM','ON');
@@ -144,8 +144,12 @@ classdef SterileAnalysis < handle
                     % for testing: KSN2 top 3 systematics: Plasma, NP, Penning
                     obj.RunAnaObj.ComputeCM('SysEffect',struct('LongPlasma','ON'),'BkgCM','OFF','BkgPtCM','ON');
                 elseif strcmp(obj.RunAnaObj.chi2,'chi2CMShape') && strcmp(obj.SysEffect,'KSN2Top4')
-                    % for testing: KSN2 top 3 systematics: Plasma, NP, Penning
+                    % for testing: KSN2 (top) 4 systematics: Plasma, NP, Penning, Bkg slope
                     obj.RunAnaObj.ComputeCM('SysEffect',struct('LongPlasma','ON'),'BkgCM','ON','BkgPtCM','ON');
+                elseif strcmp(obj.RunAnaObj.chi2,'chi2CMShape') && isstruct(obj.SysEffect)
+                     obj.RunAnaObj.ComputeCM('SysEffect',obj.SysEffect);
+                elseif strcmp(obj.RunAnaObj.chi2,'chi2CMShape') && strcmp(obj.SysEffect,'allmBkgPT')
+                    obj.RunAnaObj.ComputeCM('BkgCM','ON','BkgPtCM','OFF');  
                 end
                 
                 %% ranomized mc data
