@@ -136,7 +136,7 @@ classdef SterileAnalysis < handle
                     obj.RunAnaObj.ComputeCM('SysEffect',struct('FSD','OFF'),'BkgCM','ON','BkgPtCM','OFF');
                 elseif strcmp(obj.RunAnaObj.chi2,'chi2CMShape') && strcmp(obj.SysEffect,'BkgPT') 
                     obj.RunAnaObj.ComputeCM('SysEffect',struct('FSD','OFF'),'BkgCM','OFF','BkgPtCM','ON');
-                elseif strcmp(obj.RunAnaObj.chi2,'chi2CMShape') && ~strcmp(obj.SysEffect,'all') && ~strcmp(obj.SysEffect,'allmBkgPT')
+                elseif strcmp(obj.RunAnaObj.chi2,'chi2CMShape') && ~strcmp(obj.SysEffect,'all') && ~strcmp(obj.SysEffect,'allmBkgPT') && ~strcmp(obj.SysEffect,'allmLongPlasma')
                     obj.RunAnaObj.ComputeCM('SysEffect',struct(obj.SysEffect,'ON'),'BkgCM','OFF','BkgPtCM','OFF');
                 elseif strcmp(obj.RunAnaObj.chi2,'chi2CMShape') && strcmp(obj.SysEffect,'all')
                     obj.RunAnaObj.ComputeCM('BkgCM','ON','BkgPtCM','ON');
@@ -147,9 +147,13 @@ classdef SterileAnalysis < handle
                     % for testing: KSN2 (top) 4 systematics: Plasma, NP, Penning, Bkg slope
                     obj.RunAnaObj.ComputeCM('SysEffect',struct('LongPlasma','ON'),'BkgCM','ON','BkgPtCM','ON');
                 elseif strcmp(obj.RunAnaObj.chi2,'chi2CMShape') && isstruct(obj.SysEffect)
-                     obj.RunAnaObj.ComputeCM('SysEffect',obj.SysEffect);
+                    obj.RunAnaObj.ComputeCM('SysEffect',obj.SysEffect);
                 elseif strcmp(obj.RunAnaObj.chi2,'chi2CMShape') && strcmp(obj.SysEffect,'allmBkgPT')
-                    obj.RunAnaObj.ComputeCM('BkgCM','ON','BkgPtCM','OFF');  
+                    obj.RunAnaObj.ComputeCM('BkgCM','ON','BkgPtCM','OFF');
+                elseif strcmp(obj.RunAnaObj.chi2,'chi2CMShape') && strcmp(obj.SysEffect,'allmLongPlasma')
+                    SysEffects = obj.RunAnaObj.GetDefaultEffects;
+                    SysEffects.LongPlasma = 'OFF';
+                    obj.RunAnaObj.ComputeCM('SysEffect',SysEffects,'BkgCM','ON','BkgPtCM','ON');
                 end
                 
                 %% ranomized mc data

@@ -30,26 +30,33 @@ SterileArg = {'RunAnaObj',F,... % Mother Object: defines RunList, Column Density
     'RandMC','OFF',...
     'range',range};
 S = SterileAnalysis(SterileArg{:});
-S.InterpMode = 'Mix';%'spline';
+S.InterpMode = 'spline';
 %% regular KNM-2 MTD
 S.RunAnaObj.FakeInitFile = @ref_KNM2_KATRIN_RegMTD;
 S.LoadGridFile
-S.Interp1Grid;
-preg = S.ContourPlot('Color',rgb('DodgerBlue'),'LineStyle','-.','HoldOn','OFF');
+S.Interp1Grid('Maxm4Sq',36^2);
+preg = S.ContourPlot('Color',rgb('DodgerBlue'),'LineStyle','-','HoldOn','OFF');
+
+% % regular KNM-2 MTD 10 mcps
+% S.RunAnaObj.FakeInitFile = @ref_KNM2_KATRIN_RegMTD_Bkg10mcps;
+% S.LoadGridFile
+% S.Interp1Grid('Maxm4Sq',36^2);
+% preg10 = S.ContourPlot('Color',rgb('HotPink'),'LineStyle','-.','HoldOn','ON');
+
 % flat KNM-2 MTD
 S.RunAnaObj.FakeInitFile = @ref_KNM2_KATRIN_FlatMTD;
 S.LoadGridFile
-S.Interp1Grid;
+S.Interp1Grid('Maxm4Sq',36^2);
 pflat = S.ContourPlot('Color',rgb('Orange'),'LineStyle','-','HoldOn','ON');
 % flat KNM-2 MTD
 S.RunAnaObj.FakeInitFile = @ref_KNM2_KATRIN_LinFlatMTD;
 S.LoadGridFile
-S.Interp1Grid;
+S.Interp1Grid('Maxm4Sq',36^2);
 plinflat = S.ContourPlot('Color',rgb('FireBrick'),'LineStyle','--','HoldOn','ON');
 % isostat KNM-2 MTD
 S.RunAnaObj.FakeInitFile = @ref_KNM2_KATRIN_IsoStatMTD;
 S.LoadGridFile
-S.Interp1Grid;
+S.Interp1Grid('Maxm4Sq',36^2);
 piso = S.ContourPlot('Color',rgb('ForestGreen'),'LineStyle',':','HoldOn','ON');
 %% change title and legend
 if ~contains(freePar,'mNu')

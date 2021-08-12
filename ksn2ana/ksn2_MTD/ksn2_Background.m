@@ -64,6 +64,15 @@ S.Interp1Grid('Maxm4Sq',34^2);
 p100 = S.ContourPlot('Color',rgb('Orange'),'LineStyle','--','HoldOn','ON');
 mNu4Sq_contour_109 = S.mNu4Sq_contour;
 sin2T4_contour_109 = S.sin2T4_contour;
+
+% % 100000 mcps / 100 counts
+% S.RunAnaObj.FakeInitFile = @ref_KNM2_KATRIN_RegMTD_Bkg100000mcps;
+% S.LoadGridFile
+% S.Interp1Grid('Maxm4Sq',34^2);
+% p100000 = S.ContourPlot('Color',rgb('HotPink'),'LineStyle',':','HoldOn','ON');
+% mNu4Sq_contour_1000 = S.mNu4Sq_contour;
+% sin2T4_contour_1000 = S.sin2T4_contour;
+
 % change title and legend
 if ~contains(freePar,'mNu')
     title(sprintf('Simulation , {\\itm}_\\nu^2 = 0 eV^2'),'FontSize',get(gca,'FontSize'),'FontWeight','normal');
