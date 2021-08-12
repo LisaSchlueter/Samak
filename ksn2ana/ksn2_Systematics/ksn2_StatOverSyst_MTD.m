@@ -2,7 +2,7 @@
 % (same qU as KNM-2 MTD)
 
 
-FakeInitFile = @ref_KNM2_KATRIN_LinFlatMTD;
+FakeInitFile = @ref_KNM2_KATRIN_RegMTD_Bkg10mcps;%LinFlatMTD;
 
 savedir = [getenv('SamakPath'),'ksn2ana/ksn2_Systematics/results/'];
 savename = sprintf('%sksn2_StatOverSyst_%s.mat',savedir,func2str(FakeInitFile));
@@ -11,8 +11,14 @@ if exist(savename,'file')
 else
     range = 40;
     freePar = 'E0 Norm Bkg';
-    nGridSteps = 30;
     
+    if contains(func2str(FakeInitFile),'Reg')
+        nGridSteps = 25;
+        mNu4SqTestGrid = 'OFF';
+    else
+        nGridSteps = 30;
+        mNu4SqTestGrid = 2;
+    end
     %% tritium run model
     F = RunAnalysis('RunNr',1,...
         'DataType','Fake',...
@@ -37,21 +43,22 @@ else
         'SysEffect','KSN2Top3',...
         'RandMC','OFF',...
         'range',range,...
-        'LoadGridArg',{'mNu4SqTestGrid',2}};
+        'LoadGridArg',{'mNu4SqTestGrid',mNu4SqTestGrid}};
     S = SterileAnalysis(SterileArg{:});
     
     S.RunAnaObj.chi2 = 'chi2Stat';
     S.RunAnaObj.NonPoissonScaleFactor = 1;
     S.LoadGridFile(S.LoadGridArg{:});
-    S.Interp1Grid('MaxM4Sq',38.^2);
+    S.Interp1Grid('MaxM4Sq',34.7^2);
     S.ContourPlot;
     sin2T4_contour_stat = S.sin2T4_contour;
     mNu4Sq_contour_stat = S.mNu4Sq_contour;
-    
+ %%   
     S.RunAnaObj.chi2 = 'chi2CMShape';
     S.RunAnaObj.NonPoissonScaleFactor = 1.112;
     S.LoadGridFile(S.LoadGridArg{:});
-    S.Interp1Grid('MaxM4Sq',38.^2);
+    S.InterpMode = 'spline';
+    S.Interp1Grid('MaxM4Sq',34.7^2);
     S.ContourPlot('HoldOn','ON','Color',rgb('Orange'),'LineStyle',':');
     sin2T4_contour_cm = S.sin2T4_contour;
     mNu4Sq_contour_cm = S.mNu4Sq_contour;

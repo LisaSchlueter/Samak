@@ -143,6 +143,9 @@ classdef SterileAnalysis < handle
                 elseif  strcmp(obj.RunAnaObj.chi2,'chi2CMShape') && strcmp(obj.SysEffect,'KSN2Top3')
                     % for testing: KSN2 top 3 systematics: Plasma, NP, Penning
                     obj.RunAnaObj.ComputeCM('SysEffect',struct('LongPlasma','ON'),'BkgCM','OFF','BkgPtCM','ON');
+                elseif strcmp(obj.RunAnaObj.chi2,'chi2CMShape') && strcmp(obj.SysEffect,'KSN2Top4')
+                    % for testing: KSN2 top 3 systematics: Plasma, NP, Penning
+                    obj.RunAnaObj.ComputeCM('SysEffect',struct('LongPlasma','ON'),'BkgCM','ON','BkgPtCM','ON');
                 end
                 
                 %% ranomized mc data

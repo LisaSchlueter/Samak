@@ -4,20 +4,25 @@ savedir = [getenv('SamakPath'),'ksn2ana/ksn2_Systematics/results/'];
 savenameReg = sprintf('%sksn2_StatOverSyst_Twin.mat',savedir);
 savenameFlat = sprintf('%sksn2_StatOverSyst_ref_KNM2_KATRIN_LinFlatMTD.mat',savedir);
 savenameIso = sprintf('%sksn2_StatOverSyst_ref_KNM2_KATRIN_IsoStatMTD.mat',savedir);
-
+savenameReg2 = sprintf('%sksn2_StatOverSyst_ref_KNM2_KATRIN_RegMTD.mat',savedir);
+savenameReg2_10mcps = sprintf('%sksn2_StatOverSyst_ref_KNM2_KATRIN_RegMTD_Bkg10mcps.mat',savedir);
 dReg = importdata(savenameReg);
+dReg2 = importdata(savenameReg2);
+dReg2_10mcps = importdata(savenameReg2_10mcps);
 dFlat = importdata(savenameFlat);
 dIso = importdata(savenameIso);
 
 %%
 f1 = figure('Units','normalized','Position',[0.1,0.1,0.2,0.5]);
-preg = plot(dReg.sin2t4_Stat.^2./dReg.sin2t4_Tot.^2,dReg.mNu4Sq);
+pregall = plot(dReg.sin2t4_Stat.^2./dReg.sin2t4_Tot.^2,dReg.mNu4Sq,'LineWidth',2);
 hold on;
-pflat = plot(dFlat.sin2T4_stat.^2./dFlat.sin2T4_cm.^2,dFlat.mNu4Sq);
-piso = plot(dIso.sin2T4_stat.^2./dIso.sin2T4_cm.^2,dIso.mNu4Sq);
+preg = plot(dReg2.sin2T4_stat.^2./dReg2.sin2T4_cm.^2,dReg2.mNu4Sq,'LineWidth',2);
+preg10 = plot(dReg2_10mcps.sin2T4_stat.^2./dReg2_10mcps.sin2T4_cm.^2,dReg2_10mcps.mNu4Sq,'LineWidth',2);
+pflat = plot(dFlat.sin2T4_stat.^2./dFlat.sin2T4_cm.^2,dFlat.mNu4Sq,'LineWidth',2);
+piso = plot(dIso.sin2T4_stat.^2./dIso.sin2T4_cm.^2,dIso.mNu4Sq,'LineWidth',2);
 set(gca,'YScale','log');
 PrettyFigureFormat;
-leg = legend('ksn2','flat','iso stat','Location','southwest');
+leg = legend([pregall,preg,preg10,piso,pflat],'ksn2 all','ksn2','ksn2 10 mcps','iso stat','flat','Location','southwest');
 PrettyLegendFormat(leg);
 xlim([0.5,1])
 ylabel(sprintf('\\sigma_{stat.}^2 / \\sigma_{total}^2'))
