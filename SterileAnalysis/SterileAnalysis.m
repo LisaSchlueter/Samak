@@ -136,7 +136,7 @@ classdef SterileAnalysis < handle
                     obj.RunAnaObj.ComputeCM('SysEffect',struct('FSD','OFF'),'BkgCM','ON','BkgPtCM','OFF');
                 elseif strcmp(obj.RunAnaObj.chi2,'chi2CMShape') && strcmp(obj.SysEffect,'BkgPT') 
                     obj.RunAnaObj.ComputeCM('SysEffect',struct('FSD','OFF'),'BkgCM','OFF','BkgPtCM','ON');
-                elseif strcmp(obj.RunAnaObj.chi2,'chi2CMShape') && ~strcmp(obj.SysEffect,'all') && ~strcmp(obj.SysEffect,'allmBkgPT') && ~strcmp(obj.SysEffect,'allmLongPlasma')
+                elseif strcmp(obj.RunAnaObj.chi2,'chi2CMShape') && ~strcmp(obj.SysEffect,'all') && ~strcmp(obj.SysEffect,'allmBkgPT') && ~strcmp(obj.SysEffect,'allmLongPlasma') && ~strcmp(obj.SysEffect,'allmLongPlasmaPT')
                     obj.RunAnaObj.ComputeCM('SysEffect',struct(obj.SysEffect,'ON'),'BkgCM','OFF','BkgPtCM','OFF');
                 elseif strcmp(obj.RunAnaObj.chi2,'chi2CMShape') && strcmp(obj.SysEffect,'all')
                     obj.RunAnaObj.ComputeCM('BkgCM','ON','BkgPtCM','ON');
@@ -154,6 +154,10 @@ classdef SterileAnalysis < handle
                     SysEffects = obj.RunAnaObj.GetDefaultEffects;
                     SysEffects.LongPlasma = 'OFF';
                     obj.RunAnaObj.ComputeCM('SysEffect',SysEffects,'BkgCM','ON','BkgPtCM','ON');
+                elseif strcmp(obj.RunAnaObj.chi2,'chi2CMShape') && strcmp(obj.SysEffect,'allmLongPlasmaPT')
+                    SysEffects = obj.RunAnaObj.GetDefaultEffects;
+                    SysEffects.LongPlasma = 'OFF';
+                    obj.RunAnaObj.ComputeCM('SysEffect',SysEffects,'BkgCM','ON','BkgPtCM','OFF');
                 end
                 
                 %% ranomized mc data

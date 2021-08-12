@@ -1,5 +1,5 @@
 % ksn2: all systematics minus 1 effects
-MinusSysEffect = 'allmLongPlasma';%'BkgPT';
+MinusSysEffect = 'allmLongPlasmaPT';%'BkgPT';
 
 savedir = [getenv('SamakPath'),'ksn2ana/ksn2_Systematics/results/'];
 savename = sprintf('%sksn2_StatOverSyst_Sysm1_%s.mat',savedir,MinusSysEffect);
@@ -47,10 +47,10 @@ else
         'SysEffect','all',...
         'RandMC','OFF',...
         'range',range,...
-        'LoadGridArg',LoadGridArg};
+        'LoadGridArg',LoadGridArg}
     
 %     %%
-%     S = SterileAnalysis(SterileArg{:});
+     S = SterileAnalysis(SterileArg{:});
 %     S.RunAnaObj.chi2 = 'chi2Stat';
 %     S.RunAnaObj.NonPoissonScaleFactor = 1;
 %     S.LoadGridFile(S.LoadGridArg{:});
@@ -58,7 +58,7 @@ else
 %     S.ContourPlot;
 %     sin2T4_contour_stat = S.sin2T4_contour;
 %     mNu4Sq_contour_stat = S.mNu4Sq_contour;
-%     
+    
     %%
     S.RunAnaObj.chi2 = 'chi2CMShape';
     if strcmp(MinusSysEffect,'NP')
@@ -70,11 +70,14 @@ else
     elseif strcmp(MinusSysEffect,'allmLongPlasma')
          S.RunAnaObj.NonPoissonScaleFactor = 1.112;
         S.SysEffect = 'allmLongPlasma';  
+    elseif  strcmp(MinusSysEffect,'allmLongPlasmaPT')
+          S.SysEffect = 'allmLongPlasmaPT';  
+        strcmp(MinusSysEffect,'allmLongPlasmaPT');
     end
   %  S.SysEffect = 'KSN2Top3';
     
-    S.GridSearch(S.LoadGridArg{:});
-    return
+     S.GridSearch(S.LoadGridArg{:});
+     return
     S.LoadGridFile(S.LoadGridArg{:});
      S.Interp1Grid('MaxM4Sq',38^2);
     S.ContourPlot('HoldOn','ON');
