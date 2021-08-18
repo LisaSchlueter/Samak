@@ -101,6 +101,7 @@ classdef SterileAnalysis < handle
             p.addParameter('Negsin2T4','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('NegmNu4Sq','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('Extsin2T4','OFF',@(x)ismember(x,{'ON','OFF'})); %extended sin2T2 (up to 1)
+            p.addParameter('ExtMinsin2T4','OFF',@(x)strcmp(x,'OFF') || isfloat(x)); %extended sin2T2 to smaller values (default/OFF is 1e-03)
             p.addParameter('ExtmNu4Sq','OFF',@(x)ismember(x,{'ON','OFF','0.01'})); %extended m4Sq (from 0.1)
             p.addParameter('mNu4SqTestGrid','OFF',@(x) strcmp(x,'OFF') || isfloat(x)); % different grid..
             p.addParameter('FixmNuSq',0,@(x)isfloat(x)); % if light nu-mass fixed (eV^2)
@@ -110,6 +111,7 @@ classdef SterileAnalysis < handle
             Negsin2T4     = p.Results.Negsin2T4;
             NegmNu4Sq     = p.Results.NegmNu4Sq;
             Extsin2T4     = p.Results.Extsin2T4;
+            ExtMinsin2T4  = p.Results.ExtMinsin2T4;
             ExtmNu4Sq     = p.Results.ExtmNu4Sq;
             mNu4SqTestGrid = p.Results.mNu4SqTestGrid;
             FixmNuSq       = p.Results.FixmNuSq;
@@ -118,7 +120,8 @@ classdef SterileAnalysis < handle
             savefile = obj.GridFilename('Negsin2T4',Negsin2T4,'NegmNu4Sq',NegmNu4Sq,...
                                         'Extsin2T4',Extsin2T4,'ExtmNu4Sq',ExtmNu4Sq,...
                                         'FixmNuSq',FixmNuSq,'mNu4SqTestGrid',mNu4SqTestGrid,...
-                                         'ExtGrid',ExtGrid);
+                                         'ExtGrid',ExtGrid,...
+                                         'ExtMinsin2T4',ExtMinsin2T4);
             
             if exist(savefile,'file') && strcmp(obj.RecomputeFlag,'OFF')
                 fprintf('Grid file already exists: %s \nIf you want to load grid into memory call: obj.LoadGridFile() \n',savefile)
@@ -281,6 +284,8 @@ classdef SterileAnalysis < handle
                     elseif strcmp(Extsin2T4,'ON') && obj.nGridSteps<50
                         % add more points are large mixing
                         sin2T4      = sort([logspace(-3,log10(sin2T4Max),obj.nGridSteps-7),0.5,0.6,0.7,0.85,0.9,0.95,0.98]);
+                    elseif isfloat(ExtMinsin2T4)
+                        sin2T4      = logspace(ExtMinsin2T4,log10(sin2T4Max),obj.nGridSteps);
                     else
                         sin2T4      = logspace(-3,log10(sin2T4Max),obj.nGridSteps);
                     end
@@ -2928,11 +2933,12 @@ classdef SterileAnalysis < handle
             p.addParameter('Negsin2T4','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('NegmNu4Sq','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('Extsin2T4','OFF',@(x)ismember(x,{'ON','OFF'})); %extended sin2T2 (up to 1)
+            p.addParameter('ExtMinsin2T4','OFF',@(x)strcmp(x,'OFF') || isfloat(x)); %extended sin2T2 to smaller values (default/OFF is 1e-03)
             p.addParameter('ExtmNu4Sq','OFF',@(x)ismember(x,{'ON','OFF','0.01'}));
             p.addParameter('mNu4SqTestGrid','OFF',@(x)strcmp(x,'OFF') || isfloat(x));
             p.addParameter('FixmNuSq',0,@(x)isfloat(x)); % if light nu-mass fixed (eV^2)
             p.addParameter('ExtGrid','OFF',@(x)iscell(x) || strcmp(x,'OFF'));
-            
+          
             p.parse(varargin{:});
             Negsin2T4     = p.Results.Negsin2T4;
             NegmNu4Sq     = p.Results.NegmNu4Sq;
@@ -2941,7 +2947,7 @@ classdef SterileAnalysis < handle
             mNu4SqTestGrid= p.Results.mNu4SqTestGrid;
             FixmNuSq      = p.Results.FixmNuSq;
             ExtGrid       = p.Results.ExtGrid;
-            
+            ExtMinsin2T4  = p.Results.ExtMinsin2T4;
             %% label
             if strcmp(obj.SmartGrid,'ON')
                 AddSin2T4 = 0.1;
@@ -3010,6 +3016,10 @@ classdef SterileAnalysis < handle
                      
                      if isfloat(mNu4SqTestGrid)
                          extraStr = [extraStr,sprintf('_mNu4SqTestGrid%.2g',mNu4SqTestGrid)];
+                     end
+                     
+                     if isfloat(ExtMinsin2T4)
+                           extraStr = [extraStr,sprintf('_ExtMinsin2T4%.2g',ExtMinsin2T4)];
                      end
                  else
                      extraStr = [extraStr,sprintf('_ExtGrid_m4Sq%.1fto%.1feV2_sin2T4%.3fto%.3f',...

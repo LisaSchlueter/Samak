@@ -2,7 +2,7 @@
 % perform grid searches for differed nu-masses
 
 %% settings that might change
-FixmNuSq_all = (-1:0.1:1);
+FixmNuSq_all = (-1:0.2:1.5);
 DataType = 'Real';
 
 for i=1:numel(FixmNuSq_all)
@@ -54,5 +54,5 @@ for i=1:numel(FixmNuSq_all)
         'LoadGridArg',LoadGridArg};
     FixmNuSq = FixmNuSq_all(i);
     S = SterileAnalysis(SterileArg{:});
-    S.GridSearch(S.LoadGridArg{:},'FixmNuSq',FixmNuSq);
+    S.GridSearch(S.LoadGridArg{:},'FixmNuSq',FixmNuSq,'ExtMinsin2T4',-5);
 end

@@ -4,7 +4,7 @@
 range                 = 40;
 freePar               = 'mNu E0 Bkg Norm';
 chi2                  = 'chi2CMShape';
-DataType              = 'Real';
+DataType              = 'Twin';
 AnaFlag               = 'StackPixel';
 RingMerge             = 'Full';%'None'; %only relevand when AnaFlag = Ring
 DopplerEffectFlag     = 'FSD';

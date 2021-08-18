@@ -585,7 +585,6 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
                 ttfsdfile_temp=importdata(ttfsdfilename);
                 ttfsdfile = ttfsdfile_temp(ttfsdfile_temp(:,2)>(10^-8),[1 2]);
                 
-                %
                 [obj.TTexE, TTexE_index] = sort(ttfsdfile(:,1)); %sort from small to large excitation energies
                 obj.TTexE = obj.TTexE';
                 obj.TTexP = (ttfsdfile(TTexE_index,2))';

@@ -2,7 +2,7 @@
 % perform grid searches for differed nu-masses
 % exclude large mixings
 %% settings that might change
-DataType = 'Real';
+DataType = 'Twin';
 switch DataType
     case 'Twin'
         FixmNuSq_all = -1.1:0.1:2.5;
@@ -140,6 +140,7 @@ ErrUp2     = zeros(numel(ExclUe4),1);
 for i=1:numel(ExclUe4)
 ErrLow(i) = mNuSq_bf(i)-interp1(deltachi2_tmp(1:Idx(i),i),mNu_tmp(1:Idx(i)),1,'spline');
 ErrUp(i)  = interp1(deltachi2_tmp(Idx(i):end,i),mNu_tmp(Idx(i):end),1,'spline')-mNuSq_bf(i);
+% 2 sigma
 ErrLow2(i) = mNuSq_bf(i)-interp1(deltachi2_tmp(1:Idx(i),i),mNu_tmp(1:Idx(i)),4,'spline');
 ErrUp2(i)  = interp1(deltachi2_tmp(Idx(i):end,i),mNu_tmp(Idx(i):end),4,'spline')-mNuSq_bf(i);
 end
@@ -151,7 +152,7 @@ PltIdx = find(sum(ExclUe4==[0.5,0.4,0.2,0.1,0.01,0.02,0.04,0.05,0.002]'));
 pHandle = cell(numel(PltIdx),1);
 legStr = cell(numel(PltIdx),1);
 myColors = parula(numel(PltIdx));
-LineStyles = {'-','-.',':','--','-','-.',':','--','-','-.',':','--','-','-.',':','--'};
+LineStyles = {'-.',':','--','-','-.',':','--','-','-.',':','--','-','-.',':','--'};
 figure('Units','normalized','Position',[0.1,0.1,0.8,0.5]);
 plot(FixmNuSq_all,ones(numel(FixmNuSq_all),1),'k-','LineWidth',2);
 hold on;
@@ -159,40 +160,71 @@ plot(FixmNuSq_all,4.*ones(numel(FixmNuSq_all),1),'k-','LineWidth',2);
 for i=1:numel(PltIdx)
 pHandle{i} = plot(FixmNuSq_all,DeltaChi2(:,PltIdx(i)),'Color',myColors(i,:),'LineStyle',LineStyles{i},'LineWidth',3);
 if abs(ErrLow(PltIdx(i)))>100
-    legStr{i} = sprintf('|{\\itU}_{e4}|^2 < %.3f eV^2  , \\sigma =   -\\infty   + %.2f eV^2',...
-    ExclUe4(PltIdx(i)),abs(ErrUp(PltIdx(i))));
+    if strcmp(DataType,'Twin')
+        legStr{i} = sprintf('|{\\itU}_{e4}|^2 < %.3f eV^2 , \\sigma({\\itm}_\\nu^2) = - \\infty + %.2f eV^2',...
+            ExclUe4(PltIdx(i)),abs(ErrUp(PltIdx(i))));
+    else
+        legStr{i} = sprintf('|{\\itU}_{e4}|^2 < %.3f eV^2 ,  {\\itm}_\\nu^2 = %.2f (-\\infty    + %.2f) eV^2',...
+            ExclUe4(PltIdx(i)),mNuSq_bf(PltIdx(i)),abs(ErrUp(PltIdx(i))));
+    end
 else
-    legStr{i} = sprintf('|{\\itU}_{e4}|^2 < %.3f eV^2 , \\sigma = -%.2f + %.2f eV^2',...
-    ExclUe4(PltIdx(i)),abs(ErrLow(PltIdx(i))),abs(ErrUp(PltIdx(i))));
+    if strcmp(DataType,'Twin')
+        legStr{i} = sprintf('|{\\itU}_{e4}|^2 < %.3f eV^2 ,  \\sigma({\\itm}_\\nu^2) = -%.2f + %.2f eV^2',...
+            ExclUe4(PltIdx(i)),abs(ErrLow(PltIdx(i))),abs(ErrUp(PltIdx(i))));
+    else
+        legStr{i} = sprintf('|{\\itU}_{e4}|^2 < %.3f eV^2  , {\\itm}_\\nu^2 = %.2f (-%.2f + %.2f) eV^2',...
+            ExclUe4(PltIdx(i)),mNuSq_bf(PltIdx(i)) ,  abs(ErrLow(PltIdx(i))),abs(ErrUp(PltIdx(i))));
+    end
 end
 
 end
 xlabel(sprintf('{\\itm}_\\nu^2 (eV^2)'));
 ylabel(sprintf('\\Delta\\chi^2'));
-PrettyFigureFormat('FontSize',22);
+PrettyFigureFormat('FontSize',24);
 
-leg = legend([pHandle{:}],legStr);
+%% plot knm2 chi2 profile
+
+PltKnm2 = 'ON';
+if strcmp(PltKnm2,'ON')
+    dN = importdata(sprintf('%stritium-data/fit/Knm2/Chi2Profile/Uniform/Chi2Profile_%s_UniformScan_mNu_Knm2_UniformFPD_chi2CMShape_SysBudget40_NP1.112_FitParE0BkgNorm_nFit50_KNM2_0p1eV_min-2.5_max2.5.mat',getenv('SamakPath'),DataType));
+    pKnm2 = plot(dN.ScanResults.ParScan(:,1),dN.ScanResults.chi2min(:,1)-min(min(dN.ScanResults.chi2min)),'-','Color',rgb('FireBrick'),'LineWidth',3);
+    plot(dN.ScanResults.ParScan(1:end,2),dN.ScanResults.chi2min(1:end,2)-min(min(dN.ScanResults.chi2min)),'-','Color',pKnm2.Color,'LineWidth',pKnm2.LineWidth);
+    if strcmp(DataType,'Twin')
+         knm2leg = sprintf('No sterile neutrinos, \\sigma({\\itm}_\\nu^2) = -%.2f + %.2f eV^2',...
+        dN.ScanResults.BestFit.errNeg,dN.ScanResults.BestFit.errPos);
+    else
+    knm2leg = sprintf('No sterile neutrinos, {\\itm}_\\nu^2 = %.2f (-%.2f + %.2f) eV^2',...
+        dN.ScanResults.BestFit.par(1),dN.ScanResults.BestFit.errNeg,dN.ScanResults.BestFit.errPos);
+    end
+    leg = legend([pHandle{:},pKnm2],{legStr{:},knm2leg});
+else
+    leg = legend([pHandle{:}],legStr);
+end
+%%
+
 PrettyLegendFormat(leg);
 
 leg.NumColumns = 1;
 leg.Location = 'eastoutside';
-leg.Title.String = sprintf('Constraint on |{\\itU}_{e4}|^2');
-leg.Title.FontWeight = 'normal';
-leg.Title.FontSize = get(gca,'FontSize');
-
+leg.FontSize =  get(gca,'FontSize')-4;
 if strcmp(DataType,'Twin')
-    t =  title('MC Twin');
     ylim([0 7]);
     xlim([min(FixmNuSq_all),1.5])
+    leg.Title.String = sprintf('MC twin + constraint on |{\\itU}_{e4}|^2');
 else
-    t =  title('Data');
+  
     ylim([0 7]);
     xlim([-1.5,2.5])
+    leg.Title.String = sprintf('Data + constraint on |{\\itU}_{e4}|^2');
+
 end
-t.FontWeight = 'normal'; t.FontSize = get(gca,'FontSize');
+leg.Title.FontWeight = 'normal';
+leg.Title.FontSize = get(gca,'FontSize');
+%t.FontWeight = 'normal'; t.FontSize = get(gca,'FontSize');
 
 pltdir = strrep(savedir,'results','plots');
 MakeDir(pltdir);
-pltname = strrep(strrep(savefileCombi,'results','plots'),'.mat','.png');
-print(gcf,pltname,'-dpng','-r350');
+pltname = strrep(strrep(savefileCombi,'results','plots'),'.mat','.pdf');
+%print(gcf,pltname,'-dpng','-r350');
+export_fig(pltname);
 fprintf('save plot to %s \n',pltname);

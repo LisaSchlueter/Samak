@@ -51,13 +51,13 @@ else
     
 %     %%
      S = SterileAnalysis(SterileArg{:});
-%     S.RunAnaObj.chi2 = 'chi2Stat';
-%     S.RunAnaObj.NonPoissonScaleFactor = 1;
-%     S.LoadGridFile(S.LoadGridArg{:});
-%     S.Interp1Grid('MaxM4Sq',38^2);
-%     S.ContourPlot;
-%     sin2T4_contour_stat = S.sin2T4_contour;
-%     mNu4Sq_contour_stat = S.mNu4Sq_contour;
+    S.RunAnaObj.chi2 = 'chi2Stat';
+    S.RunAnaObj.NonPoissonScaleFactor = 1;
+    S.LoadGridFile(S.LoadGridArg{:});
+    S.Interp1Grid('MaxM4Sq',38^2);
+    S.ContourPlot;
+    sin2T4_contour_stat = S.sin2T4_contour;
+    mNu4Sq_contour_stat = S.mNu4Sq_contour;
     
     %%
     S.RunAnaObj.chi2 = 'chi2CMShape';
@@ -76,8 +76,8 @@ else
     end
   %  S.SysEffect = 'KSN2Top3';
     
-     S.GridSearch(S.LoadGridArg{:});
-     return
+%      S.GridSearch(S.LoadGridArg{:});
+%      return
     S.LoadGridFile(S.LoadGridArg{:});
      S.Interp1Grid('MaxM4Sq',38^2);
     S.ContourPlot('HoldOn','ON');
