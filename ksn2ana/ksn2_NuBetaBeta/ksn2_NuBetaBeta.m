@@ -3,20 +3,20 @@
 % --> term with m4 gets maximal -> m4 need to be even smaller to compensate
 % least stringend contour phase = +-1 and  maximal m3nubetabeta
 mbb3nu_max = [0.005,0.05];%[0.026,0.049]';%NH, IH
-mbb4nu_ExpLimit =  0.165;
+mbb4nu_ExpLimit =  0.16;%0.165;
 
 savedir = [getenv('SamakPath'),'ksn2ana/ksn2_NuBetaBeta/results/'];
 savefile = sprintf('%sksn2_NuBetaBeta_mbb3numax_NH%.3feV_IH%.3feV_mbbExpLimit%.3feV.mat',...
     savedir,mbb3nu_max(1),mbb3nu_max(2),mbb4nu_ExpLimit);
-if exist(savefile,'file')
+if exist(savefile,'file') 
     load(savefile)
 else
     %% m_betabeta neutrino mass in 3+1 neutrino framework
     mbb4nu = @(phase,mbb3nu,sint4Sq,m4Sq) abs((1-sint4Sq).*mbb3nu+exp(1i*pi*phase).*sqrt(m4Sq).*sint4Sq);
     
     nGrid = 1e3;
-    sin2T4 = repmat(logspace(-3,log10(1),nGrid)',[1,nGrid]);% mixing
-    m4Sq   = repmat(logspace(-1,log10(8e3),nGrid),[nGrid,1]);
+    sin2T4 = repmat(logspace(-3,log10(2),nGrid)',[1,nGrid]);% mixing
+    m4Sq   = repmat(logspace(-1.58,log10(8e3),nGrid),[nGrid,1]);
     
     %% extreme cases for IH:
     mbb4nu_IH_min = mbb4nu(0,mbb3nu_max(2),sin2T4,m4Sq);

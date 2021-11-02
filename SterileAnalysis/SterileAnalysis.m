@@ -853,6 +853,8 @@ classdef SterileAnalysis < handle
             p.addParameter('Color',obj.PlotColors{1},@(x) isfloat(x));
             p.addParameter('LineStyle',obj.PlotLines{1},@(x) ischar(x));
             p.addParameter('SavePlot','OFF',@(x)ismember(x,{'ON','OFF','png'}));
+            p.addParameter('RAA_GA','OFF',@(x) ismember(x,{'ON','OFF'}));
+            p.addParameter('Combi','OFF',@(x) ismember(x,{'ON','OFF'}));
             p.addParameter('RAA','ON',@(x) ismember(x,{'ON','OFF'}));
             p.addParameter('Mainz','ON',@(x) ismember(x,{'ON','OFF'}));
             p.addParameter('Troitsk','ON',@(x) ismember(x,{'ON','OFF'}));
@@ -864,6 +866,8 @@ classdef SterileAnalysis < handle
             p.addParameter('Solar','ON',@(x) ismember(x,{'ON','OFF'}));
             p.addParameter('NuBetaBeta','ON',@(x) ismember(x,{'ON','OFF'}));
             p.addParameter('Stereo','ON',@(x) ismember(x,{'ON','OFF'}));
+            p.addParameter('Best','OFF',@(x) ismember(x,{'ON','OFF'})); % BEST only
+            p.addParameter('BestGA','ON',@(x) ismember(x,{'ON','OFF'})); % BEST + Gallex + Sage
             p.addParameter('Style','Reg',@(x) ismember(x,{'Reg','PRL'}));
             p.addParameter('FinalSensitivity','OFF',@(x) ismember(x,{'ON','OFF'}));
             
@@ -874,6 +878,7 @@ classdef SterileAnalysis < handle
             myLineStyle = p.Results.LineStyle;
             SavePlot    = p.Results.SavePlot;
             RAA         = p.Results.RAA;
+            RAA_GA      = p.Results.RAA_GA;
             Mainz       = p.Results.Mainz;
             Troitsk     = p.Results.Troitsk;
             Neutrino4   = p.Results.Neutrino4;
@@ -884,6 +889,9 @@ classdef SterileAnalysis < handle
             Solar       = p.Results.Solar;
             NuBetaBeta  = p.Results.NuBetaBeta;
             Stereo      = p.Results.Stereo;
+            Best        = p.Results.Best;
+            BestGA       = p.Results.BestGA;
+            Combi       = p.Results.Combi;
             Style       = p.Results.Style;
             FinalSensitivity = p.Results.FinalSensitivity;
             
@@ -904,7 +912,7 @@ classdef SterileAnalysis < handle
             %% neutrinoless double beta decay
             if strcmp(NuBetaBeta,'ON')
                 mbb3nu_max = [0.005,0.05];%[0.026,0.049]';%NH, IH
-                mbb4nu_ExpLimit =  0.165;
+                mbb4nu_ExpLimit =  0.16;
                 savedir = [getenv('SamakPath'),'ksn2ana/ksn2_NuBetaBeta/results/'];
                 savefileBB = sprintf('%sksn2_NuBetaBeta_mbb3numax_NH%.3feV_IH%.3feV_mbbExpLimit%.3feV.mat',...
                     savedir,mbb3nu_max(1),mbb3nu_max(2),mbb4nu_ExpLimit);
@@ -988,20 +996,99 @@ classdef SterileAnalysis < handle
                 hold on;
             end
             
-            %% RAA
-            if strcmp(RAA,'ON')
+            %% RAA+GA
+            if strcmp(RAA_GA,'ON')
                 hold on;
                 filenameRAA1 = sprintf('%scoord_RAA_95_A.mat',savedirOther);
                 filenameRAA2 = sprintf('%scoord_RAA_95_B.mat',savedirOther);
                 dRAA1 = importdata(filenameRAA1,'file');
                 dRAA2 = importdata(filenameRAA2,'file');  
-                pRAA = plot([dRAA1.sith4_X(1),dRAA1.sith4_X,dRAA1.sith4_X(end)],...
+                pRAA_GA = plot([dRAA1.sith4_X(1),dRAA1.sith4_X,dRAA1.sith4_X(end)],...
                          [1e5,dRAA1.m4_Y,1e5],'-','LineWidth',2,'Color',rgb('ForestGreen'));
-                plot(dRAA2.sith4_X,dRAA2.m4_Y,'-','LineWidth',pRAA.LineWidth,'Color',pRAA.Color);
-                legHandle{numel(legHandle)+1} = pRAA;
+                plot(dRAA2.sith4_X,dRAA2.m4_Y,'-','LineWidth',pRAA_GA.LineWidth,'Color',pRAA_GA.Color);
+                legHandle{numel(legHandle)+1} = pRAA_GA;
                 legStr = [legStr,{sprintf('RAA + GA 95%% CL')}];%-PRD 83, 073006 (2011) -
             end
    
+             %% RAA only from 2011 paper
+            if strcmp(RAA,'ON')
+                hold on;
+                filenameRAA1 = sprintf('%sRAA2011_95a.txt',savedirOther);
+                filenameRAA2 = sprintf('%sRAA2011_95b.txt',savedirOther);
+                filenameRAA3 = sprintf('%sRAA2011_95c.txt',savedirOther);
+                dRAA1 = table2array(readtable(filenameRAA1));
+                dRAA2 = table2array(readtable(filenameRAA2));
+                dRAA3 = table2array(readtable(filenameRAA3));
+                
+                pRAA = plot(dRAA1(1:15:end,1),smooth(dRAA1(1:15:end,2),5),'-','LineWidth',2,'Color',rgb('ForestGreen'));
+                plot(dRAA2(1:15:end,1),smooth(dRAA2(1:15:end,2),5),'-','LineWidth',pRAA.LineWidth,'Color',pRAA.Color);
+                 plot(dRAA3(1:15:end,1),smooth(dRAA3(1:15:end,2),5),'-','LineWidth',pRAA.LineWidth,'Color',pRAA.Color);
+                legHandle{numel(legHandle)+1} = pRAA;
+                legStr = [legStr,{sprintf('RAA 95%% CL')}];%-PRD 83, 073006 (2011) -
+            end
+            
+            if strcmp(BestGA,'ON') % Best + GA
+%                 % Gallex SAGE, Light Sterile Neutrinos. White paper https://arxiv.org/pdf/1204.5379.pdf
+%                 fGA2 = sprintf('%sGalliumAnomaly_GallexSage_95p45CL.txt',savedirOther);
+%                 dataGA2 = importdata(fGA2);
+%                 pGA = plot(dataGA2(:,1),dataGA2(:,2),'-','LineWidth',2,'Color',rgb('Blue'));
+%                 legHandle{numel(legHandle)+1} = pGA;
+%                 legStr = [legStr,{sprintf('Gallex + SAGE 95.45%% CL')}];
+                 
+                % BEST 2021: https://arxiv.org/abs/2109.11482
+                fBest2a = sprintf('%scontour_BestGAcombi_2sigma_a.txt',savedirOther);
+                fBest2b = sprintf('%scontour_BestGAcombi_2sigma_b.txt',savedirOther);
+                dataBest2a = importdata(fBest2a);
+                dataBest2b = importdata(fBest2b);
+                pBest = plot(dataBest2a(:,1),dataBest2a(:,2),'-','LineWidth',2,'Color',rgb('LimeGreen'));
+                plot(dataBest2b(:,1),dataBest2b(:,2),'-','LineWidth',pBest.LineWidth,'Color',pBest.Color);
+                legHandle{numel(legHandle)+1} = pBest;
+                legStr = [legStr,{sprintf('BEST + GA 95.45%% CL')}];
+                
+            end
+            
+            if strcmp(Best,'ON')
+%                  % Gallex SAGE, Light Sterile Neutrinos. White paper https://arxiv.org/pdf/1204.5379.pdf 
+%                 fGA2 = sprintf('%sGalliumAnomaly_GallexSage_95p45CL.txt',savedirOther); 
+%                 dataGA2 = importdata(fGA2);
+%                 pGA = plot(dataGA2(:,1),dataGA2(:,2),'-','LineWidth',2,'Color',rgb('Blue'));
+%                 legHandle{numel(legHandle)+1} = pGA;
+%                 legStr = [legStr,{sprintf('Gallex + SAGE 95.45%% CL')}];
+                 
+                % BEST 2021: https://arxiv.org/abs/2109.11482 
+                fBest2a = sprintf('%scontour_Best_2sigma_a.txt',savedirOther);
+                fBest2b = sprintf('%scontour_Best_2sigma_b.txt',savedirOther);
+                dataBest2a = importdata(fBest2a);
+                dataBest2b = importdata(fBest2b);
+                pBest = plot(dataBest2a(:,1),dataBest2a(:,2),'-','LineWidth',2,'Color',rgb('FireBrick'));
+                plot(dataBest2b(:,1),dataBest2b(:,2),'-','LineWidth',pBest.LineWidth,'Color',pBest.Color);
+                legHandle{numel(legHandle)+1} = pBest;
+                legStr = [legStr,{sprintf('BEST 95.45%% CL')}];
+                
+            end
+            
+            %% COMBI https://arxiv.org/pdf/2109.14654.pdf
+            if strcmp(Combi,'ON')
+                
+                % BEST 2021: https://arxiv.org/abs/2109.11482
+                fCombi2a = sprintf('%sCombi_GA_BEST_DANSS_Neutrino4a.txt',savedirOther);
+                fCombi2b = sprintf('%sCombi_GA_BEST_DANSS_Neutrino4b.txt',savedirOther);
+                fCombi2c = sprintf('%sCombi_GA_BEST_DANSS_Neutrino4c.txt',savedirOther);
+                
+                dataCombi2a = importdata(fCombi2a);
+                dataCombi2b = importdata(fCombi2b);
+                dataCombi2c = importdata(fCombi2c);
+             
+                pCombi = plot(dataCombi2a(:,1),dataCombi2a(:,2),'-','LineWidth',2,'Color',rgb('HotPink'));
+                plot(dataCombi2b(:,1),dataCombi2b(:,2),'-','LineWidth',pCombi.LineWidth,'Color',pCombi.Color);
+                plot(dataCombi2c(:,1),dataCombi2c(:,2),'-','LineWidth',pCombi.LineWidth,'Color',pCombi.Color);
+                legHandle{numel(legHandle)+1} = pCombi;
+                legStr = [legStr,{sprintf('BEST + GA +  Neutrino-4 + DANSS 95.45%% CL')}];
+                
+            end
+            
+            
+           
             %% just for legend
             if strcmp(NuBetaBeta,'ON')
                 legHandle{numel(legHandle)+1} = aNH;
@@ -2806,6 +2893,7 @@ classdef SterileAnalysis < handle
             p.addParameter('NegmNu4Sq','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('IgnoreKnm2FSDbinning','OFF',@(x)ismember(x,{'ON','OFF'})); % if OFF -> load file with other binning if available
             p.addParameter('Extsin2T4','OFF',@(x)ismember(x,{'ON','OFF'})); %extended sin2T2 (up to 1)
+            p.addParameter('ExtMinsin2T4','OFF',@(x)strcmp(x,'OFF') || isfloat(x)); %extended sin2T2 to smaller values (default/OFF is 1e-03)
             p.addParameter('ExtmNu4Sq','OFF',@(x)ismember(x,{'ON','OFF'})); %extended m4Sq (from 0.1)
             p.addParameter('mNu4SqTestGrid','OFF',@(x)strcmp(x,'OFF') || isfloat(x));
             p.addParameter('FixmNuSq',0,@(x)isfloat(x)); % if light nu-mass fixed (eV^2)
@@ -2818,6 +2906,7 @@ classdef SterileAnalysis < handle
             Negsin2T4     = p.Results.Negsin2T4;
             NegmNu4Sq     = p.Results.NegmNu4Sq;
             Extsin2T4     = p.Results.Extsin2T4;
+            ExtMinsin2T4  = p.Results.ExtMinsin2T4;
             ExtmNu4Sq     = p.Results.ExtmNu4Sq;
             mNu4SqTestGrid = p.Results.mNu4SqTestGrid;
             FixmNuSq      = p.Results.FixmNuSq;
@@ -2827,7 +2916,7 @@ classdef SterileAnalysis < handle
             filename = obj.GridFilename('Negsin2T4',Negsin2T4,'NegmNu4Sq',NegmNu4Sq,...
                                         'Extsin2T4',Extsin2T4,'ExtmNu4Sq',ExtmNu4Sq,...
                                         'FixmNuSq',FixmNuSq,'mNu4SqTestGrid',mNu4SqTestGrid,...
-                                        'ExtGrid',ExtGrid);
+                                        'ExtGrid',ExtGrid,'ExtMinsin2T4',ExtMinsin2T4);
             
             loadSuccess = 0;
             

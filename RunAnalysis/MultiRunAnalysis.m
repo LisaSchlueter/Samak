@@ -2070,8 +2070,9 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             p.addParameter('DisplayStyle','Abs',@(x)ismember(x,{'Rel','Abs'}));
             p.addParameter('YLim','',@(x)isfloat(x) || isempty(x));
             p.addParameter('DispHist','ON',@(x)ismember(x,{'OFF','ON','Separate'}));
-            p.addParameter('HideGaps','ON',@(x)ismember(x,{'OFF','ON'}));
+            p.addParameter('HideGaps','ON',@(x)ismember(x,{'OFF','ON'})); % only works for TimeStyle "hours"
             p.addParameter('ShowRWPeriods','OFF',@(x)ismember(x,{'OFF','ON'}));
+            p.addParameter('TimeStyle','hours',@(x)ismember(x,{'hours','date'}));
             
             p.parse(varargin{:});
             saveplot      = p.Results.saveplot;
@@ -2081,6 +2082,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             DispHist      = p.Results.DispHist;
             HideGaps      = p.Results.HideGaps; % reduce time gaps
             ShowRWPeriods = p.Results.ShowRWPeriods;
+            TimeStyle     = p.Results.TimeStyle;
             
             LocalFontSize = 25;%28;
             
@@ -2102,7 +2104,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             
             % prepare x-axis: time
             LiveTime = hours(obj.SingleRunData.StartTimeStamp-obj.SingleRunData.StartTimeStamp(1));
-            if strcmp(HideGaps,'ON')
+            if strcmp(HideGaps,'ON') %&& strcmp(TimeStyle,'hours')
                 % get rid of large jumps
                 TimeBreakIndex = find(diff(LiveTime)>5*mean(diff(LiveTime)));
                 x = zeros(numel(LiveTime),1);
@@ -2128,9 +2130,10 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                     x(startI:stopI) = LiveTime(startI:stopI)-0.75*t;
                 end
             elseif strcmp(HideGaps,'OFF')
-                x = LiveTime;
+                    x = LiveTime; 
             end
             %% prepare y axis: depending on defined Parameter  
+            SysErr = GetSysErr(obj.SysBudget);
             switch Parameter
                 case 'E0'
                     y = FitResults.E0;
@@ -2156,7 +2159,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                     y = FitResults.B.*1e3;
                     yErr = FitResults.BErr.*1e3;
                     if strcmp(DisplayStyle,'Abs')
-                        ystr = sprintf('Background (mcps)');
+                        ystr = sprintf('{\\itB} (mcps)');
                     elseif strcmp(DisplayStyle,'Rel')
                         y = y-wmean(y,1./yErr.^2);
                         ystr = sprintf('{\\itB} - \\langle{\\itB}\\rangle  (mcps)');
@@ -2166,10 +2169,10 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                     y = FitResults.N+1;
                     yErr = FitResults.NErr;
                     if strcmp(DisplayStyle,'Abs')
-                        ystr = sprintf('{\\itN}');
+                        ystr = sprintf('{\\itN}_{sig.}');
                     elseif strcmp(DisplayStyle,'Rel')
                         y = y-wmean(y,1./yErr.^2);
-                        ystr = sprintf('{\\itN} - \\langle{\\itN}\\rangle');
+                        ystr = sprintf('{\\itN}_{sig.} - \\langle{\\itN}_sig.\\rangle');
                     end
                     yUnit = sprintf('');
                 case 'pVal'
@@ -2178,20 +2181,20 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                     ystr = sprintf('p-value (%.0f dof)',FitResults.dof(1));
                     yUnit = sprintf('');
                 case 'RhoD'
-                    y = obj.SingleRunData.WGTS_CD_MolPerCm2;
-                    yErr = std(obj.SingleRunData.WGTS_CD_MolPerCm2_SubRun);
+                    y    = obj.SingleRunData.WGTS_CD_MolPerCm2;
+                    yErr = mean(y).*SysErr.WGTS_CD_MolPerCm2_RelErr;%std(obj.SingleRunData.WGTS_CD_MolPerCm2_SubRun);
                     if strcmp(DisplayStyle,'Abs')
-                        ystr = sprintf('\\rho{\\itd} (molecules \\cdot cm^{-2})');
+                        ystr = sprintf('\\rho{\\itd} (molecules/cm^{2})');
                     elseif strcmp(DisplayStyle,'Rel')
                         y = y-wmean(y,obj.SingleRunData.TimeSec);
                         ystr = sprintf('\\rhod - \\langle\\rhod\\rangle (mol \\cdot cm^{-2})');
                     end
                     yUnit = sprintf('molecules \\cdot cm^{-2}');
-                case 'T2'
+                case 'T2' % tritium purity
                     y    = (obj.SingleRunData.WGTS_MolFrac_TT+0.5.*obj.SingleRunData.WGTS_MolFrac_DT+0.5.*obj.SingleRunData.WGTS_MolFrac_HT);
-                    yErr = zeros(numel(y),1);%std(obj.SingleRunData.WGTS_MolFrac_TT_SubRun);
-                    ystr = sprintf('\\epsilon_T');%+ 0.5 \\epsilon_{HT} + 0.5 \\epsilon_{DT}
-                    yUnit =''; 
+                    yErr = 0;%zeros(numel(y),1);%std(obj.SingleRunData.WGTS_MolFrac_TT_SubRun);
+                    ystr = sprintf('%s_T',char(949));%+ 0.5 \\epsilon_{HT} + 0.5 \\epsilon_{DT}
+                    yUnit ='';
             end
             
             %% plot
@@ -2218,46 +2221,61 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             elseif ismember(Parameter,{'T2'})
                 if   strcmp(ShowRWPeriods,'ON')
                     l1 = plot(linspace(min(x(Idx1)),max(x(Idx1)),10),mean(y(Idx1))*ones(10,1),'-','Color',rgb('DodgerBlue'),'LineWidth',1.5);
-                       hold on;
-                        l2 = plot(linspace(min(x(Idx2)),max(x(Idx2)),10),mean(y(Idx2))*ones(10,1),'-','Color',rgb('Orange'),'LineWidth',1.5);
-                        l3 = plot(linspace(min(x(Idx3)),max(x(Idx3)),10),mean(y(Idx3))*ones(10,1),'-','Color',rgb('ForestGreen'),'LineWidth',1.5);  
-                 
+                    hold on;
+                    l2 = plot(linspace(min(x(Idx2)),max(x(Idx2)),10),mean(y(Idx2))*ones(10,1),'-','Color',rgb('Orange'),'LineWidth',1.5);
+                    l3 = plot(linspace(min(x(Idx3)),max(x(Idx3)),10),mean(y(Idx3))*ones(10,1),'-','Color',rgb('ForestGreen'),'LineWidth',1.5);
+                    
                 else
-                    l1 = plot(linspace(xmin,xmax,10),wmean(y(y>0),obj.SingleRunData.TimeSec(y>0))*ones(10,1),'-','Color',rgb('Black'),'LineWidth',1.5);
+                    l1 = plot(linspace(xmin,xmax,10),mean(y)*ones(10,1),'-','Color',rgb('LightGray'),'LineWidth',2);%mean(y(y>0),obj.SingleRunData.TimeSec(y>0))
+%                     [l1,a1]= boundedline(linspace(xmin,xmax,10),wmean(y,obj.SingleRunData.TimeSec)*ones(10,1),std(y)./sqrt(obj.nRuns));
+%                     l1.Color = rgb('Gray');
+%                     a1.FaceColor = rgb('LightGray'); a1.FaceAlpha = 1;
                 end
             elseif ismember(Parameter,{'RhoD'})
                 if strcmp(DisplayStyle,'Abs')
                     if   strcmp(ShowRWPeriods,'ON')
                         l1 = plot(linspace(min(x(Idx1)),max(x(Idx1)),10),mean(y(Idx1))*ones(10,1),'-','Color',rgb('DodgerBlue'),'LineWidth',1.5);
-                       hold on;
+                        hold on;
                         l2 = plot(linspace(min(x(Idx2)),max(x(Idx2)),10),mean(y(Idx2))*ones(10,1),'-','Color',rgb('Orange'),'LineWidth',1.5);
-                        l3 = plot(linspace(min(x(Idx3)),max(x(Idx3)),10),mean(y(Idx3))*ones(10,1),'-','Color',rgb('ForestGreen'),'LineWidth',1.5);  
+                        l3 = plot(linspace(min(x(Idx3)),max(x(Idx3)),10),mean(y(Idx3))*ones(10,1),'-','Color',rgb('ForestGreen'),'LineWidth',1.5);
                     else
-                        l1 = plot(linspace(xmin,xmax,10),wmean(y,obj.SingleRunData.TimeSec)*ones(10,1),'-','Color',rgb('Black'),'LineWidth',1.5);
-                        
-                    end
+                        l1 = plot(linspace(xmin,xmax,10),wmean(y,obj.SingleRunData.TimeSec)*ones(10,1),'-','Color',rgb('LightGray'),'LineWidth',2);
+  
+%                        [l1,a1]= boundedline(linspace(xmin,xmax,10),wmean(y,obj.SingleRunData.TimeSec)*ones(10,1),std(y));
+%                    l1.Color = rgb('Gray');
+%                    a1.FaceColor = rgb('LightGray'); a1.FaceAlpha = 1;
+                    end         
                 else
                     l1 = plot(linspace(xmin,xmax,10),zeros(10,1),'-','Color',rgb('DimGray'),'LineWidth',2);
                 end
             else
-                l1 = plot(linspace(xmin,xmax,10),wmean(y,1./yErr.^2)*ones(10,1),'-','Color',rgb('Black'),'LineWidth',1.5);
+                l1 = plot(linspace(xmin,xmax,10),wmean(y,1./yErr.^2)*ones(10,1),'-','Color',rgb('LightGray'),'LineWidth',2);
             end
             
             hold on;
             if strcmp(ShowRWPeriods,'OFF')
-            e1 = errorbar(x,y,yErr,PlotStyle{:});
-            
+                if isscalar(yErr)       
+                     eabs = errorbar(x(1),mean(y),yErr,'.r','LineWidth',2,'CapSize',10); %absolute uncertainty
+                     e1 = errorbar(x,y,zeros(size(y)),PlotStyle{:});     
+                else
+                    e1 = errorbar(x,y,yErr,PlotStyle{:});
+                end
             else
-              % only for knm2 and RunList='KNM2_Promp'  
-               e1 = errorbar(x(Idx1),y(Idx1),yErr(Idx1),PlotStyle{:});
+                % only for knm2 and RunList='KNM2_Promp'
+                e1 = errorbar(x(Idx1),y(Idx1),yErr(Idx1),PlotStyle{:});
                e2 = errorbar(x(Idx2),y(Idx2),yErr(Idx2),'.','MarkerSize',20,'LineWidth',1.5,'Color',rgb('Orange'));
                e3 = errorbar(x(Idx3),y (Idx3),yErr(Idx3),'.','MarkerSize',20,'LineWidth',1.5,'Color',rgb('ForestGreen'));
                e2.CapSize = 0;
                e3.CapSize = 0;
             end
+            
             e1.CapSize = 0;
             hold off;
-            xlabel('Time (hours)');
+            if strcmp(TimeStyle,'hour')
+                xlabel('Time (hours)');
+            elseif strcmp(TimeStyle,'date')
+                xlabel(sprintf('Date in %s',datestr(obj.SingleRunData.StartTimeStamp(1),'yyyy')));
+            end
             ylabel(ystr);
             PrettyFigureFormat('FontSize',LocalFontSize);
             
@@ -2286,6 +2304,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                myxtickslabels{i} = round(myxticks(i)+TimeDiff,0);
             end
             xticklabels(myxtickslabels);
+            
             % plot time break axis sybol
             myylim=get(gca,'YLim'); % get current ylimits
             if strcmp(Parameter,'B') && strcmp(DisplayStyle,'Abs')
@@ -2305,6 +2324,23 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                     end
                 end
             end
+            
+            % axis label
+            if strcmp(TimeStyle,'date')
+                % put label once a week
+                Date = obj.SingleRunData.StartTimeStamp;
+                TimeWeek = 7*24;
+                nWeek = floor(max(LiveTime)/TimeWeek);
+                
+                StartIdx = 24;
+                myXticks = LiveTime(StartIdx)+(0:1:nWeek).*TimeWeek;
+                myXdates = Date(StartIdx)+(0:1:nWeek).*7;
+                
+                xticks(myXticks);
+                xticklabels(datestr(myXdates,'mmm, dd'));
+                set(gca,'XMinorTick','off');
+            end
+          
             % title
             if ismember(Parameter,{'mNuSq','E0','N','B'})
                 % calculate p-value with respect to straight line
@@ -2316,24 +2352,28 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             
             % legend
             if strcmp(Parameter,'pVal')
-                leg = legend([e1],sprintf('Scanwise fits (%s)',chi2leg));%,'p-value = 0.05'); %l1
+                leg = legend([e1],sprintf('%s scanwise fits (%s)',upper(obj.DataSet),chi2leg));%,'p-value = 0.05'); %l1
             elseif ismember(Parameter,{'RhoD'})
                  ytmp = obj.SingleRunData.WGTS_CD_MolPerCm2;
-                meanRhoD = wmean(ytmp,obj.SingleRunData.TimeSec);  
-                
-                
-                if strcmp(ShowRWPeriods,'ON')
-                    leg = legend([e1,e2,e3,l1,l2,l3],'Scanwise RW1','Scanwise RW2','Scanwise RW3',...
-                        sprintf('\\langle\\rho{\\itd}\\rangle = %.3f\\cdot10^{17} molecules \\cdotcm^{-2} , \\sigma = %.1f %%',1e-17*mean(y(Idx1)),1e2*std(y(Idx1))/mean(y(Idx1))),...
-                        sprintf('\\langle\\rho{\\itd}\\rangle = %.3f\\cdot10^{17} molecules \\cdotcm^{-2} , \\sigma = %.1f %%',1e-17*mean(y(Idx2)),1e2*std(y(Idx2))/mean(y(Idx2))),...
-                        sprintf('\\langle\\rho{\\itd}\\rangle = %.3f\\cdot10^{17} molecules \\cdotcm^{-2} , \\sigma = %.1f %%',1e-17*mean(y(Idx3)),1e2*std(y(Idx3))/mean(y(Idx3))));
-                    leg.NumColumns = 2;
-                else
-                    leg = legend([e1,l1],'Scanwise',...
-                    sprintf('\\langle\\rho{\\itd}\\rangle = %.3g molecules \\cdotcm^{-2} , \\sigma = %.1f %%',...
-                    meanRhoD,100*std(ytmp)./meanRhoD));
-                end
-                
+                 meanRhoD = wmean(ytmp,obj.SingleRunData.TimeSec);
+
+                 if strcmp(ShowRWPeriods,'ON') && strcmp(obj.DataSet,'Knm2')
+                     leg = legend([e1,e2,e3,l1,l2,l3],'Scanwise RW1','Scanwise RW2','Scanwise RW3',...
+                         sprintf('\\langle\\rho{\\itd}\\rangle = %.3f\\cdot10^{17} molecules \\cdotcm^{-2} , \\sigma = %.1f %%',1e-17*mean(y(Idx1)),1e2*std(y(Idx1))/mean(y(Idx1))),...
+                         sprintf('\\langle\\rho{\\itd}\\rangle = %.3f\\cdot10^{17} molecules \\cdotcm^{-2} , \\sigma = %.1f %%',1e-17*mean(y(Idx2)),1e2*std(y(Idx2))/mean(y(Idx2))),...
+                         sprintf('\\langle\\rho{\\itd}\\rangle = %.3f\\cdot10^{17} molecules \\cdotcm^{-2} , \\sigma = %.1f %%',1e-17*mean(y(Idx3)),1e2*std(y(Idx3))/mean(y(Idx3))));
+                     leg.NumColumns = 2;
+                 else
+                     if isscalar(yErr)
+                         leg = legend([e1,l1,eabs],sprintf('%s scan-wise values',upper(obj.DataSet)),...
+                            sprintf('\\langle\\rho{\\itd}\\rangle = %.3g molecules/cm^{2} (scan-wise variation \\sigma = %.1f %%)',meanRhoD,100*std(ytmp)./meanRhoD),...
+                            sprintf( 'Absolute uncertainty illustration \\sigma = %.2f%%',1e2.*SysErr.WGTS_CD_MolPerCm2_RelErr));                     
+                     else   
+                         leg = legend([e1,l1],sprintf('%s scan-wise values',upper(obj.DataSet)),...
+                             sprintf('Mean = %.3g molecules/cm^{2} (std = %.1f %%)',meanRhoD,100*std(ytmp)./meanRhoD));                     
+                     end
+                 end
+                 
             elseif ismember(Parameter,{'T2'})
                 if strcmp(ShowRWPeriods,'ON')
                     leg = legend([e1,e2,e3,l1,l2,l3],'Scanwise RW1','Scanwise RW2','Scanwise RW3',...
@@ -2342,26 +2382,24 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                         sprintf('\\langle\\epsilon_T\\rangle = %.3f , \\sigma = %.1f %%',mean(y(Idx3)),1e2*std(y(Idx3))/mean(y(Idx3))));
                     leg.NumColumns = 2;
                 else
-                    leg = legend([e1,l1],'Scanwise',sprintf('Time weighted mean = %.3f',wmean(y(y>0),obj.SingleRunData.TimeSec(y>0))));
+                    leg = legend([e1,l1],sprintf('%s scan-wise values',upper(obj.DataSet)),...
+                        sprintf('Mean = %.3f (std = %.1f %%)',mean(y),1e2*std(y)./mean(y)));%wmean(y(y>0),obj.SingleRunData.TimeSec(y>0))));
                 end
+            elseif ismember(Parameter,{'B'})
+                 leg = legend([e1,l1],sprintf('%s scan-wise fits',upper(obj.DataSet)),...
+                    sprintf('Mean = %.1f %s (std = %.1f %s)',mean(y),yUnit,std(y),yUnit));%pval
+             elseif ismember(Parameter,{'N'})
+                 leg = legend([e1,l1],sprintf('%s scan-wise fits',upper(obj.DataSet)),...
+                     sprintf('Mean = %.2f %s (std = %.2f)',mean(y),yUnit,std(y)));%pval
             else
-                leg = legend([e1,l1],sprintf('Scanwise fits (%s) , \\sigma = %.2f %s',chi2leg,std(y),yUnit),...
-                    sprintf('Weighted mean, p-value = %.2f',pval));
+                leg = legend([e1,l1],sprintf('%s scan-wise fits',upper(obj.DataSet)),...
+                    sprintf('Mean = %.2f %s (std = %.2f %s)',mean(y),yUnit,std(y),yUnit));%pval
             end
-            
-            if ismember(Parameter,{'RhoD'})
-                leg.Location = 'northwest';
-            elseif ismember(Parameter,{'T2'})
-                     leg.Location = 'southwest'; 
-            else
-                leg.Location = 'northwest';
-                legpos = leg.Position;
-                leg.Position = [legpos(1)-0.03,legpos(2)-0.02,legpos(3:4)];
-                
-            end
+            leg.Location = 'northwest';
             leg.FontSize = get(gca,'FontSize')-2;
-            leg.EdgeColor= rgb('Silver');
-            %  PrettyLegendFormat(leg);
+         legend boxoff;
+           % PrettyLegendFormat(leg);
+         
             % remove white space around figure
             ax = gca;
             outerpos = ax.OuterPosition;
@@ -2370,16 +2408,14 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             bottom = outerpos(2) + ti(2);
             ax_width = outerpos(3) - ti(1);% - ti(3);
             ax_height = outerpos(4);% - ti(2) - ti(4);
-            %ax.Position = [left bottom ax_width ax_height];
-            %ax.Position = [left-0.02 bottom+0.01 ax_width+0.02 ax_height-0.2];
-            ax.Position = [left-0.02 bottom+0.05 ax_width+0.02 ax_height-0.3];
+            ax.Position = [left-0.03 bottom+0.05 ax_width+0.02 ax_height-0.3];
             if strcmp(DispHist,'ON')
                 myYlim = ylim;
                 
               s2 =  subplot(1,6,6);
                 
-                PlotStyle = { 'FaceColor',rgb('Silver'),...%obj.PlotColor,...
-                    'FaceAlpha',1};
+                PlotStyle = {'FaceColor',obj.PlotColor,...%rgb('Silver'),...
+                    'FaceAlpha',0.8,'EdgeColor',obj.PlotColor};
                
                 h1 = histogram(y,PlotStyle{:});
                 h1.Orientation='horizontal';
@@ -2407,35 +2443,42 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                         %    '-','LineWidth',4,'Color',rgb('GoldenRod'));
                     end
                 end
-                PrettyFigureFormat;
-                
+              
                 % get rid of box and x axis
-                box off
-                set(get(gca,'XAxis'),'Visible','off')
-                set(get(gca,'YAxis'),'Visible','off')
+             %   box off
+              %  set(get(gca,'XAxis'),'Visible','on')
+               % set(get(gca,'YAxis'),'Visible','off')
                 % adjust position
                 ax2 = gca;
                 %ax.Position = [left-0.02 bottom+0.01 ax_width+0.128 ax_height-0.2];
-                ax.Position = [left-0.02 bottom+0.05 ax_width+0.1343 ax_height-0.3];
-                if strcmp(HideGaps,'ON')
-                    ax2.Position(1) = 0.80+0.094;
-                else
-                    ax2.Position(1) = 0.80+0.09;
-                end
-                if strcmp(Parameter,'pVal')
-                  ax2.Position(2)=0.158;
-                  ax2.Position(4)=0.75;
-                elseif strcmp(Parameter,'RhoD')
-                     ax2.Position(2)=0.17;
-                     ax2.Position(4) = 0.74;
-                elseif strcmp(Parameter,'T2')
-                   ax2.Position(4) = 0.785 ;
-                   ax2.Position(2)= 0.13;
-                end
-
+                ax.Position = [left-0.03 bottom+0.05 ax_width+0.1343 ax_height-0.3]; % change size of first subplot
+                %                 if strcmp(HideGaps,'ON')
+                %                     ax2.Position(1) = 0.80+0.094; % left edge
+                %                 else
+                %                     ax2.Position(1) = 0.80+0.09; % left edge
+                %                 end
+                %                 if strcmp(Parameter,'pVal')
+                %                   ax2.Position(2)=0.158; % bottom
+                %                   ax2.Position(4)=0.75;  % height
+                %                 elseif strcmp(Parameter,'RhoD')
+                %                      ax2.Position(2)=0.17; % bottom
+                %                      ax2.Position(4) = 0.74; % height
+                %                 elseif strcmp(Parameter,'T2')
+                %                     ax2.Position(4) = 0.785 ; % height
+                %                     ax2.Position(2)= 0.13; % bottom
+                %                 end
+                
+                %adjust axes to be adjacent to first subplot
+                ax2.Position(1) = ax.Position(1)+ax.Position(3).*1.005;%left
+                ax2.Position(2) = ax.Position(2); % bottom
+                ax2.Position(4) = ax.Position(4); % height
+                PrettyFigureFormat('FontSize',LocalFontSize);
+                yticklabels(''); %   yticks([])
+                xlabel('Entries');
+                set(gca,'XMinorTick','off');
                 linkaxes([s1,s2],'y');
             end
-           
+            
             % save plot
             if ~strcmp(saveplot,'OFF')
   
@@ -2467,8 +2510,9 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             
             fig89 = figure('Renderer','opengl');
             set(fig89,'units','normalized','pos',[0.1, 0.1,0.5,0.6]);
-            PlotStyle = { 'FaceColor', rgb('Gray'),...%obj.PlotColor,...
+            PlotStyle = {'FaceColor', rgb('Gray'),...%obj.PlotColor,...
                 'FaceAlpha',0.9};
+            
             h1 = histogram(y,PlotStyle{:});
             if ~strcmp(Parameter,{'T2','RhoD'})
                 hold on;
@@ -2595,14 +2639,14 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                         ystr = sprintf('{\\itm}_{\\beta}^2 - < m_{\\beta}^2 >  (eV^2)');
                     end
                 case 'B'
-                     UnitStr = 'cps';
-                    y = FitResults.B.*1e3;
-                    yErr = FitResults.BErr.*1e3;
+                    UnitStr = 'cps';
+                    y = FitResults.B;%.*1e3;
+                    yErr = FitResults.BErr;%.*1e3;
                     if strcmp(DisplayStyle,'Abs')
-                        ystr = sprintf('Background (mcps)');
+                        ystr = sprintf('{\\itB} (cps)');
                     elseif strcmp(DisplayStyle,'Rel')
                         y = y-wmean(y,1./yErr.^2);
-                        ystr = sprintf('{\\itB} - \\langle{\\itB}\\rangle  (mcps)');
+                        ystr = sprintf('{\\itB} - \\langle{\\itB}\\rangle  (cps)');
                     end
                 case 'N'
                     UnitStr = '';
@@ -2961,7 +3005,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             xlabel('E_0 (eV)');
             %             leg = legend([h1,h2],sprintf('All: %0.0f',numel(obj.RunList)),sprintf('Stacked: %0.0f',numel(obj.StackedRuns)),'Location','northwest');
             %             leg.Color = 'none'; legend boxoff;
-            sp1 = sprintf('mean = %.03f eV - \\sigma = %.03f eV',...
+            sp1 = sprintf('Mean = %.03f eV - \\sigma = %.03f eV',...
                 mean(obj.SingleRun_FitResults.chi2Stat.E0),std(obj.SingleRun_FitResults.chi2Stat.E0));title(sp1)
             PrettyFigureFormat;
             subplot(3,2,2)

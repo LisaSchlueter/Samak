@@ -10,11 +10,12 @@ p = inputParser;
 
 p.addParameter('ReDrawSkeleton','OFF',@(x)ismember(x,{'ON','OFF'}));
 p.addParameter('outliers',-1,@(x)isfloat(x) && min(x)>=0);
-
+p.addParameter('Label','ON',@(x)ismember(x,{'ON','OFF'}));
 p.parse(varargin{:});
 
 ReDrawSkeleton  = p.Results.ReDrawSkeleton;
 outliers        = p.Results.outliers;
+Label           = p.Results.Label;
 
 if strcmp(ReDrawSkeleton,'OFF')
     fig = openfig('FPDFrame.fig');
@@ -41,6 +42,8 @@ if strcmp(ReDrawSkeleton,'ON')
         'YLim',[-max(rEnd) max(rEnd)],...
         'Position',[0.11452380952381 0.11 0.682738095238095 0.815]);
     pix = 0; %number in each detector
+    TextHandle = cell(148,1);
+ 
     % build the skeleton segment by segment from the center outwards
     for ii = 1:13
         for jj = 0:segs(ii)-1
@@ -55,18 +58,21 @@ if strcmp(ReDrawSkeleton,'ON')
             %         xx = 0.13+0.775/2 + ((rStart(ii)+rEnd(ii))/2*cos((th1+th2)/2))/(9/0.775);
             xx = 0.114523809523810+0.682738095238095/2 + ((rStart(ii)+rEnd(ii))/2*cos((th1+th2)/2))/(9/0.682738095238095);
             yy = 0.11+0.815/2 + ((rStart(ii)+rEnd(ii))/2*sin((th1+th2)/2))/(9/0.815);
-            annotation(gcf,'textbox',[xx yy 0.0 0.0],'Color','k',...
-                'String',num2str(pix),'FontSize',11,'Margin',0,...
+            if strcmp(Label,'ON')
+            TextHandle{pix+1} = annotation(gcf,'textbox',[xx yy 0.0 0.0],'Color','k',...
+                'String',num2str(pix),'FontSize',10,'Margin',0,'FontWeight','bold',...
                 'HorizontalAlignment','center','VerticalAlignment','middle');
+            end
             pix = pix + 1;
-        end
+         
+        end    
     end
  
     % Set all lines to color black
     tmp = findall(gca,'Type','line');
     detLines = tmp(1:148);
     %set(detLines,'Color','k');
-    set(detLines,'Color',rgb('SteelBlue'),'LineWidth',2)
+    set(detLines,'Color',rgb('Black'),'LineWidth',1)
     hold off
 end
 
@@ -137,6 +143,14 @@ plotHandle.Units = 'normalized';
 plotHandle.Position = [0.1,0.1,0.42,0.55]; % make it rounder
 
 hold off
+
+if strcmp(Label,'ON')
+    for i=1:148
+        if isnan(data(i))
+            TextHandle{i}.delete;
+        end
+    end
+end
 
 end
 

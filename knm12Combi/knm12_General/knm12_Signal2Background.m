@@ -131,5 +131,6 @@ t0 = text(-9,Sig2Bkgtot2+4,...
 
 %% interpolate for KSN2:
 S2B = interp1(qU2-18574,Sig2Bkg2,[-40,-30,-20,-10,0],'spline');
-fprintf('Signal to background ratio of 2 at %.1f eV \n',interp1(Sig2Bkg2(1:end-5),qU2(1:end-5)-18574,1,'spline'))
+fprintf('KNM1 signal to background ratio of 2 at %.1f eV \n',interp1(Sig2Bkg1(1:end-5),qU1(1:end-5)-Model1.Q,1,'spline'))
+fprintf('KNM2 signal to background ratio of 2 at %.1f eV \n',interp1(Sig2Bkg2(1:end-5),qU2(1:end-5)-Model2.Q,1,'spline'))
 

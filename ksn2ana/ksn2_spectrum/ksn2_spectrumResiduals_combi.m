@@ -1,4 +1,4 @@
-
+% KSN2 paper plot
 %% settings that might change
 
 range = 40;
@@ -229,11 +229,11 @@ if strcmp(Mode,'Residuals')
     plot(linspace(-50,150,10),yref.*ones(10,1)+1,'-','Color',rgb('Gray'),'LineWidth',1.5);
 end
 
+pH0  = plot(linspace(-50,150,numel(y1)),y0,':','MarkerSize',10,'LineWidth',LocalLineWidth-0.5,'Color',rgb('Black'));
 pH1  = plot(x,y1,MarkerStyle,'MarkerSize',10,'LineWidth',LocalLineWidth,'Color',rgb('DodgerBlue'));
-pH0  = plot(x,y0,'-.','MarkerSize',10,'LineWidth',LocalLineWidth,'Color',rgb('Orange'));
 
-eSimData = errorbar(x,SimRateBf./NullBfRate,(sqrt(SimRateBf.*Time)./Time)./NullBfRate,...
-    '.','Color',rgb('Black'),'CapSize',0,'LineWidth',LocalLineWidth-0.5, 'MarkerSize',10);
+%eSimData = errorbar(x,SimRateBf./NullBfRate,(sqrt(SimRateBf.*Time)./Time)./NullBfRate,...
+%    '.','Color',rgb('Black'),'CapSize',0,'LineWidth',LocalLineWidth-0.5, 'MarkerSize',10);
 hold off
 if strcmp(qUDisp,'Abs')
     xticks(myxticks);
@@ -247,26 +247,28 @@ ylabel(yStr,'FontSize',LocalFontSize+6);
 
 katrinsim   = sprintf('3\\nu+1 simulation {\\itm}_4^2 = %.1f eV^2, |{\\itU}_{e4}|^2 = %.3f',dbf.mNu4Sq_bf,dbf.sin2T4_bf);
 
-ylim([0.972 1.013]);
+%ylim([0.972 1.013]);
+ylim([0.977 1.015]);
 xlim([-43 140]);
 
 ax2 = gca;
 %axis
 mypos2 = ax2.Position;
 ax2.Position = [ax.Position(1) mypos2(2)+0.012 ax.Position(3) mypos2(4)+0.035];
-text(textx(1)+1,1.007,'b)','FontSize',LocalFontSize+2,'FontName',get(gca,'FontName'));
+text(textx(1)+1,1.009,'b)','FontSize',LocalFontSize+2,'FontName',get(gca,'FontName'));
 
 
 % legend
-hl=legend([eSimData,pH1],...
-    {katrinsim,'3\nu+1 model'},'Location','southeast','box','off');
+% hl=legend([eSimData,pH1],...
+%     {katrinsim,'3\nu+1 model'},'Location','southeast','box','off');
+hl=legend(pH1,...
+   katrinsim,'Location','northeast','box','off');
 hl.FontSize = LocalFontSize-0.5;
 
-axleg=axes('Position',get(gca,'Position'),'Visible','Off');
-hl2 = legend(axleg,pH0,'3\nu model','box','off','Location','southeast');
-hl2.FontSize = LocalFontSize-0.5;
+% axleg=axes('Position',get(gca,'Position'),'Visible','Off');
+% hl2 = legend(axleg,pH0,'3\nu model','box','off','Location','southeast');
+% hl2.FontSize = LocalFontSize-0.5;
 PRLFormat;
-
 
 %% 
 s3 = subplot(4,1,4);
@@ -292,7 +294,7 @@ xlim([-43 140]);
 ax3 = gca;
 mypos2 = ax3.Position;
 ax3.Position = [ax.Position(1) mypos2(2)-0.01 ax.Position(3) mypos2(4)+0.035];
- hl2.Position(2) = hl.Position(2);
+% hl2.Position(2) = hl.Position(2);
  
 if strcmp(SavePlot,'ON')
     plotdir  = strrep(savedir,'results','plots');

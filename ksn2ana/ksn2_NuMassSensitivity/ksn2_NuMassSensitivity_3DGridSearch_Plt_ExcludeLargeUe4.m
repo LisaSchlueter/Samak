@@ -10,7 +10,7 @@ switch DataType
         FixmNuSq_all = sort(round([-3:0.1:2.5],2));
 end
 
-RecomputeFlag = 'OFF';
+RecomputeFlag = 'ON';
 Maxm4Sq    = 36^2; % interpolation
 chi2min = zeros(numel(FixmNuSq_all),1);
 sin2T4_bf =  zeros(numel(FixmNuSq_all),1);
@@ -85,6 +85,7 @@ else
         A.ModelObj.mnuSq_i = FixmNuSq;
         S.LoadGridFile(S.LoadGridArg{:},'FixmNuSq',FixmNuSq);
         S.Interp1Grid('MaxM4Sq',Maxm4Sq);
+        S.FindBestFit;
         
         if S.chi2_bf<S.chi2_Null
             chi2min(i) = S.chi2_bf;

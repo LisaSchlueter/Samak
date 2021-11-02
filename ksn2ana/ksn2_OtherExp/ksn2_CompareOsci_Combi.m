@@ -1,7 +1,7 @@
 % ksn2 calculate chi2 grid search
 %% settings that might change
 chi2 = 'chi2CMShape';
-DataType = 'Twin';
+DataType = 'Real';
 
 range = 40;
 freePar = 'E0 Norm Bkg';
@@ -52,10 +52,15 @@ S.LoadGridFile(S.LoadGridArg{:});
 S.Interp1Grid;
 
 FinalSensitivity = 'ON';
-[legHandle,legStr,pHandle] = S.ContourPlotOsci('DayaBay','ON','DoubleChooz','ON',...
+[legHandle,legStr,pHandle] = S.ContourPlotOsci(....
     'Solar','OFF',...
+    'BestGA','ON',...%'Best','ON',...
+    'RAA','ON',...%'RAA_GA','ON',...
     'SavePlot','OFF','Style','PRL','BestFit','ON',...
-    'FinalSensitivity',FinalSensitivity);
+   ...% 'Stereo','OFF','DANSS','OFF','Prospect','OFF','DoubleChooz','OFF',...
+   ... % 'DayaBay','OFF','Neutrino4','OFF', 'Mainz','OFF','Troitsk','OFF', 'NuBetaBeta','OFF',...
+    'FinalSensitivity',FinalSensitivity,...
+    'Combi','OFF');
 
 % load combined result for fixed m_nu
 savedir_fix = [getenv('SamakPath'),'ksn2ana/ksn2_RunCombination/results/'];
@@ -108,7 +113,12 @@ leg.FontSize=19;
 leg.Position(1) = 0.005;
 leg.Position(2) = 0.7;
 ax.Position(4) = 0.55;
-plotname = sprintf('%s_OsciContour_%.2gCL_Combi.pdf',S.DefPlotName,S.ConfLevel);
+
+%% save as pdf
+plotname = sprintf('%s_OsciContour_%.2gCL_CombiBEST.pdf',S.DefPlotName,S.ConfLevel);
 export_fig(gcf,plotname);
 fprintf('save plot to %s \n',plotname)         
-print('KSN2_Osci.png','-dpng','-r300');
+print('KSN2_Osci.png','-dpng','-r70');
+
+
+

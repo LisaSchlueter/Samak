@@ -59,11 +59,13 @@ if strcmp(DataSet,'Knm2') && strcmp(Fitter,'Samak')
         TBDIS14keV = zeros(size(TBDIS));
     else
         TBDIS14keV = h5read([h5path,h5name],'/RunSummary/CountsKNM1')'; % for compute TBDISE
-         TBDIS1133 = zeros(size(TBDIS));
-         TBDIS2232 = zeros(size(TBDIS));
+        TBDIS1133 = zeros(size(TBDIS));
+        TBDIS2232 = zeros(size(TBDIS));
     end
 else
     TBDIS14keV = zeros(size(TBDIS));
+    TBDIS1133 = zeros(size(TBDIS));
+    TBDIS2232 = zeros(size(TBDIS));
 end
 %% Import Retarding Potentials and Measurement Times
 if strcmp(DataSet,'FirstTritium.katrin') && str2double(Version(1))<4
@@ -203,6 +205,10 @@ if  (any(diff(qU(:,1)) < 0))
     end
 end
 
+%% Temperature
+if strcmp(Fitter,'Samak')
+    WGTS_Temp_K = h5read(h5name,'/RunSummary/Source/TemperatureMean');
+end
 %% Special Treatment for some Data Points
 % First Tritium (FT): Erase two first points from the two first runs
 
@@ -288,6 +294,7 @@ save(savename,'StartTimeStamp','TBDIS','TBDISE','qU','qUfrac','EffCorr',...
     'TBDIS14keV','TBDIS14keV_RM',...
     'TBDIS1133','TBDIS1133_RM',...
     'TBDIS2232','TBDIS2232_RM',...
+    'WGTS_Temp_K',...
     '-v7.3','-nocompression');
 
 h5mat.mpix = struct('StartTimeStamp',StartTimeStamp,'TBDIS',TBDIS,'TBDISE',TBDISE,'qU',qU,'TimeperSubRunperPixel',TimeperSubRunperPixel,...
@@ -317,7 +324,8 @@ h5mat.mpix = struct('StartTimeStamp',StartTimeStamp,'TBDIS',TBDIS,'TBDISE',TBDIS
     'TBDIS1133',TBDIS1133,...
     'TBDIS1133_RM',TBDIS1133_RM,...     
     'TBDIS2232',TBDIS2232,...
-    'TBDIS2232_RM',TBDIS2232_RM);
+    'TBDIS2232_RM',TBDIS2232_RM,...
+    'WGTS_Temp',WGTS_Temp_K);
 
 % TD (optional)
 switch saveTD_DataBank

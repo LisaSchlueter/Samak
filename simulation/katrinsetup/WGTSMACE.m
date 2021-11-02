@@ -167,7 +167,7 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
             % WGTS Parameters
             p.addParameter('WGTS_Tp',0.95,@(x)isfloat(x) && x>0); %0.95
             p.addParameter('WGTS_DTHTr',0,@(x)isfloat(x) && x>=0);
-            p.addParameter('WGTS_FTR_cm',4.2,@(x)isfloat(x) && x>0);
+            p.addParameter('WGTS_FTR_cm',4.5,@(x)isfloat(x) && x>0);%4.2
             p.addParameter('WGTS_CD_MolPerCm2',5e17,@(x)isfloat(x) && x>0);
             p.addParameter('WGTS_CD_MolPerCm2_SubRun',[]);
             p.addParameter('WGTS_CDDist',0,@(x)isfloat(x) && sum(x)>0 && sum(x)<=148);

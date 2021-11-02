@@ -71,7 +71,7 @@ leg.Location = 'northoutside';%'eastoutside';
 
 %% ratio subplot 2
 s2 = subplot(1,4,[3:4]);
-plot(0.5.*ones(10,1),linspace(0.1,2e3,10),'k-','LineWidth',1.5)
+plot(0.5.*ones(10,1),linspace(0.1,2e3,10),'k:','LineWidth',1.5)
 t = text(0.45,40,'stat. = syst.','HorizontalAlignment','center','Rotation',90,'FontSize',18,'FontWeight','normal',...
     'FontName','Times New Roman');
 hold on
