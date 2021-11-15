@@ -1747,7 +1747,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                 %                     obj.InitModelObj_Norm_BKG('RecomputeFlag','ON');
                 %                 else
                 if ~contains(obj.fixPar,'fix 3 ;')
-                    obj.InitModelObj_Norm_BKG('RecomputeFlag','OFF');
+                   % obj.InitModelObj_Norm_BKG('RecomputeFlag','OFF');
                 end
                 
                 [StatCM, StatCMFrac] = obj.ComputeCM_StatPNP(varargin);

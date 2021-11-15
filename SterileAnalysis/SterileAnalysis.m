@@ -1020,10 +1020,17 @@ classdef SterileAnalysis < handle
                 dRAA2 = table2array(readtable(filenameRAA2));
                 dRAA3 = table2array(readtable(filenameRAA3));
                 
-                pRAA = plot(dRAA1(1:15:end,1),smooth(dRAA1(1:15:end,2),5),'-','LineWidth',2,'Color',rgb('ForestGreen'));
+                xRAA = dRAA1(1:15:end,1);
+                yRAA = smooth(dRAA1(1:15:end,2),5);
+                pRAA = plot(xRAA,yRAA,'-','LineWidth',2,'Color',rgb('ForestGreen'));
                 plot(dRAA2(1:15:end,1),smooth(dRAA2(1:15:end,2),5),'-','LineWidth',pRAA.LineWidth,'Color',pRAA.Color);
-                 plot(dRAA3(1:15:end,1),smooth(dRAA3(1:15:end,2),5),'-','LineWidth',pRAA.LineWidth,'Color',pRAA.Color);
-                legHandle{numel(legHandle)+1} = pRAA;
+                plot(dRAA3(1:15:end,1),smooth(dRAA3(1:15:end,2),5),'-','LineWidth',pRAA.LineWidth,'Color',pRAA.Color);
+               
+                % extend to large m4              
+                plot(ones(1,1e2).*xRAA(end),linspace(yRAA(end),2e3,1e2),'-','LineWidth',pRAA.LineWidth,'Color',pRAA.Color);
+                plot(ones(1,1e2).*xRAA(1),linspace(yRAA(1),2e3,1e2),'-','LineWidth',pRAA.LineWidth,'Color',pRAA.Color);
+              
+                 legHandle{numel(legHandle)+1} = pRAA;
                 legStr = [legStr,{sprintf('RAA 95%% CL')}];%-PRD 83, 073006 (2011) -
             end
             
@@ -1042,6 +1049,10 @@ classdef SterileAnalysis < handle
                 dataBest2b = importdata(fBest2b);
                 pBest = plot(dataBest2a(:,1),dataBest2a(:,2),'-','LineWidth',2,'Color',rgb('LimeGreen'));
                 plot(dataBest2b(:,1),dataBest2b(:,2),'-','LineWidth',pBest.LineWidth,'Color',pBest.Color);
+                %extend to large m4
+                plot(ones(1,1e2).*dataBest2a(end,1),linspace(dataBest2a(end,2),2e3,1e2),'-','LineWidth',pBest.LineWidth,'Color',pBest.Color);
+                plot(ones(1,1e2).*dataBest2a(1,1),linspace(dataBest2a(1,2),2e3,1e2),'-','LineWidth',pBest.LineWidth,'Color',pBest.Color);
+              
                 legHandle{numel(legHandle)+1} = pBest;
                 legStr = [legStr,{sprintf('BEST + GA 95.45%% CL')}];
                 
@@ -1120,7 +1131,7 @@ classdef SterileAnalysis < handle
                 hold on;
             end
             %% KATRIN
-            PlotArg = {'LineWidth',2.5,'LineStyle',myLineStyle};
+            PlotArg = {'LineWidth',3,'LineStyle',myLineStyle};
             if numel(CL)==1
                 PlotArg = [PlotArg,{'LineColor',myColor}];
             end
@@ -1150,7 +1161,7 @@ classdef SterileAnalysis < handle
                 obj.LoadGridFile;%('CheckSmallerN','ON',obj.LoadGridArg{:});
                 obj.Interp1Grid('RecomputeFlag','ON','Maxm4Sq',36^2);
                 
-                PlotArg = {'LineWidth',2,'LineStyle',':','LineColor',rgb('SteelBlue')};
+                PlotArg = {'LineWidth',3,'LineStyle',':','LineColor',rgb('SteelBlue')};
                 [DeltamNu41Sq,sin2T4Sq] = obj.Convert2Osci;
                 [~,legHandle{numel(legHandle)+1}]= contour(sin2T4Sq,DeltamNu41Sq,obj.chi2-obj.chi2_ref,...
                     [obj.DeltaChi2 obj.DeltaChi2],...

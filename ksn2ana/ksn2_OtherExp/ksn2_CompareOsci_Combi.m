@@ -82,8 +82,8 @@ sin2T4Sq_fix1  = 4*dfix.sin2T4_contour_1.*(1-dfix.sin2T4_contour_1);
 
 % include n plot
 hold on;
-pfix12 = plot(sin2T4Sq_fix,mNu4Sq_fix,':','Color',rgb('Navy'),'LineWidth',2.5);
-pfix1 = plot(sin2T4Sq_fix1,mNu4Sq_fix1,'-.','Color',rgb('SkyBlue'),'LineWidth',2.5);
+pfix12 = plot(sin2T4Sq_fix,mNu4Sq_fix,':','Color',rgb('Navy'),'LineWidth',3);
+pfix1 = plot(sin2T4Sq_fix1,mNu4Sq_fix1,'-.','Color',rgb('SkyBlue'),'LineWidth',3);
 
 ax = gca;
 set(gca,'FontSize',24);
@@ -113,7 +113,7 @@ leg.FontSize=19;
 leg.Position(1) = 0.005;
 leg.Position(2) = 0.7;
 ax.Position(4) = 0.55;
-
+xlim([4e-03 1]);
 %% save as pdf
 plotname = sprintf('%s_OsciContour_%.2gCL_CombiBEST.pdf',S.DefPlotName,S.ConfLevel);
 export_fig(gcf,plotname);

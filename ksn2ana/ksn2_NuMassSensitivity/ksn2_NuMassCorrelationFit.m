@@ -174,7 +174,8 @@ t7 = text(0.0015,47,0.17,'0','FontSize',28,'FontName','Times New Roman','Rotatio
 t8 = text(0.025,190,0.17,'0.01','FontSize',28,'FontName','Times New Roman','Rotation',30) ;
 t9 = text(0.115,160,0.17,'0.05','FontSize',28,'FontName','Times New Roman','Rotation',40) ;
 t10 = text(0.225,150,0.17,'0.1','FontSize',28,'FontName','Times New Roman','Rotation',50) ;
-
+ax = gca;
+ax.SortMethod='ChildOrder';
 %
 plotname = sprintf('%sksn2_NuMassCorrelationFit_%s_%.0fGrid_%.0ffits_LinSlope.pdf',plotdir,DataType,nStepsAll,nSteps);
 export_fig(plotname);
