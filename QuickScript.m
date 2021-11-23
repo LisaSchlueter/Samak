@@ -55,7 +55,7 @@ close all;
 %startangle=linspace(140,190,10);
 %launchangle=linspace(-25,25,10);
 %v=TransitVel('rho2',4000,'R2',8660000,'startangle',startangle,'launchangle',launchangle);
-TransitVel('rho2',4000,'R2',8660000,'startangle',157,'launchangle',-14);
+vel=TransitVel('rho2',4000,'R2',8660000,'startangle',157,'launchangle',-14,'Startheight',0);
 %TransitVel('rho2',5000,'R2',30927000);
 %TransitVel('startangle',168,'launchangle',-14);
 % N=10;
@@ -67,6 +67,12 @@ TransitVel('rho2',4000,'R2',8660000,'startangle',157,'launchangle',-14);
 %         v(i,j)=TransitVel('rho2',rho2(i),'R2',R2(j),'plot','OFF');
 %     end
 % end
+
+r_outer = 0.8; %meter
+r_inner = 0.795;
+mass = 4/3*pi*(r_outer^3-r_inner^3)*8920
+energy = 0.5*mass*vel^2
+
 function vel=TransitVel(varargin)
     p=inputParser;
     p.addParameter('rho2',11342,@(x)isfloat(x));
@@ -74,6 +80,7 @@ function vel=TransitVel(varargin)
     p.addParameter('launchangle',0,@(x)isfloat(x));
     p.addParameter('startangle',180,@(x)isfloat(x));
     p.addParameter('Plot','ON',@(x)ismember(x,{'ON','OFF'}));
+    p.addParameter('Startheight',0,@(x)isfloat(x));
     p.parse(varargin{:});
     %% Settings
     rho2        = p.Results.rho2;
@@ -81,6 +88,7 @@ function vel=TransitVel(varargin)
     launchangle = p.Results.launchangle;
     startangle  = p.Results.startangle;
     Plot        = p.Results.Plot;
+    Startheight = p.Results.Startheight;
     
     G=6.67428e-11;
     rho1=11342; %kg/m³
@@ -170,12 +178,12 @@ function vel=TransitVel(varargin)
     v_0=v;
     for i=1:numel(startangle)
         for j=1:numel(launchangle)
-            Position=[R1.*sin(phi(10*round(startangle(i)))) -r_B-R1.*cos(phi(10*round(startangle(i))))];
+            Position=[(R1+Startheight).*sin(phi(10*round(startangle(i)))) -r_B-(R1+Startheight).*cos(phi(10*round(startangle(i))))];
             velocity=[v_0*sin(pi/180*launchangle(j)) v_0*cos(pi/180*launchangle(j))];
             cntr2=1;
             while (Position(2)-(r2-r_B))^2+Position(1)^2>R2^2 && abs(Position(1))<x(end)
                 v_0=cntr2*v;
-                Position=[R1.*sin(phi(10*round(startangle(i)))) -r_B-R1.*cos(phi(10*round(startangle(i))))];
+                Position=[(R1+Startheight).*sin(phi(10*round(startangle(i)))) -r_B-(R1+Startheight).*cos(phi(10*round(startangle(i))))];
                 velocity=[v_0*sin(pi/180*launchangle(j)) v_0*cos(pi/180*launchangle(j))];
                 cntr=1;
                 clear trajectory;
@@ -191,11 +199,11 @@ function vel=TransitVel(varargin)
                 cntr2=cntr2+1;
             end
             cntr3=1;
-            Position=[R1.*sin(phi(10*round(startangle(i)))) -r_B-R1.*cos(phi(10*round(startangle(i))))];
+            Position=[(R1+Startheight).*sin(phi(10*round(startangle(i)))) -r_B-(R1+Startheight).*cos(phi(10*round(startangle(i))))];
             velocity=[v_0*sin(pi/180*launchangle(j)) v_0*cos(pi/180*launchangle(j))];
             while (Position(2)-(r2-r_B))^2+Position(1)^2>R2^2 && cntr3<11
                 v_0=(cntr2-2+0.1*cntr3)*v;
-                Position=[R1.*sin(phi(10*round(startangle(i)))) -r_B-R1.*cos(phi(10*round(startangle(i))))];
+                Position=[(R1+Startheight).*sin(phi(10*round(startangle(i)))) -r_B-(R1+Startheight).*cos(phi(10*round(startangle(i))))];
                 velocity=[v_0*sin(pi/180*launchangle(j)) v_0*cos(pi/180*launchangle(j))];
                 cntr=1;
                 clear trajectory;
@@ -211,11 +219,11 @@ function vel=TransitVel(varargin)
                 cntr3=cntr3+1;
             end
             cntr4=1;
-            Position=[R1.*sin(phi(10*round(startangle(i)))) -r_B-R1.*cos(phi(10*round(startangle(i))))];
+            Position=[(R1+Startheight).*sin(phi(10*round(startangle(i)))) -r_B-(R1+Startheight).*cos(phi(10*round(startangle(i))))];
             velocity=[v_0*sin(pi/180*launchangle(j)) v_0*cos(pi/180*launchangle(j))];
             while (Position(2)-(r2-r_B))^2+Position(1)^2>R2^2 && cntr4<11
                 v_0=(cntr2-2+0.1*(cntr3-2)+0.01*cntr4)*v;
-                Position=[R1.*sin(phi(10*round(startangle(i)))) -r_B-R1.*cos(phi(10*round(startangle(i))))];
+                Position=[(R1+Startheight).*sin(phi(10*round(startangle(i)))) -r_B-(R1+Startheight).*cos(phi(10*round(startangle(i))))];
                 velocity=[v_0*sin(pi/180*launchangle(j)) v_0*cos(pi/180*launchangle(j))];
                 cntr=1;
                 clear trajectory;

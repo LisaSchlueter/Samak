@@ -67,7 +67,7 @@ function PlotBestFit(varargin)
                         'fitter','minuit',...
                         'pullFlag',pullFlag,...
                         'fitter',fitter,...
-                        'minuitOpt','min ; minos',...         % technical fitting options (minuit)
+                        'minuitOpt','min ; imp ; minos',...         % technical fitting options (minuit)
                         'FSDFlag','KNM2',...          % final state distribution
                         'ELossFlag','KatrinT2A20',...            % energy loss function
                         'SysBudget',40,...                    % defines syst. uncertainties -> in GetSysErr.m;
@@ -82,6 +82,8 @@ function PlotBestFit(varargin)
                         'TwinBias_FSDSigma',sqrt(0.0124+0.0025),...
                         'BKG_PtSlope',3*1e-06,...
                         'TwinBias_BKG_PtSlope',3*1e-06);
+                    D.exclDataStart = D.GetexclDataStart(40);
+                    D.Fit;
         end
 
         fitresults = zeros(11,Nfit);
@@ -116,7 +118,7 @@ function PlotBestFit(varargin)
                         'fitter','minuit',...
                         'pullFlag',pullFlag,...
                         'fitter',fitter,...
-                        'minuitOpt','min ; imp',...         % technical fitting options (minuit)
+                        'minuitOpt','min ; minos',...         % technical fitting options (minuit)
                         'FSDFlag','KNM2',...          % final state distribution
                         'ELossFlag','KatrinT2A20',...            % energy loss function
                         'SysBudget',40,...                    % defines syst. uncertainties -> in GetSysErr.m;
@@ -161,7 +163,7 @@ function PlotBestFit(varargin)
             fitresults(9,j)= M.FitResult.par(18).*1e10;
             fitresults(10,j)=M.FitResult.err(18).*1e10;
             fitresults(11,j)=M.FitResult.chi2min;
-            save(sprintf('./EtaFitResult_%s_AllParams_mnuSq%g_Nfit%g.mat',RunList,mnuSq,Nfit),'fitresults');
+            save(sprintf('./EtaFitResult_%s_AllParams_mnuSq%g_Nfit%g.mat',RunList,mnuSq,Nfit),'D','M','fitresults');
         end
         D.exclDataStart = D.GetexclDataStart(40);
         if strcmp(DataType,'Twin')
@@ -327,8 +329,8 @@ function PlotBestFit(varargin)
                 else
                     SaveName1='BestFit.pdf';
                 end
-                SaveName2='Corplot_eta.pdf';
-                SaveName3='Corplot_Noeta.pdf';
+                SaveName2='Corplot_etaKRN2.pdf';
+                SaveName3='Corplot_NoetaKRN2.pdf';
                 export_fig(fig,[SaveDir,SaveName1]);
                 export_fig(fig3,[SaveDir,SaveName2]);
                 export_fig(fig4,[SaveDir,SaveName3]);
@@ -404,18 +406,18 @@ function PlotBestFit(varargin)
         fig5=figure('Renderer','painters');
         set(fig5, 'Units', 'normalized', 'Position', [0.001, 0.001,0.45, 0.6]);
         if strcmp(RunList,'KNM1')
-            etalarge = fitresults(9,find(fitresults(9,:)>3.6827e11));
+            etalarge = fitresults(9,fitresults(9,:)>3.6827e11);
             low=-6.4e11;
             high=5.56e11;
             bins=[3.72e11 4.64e11 5.56e11];
             linePos=0.762;
             legPos='northwest';
         elseif strcmp(RunList,'KNM2_Prompt')
-            etalarge = fitresults(9,find(fitresults(9,:)<-5.802e10));
-            low=-1.5e11;
-            high=1.5e11;
-            bins=[-1.5e11 -1.269e11 -1.038e11 -8.077e10 -5.802e10];
-            linePos=0.38;
+            etalarge = fitresults(9,fitresults(9,:)<-5.802e10);
+            low=-2.58e11;
+            high=2.6e11;
+            bins=[-2.182e11 -1.783e11 -1.385e11 -9.862e10 -5.802e10];
+            linePos=0.35125;
             legPos='northeast';
         end
         histogram(fitresults(9,:),linspace(low,high,14));
@@ -427,12 +429,15 @@ function PlotBestFit(varargin)
         a.Color=[0.8500 0.3250 0.0980];
         legend('\eta best fit distribution \newline (simulated)','Above data best fit','box','off','location',legPos);
         xlabel('\eta');
+        if strcmp(RunList,'KNM2_Prompt')
+            xlim([-2e11 3e11]);
+        end
         PrettyFigureFormat;
         hold off;
         
         fig6=figure('Renderer','painters');
         set(fig6, 'Units', 'normalized', 'Position', [0.001, 0.001,0.45, 0.6]);
-        histogram(fitresults(9,:),linspace(-6.4e11,5.56e11,14));
+        histogram(fitresults(9,:),linspace(low,high,14));
         a=annotation('line',[0.425 0.425],[0.1 0.9]);
         a.LineStyle='--';
         a.LineWidth=2;
@@ -447,9 +452,9 @@ function PlotBestFit(varargin)
         if strcmp(saveplot,'ON')
                 SaveDir = [getenv('SamakPath'),sprintf('RelicNuBkg/Plots/FinalPlots/')];
                 MakeDir(SaveDir);
-                SaveName4='ScatterCorr.pdf';
-                SaveName5='HistetaFrac.pdf';
-                SaveName6='Histeta.pdf';
+                SaveName4='ScatterCorrKNR2.pdf';
+                SaveName5='HistetaFracKRN2.pdf';
+                SaveName6='HistetaKRN2.pdf';
                 export_fig(fig2,[SaveDir,SaveName4]);
                 export_fig(fig5,[SaveDir,SaveName5]);
                 export_fig(fig6,[SaveDir,SaveName6]);

@@ -11,7 +11,7 @@ function ProfileLikelihood(varargin)
     Nfit      = p.Results.Nfit;
 
     matFilePath = [getenv('SamakPath'),sprintf('RelicNuBkg/Misc/')];
-    savename=[matFilePath,sprintf('LikelihoodFct%s_%s_SysBudget%i_Nfit%i.mat',RunList,Parameter,SysBudget,Nfit)];
+    savename=[matFilePath,sprintf('LikelihoodFct%s_%s_SysBudget%i_Nfit%i_PullFlag31.mat',RunList,Parameter,SysBudget,Nfit)];
     if exist(savename,'file')
         load(savename);
         figure(1);
@@ -21,7 +21,7 @@ function ProfileLikelihood(varargin)
         for i=1:numel(P)
             cdf(i,2)=sum(P(1:i))./sum(P);
         end
-        load('EtaFitResult_KNM2_Prompt_AllParams_mnuSq0_Nfit1000.mat','fitresults');
+        load('EtaFitResult_KNM2_Prompt_AllParams_mnuSq0_Nfit1002.mat','fitresults');
         %fitresults(9,:)=fitresults(9,:)-1.6e10;
         [~,p]=kstest(fitresults(9,:),'CDF',cdf);
         figure(2);
@@ -74,7 +74,7 @@ function ProfileLikelihood(varargin)
                 'RadiativeFlag','ON',...              % theoretical radiative corrections applied in model
                 'NonPoissonScaleFactor',1.112,...     % background uncertainty are enhanced
                 'minuitOpt','min ; minos',...         % technical fitting options (minuit)
-                'pullFlag',99,...
+                'pullFlag',31,...
                 'FSDFlag','KNM2',...          % final state distribution
                 'ELossFlag','KatrinT2A20',...            % energy loss function
                 'SysBudget',40,...                    % defines syst. uncertainties -> in GetSysErr.m;

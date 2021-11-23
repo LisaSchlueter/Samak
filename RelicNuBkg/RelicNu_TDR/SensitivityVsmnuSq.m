@@ -6,6 +6,7 @@ function SensitivityVsmnuSq(varargin)
     p.addParameter('T','OFF',@(x)ismember(x,{'ON','OFF'}));             %Atomic Tritium
     p.addParameter('TDRbkg','OFF',@(x)ismember(x,{'ON','OFF'}));
     p.addParameter('MTD','OFF',@(x)ismember(x,{'ON','OFF'}));
+    p.addParameter('DeltaChi2',2.71,@(x)isfloat(x));
     p.parse(varargin{:});
     %% Settings
     mNuBins  = p.Results.mNuBins;
@@ -14,6 +15,7 @@ function SensitivityVsmnuSq(varargin)
     T        = p.Results.T;
     TDRbkg   = p.Results.TDRbkg;
     MTD      = p.Results.MTD;
+    DeltaChi2= p.Results.DeltaChi2;
 
     A = RelicNuAnalysis('Params',Params);
 
@@ -38,8 +40,8 @@ function SensitivityVsmnuSq(varargin)
     else
         Sensitivities = zeros(1,mNuBins);
         ScanPoints = linspace(0,mNuUpper,mNuBins);
-        if strcmp('Params','TDR')
-            etafactor=1.5;
+        if strcmp(Params,'TDR')
+            etafactor=2;
             etarange=10;
         else
             etafactor=3;
@@ -68,16 +70,17 @@ function SensitivityVsmnuSq(varargin)
                 'Syst',Syst,...
                 'Init_Opt',Init_Opt,... %,'TTFSD','OFF','HTFSD','OFF','DTFSD','OFF'},...
                 'NetaBins',2,...
-                'Plot','OFF');
+                'Plot','OFF',...
+                'DeltaChi2',DeltaChi2);
             Sensitivities(i) = A.etaSensitivity;
         end
 
         save(savename,'ScanPoints','Sensitivities');
     end
+    fig1=figure(1);
+plot(ScanPoints,Sensitivities,'LineWidth',2);
+xlabel('m_\nu^2','FontSize',12);
+ylabel('\eta','FontSize',12);
+PrettyFigureFormat;
 end
 
-% fig1=figure(1);
-% plot(ScanPoints./2018850,Sensitivities,'LineWidth',2);
-% xlabel('Measurement Time (multiple of KNM1)','FontSize',12);
-% ylabel('\eta','FontSize',12);
-% PrettyFigureFormat;

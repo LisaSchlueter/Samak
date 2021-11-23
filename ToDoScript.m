@@ -140,4 +140,8 @@
 % krn2systematicstudies;
 % close all;
 % clear all;
-FullAna;
+%FullAna;
+%PlotBestFit('RunList','Knm2_Prompt','DataType','Twin','Nfit',1002,'pullFlag',31);
+%PlotBestFit('RunList','Knm2_Prompt','DataType','Twin','Nfit',1001,'Syst','OFF');
+FinalPlot;
+PaperPlots;

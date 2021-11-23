@@ -9,7 +9,7 @@ DopplerEffectFlag = 'FSD';      %!different from KNM1
 BKG_PtSlope = 3*1e-06;
 TwinBias_BKG_PtSlope = 3*1e-06;
 FSDFlag   = 'KNM2';     %'KNM2_0p5eV' for faster fit (rebinned FSDs)
-PullFlag = 99;%[7,24]; %24 = 3.0 mucps/s; 99 for no pull
+PullFlag = [31];%[7,24]; %24 = 3.0 mucps/s; 99 for no pull
 SysBudget = 40;
 
 savedir = [getenv('SamakPath'),'knm2ana/knm2_PngBkg/results/'];
@@ -41,7 +41,7 @@ if any(PullFlag~=99)
     end
 end
 
-if ~exist(savename,'file')
+if exist(savename,'file')
     load(savename,'FitResult','RunAnaArg','A');
 else
     SigmaSq =  0.0124+0.0025;   %broadening durch longitudinale plasmainhomogenität + plasma drift
@@ -56,8 +56,8 @@ else
         'DataType',DataType,...
         'fixPar',freePar,...
         'RadiativeFlag','ON',...
-        'fitter','matlab',...
-        'minuitOpt','min ; imp',...
+        'fitter','minuit',...
+        'minuitOpt','min ; minos',...
         'FSDFlag',FSDFlag,...
         'ELossFlag','KatrinT2A20',...   %!different
         'SysBudget',SysBudget,...
@@ -110,13 +110,13 @@ else
     else
         
     end
-    A.ModelObj.eta_i = -5.8e10;
+    %A.ModelObj.eta_i = -5.8e10;
     A.ModelObj.ComputeTBDDS;
     A.ModelObj.ComputeTBDIS;
     A.Fit;
     FitResult = A.FitResult;
     MakeDir(savedir);
-    %save(savename,'FitResult','RunAnaArg','A','SigmaSq')
+    save(savename,'FitResult','RunAnaArg','A','SigmaSq')
 end
 %%
 
