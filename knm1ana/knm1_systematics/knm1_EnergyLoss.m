@@ -9,7 +9,7 @@ Compare = 'OFF'; %compare with fitrium errorband (abdurashitov)
 nScat = 1; % 1 or 2
 % Init Model Object and covariance matrix object
 if ~exist('A','var')
-    A = MultiRunAnalysis('RunList',RunList,'chi2','chi2Stat');
+    A = MultiRunAnalysis('RunList',RunList,'chi2','chi2Stat','NonPoissonScaleFactor',1);
 end
 
 A.ModelObj.ELossFlag = ELossFlag; A.ModelObj.InitializeELossFunction;
@@ -41,6 +41,7 @@ set(f33, 'Units', 'normalized', 'Position', [0.1, 0.1, 0.6, 0.6]);
 plotE =E(E>xmin & E<xmax);
 Eloss1 = squeeze(fscatnE(1,E>xmin & E<xmax,:));
 Eloss2 = squeeze(fscatnE(2,E>xmin & E<xmax,:));
+
 if ismember(ELossFlag,{'KatrinD2','KatrinT2'})
     std1 = std(Eloss1')*10;
     std2 = std(Eloss2')*10;

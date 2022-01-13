@@ -3,7 +3,7 @@
 % compute covariance matrix for varyying FSD, based on trueness
 
 % get correlation matrix
- nSamples = 1e3;
+ nSamples = 4e3;
 savedir  = [getenv('SamakPath'),'knm1ana/knm1_GasComposition/results/'];
 savefileResult = sprintf('%sknm1_GasComposition_Sampling%.0f.mat',savedir,nSamples);
 if exist(savefileResult,'file') 
@@ -43,4 +43,9 @@ else
     save(savefileResult,'mNuSq','FitResults');
 end
 
-
+%% clean
+mNuSq = dR.mNuSq(abs(dR.mNuSq)<1e3);
+%% look at results
+histogram(mNuSq)
+std(mNuSq)
+mean(mNuSq)

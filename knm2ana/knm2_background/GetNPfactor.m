@@ -10,7 +10,7 @@ function [NPfactor, NPfactorErr]= GetNPfactor(obj,varargin)
 p=inputParser;
 p.addParameter('RecomputeFlag','OFF',@(x)ismember(x,{'ON','OFF'}));
 p.addParameter('SanityPlot','OFF',@(x)ismember(x,{'ON','OFF'}));
-p.addParameter('SlopeCorr','OFF',@(x)ismember(x,{'ON','OFF'}));  % only working for stacked FPD
+p.addParameter('SlopeCorr','OFF',@(x)ismember(x,{'ON','OFF'}));  % correct for increasing background rate over time in knm2. in knm1 no significant time dependence!
 p.parse(varargin{:});
 RecomputeFlag = p.Results.RecomputeFlag;
 SanityPlot    = p.Results.SanityPlot;
@@ -35,15 +35,10 @@ else
 end
 
 if strcmp(obj.AnaFlag,'StackPixel')
-% <<<<<<< HEAD
-%     savename = [savedir,sprintf('NPfactor_%s_UniformFPD_SlopeCorr%s.mat',obj.RunData.RunName,SlopeCorr)];
-% elseif strcmp(obj.AnaFlag,'Ring')
-%     savename = [savedir,sprintf('NPfactor_%s_Ring%s.mat',obj.RunData.RunName,obj.RingMerge)];
-% =======
+
     savename = [savedir,sprintf('NPfactor_%s_UniformFPD_SlopeCorr%s.mat',runname,SlopeCorr)];
 elseif strcmp(obj.AnaFlag,'Ring')
     savename = [savedir,sprintf('NPfactor_%s_Ring%s.mat',runname,obj.RingMerge)];
-%>>>>>>> 2680d1afe0066666933d7782d14d252046b5598f
 end
 %% load of compute
 if exist(savename,'file') && strcmp(RecomputeFlag,'OFF')
@@ -60,12 +55,12 @@ else
     dPois = cell(nPseudoRing,1);
     BkgSlope = cell(nPseudoRing,1);
     %% get background counts
-    % and normalize to average time spent in background region
-    
+    % and normalize to average time spent in background region 
     if strcmp(obj.AnaFlag,'StackPixel')
         TimeperSubRun =   (obj.SingleRunData.qUfrac(BkgIndex:end,:).*obj.SingleRunData.TimeSec);
         MeanTimeperSubRun = mean(obj.SingleRunData.qUfrac(BkgIndex:end,:).*obj.SingleRunData.TimeSec,2);
-        Bkg_Subrun =  obj.SingleRunData.TBDIS(BkgIndex:end,:).*(MeanTimeperSubRun./TimeperSubRun);
+        MeanTime= mean(MeanTimeperSubRun);
+        Bkg_Subrun =  obj.SingleRunData.TBDIS(BkgIndex:end,:).*(MeanTime./TimeperSubRun);
         Bkg = reshape(Bkg_Subrun,[nBkg*numel(obj.RunList),1]);
     else
         for i=1:nPseudoRing
@@ -83,10 +78,11 @@ else
         Bkg_fitErr= obj.SingleRun_FitResults.chi2Stat.BErr;
         Bkg_fit_corr = zeros(numel(obj.RunList),nBkg); % corrected fit results -> should be flat!
         
-        LiveTime   = seconds(obj.SingleRunData.StartTimeStamp-obj.SingleRunData.StartTimeStamp(1)); % time in hours with respect to first run
+        % relative live time with respect to overall mean background rate
+        LiveTime_i   = seconds(obj.SingleRunData.StartTimeStamp-obj.SingleRunData.StartTimeStamp(1)); % time in hours with respect to first run
         MeanBkgfit = wmean(Bkg_fit,1./Bkg_fitErr);
-        refTime = LiveTime(find(abs(Bkg_fit-MeanBkgfit)==min(abs(Bkg_fit-MeanBkgfit))));%mean(LiveTime);%LiveTime(end)/2;% ;
-        LiveTime = LiveTime-refTime;
+        refTime = LiveTime_i(find(abs(Bkg_fit-MeanBkgfit)==min(abs(Bkg_fit-MeanBkgfit))));%mean(LiveTime);%LiveTime(end)/2;% ;
+        LiveTime = LiveTime_i-refTime;
         
         % fit linear slope
         [coeff,coeffErr,chi2,dof]= linFit(LiveTime',Bkg_fit,Bkg_fitErr);
@@ -104,7 +100,7 @@ else
             xlabel('Live time (h)');
             ylabel('Background rate (mcps)')
             xlim([min(LiveTime./(60*60))-20,max(LiveTime./(60*60))+20]);
-            ylim([175,270]);
+           % ylim([175,270]);
             leg = legend([e1,l1],'Scanwise fits (statistics only)',sprintf('Background slope = (%.2g \\pm %.1g) mcps/day \n',...
                 BkgSlopeCpsPerS*60*60*24*1e3,coeffErr(1)*60*60*24*1e3));
             legend boxoff
@@ -206,7 +202,7 @@ else
     
     %% save
     save(savename,'NPfactor','NPfactorErr','SigmaGauss','SigmaErrGauss',...
-        'SigmaPoiss','SigmaErrPoiss','Bkg','dPois','dNorm','NPfactor_Samples','Bkg_Samples');
+        'SigmaPoiss','SigmaErrPoiss','Bkg','dPois','dNorm','NPfactor_Samples','Bkg_Samples','MeanTime');
     
     if strcmp(SlopeCorr,'ON')
        save(savename,'Bkg_corr','-append');
@@ -223,35 +219,44 @@ if strcmp(SanityPlot,'ON')
         dataleg = 'Data';
     end
     
-    
-    f2 = figure('Units','normalized','Position',[0.1,0.1,0.6,0.6]);
+   % GetFigure;
+    f2 = figure('Units','normalized','Position',[0.1,0.1,0.4,0.5]);% breite, höhe
     switch SlopeCorr
         case 'OFF'
-            h1 = histogram(Bkg(:,ring),'Normalization','pdf','FaceColor',rgb('SteelBlue'),'FaceAlpha',0.8);
+            h1 = histogram(Bkg(:,ring),'FaceColor',rgb('Silver'),'FaceAlpha',1,'EdgeColor',rgb('DarkGray'));
         case 'ON'
-            h1 = histogram(Bkg_corr(:,ring),'Normalization','pdf','FaceColor',rgb('SteelBlue'),'FaceAlpha',0.8);
+            h1 = histogram(Bkg_corr(:,ring),'FaceColor',rgb('Silver'),'FaceAlpha',1,'EdgeColor',rgb('DarkGray'));%'Normalization','pdf'
     end
     hold on
     plotx    = linspace(h1.BinEdges(1)-2,h1.BinEdges(end)+2,100)';
     plotNorm = pdf(dNorm{ring},plotx);
     plotx2 = 0:0.1:round(max(plotx));
     plotPois = interp1(0:1:round(max(plotx)),poisspdf(0:1:round(max(plotx)),dPois{ring}.lambda),plotx2,'spline');
-    lN = plot(plotx,plotNorm,'LineWidth',4,'Color',rgb('Crimson'));
-    lP = plot(plotx2,plotPois,'LineWidth',lN.LineWidth,'Color',[0.929,0.694,0.125]);
+    lP = plot(plotx2,plotPois.*numel(Bkg(:,ring)).*h1.BinWidth,'-.','LineWidth',3,'Color',[0.929,0.694,0.125]);
+    lN = plot(plotx,plotNorm.*numel(Bkg(:,ring)).*h1.BinWidth,'LineWidth',3,'Color',rgb('Crimson'));
     hold off
-    PrettyFigureFormat('FontSize',24)
-    xlabel('Background counts');
-    ylabel('Probability density');
-    leg = legend([h1,lN,lP],dataleg,sprintf('Gauss   \\sigma = (%.2f \\pm %.2f) counts',SigmaGauss(ring),SigmaErrGauss(ring)),...
-        sprintf('Poisson \\sigma = (%.2f \\pm %.2f) counts',SigmaPoiss(ring),SigmaErrPoiss(ring)));
-    leg.Title.String = sprintf('Non Poissonian factor = %.1f%% \\pm %.1f%%',[((NPfactor(ring)-1).*100)';NPfactorErr(ring)'.*100]);
+    PrettyFigureFormat('FontSize',22)
+    xlabel(sprintf('Counts in %.0f s',MeanTime));
+    ylabel('Occurence');
+    leg = legend([lN,lP],sprintf('Gauss:   \\sigma = (%.2f \\pm %.2f) counts',SigmaGauss(ring),SigmaErrGauss(ring)),...
+        sprintf('Poisson: \\sigma = (%.2f \\pm %.2f) counts',SigmaPoiss(ring),SigmaErrPoiss(ring)),...
+        'Location','north');
+    leg.Title.String = sprintf('Non-Poisson factor: {\\itf}_{NP} = (%.2f \\pm %.2f) %%',[((NPfactor(ring)-1).*100)';NPfactorErr(ring)'.*100]);
+    leg.Title.FontWeight = 'normal';
     %leg.Title.String = sprintf('Non Poissonian factor = %.1f%% \\pm %.1f%% \n',[((NPfactor-1).*100)';NPfactorErr'.*100]);
     legend boxoff;
-    xlim([h1.BinEdges(1),h1.BinEdges(end)]);
-    title(sprintf('%s',obj.DataSet))
+  
+    if strcmp(obj.DataSet,'Knm1')
+        ylim([0 210])
+          xlim([h1.BinEdges(1),h1.BinEdges(end)]);
+    else
+        ylim([0 320])
+          xlim([44,114]);
+    end
+   % title(sprintf('%s',obj.DataSet))
     savedirplot = [savedir,'plots/'];
     MakeDir(savedirplot);
-       
+     
     if strcmp(obj.AnaFlag,'StackPixel')
     saveplot = [savedirplot,sprintf('GetNPfactor_%s_SlopeCorr%s.pdf',obj.RunData.RunName,SlopeCorr)];
     else

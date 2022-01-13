@@ -7,7 +7,7 @@ savedir = [getenv('SamakPath'),'ksn2ana/ksn2_NuMassSensitivity/results/CorrFits/
 MakeDir(savedir);
 nStepsAll = 25;
 nSteps = 5;
-
+LocalFontSize = 20;
 
 savefileCombi = sprintf('%sksn2_NuMassCorrelationFit_%s_%.0fGrid_%.0ffits.mat',savedir,DataType,nStepsAll,nSteps);
 
@@ -123,7 +123,8 @@ plotdir = [getenv('SamakPath'),'ksn2ana/ksn2_NuMassSensitivity/plots/'];
 MakeDir(plotdir);
 %% plot slope from linear fit
 close all
-GetFigure
+%GetFigure
+figureHandle = figure('Units','normalized','Position',[0.1,0.1,0.5,0.55]);
  %surf(sin2T4_allgrid,mNu4Sq_allgrid,SlopeFit,'EdgeColor','none');
 % hold on;
 % [~,ct] = contour3(sin2T4_allgrid,mNu4Sq_allgrid,SlopeFit,[-0.1,0,0.1],'Color',rgb('Black'),...
@@ -138,21 +139,27 @@ set(gca,'XScale','log');
 set(gca,'YScale','log');
 view(2);
 c = colorbar; 
+c.Location = 'northoutside';
 c.Ticks = (-1:0.2:0.1);
 c.Label.String = sprintf('\\alpha_{slope}');%sprintf('Slope {\\ita}  ({\\itm}_\\nu^2 = {\\ita} \\cdot {\\itm}_4^2 + offset)');
+c.LineWidth = 1.5;
 grid off; 
 PRLFormat;
-set(gca,'FontSize',30);
+set(gca,'FontSize',LocalFontSize);
 ax = gca;
-c.Label.FontSize = ax.XLabel.FontSize;
+
 yticks([[0.1,1,10, 1e2 ,1e3]])
 ylim([0.1 1600]);
 xlim([1e-03 0.5])
 xlabel(sprintf('|{\\itU}_{e4}|^2'));
 ylabel(sprintf('{\\itm}_4^2 (eV^2)'));
-ax.Position(3) = 0.65;
-ax.Position(1) = 0.165;
+ax.XLabel.FontSize = LocalFontSize+4;
+ax.YLabel.FontSize = LocalFontSize+4;
 
+c.Label.FontSize = ax.XLabel.FontSize;
+%ax.Position(3) = 0.65;
+ax.Position(1) = 0.165;
+ax.Position(4) = 0.67;
 % by hand: text boxes:
 % t.delete;
 % t2.delete;
@@ -164,26 +171,29 @@ ax.Position(1) = 0.165;
 % t8.delete;
 % t9.delete;
 % t10.delete;
-t = text(0.0086,0.15,0.17,'-0.01','FontSize',28,'FontName','Times New Roman','Rotation',90) ;
-t2 = text(0.041,0.15,0.17,'-0.05','FontSize',28,'FontName','Times New Roman','Rotation',90) ;
-t3 = text(0.078,0.15,0.17,'-0.1','FontSize',28,'FontName','Times New Roman','Rotation',90) ;
-t4 = text(0.168,0.15,0.17,'-0.25','FontSize',28,'FontName','Times New Roman','Rotation',90) ;
-t5 = text(0.275,0.15,0.17,'-0.5','FontSize',28,'FontName','Times New Roman','Rotation',90) ;
-t6 = text(0.415,0.15,0.17,'-1','FontSize',28,'FontName','Times New Roman','Rotation',90) ;
-t7 = text(0.0015,47,0.17,'0','FontSize',28,'FontName','Times New Roman','Rotation',0) ;
-t8 = text(0.025,190,0.17,'0.01','FontSize',28,'FontName','Times New Roman','Rotation',30) ;
-t9 = text(0.115,160,0.17,'0.05','FontSize',28,'FontName','Times New Roman','Rotation',40) ;
-t10 = text(0.225,150,0.17,'0.1','FontSize',28,'FontName','Times New Roman','Rotation',50) ;
+t = text(0.0089,0.15,0.17,'-0.01','FontSize',LocalFontSize,'FontName','Times New Roman','Rotation',90) ;
+t2 = text(0.043,0.15,0.17,'-0.05','FontSize',LocalFontSize,'FontName','Times New Roman','Rotation',90) ;
+t3 = text(0.081,0.15,0.17,'-0.1','FontSize',LocalFontSize,'FontName','Times New Roman','Rotation',90) ;
+t4 = text(0.172,0.15,0.17,'-0.25','FontSize',LocalFontSize,'FontName','Times New Roman','Rotation',90) ;
+t5 = text(0.282,0.15,0.17,'-0.5','FontSize',LocalFontSize,'FontName','Times New Roman','Rotation',90) ;
+t6 = text(0.421,0.15,0.17,'-1','FontSize',LocalFontSize,'FontName','Times New Roman','Rotation',90) ;
+t7 = text(0.0015,43,0.17,'0','FontSize',LocalFontSize,'FontName','Times New Roman','Rotation',0) ;
+t8 = text(0.025,170,0.17,'0.01','FontSize',LocalFontSize,'FontName','Times New Roman','Rotation',30) ;
+t9 = text(0.115,140,0.17,'0.05','FontSize',LocalFontSize,'FontName','Times New Roman','Rotation',40) ;
+t10 = text(0.238,150,0.17,'0.1','FontSize',LocalFontSize,'FontName','Times New Roman','Rotation',50) ;
 ax = gca;
 ax.SortMethod='ChildOrder';
 %
-plotname = sprintf('%sksn2_NuMassCorrelationFit_%s_%.0fGrid_%.0ffits_LinSlope.pdf',plotdir,DataType,nStepsAll,nSteps);
+
+
+plotname = sprintf('%sksn2_NuMassCorrelationFit.pdf',plotdir);
+%plotname = sprintf('%sksn2_NuMassCorrelationFit_%s_%.0fGrid_%.0ffits_LinSlope.pdf',plotdir,DataType,nStepsAll,nSteps);
 export_fig(plotname);
 
 %print(gcf,plotname,'-dpng','-r350');
 
-
 return
+
 %% plot correlation
 GetFigure
 surf(sin2T4_allgrid,mNu4Sq_allgrid,CorrCoeff,'EdgeColor','none');
@@ -219,6 +229,7 @@ view(2);
 c = colorbar;
 c.Label.FontSize = 18;
 c.Label.String = sprintf('Covariance (eV^4)');
+
 grid off;
 PrettyFigureFormat('FontSize',22);
 
@@ -226,6 +237,8 @@ ylim([0.1 1600]);
 xlim([1e-03 0.5])
 xlabel(sprintf('|{\\itU}_{e4}|^2'));
 ylabel(sprintf('{\\itm}_4^2 (eV^2)'));
+
+
 plotname = sprintf('%sksn2_NuMassCorrelationFit_%s_%.0fGrid_%.0ffits_Covar.png',plotdir,DataType,nStepsAll,nSteps);
 print(gcf,plotname,'-dpng','-r350');
 

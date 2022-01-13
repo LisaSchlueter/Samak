@@ -14,7 +14,7 @@ savedir = [getenv('SamakPath'),'ksnxana/ksnx_sensitivity/results/'];
 MakeDir(savedir);
 savename = sprintf('%sksnx_finalsensitivity_contour_%s_%s_nGridSteps%.0f.mat',savedir,chi2,strrep(freePar,' ',''),nGridSteps);
 
-if exist(savename,'file')
+if exist(savename,'file')  & 1==2
 else
     
     FakeInitFile = @ref_KSNX_KATRIN_Final2;

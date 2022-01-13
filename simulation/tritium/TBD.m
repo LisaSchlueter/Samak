@@ -823,7 +823,7 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
         end
         function          SetTBDDSBinning(obj,varargin)
             p = inputParser;
-            p.addParameter('TeStep',0.1,@(x)isfloat(x));
+            p.addParameter('TeStep',0.1,@(x)isfloat(x)); % 0.1
             p.parse(varargin{:});
             TeStep_local = p.Results.TeStep;
             

@@ -7,7 +7,7 @@
 
 RunList = 'KNM1';
 if ~exist('M','var')
-    M = MultiRunAnalysis('RunList',RunList,'chi2','chi2Stat','DataType','Twin');
+    M = MultiRunAnalysis('RunList',RunList,'chi2','chi2Stat','DataType','Twin','exclDataStart',13,'NonPoissonScaleFactor',1);
     M.exclDataStart = 14;
     M.fixPar = '5 6 7 8 9 10 11';
     M.Fit;
@@ -44,7 +44,7 @@ else
 end
 
 %% step 1.2 get pixelwise qU
-if ~exist('qUPix','var')
+if ~exist('qUPix','varxc')
     T = MultiRunAnalysis('RunList',RunList,'chi2','chi2Stat','DataType','Real');
     T.ReadSingleRunData;
     qUPix = T.StackWmean(T.SingleRunData.qU,T.SingleRunData.TimeperSubRunperPixel);

@@ -4,7 +4,7 @@
 range = 40;
 LocalFontSize = 20;
 LocalLineWidth = 2.5;
-
+LegResults = 'OFF'; % print best-fit in legend (upper panel) yes or no
  SavePlot = 'ON';
  
 savedir = [getenv('SamakPath'),'ksn2ana/ksn2_spectrum/results/'];
@@ -170,16 +170,23 @@ set(gca,'FontSize',LocalFontSize);
 if ErrorBarScaling==1
     datalabel = sprintf(' KATRIN data with %.0f\\sigma error bars',ErrorBarScaling);
 else
-    datalabel = sprintf(' KATRIN data with 1 \\sigma error bars \\times %.0f',ErrorBarScaling);
+    datalabel = sprintf(' KATRIN data with 1\\sigma error bars \\times %.0f',ErrorBarScaling);
 end
-leg = legend([pdata,pfit,pactive,psterile],datalabel,...
-    sprintf('3\\nu+1 best fit model'),...
-    sprintf('Active branch'),...%: {\\itm}_\\nu^2 = %.1f eV^2',dbf.FitResult.par(1)),...
-    sprintf('Sterile branch: {\\itm}_\\nu^2 = %.1f eV^2, |{\\itU}_{e4}|^2 = %.3f',dbf.mNu4Sq_bf,dbf.sin2T4_bf));
+
+if strcmp(LegResults,'ON')
+    leg = legend([pdata,pfit,pactive,psterile],datalabel,...
+        sprintf('3\\nu+1 best fit model'),...
+        sprintf('Active branch: {\\itm}_\\nu^2 = %.1f eV^2',dbf.FitResult.par(1)),...
+        sprintf('Sterile branch: {\\itm}_4^2 = %.1f eV^2, |{\\itU}_{e4}|^2 = %.3f',dbf.mNu4Sq_bf,dbf.sin2T4_bf));
+else
+       leg = legend([pdata,pfit,pactive,psterile],datalabel,...
+        sprintf('3\\nu+1 best fit model'),...
+        'Active branch','Sterile branch');
+end
 PrettyLegendFormat(leg);
-leg.FontSize = LocalFontSize-0.5;
+leg.FontSize = LocalFontSize;
 set(gca,'yscale','log');
-ylabel('Count rate (cps)','FontSize',LocalFontSize+6);
+ylabel('Count rate (cps)','FontSize',LocalFontSize+4);
 
 % axis
 ax = gca;
@@ -243,7 +250,7 @@ end
 
 PRLFormat;
 set(gca,'FontSize',LocalFontSize);
-ylabel(yStr,'FontSize',LocalFontSize+6);
+ylabel(yStr,'FontSize',LocalFontSize+4);
 
 katrinsim   = sprintf('3\\nu+1 simulation {\\itm}_4^2 = %.1f eV^2, |{\\itU}_{e4}|^2 = %.3f',dbf.mNu4Sq_bf,dbf.sin2T4_bf);
 
@@ -263,12 +270,12 @@ text(textx(1)+1,1.009,'b)','FontSize',LocalFontSize+2,'FontName',get(gca,'FontNa
 %     {katrinsim,'3\nu+1 model'},'Location','southeast','box','off');
 hl=legend(pH1,...
    katrinsim,'Location','northeast','box','off');
-hl.FontSize = LocalFontSize-0.5;
+hl.FontSize = LocalFontSize;
 
 % axleg=axes('Position',get(gca,'Position'),'Visible','Off');
 % hl2 = legend(axleg,pH0,'3\nu model','box','off','Location','southeast');
 % hl2.FontSize = LocalFontSize-0.5;
-PRLFormat;
+
 
 %% 
 s3 = subplot(4,1,4);
@@ -285,8 +292,8 @@ ylim([0 70])
 yticks([0 35 70])
 PRLFormat;
 set(gca,'FontSize',LocalFontSize);
-set(get(gca,'XLabel'),'FontSize',LocalFontSize+6);
-set(get(gca,'YLabel'),'FontSize',LocalFontSize+6);
+set(get(gca,'XLabel'),'FontSize',LocalFontSize+4);
+set(get(gca,'YLabel'),'FontSize',LocalFontSize+4);
 text(textx(1)+1,60,'c)','FontSize',LocalFontSize+2,'FontName',get(gca,'FontName'));
 
 linkaxes([s1,s2,s3],'x');
@@ -295,11 +302,15 @@ ax3 = gca;
 mypos2 = ax3.Position;
 ax3.Position = [ax.Position(1) mypos2(2)-0.01 ax.Position(3) mypos2(4)+0.035];
 % hl2.Position(2) = hl.Position(2);
- 
+%  display
 if strcmp(SavePlot,'ON')
     plotdir  = strrep(savedir,'results','plots');
     MakeDir(plotdir);
-    plotname = sprintf('%sksn2_spectrum.pdf',plotdir);
+    if strcmp(LegResults,'ON')
+        plotname = sprintf('%sksn2_spectrum_BestFit.pdf',plotdir);
+    else
+        plotname = sprintf('%sksn2_spectrum.pdf',plotdir);
+    end
 end
 export_fig(plotname);
 fprintf('save plot to %s \n',plotname);

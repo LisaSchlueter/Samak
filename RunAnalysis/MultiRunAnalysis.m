@@ -1731,7 +1731,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             [TTFSD,DTFSD,HTFSD] = obj.SetDefaultFSD;
             progressbar('Load single run objects')
             for r=1:length(obj.RunList)
-                progressbar(i/obj.nRuns);
+                progressbar(r/obj.nRuns);
                 obj.RunNr = obj.RunList(r);
                 obj.ReadData;
                 obj.SingleRunObj{r} = ref_RunAnalysis(obj.RunData,...
@@ -1742,7 +1742,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                     'AngularTFFlag',obj.AngularTFFlag,'SynchrotronFlag',obj.SynchrotronFlag,...
                     'FSD_Sigma',obj.FSD_Sigma,'BKG_PtSlope',obj.BKG_PtSlope,'nRuns',1);
                 
-                obj.SingleRunObj{r}.ComputeTBDDS; obj.SingleRunObj{r}.ComputeTBDIS;
+             %   obj.SingleRunObj{r}.ComputeTBDDS; obj.SingleRunObj{r}.ComputeTBDIS;
             end
             
             obj.RunNr   = tmpRunNr;    % set back to initial value
@@ -2159,7 +2159,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                     y = FitResults.B.*1e3;
                     yErr = FitResults.BErr.*1e3;
                     if strcmp(DisplayStyle,'Abs')
-                        ystr = sprintf('{\\itB} (mcps)');
+                        ystr = sprintf('{\\itB}_{base} (mcps)');
                     elseif strcmp(DisplayStyle,'Rel')
                         y = y-wmean(y,1./yErr.^2);
                         ystr = sprintf('{\\itB} - \\langle{\\itB}\\rangle  (mcps)');
@@ -2172,13 +2172,13 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                         ystr = sprintf('{\\itN}_{sig.}');
                     elseif strcmp(DisplayStyle,'Rel')
                         y = y-wmean(y,1./yErr.^2);
-                        ystr = sprintf('{\\itN}_{sig.} - \\langle{\\itN}_sig.\\rangle');
+                        ystr = sprintf('{\\itN}_{sig.} - \\langle{\\itN}_{sig}.\\rangle');
                     end
                     yUnit = sprintf('');
                 case 'pVal'
                     y = FitResults.pValue;
                     yErr = zeros(numel(y),1);
-                    ystr = sprintf('p-value (%.0f dof)',FitResults.dof(1));
+                    ystr = sprintf('{\\itp}-value (%.0f dof)',FitResults.dof(1));
                     yUnit = sprintf('');
                 case 'RhoD'
                     y    = obj.SingleRunData.WGTS_CD_MolPerCm2;
@@ -2353,6 +2353,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
             % legend
             if strcmp(Parameter,'pVal')
                 leg = legend([e1],sprintf('%s scanwise fits (%s)',upper(obj.DataSet),chi2leg));%,'p-value = 0.05'); %l1
+                ylim([0 1])
             elseif ismember(Parameter,{'RhoD'})
                  ytmp = obj.SingleRunData.WGTS_CD_MolPerCm2;
                  meanRhoD = wmean(ytmp,obj.SingleRunData.TimeSec);
@@ -2387,18 +2388,23 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                 end
             elseif ismember(Parameter,{'B'})
                  leg = legend([e1,l1],sprintf('%s scan-wise fits',upper(obj.DataSet)),...
-                    sprintf('Mean = %.1f %s (std = %.1f %s)',mean(y),yUnit,std(y),yUnit));%pval
+                    sprintf('Mean = %.1f %s (std = %.1f %s)',wmean(y,1./yErr.^2),yUnit,std(y),yUnit));%pval
              elseif ismember(Parameter,{'N'})
                  leg = legend([e1,l1],sprintf('%s scan-wise fits',upper(obj.DataSet)),...
-                     sprintf('Mean = %.2f %s (std = %.2f)',mean(y),yUnit,std(y)));%pval
+                     sprintf('Mean = %.2f %s (std = %.2f)',wmean(y,1./yErr.^2),yUnit,std(y)));%pval
             else
                 leg = legend([e1,l1],sprintf('%s scan-wise fits',upper(obj.DataSet)),...
-                    sprintf('Mean = %.2f %s (std = %.2f %s)',mean(y),yUnit,std(y),yUnit));%pval
+                    sprintf('Mean = %.2f %s (std = %.2f %s)',wmean(y,1./yErr.^2),yUnit,std(y),yUnit));%pval
+            end
+            
+            if strcmp(Parameter,'E0')
+                ax = gca;
+                ax.YAxis.Exponent = 0;
             end
             leg.Location = 'northwest';
             leg.FontSize = get(gca,'FontSize')-2;
-         legend boxoff;
-           % PrettyLegendFormat(leg);
+       %  legend boxoff;
+            PrettyLegendFormat(leg);
          
             % remove white space around figure
             ax = gca;
@@ -2429,7 +2435,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                 elseif ~ismember(Parameter,{'T2','RhoD'})
                     hold on;
                     if strcmp(Parameter,'pVal')
-                        h1.BinWidth = 0.04;
+                        h1.BinWidth = 0.02;
                         %                        x=linspace(min(y)*0.75,max(y)*1.2,100);
                         %                        yhist = chi2pdf(x,FitResults.dof(1));
                     else
@@ -2441,6 +2447,9 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                         yhist = gaussian(x,wmean(y,1./yErr.^2),std(y))./simpsons(x,gaussian(x,wmean(y,1./yErr.^2),std(y)));
                         % plot(yhist.*h1.BinWidth.*numel(obj.RunList),x,...
                         %    '-','LineWidth',4,'Color',rgb('GoldenRod'));
+                        if strcmp(Parameter,'N')
+                            h1.BinWidth = 0.01;
+                        end
                     end
                 end
               
@@ -2474,7 +2483,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                 ax2.Position(4) = ax.Position(4); % height
                 PrettyFigureFormat('FontSize',LocalFontSize);
                 yticklabels(''); %   yticks([])
-                xlabel('Entries');
+                xlabel('Occurrence');
                 set(gca,'XMinorTick','off');
                 linkaxes([s1,s2],'y');
             end
@@ -2908,11 +2917,16 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                 MosStr = '';
             end
             
+           if strcmp(obj.chi2,'chi2Stat') && obj.NonPoissonScaleFactor~=1
+               NPstr = sprintf('_NP%.5g',obj.NonPoissonScaleFactor);
+           else
+               NPstr = '';
+           end
             savefile = arrayfun(@(x) ...
-                sprintf('%sFit%s%.0f_%s_%.0fbE0_freePar%s%s%s.mat',...
+                sprintf('%sFit%s%.0f_%s%s_%.0fbE0_freePar%s%s%s.mat',...
                 savedir,DataTypeLabel,...
                 x,...
-                obj.chi2,obj.ModelObj.Q_i-obj.ModelObj.qU(obj.exclDataStart),fixParstr,RoiStr,MosStr), ...
+                obj.chi2,NPstr,obj.ModelObj.Q_i-obj.ModelObj.qU(obj.exclDataStart),fixParstr,RoiStr,MosStr), ...
                 obj.RunList,'UniformOutput',0);
             
             % load fit results, which are already computed

@@ -5,6 +5,8 @@ DataType = 'Real';
 
 range = 40;
 freePar = 'E0 Norm Bkg';
+LegLog = 2;
+
 %% configure RunAnalysis object
 if strcmp(chi2,'chi2Stat')
     NonPoissonScaleFactor = 1;
@@ -60,7 +62,8 @@ FinalSensitivity = 'ON';
    ...% 'Stereo','OFF','DANSS','OFF','Prospect','OFF','DoubleChooz','OFF',...
    ... % 'DayaBay','OFF','Neutrino4','OFF', 'Mainz','OFF','Troitsk','OFF', 'NuBetaBeta','OFF',...
     'FinalSensitivity',FinalSensitivity,...
-    'Combi','OFF');
+    'Combi','OFF',...
+    'LineStyle','-.');
 
 % load combined result for fixed m_nu
 savedir_fix = [getenv('SamakPath'),'ksn2ana/ksn2_RunCombination/results/'];
@@ -82,29 +85,31 @@ sin2T4Sq_fix1  = 4*dfix.sin2T4_contour_1.*(1-dfix.sin2T4_contour_1);
 
 % include n plot
 hold on;
-pfix12 = plot(sin2T4Sq_fix,mNu4Sq_fix,':','Color',rgb('Navy'),'LineWidth',3);
-pfix1 = plot(sin2T4Sq_fix1,mNu4Sq_fix1,'-.','Color',rgb('SkyBlue'),'LineWidth',3);
+pfix12 = plot(sin2T4Sq_fix,mNu4Sq_fix,'-','Color',rgb('Navy'),'LineWidth',3);
+pfix1 = plot(sin2T4Sq_fix1,mNu4Sq_fix1,':','Color',rgb('SkyBlue'),'LineWidth',3);
 
 ax = gca;
 set(gca,'FontSize',24);
 ax.XLabel.FontSize = 26;
 ax.YLabel.FontSize = 26;
 
-% legend
+%% legend
+mNuStr = sprintf('{\\itm}_\\nu^2 = 0 eV^2');
 legStrCombi = legStr;
 if strcmp(FinalSensitivity,'ON')
-    legStrCombi{end-2} = [legStr{end-2},' (KSN2)'];
+    legStrCombi{end-1} = [legStr{end-1},' sensitivity'];
+    legStrCombi{end} = strrep(legStr{end},'sensitivity',sprintf('(%s)',mNuStr));
     legStrCombi = {legStrCombi{1:end-3},...
-        [legStr{end-2},' (KSN1)'],...
-        [legStr{end-2},' (KSN2)'],...
-        [legStr{end-2},' (KSN1+2)'],...
+       sprintf('KATRIN (KNM1, %s) 95%% C.L.',mNuStr),...% [legStr{end-2},' (KSN1)'],...
+       sprintf('KATRIN (KNM2, %s) 95%% C.L.',mNuStr),...% [legStr{end-2},' (KSN2)'],...
+      sprintf('KATRIN (KNM1+2, %s) 95%% C.L.',mNuStr),...%  [legStr{end-2},' (KSN1+2)'],...
         legStrCombi{end-1:end}};
     legHandleAll = [legHandle{1:end-3},...
         pfix1,legHandle{end-2},pfix12,...
         legHandle{end-1},legHandle{end}];
 else
-    legStrCombi{end} = [legStr{end},' (KSN2)'];
-    legStrCombi = {legStrCombi{1:end-1},[legStr{end},' (KSN1)'],legStrCombi{end},[legStr{end},' (KSN1+2)']};
+    legStrCombi{end} = [legStr{end},' (KNM2)'];
+    legStrCombi = {legStrCombi{1:end-1},[legStr{end},' (KNM1)'],legStrCombi{end},[legStr{end},' (KNM1+2)']};
     legHandleAll = [legHandle{1:end-1},pfix1,legHandle{end},pfix12];
 end
 
@@ -114,11 +119,37 @@ leg.Position(1) = 0.005;
 leg.Position(2) = 0.7;
 ax.Position(4) = 0.55;
 xlim([4e-03 1]);
+
+% but ksn2-only in front of ksn1+2
+ch=get(gca,'children');
+set(gca,'children',[ch(5) ;ch(1:4) ;ch(6:end)]) ;
+
+LocalFontSize = 20;
+ax = gca;
+
+% different legend position and style
+if LegLog==2
+   leg.Location = 'eastoutside'; 
+   f1 = gcf;
+   f1.Position = [0 0.1 0.6 0.6];
+   leg.NumColumns = 1;
+   ax.Position(2) = 0.2;
+   ax.Position(4) = 0.65;
+   ax.Position(3) = 0.45;
+   LocalFontSize = 12;
+   leg.FontSize = LocalFontSize;
+end
+
+set(gca,'FontSize',LocalFontSize);
+ax.XLabel.FontSize = LocalFontSize;
+ax.YLabel.FontSize = LocalFontSize;
+
+
 %% save as pdf
 plotname = sprintf('%s_OsciContour_%.2gCL_CombiBEST.pdf',S.DefPlotName,S.ConfLevel);
 export_fig(gcf,plotname);
 fprintf('save plot to %s \n',plotname)         
-print('KSN2_Osci.png','-dpng','-r70');
+print('KSN2_Osci.png','-dpng','-r100');
 
 
 

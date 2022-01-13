@@ -2,7 +2,7 @@
 
 RunList = 'KNM1';
 exclDataStart_all = [17,14];
-ReFit = 'ON';
+ReFit = 'OFF';
 nTwins = 7;
 mNuSq    = zeros(numel(exclDataStart_all),nTwins); mNuSqErr = zeros(numel(exclDataStart_all),nTwins);
 E0       = zeros(numel(exclDataStart_all),nTwins); E0Err    = zeros(numel(exclDataStart_all),nTwins);

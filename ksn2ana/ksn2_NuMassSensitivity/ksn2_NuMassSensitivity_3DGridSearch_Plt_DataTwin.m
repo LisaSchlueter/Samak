@@ -116,7 +116,7 @@ xlabel(sprintf('{\\itm}_\\nu^2 (eV^2)'));
 ylabel(sprintf('\\Delta\\chi^2'));
 %PrettyFigureFormat('FontSize',22);
 PRLFormat;
-set(gca,'FontSize',30);
+set(gca,'FontSize',24);
 if strcmp(CombiSTEREO,'OFF') && strcmp(PltKnm2,'OFF')
 leg = legend([p1interR,p1interT],...
     sprintf('Data: {\\itm}_\\nu^2 = %.1f^{+%.2f}_{-%.2g} eV^2',mNuSq_bf,mNuSqErrUp,mNuSqErrDown),...
@@ -138,7 +138,7 @@ leg = legend([p1interR,p1interT,p2],...
     'Location','northeast');
 ylim([-0.3 5]);
 xlim([-1 2.5]);
-    
+   
 else
     leg = legend([p1interR,p2Stereo],...
         sprintf('{\\itm}_\\nu^2 = %.1f^{+%.2f}_{-%.2g} eV^2 (KATRIN)',mNuSq_bf,mNuSqErrUp,mNuSqErrDown),...
@@ -148,7 +148,7 @@ else
  xlim([min(max(dR.FixmNuSq_all)),max(dR.FixmNuSq_all)]);
 end
 PrettyLegendFormat(leg);
-
+ leg.FontSize = get(gca,'FontSize');
 pltdir = strrep(savedir,'results','plots');
 MakeDir(pltdir);
 pltname = sprintf('%sksn2_NuMassSensitivity.png',pltdir);%strrep(strrep(strrep(savefileCombiR,'results','plots'),'.mat','.png'),'Real','');

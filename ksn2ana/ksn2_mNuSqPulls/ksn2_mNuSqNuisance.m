@@ -6,6 +6,7 @@ DataType = 'Real';%'Twin';%'Real';
 nGridSteps = 40;
 range = 40;
 Mode = 'Compute';
+LocalFontSize = 24;
 %% configure RunAnalysis object
 if strcmp(chi2,'chi2Stat')
     NonPoissonScaleFactor = 1;
@@ -93,7 +94,7 @@ pFree.LineWidth = 3;
 leg = legend([pFix,pFree,p1],...
     sprintf('I)  Fixed {\\itm}_\\nu^2 = 0 eV^2'),...
     sprintf('II) Free {\\itm}_\\nu^2 unconstrained'),...
-    sprintf('Isoline: {\\itm}_\\nu^2 (eV^2) best fit for ii)'),...
+    sprintf('Isoline: {\\itm}_\\nu^2 (eV^2) best fit for II)'),...
     'EdgeColor',rgb('Silver'),'Location','southwest','box','off');
 if strcmp(DataType,'Twin')
     legend boxon
@@ -102,17 +103,20 @@ end
 %
 title('');
 PRLFormat;
-set(gca,'FontSize',30);
+set(gca,'FontSize',LocalFontSize);
 
-leg.FontSize = 26;
-leg.Position(2) = 0.3;
+leg.FontSize = LocalFontSize;
+leg.Position(2) = 0.275;
+ax = gca;
+ax.XLabel.FontSize = LocalFontSize;
+ax.YLabel.FontSize = LocalFontSize;
 
 ylim([0.1 2e3]);
 yticks([0.1 1 10 100 1e3])
 xlim([2e-03 0.5]);
 set(gca,'YScale','log')
 set(gca,'XScale','log')
-% make nice labels by hand
+%% make nice labels by hand
 if strcmp(DataType,'Real')
     BoxArg = { 'Color','Black','EdgeColor','none','FontSize',24,'FontName','Times New Roman'};
 %     t1.delete;
@@ -133,37 +137,36 @@ if strcmp(DataType,'Real')
 %     tx8.delete;
 %         t9.delete;
 %     tx9.delete;
-    t1 = annotation('rectangle',[0.82,0.30,0.07,0.04],'FaceColor',rgb('White'),'Color','none');
-    tx1 = annotation('textbox',[0.82,0.302,0.05,0.05],'String',0.28,BoxArg{:});
+    t1 = annotation('rectangle',[0.82,0.24,0.07,0.05],'FaceColor',rgb('White'),'Color','none');
+    tx1 = annotation('textbox',[0.82,0.302,0.05,0.001],'String',0.28,BoxArg{:});
     
-    t2 = annotation('ellipse',[0.84,0.38,0.03,0.04],'FaceColor',rgb('White'),'Color','none');
-    tx2 = annotation('textbox',[0.84,0.387,0.05,0.05],'String',0,BoxArg{:});
-    
-%     t3.delete;
-%     tx3.delete;
-    t3 = annotation('ellipse',[0.83,0.45,0.04,0.035],'FaceColor',rgb('White'),'Color','none'); 
-    tx3 = annotation('textbox',[0.83,0.451,0.05,0.05],'String','-1',BoxArg{:});
-   
-    t4 = annotation('rectangle',[0.8,0.589,0.045,0.045],'FaceColor',rgb('White'),'Color','none');
-    tx4 = annotation('textbox',[0.8,0.6,0.05,0.05],'String','-5',BoxArg{:});
-    
-    t5 = annotation('rectangle',[0.735,0.74,0.04,0.04],'FaceColor',rgb('White'),'Color','none');
-    tx5 = annotation('textbox',[0.73,0.74,0.05,0.05],'String','10',BoxArg{:});
-    
+    t2 = annotation('rectangle',[0.84,0.34,0.03,0.04],'FaceColor',rgb('White'),'Color','none');
+    tx2 = annotation('textbox',[0.84,0.387,0.05,0.005],'String',0,BoxArg{:});
+
+    t3 = annotation('ellipse',[0.83,0.4,0.04,0.05],'FaceColor',rgb('White'),'Color','none'); 
+    tx3 = annotation('textbox',[0.83,0.451,0.01,0.01],'String','-1',BoxArg{:});
+ 
+    t4 = annotation('ellipse',[0.8,0.56,0.047,0.06],'FaceColor',rgb('White'),'Color','none');
+    tx4 = annotation('textbox',[0.8,0.575,0.05,0.05],'String','-5',BoxArg{:});
+  
+    t5 = annotation('rectangle',[0.735,0.715,0.04,0.04],'FaceColor',rgb('White'),'Color','none');
+    tx5 = annotation('textbox',[0.73,0.74,0.05,0.03],'String','10',BoxArg{:});
+  
     t6 = annotation('rectangle',[0.53,0.81,0.03,0.04],'FaceColor',rgb('White'),'Color','none');
     tx6 = annotation('textbox',[0.53,0.81,0.05,0.05],'String','2',BoxArg{:});
-    
+  
     t7 = annotation('rectangle',[0.425,0.81,0.02,0.03],'FaceColor',rgb('White'),'Color','none');
-    tx7 = annotation('textbox',[0.42,0.81,0.05,0.05],'String','1',BoxArg{:});
-    
-    t8 = annotation('rectangle',[0.302,0.66,0.07,0.05],'FaceColor',rgb('White'),'Color','none');
-    tx8 = annotation('textbox',[0.3,0.655,0.05,0.05],'String','0.28',BoxArg{:});
-    
+    tx7 = annotation('textbox',[0.42,0.81,0.05,0.05],'String','1',BoxArg{:});   
+ 
+    t8 = annotation('rectangle',[0.302,0.62,0.07,0.05],'FaceColor',rgb('White'),'Color','none');
+    tx8 = annotation('textbox',[0.3,0.655,0.05,0.02],'String','0.28',BoxArg{:});
+   
     t9 = annotation('rectangle',[0.2,0.88,0.07,0.04],'FaceColor',rgb('White'),'Color','none');
     tx9 = annotation('textbox',[0.2,0.875,0.05,0.05],'String','0.28',BoxArg{:});
 end
 
 %% save
+axes.SortMethod='ChildOrder';
 name_i = strrep(S.DefPlotName,'_mNuE0BkgNorm','');
 plotname = sprintf('%s_mNuSqOverviewmNuSq_%.2gCL.png',name_i,S.ConfLevel);
 %print(gcf,plotname,'-dpng','-r450');

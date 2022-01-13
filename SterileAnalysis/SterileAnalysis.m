@@ -1022,16 +1022,52 @@ classdef SterileAnalysis < handle
                 
                 xRAA = dRAA1(1:15:end,1);
                 yRAA = smooth(dRAA1(1:15:end,2),5);
-                pRAA = plot(xRAA,yRAA,'-','LineWidth',2,'Color',rgb('ForestGreen'));
+                pRAA = plot(xRAA,yRAA,'-','LineWidth',2,'Color',rgb('SeaGreen'));%ForestGreen
                 plot(dRAA2(1:15:end,1),smooth(dRAA2(1:15:end,2),5),'-','LineWidth',pRAA.LineWidth,'Color',pRAA.Color);
                 plot(dRAA3(1:15:end,1),smooth(dRAA3(1:15:end,2),5),'-','LineWidth',pRAA.LineWidth,'Color',pRAA.Color);
                
                 % extend to large m4              
                 plot(ones(1,1e2).*xRAA(end),linspace(yRAA(end),2e3,1e2),'-','LineWidth',pRAA.LineWidth,'Color',pRAA.Color);
                 plot(ones(1,1e2).*xRAA(1),linspace(yRAA(1),2e3,1e2),'-','LineWidth',pRAA.LineWidth,'Color',pRAA.Color);
-              
-                 legHandle{numel(legHandle)+1} = pRAA;
+                
+                legHandle{numel(legHandle)+1} = pRAA;
                 legStr = [legStr,{sprintf('RAA 95%% CL')}];%-PRD 83, 073006 (2011) -
+                
+%               % first part
+%                 y1 = yRAA(xRAA<=mean(xRAA));
+%                 y2 = yRAA(xRAA>mean(xRAA));
+%                 yall = logspace(log10(max([min(y1),min(y2)])),log10(min([max(y1),max(y2)])),5e3);
+%                 %
+%                 x1all = interp1(y1,xRAA(xRAA<=mean(xRAA)),yall);
+%                 x2all = interp1(y2,xRAA(xRAA>mean(xRAA)),yall);
+%                 xmean = x1all+0.5.*(x2all-x1all);
+%       
+%                 [lRAA,aRAA] = boundedline(xmean,yall,[(xmean-x1all);(x2all-xmean)]','orientation','horiz');
+%                 aRAA.FaceColor = rgb('LightGray'); lRAA.delete;
+%                 aRAA.FaceAlpha = 0.5;
+%                 
+%                 % large m4 part
+%                 meanx =  xRAA(1)+0.5*(xRAA(end)-xRAA(1));
+%                 boundedline(meanx.*ones(2,1),[yRAA(1)-1.5,2e3],0.5*(xRAA(end)-xRAA(1)),'orientation','horiz')
+%                 
+%                 % second bubble
+%                 x2 = dRAA2(1:15:end,1);
+%                 y2 = smooth(dRAA2(1:15:end,2),5);
+%                 
+%                    % first part
+%                   Idx = (y2==min(y2));
+%                 y12 = y2(1:Idx);
+%                 y22 = y2(Idx+1:end);
+%                 yall2 = logspace(log10(max([min(y12),min(y22)])),log10(min([max(y12),max(y22)])),5e3);
+%                 %
+%                 x12all = interp1(y12,x2(1:Idx),yall2);
+%                 x22all = interp1(y22,x2(Idx+1:end),yall2);
+%                 xmean2 = x12all+0.5.*(x22all-x12all);
+%                 
+%                 [lRAA2,aRAA2] = boundedline(xmean2,yall2,[(xmean2-x1all2);(x2all2-xmean2)]','orientation','horiz');
+%                 aRAA2.FaceColor = rgb('LightGray'); lRAA2.delete;
+%                 aRAA2.FaceAlpha = 0.5;
+%                 
             end
             
             if strcmp(BestGA,'ON') % Best + GA
@@ -1047,11 +1083,11 @@ classdef SterileAnalysis < handle
                 fBest2b = sprintf('%scontour_BestGAcombi_2sigma_b.txt',savedirOther);
                 dataBest2a = importdata(fBest2a);
                 dataBest2b = importdata(fBest2b);
-                pBest = plot(dataBest2a(:,1),dataBest2a(:,2),'-','LineWidth',2,'Color',rgb('LimeGreen'));
-                plot(dataBest2b(:,1),dataBest2b(:,2),'-','LineWidth',pBest.LineWidth,'Color',pBest.Color);
+                pBest = plot(dataBest2a(:,1),dataBest2a(:,2),'-','LineWidth',2,'Color',rgb('Lime'));
+                plot(dataBest2b(:,1),dataBest2b(:,2),pBest.LineStyle,'LineWidth',pBest.LineWidth,'Color',pBest.Color);
                 %extend to large m4
-                plot(ones(1,1e2).*dataBest2a(end,1),linspace(dataBest2a(end,2),2e3,1e2),'-','LineWidth',pBest.LineWidth,'Color',pBest.Color);
-                plot(ones(1,1e2).*dataBest2a(1,1),linspace(dataBest2a(1,2),2e3,1e2),'-','LineWidth',pBest.LineWidth,'Color',pBest.Color);
+                plot(ones(1,1e2).*dataBest2a(end,1),linspace(dataBest2a(end,2),2e3,1e2),pBest.LineStyle,'LineWidth',pBest.LineWidth,'Color',pBest.Color);
+                plot(ones(1,1e2).*dataBest2a(1,1),linspace(dataBest2a(1,2),2e3,1e2),pBest.LineStyle,'LineWidth',pBest.LineWidth,'Color',pBest.Color);
               
                 legHandle{numel(legHandle)+1} = pBest;
                 legStr = [legStr,{sprintf('BEST + GA 95.45%% CL')}];

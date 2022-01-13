@@ -1451,6 +1451,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                         if strcmp(obj.DataSet,'Knm1')
                             % pass to covariance matrix object
                             obj.FitCM_Obj.WGTS_TASR_RelErr =  diag(WGTS_TASR_RelErr.^2);
+                            TASR_CorrMat = corrcoef(SubRunActivity','Rows','pairwise');%0;
                         elseif strcmp(obj.DataSet,'Knm2')
                             % calculate correlation matrix
                             %SubRunActivity(isnan(SubRunActivity))=1;

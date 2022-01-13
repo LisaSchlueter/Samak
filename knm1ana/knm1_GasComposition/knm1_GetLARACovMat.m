@@ -59,12 +59,26 @@ else
    
     covmat = cov(TBDIS_s');
     covmatfrac = covmat./(TBDIS_i.*TBDIS_i');
+ 
     
-    save(savefileCovMat,'covmat','covmatfrac','TBDIS_s','WGTS_MolFrac_s','CovMatLARA','AbsErr_Std');
+    save(savefileCovMat,'covmat','covmatfrac','TBDIS_s','WGTS_MolFrac_s','CovMatLARA','AbsErr_Std','TBDIS_i');
 end
 %%
-% GetFigure
-% imagesc(TBDIS_covmatfrac(13:end,13:end));
-% c = colorbar;
+%  GetFigure
+%  imagesc(dCov.covmatfrac(13:end,13:end)-covmatfracshape(13:end,13:end));
+%  c = colorbar;
+%% convert to shape only
+if exist(savefileCovMat,'file') && ~isfield(dCov,'covmatshape')
+    dCov = importdata(savefileCovMat);
+    NormCorr = mean(sum(dCov.TBDIS_s(13:end,:)))./sum(dCov.TBDIS_s(13:end,:)); % bring all spectra to the same number of counts (total)
+    TBDIS_NormCorr = dCov.TBDIS_s.*NormCorr;
+    
+    covmatshape = cov(TBDIS_NormCorr');
+    covmatfracshape = covmatshape./(dCov.TBDIS_i.*dCov.TBDIS_i');
+    save(savefileCovMat,'covmatshape','covmatfracshape','-append');
+else
+    fprintf('not available \n');
+     return
+end
 
 
