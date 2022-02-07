@@ -1848,7 +1848,7 @@ classdef RunSensitivity < handle
             if strcmp(Style,'PRL')
                 LocalFontSize = 30;
             else
-                LocalFontSize = 28;
+                LocalFontSize = 33;
             end
             
             if isempty(obj.FC_x1)
@@ -1988,7 +1988,7 @@ classdef RunSensitivity < handle
             else
                 if isempty(mNuSq_bf)
                     if strcmp(obj.RunAnaObj.DataSet,'Knm1')
-                        mNuMeasured = -0.98;
+                        mNuMeasured = -0.96;
                     elseif strcmp(obj.RunAnaObj.DataSet,'Knm2')
                         mNuMeasured = 0.19;
                     else
@@ -2020,11 +2020,12 @@ classdef RunSensitivity < handle
                 leg = legend([p2,plimit],[sprintf('%s confidence belt at %.4g%% C.L. ',legStr,obj.ConfLevel*100),chi2str],...
                     sprintf(' Sensitivity: {\\itm}^2_\\nu \\leq %.2f eV^2 \n              \\rightarrow {\\itm}_\\nu  \\leq %.2f eV',mNuLimit,sqrt(mNuLimit)),'Location','northwest');
             else
-                leg = legend([p2,plimit],[sprintf('%s confidence belt at %.4g%% C.L. ',legStr,obj.ConfLevel*100),chi2str],...
-                    sprintf('     {\\itm}^2_\\nu \\leq %.2f eV^{ 2} \n\\rightarrow {\\itm}_\\nu  \\leq %.2f eV',mNuLimit,sqrt(mNuLimit)),'Location','northwest');
+                leg = legend([p2,plimit],[sprintf('%s confidence belt at %.4g%% C.L. ',legStr,obj.ConfLevel*100)],...%,chi2str
+                    sprintf(' {\\itm}^2_\\nu \\leq %.1f eV^{2} \n {\\itm}_\\nu \\leq %.1f eV',mNuLimit,sqrt(mNuLimit)),'Location','northwest');
             end
            %legend boxoff;
            PrettyLegendFormat(leg);
+           legend box off
             %leg.EdgeColor = rgb('Silver');
             % axis style etc.
             % PrettyFigureFormat('FontSize',LocalFontSize);
@@ -2043,20 +2044,20 @@ classdef RunSensitivity < handle
                 PrettyFigureFormat('FontSize',LocalFontSize);
             end
             
+            leg.FontSize = get(gca,'FontSize');
             %%
             if ~strcmp(SavePlot,'OFF')
                 savedir = [getenv('SamakPath'),'/tritium-data/FC/plots/'];
                 obj.CreateDir(savedir);
                 savefile = [savedir,sprintf('%s_FCbelt_%s%s_%.0fCL.pdf',obj.RunAnaObj.DataSet,savestr,obj.RunAnaObj.chi2,obj.ConfLevel*100)];
-                if strcmp(Lokov,'ON')
-                    leg.FontSize = get(gca,'FontSize')-6;
+                if strcmp(Lokov,'ON') 
                     savefile = [savedir,sprintf('%s_Lokovbelt_%s%s_%.0fCL.pdf',obj.RunAnaObj.DataSet,savestr,obj.RunAnaObj.chi2,obj.ConfLevel*100)];
                 end
                 
                 if strcmp(SavePlot,'png')
                     %obj.PlotWhiteSpace;
                     savefile = strrep(savefile,'.pdf','.png');
-                    print(f111,savefile,'-dpng','-r100');
+                    print(f111,savefile,'-dpng','-r400');
                 else
                     export_fig(f111,savefile);
                 end

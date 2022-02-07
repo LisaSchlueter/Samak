@@ -16,7 +16,11 @@ A.ComputeTBDDS;
 cdfTBDDS = cumsum(A.TBDDS(1:end-1));
 cdfTBDDS = cdfTBDDS./cdfTBDDS(end);
 nSamples = 100000;
-cdfInvTBDDS = interp1(cdfTBDDS,A.Te(1:end-1),rand(nSamples,1),'spline');
+
+[cdfTBDDS_u,Idx_u,~] = unique(cdfTBDDS);
+Te_u = A.Te(1:end-1);
+Te_u = Te_u(Idx_u);
+cdfInvTBDDS = interp1(cdfTBDDS_u,Te_u,rand(nSamples,1),'spline');
 
 f3 = figure('Renderer','opengl');
 set(f3, 'Units', 'normalized', 'Position', [0.1, 0.1, 0.7 ,07]);

@@ -30,5 +30,10 @@ R = RingAnalysis('RunAnaObj',A,'RingList',A.RingList);
 R.FitRings('SaveResult','ON','RecomputeFlag','OFF');
 
 %%
-% R.PlotFits('SavePlot','ON','Blind','ON','PlotPar',2,'YLim',[-0.5 0.4])
-% R.PlotFits('SavePlot','ON','Blind','ON','PlotPar',1,'PlotMode','Abs','YLim',[-15 15]);
+close all
+%R.PlotFits('SavePlot','ON','Blind','OFF','PlotPar',1,'PlotMode','Abs','YLim',[-8.5 6.5])
+%R.PlotFits('SavePlot','ON','Blind','OFF','PlotPar',2,'PlotMode','Abs','YLim',18573+[+0.25,+1.15])
+R.PlotFits('SavePlot','ON','Blind','OFF','PlotPar',3,'PlotMode','Abs','YLim',[2.1 3.1]);%,'YLim',[-8.5 6.5])
+%R.PlotFits('SavePlot','ON','Blind','OFF','PlotPar',4,'PlotMode','Rel','YLim',[-1.3e-2 +2.2e-2]);%,'YLim',[-8.5 6.5])
+
+

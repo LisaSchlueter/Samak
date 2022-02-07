@@ -1,3 +1,4 @@
+
 % Compute KNM-1 chi2 profile
 %% settings
 nFitMax  = 50;

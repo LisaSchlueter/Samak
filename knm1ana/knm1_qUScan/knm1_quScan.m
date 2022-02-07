@@ -5,8 +5,8 @@ chi2 = 'chi2CMShape';
 SysBudet = 22;
 fixPar = 'mNu E0 Norm Bkg';% free par
 FSDFlag       = 'SibilleFull';
-ELossFlag     = 'KatrinT2A20';
-AngularTFFlag = 'ON';
+ELossFlag     = 'KatrinT2';%A20';
+AngularTFFlag = 'OFF';
 
 M = MultiRunAnalysis('RunList',RunList,...
     'chi2','chi2Stat',...
@@ -45,4 +45,6 @@ end
     'RelFlag','OFF',...
     'saveStr',AddsaveStr,...
     'RefLine',40);
+
+
 

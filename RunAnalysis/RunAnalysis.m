@@ -2420,8 +2420,12 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
              set(gca,'yscale','log');%grid on;
              switch Mode
                  case 'Rate'
+                     if strcmp(obj.DataSet,'Knm2')
                      ylim([0.9*min(ydata-obj.ErrorBarScaling*yerrdata),...
                          1.1*max(ydata+obj.ErrorBarScaling*yerrdata)]);
+                     else
+                         ylim([0.18 45])
+                     end
              end
              if contains(obj.DataSet,'FirstTritium')
                  ylim([0.18 1.35*max(obj.ModelObj.TBDIS(obj.exclDataStart:BkgEnd)./obj.ModelObj.qUfrac(obj.exclDataStart:BkgEnd,:)./obj.ModelObj.TimeSec)]);
@@ -2445,10 +2449,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                  end
                  PRLFormat;
                  myleg.FontSize = get(gca,'FontSize')+4;
-                 mylim = ylim;
-                 %    text(-57,log(mean(mylim)),'a)','FontSize',get(gca,'FontSize')+4,'FontName',get(gca,'FontName'));
-                 text(textx(1),max(mylim)*0.7,'a)','FontSize',get(gca,'FontSize')+4,'FontName',get(gca,'FontName'));
-             elseif contains(obj.DataSet,'FirstTritium')
+               elseif contains(obj.DataSet,'FirstTritium')
                  FTpaperFormat;
                  set(gca,'FontSize',LocalFontSize);
                  set(get(gca,'YLabel'),'FontSize',LocalFontSize);
@@ -2457,12 +2458,15 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
              else
                  PrettyFigureFormat;
                  set(gca,'FontSize',LocalFontSize);
-                 set(gca,'YMinorTick','off');
+                % set(gca,'YMinorTick','off');
                  set(gca,'TickLength',[0.01 0.01]);
                  set(get(gca,'YLabel'),'FontSize',LocalFontSize+4);
                  myleg.FontSize = LocalFontSize;
              end
-             
+                mylim = ylim;
+                 %    text(-57,log(mean(mylim)),'a)','FontSize',get(gca,'FontSize')+4,'FontName',get(gca,'FontName'));
+                 text(textx(1),max(mylim)*0.7,'a)','FontSize',LocalFontSize,'FontName',get(gca,'FontName'));
+            
              if strcmp(qUDisp,'Abs')
                  xticks(myxticks);
                  ax = gca;
@@ -2543,7 +2547,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                         else
                             PrettyFigureFormat
                         end
-                        leg.FontSize = get(gca,'FontSize')+4;
+                        leg.FontSize = LocalFontSize;
                         %pstat.delete; psys.delete;
                         lstat.Color = rgb('DarkGray');
                     elseif contains(obj.DataSet,'FirstTritium')
@@ -2551,7 +2555,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                         leg.FontSize = LocalFontSize;
                     else
                         xlabel(xstr,'FontSize',LocalFontSize);
-                        leg.FontSize = LocalFontSize+4;
+                        leg.FontSize = LocalFontSize;
                     end
                     
                     ylabel(sprintf('Residuals (\\sigma)'));
@@ -2578,7 +2582,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                        set(get(gca,'XLabel'),'FontSize',LocalFontSize);
                    else
                        PrettyFigureFormat; set(gca,'FontSize',LocalFontSize);
-                       set(gca,'YMinorTick','off');
+                     %  set(gca,'YMinorTick','off');
                        set(gca,'XMinorTick','off');
                        set(gca,'TickLength',[0.01 0.01]);
                        set(get(gca,'YLabel'),'FontSize',LocalFontSize+4);
@@ -2667,8 +2671,8 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
              if strcmp(DisplayStyle,'PRL')  || strcmp(DisplayMTD,'ON')
                  mylim = ylim;
                  %  text(-57,mean(mylim),'b)','FontSize',get(gca,'FontSize')+4,'FontName',get(gca,'FontName'));
-                text(textx(1),max(mylim)*0.65,'b)','FontSize',get(gca,'FontSize')+4,'FontName',get(gca,'FontName'));
-                   
+                text(textx(1),max(mylim)*0.73,'b)','FontSize',LocalFontSize,'FontName',get(gca,'FontName'));
+                   %*0.65
                  s3= subplot(4,1,4);
                  b1 = bar(qU,obj.RunData.qUfrac(obj.exclDataStart:BkgEnd,ring).*obj.RunData.TimeSec(ring)./(60*60));
                  b1.FaceColor = obj.PlotColor;
@@ -2703,7 +2707,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                 % linkaxes([s1,s2,s3],'x');
                 mylim = ylim;
                 %  text(-57,mean(mylim),'c)','FontSize',get(gca,'FontSize')+4,'FontName',get(gca,'FontName'));
-                text( textx(1),max(mylim)*0.8,'c)','FontSize',get(gca,'FontSize')+4,...
+                text( textx(1),max(mylim)*0.84,'c)','FontSize',LocalFontSize,...
                     'FontName',get(gca,'FontName'),'FontWeight',get(gca,'FontWeight'));
                 if strcmp(TickDir,'Out')
                     set(gca,'TickDir','out');
@@ -3754,22 +3758,22 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                         ystr = sprintf('{\\itm}_\\nu^2 (eV^{ 2})');
                     end
                 elseif i==2
-                    y = flip(parqU(i,:));%obj.ModelObj.Q_i-18574;
+                    y = flip(parqU(i,:))+obj.ModelObj.Q_i;%-18574;
                     if strcmp(RelFlag,'ON')
                         y = y-wmean(y,1./yErr.^2);
                         ystr = sprintf('{\\itE}_0^{fit} - \\langleE_0^{fit}\\rangle  (eV)');
                     else
-                        ystr = sprintf('{\\itE}_0^{fit} - %.1f (eV)',obj.ModelObj.Q_i);
+                        ystr = sprintf('{\\itE}_0^{fit} (eV)');%,obj.ModelObj.Q_i);
                     end
                 elseif i==3
                     ystr = 'Background (mcps)';
                     y =(flip(parqU(i,:))+obj.ModelObj.BKG_RateSec_i)*1e3;
                     yErr = flip(errqU(i,:))*1e3;
                 elseif i==4
-                    ystr ='Normalization';
+                    ystr ='Signal normalization';
                     y =flip(parqU(i,:))+1;
                 elseif i==5
-                    ystr ='p-value';
+                    ystr =sprintf('{\\itp} - value');
                     y =flip(1-chi2cdf(chi2qU,dofqU));
                     yErr = zeros(numel(y),1);
                 end
@@ -3809,10 +3813,10 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                     
                 else
                     
-                 x =flip(obj.RunData.qU(exclDataStart_v(1):exclDataStart_v(end),1))-18575;%obj.ModelObj.Q_i;
+                 x =flip(obj.RunData.qU(exclDataStart_v(1):exclDataStart_v(end),1))-18574;%obj.ModelObj.Q_i;
                     if (strcmp(HoldOn,'OFF') || strcmp(HoldOn,'ON1')) && ~contains(obj.DataSet,'FirstTritium')
                         fig12345 = figure('Renderer','painters');
-                        set(fig12345, 'Units', 'normalized', 'Position', [0.1, 0.1, 0.7, 0.6]);
+                        set(fig12345, 'Units', 'normalized', 'Position', [0.1, 0.1, 0.7, 0.3]);
                         ColorArg = {'MarkerFaceColor',obj.PlotColor,'Color',obj.PlotColor};
                     elseif contains(obj.DataSet,'FirstTritium')
                         fig12345 = figure('Renderer','painters');
@@ -3832,31 +3836,47 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                         hold on
                     elseif ~strcmp(RefLine,'OFF')
                         % reference line with respect to certain range
-                        RefIndex = find(abs(x+RefLine)==min(abs(x+RefLine)));  
-                        pref = plot(linspace(min(x)-3,max(x)+3,numel(x)),...
-                            y(RefIndex).*ones(numel(x),1),':','Color',rgb('Silver'),'LineWidth',3);
-                        hold on
+                       
+                        Idx_AnaInterval = find(flip(exclDataStart_v)== obj.GetexclDataStart(RefLine));
+                        [l,pref]  = boundedline(x(Idx_AnaInterval).*ones(10,1),linspace(floor(min(y-yErr))-10,10+ceil(max(y+yErr)),10),0.7.*ones(10,1),'orientation','horiz');
+                        l.LineStyle = 'none'; pref.FaceColor = rgb('Orange'); pref.FaceAlpha =0.8;%obj.PlotColorLight;
+                        hold on;
+                        pline = plot(linspace(min(x)-3,max(x)+3,numel(x)),...
+                            y(Idx_AnaInterval).*ones(numel(x),1),':','Color',rgb('Silver'),'LineWidth',3);
                     end
                     
-                    if contains(obj.DataSet,'FirstTritium') && i==2
+                    if contains(obj.DataSet,'FirstTritium')
                         plot(linspace(min(x)-10,max(x)+10,numel(x)),zeros(numel(x),1),'-','Color',rgb('Black'),'LineWidth',1);
                         hold on;
                     end
                     e1 = errorbar(x, y,yErr,...
-                        '.','LineWidth',2.5,'MarkerSize',25,ColorArg{:});
+                        '.','LineWidth',2.5,'MarkerSize',20,ColorArg{:});
                     e1.CapSize = 0;
-                    if ~strcmp(RefLine,'OFF')
-                          plot(x(RefIndex),y(RefIndex),...
-                        '.','LineWidth',2.5,'MarkerSize',e1.MarkerSize,...
-                        'MarkerEdgeColor',obj.PlotColor,'MarkerFaceColor',obj.PlotColorLight);
-                    end
-                    xlabel(sprintf('Lower fit boundary below {\\itE}_0 (eV)'));
+                    
+                    % highlight standard analysis interval
+%                     if ~strcmp(RefLine,'OFF')
+%                         e2 = errorbar(x(Idx_AnaInterval),y(Idx_AnaInterval),yErr(Idx_AnaInterval),...
+%                             '.','LineWidth',2.5,'MarkerSize',25,'MarkerFaceColor',rgb('Orange'),'Color',rgb('Orange'));
+%                         e2.CapSize = 0;
+%                     end
+  
+                    xlabel(sprintf('Lower fit boundary below 18574 (eV)'));%{\\itE}_0 (eV)'));
                     ylabel(ystr);
                     xlim([min(x)-2,max(x)+2]);
                     if i==3 %background
-                        ylim([min(y-yErr).*0.999,max(y+yErr)*1.001])
+                        ylim([min(y-yErr).*0.997,max(y+yErr)*1.003])
                     elseif i==1
-                        %ylim([min(y-yErr),max(y+yErr)])
+                       % ylim([min(y-yErr),max(y+yErr)])
+                        ylim([min(y-yErr)-0.5,1.5+max(y+yErr)]);
+                    elseif i==2
+                        ax = gca;
+                        ax.YAxis.Exponent = 0;
+                         ylim([(min(y-yErr))-0.05,0.05+max(y+yErr)]);
+                         %ylim([round(min(y-yErr),1),round(max(y+yErr),1)]);
+                    elseif i==4 %normalization
+                        ylim([(1-3e-3).*(min(y-yErr)),(1+3e-3).*max(y+yErr)]);
+                    elseif i==5
+                        ylim([(min(y-yErr))-0.07,0.1+max(y+yErr)]);
                     end
                     if contains(obj.DataSet,'FirstTritium')
                         FTpaperFormat;
@@ -3872,21 +3892,23 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                     
                     
                     % legend
-                    if ~strcmp(obj.chi2,'chi2Stat')
-                        legstr='Fit (Stat + syst)';
-                    else
-                        legstr ='Fit (Stat only)';
-                    end
+%                     if ~strcmp(obj.chi2,'chi2Stat')
+%                         legstr='Fit (Stat + syst)';
+%                     else
+%                         legstr ='Fit (Stat only)';
+%                     end
                     
                     if i~=5 && strcmp(CorrMean,'ON') && ~strcmp(HoldOn,'ON')
                         leg = legend([e1,pref],legstr,'correlated weighted mean');
                     elseif ~strcmp(RefLine,'OFF')
-                         leg = legend([e1,pref],legstr,sprintf('%.0f eV range',x(RefIndex)));
+                         leg = legend([pref],'Standard analysis range');
+                         leg.ItemTokenSize = [30,13];
                     else
-                        leg = legend(e1,legstr);
+                        leg = legend(e1,'');
                     end
-                    leg.EdgeColor = rgb('Silver');
-                    
+                    %leg.EdgeColor = rgb('Silver');
+                     PrettyLegendFormat(leg);
+                      
                     if i==1 && strcmp(CorrMean,'ON')
                         leg.Location = 'southwest';
                     else
@@ -3900,8 +3922,8 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                     else
                         leg.FontSize = get(gca,'FontSize')+2;
                     end
-                    
-                    leg.delete;
+                  
+                  %  leg.delete;
                     %% save
                     if strcmp(saveplot,'ON')
                         if ErrorBarScaling~=1
@@ -3910,12 +3932,13 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                             errStr = '';
                         end
                         plotdir = strrep(savedir,'results','plots');
-                        savename_plot = strrep(strrep(strrep(savename,'results','plots'),'.mat','.png'),...
+                        savename_plot = strrep(strrep(strrep(savename,'results','plots'),'.mat','.pdf'),...
                             obj.RunData.RunName,[obj.RunData.RunName,'_',num2str(i),errStr]);
                         MakeDir(plotdir);
                         %print(gcf,savename_plot,'-dpng','-r100');
                         %publish_figurePDF(gcf,strrep(savename_plot,'.png','.pdf'));
-                        export_fig(gcf,strrep(savename_plot,'.png','.pdf'));
+                        export_fig(gcf,savename_plot);
+                        fprintf('save plot to %s \n',savename_plot);
                     end
                     if strcmp(HoldOn,'OFF')
                         close
@@ -4020,7 +4043,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             plot(flip(obj.RunData.qU(firstPoint:lastPoint,1))-obj.ModelObj.Q_i, flip(1-chi2cdf(chi2qU,dofqU))',...
                 's-', 'Color',rgb('CadetBlue'),'LineWidth',2);
             xlabel(sprintf('qU_{min} - %.1f (eV)',obj.ModelObj.Q_i));
-            ylabel('p-value');
+            ylabel(sprintf('{\\itp}-value'));
             xlim([qUmin qUmax]);
             grid on;
             PrettyFigureFormat;

@@ -11,7 +11,7 @@ SaveAs     = p.Results.SaveAs;
 Ring       = p.Results.Ring;
 PlotCorMat = p.Results.PlotCorMat;
 
-nPixels = (size(FitResults,1)-9)/4;
+nPixels = (size(FitResults,1)-13)/4;
 if strcmp(par1,'mNu')
     x = FitResults(1,:);
     xstr = sprintf('{\\itm_\\nu}^2 (eV^{2})');
@@ -68,6 +68,11 @@ leg = legend(sprintf('%.0f Pseudo experiments',numel(x)),'Mean');
 leg.Location='northwest';
 legend boxoff;
 
+  if strcmp(par2,'E0')
+        ax = gca;
+        ax.YAxis.Exponent = 0;
+  end
+    
 if ~isempty(SaveAs)
     savename = sprintf('%s_%s%sCorr_Ring%.0f_ScatterPlot.pdf',SaveAs,par1,par2,Ring);
     export_fig(f111,savename,'-painters');
@@ -85,6 +90,9 @@ if strcmp(PlotCorMat,'ON')
     end
     CorrMat = corrcoef(FitResultsActive');
     cp= corplot(CorrMat);
+      myticklabels = {sprintf('{\\itm}_\\nu^2'),sprintf('{\\itE}_{0}^{fit}'),...
+            sprintf('{\\itB}_{base}'),sprintf('{\\itN}_{sig.}')};
+  
     if nPixels==2
         myticklabels = {sprintf('{\\itm}_\\nu^2'),sprintf('{\\itE}_{0}^{fit}'),...
             sprintf('{\\itB_1}'),sprintf('{\\itB_2}'),sprintf('{\\itN_1}'),sprintf('{\\itN_2}'),sprintf('\\DeltaqU_2'),sprintf('\\sigma_2^2')};
@@ -123,6 +131,7 @@ if strcmp(PlotCorMat,'ON')
     set(gca,'YMinorTick','off');
     set(gca,'TickLength',[0 0]);
     
+  
     
     if ~isempty(SaveAs)
         savename = sprintf('%s_%s%sCorr_Ring%.0f_Matrix.pdf',SaveAs,par1,par2,Ring);

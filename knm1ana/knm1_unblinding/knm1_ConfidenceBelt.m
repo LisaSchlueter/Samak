@@ -3,10 +3,10 @@
 % calculation and plotting takes place in RunSensitivity class
 % Lisa Schlüter, 2019
 %% settings
-Mode        = 'LT';  % FC = Feldman Cousin, LT = Lokov Tkachov
+Mode        = 'FC';  % FC = Feldman Cousin, LT = Lokov Tkachov
 Sensitivity = 'OFF'; % OFF= show best fit, ON = show sensitivity only
-SavePlot    = 'OFF';
-
+SavePlot    = 'ON';
+Style = 'Pretty';
 RunAnaArg = {'RunList','KNM1',...
     'fixPar','mNu E0 Norm Bkg',...%free par
     'exclDataStart',13,...
@@ -33,10 +33,10 @@ S.ConfLevel = 0.9; % confidence level (0==1 sigma)
 switch Mode
     case 'FC'
         S.ComputeFC_Asimov('mNuSq_t',mNuSq,'nSamplesAsimov',300);
-        S.PlotFCBelt('HoldOn','OFF','Sensitivity',Sensitivity,'SavePlot',SavePlot);
+        S.PlotFCBelt('HoldOn','OFF','Sensitivity',Sensitivity,'SavePlot',SavePlot,'Style',Style);
     case 'LT'
         S.ComputeLokhov_Asimov('mNuSq_t',mNuSq);
-        S.PlotFCBelt('Lokov','ON','Sensitivity',Sensitivity,'SavePlot',SavePlot);
+        S.PlotFCBelt('Lokov','ON','Sensitivity',Sensitivity,'SavePlot',SavePlot,'Style',Style);
 end
 %% plot likelihood function
 % S.PlotFC_DeltaChi2('PDF','Central','SavePlot','ON','mNuSq_t',0); % probability density function with best fit probability

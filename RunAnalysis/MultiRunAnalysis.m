@@ -2390,8 +2390,13 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                  leg = legend([e1,l1],sprintf('%s scan-wise fits',upper(obj.DataSet)),...
                     sprintf('Mean = %.1f %s (std = %.1f %s)',wmean(y,1./yErr.^2),yUnit,std(y),yUnit));%pval
              elseif ismember(Parameter,{'N'})
+                 if strcmp(DisplayStyle,'Abs')
+                    ymean = wmean(y,1./yErr.^2);
+                 else
+                    ymean = wmean(FitResults.N+1,FitResults.NErr);
+                 end
                  leg = legend([e1,l1],sprintf('%s scan-wise fits',upper(obj.DataSet)),...
-                     sprintf('Mean = %.2f %s (std = %.2f)',wmean(y,1./yErr.^2),yUnit,std(y)));%pval
+                     sprintf('Mean = %.2f %s (std = %.2f)',ymean,yUnit,std(y)));%pval
             else
                 leg = legend([e1,l1],sprintf('%s scan-wise fits',upper(obj.DataSet)),...
                     sprintf('Mean = %.2f %s (std = %.2f %s)',wmean(y,1./yErr.^2),yUnit,std(y),yUnit));%pval

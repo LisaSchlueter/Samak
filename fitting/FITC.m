@@ -871,11 +871,11 @@ classdef FITC < handle
             chi2min = obj.RESULTS{3};
             dof     = obj.RESULTS{5};
             
-            % Normalization (pixelwise)
+            % Normalization (pixelwise) (uniform 4)
             norms_fit = par(3+obj.SO.nPixels:3+2*obj.SO.nPixels-1);
             norms_fit_err = err(3+obj.SO.nPixels:3+2*obj.SO.nPixels-1);
             
-            % Background (pixelwise)
+            % Background (pixelwise) (uniform 3)
             bcks_fit     = par(3:2+obj.SO.nPixels);
             bcks_fit_err = err(3:2+obj.SO.nPixels);
             
