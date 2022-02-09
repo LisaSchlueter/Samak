@@ -48,7 +48,7 @@ else
         
         
         FitResults{i} = D(i).FitResult;
-        PixLists{i}   = D(i).RunList;
+        PixLists{i}   = D(i).RunList; % wrong....ups, not so important though
       
     end
     

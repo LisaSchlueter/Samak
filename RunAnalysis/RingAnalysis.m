@@ -341,18 +341,23 @@ classdef RingAnalysis < handle
             switch obj.RunAnaObj.RingMerge
                 case 'Half'
                     xticks([1 2])
-                    xticklabels({'1-6','7-12'})
+                  %  xticklabels({'1-6','7-12'})
+                    xticklabels({'Bullseye & 1-5','6-11'});
                 case 'InnerPseudo3'
                     xticks([1]);
-                    xticklabels({'1,2,3,4,5,6,7,8,9'})
+                    %xticklabels({'1,2,3,4,5,6,7,8,9'})
+                    xticklabels({'Bullseye',1,2,3,4,5,6,7,8});
                 case 'Full'
                     xticks([1 2 3 4]);
-                    xticklabels({'1-3','4-6','7-9','10-12'})
+                    %xticklabels({'1-3','4-6','7-9','10-12'})
+                    xticklabels({'Bullseye & 1-2','3-5','6-8','9-11'})
                 case 'Default'
                     xticks([1:1:10]);
-                    xticklabels({'1-2',3,4,5,6,7,8,9,10,'11-12'})
+                    %xticklabels({'1-2',3,4,5,6,7,8,9,10,'11-12'})
+                    xticklabels({'Bullseye & 1',2,3,4,5,6,7,8,9,'10-11'});
                 case 'None'
                     xticks([1:12])
+                    xticklabels({'Bullseye',1,2,3,4,5,6,7,8,9,10,11});
             end
             set(gca,'XMinorTick','off');
             

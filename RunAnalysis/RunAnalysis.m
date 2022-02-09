@@ -3662,7 +3662,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
         end
         
         
-        function [parqU, errqU, chi2qU, dofqU,e1] = qUScan(obj,varargin)
+        function [parqU, errqU, chi2qU, dofqU,e1,exclDataStart_v] = qUScan(obj,varargin)
             % Perform qUmin Fit Scan
             % -------------------------------------------------------------%
             p=inputParser;
@@ -3675,6 +3675,9 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             p.addParameter('ErrorBarScaling',1,@(x)isfloat(x)); % scale error bars in fit results
             p.addParameter('RefLine','OFF',@(x) isfloat(x) || strcmp(x,'OFF')); % reference line for respect to certain range
             p.addParameter('saveStr','',@(x)ischar(x) || isempty(x));
+            p.addParameter('saveResult','ON',@(x)ismember(x,{'ON','OFF'})); %save to file
+            p.addParameter('PlotResult','ON',@(x)ismember(x,{'ON','OFF'})); %save to file
+            
             p.parse(varargin{:});
             saveplot        = p.Results.saveplot;
             qURange         = p.Results.qURange;
@@ -3685,6 +3688,8 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             ErrorBarScaling = p.Results.ErrorBarScaling;
             saveStr         = p.Results.saveStr; % additional label for result and plots
             RefLine         = p.Results.RefLine;
+            saveResult      = p.Results.saveResult;
+            PlotResult      = p.Results.PlotResult;
             
             if strcmp(obj.DataSet,'Knm1')
                 savedir = [getenv('SamakPath'),'knm1ana/knm1_qUScan/results/'];
@@ -3735,215 +3740,224 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                     chi2qU(i)  = obj.FitResult.chi2min;
                     dofqU(i)   = obj.FitResult.dof;
                 end
-                save(savename,'parqU', 'errqU', 'chi2qU', 'dofqU');
+                
+                if strcmp(saveResult,'ON')
+                    save(savename,'parqU', 'errqU', 'chi2qU', 'dofqU');
+                end
             end
             
             
             %% Plot qU Scan
-            if ismember(HoldOn,{'ON','ON1'})
-                fitPar = 1; % hack for nu mass plot with different models
-            else
-                fitPar = 1:5;
-            end
-            
-            for i=fitPar
-              
-                yErr = flip(errqU(i,:));
-                if i==1
-                    y = flip(parqU(i,:));
-                    if strcmp(RelFlag,'ON')
-                        y = y-wmean(y,1./yErr.^2);
-                        ystr = sprintf('{\\itm}_\\nu^2 - \\langle{\\itm}_\\nu^2\\rangle (eV^{ 2})');
-                    else
-                        ystr = sprintf('{\\itm}_\\nu^2 (eV^{ 2})');
-                    end
-                elseif i==2
-                    y = flip(parqU(i,:))+obj.ModelObj.Q_i;%-18574;
-                    if strcmp(RelFlag,'ON')
-                        y = y-wmean(y,1./yErr.^2);
-                        ystr = sprintf('{\\itE}_0^{fit} - \\langleE_0^{fit}\\rangle  (eV)');
-                    else
-                        ystr = sprintf('{\\itE}_0^{fit} (eV)');%,obj.ModelObj.Q_i);
-                    end
-                elseif i==3
-                    ystr = 'Background (mcps)';
-                    y =(flip(parqU(i,:))+obj.ModelObj.BKG_RateSec_i)*1e3;
-                    yErr = flip(errqU(i,:))*1e3;
-                elseif i==4
-                    ystr ='Signal normalization';
-                    y =flip(parqU(i,:))+1;
-                elseif i==5
-                    ystr =sprintf('{\\itp} - value');
-                    y =flip(1-chi2cdf(chi2qU,dofqU));
-                    yErr = zeros(numel(y),1);
+            if strcmp(PlotResult,'ON')
+                
+                if ismember(HoldOn,{'ON','ON1'})
+                    fitPar = 1; % hack for nu mass plot with different models
+                else
+                    fitPar = 1:5;
                 end
                 
-                if strcmp(CorrMean,'ON') && strcmp(obj.DataSet,'Knm1')
-                    % get correlation matrix with largest number of samples
-                    CovMatdir = [getenv('SamakPath'),'knm1ana/knm1_qUScan/results/'];
-                    mydir = arrayfun(@(x) x.name,dir(CovMatdir),'UniformOutput',0);
-                    Index = cell2mat(cellfun(@(x) contains(x,'CorrMat_qUScan_KNM1'),mydir,'UniformOutput',0));
-                    myfiles = mydir(Index);
-                    nSamples = str2double(extractBetween(myfiles,[obj.chi2,'_'],'.mat'));
-                    thisfile = myfiles{nSamples==max(nSamples)};
-                    d = importdata(thisfile);
-                    %correlation matrix:
-                    % Corr(1,1) describes point farthest away from endpoint
-                    % Corr(end,end) describes point closest to endpoint
+                for i=fitPar
+                    
+                    yErr = flip(errqU(i,:));
                     if i==1
-                        CorrMat = d.CorrMatmNuSq;
-                    elseif i==2
-                        CorrMat = d.CorrMatE0;
-                    elseif i==3
-                        CorrMat = d.CorrMatB;
-                    elseif i==4
-                        CorrMat = d.CorrMatN;
-                    end
-                    CovMat = CorrMat.*flip(yErr).*flip(yErr)';
-                    Weight = sum(inv(CovMat))./sum(sum(inv(CovMat)));
-                    Mean   = sum(flip(y).*Weight);
-                    chi2   = sum((flip(y)-Mean)*(CovMat\(flip(y)-Mean)'));
-                    pval =  1-chi2cdf(chi2,numel(y)-1);
-                else
-                    Mean = wmean(y,1./yErr.^2);
-                end
-                
-                yErr = yErr.*ErrorBarScaling;
-                if all(y==0) || all(isnan(y))
-                    
-                else
-                    
-                 x =flip(obj.RunData.qU(exclDataStart_v(1):exclDataStart_v(end),1))-18574;%obj.ModelObj.Q_i;
-                    if (strcmp(HoldOn,'OFF') || strcmp(HoldOn,'ON1')) && ~contains(obj.DataSet,'FirstTritium')
-                        fig12345 = figure('Renderer','painters');
-                        set(fig12345, 'Units', 'normalized', 'Position', [0.1, 0.1, 0.7, 0.3]);
-                        ColorArg = {'MarkerFaceColor',obj.PlotColor,'Color',obj.PlotColor};
-                    elseif contains(obj.DataSet,'FirstTritium')
-                        fig12345 = figure('Renderer','painters');
-                        set(fig12345, 'Units', 'centimeters', 'Position', [0.1, 0.1, 8.4, 4.5]);
-                        ColorArg = {'MarkerFaceColor',rgb('CadetBlue'),'Color',rgb('DarkCyan')};
-                    else
-                        hold on;
-                         ColorArg = {'MarkerFaceColor',obj.PlotColorLight,'Color',obj.PlotColorLight};
-                       % ColorArg = {'MarkerFaceColor',rgb('Orange'),'Color',rgb('Orange')};
-                        x = x+0.5;
-                    end
-                    
-                    
-                    if i~=5 && strcmp(CorrMean,'ON') && ~strcmp(HoldOn,'ON')
-                        pref = plot(linspace(min(x)-3,max(x)+3,numel(x)),...
-                            Mean.*ones(numel(x),1),':','Color',obj.PlotColor,'LineWidth',3); %rgb('Silver')
-                        hold on
-                    elseif ~strcmp(RefLine,'OFF')
-                        % reference line with respect to certain range
-                       
-                        Idx_AnaInterval = find(flip(exclDataStart_v)== obj.GetexclDataStart(RefLine));
-                        [l,pref]  = boundedline(x(Idx_AnaInterval).*ones(10,1),linspace(floor(min(y-yErr))-10,10+ceil(max(y+yErr)),10),0.7.*ones(10,1),'orientation','horiz');
-                        l.LineStyle = 'none'; pref.FaceColor = rgb('Orange'); pref.FaceAlpha =0.8;%obj.PlotColorLight;
-                        hold on;
-                        pline = plot(linspace(min(x)-3,max(x)+3,numel(x)),...
-                            y(Idx_AnaInterval).*ones(numel(x),1),':','Color',rgb('Silver'),'LineWidth',3);
-                    end
-                    
-                    if contains(obj.DataSet,'FirstTritium')
-                        plot(linspace(min(x)-10,max(x)+10,numel(x)),zeros(numel(x),1),'-','Color',rgb('Black'),'LineWidth',1);
-                        hold on;
-                    end
-                    e1 = errorbar(x, y,yErr,...
-                        '.','LineWidth',2.5,'MarkerSize',20,ColorArg{:});
-                    e1.CapSize = 0;
-                    
-                    % highlight standard analysis interval
-%                     if ~strcmp(RefLine,'OFF')
-%                         e2 = errorbar(x(Idx_AnaInterval),y(Idx_AnaInterval),yErr(Idx_AnaInterval),...
-%                             '.','LineWidth',2.5,'MarkerSize',25,'MarkerFaceColor',rgb('Orange'),'Color',rgb('Orange'));
-%                         e2.CapSize = 0;
-%                     end
-  
-                    xlabel(sprintf('Lower fit boundary below 18574 (eV)'));%{\\itE}_0 (eV)'));
-                    ylabel(ystr);
-                    xlim([min(x)-2,max(x)+2]);
-                    if i==3 %background
-                        ylim([min(y-yErr).*0.997,max(y+yErr)*1.003])
-                    elseif i==1
-                       % ylim([min(y-yErr),max(y+yErr)])
-                        ylim([min(y-yErr)-0.5,1.5+max(y+yErr)]);
-                    elseif i==2
-                        ax = gca;
-                        ax.YAxis.Exponent = 0;
-                         ylim([(min(y-yErr))-0.05,0.05+max(y+yErr)]);
-                         %ylim([round(min(y-yErr),1),round(max(y+yErr),1)]);
-                    elseif i==4 %normalization
-                        ylim([(1-3e-3).*(min(y-yErr)),(1+3e-3).*max(y+yErr)]);
-                    elseif i==5
-                        ylim([(min(y-yErr))-0.07,0.1+max(y+yErr)]);
-                    end
-                    if contains(obj.DataSet,'FirstTritium')
-                        FTpaperFormat;
-                        set(gca,'FontSize',9);
-                        set(get(gca,'XLabel'),'FontSize',9);
-                        set(get(gca,'YLabel'),'FontSize',9);
-                        e1.LineWidth = 1;
-                        e1.MarkerSize = 3;
-                        xlim([min(x)-10,max(x)+10]);
-                    else
-                        PrettyFigureFormat('FontSize',24);
-                    end
-                    
-                    
-                    % legend
-%                     if ~strcmp(obj.chi2,'chi2Stat')
-%                         legstr='Fit (Stat + syst)';
-%                     else
-%                         legstr ='Fit (Stat only)';
-%                     end
-                    
-                    if i~=5 && strcmp(CorrMean,'ON') && ~strcmp(HoldOn,'ON')
-                        leg = legend([e1,pref],legstr,'correlated weighted mean');
-                    elseif ~strcmp(RefLine,'OFF')
-                         leg = legend([pref],'Standard analysis range');
-                         leg.ItemTokenSize = [30,13];
-                    else
-                        leg = legend(e1,'');
-                    end
-                    %leg.EdgeColor = rgb('Silver');
-                     PrettyLegendFormat(leg);
-                      
-                    if i==1 && strcmp(CorrMean,'ON')
-                        leg.Location = 'southwest';
-                    else
-                        leg.Location = 'northwest';
-                    end
-                    
-                    if contains(obj.DataSet,'FirstTritium')
-                        mypos = leg.Position;
-                        leg.Position = [mypos(1)-0.05, mypos(2)+0.02,mypos(3:end)];
-                        leg.FontSize = 9;
-                    else
-                        leg.FontSize = get(gca,'FontSize')+2;
-                    end
-                  
-                  %  leg.delete;
-                    %% save
-                    if strcmp(saveplot,'ON')
-                        if ErrorBarScaling~=1
-                            errStr = sprintf('_%.0fErrScaling',ErrorBarScaling);
+                        y = flip(parqU(i,:));
+                        if strcmp(RelFlag,'ON')
+                            y = y-wmean(y,1./yErr.^2);
+                            ystr = sprintf('{\\itm}_\\nu^2 - \\langle{\\itm}_\\nu^2\\rangle (eV^{ 2})');
                         else
-                            errStr = '';
+                            ystr = sprintf('{\\itm}_\\nu^2 (eV^{ 2})');
                         end
-                        plotdir = strrep(savedir,'results','plots');
-                        savename_plot = strrep(strrep(strrep(savename,'results','plots'),'.mat','.pdf'),...
-                            obj.RunData.RunName,[obj.RunData.RunName,'_',num2str(i),errStr]);
-                        MakeDir(plotdir);
-                        %print(gcf,savename_plot,'-dpng','-r100');
-                        %publish_figurePDF(gcf,strrep(savename_plot,'.png','.pdf'));
-                        export_fig(gcf,savename_plot);
-                        fprintf('save plot to %s \n',savename_plot);
+                    elseif i==2
+                        y = flip(parqU(i,:))+obj.ModelObj.Q_i;%-18574;
+                        if strcmp(RelFlag,'ON')
+                            y = y-wmean(y,1./yErr.^2);
+                            ystr = sprintf('{\\itE}_0^{fit} - \\langleE_0^{fit}\\rangle  (eV)');
+                        else
+                            ystr = sprintf('{\\itE}_0^{fit} (eV)');%,obj.ModelObj.Q_i);
+                        end
+                    elseif i==3
+                        ystr = 'Background (mcps)';
+                        y =(flip(parqU(i,:))+obj.ModelObj.BKG_RateSec_i)*1e3;
+                        yErr = flip(errqU(i,:))*1e3;
+                    elseif i==4
+                        ystr ='Signal normalization';
+                        y =flip(parqU(i,:))+1;
+                    elseif i==5
+                        ystr =sprintf('{\\itp} - value');
+                        y =flip(1-chi2cdf(chi2qU,dofqU));
+                        yErr = zeros(numel(y),1);
                     end
-                    if strcmp(HoldOn,'OFF')
-                        close
+                    
+                    if strcmp(CorrMean,'ON') && strcmp(obj.DataSet,'Knm1')
+                        % get correlation matrix with largest number of samples
+                        CovMatdir = [getenv('SamakPath'),'knm1ana/knm1_qUScan/results/'];
+                        mydir = arrayfun(@(x) x.name,dir(CovMatdir),'UniformOutput',0);
+                        Index = cell2mat(cellfun(@(x) contains(x,'CorrMat_qUScan_KNM1'),mydir,'UniformOutput',0));
+                        myfiles = mydir(Index);
+                        nSamples = str2double(extractBetween(myfiles,[obj.chi2,'_'],'.mat'));
+                        thisfile = myfiles{nSamples==max(nSamples)};
+                        d = importdata(thisfile);
+                        %correlation matrix:
+                        % Corr(1,1) describes point farthest away from endpoint
+                        % Corr(end,end) describes point closest to endpoint
+                        if i==1
+                            CorrMat = d.CorrMatmNuSq;
+                        elseif i==2
+                            CorrMat = d.CorrMatE0;
+                        elseif i==3
+                            CorrMat = d.CorrMatB;
+                        elseif i==4
+                            CorrMat = d.CorrMatN;
+                        end
+                        CovMat = CorrMat.*flip(yErr).*flip(yErr)';
+                        Weight = sum(inv(CovMat))./sum(sum(inv(CovMat)));
+                        Mean   = sum(flip(y).*Weight);
+                        chi2   = sum((flip(y)-Mean)*(CovMat\(flip(y)-Mean)'));
+                        pval =  1-chi2cdf(chi2,numel(y)-1);
+                    else
+                        Mean = wmean(y,1./yErr.^2);
+                    end
+                    
+                    yErr = yErr.*ErrorBarScaling;
+                    if all(y==0) || all(isnan(y))
+                        
+                    else
+                        
+                        x =flip(obj.RunData.qU(exclDataStart_v(1):exclDataStart_v(end),1))-18574;%obj.ModelObj.Q_i;
+                        if (strcmp(HoldOn,'OFF') || strcmp(HoldOn,'ON1')) && ~contains(obj.DataSet,'FirstTritium')
+                            fig12345 = figure('Renderer','painters');
+                            set(fig12345, 'Units', 'normalized', 'Position', [0.1, 0.1, 0.7, 0.3]);
+                            ColorArg = {'MarkerFaceColor',obj.PlotColor,'Color',obj.PlotColor};
+                        elseif contains(obj.DataSet,'FirstTritium')
+                            fig12345 = figure('Renderer','painters');
+                            set(fig12345, 'Units', 'centimeters', 'Position', [0.1, 0.1, 8.4, 4.5]);
+                            ColorArg = {'MarkerFaceColor',rgb('CadetBlue'),'Color',rgb('DarkCyan')};
+                        else
+                            hold on;
+                            ColorArg = {'MarkerFaceColor',obj.PlotColorLight,'Color',obj.PlotColorLight};
+                            % ColorArg = {'MarkerFaceColor',rgb('Orange'),'Color',rgb('Orange')};
+                            x = x+0.5;
+                        end
+                        
+                        
+                        if i~=5 && strcmp(CorrMean,'ON') && ~strcmp(HoldOn,'ON')
+                            pref = plot(linspace(min(x)-3,max(x)+3,numel(x)),...
+                                Mean.*ones(numel(x),1),':','Color',obj.PlotColor,'LineWidth',3); %rgb('Silver')
+                            hold on
+                        elseif ~strcmp(RefLine,'OFF')
+                            % reference line with respect to certain range
+                            
+                            Idx_AnaInterval = find(flip(exclDataStart_v)== obj.GetexclDataStart(RefLine));
+                            [l,pref]  = boundedline(x(Idx_AnaInterval).*ones(10,1),linspace(floor(min(y-yErr))-10,10+ceil(max(y+yErr)),10),0.7.*ones(10,1),'orientation','horiz');
+                            l.LineStyle = 'none'; pref.FaceColor = rgb('Orange'); pref.FaceAlpha =0.8;%obj.PlotColorLight;
+                            hold on;
+                            pline = plot(linspace(min(x)-3,max(x)+3,numel(x)),...
+                                y(Idx_AnaInterval).*ones(numel(x),1),':','Color',rgb('Silver'),'LineWidth',3);
+                        end
+                        
+                        if contains(obj.DataSet,'FirstTritium')
+                            plot(linspace(min(x)-10,max(x)+10,numel(x)),zeros(numel(x),1),'-','Color',rgb('Black'),'LineWidth',1);
+                            hold on;
+                        end
+                        e1 = errorbar(x, y,yErr,...
+                            '.','LineWidth',2.5,'MarkerSize',20,ColorArg{:});
+                        e1.CapSize = 0;
+                        
+                        % highlight standard analysis interval
+                        %                     if ~strcmp(RefLine,'OFF')
+                        %                         e2 = errorbar(x(Idx_AnaInterval),y(Idx_AnaInterval),yErr(Idx_AnaInterval),...
+                        %                             '.','LineWidth',2.5,'MarkerSize',25,'MarkerFaceColor',rgb('Orange'),'Color',rgb('Orange'));
+                        %                         e2.CapSize = 0;
+                        %                     end
+                        
+                        xlabel(sprintf('Lower fit boundary below 18574 (eV)'));%{\\itE}_0 (eV)'));
+                        ylabel(ystr);
+                        xlim([min(x)-2,max(x)+2]);
+                        if i==3 %background
+                            ylim([min(y-yErr).*0.997,max(y+yErr)*1.003])
+                        elseif i==1
+                            % ylim([min(y-yErr),max(y+yErr)])
+                            ylim([min(y-yErr)-0.5,1.5+max(y+yErr)]);
+                        elseif i==2
+                            ax = gca;
+                            ax.YAxis.Exponent = 0;
+                            ylim([(min(y-yErr))-0.05,0.05+max(y+yErr)]);
+                            %ylim([round(min(y-yErr),1),round(max(y+yErr),1)]);
+                        elseif i==4 %normalization
+                            ylim([(1-3e-3).*(min(y-yErr)),(1+3e-3).*max(y+yErr)]);
+                        elseif i==5
+                            ylim([(min(y-yErr))-0.07,0.1+max(y+yErr)]);
+                        end
+                        if contains(obj.DataSet,'FirstTritium')
+                            FTpaperFormat;
+                            set(gca,'FontSize',9);
+                            set(get(gca,'XLabel'),'FontSize',9);
+                            set(get(gca,'YLabel'),'FontSize',9);
+                            e1.LineWidth = 1;
+                            e1.MarkerSize = 3;
+                            xlim([min(x)-10,max(x)+10]);
+                        else
+                            PrettyFigureFormat('FontSize',24);
+                        end
+                        
+                        
+                        % legend
+                        %                     if ~strcmp(obj.chi2,'chi2Stat')
+                        %                         legstr='Fit (Stat + syst)';
+                        %                     else
+                        %                         legstr ='Fit (Stat only)';
+                        %                     end
+                        
+                        if i~=5 && strcmp(CorrMean,'ON') && ~strcmp(HoldOn,'ON')
+                            leg = legend([e1,pref],legstr,'correlated weighted mean');
+                        elseif ~strcmp(RefLine,'OFF')
+                            leg = legend([pref],'Standard analysis range');
+                            leg.ItemTokenSize = [30,13];
+                        else
+                            leg = legend(e1,'');
+                        end
+                        %leg.EdgeColor = rgb('Silver');
+                        PrettyLegendFormat(leg);
+                        
+                        if i==1 && strcmp(CorrMean,'ON')
+                            leg.Location = 'southwest';
+                        else
+                            leg.Location = 'northwest';
+                        end
+                        
+                        if contains(obj.DataSet,'FirstTritium')
+                            mypos = leg.Position;
+                            leg.Position = [mypos(1)-0.05, mypos(2)+0.02,mypos(3:end)];
+                            leg.FontSize = 9;
+                        else
+                            leg.FontSize = get(gca,'FontSize')+2;
+                        end
+                        
+                        %  leg.delete;
+                        %% save
+                        if strcmp(saveplot,'ON')
+                            if ErrorBarScaling~=1
+                                errStr = sprintf('_%.0fErrScaling',ErrorBarScaling);
+                            else
+                                errStr = '';
+                            end
+                            plotdir = strrep(savedir,'results','plots');
+                            savename_plot = strrep(strrep(strrep(savename,'results','plots'),'.mat','.pdf'),...
+                                obj.RunData.RunName,[obj.RunData.RunName,'_',num2str(i),errStr]);
+                            MakeDir(plotdir);
+                            %print(gcf,savename_plot,'-dpng','-r100');
+                            %publish_figurePDF(gcf,strrep(savename_plot,'.png','.pdf'));
+                            export_fig(gcf,savename_plot);
+                            fprintf('save plot to %s \n',savename_plot);
+                        end
+                        if strcmp(HoldOn,'OFF')
+                            close
+                        end
+                        
                     end
                 end
+            else
+                e1 = NaN;
             end
             
             

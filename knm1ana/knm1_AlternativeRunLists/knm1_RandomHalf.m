@@ -13,7 +13,7 @@ if exist(savename,'file')
 else
     MakeDir(savedir);
     
-    RunAnaArg = { 'chi2','chi2Stat',...
+    RunAnaArg = { 'chi2',chi2,...
     'DataType','Real',...
     'fixPar','mNu E0 Norm Bkg',... free parameter
     'RadiativeFlag','ON',...
@@ -51,7 +51,7 @@ else
     fprintf('save to %s \n',savename);
 end
 %% histogram neutrino mass and 1 sigma
-return
+
 Both = 'OFF'; % on for blinded results
 if strcmp(Both,'ON')
     savedir = [getenv('SamakPath'),'knm1ana/knm1_AlternativeRunLists/results/'];

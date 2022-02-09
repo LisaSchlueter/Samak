@@ -128,7 +128,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                     [obj.PixList,obj.RingPixList] = Ring2PixelHalfCombi(obj.RingList,obj.PixList);
                     obj.nRings = 2;
                     obj.RingList = 1:2;
-                case 'Azi'
+                case 'Azi' 
                     [obj.PixList,obj.RingPixList] = AziPatch2PixelCombi(obj.RingList,obj.PixList);
                     obj.nRings = 5;
                     obj.RingList = 1:5;

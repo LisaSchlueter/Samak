@@ -144,7 +144,7 @@ plotHandle.Position = [0.1,0.1,0.42,0.55]; % make it rounder
 
 hold off
 
-if strcmp(Label,'ON')
+if strcmp(Label,'ON') && strcmp(ReDrawSkeleton,'ON')
     for i=1:148
         if isnan(data(i))
             TextHandle{i}.delete;
