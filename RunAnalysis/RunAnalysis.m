@@ -3662,7 +3662,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
         end
         
         
-        function [parqU, errqU, chi2qU, dofqU,e1,exclDataStart_v] = qUScan(obj,varargin)
+        function [parqU, errqU, chi2qU, dofqU,e1] = qUScan(obj,varargin)
             % Perform qUmin Fit Scan
             % -------------------------------------------------------------%
             p=inputParser;
