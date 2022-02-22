@@ -20,6 +20,9 @@ Time90  = R.RunData.TimeSec*sum(R.RunData.qUfrac)/Sec2Hour;
 Time40  = R.RunData.TimeSec*sum(R.RunData.qUfrac(R.exclDataStart:end))/Sec2Hour;
 TimeBkg = R.RunData.TimeSec*sum(R.RunData.qUfrac(end-4:end))/Sec2Hour;
 
+fprintf('------------------------ KNM1 ------------------------\n');
+fprintf('First golden scan: %s \n',R.SingleRunData.StartTimeStamp(1));
+fprintf('Last golden scan:  %s \n',R.SingleRunData.StartTimeStamp(end));
 fprintf('Net time [-40,+50] eV : %.1f hours \n',Time40);
 fprintf('Net time [-90,+50] eV : %.1f hours \n',Time90);
 fprintf('Net time [-200,+50] eV: %.1f hours \n',TimeAll);
@@ -46,3 +49,4 @@ fprintf('Mean signal to background   %.2f \n',mean(SB_qU));
 fprintf('Min signal to background   %.2f \n',min(SB_qU));
 fprintf('Max signal to background   %.2f \n',max(SB_qU));
 
+Activity = 2.*R.RunData.WGTS_CD_MolPerCm2.*R.ModelObj.WGTS_epsT.*pi*4.5^2.*R.ModelObj.TdecayC;

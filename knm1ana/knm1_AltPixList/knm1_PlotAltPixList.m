@@ -25,6 +25,7 @@ chi2min = zeros(numel(AltPixLists),2);
 p     = zeros(numel(AltPixLists),2);
 PixNumList = cell(2*numel(AltPixLists),1);
 %% fit run lists
+LocalFontSize = 18;
 
 for i=1:numel(AltPixLists)
     AltPixList =AltPixLists{i};  %'Half';%'AziHalfEW';  % defines alternative pixel list
@@ -38,7 +39,8 @@ for i=1:numel(AltPixLists)
     nPix(i,:) = cellfun(@(x) numel(x),d.PixList,'UniformOutput',1);
     PixNumList(2*(i-1)+1:2*i) = d.PixList;
     mNuSq(i,:) = d.FitResult.par(:,1);
-    mNuSqErr(i,:) =  d.FitResult.err(:,1);
+   % mNuSqErr(i,:) =  d.FitResult.err(:,1);
+    mNuSqErr(i,:) =  0.5.*(d.FitResult.errPos(:,1)-d.FitResult.errNeg(:,1));
     chi2min(i,:) =  d.FitResult.chi2min;
     p(i,:) = 1-chi2cdf(d.FitResult.chi2min,d.FitResult.dof);
 end
@@ -73,19 +75,21 @@ e_fits= errorbar(x,1:numel(x),xerr,'horizontal',...
 e_bf = errorbar(x(1),1,xerr(1),'horizontal',...
     '.','MarkerSize',20,'LineStyle','none','Color',pref.Color,'CapSize',0,'LineWidth',2);
 
-PrettyFigureFormat('FontSize',24);
+
 xlabel(sprintf('{\\itm}_\\nu^{ 2} (eV^{ 2})'));
 set(gca,'YMinorTick','off');
 yticks(1:numel(x));
 yticklabels(PixList_Labels)
 ax1 = gca;
-xlim([-5.5 2.2]);
+xlim([-5.5 2.7]);
 ylabel('Pixel selection');
+PrettyFigureFormat('FontSize',LocalFontSize);
 
 if strcmp(RandList,'ON')
     leg = legend(a_rand,sprintf('Random half pixels: 1\\sigma band (%.0f samples)',nPixList));
     PrettyLegendFormat(leg,'alpha',0.8); leg.EdgeColor = 'none';
     leg.Location= 'northwest';
+    leg.FontSize = LocalFontSize-2;
 end
 
 
@@ -94,10 +98,12 @@ area(linspace(0,0.05,10),numel(x)+1.*ones(10,1),'FaceColor',rgb('Red'));%(0.05.*
 hold on;
 plot(pp,1:numel(x),'.','MarkerSize',20,'LineWidth',2,'Color',rgb('DodgerBlue'));
 plot(pp(1),1,'.','MarkerSize',20,'LineWidth',2,'Color',pref.Color);
-PrettyFigureFormat('FontSize',24);
+
 yticklabels('');
 xlabel(sprintf('{\\it p}'));
 ax2 = gca;
+PrettyFigureFormat('FontSize',LocalFontSize);
+
 linkaxes([s1,s2],'y');
 
 ax1.Position(2) = 0.17;
@@ -119,12 +125,12 @@ export_fig(gcf,pltname);
 
 
 %%
-close all
+
 FPDView = 'OFF';
 ViewList = 'AziHalfEW';%{'Half','AziHalfNS','AziHalfEW'};
 if strcmp(FPDView,'ON')
+    close all
     Pixels = NaN.*zeros(148,1);
-    
     if strcmp(ViewList,'Half')
         Pixels(PixNumList{1}) = 1;
         Pixels(PixNumList{2}) = 0;
@@ -157,3 +163,12 @@ if strcmp(FPDView,'ON')
     
    
 end
+
+
+%% signficiance
+fprintf('Inner vs. Outer: %.2f sigma \n',abs(x(3)-x(2))./mean(xerr(2:3)));
+fprintf('North vs. South: %.2f sigma \n',abs(x(5)-x(4))./mean(xerr(4:5)));
+fprintf('East vs. West  : %.2f sigma \n',abs(x(7)-x(6))./mean(xerr(6:7)));
+
+% sigma with respect to random half
+Sigma = (x-mean(mNuSq_rand))./std(mNuSq_rand);

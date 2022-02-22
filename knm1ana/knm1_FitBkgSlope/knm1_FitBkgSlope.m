@@ -6,12 +6,12 @@ mNuSqErr = zeros(3,1);
 %% set up model: 
 % settings
 RunList               = 'KNM1';
-exclDataStart         = 14; % 40eV range = 27 subruns
+exclDataStart         = 13; % 40eV range = 27 subruns
 BkgConstrain = 'OFF';
 BkgRange = -5; %eV with respect to endpoint, background points used for cov mat
 
 savedir = [getenv('SamakPath'),'knm1ana/knm1_FitBkgSlope/results/'];
-DataType = 'Twin';
+DataType = 'Real';
 savename = [savedir,sprintf('knm1_FitBkgSlope_%s_%s_%.0f_BkgConstrain%s_%.0feVBkgRange.mat',...
     RunList,DataType,exclDataStart,BkgConstrain,BkgRange)];
 
@@ -40,7 +40,7 @@ else
     A.fixPar = '5 6 7 8 9 10 11';
     switch BkgConstrain
         case 'OFF'
-    A.pullFlag = 3; % no pull
+            A.pullFlag = 3; % no pull
         case 'ON'
             A.pullFlag = 6;
     end

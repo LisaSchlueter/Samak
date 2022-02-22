@@ -1,3 +1,5 @@
+% plot final knm1 systematics (PRL config) breakdown
+% either data or sensitivity
 DataType = 'Real';
 filedir = [getenv('SamakPath'),'tritium-data/sensitivity/Knm1/'];
 twinFile =  sprintf('%sSensitivitySys_Asimov_KNM1_40eV_TCFSDTASRRF_ELRF_BFRF_RXStackFPDeffBkg_chi2CMShape_budget22_MatlabFit_Twin.mat',filedir);
@@ -8,13 +10,13 @@ ddata = importdata(dataFile);
 
 %% legend
 SysEffectLeg      = {'Theoretical corrections';...
-    'Final states';...
-    'HV stacking';...%Scan fluctuations: Tritium activity';...
-    sprintf('Source scattering: Energy-loss');...
+    'Final-state distribution';...
+    'Scan fluctuations';...%: Tritium activity';...
+    sprintf('Energy-loss function');...
     'Magnetic fields';...
-    sprintf('Source scattering: \\rho{\\itd}\\sigma');...%  'Scan fluctuations: High voltage';...
+    sprintf('Number of scatterings \\rho{\\itd}\\sigma');...%  
     'Detector efficiency';...
-    'Background slope'};
+    sprintf('Background {\\itqU} slope')};
 
 PlotColor = {rgb('White'),rgb('DodgerBlue'),rgb('GoldenRod'),rgb('PowderBlue'),...
     rgb('CadetBlue'),rgb('DarkOrange'),rgb('FireBrick'),rgb('DarkSlateGray'),...
@@ -29,7 +31,7 @@ PlotVarTmp_twin = struct2array(structfun(@(x)x(1),dtwin.MultiLpar,'UniformOutput
 SingleBarY_twin(1)      = sqrt(dtwin.MultiLpar.Stat(1)^2-dtwin.NPcomponent(1)^2);
 SingleBarY_twin(2:end)  = sqrt(PlotVarTmp_twin(2:end).^2-SingleBarStat_twin^2);
 SingleBarY_twin(4) = sqrt(SingleBarY_twin(4)^2+SingleBarY_twin(8)^2);
-SingleBarY_twin(8) = [];
+SingleBarY_twin(8) = []; % remove HV stacking, because not approved
 
 %data
 PlotVarTmp_data = struct2array(structfun(@(x)x(1),ddata.MultiLpar,'UniformOutput',0));      
@@ -37,7 +39,7 @@ SingleBarStat_data       = ddata.MultiLpar.Stat(1);
 SingleBarY_data(1)      = sqrt(ddata.MultiLpar.Stat(1)^2-ddata.NPcomponent(1)^2);
 SingleBarY_data(2:end)  = sqrt(PlotVarTmp_data(2:end).^2-SingleBarStat_data^2);
 SingleBarY_data(4) = sqrt(SingleBarY_data(4)^2+SingleBarY_data(8)^2);
-SingleBarY_data(8) = [];
+SingleBarY_data(8) = []; % remove HV stacking, because not approved
 
 if strcmp(DataType,'Twin')
     y = SingleBarY_twin;

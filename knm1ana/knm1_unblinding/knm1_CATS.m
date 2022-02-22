@@ -1,22 +1,22 @@
 %
-% KNM1 Final fit Results
+% KNM1 Final fit Results with CATS diagnostic
 % Uniform Fit
 % Golden Run List
 % Golden Pixel List
-% Last Updated: 23/03/2021
+
 
 %% settings
 RecomputeFlag = 'OFF';
 Plots        = 'OFF';
 DataType     = 'Real';
 range        = 40;
-chi2         = 'chi2Stat';
+chi2         = 'chi2CMShape';
 freePar      = 'mNu E0 Norm Bkg';
 FSDFlag      = 'Sibille0p5eV';
-NonPoissonScaleFactor = 1;%.064;
+NonPoissonScaleFactor = 1.064;
 SysBudget    = 22;
 savedir = [getenv('SamakPath'),'knm1ana/knm1_unblinding/results/'];
-savefile = sprintf('%sknm1finalfitUniform_%s_%s_NP%.4g_%s_%.0feV_%s.mat',savedir,DataType,chi2,NonPoissonScaleFactor,strrep(freePar,' ',''),range,FSDFlag);
+savefile = sprintf('%sknm1_CATS_%s_%s_NP%.4g_%s_%.0feV_%s.mat',savedir,DataType,chi2,NonPoissonScaleFactor,strrep(freePar,' ',''),range,FSDFlag);
 
 if strcmp(chi2,'chi2CMShape')
     savefile = strrep(savefile,chi2,sprintf('%s_SysBudget%.0f',chi2,SysBudget));
@@ -44,17 +44,19 @@ else
     
     Real.exclDataStart =    Real.GetexclDataStart(range);
     
-    if strcmp(chi2,'chi2Stat')
-        Real.InitModelObj_Norm_BKG('RecomputeFlag','ON');
-    else
-        Real.InitModelObj_Norm_BKG('RecomputeFlag','ON');
-        Real.ComputeCM;
-    end
-    
-    Real.Fit;
-    
+%     if strcmp(chi2,'chi2Stat')
+%         Real.InitModelObj_Norm_BKG('RecomputeFlag','ON');
+%     else
+%         Real.InitModelObj_Norm_BKG('RecomputeFlag','ON');
+%         Real.ComputeCM;
+%     end
+    F = Real.Fit;
     FitResult = Real.FitResult;
-    save(savefile,'FitResult','Real');
+    F.catss;
+    F.Samakcats_StandResidualLeverage2D('savePlot','ON');
+    F.Samakcats_Dfbetas_Abs('savePlot','ON');
+    
+    save(savefile,'F','FitResult','Real');
 end
 %%
 fprintf('m^2 = %.3f (+-%.3f %.3f +%.3f) eV^2 \n',FitResult.par(1),(FitResult.errPos(1)-FitResult.errNeg(1))/2,FitResult.errNeg(1),FitResult.errPos(1))
@@ -64,4 +66,10 @@ fprintf('chi^2 = %.1f (%.0f dof) \n',FitResult.chi2min,FitResult.dof)
 if strcmp(Plots,'ON')
     Real.PlotFit('LabelFlag','data','saveplot','pdf','ErrorBarScaling',1,'YLimRes',[-2.2,2.9],'Colors','RGB','DisplayStyle','PRL');
 end
+
+%%
+% F.Samakcats_StandResidualLeverage2D('savePlot','ON');
+    F.Samakcats_Dfbetas_Abs('savePlot','ON');
+    
+
 

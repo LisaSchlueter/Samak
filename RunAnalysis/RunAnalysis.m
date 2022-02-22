@@ -461,7 +461,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                         end
                         
                         if isfield(obj.RunData,'TBDIS_RM')
-                            obj.RunData.TBDIS_RM   = mean(obj.RunData.TBDIS_RM(obj.PixList));
+                            obj.RunData.TBDIS_RM   = sum(obj.RunData.TBDIS_RM(obj.PixList));
                             obj.RunData.TBDIS_RM_Default   = obj.RunData.TBDIS_RM;
                             obj.RunData.qU_RM      = mean(obj.RunData.qU_RM(obj.PixList));
                             obj.RunData.qUfrac_RM  = mean(obj.RunData.qUfrac_RM(obj.PixList));
@@ -469,7 +469,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                         
                         if isfield(obj.RunData,'TBDIS14keV')
                             obj.RunData.TBDIS14keV      = sum(obj.RunData.TBDIS14keV(:,obj.PixList),2);
-                            obj.RunData.TBDIS14keV_RM   = mean(obj.RunData.TBDIS14keV_RM(obj.PixList));
+                            obj.RunData.TBDIS14keV_RM   = sum(obj.RunData.TBDIS14keV_RM(obj.PixList));
                         end
                     case {'MultiPixel','SinglePixel'}
                         %Select pixellist
@@ -1187,6 +1187,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             else
                 BkgMode_def = 'Gauss';
             end
+            
             p = inputParser;
             %RunAnalysis settings
             p.addParameter('InitNormFit','ON',@(x)ismember(x,{'ON','OFF'})); % Init Model Normalization + Background with Fit
@@ -1263,6 +1264,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             else
                 nStack=1;
             end    
+            
             % init
             obj.FitCM          = zeros(obj.ModelObj.nqU*obj.ModelObj.nPixels,obj.ModelObj.nqU*obj.ModelObj.nPixels);
             obj.FitCMFrac      = zeros(obj.ModelObj.nqU*obj.ModelObj.nPixels,obj.ModelObj.nqU*obj.ModelObj.nPixels);
@@ -1716,7 +1718,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
     end
     methods % Fit
         
-        function Fit(obj,varargin)
+        function F = Fit(obj,varargin)
             % Fit of the Data/Sim
             % -------------------------------------------------------------%
             
@@ -3662,7 +3664,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
         end
         
         
-        function [parqU, errqU, chi2qU, dofqU,e1] = qUScan(obj,varargin)
+        function [parqU, errqU, chi2qU, dofqU,e1,pref] = qUScan(obj,varargin)
             % Perform qUmin Fit Scan
             % -------------------------------------------------------------%
             p=inputParser;
@@ -3676,8 +3678,9 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             p.addParameter('RefLine','OFF',@(x) isfloat(x) || strcmp(x,'OFF')); % reference line for respect to certain range
             p.addParameter('saveStr','',@(x)ischar(x) || isempty(x));
             p.addParameter('saveResult','ON',@(x)ismember(x,{'ON','OFF'})); %save to file
-            p.addParameter('PlotResult','ON',@(x)ismember(x,{'ON','OFF'})); %save to file
-            
+            p.addParameter('PlotResult','ON',@(x)ismember(x,{'ON','OFF'})); %plot yes or no
+            p.addParameter('randMC','OFF',@(x)ismember(x,{'ON','OFF'})); %only for knm1 so far
+           
             p.parse(varargin{:});
             saveplot        = p.Results.saveplot;
             qURange         = p.Results.qURange;
@@ -3690,6 +3693,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             RefLine         = p.Results.RefLine;
             saveResult      = p.Results.saveResult;
             PlotResult      = p.Results.PlotResult;
+            randMC          = p.Results.randMC;
             
             if strcmp(obj.DataSet,'Knm1')
                 savedir = [getenv('SamakPath'),'knm1ana/knm1_qUScan/results/'];
@@ -3776,11 +3780,11 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                             ystr = sprintf('{\\itE}_0^{fit} (eV)');%,obj.ModelObj.Q_i);
                         end
                     elseif i==3
-                        ystr = 'Background (mcps)';
+                        ystr = sprintf('{\\itB}_{base} (mcps)');
                         y =(flip(parqU(i,:))+obj.ModelObj.BKG_RateSec_i)*1e3;
                         yErr = flip(errqU(i,:))*1e3;
                     elseif i==4
-                        ystr ='Signal normalization';
+                        ystr =sprintf('{\\itN}_{sig.}');%Signal normalization';
                         y =flip(parqU(i,:))+1;
                     elseif i==5
                         ystr =sprintf('{\\itp} - value');
@@ -3819,142 +3823,173 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                     end
                     
                     yErr = yErr.*ErrorBarScaling;
-                    if all(y==0) || all(isnan(y))
-                        
+                    
+                    x =flip(obj.RunData.qU(exclDataStart_v(1):exclDataStart_v(end),1))-18574;%obj.ModelObj.Q_i;
+                    if (strcmp(HoldOn,'OFF') || strcmp(HoldOn,'ON1')) && ~contains(obj.DataSet,'FirstTritium')
+                        fig12345 = figure('Renderer','painters');
+                        set(fig12345, 'Units', 'normalized', 'Position', [0.1, 0.1, 0.7, 0.3]);
+                        ColorArg = {'MarkerFaceColor',obj.PlotColor,'Color',obj.PlotColor};
+                    elseif contains(obj.DataSet,'FirstTritium')
+                        fig12345 = figure('Renderer','painters');
+                        set(fig12345, 'Units', 'centimeters', 'Position', [0.1, 0.1, 8.4, 4.5]);
+                        ColorArg = {'MarkerFaceColor',rgb('CadetBlue'),'Color',rgb('DarkCyan')};
                     else
-                        
-                        x =flip(obj.RunData.qU(exclDataStart_v(1):exclDataStart_v(end),1))-18574;%obj.ModelObj.Q_i;
-                        if (strcmp(HoldOn,'OFF') || strcmp(HoldOn,'ON1')) && ~contains(obj.DataSet,'FirstTritium')
-                            fig12345 = figure('Renderer','painters');
-                            set(fig12345, 'Units', 'normalized', 'Position', [0.1, 0.1, 0.7, 0.3]);
-                            ColorArg = {'MarkerFaceColor',obj.PlotColor,'Color',obj.PlotColor};
-                        elseif contains(obj.DataSet,'FirstTritium')
-                            fig12345 = figure('Renderer','painters');
-                            set(fig12345, 'Units', 'centimeters', 'Position', [0.1, 0.1, 8.4, 4.5]);
-                            ColorArg = {'MarkerFaceColor',rgb('CadetBlue'),'Color',rgb('DarkCyan')};
-                        else
-                            hold on;
-                            ColorArg = {'MarkerFaceColor',obj.PlotColorLight,'Color',obj.PlotColorLight};
-                            % ColorArg = {'MarkerFaceColor',rgb('Orange'),'Color',rgb('Orange')};
-                            x = x+0.5;
-                        end
-                        
-                        
-                        if i~=5 && strcmp(CorrMean,'ON') && ~strcmp(HoldOn,'ON')
-                            pref = plot(linspace(min(x)-3,max(x)+3,numel(x)),...
-                                Mean.*ones(numel(x),1),':','Color',obj.PlotColor,'LineWidth',3); %rgb('Silver')
-                            hold on
-                        elseif ~strcmp(RefLine,'OFF')
-                            % reference line with respect to certain range
-                            
-                            Idx_AnaInterval = find(flip(exclDataStart_v)== obj.GetexclDataStart(RefLine));
-                            [l,pref]  = boundedline(x(Idx_AnaInterval).*ones(10,1),linspace(floor(min(y-yErr))-10,10+ceil(max(y+yErr)),10),0.7.*ones(10,1),'orientation','horiz');
-                            l.LineStyle = 'none'; pref.FaceColor = rgb('Orange'); pref.FaceAlpha =0.8;%obj.PlotColorLight;
-                            hold on;
-                            pline = plot(linspace(min(x)-3,max(x)+3,numel(x)),...
-                                y(Idx_AnaInterval).*ones(numel(x),1),':','Color',rgb('Silver'),'LineWidth',3);
-                        end
-                        
-                        if contains(obj.DataSet,'FirstTritium')
-                            plot(linspace(min(x)-10,max(x)+10,numel(x)),zeros(numel(x),1),'-','Color',rgb('Black'),'LineWidth',1);
-                            hold on;
-                        end
-                        e1 = errorbar(x, y,yErr,...
-                            '.','LineWidth',2.5,'MarkerSize',20,ColorArg{:});
-                        e1.CapSize = 0;
-                        
-                        % highlight standard analysis interval
-                        %                     if ~strcmp(RefLine,'OFF')
-                        %                         e2 = errorbar(x(Idx_AnaInterval),y(Idx_AnaInterval),yErr(Idx_AnaInterval),...
-                        %                             '.','LineWidth',2.5,'MarkerSize',25,'MarkerFaceColor',rgb('Orange'),'Color',rgb('Orange'));
-                        %                         e2.CapSize = 0;
-                        %                     end
-                        
-                        xlabel(sprintf('Lower fit boundary below 18574 (eV)'));%{\\itE}_0 (eV)'));
-                        ylabel(ystr);
-                        xlim([min(x)-2,max(x)+2]);
-                        if i==3 %background
-                            ylim([min(y-yErr).*0.997,max(y+yErr)*1.003])
-                        elseif i==1
-                            % ylim([min(y-yErr),max(y+yErr)])
-                            ylim([min(y-yErr)-0.5,1.5+max(y+yErr)]);
+                        hold on;
+                        ColorArg = {'MarkerFaceColor',obj.PlotColorLight,'Color',obj.PlotColorLight};
+                        % ColorArg = {'MarkerFaceColor',rgb('Orange'),'Color',rgb('Orange')};
+                        %x = x+0.5;
+                    end
+                    
+                    if strcmp(randMC,'ON') && strcmp(obj.DataSet,'Knm1')
+                        nSamples = 1e3;
+                        savedir = [getenv('SamakPath'),'knm1ana/knm1_qUScan/results/'];
+                        savenameMC = sprintf('%sknm1_qUScan_MC_%.0feV_to_%.0feV_%s_NP%2g_%.0fsamples.mat',...
+                            savedir,qURange(1),qURange(2),obj.chi2,obj.NonPoissonScaleFactor,nSamples);
+                        dMC = importdata(savenameMC);
+                        if i==1
+                            mu  = dMC.mNuSq_mu+y(13);
+                            std = dMC.mNuSq_std;
                         elseif i==2
-                            ax = gca;
-                            ax.YAxis.Exponent = 0;
-                            ylim([(min(y-yErr))-0.05,0.05+max(y+yErr)]);
-                            %ylim([round(min(y-yErr),1),round(max(y+yErr),1)]);
-                        elseif i==4 %normalization
-                            ylim([(1-3e-3).*(min(y-yErr)),(1+3e-3).*max(y+yErr)]);
-                        elseif i==5
-                            ylim([(min(y-yErr))-0.07,0.1+max(y+yErr)]);
+                            mu  = dMC.E0_mu+y(13);
+                            std = dMC.E0_std;
+                        elseif i==3
+                            mu  = 1e3.*dMC.B_mu+y(13);
+                            std = 1e3.*dMC.B_std;
+                        elseif i==4
+                            mu  = dMC.N_mu+y(13);
+                            std = dMC.N_std;
                         end
-                        if contains(obj.DataSet,'FirstTritium')
-                            FTpaperFormat;
-                            set(gca,'FontSize',9);
-                            set(get(gca,'XLabel'),'FontSize',9);
-                            set(get(gca,'YLabel'),'FontSize',9);
-                            e1.LineWidth = 1;
-                            e1.MarkerSize = 3;
-                            xlim([min(x)-10,max(x)+10]);
+                        [l,arand] = boundedline(dMC.qU(dMC.exclDataStart_v)-18574,mu,std);
+                        hold on;
+                        l.delete;
+                        arand.FaceColor = rgb('LightGray');
+                        arand.FaceAlpha = 0.8;
+                    end
+                    
+                    if i~=5 && strcmp(CorrMean,'ON') && ~strcmp(HoldOn,'ON')
+                        pref = plot(linspace(min(x)-3,max(x)+3,numel(x)),...
+                            Mean.*ones(numel(x),1),':','Color',obj.PlotColor,'LineWidth',3); %rgb('Silver')
+                        hold on
+                    elseif ~strcmp(RefLine,'OFF')
+                        % reference line with respect to certain range
+                        
+                        Idx_AnaInterval = find(flip(exclDataStart_v)== obj.GetexclDataStart(RefLine));
+                        [l,pref]  = boundedline(x(Idx_AnaInterval).*ones(10,1),linspace(floor(min(y-yErr))-10,10+ceil(max(y+yErr)),10),0.7.*ones(10,1),'orientation','horiz');
+                        l.LineStyle = 'none'; pref.FaceColor = rgb('Orange'); pref.FaceAlpha =0.8;%obj.PlotColorLight;
+                        hold on;
+                        pline = plot(linspace(min(x)-3,max(x)+3,numel(x)),...
+                            y(Idx_AnaInterval).*ones(numel(x),1),':','Color',rgb('Orange'),'LineWidth',3);
+                    end
+                    
+                    if contains(obj.DataSet,'FirstTritium')
+                        plot(linspace(min(x)-10,max(x)+10,numel(x)),zeros(numel(x),1),'-','Color',rgb('Black'),'LineWidth',1);
+                        hold on;
+                    end
+                    e1 = errorbar(x, y,yErr,...
+                        '.','LineWidth',2.5,'MarkerSize',20,ColorArg{:});
+                    e1.CapSize = 0;
+                    
+                    % highlight standard analysis interval
+                    %                     if ~strcmp(RefLine,'OFF')
+                    %                         e2 = errorbar(x(Idx_AnaInterval),y(Idx_AnaInterval),yErr(Idx_AnaInterval),...
+                    %                             '.','LineWidth',2.5,'MarkerSize',25,'MarkerFaceColor',rgb('Orange'),'Color',rgb('Orange'));
+                    %                         e2.CapSize = 0;
+                    %                     end
+                    
+                    xlabel(sprintf('Lower fit boundary below 18574 (eV)'));%{\\itE}_0 (eV)'));
+                    ylabel(ystr);
+                    xlim([min(x)-2,max(x)+2]);
+                    if i==3 %background
+                        ylim([min(y-yErr).*0.997,max(y+yErr)*1.003])
+                    elseif i==1
+                        % ylim([min(y-yErr),max(y+yErr)])
+                        ylim([min(y-yErr)-0.5,1.5+max(y+yErr)]);
+                    elseif i==2
+                        ax = gca;
+                        ax.YAxis.Exponent = 0;
+                        ylim([(min(y-yErr))-0.05,0.05+max(y+yErr)]);
+                        %ylim([round(min(y-yErr),1),round(max(y+yErr),1)]);
+                    elseif i==4 %normalization
+                        ylim([(1-3e-3).*(min(y-yErr)),(1+3e-3).*max(y+yErr)]);
+                    elseif i==5
+                        ylim([(min(y-yErr))-0.07,0.1+max(y+yErr)]);
+                    end
+                    if contains(obj.DataSet,'FirstTritium')
+                        FTpaperFormat;
+                        set(gca,'FontSize',9);
+                        set(get(gca,'XLabel'),'FontSize',9);
+                        set(get(gca,'YLabel'),'FontSize',9);
+                        e1.LineWidth = 1;
+                        e1.MarkerSize = 3;
+                        xlim([min(x)-10,max(x)+10]);
+                    else
+                        PrettyFigureFormat('FontSize',18);
+                    end
+                    
+                    
+                    % legend
+                    %                     if ~strcmp(obj.chi2,'chi2Stat')
+                    %                         legstr='Fit (Stat + syst)';
+                    %                     else
+                    %                         legstr ='Fit (Stat only)';
+                    %                     end
+                    
+                    if i~=5 && strcmp(CorrMean,'ON') && ~strcmp(HoldOn,'ON')
+                        leg = legend([e1,pref],legstr,'correlated weighted mean');
+                    elseif ~strcmp(RefLine,'OFF')
+                        if strcmp(randMC,'ON') && strcmp(obj.DataSet,'Knm1') && i<5
+                            leg = legend([pref,arand],'Standard analysis range', sprintf('Expected 1\\sigma variation'));
                         else
-                            PrettyFigureFormat('FontSize',24);
-                        end
-                        
-                        
-                        % legend
-                        %                     if ~strcmp(obj.chi2,'chi2Stat')
-                        %                         legstr='Fit (Stat + syst)';
-                        %                     else
-                        %                         legstr ='Fit (Stat only)';
-                        %                     end
-                        
-                        if i~=5 && strcmp(CorrMean,'ON') && ~strcmp(HoldOn,'ON')
-                            leg = legend([e1,pref],legstr,'correlated weighted mean');
-                        elseif ~strcmp(RefLine,'OFF')
                             leg = legend([pref],'Standard analysis range');
-                            leg.ItemTokenSize = [30,13];
-                        else
-                            leg = legend(e1,'');
                         end
-                        %leg.EdgeColor = rgb('Silver');
-                        PrettyLegendFormat(leg);
-                        
-                        if i==1 && strcmp(CorrMean,'ON')
-                            leg.Location = 'southwest';
-                        else
-                            leg.Location = 'northwest';
-                        end
-                        
-                        if contains(obj.DataSet,'FirstTritium')
-                            mypos = leg.Position;
-                            leg.Position = [mypos(1)-0.05, mypos(2)+0.02,mypos(3:end)];
-                            leg.FontSize = 9;
-                        else
-                            leg.FontSize = get(gca,'FontSize')+2;
-                        end
-                        
-                        %  leg.delete;
-                        %% save
-                        if strcmp(saveplot,'ON')
-                            if ErrorBarScaling~=1
-                                errStr = sprintf('_%.0fErrScaling',ErrorBarScaling);
-                            else
-                                errStr = '';
-                            end
-                            plotdir = strrep(savedir,'results','plots');
-                            savename_plot = strrep(strrep(strrep(savename,'results','plots'),'.mat','.pdf'),...
-                                obj.RunData.RunName,[obj.RunData.RunName,'_',num2str(i),errStr]);
-                            MakeDir(plotdir);
-                            %print(gcf,savename_plot,'-dpng','-r100');
-                            %publish_figurePDF(gcf,strrep(savename_plot,'.png','.pdf'));
-                            export_fig(gcf,savename_plot);
-                            fprintf('save plot to %s \n',savename_plot);
-                        end
-                        if strcmp(HoldOn,'OFF')
-                            close
-                        end
+                        leg.ItemTokenSize = [30,13];
+                    else
+                        leg = legend(e1,'');
+                    end
+                    %leg.EdgeColor = rgb('Silver');
+                    PrettyLegendFormat(leg);
+                    
+                    if i==1 && strcmp(CorrMean,'ON')
+                        leg.Location = 'southwest';
+                    elseif strcmp(randMC,'ON') && i~=4 
+                        leg.Location = 'southwest';
+                    else
+                        leg.Location = 'northwest';
                         
                     end
+                    
+                    if contains(obj.DataSet,'FirstTritium')
+                        mypos = leg.Position;
+                        leg.Position = [mypos(1)-0.05, mypos(2)+0.02,mypos(3:end)];
+                        leg.FontSize = 9;
+                    else
+                        leg.FontSize = get(gca,'FontSize')+4;
+                    end
+                    
+                    %  leg.delete;
+                    %% save
+                    if strcmp(saveplot,'ON')
+                        if ErrorBarScaling~=1
+                            errStr = sprintf('_%.0fErrScaling',ErrorBarScaling);
+                        else
+                            errStr = '';
+                        end
+                        plotdir = strrep(savedir,'results','plots');
+                        savename_plot = strrep(strrep(strrep(savename,'results','plots'),'.mat','.pdf'),...
+                            obj.RunData.RunName,[obj.RunData.RunName,'_',num2str(i),errStr]);
+                        
+                     
+                        MakeDir(plotdir);
+                        %print(gcf,savename_plot,'-dpng','-r100');
+                        %publish_figurePDF(gcf,strrep(savename_plot,'.png','.pdf'));
+                        export_fig(gcf,savename_plot);
+                        fprintf('save plot to %s \n',savename_plot);
+                    end
+                    if strcmp(HoldOn,'OFF')
+                        close
+                    end
+                    
+                    
                 end
             else
                 e1 = NaN;

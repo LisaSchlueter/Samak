@@ -7,7 +7,7 @@ DataType = 'Real';
 nGridSteps = 50;
 range = 40;
 freePar = 'E0 Norm Bkg';
-NH = 'OFF'; % with respect to null hypothesis
+
 %% configure RunAnalysis object
 if strcmp(chi2,'chi2Stat')
     NonPoissonScaleFactor = 1;
@@ -42,58 +42,95 @@ SterileArg = {'RunAnaObj',A,... % Mother Object: defines RunList, Column Density
     'SysEffect','all',...
     'RandMC','OFF',...
     'range',range,...
-    'LoadGridArg',{'mNu4SqTestGrid',5}};
+    'LoadGridArg',{'mNu4SqTestGrid',5,'Extsin2T4','OFF','ExtmNu4Sq','ON'}};
 S = SterileAnalysis(SterileArg{:});
 %%
 S.InterpMode = 'spline';
-if ~contains(freePar,'mNu') && strcmp(NH,'OFF') 
-    GridArg_i = S.LoadGridArg;
-    S.LoadGridArg = {GridArg_i{:},'Extsin2T4','OFF','ExtmNu4Sq','ON'};
-    S.LoadGridFile(S.LoadGridArg{:});
-   
-    S.Interp1Grid('RecomputeFlag','ON','Maxm4Sq',38.2^2);
-    S.FindBestFit;
-  %  S.FindBestFit('Mode','Imp');
-    chi2_ref = S.chi2_ref;
-    mNuSq_bf = S.mNuSq_bf;
-    sin2T4_bf = S.sin2T4_bf;
-    mNu4Sq_bf = S.mNu4Sq_bf;
-    S.LoadGridArg = GridArg_i;
-end
 
+S.LoadGridArg = {S.LoadGridArg{:}};
 S.LoadGridFile(S.LoadGridArg{:});
-S.Interp1Grid('Maxm4Sq',40^2);
 
-if ~contains(freePar,'mNu') && strcmp(NH,'OFF') 
-    S.chi2_ref  = chi2_ref;
-    S.mNuSq_bf  = mNuSq_bf ;
-    S.sin2T4_bf = sin2T4_bf;
-    S.mNu4Sq_bf = mNu4Sq_bf;
-else
-    S.FindBestFit;
-    S.FindBestFit('Mode','Imp');
-    
-    S.LoadGridFile(S.LoadGridArg{:});
-    S.Interp1Grid('Maxm4Sq',40^2);
-    
-end
+m4Sq   = S.mNu4Sq;
+sin2t4 = S.sin2T4;
+chi2   = S.chi2';
 
-%
-S.ContourPlot('NullHypothesis',NH,'ReCalcBF','OFF'); 
+close all
+GetFigure;
+contour(sin2t4,m4Sq,chi2-min(min(chi2)),[5.99,5.99],'LineWidth',2);
+set(gca,'XScale','log');
+set(gca,'YScale','log');
 
-%% export contour
+S.Interp1Grid('RecomputeFlag','ON','Maxm4Sq',38.2^2);
+S.FindBestFit;
+chi2_ref = S.chi2_ref;
 
-savedir = sprintf('%sksn2ana/ksn2_FitterCrossCheck/results/',getenv('SamakPath'));
+m4Sq_interp   = S.mNu4Sq;
+sin2t4_interp = S.sin2T4;
+chi2_interp   = S.chi2;
+
+hold on;
+
+contour(sin2t4_interp,m4Sq_interp,chi2_interp-chi2_ref,[5.99,5.99],'LineWidth',2);
+
+
+%% export chi2 map
+
+savedir = sprintf('%sksn2ana/ksn2_Export/results/',getenv('SamakPath'));
 MakeDir(savedir);
 
-savename =  sprintf('%sKSN2_contour_Samak%s_%s_40eV_%s',...
-    savedir,DataType,strrep(freePar,' ',''),strrep(chi2,'chi2',''));
-if strcmp(NH,'ON')
-  savename =  sprintf('%sKSN2_contour_Samak%s_%s_40eV_%s_NH',...
-    savedir,DataType,strrep(freePar,' ',''),strrep(chi2,'chi2',''));  
-end
+savename =  sprintf('%sKSN2_chi2map.h5', savedir);
+
+system(sprintf('rm %s',savename));
+
+h5create(savename,'/chiSqmin',[1,1]);
+h5write(savename, '/chiSqmin', chi2_ref);
+
+h5create(savename,'/chiSq',[50,50]);
+h5write(savename, '/chiSq', chi2);
+
+h5create(savename,'/m4Sq',[50,50]);
+h5write(savename, '/m4Sq', m4Sq);
+
+h5create(savename,'/sint4Sq',[50,50]);
+h5write(savename, '/sint4Sq', sin2t4);
+
+% h5create(savename,'/chiSq_interp',[1e3,1e3]);
+% h5write(savename, '/chiSq_interp', chi2_interp);
+% 
+% h5create(savename,'/m4Sq_interp',[1e3,1e3]);
+% h5write(savename, '/m4Sq_interp', m4Sq_interp);
+% 
+% h5create(savename,'/sint4Sq_interp',[1e3,1e3]);
+% h5write(savename, '/sint4Sq_interp', sin2t4_interp);
+
+h5disp(savename)
+
+%%
+savenameData =  sprintf('%sKSN2_Data.h5', savedir);
+system(sprintf('rm %s',savenameData));
+
+qU    = A.RunData.qU(A.exclDataStart:end);
+Counts   = A.RunData.TBDIS(A.exclDataStart:end);
+Time_sec = A.RunData.qUfrac(A.exclDataStart:end).*A.RunData.TimeSec;
+CovMat = A.FitCMShape(A.exclDataStart:end,A.exclDataStart:end);
+
+h5create(savenameData,'/RetardingEnergy_eV',[28,1]);
+h5write(savenameData, '/RetardingEnergy_eV', qU);
+
+h5create(savenameData,'/Counts',[28,1]);
+h5write(savenameData, '/Counts', Counts);
+
+h5create(savenameData,'/Time_sec',[28,1]);
+h5write(savenameData, '/Time_sec', Time_sec);
+
+h5create(savenameData,'/CovarianceMatrix',[28,28]);
+h5write(savenameData, '/CovarianceMatrix', CovMat);
+
+h5disp(savenameData);
+%%
 Write2Txt('filename',savename,...
-    'Format','dat','variable',[S.sin2T4_contour;S.mNu4Sq_contour],'nCol',2,'variableName','sinT4Sq m4Sq');
+    'Format','dat',...
+    'variable',[S.sin2T4_contour;S.mNu4Sq_contour],'nCol',2,'variableName','sinT4Sq m4Sq');
 
 %% Write best fit
 if strcmp(DataType,'Real')  && strcmp(NH,'OFF')

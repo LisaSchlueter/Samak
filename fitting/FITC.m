@@ -1235,8 +1235,8 @@ classdef FITC < handle
             
             nFitPar       = length(obj.RESULTS{1});
             AllParameters = 1:nFitPar;
-            if nFitPar    == 14  % Uniform - m2,E0,N,B
-            AllLabels     = {'m^2 (eV^2)' ,'E_0 (eV)' ,'B (cps)' ,'N','Pgs_{DT}','Pes_{DT}','Pgs_{HT}','Pes_{HT}','Pgs_{TT}','Pes_{TT}','qUoffset','12','13','14'};
+            if nFitPar    == 17  % Uniform - m2,E0,N,B
+            AllLabels     = {'m^2 (eV^2)' ,'E_0 (eV)' ,'B (cps)' ,'N','Pgs_{DT}','Pes_{DT}','Pgs_{HT}','Pes_{HT}','Pgs_{TT}','Pes_{TT}','qUoffset','12','13','14','15'};
             elseif nFitPar    == 16  % Uniform - m2,E0,N,B
             AllLabels     = {'m^2 (eV^2)' ,'E_0 (eV)' ,'B (cps)' ,'N','Pgs_{DT}','Pes_{DT}','Pgs_{HT}','Pes_{HT}','Pgs_{TT}','Pes_{TT}','qUoffset','12','13','14','m_4^2 (eV^2)','sint4^2'};
             elseif nFitPar== 18  % MultiRing 4 - m2,E0,N,B
@@ -1310,7 +1310,7 @@ classdef FITC < handle
             
              % Label
             %obj.CATSstat.names = [round(obj.DATA(obj.exclDataStart:end,1)-obj.SO.Q_i,1) ; obj.CATSstat.nsys];
-            obj.CATSstat.names = [round(obj.qUdata(exclIndex)-obj.SO.Q_i,1) ; obj.CATSstat.nsys];
+            obj.CATSstat.names = [round(obj.qUdata(exclIndex)-obj.SO.Q_i,0) ; obj.CATSstat.nsys];
 
         end
         
@@ -1418,20 +1418,21 @@ classdef FITC < handle
             box on;
             axis([min(0,min(obj.CATSstat.standres)*1.2) max(obj.CATSstat.standres)*1.2 0 length(obj.CATSstat.standres)+1 ]);
             grid off;
+            xlabel('Standardized Residuals');
+           ylabel(sprintf('Retarding energy - 18574 (eV)'));
             % set(gca,'Xtick',round(linspace(1,length(obj.CATSstat.leverage),min(10,nobs+nsys))));
             if isempty(obj.CATSstat.names)
                 set(gca,'YDir','Reverse','Ytick',1:(nobs+nsys),'YtickLabel',1:(nobs+nsys));
                 grid on;
                 set(gca,'YGrid','off');
-                PrettyFigureFormat;
+                PrettyFigureFormat('FontSize',24);
             else
                 set(gca,'YDir','Reverse','Ytick',1:(nobs+nsys),'YtickLabel',obj.CATSstat.names(1:(nobs+nsys)));
-                PrettyFigureFormat;
+                PrettyFigureFormat('FontSize',24);
                 grid on;
                 set(gca,'YGrid','off');
             end
-            xlabel('Standardized Residuals');
-            ylabel(sprintf('retarding potential - %.1f (eV)',obj.SO.Q_i));
+           
             if nobs>40
                  a = get(gca,'YTickLabel');
                 set(gca,'YTickLabel',a,'fontsize',8);
@@ -1456,18 +1457,21 @@ classdef FITC < handle
             box on;
             axis([ 0 max(obj.CATSstat.leverage)*1.2 0 length(obj.CATSstat.leverage)+1]);
             grid off;
+            ylabel(sprintf('Retarding energy - 18574 (eV)'));
+            xlabel('Leverages');
             % set(gca,'Xtick',round(linspace(1,length(obj.CATSstat.leverage),min(10,nobs+nsys))));
             if isempty(obj.CATSstat.names)
                 set(gca,'YDir','Reverse','Ytick',1:(nobs+nsys),'YtickLabel',1:(nobs+nsys));
                 grid on;
                 set(gca,'YGrid','off');
-                PrettyFigureFormat;
+                PrettyFigureFormat('FontSize',24);
             else
                 set(gca,'YDir','Reverse','Ytick',1:(nobs+nsys),'YtickLabel',obj.CATSstat.names(1:(nobs+nsys)));
                 grid on;
                 set(gca,'YGrid','off');
-                PrettyFigureFormat;
+                PrettyFigureFormat('FontSize',24);
             end
+             ylabel(sprintf('Retarding energy - 18574 (eV)'));
             xlabel('Leverages');
             if nobs>40
                 a = get(gca,'YTickLabel');
@@ -1509,27 +1513,26 @@ classdef FITC < handle
             p.addParameter('savePlot','ON',@(x)ismember(x,{'ON','OFF'}));
             p.parse(varargin{:});
             savePlot      = p.Results.savePlot;
-             
+            
             % Figure definition
-            myMainTitle=sprintf('Samak: Standardized Residuals Versus Leverages (CATS)');
+            %            myMainTitle=sprintf('Samak: Standardized Residuals Versus Leverages (CATS)');
             savefile=sprintf('plots/cats/CATS_StandResidualLeverage2D.pdf');
-            fig = figure('Name','Samak','NumberTitle','off','rend','painters','pos',[10 10 800 800]);
-            a=annotation('textbox', [0 0.88 1 0.1], ...
-                'String', myMainTitle, 'EdgeColor', 'none','HorizontalAlignment', 'center');
-            a.FontSize=20;a.FontWeight='bold';
-            
-            obj.CATSstat.names = [];
-            stdrlevplot(obj.CATSstat);
-            %            obj.CATSstat.names = [round(obj.DATA(obj.exclDataStart:end,1)-obj.SO.Q_i,1) ; obj.CATSstat.nsys];
-            
+            fig = figure('Units','normalized','Position',[0.1,0.1,0.7,0.45]);%'Name','Samak','NumberTitle','off','rend','painters','pos',[10 10 800 800]);
+            %             a=annotation('textbox', [0 0.88 1 0.1], ...
+            %                 'String', myMainTitle, 'EdgeColor', 'none','HorizontalAlignment', 'center');
+            %             a.FontSize=20;a.FontWeight='bold';
             % Build uniform / multi-ring indexes
             m         = obj.SO.TBDIS(obj.exclDataStart:obj.exclDataStop,:); %model
             nrings    = numel(obj.SO.MACE_Ba_T); % always gives correct number of pseudo rings
             nqU_used  = size(m,1);             % number of subruns, which are NOT excluded
             exclIndex = sort(reshape(repmat(obj.exclDataStart:obj.exclDataStop,[nrings,1])+[0:nrings-1]'.*obj.SO.nqU,[nqU_used*nrings,1]));
-           
-            obj.CATSstat.names = [round(obj.qUdata(exclIndex)-obj.SO.Q_i,1) ; obj.CATSstat.nsys];
-
+            obj.CATSstat.names = [round(obj.qUdata(exclIndex)-18574,1) ; obj.CATSstat.nsys];
+            
+            stdrlevplot(obj.CATSstat);
+            %            obj.CATSstat.names = [round(obj.DATA(obj.exclDataStart:end,1)-obj.SO.Q_i,1) ; obj.CATSstat.nsys];
+            
+            
+            PrettyFigureFormat('FontSize',18);
 
             if strcmp(savePlot,'ON')
                 if exist('./plots','dir')~=7
@@ -1719,10 +1722,10 @@ classdef FITC < handle
                     legend([p l],'delete 1 data - best fit','all data - best fit','Location','southwest') ;
                     legend('boxoff')
                 end
-                PrettyFigureFormat; set(gca,'FontSize',18);
+                PrettyFigureFormat('FontSize',20); %set(gca,'FontSize',18);
                 sv = [sv s(counter)];
             end
-            xlabel(sprintf('retarding potential - %.1f (eV)',obj.SO.Q_i));
+            xlabel(sprintf('Retarding energy - %.1f (eV)',obj.SO.Q_i));
             for k=1:4
                 linkaxes(sv,'x');
             end
@@ -1734,48 +1737,56 @@ classdef FITC < handle
                 if exist('./plots/cats','dir')~=7
                     mkdir plots/cats
                 end
-                publish_figurePDF(fig,savefile);
+                export_fig(fig,savefile);
             end
             
             %% plot only mnu
-            fnew = figure('Units','normalized','Position',[0.1,0.1,0.6,0.5]);
+            fnew = figure('Units','normalized','Position',[0.1,0.1,0.6,0.4]);
             counter = 1; k=1;
             l=line([min(round(obj.qUdata(exclIndex)-18574,1))-5 5+max(round(obj.qUdata(exclIndex)-18574,1))],...
                 [BestFitCoeff(k),BestFitCoeff(k)],...
                 'LineStyle','-','LineWidth',1.5,'Color',rgb('Black'));
             hold on;
             p=plot(round(obj.qUdata(exclIndex)-18574,1),diffxi(counter,:)+BestFitCoeff(k),...
-                '.-.','MarkerSize',20,'LineWidth',2,'Color',rgb('DodgerBlue'));
+                '.:','MarkerSize',26,'LineWidth',2,'Color',rgb('DodgerBlue'));
             hold off 
             ylabel(sprintf('{\\itm}_\\nu^{ 2} (eV^{ 2})'));
-            xlabel('Retarding potential - 18574 (eV)');
+            xlabel('Retarding energy - 18574 (eV)');
             xlim([min(round(obj.qUdata(exclIndex)-18574,1))-4 4+max(round(obj.qUdata(exclIndex)-18574,1)) ])
-            PrettyFigureFormat;
-            set(gca,'FontSize',18);
-            grid on;
-            
+            ylim([min(diffxi(counter,:)+BestFitCoeff(k))-0.05,max(diffxi(counter,:)+BestFitCoeff(k))+0.05]);
+            PrettyFigureFormat('FontSize',19);
+           % set(gca,'FontSize',18);
+            grid off;
+            leg = legend([l,p],'Best-fit with all scan steps in analysis range',sprintf('Fit without 1 scan step'));
+            legend boxoff
+            leg.FontSize = get(gca,'FontSize')+4;
+            leg.Location = 'southeast';
             if strcmp(savePlot,'ON')
-                publish_figurePDF(fnew,strrep(savefile,'.pdf','_mnu.pdf'));
+                export_fig(fnew,strrep(savefile,'.pdf','_mnu.pdf'));
             end
             %% plot only E0 
-             fnew2 = figure('Units','normalized','Position',[0.1,0.1,0.6,0.5]);
+             fnew2 = figure('Units','normalized','Position',[0.1,0.1,0.6,0.4]);
             counter = 2; k=2;
             l=line([min(round(obj.qUdata(exclIndex)-18574,1))-5 5+max(round(obj.qUdata(exclIndex)-18574,1))],...
                 [0,0],...
                 'LineStyle','-','LineWidth',1.5,'Color',rgb('Black'));
             hold on;
             p=plot(round(obj.qUdata(exclIndex)-18574,1),diffxi(counter,:),...
-                '.-.','MarkerSize',20,'LineWidth',2,'Color',rgb('DodgerBlue'));
+                '.:','MarkerSize',24,'LineWidth',2,'Color',rgb('DodgerBlue'));
             hold off 
             ylabel(sprintf('{\\itE}_0^{fit} - {\\itE}_0^{bf} (eV)'));
-            xlabel('Retarding potential - 18574 (eV)');
+            xlabel('Retarding energy - 18574 (eV)');
             xlim([min(round(obj.qUdata(exclIndex)-18574,1))-4 4+max(round(obj.qUdata(exclIndex)-18574,1)) ])
-            PrettyFigureFormat;
-            set(gca,'FontSize',18);
-            grid on;
-            
+           ylim([min(diffxi(counter,:))-0.01,max(diffxi(counter,:))+0.01]);
+          
+            PrettyFigureFormat('FontSize',19);
+          
+           leg=   legend([l,p],'Best-fit with all scan steps in analysis range',sprintf('Fit without 1 scan step'));
+            legend boxoff
+              leg.FontSize = get(gca,'FontSize')+4;
+                 leg.Location = 'southeast';
             if strcmp(savePlot,'ON')
-                publish_figurePDF(fnew2,strrep(savefile,'.pdf','_E0.pdf'));
+                export_fig(fnew2,strrep(savefile,'.pdf','_E0.pdf'));
             end
         end
         

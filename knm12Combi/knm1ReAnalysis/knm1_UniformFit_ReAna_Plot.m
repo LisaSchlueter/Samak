@@ -63,25 +63,45 @@ mNuSqErrTot(2) = 0.5*(d_new_Tot.FitResult.errPos(1)-d_new_Tot.FitResult.errNeg(1
 
 
 %% plot
-f1 = figure('Units','normalized','Position',[0.1,0.1,0.4,0.6]);
+f1 = figure('Units','normalized','Position',[0.1,0.1,0.5,0.6]);
 plot(mNuSqTot(1).*[1,1],[0 nFiles+1],':','Color',rgb('Silver'),'LineWidth',2);
 hold on;
-eStat = errorbar(mNuSq,1:nFiles,zeros(nFiles,1),zeros(nFiles,1),mNuSqErr,mNuSqErr,'.','MarkerSize',17,'CapSize',0,'LineWidth',1.5,'Color',rgb('DodgerBlue'));
-eTot = errorbar(mNuSqTot,[1.1,nFiles+0.1],zeros(2,1),zeros(2,1),mNuSqErrTot,mNuSqErrTot,'.','MarkerSize',17,'CapSize',0,'LineWidth',1.5,'Color',rgb('Orange'));
+eStat = errorbar(mNuSq,1:nFiles,zeros(nFiles,1),zeros(nFiles,1),mNuSqErr,mNuSqErr,'.','MarkerSize',17,'CapSize',0,'LineWidth',1.5,'Color',rgb('Orange'));
+eTot = errorbar(mNuSqTot,[1,nFiles]+0.1,zeros(2,1),zeros(2,1),mNuSqErrTot,mNuSqErrTot,'.','MarkerSize',17,'CapSize',0,'LineWidth',1.5,'Color',rgb('DodgerBlue'));
 PrettyFigureFormat;
 ylim([0.5 nFiles+0.9])
 yticks(1:nFiles);
 xlim([-2.2 0.1])
-yticklabels({'PRL','Non-isotropic TF','KNM-2 FSD','KNM-2 Energy-loss',sprintf('{\\itB}_{penning}'),'Re-Ana 2021'});
+yticklabels({'Original',sprintf('Non-isotropic transmission'),'Final-state distribution','Energy-loss function',sprintf('{\\itB}_{penning}'),'Reanalysis 2021'});
 set(gca,'YMinorTick','off');
-xlabel(sprintf('{\\itm}_\\nu^2 (eV^2)'));
+xlabel(sprintf('{\\itm}_\\nu^2 (eV^{ 2})'));
 leg = legend([eStat,eTot],'Stat. only','Stat. and syst');
 PrettyLegendFormat(leg);
 leg.NumColumns = 2;
 leg.Location = 'north';
 
-% save
+ax = gca;
+ax.Position(3) = 0.5;
+% difference with respect to PRL
+DeltamNuSqAll  = mNuSqTot(2)-mNuSqTot(1);
+DeltamNuSq = mNuSq(2:end)-mNuSq(1);
+DeltamNuSq(end) = DeltamNuSqAll;
+a.delete;
+for i=1:6
+    if i==6
+        a = text(0.15,i+0.62,sprintf('\\Delta{\\itm}_\\nu^2 (eV^2)'),'FontSize',get(gca,'FontSize'),'Color',rgb('DimGray'));
+    else
+        if abs(DeltamNuSq(i))<1e-02
+            a = text(0.2,i+1.05,sprintf('%+.0f\\times10^{-3}',1e3.*DeltamNuSq(i)),'FontSize',get(gca,'FontSize'),'Color',rgb('DimGray'));
+        else
+            
+            a = text(0.2,i+1.05,sprintf('%+.0f\\times10^{-2}',1e2.*DeltamNuSq(i)),'FontSize',get(gca,'FontSize'),'Color',rgb('DimGray'));
+        end
+    end
+end
+%% save
 plotdir = strrep(savedir,'results','plots');
 MakeDir(plotdir);
-plotname = sprintf('%sknm1_UniformFit_ReAna_mNuSqOverview.png',plotdir);
-print(f1,plotname,'-dpng','-r350');
+plotname = sprintf('%sknm1_UniformFit_ReAna_mNuSqOverview.pdf',plotdir);
+%print(f1,plotname,'-dpng','-r350');
+export_fig(f1,plotname);

@@ -2389,27 +2389,41 @@ function ComputeCM_Background(obj,varargin)
                 fig1        = figure('Units','normalized','pos',[0.1 0.1 0.5 0.4]);
                 
                 Q_ref = 18574;
-                pfit = plot(obj.StudyObject.qU(qUStartIndex:end,1)-Q_ref,1e3*Bkg_Fit(qUStartIndex:end,1:1000),...
-                    'LineWidth',2,'Color', [rgb('SlateGray') 0.25]);%[1.0000    0.6445      0 0.2]);
+                %                 pfit = plot(obj.StudyObject.qU(qUStartIndex:end,1)-Q_ref,1e3*Bkg_Fit(qUStartIndex:end,1:1000),...
+                %                     'LineWidth',2,'Color', [rgb('SlateGray') 0.25]);%[1.0000    0.6445      0 0.2]);
+                %                hold on
+                %                 sg = scatter(reshape(squeeze(Data(:,1,:))-Q_ref,[BKGnqU*obj.nTrials,1]),...
+                %                     1e3.*reshape(squeeze(Data(:,2,:)),[BKGnqU*obj.nTrials,1]),'o','filled');
+                %                 if size(Data,3)>=5000
+                %                     sg.MarkerFaceAlpha = 0.01;
+                %                 elseif size(Data,3)>=1000
+                %                     sg.MarkerFaceAlpha = 0.04;
+                %                 else
+                %                     sg.MarkerFaceAlpha = 0.2;
+                %                 end
+                %                 sg.MarkerFaceColor = rgb('DodgerBlue');
+                %
+                %                 tmp = scatter(1,1,'o','filled'); % just for display in legend
+                %                 tmp.MarkerFaceColor=sg.MarkerFaceColor;
+                %                 tmp.MarkerFaceAlpha = 0.5;
+                GetFigure;
+                [pfit,afit] = boundedline(obj.StudyObject.qU(qUStartIndex:end,1)-Q_ref,...
+                    1e3.*nanmean(Bkg_Fit(qUStartIndex:end,:),2),...
+                    1e3.*std(Bkg_Fit(qUStartIndex:end,:),0,2,'omitnan'));
+                afit.FaceColor = rgb('Silver');
+                pfit.Color = rgb('DarkSlateGray');
                 hold on;
-                sg = scatter(reshape(squeeze(Data(:,1,:))-Q_ref,[BKGnqU*obj.nTrials,1]),...
-                    1e3.*reshape(squeeze(Data(:,2,:)),[BKGnqU*obj.nTrials,1]),'o','filled');
-                if size(Data,3)>=5000
-                    sg.MarkerFaceAlpha = 0.01;
-                elseif size(Data,3)>=1000
-                    sg.MarkerFaceAlpha = 0.04;
-                else
-                    sg.MarkerFaceAlpha = 0.2;
+                for i=1:size(Data,1)
+                    % activity distribution for each scan-step
+                    % relative to mean activit of this scan-step
+                    sg = dscatter(squeeze(Data(i,1,:))-Q_ref+1e-09.*randn(1e4,1),1e3.*squeeze(Data(i,2,:)),'Msize',20); % density scatter plot
+                    hold on;
                 end
-                sg.MarkerFaceColor = rgb('DodgerBlue');
                 
-                tmp = scatter(1,1,'o','filled'); % just for display in legend
-                tmp.MarkerFaceColor=sg.MarkerFaceColor;
-                tmp.MarkerFaceAlpha = 0.5;
                 
                 hold off
                 set(gca,'FontSize',20);
-                xlabel(sprintf('Retarding Potential qU - %.0f (eV)',Q_ref));
+                xlabel(sprintf('Retarding energy qU - %.0f (eV)',Q_ref));
                 ylabel('Background (mcps)');
                 hold off;
                 PrettyFigureFormat('FontSize',24);
@@ -2421,19 +2435,19 @@ function ComputeCM_Background(obj,varargin)
                 
                 if strcmp(obj.StudyObject.FPD_Segmentation,'RING')
                     leg = legend([tmp, pfit(1)],sprintf(' MC background spectra (ring %.0f)',obj.StudyObject.nRings),...
-                        legStr,'Location','northeast');
+                        legStr,'Location','southwest');
                 else
-                    leg = legend([tmp, pfit(1)],' MC background spectra',legStr,'Location','northeast');
+                    leg = legend([afit],legStr,'Location','southwest');
                 end
                 
-                leg.EdgeColor = rgb('Silver');
+                legend boxoff
                 leg.FontSize = get(gca,'FontSize');
                 xlim([obj.StudyObject.qU(qUStartIndex,1)-Q_ref,obj.StudyObject.qU(end,1)-Q_ref+5]);
                 ylim([min(min(Data(:,2,:)))*1e3-0.005,max(max(Data(:,2,:)))*1e3+0.1])
                 % sgtitle(maintitle,'FontSize',22);
-                savefile    =  [savedir,strrep(cm_name,'.mat','_ToyMC.png')];
-                print(fig1,savefile,'-dpng','-r500');
-                % export_fig(fig1,savefile);
+                savefile    =  [savedir,strrep(cm_name,'.mat','_ToyMC.pdf')];
+              %  print(fig1,savefile,'-dpng','-r500');
+                 export_fig(fig1,savefile);
                 fprintf('Save plot to %s \n',savefile);
             end
             
@@ -2482,20 +2496,23 @@ function ComputeCM_Background(obj,varargin)
                     SlopeOK = Slopes(logical(SlopesExcl));
                     h2 = histogram(SlopeOK.*1e06,'FaceColor',rgb('DodgerBlue'),...
                         'FaceAlpha',1,'BinWidth',h1.BinWidth);
-                    leg = legend('MC fit slopes',sprintf('MC fit slopes < %.1f mcps / keV',MaxSlopeCpsPereV*1e6));
+                    leg = legend('Linear fit results',sprintf('Slope < %.1f mcps / keV',MaxSlopeCpsPereV*1e6));
                 else
                     h1.FaceColor = rgb('DodgerBlue');
                     leg = legend(sprintf('Randomized slopes \\sigma = %.1f mcps / keV',MaxSlopeCpsPereV*1e6));
                 end
                 leg.Location='northwest';
                 leg.EdgeColor = rgb('Silver');
+                legend boxoff
                 xlabel('Background slope (mcps / keV)');
+                ylabel('Occurrence');
                 PrettyFigureFormat('FontSize',22)
                 hold off;
-                ylim([0 2500])
+                ylim([0 700])
             end
             savefile    =  [savedir,strrep(cm_name,'.mat','_Hist.pdf')];
-            print(fig2,strrep(strrep(savefile,'.pdf','.png'),'plots/','plots/png/'),'-dpng','-r500');
+            MakeDir(savedir)
+            %  print(fig2,strrep(strrep(savefile,'.pdf','.png'),'plots/','plots/png/'),'-dpng','-r500');
             export_fig(fig2,savefile);
             fprintf('Save plot to %s \n',savefile);
             
