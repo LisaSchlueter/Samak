@@ -6,7 +6,7 @@ range = 40;                % fit range in eV below endpoint
 chi2 = 'chi2Stat';
 NP = 1.064;
 
-AltPixLists = {'AziHalfNS','AziHalfEW'};%,'Half'};
+AltPixLists = {'AziHalfNS','AziHalfEW','Half','Azi'};
 RecomputeFlag = 'OFF';
 for i=1:numel(AltPixLists)
     AltPixList =AltPixLists{i};  %'Half';%'AziHalfEW';  % defines alternative pixel list

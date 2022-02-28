@@ -16,7 +16,7 @@ chi2min_u =  d.FitResult.chi2min;
 p_u = 1-chi2cdf(d.FitResult.chi2min,d.FitResult.dof);
 
 AltPixLists = {'Half','AziHalfNS','AziHalfEW'};
-PixList_Labels = {'Golden','Inner','Outer','North','South','East','West'};
+PixList_Labels = {'Golden','Inner','Outer','North','South','East','West','Bullseye','1','2','3','4'};
 
 nPix = zeros(numel(AltPixLists),2);
 mNuSq = zeros(numel(AltPixLists),2);

@@ -32,13 +32,13 @@ end
 
 
 if any(ismember(myRingList,4))
-    SW = [34 35 36 46 47 48 58 59 60 70 71 72 82 83 84 94 95 96 106 107 108 118 119 120]+1;
+    SW = [34 35 36 46 47 48 58 59 60 70 71 72 82 83 84 94 95 96 106 107 108 118 119 120 131 132 133]+1;
     PixList_all = [PixList_all,SW];
     RingPixList{4} = SW;
 end
 
 if any(ismember(myRingList,5))
-    NW = [31 32 33 43 44 45 55 56 57 67 68 69 79 80 81 91 92 93 103 104 106 115 116 117]+1;
+    NW = [31 32 33 43 44 45 55 56 57 67 68 69 79 80 81 91 92 93 103 104 105 115 116 117]+1;
     PixList_all = [PixList_all,NW];
     RingPixList{5} = NW;
 end

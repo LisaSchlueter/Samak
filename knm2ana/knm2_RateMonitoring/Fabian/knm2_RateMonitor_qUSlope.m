@@ -49,15 +49,19 @@
 
     %% Sanity plot: Uniform - All Pixels
     MeanRate = wmean(Rate,RateErr);
-   
+    
     f1 = GetFigure;
+    %     x = linspace(min(qU),max(qU),1e3);
+    %     y = x.*par(1)+par(2);
+    x = linspace(min(qU),max(qU),100)-18574;
+    y = par(1).*x+par(2);
     p1 = plot(x,y.*1e-04,'LineWidth',2,'Color',rgb('Gray'));
     hold on;
     pMC = plot(qU-18574,Rate.*1e-04,'.','LineWidth',3,'MarkerSize',20);
+    hold on;
     pNone = plot(NaN,NaN,'Color',rgb('White'));
-     pNone2 = plot(NaN,NaN,'Color',rgb('White'));
-    x = linspace(min(qU),max(qU),100)-18574;
-    y = par(1).*x+par(2);
+    pNone2 = plot(NaN,NaN,'Color',rgb('White'));
+    
     
     PrettyFigureFormat('FontSize',24);
     xlabel('Retarding energy - 18574 (eV)');
@@ -75,6 +79,9 @@ leg = legend([pMC,p1,pNone,pNone2],sprintf('Simulation (KNM-2-like)'),...
     Err_Slope_RateqU = err(1)/MeanRate*1e3;
     xlim([-300.5 -299])
    
+    pltdir = strrep(savedir,'results','plots');
+    MakeDir(pltdir);
     pltname = strrep(strrep(savename,'results','plots'),'.mat','.png');
+    
    print(pltname,'-dpng','-r400');% export_fig(pltname);
     

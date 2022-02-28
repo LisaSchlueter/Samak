@@ -19,10 +19,10 @@ BkgIdxStart = find(R.RunData.qU>R.ModelObj.Q,1);
 qU = R.RunData.qU(R.exclDataStart:BkgIdxStart);
 CorrMat = TASR_CorrMat(R.exclDataStart:BkgIdxStart,R.exclDataStart:BkgIdxStart);
 %% 
-f1 = figure('Units','normalized','Position',[0.1,0.1,0.4,0.5]);
+f1 = figure('Units','normalized','Position',[0.1,0.1,0.4,0.4]);
 imagesc(CorrMat);
 pbaspect([1 1 1]);
-PrettyFigureFormat('FontSize',22);
+PrettyFigureFormat('FontSize',18);
 
 % x,y axis
 xticks([1:1:numel(qU)+0.5]);

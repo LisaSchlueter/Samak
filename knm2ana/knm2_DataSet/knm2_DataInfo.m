@@ -66,6 +66,9 @@ fprintf('Max signal to background   %.2f \n',max(SB_qU));
 %% activity
 fprintf('Colun density %.2f x e17 \n',d.A.RunData.WGTS_CD_MolPerCm2*1e-17);
 fprintf('Atomic purity %.2f %% \n',1e2*d.A.ModelObj.WGTS_epsT);
+
+
+std(d.A.SingleRunData.WGTS_MolFrac_TT)
 Activity = 2.*d.A.RunData.WGTS_CD_MolPerCm2.*d.A.ModelObj.WGTS_epsT.*pi*4.5^2.*d.A.ModelObj.TdecayC;
 fprintf('Activity %.2e \n',Activity)
 fprintf('TT %.2f %% \n',1e2*d.A.ModelObj.WGTS_MolFrac_TT);

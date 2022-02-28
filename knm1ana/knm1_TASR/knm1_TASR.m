@@ -58,7 +58,7 @@ colormap(flipud(colormap('winter')));
 ax = gca;
 ax.XAxis.Exponent = 0;
 xlim([min(qU)-2 max(qU)+2]);
-xticks(18535:10:18575);
+xticks(18534:10:18575);
 
 leg = legend([ps,peom],'Standard deviation','Error of the mean','Location','southeast');
 legend box off;
@@ -67,3 +67,8 @@ pltdir = [getenv('SamakPath'),'knm1ana/knm1_TASR/plots/'];
 MakeDir(pltdir);
 pltname = sprintf('%sknm1_TASR.pdf',pltdir);
 export_fig(pltname);
+
+%% some numbers
+fprintf('Average std               = %.3e (%.1g%%) \n',mean(std(SubRunActivity,0,2)),1e2.*mean(std(SubRunActivity,0,2))./MeanActivity);
+fprintf('Average error of the mean = %.3e (%.2g%%) \n',mean(std(SubRunActivity,0,2))./sqrt(R.nRuns),1e2.*mean(std(SubRunActivity,0,2))./(MeanActivity.*sqrt(R.nRuns)));
+

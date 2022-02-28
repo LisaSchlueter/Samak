@@ -1,4 +1,5 @@
 % get Data
+LocalFontSize = 24;
 savedir = [getenv('SamakPath'),'knm2ana/knm2_PngBkg/results/'];
 savename = sprintf('%sknm2ubfinal_Fit_Bpng-%.1fmucpsPers_%s_%.0feV_%s_%s_%s_%s_SysBudget40.mat',...
     savedir,3,'Real',40,'mNuE0BkgNorm','chi2CMShape','StackPixel','KNM2_0p1eV');
@@ -197,3 +198,8 @@ axdt2.Position(3) = 0.13;
 pltdir = [getenv('SamakPath'),'knm2ana/knm2_DataSet/plots/'];
 pltfile = sprintf('%sknm2_Isotopologues.pdf',pltdir);
 export_fig(pltfile);
+
+
+%% 
+max(yt)-min(yt)
+max(ytt)-min(ytt)

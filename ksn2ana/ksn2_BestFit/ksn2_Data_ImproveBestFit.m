@@ -6,7 +6,7 @@ DataType = 'Real';
 nGridSteps_FullGrid   = 50;
 nGridSteps_BfImp = 40;
 
-freePar = 'mNu E0 Norm Bkg';
+freePar = 'mNuSq E0 Norm Bkg';
 
 savedir = sprintf('%sksn2ana/ksn2_BestFit/results/',getenv('SamakPath'));
 savefile = sprintf('%sksn2_ImpBestFit_%s_%s_%s_nGridStepsFull%.0f_nGridStepsImp%.0f.mat',...

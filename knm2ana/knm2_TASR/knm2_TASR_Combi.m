@@ -5,6 +5,7 @@
 % look at variations of source activity within a scan
 % look at variations of column density within a scan
 % plot for PhD thesis
+% combi plot
 savedir = [getenv('SamakPath'),'knm2ana/knm2_TASR/results/'];
 savefile = sprintf('%sknm2_RunObj.mat',savedir);
 
@@ -51,10 +52,13 @@ qU_singlerun = R.SingleRunData.qU(R.exclDataStart:BkgIdxStart,:);
 SubRunActivity_scatter = reshape((SubRunActivity-MeanActivity)./MeanActivity,1,R.nRuns.*numel(qU))';
 qU_scatter = repmat(qU,R.nRuns,1);
 
+CorrMat = TASR_CorrMat(R.exclDataStart:BkgIdxStart,R.exclDataStart:BkgIdxStart);
 %% test 
 
 %GetFigure
-f1 = figure('Units','normalized','Position',[0.1,0.1,0.5,0.4]);
+f1 = figure('Units','normalized','Position',[0.1,0.1,0.8,0.45]);
+s1 = subplot(1,2,1);
+
 % relative standard deviation
 [pl, ps] = boundedline(qU,(mean(SubRunActivity,2)-MeanActivity)./MeanActivity,std(SubRunActivity,0,2)./MeanActivity);
 ps.FaceColor = rgb('LightSalmon'); ps.EdgeColor = rgb('LightSalmon'); pl.LineStyle = 'none';
@@ -79,19 +83,55 @@ ylabel('Relative source activity');%sprintf('[\\rhod - \\langle\\rhod\\rangle]/\
 PrettyFigureFormat('FontSize',18);
 c = colorbar;
 c.Label.String = 'Scan density'; 
-c.Label.FontSize = get(gca,'FontSize')+2;
+c.Label.FontSize = get(gca,'FontSize')+4;
 colormap(flipud(colormap('winter')));
+c.Location = 'northoutside';
+set(c,'LineWidth',1.5);
 ax = gca;
 ax.XAxis.Exponent = 0;
 xlim([min(qU)-2 max(qU)+2]);
 xticks(18535:10:18575);
-
 leg = legend([ps,peom],'Standard deviation','Error of the mean','Location','southwest');
 legend box off;
+leg.FontSize  = ax.FontSize+2;
+
+s2 = subplot(1,2,2);
+imagesc(CorrMat);
+pbaspect([1 1 1]);
+% x,y axis
+xticks([1:1:numel(qU)+0.5]);
+yticks([1:1:numel(qU)+0.5]);
+
+EmptyStrings = strings(numel(qU)-2,1);
+xticklabels({sprintf('%.0f eV',qU(1)),EmptyStrings{:},sprintf('%.0f eV',qU(end))});
+yticklabels('');
+xlabel('Retarding energy bin');
+ylabel('Retarding energy bin');
+PrettyFigureFormat('FontSize',18);
+set(gca,'XMinorTick','off');
+set(gca,'YMinorTick','off');
+ax2 = gca;
+ax2.YLabel.Position(1) = -0.4;
+%ax2.XLabel.Position(2) = 25.5;
+
+%%colorbar
+cb = colorbar;
+cb.Label.String = sprintf('Correlation coefficient');
+cb.Label.FontSize = ax.XLabel.FontSize;
+cb.Location = 'northoutside';
+set(cb,'LineWidth',1.5);
+colormap(ax,flipud(colormap('winter')))
+colormap(ax2,flipud(hot));
+
+%cb.Position(1) = 0.82;
+ax.Position(3) = 0.38;
+ax2.Position(1) = 0.56;
+ax2.Position(4) = ax.Position(4);
+cb.Position(2) = c.Position(2);
 %%
 pltdir = [getenv('SamakPath'),'knm2ana/knm2_TASR/plots/'];
 MakeDir(pltdir);
-pltname = sprintf('%sknm2_TASR.pdf',pltdir);
+pltname = sprintf('%sknm2_TASR_Combi.pdf',pltdir);
 export_fig(pltname);
 %% some numbers
 fprintf('Average std               = %.3e (%.1g%%) \n',mean(std(SubRunActivity,0,2)),1e2.*mean(std(SubRunActivity,0,2))./MeanActivity);

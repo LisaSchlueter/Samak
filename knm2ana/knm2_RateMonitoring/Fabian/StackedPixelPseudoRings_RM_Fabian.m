@@ -1,7 +1,7 @@
-KNM1CorFlag    = 'ON';
+KNM1CorFlag    = 'OFF';
 HVdriftCorFlag = 'OFF';
 ROI            = 'Default';
-Mode           = 'Ringwise';
+Mode           = 'Periodwise';%'Ringwise';
 
 %% KNM1 with Calibration - Divide Rates by
 switch KNM1CorFlag

@@ -48,34 +48,48 @@ S = SterileAnalysis(SterileArg{:});
 S.InterpMode = 'spline';
 if ~contains(freePar,'mNu') && strcmp(NH,'OFF') 
     GridArg_i = S.LoadGridArg;
-    S.LoadGridArg = {GridArg_i{:},'Extsin2T4','OFF','ExtmNu4Sq','ON'};
+    GridSteps_i = S.nGridSteps;
+    FSD_i = S.RunAnaObj.FSDFlag;
+    S.nGridSteps = 30;
+    S.LoadGridArg = {'mNu4SqTestGrid',2,'Extsin2T4','ON','ExtmNu4Sq','ON','IgnoreKnm2FSDbinning','ON'};
     S.LoadGridFile(S.LoadGridArg{:});
-   
-    S.Interp1Grid('RecomputeFlag','ON','Maxm4Sq',38.2^2);
+    S.Interp1Grid('RecomputeFlag','ON','Maxm4Sq',20^2);
     S.FindBestFit;
   %  S.FindBestFit('Mode','Imp');
     chi2_ref = S.chi2_ref;
     mNuSq_bf = S.mNuSq_bf;
     sin2T4_bf = S.sin2T4_bf;
     mNu4Sq_bf = S.mNu4Sq_bf;
-    S.LoadGridArg = GridArg_i;
+    S.LoadGridArg = GridArg_i; 
+    S.nGridSteps = GridSteps_i;
 end
 
 S.LoadGridFile(S.LoadGridArg{:});
 S.Interp1Grid('Maxm4Sq',40^2);
 
-if ~contains(freePar,'mNu') && strcmp(NH,'OFF') 
+if ~contains(freePar,'mNu') && strcmp(NH,'OFF')
     S.chi2_ref  = chi2_ref;
     S.mNuSq_bf  = mNuSq_bf ;
     S.sin2T4_bf = sin2T4_bf;
     S.mNu4Sq_bf = mNu4Sq_bf;
+elseif contains(freePar,'mNu') && strcmp(NH,'OFF')
+    nGridSteps_FullGrid   = 50;
+    nGridSteps_BfImp = 40;
+    savedirbf = sprintf('%sksn2ana/ksn2_BestFit/results/',getenv('SamakPath'));
+    savefilebf = sprintf('%sksn2_ImpBestFit_%s_%s_%s_nGridStepsFull%.0f_nGridStepsImp%.0f.mat',...
+        savedirbf,DataType,strrep(freePar,' ',''),chi2,nGridSteps_FullGrid,nGridSteps_BfImp);
+    dbf = importdata(savefilebf);
+    S.chi2_ref  = d.chi2_bf_inter;
+     S.chi2_bf = d.chi2_bf_inter;
+    S.mNuSq_bf  = d.mNuSq_bf;
+    S.sin2T4_bf = d.sin2T4_bf_inter;
+    S.mNu4Sq_bf = d.mNu4Sq_bf_inter;
 else
     S.FindBestFit;
     S.FindBestFit('Mode','Imp');
     
     S.LoadGridFile(S.LoadGridArg{:});
-    S.Interp1Grid('Maxm4Sq',40^2);
-    
+    S.Interp1Grid('Maxm4Sq',40^2);  
 end
 
 %
@@ -99,7 +113,7 @@ Write2Txt('filename',savename,...
 if strcmp(DataType,'Real')  && strcmp(NH,'OFF')
     Write2Txt('filename',[savename,'_bf'],...
     'Format','dat','variable',[S.chi2_bf; S.sin2T4_bf; S.mNu4Sq_bf;  S.mNuSq_bf ; ],'nCol',4,'variableName','chi2min sinT4Sq m4Sq mNuSq');
-fprintf('Best fit: sin2T4 = %.2f m4Sq = %.2feV^2 mNuSq = %.2feV^2 chi2min = %.2f \n',S.sin2T4_bf,S.mNu4Sq_bf,S.mNuSq_bf,S.chi2_bf);
+fprintf('Best fit: sin2T4 = %.3f m4Sq = %.2feV^2 mNuSq = %.2feV^2 chi2min = %.2f \n',S.sin2T4_bf,S.mNu4Sq_bf,S.mNuSq_bf,S.chi2_bf);
 end
 %% test plot
 d = importdata([savename,'.dat']);

@@ -256,4 +256,84 @@ save(savefile,'chi2_ref_1','chi2_ref_2','chi2_ref_12','dof1','dof2','dof12',...
     'sin2T4_contour_1','mNu4Sq_contour_1',...
     'sin2T4_contour_2','mNu4Sq_contour_2',...
     'sin2T4_contour_12','mNu4Sq_contour_12');
+%%
+%% export also to h5 file
+savedir = sprintf('%sksn2ana/ksn2_Export/results/',getenv('SamakPath'));
+MakeDir(savedir);
+
+savename =  sprintf('%sKSN2_Contours_mNuSqFix.h5', savedir);
+
+system(sprintf('rm %s',savename));
+
+% best fit + contours ksn1
+h5create(savename,'/ksn1/chiSqmin',[1,1]);
+h5write(savename, '/ksn1/chiSqmin', chi2_ref_1);
+
+h5create(savename,'/ksn1/mNu4Sq_bf',[1,1]);
+h5write(savename, '/ksn1/mNu4Sq_bf', mNu4Sq_bf_1);
+
+h5create(savename,'/ksn1/sinT4Sq_bf',[1,1]);
+h5write(savename, '/ksn1/sinT4Sq_bf',sin2T4_bf_1);
+
+h5create(savename,'/ksn1/mNuSq_bf',[1,1]);
+h5write(savename, '/ksn1/mNuSq_bf',mNuSq_bf_1);
+
+h5create(savename,'/ksn1/sinT4Sq_contour',[1,numel(sin2T4_contour_1)]);
+h5write(savename, '/ksn1/sinT4Sq_contour',sin2T4_contour_1);
+
+h5create(savename,'/ksn1/mNu4Sq_contour',[1,numel(sin2T4_contour_1)]);
+h5write(savename, '/ksn1/mNu4Sq_contour',mNu4Sq_contour_1);
+
+str = "Reana2021 as published in https://arxiv.org/abs/2201.11593";
+h5create(savename,'/ksn1/Config',size(str),'Datatype','string');
+h5write(savename, '/ksn1/Config',str);
+
+% ksn2
+h5create(savename,'/ksn2/chiSqmin',[1,1]);
+h5write(savename, '/ksn2/chiSqmin', chi2_ref_2);
+
+h5create(savename,'/ksn2/mNu4Sq_bf',[1,1]);
+h5write(savename, '/ksn2/mNu4Sq_bf', mNu4Sq_bf_2);
+
+h5create(savename,'/ksn2/sinT4Sq_bf',[1,1]);
+h5write(savename, '/ksn2/sinT4Sq_bf',sin2T4_bf_2);
+
+h5create(savename,'/ksn2/mNuSq_bf',[1,1]);
+h5write(savename, '/ksn2/mNuSq_bf',mNuSq_bf_2);
+
+h5create(savename,'/ksn2/sinT4Sq_contour',[1,numel(sin2T4_contour_2)]);
+h5write(savename, '/ksn2/sinT4Sq_contour',sin2T4_contour_2);
+
+h5create(savename,'/ksn2/mNu4Sq_contour',[1,numel(sin2T4_contour_2)]);
+h5write(savename, '/ksn2/mNu4Sq_contour',mNu4Sq_contour_2);
+
+str2 = "KSN2 (uniform) as published in https://arxiv.org/abs/2201.11593";
+h5create(savename,'/ksn2/Config',size(str2),'Datatype','string');
+h5write(savename, '/ksn2/Config',str2);
+
+% ksn2+1
+h5create(savename,'/ksn12combi/chiSqmin',[1,1]);
+h5write(savename, '/ksn12combi/chiSqmin', chi2_ref_12);
+
+h5create(savename,'/ksn12combi/mNu4Sq_bf',[1,1]);
+h5write(savename, '/ksn12combi/mNu4Sq_bf', mNu4Sq_bf_12);
+
+h5create(savename,'/ksn12combi/sinT4Sq_bf',[1,1]);
+h5write(savename, '/ksn12combi/sinT4Sq_bf',sin2T4_bf_12);
+
+h5create(savename,'/ksn12combi/mNuSq_bf',[1,1]);
+h5write(savename, '/ksn12combi/mNuSq_bf',mNuSq_bf_12);
+
+h5create(savename,'/ksn12combi/sinT4Sq_contour',[1,numel(sin2T4_contour_12)]);
+h5write(savename, '/ksn12combi/sinT4Sq_contour',sin2T4_contour_12);
+
+h5create(savename,'/ksn12combi/mNu4Sq_contour',[1,numel(sin2T4_contour_12)]);
+h5write(savename, '/ksn12combi/mNu4Sq_contour',mNu4Sq_contour_12);
+
+strc = "Combination (uniform) as published in https://arxiv.org/abs/2201.11593";
+h5create(savename,'/ksn12combi/Config',size(strc),'Datatype','string');
+h5write(savename, '/ksn12combi/Config',strc);
+
+
+
 

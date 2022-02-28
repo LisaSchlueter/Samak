@@ -6,7 +6,7 @@ p.addParameter('sigmas_v',[0.05,0.03,0.08],@(x)isfloat(x));  % broadenings for 3
 p.addParameter('shifts_v',[0.2 -0.1 0],@(x)isfloat(x));      % shifts for 3 periods
 p.addParameter('weights_v',[171,93,97]./361,@(x)isfloat(x)); % relative time spent in each period
 p.addParameter('SanityPlot','ON',@(x)ismember(x,{'ON','OFF'}));
-p.addParameter('PlotName','./plots/Knm2_GlobalDrift.png',@(x)ischar(x));
+p.addParameter('PlotName','./plots/Knm2_GlobalDrift.pdf',@(x)ischar(x));
 p.parse(varargin{:});
 
 sigmas_v   = p.Results.sigmas_v;
@@ -40,7 +40,7 @@ SigmaGlobal = std(GlobalGaussSamples);
 
 % sanity plot
 if strcmp(SanityPlot,'ON')
-    figure('Units','normalized','Position',[0.1,0.1,0.5,0.5])
+    figure('Units','normalized','Position',[0.1,0.1,0.5,0.4])
     h1=histogram(GlobalGaussSamples,'FaceColor',rgb('DodgerBlue'));
     hold on;
     plot(E,GlobalGaussFun(E).*nSamples.*h1.BinWidth,'LineWidth',2,'Color',rgb('Orange'));
@@ -51,5 +51,6 @@ if strcmp(SanityPlot,'ON')
     xlim([min(shifts_v)-1.5*max(sigmas_v),max(shifts_v)+1.5*max(sigmas_v)]);
     xlabel('Potential (eV)');
     ylabel('Probability')
-    print(gcf,PlotName,'-dpng','-r500');
+ %   print(gcf,PlotName,'-dpng','-r500');
+    export_fig(PlotName);
 end

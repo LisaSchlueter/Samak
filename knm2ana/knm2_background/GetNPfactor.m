@@ -87,8 +87,7 @@ else
         % fit linear slope
         [coeff,coeffErr,chi2,dof]= linFit(LiveTime',Bkg_fit,Bkg_fitErr);
         BkgSlopeCpsPerS = coeff(1);
-        fprintf('Background Slope = %.4g mcps/day \n',BkgSlopeCpsPerS*60*60*24*1e3);
-        
+        fprintf('Background slope = %.4g mcps/day \n',BkgSlopeCpsPerS*60*60*24*1e3);
         
         if strcmp(SanityPlot,'ON')
             f1 = figure('Units','normalized','Position',[0.1,0.1,0.8,0.5]);
@@ -101,7 +100,7 @@ else
             ylabel('Background rate (mcps)')
             xlim([min(LiveTime./(60*60))-20,max(LiveTime./(60*60))+20]);
            % ylim([175,270]);
-            leg = legend([e1,l1],'Scanwise fits (statistics only)',sprintf('Background slope = (%.2g \\pm %.1g) mcps/day \n',...
+            leg = legend([e1,l1],'Scan-wise fits (statistics only)',sprintf('Background slope = (%.2g \\pm %.1g) mcps/day \n',...
                 BkgSlopeCpsPerS*60*60*24*1e3,coeffErr(1)*60*60*24*1e3));
             legend boxoff
             leg.Location = 'northwest';
@@ -147,10 +146,12 @@ else
             
             PrettyFigureFormat('FontSize',24);
             xlabel('Live time (h)');
-            ylabel('Background per HV setpoint (counts)')
+            ylabel(sprintf('Counts in %.0f s',MeanTime));
             xlim([min(LiveTime./(60*60))-20,max(LiveTime./(60*60))+20]);
             
-            leg = legend([e_uncorr,e1],'Uncorrected', 'Slope correction');
+            leg = legend([e_uncorr,e1],'Uncorrected', 'Corrected for time-wise slope');
+           % leg.Title. String = 'Background scan steps';
+           % leg.Title.FontWeight = 'normal';
             legend boxoff
             leg.Location = 'northwest';
             savedirplot = [savedir,'plots/'];

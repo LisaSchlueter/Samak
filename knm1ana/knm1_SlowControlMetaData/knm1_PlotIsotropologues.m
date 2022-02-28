@@ -197,3 +197,7 @@ axdt2.Position(3) = 0.13;
 pltdir = [getenv('SamakPath'),'knm1ana/knm1_SlowControlMetaData/plots/'];
 pltfile = sprintf('%sknm1_Isotopologues.pdf',pltdir);
 export_fig(pltfile);
+
+
+%% variation
+max(ytt)-min(ytt)

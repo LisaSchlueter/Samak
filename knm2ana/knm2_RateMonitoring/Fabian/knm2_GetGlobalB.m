@@ -5,7 +5,7 @@
 
 %% setttings
 SanityPlot    = 'ON'; % plot and save plot
-Mode          = 'Uniform';       % Ring or Uniform
+Mode          = 'Ring';       % Ring or Uniform
 RecomputeFlag = 'ON';
 
 savedir  = [getenv('SamakPath'),'knm2ana/knm2_RateMonitoring/results/'];
@@ -18,7 +18,7 @@ else
     %% inputs from Fabian: broadenings + shifts
    savenameF = sprintf('%sknm2_RManalysis_%s.mat',savedir,Mode);
    load(savenameF,'Sigma','Shift');
-   
+ 
     Weights_v = [171,93,97]./361; % approx. weights -> numbers of scans
     switch Mode
         case 'Ring'
@@ -33,9 +33,9 @@ else
     MakeDir(plotdir);
     for i=1:nRings
         
-        plotname = sprintf('%sknm2_GetGlobalSigma_%s.png',plotdir,Mode);
+        plotname = sprintf('%sknm2_GetGlobalSigma_%s.pdf',plotdir,Mode);
         if nRings>1
-            plotname = strrep(plotname,'.png',sprintf('_%.0f.png',i));
+            plotname = strrep(plotname,'.pdf',sprintf('_%.0f.pdf',i));
         end
         
         SigmaGlobal(i)  = knm2_ConvertShiftDrift2GlobalSigma('shifts_v',Shift(:,i),...

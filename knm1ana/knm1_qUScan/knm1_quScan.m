@@ -14,7 +14,7 @@ savedir = [getenv('SamakPath'),'knm1ana/knm1_qUScan/results/'];
 savename = sprintf('%sknm1_qUScan_Mini_%.0feV_to_%.0feV_%s_NP1.064.mat',...
     savedir,qURange(1),qURange(2),chi2);
 
-if exist(savename,'file') & 1==2
+if exist(savename,'file')
     load(savename)
 else
     M = MultiRunAnalysis('RunList',RunList,...

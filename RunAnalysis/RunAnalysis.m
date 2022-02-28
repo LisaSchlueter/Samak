@@ -3664,7 +3664,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
         end
         
         
-        function [parqU, errqU, chi2qU, dofqU,e1,pref] = qUScan(obj,varargin)
+        function [parqU, errqU, chi2qU, dofqU,e1,pref,err_mNuSq_Asym] = qUScan(obj,varargin)
             % Perform qUmin Fit Scan
             % -------------------------------------------------------------%
             p=inputParser;
@@ -3714,11 +3714,17 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                 obj.RunData.RunName,obj.DataType,obj.chi2,obj.NonPoissonScaleFactor,freeParStr,...
                 qURange(1),qURange(2),obj.FSDFlag,saveStr)];
             if exist(savename,'file') && strcmp(RecomputeFlag,'OFF')
-                load(savename,'parqU', 'errqU', 'chi2qU', 'dofqU');
+                load(savename);
                 fprintf('load qU scan from file %s \n',savename)
+                
+                if ~exist('err_mNuSq_Asym','var')
+                    err_mNuSq_Asym = 0;
+                end
+                
             else
                 parqU                   = zeros(obj.nPar,nFits);
                 errqU                   = zeros(obj.nPar,nFits);
+                err_mNuSq_Asym          = zeros(1,nFits);
                 chi2qU                  = zeros(nFits,1);
                 dofqU                   = zeros(nFits,1);
                 
@@ -3743,10 +3749,13 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                     errqU(:,i) = obj.FitResult.err;
                     chi2qU(i)  = obj.FitResult.chi2min;
                     dofqU(i)   = obj.FitResult.dof;
+                    if  contains(obj.minuitOpt,'minos')
+                          err_mNuSq_Asym(i) = 0.5.*(obj.FitResult.errPos(1)-obj.FitResult.errNeg(1));
+                    end
                 end
                 
                 if strcmp(saveResult,'ON')
-                    save(savename,'parqU', 'errqU', 'chi2qU', 'dofqU');
+                    save(savename,'parqU', 'errqU', 'chi2qU', 'dofqU','err_mNuSq_Asym');
                 end
             end
             
@@ -3993,6 +4002,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                 end
             else
                 e1 = NaN;
+                pref = NaN;
             end
             
             
