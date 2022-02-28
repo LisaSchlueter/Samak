@@ -7,8 +7,9 @@ chi2 = 'chi2Stat';
 NP = 1.064;
 
 savedir = [getenv('SamakPath'),'knm1ana/knm1_AltPixList/results/'];
-savename = sprintf('%sknm1_SinglePixFit_%s_%s_%s_%.0feV_%s_%2g.mat',...
+savename = sprintf('%sknm1_SinglePixFit_%s_%s_%.0feV_%s_%2g.mat',...
     savedir,DataType,strrep(freePar,' ',''),range,chi2,NP);
+%%
 if exist(savename,'file') && strcmp(RecomputeFlag,'OFF')
     load(savename);
 else
