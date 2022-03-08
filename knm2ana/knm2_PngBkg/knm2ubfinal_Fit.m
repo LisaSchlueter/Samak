@@ -58,7 +58,7 @@ if exist(savename,'file')
     load(savename,'FitResult','RunAnaArg','A');
 else
     SigmaSq =  0.0124+0.0025;
-    TwinmNuSq = 0.28;
+    
     
     
      if strcmp(RingMerge,'None') && strcmp(chi2,'chi2CMShape') && strcmp(AnaFlag,'Ring')
@@ -85,8 +85,7 @@ else
         'PullFlag',PullFlag,...;%99 = no pull
         'BKG_PtSlope',BKG_PtSlope,...
         'TwinBias_BKG_PtSlope',TwinBias_BKG_PtSlope,...
-        'DopplerEffectFlag',DopplerEffectFlag,...
-         'TwinBias_mnuSq',TwinmNuSq};
+        'DopplerEffectFlag',DopplerEffectFlag};
     A = MultiRunAnalysis(RunAnaArg{:});
     %%
     A.exclDataStart = A.GetexclDataStart(range);

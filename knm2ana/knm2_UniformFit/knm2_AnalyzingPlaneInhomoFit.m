@@ -12,8 +12,8 @@ else
     freePar   = 'mNu E0 Bkg Norm';
     AnaFlag   = 'StackPixel';
     DopplerEffectFlag = 'FSD';
-    BKG_PtSlope = 3*1e-06;
-    TwinBias_BKG_PtSlope = 3*1e-06;
+    BKG_PtSlope = 0;
+    TwinBias_BKG_PtSlope = 0;
     FSDFlag   = 'KNM2_0p1eV';
     
     SigmaSq =  0.0124+0.0025;
