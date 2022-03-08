@@ -51,7 +51,7 @@ else
         A.PixList = PixList(i);
         A.StackRuns; % only 1 pixel
         A.SimulateStackRuns;
-        A.ModelObj.ComputeTBDDS('B_bias',0.2216-A.ModelObj.BKG_RateSec_i);
+        A.ModelObj.ComputeTBDDS('B_bias',(0.2216-A.ModelObj.BKG_RateSec_i)./117);
         A.ModelObj.ComputeTBDIS;
         
         TBDIS_pixel(:,i) = A.ModelObj.TBDIS;
@@ -65,10 +65,10 @@ else
     
     A           = MultiRunAnalysis(RunAnaArg{:}); % average model
     
-    TBDIS = sum(TBDIS_pixel);
+    TBDIS = sum(TBDIS_pixel,2);
     A.RunData.TBDIS = TBDIS;
     A.Fit;
     Fit_average = A.FitResult;
     
-    save(savename,'Fit_average','-append');
+    save(savename,'Fit_average','RunAnaArg','-append');
 end  

@@ -1,8 +1,8 @@
 % unblinded fit with penning trap background slope
 range     = 40;
 freePar   = 'mNu E0 Bkg Norm';
-chi2      = 'chi2Stat';%CMShape';
-DataType  = 'Twin';
+chi2      = 'chi2CMShape';
+DataType  = 'Real';
 AnaFlag   = 'StackPixel';%'Ring';
 RingMerge = 'None';
 DopplerEffectFlag = 'FSD';
@@ -58,6 +58,8 @@ if exist(savename,'file')
     load(savename,'FitResult','RunAnaArg','A');
 else
     SigmaSq =  0.0124+0.0025;
+    TwinmNuSq = 0.28;
+    
     
      if strcmp(RingMerge,'None') && strcmp(chi2,'chi2CMShape') && strcmp(AnaFlag,'Ring')
          chi2tmp = 'chi2Stat';
@@ -83,7 +85,8 @@ else
         'PullFlag',PullFlag,...;%99 = no pull
         'BKG_PtSlope',BKG_PtSlope,...
         'TwinBias_BKG_PtSlope',TwinBias_BKG_PtSlope,...
-        'DopplerEffectFlag',DopplerEffectFlag};
+        'DopplerEffectFlag',DopplerEffectFlag,...
+         'TwinBias_mnuSq',TwinmNuSq};
     A = MultiRunAnalysis(RunAnaArg{:});
     %%
     A.exclDataStart = A.GetexclDataStart(range);
