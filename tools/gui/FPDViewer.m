@@ -1,4 +1,4 @@
-function [plotHandle, cbHandle] = FPDViewer(data,varargin)
+function [plotHandle, cbHandle,AngleDeg] = FPDViewer(data,varargin)
 %%
 %
 % P. I. Morales, December 2017
@@ -43,7 +43,8 @@ if strcmp(ReDrawSkeleton,'ON')
         'Position',[0.11452380952381 0.11 0.682738095238095 0.815]);
     pix = 0; %number in each detector
     TextHandle = cell(148,1);
- 
+    AngleDeg = zeros(148,1); % read-only
+    
     % build the skeleton segment by segment from the center outwards
     for ii = 1:13
         for jj = 0:segs(ii)-1
@@ -54,6 +55,23 @@ if strcmp(ReDrawSkeleton,'ON')
             % begining and ending radius and angles in each segment
             [theta,r] = getWedgeBorder(th1,th2,rStart(ii),rEnd(ii));
             p1 = polar(theta,r);
+            
+            % transform theta (polar) into clockwise angle (= degree==12 o'clock)
+            thStart_clock = 90-rad2deg(th1);  thStart_clock(thStart_clock<0) = thStart_clock(thStart_clock<0)+360;
+            thStop_clock = 90-rad2deg(th2);    thStop_clock(thStop_clock<0) = thStop_clock(thStop_clock<0)+360;
+            
+            if abs(thStart_clock-thStop_clock)>90+1e-05 && thStop_clock>thStart_clock
+                    thStart_clock = 360+thStart_clock;
+                    %thStop_clock=360-thStop_clock;
+            end
+            AngleDeg(pix+1) = mean([thStop_clock,thStart_clock]);
+            if AngleDeg(pix+1)==360
+                AngleDeg(pix+1)=0;
+            end
+           % theta_clock = 90-rad2deg(theta);
+           % theta_clock(theta_clock<0) = theta_clock(theta_clock<0)+360;  
+           % AngleRad(pix+1) = mean(theta_clock(theta_clock~=0));
+              
             % xx and yy are the position of the numbers in each segment
             %         xx = 0.13+0.775/2 + ((rStart(ii)+rEnd(ii))/2*cos((th1+th2)/2))/(9/0.775);
             xx = 0.114523809523810+0.682738095238095/2 + ((rStart(ii)+rEnd(ii))/2*cos((th1+th2)/2))/(9/0.682738095238095);
@@ -63,8 +81,9 @@ if strcmp(ReDrawSkeleton,'ON')
                 'String',num2str(pix),'FontSize',10,'Margin',0,'FontWeight','bold',...
                 'HorizontalAlignment','center','VerticalAlignment','middle');
             end
+           
             pix = pix + 1;
-         
+            
         end    
     end
  
@@ -74,6 +93,9 @@ if strcmp(ReDrawSkeleton,'ON')
     %set(detLines,'Color','k');
     set(detLines,'Color',rgb('Black'),'LineWidth',1)
     hold off
+    AngleDeg = round(AngleDeg,5); % round to 5 decimal digits
+else
+    AngleDeg = NaN;
 end
 
 %% Pixel or rings values
@@ -86,16 +108,16 @@ end
 
 % Give outliers a NaN value so they appear white
 if sum(outliers) >= 0
-   % data(ismember(1:length(data),outliers+1)) = NaN;
-%     outliers_count = 1;
-%     for ii = 1:length(data)
-%         if 
-%         if outliers(outliers_count) == ii
-%             data(ii,1) = NaN;
-%             outliers_count = outliers_count + 1;
-%         end
-%         
-%     end
+    % data(ismember(1:length(data),outliers+1)) = NaN;
+    %     outliers_count = 1;
+    %     for ii = 1:length(data)
+    %         if
+    %         if outliers(outliers_count) == ii
+    %             data(ii,1) = NaN;
+    %             outliers_count = outliers_count + 1;
+    %         end
+    %
+    %     end
 end
 
 % Fill the pixels in the FPD
@@ -104,14 +126,14 @@ if length(data) == 148 % for pixels
     
     pixels1 = 0; pixels2 = 4;
     
-     for ii = 1:13
+    for ii = 1:13
         fillBullseye(data(1+pixels1:pixels2),rStart(ii),rEnd(ii),thetaStart(ii),rgb('SlateGray'));
         pixels1 = pixels2;
         pixels2 = pixels2 + 12;
-     end
-     
-     pixels1 = 0; pixels2 = 4;
-   
+    end
+    
+    pixels1 = 0; pixels2 = 4;
+    
     for ii = 1:13
         fillBullseye(data(1+pixels1:pixels2),rStart(ii),rEnd(ii),thetaStart(ii));
         pixels1 = pixels2;
@@ -194,7 +216,7 @@ surfaceObject = surf(gca,X,Y,zeros(size(X)),cdata);
 set(surfaceObject,'EdgeColor','none');
 
 if exist('color','var')
-  set(surfaceObject,'FaceColor',color);  
+    set(surfaceObject,'FaceColor',color);
 end
 
 end

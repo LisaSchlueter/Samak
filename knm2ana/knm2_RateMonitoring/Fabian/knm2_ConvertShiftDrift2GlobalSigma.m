@@ -15,6 +15,8 @@ weights_v  = p.Results.weights_v;
 SanityPlot = p.Results.SanityPlot;
 PlotName   = p.Results.PlotName;
 
+sigmas_v = sigmas_v.*1e3;
+shifts_v = shifts_v.*1e3;
 % grid to define pdf
 Emin = min(shifts_v)-5.*max(sigmas_v);
 Emax = max(shifts_v)+5.*max(sigmas_v);
@@ -41,16 +43,17 @@ SigmaGlobal = std(GlobalGaussSamples);
 % sanity plot
 if strcmp(SanityPlot,'ON')
     figure('Units','normalized','Position',[0.1,0.1,0.5,0.4])
-    h1=histogram(GlobalGaussSamples,'FaceColor',rgb('DodgerBlue'));
+    h1=histogram(GlobalGaussSamples,'FaceColor',rgb('DodgerBlue'),'Normalization','pdf');
     hold on;
-    plot(E,GlobalGaussFun(E).*nSamples.*h1.BinWidth,'LineWidth',2,'Color',rgb('Orange'));
+    plot(E,GlobalGaussFun(E),'LineWidth',2,'Color',rgb('Orange'));%.*h1.BinWidth.*nSamples
     hold off  
     PrettyFigureFormat('FontSize',22)
-    leg = legend(sprintf('Global \\sigma = %.0f meV',SigmaGlobal.*1e3),'Plasma model: 3 Gaussians');
-    leg.EdgeColor = rgb('Silver');
-    xlim([min(shifts_v)-1.5*max(sigmas_v),max(shifts_v)+1.5*max(sigmas_v)]);
-    xlabel('Potential (eV)');
-    ylabel('Probability')
+    leg = legend(sprintf('Global \\sigma_t = %.0f meV',SigmaGlobal),'Effective source potential model: 3 Gaussians');
+    PrettyLegendFormat(leg);
+    xlim([min(shifts_v)-2*max(sigmas_v),max(shifts_v)+2*max(sigmas_v)]);
+    ylim([0 0.01]);
+    xlabel('Source potential (meV)');
+    ylabel('Probability density');
  %   print(gcf,PlotName,'-dpng','-r500');
     export_fig(PlotName);
 end

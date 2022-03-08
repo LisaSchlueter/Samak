@@ -9,7 +9,6 @@ else
     return
 end
 
-% to do: normalize density to every subrun!!!!
 GetFigure;
 s1 = subplot(4,1,[1:3]);
 plot(linspace(18400,18640,10),zeros(10,1),'-','LineWidth',2,'Color',rgb('Silver'));

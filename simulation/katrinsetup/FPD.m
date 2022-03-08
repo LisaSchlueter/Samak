@@ -77,7 +77,7 @@ classdef FPD < KATRIN & handle %!dont change superclass without modifying parsin
             p.addParameter('FPD_ROIEff','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('FPD_PileUpEff','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('FPD_ROIlow','',@(x)isfloat(x) && x>0); %if empty: do nothing, if not: compute coverage 
-            p.addParameter('FPD_RingMerge','Default',@(x)ismember(x,{'Default','None','Full','Half','Azi','AziHalfNS','AziHalfEW'}));
+            p.addParameter('FPD_RingMerge','Default',@(x)ismember(x,{'Default','None','Full','Half','Azi','AziHalfNS','AziHalfEW','Slice','Slice2','Slice3','Slice4'}));
     
             % Background Parameters
             p.addParameter('BKG_Flag','ON',@(x)ismember(x,{'ON','OFF','XmasData'}));
@@ -136,6 +136,7 @@ classdef FPD < KATRIN & handle %!dont change superclass without modifying parsin
                     [obj.FPD_PixList,obj.FPD_RingPixList] = Ring2PixelCombi(obj.FPD_RingList,obj.FPD_PixList);
                 case 'Half'
                     [obj.FPD_PixList,obj.FPD_RingPixList] = Ring2PixelHalfCombi(obj.FPD_RingList,obj.FPD_PixList);
+                   
             end
 
             obj.nRings = numel(obj.FPD_RingPixList);

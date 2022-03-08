@@ -155,7 +155,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             p.addParameter('fixPar','',@(x)ischar(x)); %default given in constructor: FSD and qUOffset fixed
             p.addParameter('pulls',[],@(x)isfloat(x) && all(x>0));
             p.addParameter('pullFlag',99);%@(x)ismember(x,{1,2,3}) 
-            p.addParameter('RingMerge','None',@(x)ismember(x,{'Default','None','Full','Half','Azi','AziHalfNS','AziHalfEW'}));
+            p.addParameter('RingMerge','None',@(x)ismember(x,{'Default','None','Full','Half','Azi','AziHalfNS','AziHalfEW','Slice','Slice2','Slice3','Slice4'}));
             p.addParameter('NonPoissonScaleFactor',[],@(x)isfloat(x) && all(x>0)); 
             p.addParameter('BKG_PtSlope',0,@(x)isfloat(x));     
             p.addParameter('SysBudget','',@(x)isfloat(x)); %if none given-> defined according to data set
@@ -308,6 +308,9 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                     case {'AziHalfNS','AziHalfEW'}
                         [obj.PixList,obj.RingPixList] = AziHalfPatch2PixelCombi(obj.RingList,obj.PixList,obj.RingMerge);
                         obj.RingList = 1:2;
+                    case {'Slice','Slice2','Slice3','Slice4'}
+                         [obj.PixList,obj.RingPixList] = Slice2PixelCombi(obj.PixList,obj.RingMerge);
+                        obj.RingList = 1:numel(obj.RingPixList); % now psuedo-rings (before, no meaning in slice mode)
                 end
             end
             

@@ -1,4 +1,4 @@
-% Fit KNM2 alternative runlist
+% Fit KNM2 single pixels 
 
 freePar = 'mNu E0 Bkg Norm';
 DataType = 'Real';

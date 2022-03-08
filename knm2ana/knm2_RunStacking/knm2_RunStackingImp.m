@@ -15,7 +15,7 @@
 % January 2020
 % --------------------------------------------------------------------------------
 %%  common settings
-RecomputeFlag = 'ON';
+RecomputeFlag = 'OFF';
 RunList = 'KNM2_Prompt';    % all runs
 range = 40;                 % in eV below E0
 TwinBias_Q = 18573.7;

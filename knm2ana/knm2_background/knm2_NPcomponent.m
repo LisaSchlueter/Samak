@@ -24,7 +24,7 @@ A.exclDataStart = A.GetexclDataStart(range);
 
 %% calculate NP factor
 %GetNPfactor(A,'SlopeCorr','OFF','RecomputeFlag','ON','SanityPlot','ON');
-GetNPfactor(A,'SlopeCorr','ON','RecomputeFlag','ON','SanityPlot','ON');
+ [NPfactor, NPfactorErr]=  GetNPfactor(A,'SlopeCorr','ON','RecomputeFlag','ON','SanityPlot','ON');
 
 %% result
-fprintf('%s - Non Poisson background rate contribution = %.2f %% \n',strrep(A.RunData.RunName,'_',' '),(A.NonPoissonScaleFactor-1)*100)
+fprintf('%s - Non Poisson background rate contribution = (%.2f +- %.2f) %% \n',strrep(A.RunData.RunName,'_',' '),(NPfactor-1)*100,(NPfactorErr)*100)

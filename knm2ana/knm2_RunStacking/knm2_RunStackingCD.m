@@ -44,9 +44,9 @@ end
 
 mNuSq = mNuSq-mNuSq(1);
 %% plot
-figure('Units','normalized','Position',[0.1,0.1,0.5,0.5]);
+figure('Units','normalized','Position',[0.1,0.1,0.5,0.4]);
 
-p1 =plot(WGTS_CD_RelStd,mNuSq,'-o','LineWidth',2,'MarkerFaceColor',rgb('DodgerBlue'));
+p1 =plot(1e2.*WGTS_CD_RelStd,mNuSq,'.:','MarkerSize',22,'Color',rgb('DodgerBlue'),'LineWidth',2);
 % hold on;
 %x = linspace(min(qUStd),max(qUStd),100);
 % pref  =plot(x,-2*x.^2,'-','LineWidth',2);
@@ -57,8 +57,8 @@ p1 =plot(WGTS_CD_RelStd,mNuSq,'-o','LineWidth',2,'MarkerFaceColor',rgb('DodgerBl
 % leg.EdgeColor = rgb('Silver');
 % leg.Location='southwest';
 PrettyFigureFormat('FontSize',24);
-xlabel(sprintf('\\sigma (\\rhod\\sigma)'));
-ylabel(sprintf('{\\Delta\\itm^2}'));
+xlabel(sprintf('\\sigma (\\rhod\\sigma) (%%)'));
+ylabel(sprintf('{\\Delta\\itm}^2 (eV^{ 2})'));
 %xlim([-0.005,0.205])
 
 % saveplot = strrep(strrep(savename,'results','plots'),'.mat','.pdf');

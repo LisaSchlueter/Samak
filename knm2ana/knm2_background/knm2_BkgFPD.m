@@ -1,38 +1,38 @@
-RunAnaArg = {'RunList','KNM2_Prompt',...  % define run number -> see GetRunList
-    'fixPar','E0 Bkg Norm',...         % free Parameter !!
-    'DataType','Real',...              % Real, Twin or Fake
-    'FSDFlag','BlindingKNM2',...       % final state distribution (theoretical calculation)
-    'ELossFlag','KatrinT2',...         % energy loss function     ( different parametrizations available)
-    'AnaFlag','StackPixel',...         % FPD segmentations -> pixel combination
-    'chi2','chi2Stat',...              % statistics only
-    'NonPoissonScaleFactor',1,...
-    'MosCorrFlag','OFF',...
-    'TwinBias_Q',18573.73,...% 18573.7 = default settings, 18574= const ISX, 18575= same Te for all runs
-    'ROIFlag','14keV',...    % 18573.73 == new RF binning without interp
-    'DopplerEffectFlag','FSD'};%,...
 
+savedir = [getenv('SamakPath'),'knm2ana/knm2_background/results/'];
+savename = sprintf('%sknm2_BkgFPD.mat',savedir);
 
-% build object of MultiRunAnalysis class
-D = MultiRunAnalysis(RunAnaArg{:});
-D.ReadSingleRunData;
-BkgRatePixel = NaN.*zeros(148,1);
-BkgRatePixel(D.PixList) = mean(squeeze(sum(D.SingleRunData.TBDIS(D.RunData.qU>18574,:,D.PixList),2))./...
-    (D.RunData.qUfrac(D.RunData.qU>18574).*D.RunData.TimeSec));
-%% relative background rate
-[plotHandle, cbHandle] = FPDViewer(100.*(BkgRatePixel-nanmean(BkgRatePixel))./nanmean(BkgRatePixel));
-cbHandle.Label.String = 'Rel. background rate (%)';
-cbHandle.Label.FontSize = get(gca,'FontSize')+4;
-savedir= [getenv('SamakPath'),'knm2ana/knm2_background/plots/'];
-MakeDir(savedir);
-savename = sprintf('%sknm2_FPDrelBackground.png',savedir);
-print(plotHandle,savename,'-dpng','-r400');
+if exist(savename,'file')
+    load(savename)
+else
+    savedirf = [getenv('SamakPath'),'knm2ana/knm2_PngBkg/results/'];
+    savenamef = sprintf('%sknm2ubfinal_Fit_Bpng-%.1fmucpsPers_%s_%.0feV_%s_%s_%s_%s_SysBudget40.mat',...
+        savedirf,3,'Real',40,'mNuE0BkgNorm','chi2CMShape','StackPixel','KNM2_0p1eV');
+    d = importdata(savenamef);
+    
+    d.A.ReadSingleRunData;
+    BkgRate_subrun_run_pixel = d.A.SingleRunData.TBDIS(d.A.RunData.qU>18574,:,:)./(d.A.SingleRunData.qUfrac(d.A.RunData.qU>18574,:,:).*d.A.SingleRunData.TimeSec);
+    BkgRate_subrun_pixel = squeeze(mean(BkgRate_subrun_run_pixel,2));
+    BkgRate_pixel = squeeze(mean(BkgRate_subrun_pixel));
+    
+    PixList = d.A.PixList;
+    save(savename,'PixList','BkgRate_pixel','BkgRate_subrun_pixel','BkgRate_subrun_run_pixel');
+end
 
+BkgRate_mean = sum(BkgRate_pixel(PixList));
 
-%% absolute background rate
-[plotHandle, cbHandle] = FPDViewer(1e3.*BkgRatePixel);
+% display inactive pixel in grey (-> NaN)
+BkgRate_plt = NaN.*zeros(148,1);
+BkgRate_plt(PixList) = BkgRate_pixel(PixList);
+
+%% plot
+close all
+[plotHandle, cbHandle] = FPDViewer(1e3.*BkgRate_plt,'Label','OFF','ReDrawSkeleton','ON');
 cbHandle.Label.String = 'Background rate (mcps)';
 cbHandle.Label.FontSize = get(gca,'FontSize')+4;
-savedir= [getenv('SamakPath'),'knm2ana/knm2_background/plots/'];
-MakeDir(savedir);
-savename = sprintf('%sknm2_FPDAbsBackground.png',savedir);
-print(plotHandle,savename,'-dpng','-r400');
+
+pltdir= [getenv('SamakPath'),'knm2ana/knm2_background/plots/'];
+MakeDir(pltdir);
+pltname = sprintf('%sknm2_FPD_background.pdf',pltdir);
+export_fig(pltname);
+fprintf('save plot to %s \n',pltname);

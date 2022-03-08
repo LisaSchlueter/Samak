@@ -52,8 +52,8 @@ chi2mean = sum((mNuSq-mean).^2./mNuSqErr.^2);
 [linFitpar, linFiterr, linFitchi2min,linFitdof] = linFit(R.RingList',mNuSq,mNuSqErr);
 linFitpar(1)./linFiterr(1)
 
-[linFitpar3, linFiterr3, ~,~] = linFit(R.RingList(1:3)',mNuSq(1:3),mNuSqErr(1:3));
-linFitpar3(1)./linFiterr3(1)
+% [linFitpar3, linFiterr3, ~,~] = linFit(R.RingList(1:3)',mNuSq(1:3),mNuSqErr(1:3));
+% linFitpar3(1)./linFiterr3(1)
 %%
 Deltachi2 = chi2mean-linFitchi2min;
 chi2cdf(Deltachi2,1)
@@ -65,6 +65,25 @@ Bkg_r = BkgRate_r.*A.ModelObj.qUfrac(A.exclDataStart:end)'.*A.ModelObj.TimeSec;
 TBDIS_r = cell2mat(arrayfun(@(x) x.RunData.TBDIS(A.exclDataStart:end),R.MultiObj,'UniformOutput',false)')';
 Signal_r = TBDIS_r-Bkg_r;
 sum(Signal_r')
+
+%% fit mNuSq as a function of actual radial FPD position
+% radial ring position (from FPD Viewer)
+rStart = [0 0.7398 1.4796 1.9573 2.3394 2.6674 2.9592 3.2247 ...
+    3.4699 3.699 3.9146 4.119 4.3137]';
+rEnd = [0.7398 1.4796 1.9573 2.3394 2.6674 2.9592 3.2247 ...
+    3.4699 3.699 3.9146 4.119 4.3137 4.5]';
+Radius_cm = mean([rStart';rEnd']);
+if strcmp(A.RingMerge,'Full')
+Radius_Ring_cm = zeros(4,1); %average radial position of pseudo-ring
+Radius_Ring_cm(1) = mean(Radius_cm(1:3));
+Radius_Ring_cm(2) = mean(Radius_cm(4:6));
+Radius_Ring_cm(3) = mean(Radius_cm(7:9));
+Radius_Ring_cm(4) = mean(Radius_cm(10:12));
+end
+[linFitpar, linFiterr, linFitchi2min,linFitdof] = linFit(Radius_Ring_cm,mNuSq,mNuSqErr);
+fprintf('Linear fit mNuSq(radius): slope = (%.1f +- %.1f) eV2/cm -> %.1f sigma \n',linFitpar(1),linFiterr(1),abs(linFitpar(1)./linFiterr(1)));
+
+
 
 
 

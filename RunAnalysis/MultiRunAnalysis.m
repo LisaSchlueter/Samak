@@ -135,6 +135,9 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                 case {'AziHalfNS','AziHalfEW'}
                     [obj.PixList,obj.RingPixList] = AziHalfPatch2PixelCombi(obj.RingList,obj.PixList,obj.RingMerge);
                     obj.RingList = 1:2;
+                case {'Slice','Slice2','Slice3','Slice4'}
+                    [obj.PixList,obj.RingPixList] = Slice2PixelCombi(obj.PixList,obj.RingMerge);
+                    obj.RingList = 1:numel(obj.RingPixList); % now psuedo-rings (before, no meaning in slice mode)
             end
 
             % Init Analysis: Stack Data, Create Stack Model, Covariance Matrix

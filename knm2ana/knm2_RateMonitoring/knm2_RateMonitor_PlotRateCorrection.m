@@ -46,17 +46,17 @@ pm3 = plot(x(Idx_Rw3),1e-04.*MeanRate3.*ones(sum(Idx_Rw3),1),'-','Color',pc3.Col
 PrettyFigureFormat;
 xticks(myXticks);
 xticklabels('');
-ylabel(sprintf('Rate (10^4 \\times cps)'));
+ylabel(sprintf('R_{300} (10^4 \\times cps)'));
 set(gca,'XMinorTick','off');
 xlim([xmin,xmax])
-ylim([6.635 6.717]);
+ylim([6.624 6.717]);
 ax1 = gca;
 
 leg = legend([pm1,pm2,pm3],...
-    sprintf('Period 1: \\mu = %.3f \\times 10^4 cps',MeanRate1.*1e-04),...
-    sprintf('Period 2: \\mu = %.3f \\times 10^4 cps',MeanRate2.*1e-04),...
-    sprintf('Period 3: \\mu = %.3f \\times 10^4 cps',MeanRate3.*1e-04),...
-    'Location','south');
+    sprintf(' Period 1:\n\\langleR_{300}^{corr.}\\rangle_1 = %.3f \\times 10^4 cps',MeanRate1.*1e-04),...
+    sprintf(' Period 2:\n\\langleR_{300}^{corr.}\\rangle_2 = %.3f \\times 10^4 cps',MeanRate2.*1e-04),...
+    sprintf(' Period 3:\n\\langleR_{300}^{corr.}\\rangle_3 = %.3f \\times 10^4 cps',MeanRate3.*1e-04),...
+    'Location','southwest');
 leg.NumColumns=3;
 PrettyLegendFormat(leg);
 leg.FontSize = get(gca,'FontSize');

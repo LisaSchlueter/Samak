@@ -134,22 +134,23 @@ else
             [coeff_uncorr,coeffErr_uncorr,~,~]= linFit(LiveTime',mean(Bkg_Subrun)',sqrt(mean(Bkg_Subrun))');
             [coeff1,coeffErr1,~,~]= linFit(LiveTime',mean(Bkg_Subrun_corr)',sqrt(mean(Bkg_Subrun_corr))');
             
-            f1 = figure('Units','normalized','Position',[0.1,0.1,0.8,0.5]);
-            e_uncorr =errorbar(LiveTime./(60*60),mean(Bkg_Subrun),sqrt(mean(Bkg_Subrun)),'o','LineWidth',1.5,'Color',rgb('Silver'),...
-                'MarkerFaceColor',rgb('Silver'));
+            f1 = figure('Units','normalized','Position',[0.1,0.1,0.8,0.4]);
+            e_uncorr =errorbar((LiveTime+abs(min(LiveTime)))./(60*60.*24),mean(Bkg_Subrun),sqrt(mean(Bkg_Subrun)),'o','LineWidth',1.5,'Color',rgb('HotPink'),...
+                'MarkerFaceColor',rgb('HotPink'));
             e_uncorr.CapSize = 0;
             hold on;
-            l_uncorr = plot(LiveTime./(60*60),coeff_uncorr(1)*LiveTime+coeff_uncorr(2),'Color',rgb('Silver'),'LineWidth',1.5);
-            e1 =errorbar(LiveTime./(60*60),mean(Bkg_Subrun_corr),sqrt(mean(Bkg_Subrun_corr)),'o','LineWidth',1.5,'Color',obj.PlotColor,'MarkerFaceColor',rgb('SkyBlue'));
+            l_uncorr = plot((LiveTime+abs(min(LiveTime)))./(60*60.*24),coeff_uncorr(1)*LiveTime+coeff_uncorr(2),'Color',rgb('HotPink'),'LineWidth',1.5);
+            e1 =errorbar((LiveTime+abs(min(LiveTime)))./(60*60.*24),mean(Bkg_Subrun_corr),sqrt(mean(Bkg_Subrun_corr)),'o','LineWidth',1.5,'Color',obj.PlotColor,'MarkerFaceColor',rgb('SkyBlue'));
             e1.CapSize = 0;
-            l_corr = plot(LiveTime./(60*60),coeff1(1)*LiveTime+coeff1(2),'Color',e1.Color,'LineWidth',1.5);
+            l_corr = plot((LiveTime+abs(min(LiveTime)))./(60*60.*24),coeff1(1)*LiveTime+coeff1(2),'Color',e1.Color,'LineWidth',1.5);
             
             PrettyFigureFormat('FontSize',24);
-            xlabel('Live time (h)');
+            xlabel('Live time (day)');
             ylabel(sprintf('Counts in %.0f s',MeanTime));
-            xlim([min(LiveTime./(60*60))-20,max(LiveTime./(60*60))+20]);
+            xlim([-1,max(LiveTime+abs(min(LiveTime)))./(60*60.*24)+1]);
             
-            leg = legend([e_uncorr,e1],'Uncorrected', 'Corrected for time-wise slope');
+            leg = legend([e_uncorr,e1],'Uncorrected',...
+               sprintf('Corrected for time-wise slope (%.2g \\pm %.1g mcps/day)',BkgSlopeCpsPerS*60*60*24*1e3,coeffErr(1)*60*60*24*1e3));
            % leg.Title. String = 'Background scan steps';
            % leg.Title.FontWeight = 'normal';
             legend boxoff

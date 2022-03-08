@@ -16,7 +16,7 @@ chi2min_u =  d.FitResult.chi2min;
 p_u = 1-chi2cdf(d.FitResult.chi2min,d.FitResult.dof);
 
 AltPixLists = 'Azi';
-PixList_Labels = {'Golden','Bullseye','1','2','3','4'};
+PixList_Labels = {'Golden','Inner','Northeast','Southeast','Southwest','Northwest'};
 
 % nPix = zeros(numel(AltPixLists),5);
 % mNuSq = zeros(numel(AltPixLists),5);
@@ -41,8 +41,6 @@ LocalFontSize = 18;
     p = 1-chi2cdf(d.FitResult.chi2min,d.FitResult.dof);
 
 %% plot
-
-RandList = 'ON';
 x = [mNuSq_u; mNuSq];
 xerr = [mNuSqErr_u;mNuSqErr];
 pp =[p_u;p];
@@ -78,12 +76,12 @@ xlim([-12 7]);
 ylabel('Pixel selection');
 PrettyFigureFormat('FontSize',LocalFontSize);
 
-if strcmp(RandList,'ON')
-    leg = legend(a_rand,sprintf('Random half pixels: 1\\sigma band (%.0f samples)',nPixList));
-    PrettyLegendFormat(leg,'alpha',0.8); leg.EdgeColor = 'none';
-    leg.Location= 'northwest';
-    leg.FontSize = LocalFontSize-2;
-end
+% if strcmp(RandList,'ON')
+%     leg = legend(a_rand,sprintf('Random half pixels: 1\\sigma band (%.0f samples)',nPixList));
+%     PrettyLegendFormat(leg,'alpha',0.8); leg.EdgeColor = 'none';
+%     leg.Location= 'northwest';
+%     leg.FontSize = LocalFontSize-2;
+% end
 
 s2 = subplot(1,4,4);
 area(linspace(0,0.05,10),numel(x)+1.*ones(10,1),'FaceColor',rgb('Red'));%(0.05.*ones(10,1),linspace(0,numel(RunLists)+1,10),'-','MarkerSize',20,'LineWidth',2,'Color',rgb('Red'));
@@ -95,7 +93,7 @@ yticklabels('');
 xlabel(sprintf('{\\it p}'));
 ax2 = gca;
 PrettyFigureFormat('FontSize',LocalFontSize);
-
+xlim([0 1])
 linkaxes([s1,s2],'y');
 
 ax1.Position(2) = 0.17;
@@ -104,11 +102,8 @@ ax2.Position(4) = ax1.Position(4);
 ax1.Position(1) = 0.2;
 ax2.Position(1) = 0.79;
 
-if strcmp(RandList,'ON')
-    ylim([0.5 numel(x)+1])
-else
-    ylim([0.5 numel(x)+0.5]);
-end
+ylim([0.5 numel(x)+0.5]);
+
 %%
 pltdir = strrep(savedir,'results','plots');
 MakeDir(pltdir);
@@ -118,7 +113,7 @@ export_fig(gcf,pltname);
 
 %%
 
-FPDView = 'ON';
+FPDView = 'OFF';
 
 if strcmp(FPDView,'ON')
     close all

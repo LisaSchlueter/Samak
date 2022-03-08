@@ -102,7 +102,7 @@ classdef RingAnalysis < handle
                 dof         = zeros(obj.nRings,1);
                 ScanResults = cell(obj.nRings,1); %only filled when AsymErr is ON
                 
-                progressbar('Fitting single rings');
+                progressbar('Fit single rings');
                 for i=1:obj.nRings
                     progressbar(i/obj.nRings);
                     obj.MultiObj(i).Fit;
@@ -358,6 +358,9 @@ classdef RingAnalysis < handle
                 case 'None'
                     xticks([1:12])
                     xticklabels({'Bullseye',1,2,3,4,5,6,7,8,9,10,11});
+                case 'Slice'
+                    xticks([1:28])
+                    %xticklabels({'Bullseye',1,2,3,4,5,6,7,8,9,10,11});
             end
             set(gca,'XMinorTick','off');
             
