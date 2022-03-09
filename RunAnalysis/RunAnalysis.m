@@ -1985,10 +1985,10 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             end
             
             savedir = sprintf('%stritium-data/fit/%s/Chi2Profile/%s/%s/',getenv('SamakPath'),obj.DataSet,AnaStr);
-            savename = sprintf('%sChi2Profile_%s_%sScan_%s_%s_%sFPD_%s_NP%.3f_FitPar%s_nFit%.0f_%s.mat',...
+            savename = sprintf('%sChi2Profile_%s_%sScan_%s_%s_%sFPD_%s_NP%.3f_FitPar%s_nFit%.0f_%s_%.0feVrange.mat',...
                 savedir,obj.DataType,Mode,Parameter,obj.DataSet,AnaStr,obj.chi2,obj.NonPoissonScaleFactor(1),...
                 ConvertFixPar('freePar',obj.fixPar,'Mode','Reverse','nPar',obj.nPar,'nPixels',obj.ModelObj.nPixels),nFitMax,...
-                obj.FSDFlag);
+                obj.FSDFlag,abs(obj.RunData.qU(obj.exclDataStart)-18574));
             
             if strcmp(Mode,'Uniform')
                 savename = strrep(savename,'.mat',sprintf('_min%.3g_max%.3g.mat',min(min(ScanResults.ParScan)),max(max(ScanResults.ParScan))));
@@ -2144,6 +2144,172 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             
             if strcmp(SanityPlot,'ON')
                 obj.PlotChi2Curve('ScanResult',ScanResults);
+            end
+        end
+        function ScanResults = ComputeChi2Profile(obj,varargin)
+            % Get asymetric fit uncertainties for 1 fit parameter
+            % Method: Scan through Chi^2 profile and calculate Chi^2+1
+            p = inputParser;
+            p.addParameter('Parameter','mNu',@(x)ismember(x,{'mNu','E0'}));
+            p.addParameter('nFit',20,@(x)isfloat(x));    % number of fits
+            p.addParameter('ParMin',-1,@(x)isfloat(x));  % lower limit
+            p.addParameter('ParMax',1,@(x)isfloat(x));   % upper limit
+            p.addParameter('RecomputeFlag','OFF',@(x)ismember(x,{'ON','OFF'}));
+            
+            p.parse(varargin{:});
+            
+            Parameter     = p.Results.Parameter;
+            nFit          = p.Results.nFit; 
+            ParMax        = p.Results.ParMax;
+            ParMin        = p.Results.ParMin;
+            RecomputeFlag = p.Results.RecomputeFlag;
+           
+              switch obj.AnaFlag
+                case 'StackPixel'
+                    AnaStr = 'Uniform';
+                case 'Ring'
+                    AnaStr = sprintf('Ring_%s',obj.RingMerge);
+              end
+            
+            savedir = sprintf('%stritium-data/fit/%s/Chi2Profile/%s/%s/',getenv('SamakPath'),obj.DataSet,AnaStr);
+            savename = sprintf('%sChi2Profile_%s_Parallel_%s_%s_%sFPD_%s_NP%.3f_FitPar%s_nFit%.0f_Min%.3g_Max%.3g_%s_%.0feVrange.mat',...
+                savedir,obj.DataType,Parameter,obj.DataSet,AnaStr,obj.chi2,obj.NonPoissonScaleFactor(1),...
+                ConvertFixPar('freePar',obj.fixPar,'Mode','Reverse','nPar',obj.nPar,'nPixels',obj.ModelObj.nPixels),...
+                nFit,ParMin,ParMax, obj.FSDFlag,abs(obj.RunData.qU(obj.exclDataStart)-18574));
+            
+  
+            if exist(savename,'file') && strcmp(RecomputeFlag,'OFF')
+                ScanResults = importdata(savename);
+            else
+                switch Parameter
+                    case 'mNu'
+                        ModelPar_i = 'mnuSq_i';
+                        ParScanIndex = 1;
+                    case 'E0'
+                        ModelPar_i = 'Q_i';
+                        ParScanIndex = 2;
+                end
+                fixPar_i = obj.fixPar; % save previous setting
+                obj.fixPar = [sprintf('fix %.0f ;',ParScanIndex),fixPar_i]; % fix parameter of interest
+                
+                ParScan = linspace(ParMin,ParMax,nFit);
+                par      = zeros(obj.nPar,nFit);
+                err      = zeros(obj.nPar,nFit);
+                errNeg   = zeros(4,nFit);
+                errPos   = zeros(4,nFit);
+                errMean  = zeros(4,nFit);
+                chi2min  = zeros(nFit,1);
+                dof      = zeros(nFit,1);
+                
+                D = copy(repmat(obj,nFit,1));
+                D = reshape(D,numel(D),1);
+                
+                parfor i=1:nFit
+                    D(i).SimulateStackRuns;         % get model (not copied)
+                    D(i).ModelObj.(ModelPar_i) =  ParScan(i);
+                    D(i).Fit;
+                    
+                    par(:,i)   = D(i).FitResult.par;
+                    err(:,i)   = D(i).FitResult.par;
+                    chi2min(i) = D(i).FitResult.chi2min;
+                    dof(i)     = D(i).FitResult.dof;
+                    
+                    errNeg(:,i)   = D(i).FitResult.errNeg;
+                    errPos(:,i)   = D(i).FitResult.errPos;
+                    errMean(:,i)   = 0.5.*(errPos(:,i)-errNeg(:,i));
+                end
+                
+                % collect scan results in structure
+                ScanResults = struct(...
+                    'ParScan',ParScan,...
+                    'par',par,... % Fit Parameter
+                    'err',err,... % Error on Fit Parameter
+                    'chi2min',chi2min,...
+                    'dof',dof,...
+                    'errNeg',errNeg,...
+                    'errPos',errPos,...
+                    'errMean',errMean);
+                
+                obj.fixPar = fixPar_i;
+                
+                
+                % best fit and uncertainties
+                ParScan_inter = linspace(min(ParScan),max(ParScan),1e3);
+                chi2_inter = interp1(ParScan(ParScanIndex,:),chi2min,ParScan_inter,'spline');
+                chi2_bf = min(chi2_inter);
+                ParScan_bf = ParScan_inter(chi2_inter==chi2_bf);
+                ParScanDown = interp1(chi2_inter(ParScan_inter<ParScan_bf),ParScan_inter(ParScan_inter<ParScan_bf),chi2_bf+1,'spline');
+                ParScanUp = interp1(chi2_inter(ParScan_inter>ParScan_bf),ParScan_inter(ParScan_inter>ParScan_bf),chi2_bf+1,'spline');
+                ParScan_errNeg = abs(diff([ParScanDown,ParScan_bf]));
+                ParScan_errPos = abs(diff([ParScanUp,ParScan_bf]));
+                ParScan_errMean = 0.5*(ParScan_errPos+ParScan_errNeg);
+                ScanResults.BestFit.chi2      = chi2_bf;
+                ScanResults.BestFit.par       = ParScan_bf;
+                ScanResults.BestFit.parLowLim =  ParScanDown;
+                ScanResults.BestFit.parUpLim  =  ParScanUp;
+                ScanResults.BestFit.errNeg    = ParScan_errNeg;
+                ScanResults.BestFit.errPos    = ParScan_errPos;
+                ScanResults.BestFit.errMean   = ParScan_errMean;
+                
+                save(savename,'ScanResults');
+                fprintf('save file %s \n',savename)
+                
+                
+                
+                %% also try to get other fit parameter uncertainties
+                if strcmp(Parameter,'mNu')
+                    try
+                    % E0
+                    [E0,Idx] = sort(par(2,:));
+                    %E0 = E0+obj.ModelObj.Q_i;
+                    E0_inter = linspace(min(E0),max(E0),1e3);
+                    chi2_inter_E0 = interp1(E0,chi2min(Idx),E0_inter,'spline'); 
+                    chi2_bf_E0 = min(chi2_inter_E0);
+                    E0_bf = E0_inter(chi2_inter_E0==chi2_bf_E0);
+                    LowerLim = interp1(chi2_inter_E0(E0_inter<E0_bf),E0_inter(E0_inter<E0_bf),chi2_bf_E0+1,'spline');
+                    UpperLim = interp1(chi2_inter_E0(E0_inter>E0_bf),E0_inter(E0_inter>E0_bf),chi2_bf_E0+1,'spline');
+                    E0_errNeg = abs(diff([LowerLim,E0_bf]));
+                    E0_errPos = abs(diff([UpperLim,E0_bf]));
+                    E0_errMean = 0.5*(E0_errPos+E0_errNeg);
+                    ScanResults.BestFit.E0       = E0_bf;
+                    ScanResults.BestFit.E0Err    = E0_errMean;
+                  
+                     % Bkg
+                    [B,Idx] = sort(par(3,:));
+                    %B = B+obj.ModelObj.BKG_RateSec_i;
+                    B_inter = linspace(min(B),max(B),1e3);
+                    chi2_inter_B = interp1(B,chi2min(Idx),B_inter,'spline'); 
+                    chi2_bf_B = min(chi2_inter_B);
+                    B_bf = B_inter(chi2_inter_B==chi2_bf_B);
+                    LowerLim = interp1(chi2_inter_B(B_inter<B_bf),B_inter(B_inter<B_bf),chi2_bf_B+1,'spline');
+                    UpperLim = interp1(chi2_inter_B(B_inter>B_bf),B_inter(B_inter>B_bf),chi2_bf_B+1,'spline');
+                    B_errNeg = abs(diff([LowerLim,B_bf]));
+                    B_errPos = abs(diff([UpperLim,B_bf]));
+                    B_errMean = 0.5*(B_errPos+B_errNeg);
+                    ScanResults.BestFit.B       = B_bf;
+                    ScanResults.BestFit.BErr    = B_errMean;
+                    
+                   % N
+                    [N,Idx] = sort(par(4,:));
+                    N_inter = linspace(min(N),max(N),1e3);
+                    chi2_inter_N = interp1(N,chi2min(Idx),N_inter,'spline'); 
+                    chi2_bf_N = min(chi2_inter_N);
+                    N_bf = N_inter(chi2_inter_N==chi2_bf_N);
+                    LowerLim = interp1(chi2_inter_N(N_inter<N_bf),N_inter(N_inter<N_bf),chi2_bf_N+1,'spline');
+                    UpperLim = interp1(chi2_inter_N(N_inter>N_bf),N_inter(N_inter>N_bf),chi2_bf_N+1,'spline');
+                    N_errNeg = abs(diff([LowerLim,N_bf]));
+                    N_errPos = abs(diff([UpperLim,N_bf]));
+                    N_errMean = 0.5*(N_errPos+N_errNeg);
+                    ScanResults.BestFit.N      = N_bf;
+                    ScanResults.BestFit.NErr    = N_errMean;
+                    
+                    save(savename,'ScanResults');
+                    fprintf('save file %s \n',savename)
+                    catch
+                        fprintf('other fit par from chi2profile didnt work \n')
+                    end
+                end
+                %%
             end
         end
         function out = PlotChi2Curve(obj,varargin)
@@ -3683,7 +3849,8 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             p.addParameter('saveResult','ON',@(x)ismember(x,{'ON','OFF'})); %save to file
             p.addParameter('PlotResult','ON',@(x)ismember(x,{'ON','OFF'})); %plot yes or no
             p.addParameter('randMC','OFF',@(x)ismember(x,{'ON','OFF'})); %only for knm1 so far
-           
+            p.addParameter('Chi2Profile','OFF',@(x)ismember(x,{'ON','OFF'})); %calculate chi2profile (makes sense for knm2)
+            
             p.parse(varargin{:});
             saveplot        = p.Results.saveplot;
             qURange         = p.Results.qURange;
@@ -3697,7 +3864,9 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             saveResult      = p.Results.saveResult;
             PlotResult      = p.Results.PlotResult;
             randMC          = p.Results.randMC;
+            Chi2Profile     = p.Results.Chi2Profile;
             
+            fitterStr = '';
             if strcmp(obj.DataSet,'Knm1')
                 savedir = [getenv('SamakPath'),'knm1ana/knm1_qUScan/results/'];
             elseif contains(obj.DataSet,'FirstTritium')
@@ -3705,6 +3874,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                 MakeDir(savedir);
             elseif strcmp(obj.DataSet,'Knm2')
                 savedir = [getenv('SamakPath'),'knm2ana/knm2_qUScan/results/'];
+                fitterStr = sprintf('_%s',obj.fitter);
             else
                 savedir = './plots/';
             end
@@ -3713,9 +3883,14 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             nFits = numel(exclDataStart_v);
             
             freeParStr = ConvertFixPar('Mode','Reverse','freePar',obj.fixPar);
-            savename = [savedir,sprintf('qUScan_%s_%s_%sNP%.3f_FitPar%s_%.0feV-%.0feV_%s%s.mat',...
+            savename = [savedir,sprintf('qUScan_%s_%s_%sNP%.3f_FitPar%s_%.0feV-%.0feV_%s%s%s.mat',...
                 obj.RunData.RunName,obj.DataType,obj.chi2,obj.NonPoissonScaleFactor,freeParStr,...
-                qURange(1),qURange(2),obj.FSDFlag,saveStr)];
+                qURange(1),qURange(2),obj.FSDFlag,saveStr,fitterStr)];
+            
+            if strcmp(Chi2Profile,'ON')
+                savename = strrep(savename,'.mat','_chi2profile.mat');
+            end
+            
             if exist(savename,'file') && strcmp(RecomputeFlag,'OFF')
                 load(savename);
                 fprintf('load qU scan from file %s \n',savename)
@@ -3747,13 +3922,33 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                         obj.Fit;
                         FitResult = obj.FitResult;
                         save(savename_tmp,'FitResult');
+                        if strcmp(Chi2Profile,'ON') 
+                            ProfileResult = obj.ComputeChi2Profile('Parameter','mNu','nFit',20,...
+                                'ParMin',-1,'ParMax',1);
+                            save(savename_tmp,'ProfileResult','-append');
+                        end
                     end
+                    
                     parqU(:,i) = obj.FitResult.par;
                     errqU(:,i) = obj.FitResult.err;
                     chi2qU(i)  = obj.FitResult.chi2min;
                     dofqU(i)   = obj.FitResult.dof;
                     if  contains(obj.minuitOpt,'minos')
                           err_mNuSq_Asym(i) = 0.5.*(obj.FitResult.errPos(1)-obj.FitResult.errNeg(1));
+                    end
+                    
+                    if strcmp(Chi2Profile,'ON')
+                        parqU(1,i) = ProfileResult.BestFit.par;
+                        errqU(1,i) = ProfileResult.BestFit.errMean;
+                        err_mNuSq_Asym(i) = errqU(1,i);
+                        chi2qU(i)  = ProfileResult.BestFit.chi2;
+                        
+                        parqU(2,i) = ProfileResult.BestFit.E0;
+                        errqU(2,i) = ProfileResult.BestFit.E0Err;
+                        parqU(3,i) = ProfileResult.BestFit.B;
+                        errqU(3,i) = ProfileResult.BestFit.BErr;
+                        parqU(4,i) = ProfileResult.BestFit.N;
+                        errqU(4,i) = ProfileResult.BestFit.NErr;
                     end
                 end
                 
@@ -3775,8 +3970,13 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                 for i=fitPar
                     
                     yErr = flip(errqU(i,:));
+                    
                     if i==1
                         y = flip(parqU(i,:));
+                        if strcmp(obj.fitter,'minuit') & contains(obj.minuitOpt,'minos')
+                            yErr = err_mNuSq_Asym;
+                        end
+                        
                         if strcmp(RelFlag,'ON')
                             y = y-wmean(y,1./yErr.^2);
                             ystr = sprintf('{\\itm}_\\nu^2 - \\langle{\\itm}_\\nu^2\\rangle (eV^{ 2})');
@@ -3834,7 +4034,9 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                         Mean = wmean(y,1./yErr.^2);
                     end
                     
-                    yErr = yErr.*ErrorBarScaling;
+                   
+                   yErr = yErr.*ErrorBarScaling;
+                
                     
                     x =flip(obj.RunData.qU(exclDataStart_v(1):exclDataStart_v(end),1))-18574;%obj.ModelObj.Q_i;
                     if (strcmp(HoldOn,'OFF') || strcmp(HoldOn,'ON1')) && ~contains(obj.DataSet,'FirstTritium')
@@ -3891,6 +4093,8 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                         hold on;
                         pline = plot(linspace(min(x)-3,max(x)+3,numel(x)),...
                             y(Idx_AnaInterval).*ones(numel(x),1),':','Color',rgb('Orange'),'LineWidth',3);
+                    else
+                        pref = NaN;
                     end
                     
                     if contains(obj.DataSet,'FirstTritium')

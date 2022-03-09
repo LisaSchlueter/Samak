@@ -47,7 +47,7 @@ else
     par = zeros(4,nFits,nSamples);
     err = zeros(4,nFits,nSamples);
     chi2min = zeros(nFits,nSamples);
-   dof = zeros(nFits,1);
+    dof = zeros(nFits,1);
     
     parfor i=1:nSamples
         D(i).SimulateStackRuns;
