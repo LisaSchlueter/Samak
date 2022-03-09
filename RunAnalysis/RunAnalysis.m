@@ -3916,13 +3916,18 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                     
                     if exist(savename_tmp,'file') && strcmp(RecomputeFlag,'OFF')
                         FitResult_tmp = importdata(savename_tmp);
-                        obj.FitResult = FitResult_tmp;
+                        if strcmp(Chi2Profile,'ON')
+                              obj.FitResult = FitResult_tmp.FitResult;
+                              ProfileResult = FitResult_tmp.ProfileResult;
+                        else
+                            obj.FitResult = FitResult_tmp;
+                        end
                         fprintf('load fit from file %s \n',savename_tmp)
                     else
                         obj.Fit;
                         FitResult = obj.FitResult;
                         save(savename_tmp,'FitResult');
-                        if strcmp(Chi2Profile,'ON') 
+                        if strcmp(Chi2Profile,'ON')
                             ProfileResult = obj.ComputeChi2Profile('Parameter','mNu','nFit',20,...
                                 'ParMin',-1,'ParMax',1);
                             save(savename_tmp,'ProfileResult','-append');
@@ -3973,9 +3978,9 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                     
                     if i==1
                         y = flip(parqU(i,:));
-                        if strcmp(obj.fitter,'minuit') & contains(obj.minuitOpt,'minos')
-                            yErr = err_mNuSq_Asym;
-                        end
+%                         if strcmp(obj.fitter,'minuit') & contains(obj.minuitOpt,'minos')
+%                             yErr = err_mNuSq_Asym;
+%                         end
                         
                         if strcmp(RelFlag,'ON')
                             y = y-wmean(y,1./yErr.^2);
@@ -4035,10 +4040,13 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                     end
                     
                    
-                   yErr = yErr.*ErrorBarScaling;
-                
+                    yErr = yErr.*ErrorBarScaling;
                     
-                    x =flip(obj.RunData.qU(exclDataStart_v(1):exclDataStart_v(end),1))-18574;%obj.ModelObj.Q_i;
+                   % if strcmp(obj.DataSet,'Knm1')
+                        x =flip(obj.RunData.qU(exclDataStart_v(1):exclDataStart_v(end),1))-18574;%obj.ModelObj.Q_i;
+                   % else
+                     %   x =(obj.RunData.qU(exclDataStart_v(1):exclDataStart_v(end),1))-18574;%obj.ModelObj.Q_i;
+                   % end
                     if (strcmp(HoldOn,'OFF') || strcmp(HoldOn,'ON1')) && ~contains(obj.DataSet,'FirstTritium')
                         fig12345 = figure('Renderer','painters');
                         set(fig12345, 'Units', 'normalized', 'Position', [0.1, 0.1, 0.7, 0.3]);
@@ -4116,15 +4124,27 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                     ylabel(ystr);
                     xlim([min(x)-2,max(x)+2]);
                     if i==3 %background
-                        ylim([min(y-yErr).*0.997,max(y+yErr)*1.003])
+                        if strcmp(obj.DataSet,'Knm1')
+                            ylim([min(y-yErr).*0.997,max(y+yErr)*1.003])
+                        else
+                            ylim([min(y-yErr).*0.9985,max(y+yErr)*1.0015])
+                        end
                     elseif i==1
                         % ylim([min(y-yErr),max(y+yErr)])
-                        ylim([min(y-yErr)-0.5,1.5+max(y+yErr)]);
+                        if strcmp(obj.DataSet,'Knm1')
+                            ylim([min(y-yErr)-0.5,1.5+max(y+yErr)]);
+                        else
+                            ylim([min(y-yErr)-0.2,0.2+max(y+yErr)]);
+                        end
                     elseif i==2
                         ax = gca;
                         ax.YAxis.Exponent = 0;
-                        ylim([(min(y-yErr))-0.05,0.05+max(y+yErr)]);
-                        %ylim([round(min(y-yErr),1),round(max(y+yErr),1)]);
+                        if strcmp(obj.DataSet,'Knm1')
+                            ylim([(min(y-yErr))-0.05,0.05+max(y+yErr)]);
+                        else
+                            ylim([(min(y-yErr))-0.02,0.02+max(y+yErr)]);
+                        end
+                        
                     elseif i==4 %normalization
                         ylim([(1-3e-3).*(min(y-yErr)),(1+3e-3).*max(y+yErr)]);
                     elseif i==5
