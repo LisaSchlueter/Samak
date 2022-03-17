@@ -1007,7 +1007,7 @@ classdef SterileAnalysis < handle
                          [1e5,dRAA1.m4_Y,1e5],'-','LineWidth',2,'Color',rgb('ForestGreen'));
                 plot(dRAA2.sith4_X,dRAA2.m4_Y,'-','LineWidth',pRAA_GA.LineWidth,'Color',pRAA_GA.Color);
                 legHandle{numel(legHandle)+1} = pRAA_GA;
-                legStr = [legStr,{sprintf('RAA + GA 95%% CL')}];%-PRD 83, 073006 (2011) -
+                legStr = [legStr,{sprintf('RAA + GA 95%% C.L.')}];%-PRD 83, 073006 (2011) -
             end
    
              %% RAA only from 2011 paper
@@ -1031,7 +1031,7 @@ classdef SterileAnalysis < handle
                 plot(ones(1,1e2).*xRAA(1),linspace(yRAA(1),2e3,1e2),'-','LineWidth',pRAA.LineWidth,'Color',pRAA.Color);
                 
                 legHandle{numel(legHandle)+1} = pRAA;
-                legStr = [legStr,{sprintf('RAA 95%% CL')}];%-PRD 83, 073006 (2011) -
+                legStr = [legStr,{sprintf('RAA 95%% C.L.')}];%-PRD 83, 073006 (2011) -
                 
 %               % first part
 %                 y1 = yRAA(xRAA<=mean(xRAA));

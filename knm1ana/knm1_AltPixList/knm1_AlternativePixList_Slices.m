@@ -6,8 +6,8 @@ DataType = 'Real';
 range = 40;                % fit range in eV below endpoint
 chi2 = 'chi2Stat';
 NP = 1.064;
-RecomputeFlag = 'ON';
-AltPixList ='Slice';  % defines alternative pixel list
+RecomputeFlag = 'OFF';
+AltPixList ='Slice3_1';  % defines alternative pixel list
 % label
 savedir = [getenv('SamakPath'),'knm1ana/knm1_AltPixList/results/'];
 savename = sprintf('%sknm1_PixListAlt_%s_%s_%s_%.0feV_%s_%2g.mat',...

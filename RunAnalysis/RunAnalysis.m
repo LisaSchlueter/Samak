@@ -155,7 +155,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             p.addParameter('fixPar','',@(x)ischar(x)); %default given in constructor: FSD and qUOffset fixed
             p.addParameter('pulls',[],@(x)isfloat(x) && all(x>0));
             p.addParameter('pullFlag',99);%@(x)ismember(x,{1,2,3}) 
-            p.addParameter('RingMerge','None',@(x)ismember(x,{'Default','None','Full','Half','Azi','AziHalfNS','AziHalfEW','Slice','Slice2','Slice3','Slice4'}));
+            p.addParameter('RingMerge','None',@(x)ismember(x,{'Default','None','Full','Half','Azi','AziHalfNS','AziHalfEW','Slice','Slice2','Slice3','Slice4','Slice3_1'}));
             p.addParameter('NonPoissonScaleFactor',[],@(x)isfloat(x) && all(x>0)); 
             p.addParameter('BKG_PtSlope',0,@(x)isfloat(x));     
             p.addParameter('SysBudget','',@(x)isfloat(x)); %if none given-> defined according to data set
@@ -308,7 +308,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                     case {'AziHalfNS','AziHalfEW'}
                         [obj.PixList,obj.RingPixList] = AziHalfPatch2PixelCombi(obj.RingList,obj.PixList,obj.RingMerge);
                         obj.RingList = 1:2;
-                    case {'Slice','Slice2','Slice3','Slice4'}
+                    case {'Slice','Slice2','Slice3','Slice4','Slice3_1'}
                          [obj.PixList,obj.RingPixList] = Slice2PixelCombi(obj.PixList,obj.RingMerge);
                         obj.RingList = 1:numel(obj.RingPixList); % now psuedo-rings (before, no meaning in slice mode)
                 end
@@ -2926,7 +2926,112 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                  end
              end
         end
-        
+        function PlotSpectrumMultiRing(obj,varargin)
+            p = inputParser;
+            p.addParameter('DisplayStyle','Abs',@(x)ismember(x,{'Abs','Rel'}));
+            p.addParameter('SavePlot','OFF',@(x)ismember(x,{'ON','OFF'}));
+            p.parse(varargin{:});
+            DisplayStyle = p.Results.DisplayStyle;
+            SavePlot = p.Results.SavePlot;
+            %% plot spectrum
+           RingColors = {'DodgerBlue','Orange','LimeGreen','Crimson',...
+                'SkyBlue','HotPink','ForestGreen','Navy',...
+                'GoldenRod','Salmon','Yellow','CadetBlue'};  
+          
+            RingStyle = {'-.','-',':',':','-.','-',':','--','-.','-',':','--'};
+            LocalFontSize = 17;
+            
+            if strcmp(DisplayStyle,'Abs')
+                qU   = obj.ModelObj.qU(obj.exclDataStart:end,:);
+                xStr = 'Retarding energy (eV)';
+            elseif  strcmp(DisplayStyle,'Rel')
+                qU   = obj.ModelObj.qU(obj.exclDataStart:end,:)-18574;
+                xStr = 'Retarding energy - 18574 (eV)';
+            end
+            
+            Time = obj.ModelObj.qUfrac(obj.exclDataStart:end,:).*obj.ModelObj.TimeSec;
+          RateData = obj.RunData.TBDIS(obj.exclDataStart:end,:)./Time;
+          RateErrData = sqrt(obj.RunData.TBDIS(obj.exclDataStart:end,:))./Time;
+             
+          figure('Units','normalized','Position',[0.1,0.1,0.5,0.4]);
+
+              pNone = plot(NaN,NaN,'-k','LineWidth',3);
+              hold on;
+              eNone = errorbar(NaN,NaN,1, '.k','CapSize',0,'MarkerSize',17);
+          for r=1:obj.nRings
+              l(r) = plot(qU(:,r),obj.ModelObj.TBDIS(obj.exclDataStart:end,r)./Time(:,r),...
+                  'LineWidth',3,'Color',rgb(RingColors{r}),'LineStyle',RingStyle{r});
+           
+          end
+ 
+          for r=1:obj.nRings    
+              e(r) = errorbar(qU(:,r),RateData(:,r), obj.ErrorBarScaling.*RateErrData(:,r),...
+                  '.','CapSize',0,'MarkerSize',17,'Color',rgb(RingColors{r}));
+          end
+           ax0 = gca;
+          xlabel(xStr);
+          ylabel('Count rate (cps)');
+          ax0.XAxis.Exponent = 0;
+          
+          PrettyFigureFormat('FontSize',LocalFontSize);
+          set(gca,'YScale','log');
+          if obj.nRings<=4
+              ylim([1e-02 23])
+          else
+              ylim([1e-03 10])
+          end
+          if strcmp(DisplayStyle,'Abs')
+              xlim([-41 8]+18574)
+          else
+              xlim([-41 8])
+          end
+          
+          if obj.ErrorBarScaling==1
+              datalabel = sprintf(' KATRIN data with %.0f\\sigma error bars',obj.ErrorBarScaling);
+          else
+              datalabel = sprintf(' KATRIN data with 1 \\sigma error bars \\times %.0f',obj.ErrorBarScaling);
+          end
+          
+          leg = legend([eNone,pNone],datalabel,'Fit result');
+          %  {[datalabel,' Pseudo-ring 1'],'Fit result',[datalabel,' Pseudo-ring 2'],[datalabel,' Pseudo-ring 3'],[datalabel,' Pseudo-ring 4']...
+          % 'Fit result 1','Pseudo-ring 2','Pseudo-ring 3','Pseudo-ring 4'});
+          PrettyLegendFormat(leg);
+          leg.FontSize = LocalFontSize-2;
+          
+          
+             if strcmp(obj.RingMerge,'Full')
+                RingLabels ={'Bullseye & ring 1-2','Ring 3-5','Ring 6-8','Ring 9-11'};
+            elseif strcmp(obj.RingMerge,'Half')
+                RingLabels ={'Bullseye, Ring 1-5','Ring 6-11'};
+            elseif strcmp(obj.RingMerge,'None')
+                RingLabels ={'Bullseye','Ring 1','Ring 2','Ring 3','Ring 4','Ring 5',...
+                    'Ring 6','Ring 7','Ring 8','Ring 9','Ring 10','Ring 11'};
+            elseif strcmp(obj.RingMerge,'Azi')
+                RingLabels ={'Pole','NE','SE','SW','NW'};
+            elseif strcmp(obj.RingMerge,'AziHalfEW')
+                RingLabels = {'East','West'};
+            elseif strcmp(obj.RingMerge,'AziHalfNS')
+                RingLabels ={'North','South'};
+             end
+            
+          if obj.nRings<=4
+          yDist = flip(logspace(log10(0.025),log10(0.25),obj.nRings));
+          else
+                 yDist = flip(logspace(log10(0.002),log10(0.35),obj.nRings));
+          end
+          for i=1:obj.nRings
+              text(min(min(qU))+1, yDist(i),RingLabels{i},'Color',l(i).Color,'FontSize',leg.FontSize);
+          end
+          
+          
+          if strcmp(SavePlot,'ON')
+              sdir = './plots/';
+              MakeDir(sdir);
+              sname = sprintf('%s%s_MultiRing%s_SpectrumFit_%s_%s.pdf',sdir,obj.DataSet,obj.RingMerge,obj.chi2,DisplayStyle);
+              export_fig(sname);
+              fprintf('save plot to %s \n',sname);
+          end
+        end
         function PlotResidualsMultiRing(obj,varargin)
             % Plot Fit Results for MultiRing Fit
             % Residuals as function of qU for each Ring + MTD
@@ -2963,8 +3068,11 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             else
                 obj.PlotColor = rgb('Silver');
             end
-            
-            MarkerSize     = 4;
+            RingColors = {'DodgerBlue','Orange','LimeGreen','Crimson',...
+                'SkyBlue','HotPink','ForestGreen','Navy',...
+                'GoldenRod','Salmon','Yellow','CadetBlue'};
+        
+            MarkerSize     = 17;
             LocalFontSize  = 17;
             LocalLineWidth = 2;
             
@@ -2978,8 +3086,8 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                 return;
             end
             
-            ResStyleArg = {'o','Color','k','LineWidth',1.0,'MarkerFaceColor',rgb('Black'),'MarkerSize',MarkerSize,'Color',rgb('Black')};
-            
+             ResStyleArg = {'.','LineWidth',1.0,'MarkerSize',MarkerSize};
+       
             % Chi2 Flag
             for r=1:obj.nRings
                 [StatCM, ~] = obj.ComputeCM_StatPNP;
@@ -2995,52 +3103,45 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                 end
             end
                         
-            RingPreFix = 'Pseudo-';
+           
             % Spectrum + Fit with Residuals
-            fig5 = figure('Renderer','painters');
+            fig5 = figure(1);
+            
             if obj.nRings<=4
-                set(fig5, 'Units', 'normalized', 'Position', [0.001, 0.001,0.6, 0.7]);
+                set(fig5, 'Units', 'normalized', 'Position', [0.001, 0.001,0.5, 0.6]);
                 nCol = 1;
-                nRow = obj.nRings;
+                nRow = obj.nRings;    
             else
                 set(fig5, 'Units', 'normalized', 'Position', [0.001, 0.001,0.7, 0.7]);
                 nCol = 2;
-                nRow = obj.nRings/2;
-                if obj.nRings==12
-                    RingPreFix = '';
-                end
+                nRow = obj.nRings/2;   
             end
+           
             
             if strcmp(qUDisp,'Rel')
                 qU = obj.ModelObj.qU(obj.exclDataStart:BkgEnd,:)-obj.ModelObj.Q_i;
                 xstr = sprintf('Retarding energy - %.0f (eV)',obj.ModelObj.Q_i);
-                textx = -38;
             elseif strcmp(qUDisp,'Abs')
                 qU = obj.ModelObj.qU(obj.exclDataStart:BkgEnd,:);
                 xstr = sprintf('Retarding energy (eV)');
-                myxticks = (round(min(qU),0):20:max(qU));
-                textx =min(qU)+0.5;
+                myxticks = (round(min(qU),0):20:max(qU)); 
             end
-            
-            if strcmp(obj.AnaFlag,'Ring') % show only 1 ring
-                ring=1;
-                qU = qU(:,ring);
+           
+            if strcmp(obj.RingMerge,'Full')
+                RingLabels ={'Bullseye & ring 1-2','Ring 3-5','Ring 6-8','Ring 9-11'};
+            elseif strcmp(obj.RingMerge,'Half')
+                RingLabels ={'Bullseye, Ring 1-5','Ring 6-11'};
+            elseif strcmp(obj.RingMerge,'None')
+                RingLabels ={'Bullseye','Ring 1','Ring 2','Ring 3','Ring 4','Ring 5',...
+                    'Ring 6','Ring 7','Ring 8','Ring 9','Ring 10','Ring 11'};
+            elseif strcmp(obj.RingMerge,'Azi')
+                RingLabels ={'Pole','NE','SE','SW','NW'};
+            elseif strcmp(obj.RingMerge,'AziHalfEW')
+                RingLabels = {'East','West'};
+            elseif strcmp(obj.RingMerge,'AziHalfNS')
+                RingLabels ={'North','South'};
             end
-            
-            if strcmp(qUDisp,'Rel')
-                xlim([min(qU)*1.04 max(max(qU))*1.04]);
-            elseif strcmp(qUDisp,'Abs')
-                xlim([min(min(qU))*0.9999 max(max(qU))*1.0001]);
-            end
-            
-            if strcmp(qUDisp,'Abs')
-                xticks(myxticks);
-                ax = gca;
-                ax.XAxis.Exponent = 0;
-            end
-            
-            % %            ax1 = gca;
-            
+            %% subplots loop
             for r=1:obj.nRings
  
                 if strcmp(DisplayStyle,'PRL') || strcmp(DisplayMTD,'ON')
@@ -3049,7 +3150,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                     s(r)= subplot(nRow,nCol,r);
                 end
                 
-                DataStat = [qU,zeros(size(qU)),(sqrt(StatErr(r,obj.exclDataStart:BkgEnd)./PlotErr(r,obj.exclDataStart:BkgEnd)))'];
+                DataStat = [qU(:,r),zeros(size(qU(:,r))),(sqrt(StatErr(r,obj.exclDataStart:BkgEnd)./PlotErr(r,obj.exclDataStart:BkgEnd)))'];
                 
                 if strcmp(obj.chi2,'chi2Stat')
                     [lstat , pstat]  = boundedline(DataStat(:,1),DataStat(:,2),DataStat(:,3));
@@ -3057,7 +3158,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                     pstat.FaceColor = obj.PlotColorLight;
                     
                 elseif ~strcmp(obj.chi2,'chi2Stat') %&& numel(hdata)==1
-                    DataSys = [qU,zeros(numel(qU),1), ones(numel(qU),1)];
+                    DataSys = [qU(:,r),zeros(numel(qU(:,r)),1), ones(numel(qU(:,r)),1)];
                     [l,p] = boundedline(DataSys(:,1),DataSys(:,2),DataSys(:,3),...
                         '-b*',DataStat(:,1),DataStat(:,2),DataStat(:,3),'--ro');
                     lsys = l(1);  lstat = l(2);
@@ -3066,87 +3167,77 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                     pstat.FaceColor = rgb('PowderBlue');
                     if strcmp(Colors,'RGB')
                         psys.FaceColor =obj.PlotColor; %psys.FaceAlpha=0.3;
-                        lstat.Color = rgb('Silver');
+                        lstat.Color = rgb('DarkGray');
                     else
-                        pstat.FaceColor = rgb('Black')';%obj.PlotColor;
-                        psys.FaceColor = rgb('Black'); psys.FaceAlpha=0.4;
-                        lstat.Color = rgb('Black');
+                        pstat.FaceColor = rgb('Gray')';%obj.PlotColor;
+                        psys.FaceColor = rgb('Black'); %psys.FaceAlpha=1;
+                        lstat.Color = rgb('DarkGray');
                     end
                     lsys.LineStyle= 'none';
-                    lstat.LineStyle= '--';  lstat.LineWidth=LocalLineWidth;
-                    lstat.Marker = 'none'; lsys.Marker = 'none';
-                    leg.FontSize = get(gca,'FontSize')+4;
+                    lstat.LineStyle= ':';  lstat.LineWidth=LocalLineWidth;
+                    lstat.Marker = 'none'; lsys.Marker = 'none';  
                 end
                 
                 yres = (obj.RunData.TBDIS(obj.exclDataStart:BkgEnd,r)-obj.ModelObj.TBDIS(obj.exclDataStart:BkgEnd,r))...
                     ./sqrt(PlotErr(r,obj.exclDataStart:BkgEnd)');
                 
                 hold on;
-                pRes = errorbar(qU,yres,...
-                    zeros(numel(qU),1),...
-                    ResStyleArg{:});
-                pRes.CapSize = 0;
-                
+                pRes = errorbar(qU(:,r),yres,...
+                    zeros(numel(qU(:,r)),1),...
+                    ResStyleArg{:},'Color',rgb(RingColors{r}));
+                pRes.CapSize = 0; 
                 pleg = plot(0,0,'Color',rgb('White'));
                 
+
                 if ~strcmp(obj.chi2,'chi2Stat')
-                    leg = legend([pleg,pstat psys],sprintf('%sRing %0.f',RingPreFix,r),'Stat.',sprintf('Stat. and syst.'),'Location','Northeast'); %hsyst
+                    leg = legend([pleg,pstat psys],sprintf('%s',RingLabels{r}),'Stat.',sprintf('Stat. and syst.'),'Location','Northeast'); %hsyst
                 elseif strcmp(obj.chi2,'chi2Stat')
-                    leg = legend([pleg,pstat],sprintf('%sRing %0.f Stat.',RingPreFix,r),'Location','Northeast'); %hsyst
+                    leg = legend([pleg,pstat],sprintf('%s Stat.',r,RingLabels{r}),'Location','Northeast'); %hsyst
                 end
-                legend('boxoff');
-                %leg.EdgeColor = 'none';
-                % set(leg.BoxFace, 'ColorType','truecoloralpha', 'ColorData',uint8(255*[1;1;1;0.5]));
-                
+                legend('boxoff');  
                 leg.NumColumns = 3;
+                leg.FontSize = LocalFontSize-2;
                 
-                hold off;
-                % xlabel(sprintf('retarding energy - %.1f (eV)',obj.ModelObj.Q_i),'FontSize',LocalFontSize);
-                if strcmp(DisplayStyle,'PRL') || strcmp(DisplayMTD,'ON')
-                    % xlabel(sprintf('retarding energy - %.0f (eV)',obj.ModelObj.Q_i));
-                    if ismember(DisplayStyle,'PRL')
-                        PRLFormat;
-                    else
-                        PrettyFigureFormat
+                if obj.nRings<=4
+                    ylabel(sprintf('Residuals (\\sigma)'));
+                else
+                    ylabel(sprintf('Res. (\\sigma)'));
+                end
+                if r==4 && ~strcmp(DisplayMTD,'ON')
+                    xlabel(xstr);
+                end
+ 
+                % limits
+                if ~isempty(XLims)
+                    xlim([min(XLims),max(XLims)])
+                else
+                    if strcmp(qUDisp,'Rel')
+                        xlim([floor(min(min(qU)))-4 max(max(qU))*1.04]);
+                    elseif strcmp(qUDisp,'Abs')
+                        xlim([min(min(qU))*0.9999 max(max(qU))*1.0001]);
                     end
-                    %pstat.delete; psys.delete;
-                    lstat.Color = rgb('DarkGray');
-                else
-                    if r==4
-                        xlabel(xstr,'FontSize',LocalFontSize);
-                        leg.FontSize = get(gca,'FontSize')+4;
-                    end
                 end
-                
-                %leg.FontSize = 16;%get(gca,'FontSize')-2;
-                ylabel(sprintf('Res. (\\sigma)'));
-                if strcmp(qUDisp,'Rel')
-                    xlim([floor(min(qU))-4 max(qU)*1.04]);
-                elseif strcmp(qUDisp,'Abs')
-                    xlim([min(qU)*0.9999 max(qU)*1.0001]);
-                end
-                ymin = 1.1*min(yres);
-                ymax = 1.8*max(yres);
-                if ymin<=-1 || ymax<=1
-                    ylim([-2.5 2.5]);% ylim([ymin,ymax]);%ylim([-2 2])
-                else
-                    ylim([ymin,ymax]);
-                end
-                
-                if ismember(DisplayStyle,'PRL')
-                    PRLFormat;
-                    xlim([-40 max(qU)+1]);
-                else
-                    PrettyFigureFormat; set(gca,'FontSize',LocalFontSize);
-                    set(gca,'YMinorTick','off');
-                    set(gca,'XMinorTick','off');
-                    set(gca,'TickLength',[0.01 0.01]);
-                    set(get(gca,'YLabel'),'FontSize',LocalFontSize+4);
-                    set(get(gca,'XLabel'),'FontSize',LocalFontSize+4);
-                end
-                
                 if ~isempty(YLimRes)
                     ylim([min(YLimRes) max(YLimRes)]);
+                else
+                    ymin = 1.1*min(yres);
+                    ymax = 1.8*max(yres);
+                    if ymin<=-1 || ymax<=1
+                        ylim([-2.5 2.5]);% ylim([ymin,ymax]);%ylim([-2 2])
+                    else
+                        ylim([ymin,ymax]);
+                    end
+                end
+                
+                % general style
+                if ismember(DisplayStyle,'PRL')
+                    PRLFormat; 
+                    set(gca,'FontSize',LocalFontSize);
+                else
+                    PrettyFigureFormat('FontSize',LocalFontSize);
+                    set(gca,'YMinorTick','off');
+                    set(gca,'XMinorTick','off');
+                    set(gca,'TickLength',[0.01 0.01]);    
                 end
                 
                 if strcmp(qUDisp,'Abs')
@@ -3155,35 +3246,24 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                     ax.XAxis.Exponent = 0;
                 end
                 
-                if strcmp(qUDisp,'Rel')
-                    xlim([min(qU)*1.04 max(qU)*1.04]);
-                elseif strcmp(qUDisp,'Abs')
-                    xticks(myxticks);
-                    ax = gca;
-                    ax.XAxis.Exponent = 0;
-                    xlim([min(qU)*0.9999 max(qU)*1.0001]);
+            % adjust position
+                ax1 = gca;
+                tmp = get(ax1,'YLabel');
+                tmp2 = get(gca,'YLabel');
+                set(get(gca,'YLabel'),'Position',[tmp.Position(1)-4,tmp2.Position(2),tmp2.Position(3)]);
+                ax = gca;
+                mypos = ax.Position;
+                if obj.nRings<=4
+                    ax.Position = [mypos(1)+0.05 mypos(2)+0.01 mypos(3:4)];
+                else
+                    if mod(r,2) % if uneven (left side)
+                        ax.Position = [mypos(1)-0.05 mypos(2)-0.01 mypos(3)+0.08,mypos(4)+0.03];
+                    else
+                        ax.Position = [mypos(1) mypos(2)-0.01 mypos(3)+0.08,mypos(4)+0.03];
+                    end
+                    
                 end
                 
-               
-                    ax1 = gca;
-                    tmp = get(ax1,'YLabel');
-                    tmp2 = get(gca,'YLabel');
-                    set(get(gca,'YLabel'),'Position',[tmp.Position(1),tmp2.Position(2),tmp2.Position(3)]);
-                    ax = gca;
-                    mypos = ax.Position;
-                    if obj.nRings<=4
-                        ax.Position = [mypos(1)+0.05 mypos(2)+0.01 mypos(3:4)];
-                    else
-                        if mod(r,2) % if uneven (left side)
-                            ax.Position = [mypos(1)-0.05 mypos(2)-0.01 mypos(3)+0.08,mypos(4)+0.03]; 
-                        else
-                            ax.Position = [mypos(1) mypos(2)-0.01 mypos(3)+0.08,mypos(4)+0.03];
-                        end
-                        
-                    end
-                    if ~isempty(XLims)
-                        xlim([min(XLims),max(XLims)])
-                    end
               
                 
                 % MTD - optional
@@ -3194,7 +3274,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                     
                     s(5)= subplot(obj.nRings+1,1,obj.nRings+1);
                     ring=1;
-                    b1 = bar(qU,obj.RunData.qUfrac(obj.exclDataStart:BkgEnd,ring).*obj.RunData.TimeSec(ring)./(60*60));
+                    b1 = bar(qU(:,ring),obj.RunData.qUfrac(obj.exclDataStart:BkgEnd,ring).*obj.RunData.TimeSec(ring)./(60*60));
                     b1.FaceColor = obj.PlotColor;
                     b1.EdgeColor = obj.PlotColor;
                     xlabel(xstr);
@@ -3203,7 +3283,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                     if strcmp(DisplayStyle,'PRL')
                         PRLFormat;
                     else
-                        PrettyFigureFormat;
+                        PrettyFigureFormat('FontSize',LocalFontSize);
                     end
                     tmp = get(ax1,'YLabel');
                     tmp2 = get(gca,'YLabel');
@@ -3223,12 +3303,6 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                     
                     if ~isempty(XLims)
                         xlim([min(XLims),max(XLims)])
-                    end
-                else
-                    if obj.nRings==4 && r==4
-                        xlabel(xstr);
-                    elseif nCol==2 && (r==obj.nRings  || r==obj.nRings-1 )
-                         xlabel(xstr);
                     end
                 end
             end
@@ -3253,6 +3327,8 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                 else
                     export_fig(fig5,[savename,'.pdf']);
                 end
+                
+                fprintf('save plot to %s \n',savename);
             end
         end
         
@@ -3915,6 +3991,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                         sprintf('%.0feV',obj.GetRange));
                     
                     if exist(savename_tmp,'file') && strcmp(RecomputeFlag,'OFF')
+                        % load data
                         FitResult_tmp = importdata(savename_tmp);
                         if strcmp(Chi2Profile,'ON')
                               obj.FitResult = FitResult_tmp.FitResult;
@@ -3926,11 +4003,13 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                     else
                         obj.Fit;
                         FitResult = obj.FitResult;
-                        save(savename_tmp,'FitResult');
-                        if strcmp(Chi2Profile,'ON')
-                            ProfileResult = obj.ComputeChi2Profile('Parameter','mNu','nFit',20,...
-                                'ParMin',-1,'ParMax',1);
-                            save(savename_tmp,'ProfileResult','-append');
+                        if strcmp(saveResult,'ON')
+                            save(savename_tmp,'FitResult');
+                            if strcmp(Chi2Profile,'ON')
+                                ProfileResult = obj.ComputeChi2Profile('Parameter','mNu','nFit',20,...
+                                    'ParMin',-1,'ParMax',1);
+                                save(savename_tmp,'ProfileResult','-append');
+                            end
                         end
                     end
                     
@@ -4822,8 +4901,9 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
         
         function PlotFitMultiRing(obj,varargin)
             p=inputParser;
-            p.addParameter('PlotPar','qU',@(x)ismember(x,{'qU','Norm','Bkg','mTSq'})); %display parameter
+            p.addParameter('PlotPar','qU',@(x)ismember(x,{'qU','E0eff','Norm','Bkg','mTSq'})); %display parameter  
             p.addParameter('linFitFlag','OFF',@(x)ismember(x,{'ON','OFF'}));
+            p.addParameter('RefLine','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('savePlot','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.addParameter('Blind','OFF',@(x)ismember(x,{'ON','OFF'}));
             p.parse(varargin{:});
@@ -4831,23 +4911,29 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             linFitFlag  = p.Results.linFitFlag;
             savePlot    = p.Results.savePlot;
             Blind       = p.Results.Blind;
-            
+            RefLine     = p.Results.RefLine; % at weighted mean
+            LocalFontSize = 20;
             switch PlotPar
                 case 'qU'
                     yErr  = obj.FitResult.err(2*obj.nRings+9:3*obj.nRings+8);
                     y     = obj.FitResult.par(2*obj.nRings+9:3*obj.nRings+8);
-                    ystr = sprintf(' \\DeltaqU (eV)');
+                    ystr = sprintf(' \\Delta{\\itqU} (eV)');
+                    legPos = 'northeast';
+                case 'E0eff' % qU offsets (ring-wise) + endpoint (uniform)
+                    yErr  = sqrt(obj.FitResult.err(2*obj.nRings+9:3*obj.nRings+8).^2+obj.FitResult.err(2).^2);
+                    y     = obj.FitResult.par(2*obj.nRings+9:3*obj.nRings+8)+obj.FitResult.par(2)+obj.ModelObj.Q_i;
+                    ystr = sprintf('{\\itE}_0^{fit} + \\Delta{\\itqU} (eV)');
                     legPos = 'northeast';
                 case 'Bkg'
                     nPixRing = cell2mat(cellfun(@(x) numel(x),obj.RingPixList,'UniformOutput',0));
                     y    = 1e3.*(obj.FitResult.par(3:2+obj.nRings)+obj.ModelObj.BKG_RateSec_i)./nPixRing';
                     yErr = 1e3.*obj.FitResult.err(3:2+obj.nRings)./nPixRing';
-                    ystr = 'Background / npixels (mcps)';
+                    ystr = sprintf('{\\itB}_{base} (mcps per pixel)');%'Background / npixels (mcps)';
                     legPos = 'northwest';
                 case 'Norm'
                     y    = obj.FitResult.par(3+obj.nRings:3+2*obj.nRings-1)+1;
                     yErr = obj.FitResult.err(3+obj.nRings:3+2*obj.nRings-1);
-                    ystr = sprintf('N_{sig}');%'Signal normalization factor';
+                    ystr = sprintf('{\\itN}_{sig.}');%'Signal normalization factor';
                     legPos = 'northeast';
                 case 'mTSq'
                     if strcmp(Blind,'ON')
@@ -4860,30 +4946,35 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                     legPos = 'northeast';
             end
             
-            PlotStyle = {'o','Color',rgb('DodgerBlue'),'MarkerFaceColor',...
-                rgb('DodgerBlue'),'LineWidth',2,'MarkerSize',9,...
-                'CapSize',0};
+            PlotStyle = {'.','Color',rgb('DodgerBlue'),'LineWidth',2,...
+                'MarkerSize',20,'CapSize',0};
             
-            fig1 = figure('Units','normalized','Position',[0.1,0.1,0.6,0.5]);
+            fig1 = figure('Units','normalized','Position',[0.1,0.1,0.5,0.4]);
             if ismember(PlotPar,{'qU','mTSq'})
                 plot(linspace(-5,obj.nRings+1,10),zeros(10,1),'LineWidth',2,'Color',rgb('Silver'));
                 hold on;
+            elseif strcmp(RefLine,'ON')
+                pmean = plot(linspace(-1,obj.nRings+1,10),wmean(y,1./yErr.^2).*ones(10,1),':','LineWidth',2,'Color',rgb('Silver'));
+                hold on;
             end
             e1 = errorbar(obj.RingList,y,yErr,PlotStyle{:});
-            PrettyFigureFormat('FontSize',24);
+          
             ylabel(ystr);
-            xlabel('Ring');
+            xlabel('Detector ring');
             xticks(obj.RingList); set(gca,'XMinorTick','off');
             if strcmp(obj.RingMerge,'Full')
-                xticklabels({'1,2,3','4,5,6','7,8,9','10,11,12'})
+                xticklabels({'Bullseye & 1-2','3-5','6-8','9-11'})
             elseif strcmp(obj.RingMerge,'Half')
-                xticklabels({'1,2,3,4,5,6','7,8,9,10,11,12'})
+                xticklabels({'Bullseye, 1-5','6-11'})
+            elseif strcmp(obj.RingMerge,'None')
+                xStr = string(1:11);
+                xticklabels({'Bullseye',xStr{:}});
             elseif strcmp(obj.RingMerge,'Azi')
                 xticklabels({'Pole','NE','SE','SW','NW'})
             elseif strcmp(obj.RingMerge,'AziHalfEW')
                 xticklabels({'East','West'})
             elseif strcmp(obj.RingMerge,'AziHalfNS')
-                xticklabels({'North','South'})
+                xticklabels({'North','South'})     
             end
             % set nice limits
             xlim([min(obj.RingList)-0.2,max(obj.RingList)+0.2]);
@@ -4893,10 +4984,22 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                     ylim([ymin*1.2,max(y+yErr)*1.5]);
                 elseif strcmp(PlotPar,'qU')
                     ylim([-0.02,max(y+yErr)*1.1]);
+                elseif strcmp(PlotPar,'E0eff')
+                    ylim([min(y-yErr)-0.02,0.05+max(y+yErr)]);
+                    ax = gca;
+                    ax.YAxis.Exponent = 0;
+                    yticks(round(min(y-yErr)-0.02,1):0.04:round(max(y+yErr)+0.05,1));
+                    ax.YAxis.TickLabelFormat ='%.2f';
                 else
                     ylim([ymin*0.8,max(y+yErr)*1.5]);
                 end
+            elseif strcmp(PlotPar,'Norm')
+                ylim([min(y-yErr)-2e-03 max(y+yErr)+2e-03]);
+            elseif strcmp(PlotPar,'Bkg')
+                ylim([min(y)-0.05 max(y)+0.05]);
             end
+            
+             PrettyFigureFormat('FontSize',LocalFontSize);
             % linear fit (optional)
             if strcmp(linFitFlag,'ON')
                 % test start
@@ -4906,29 +5009,69 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                 [linFitpar, linFiterr, linFitchi2min,linFitdof] =...
                     linFit(obj.RingList',y',yErr');
                 hold on;
-                plot(obj.RingList,linFitpar(1).*obj.RingList+linFitpar(2),'-','Color',e1.Color,'LineWidth',e1.LineWidth);
+                plin= plot(obj.RingList,linFitpar(1).*obj.RingList+linFitpar(2),'-','Color',e1.Color,'LineWidth',e1.LineWidth);
                 t = title(sprintf('Linear fit slope: %.1f \\pm %.1f meV/ring @ \\chi2 = %.1g (%.0f dof)',...
                     linFitpar(1)*1e3,linFiterr(1)*1e3,linFitchi2min,linFitdof));
                 t.FontWeight = 'normal';
+                fprintf('%s \n',PlotPar);
             end
             
             %legend
-                d=obj.GetPlotDescription('data');
-                  if strcmp(Blind,'OFF')
-                      resultsleg = d.fitleg;
-                  else
-                      resultsleg = '';  
-                  end
-                leg = legend(e1,[sprintf(' \\chi^2 = %.1f (%.0f dof) \n',...
-                    obj.FitResult.chi2min,obj.FitResult.dof),resultsleg]);
-                leg.Title.String = sprintf('%s Multi-ring fit (%s)',upper(obj.DataSet),d.chi2);
-                leg.Location = legPos;
-                leg.FontSize = get(gca,'FontSize');
-                leg.Title.FontWeight = 'normal';
-                leg.EdgeColor = rgb('Silver');
-                leg.Location = 'northwest';
+            if strcmp(PlotPar,'E0eff') && strcmp(linFitFlag,'ON')
+                  fprintf('linear fit: (%.0f +- %.0f) meV/pseudo-ring, pvalue = %.2f \n',1e3.*linFitpar(1),1e3.*linFiterr(1),1-chi2cdf(linFitchi2min,linFitdof));
+                 t.delete;
+                 Emean = wmean(y,1./yErr.^2);
+                 chi2const = sum((Emean-y).^2./yErr.^2);
+                 pconst = 1-chi2cdf(chi2const,numel(y)-1);
+                 
+                 leg = legend([pmean,plin],...%{\\itE}_0^{fit} + \\langle\\Delta{\\itqU}\\rangle 
+                     sprintf('Mean = %.2f eV',Emean),...
+                     sprintf('Slope = (%.0f \\pm %.0f) meV/pseudo-ring',1e3.*linFitpar(1),1e3.*linFiterr(1)));%,1-chi2cdf(linFitchi2min,linFitdof)));        
+                 fprintf('constant mean: %.2f eV, pvalue = %.2f \n',Emean,pconst);          
+             elseif strcmp(PlotPar,'E0eff') && strcmp(RefLine,'ON')
+                 Emean = wmean(y,1./yErr.^2);
+                 chi2const = sum((Emean-y).^2./yErr.^2);
+                 pconst = 1-chi2cdf(chi2const,numel(y)-1);
+                 leg = legend(pmean,...
+                     sprintf('{\\itE}_0^{fit} + \\langle\\Delta{\\itqU}\\rangle = %.2f eV',Emean));
+             elseif strcmp(PlotPar,'Norm') && strcmp(RefLine,'ON')
+                  Nmean = wmean(y,1./yErr.^2);
+                  chi2const = sum((Nmean-y).^2./yErr.^2);
+                  pconst = 1-chi2cdf(chi2const,numel(y)-1);
+                  leg = legend(pmean,...
+                      sprintf('\\langle{\\itN}_{sig.}\\rangle = %.3f',Nmean));
+                  fprintf('constant mean: %.3f, pvalue = %.2f \n',Nmean,pconst);
+            elseif strcmp(PlotPar,'Bkg') && strcmp(RefLine,'ON') && strcmp(linFitFlag,'ON')
+                t.delete;
+                Nmean = wmean(y,1./yErr.^2);
+                chi2const = sum((Nmean-y).^2./yErr.^2);
+                pconst = 1-chi2cdf(chi2const,numel(y)-1);
+                leg = legend([pmean,plin],...
+                    sprintf('\\langle{\\itB}_{base}\\rangle = %.2f mcps per pixel , \\Sigma {\\itB}_{base} = %.1f mcps',...              
+                Nmean,sum(1e3.*(obj.FitResult.par(3:2+obj.nRings)+obj.ModelObj.BKG_RateSec_i))),...
+                    sprintf('Slope = (%.3f \\pm %.3f) (mcps per pixel)/pseudo-ring',linFitpar(1),linFiterr(1)));
+                fprintf('linear fit: (%.3f +- %.3f) (mcps per pixel)/pseudo-ring, pvalue = %.4f \n',linFitpar(1),linFiterr(1),1-chi2cdf(linFitchi2min,linFitdof)); 
+                fprintf('constant mean: %.1f mcps per pixel , pvalue = %.2g \n',Nmean,pconst);
+            elseif strcmp(PlotPar,'Bkg') && strcmp(RefLine,'ON')
+          
+                Nmean = wmean(y,1./yErr.^2);
+                chi2const = sum((Nmean-y).^2./yErr.^2);
+                pconst = 1-chi2cdf(chi2const,numel(y)-1);
+                leg = legend(pmean,...
+                    sprintf('\\langle{\\itB}_{base}\\rangle = %.2f mcps per pixel , \\Sigma {\\itB}_{base} = %.1f mcps',...              
+                Nmean,sum(1e3.*(obj.FitResult.par(3:2+obj.nRings)+obj.ModelObj.BKG_RateSec_i))));
+                    fprintf('constant mean: %.1f mcps per pixel , pvalue = %.2g \n',Nmean,pconst);
+            end
             
-                leg.delete;
+            if exist('leg','var')
+                 PrettyLegendFormat(leg);
+                 leg.Location = 'northwest';
+                 leg.Title.String = sprintf('%s Multi-ring fit',upper(obj.DataSet));
+                 leg.Title.FontWeight = 'normal';
+                 leg.Title.FontSize = LocalFontSize-4;
+                 leg.FontSize = LocalFontSize-4;
+             end
+             
             if strcmp(savePlot,'ON')
                 %grid on
                 plotdir = [getenv('SamakPath'),sprintf('tritium-data/plots/%s/MultiRingFit/',obj.DataSet)];
@@ -4936,7 +5079,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                  freePar = ConvertFixPar('freePar',obj.fixPar,'nPar',obj.nPar,'nPixels',numel(obj.RunData.MACE_Ba_T),'Mode','Reverse');
                 plotname = [plotdir,sprintf('MultiRing%s_%s_%s_freePar%s_%s.pdf',...
                     obj.RingMerge,obj.RunData.RunName,obj.chi2,freePar,PlotPar)];
-                export_fig(fig1,plotname,'-painters');
+                export_fig(fig1,plotname);
                 fprintf('Plot saved to %s \n',plotname)
             end
         end

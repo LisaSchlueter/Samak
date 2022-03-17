@@ -166,9 +166,18 @@ end
 
 
 %% signficiance
-fprintf('Inner vs. Outer: %.2f sigma \n',abs(x(3)-x(2))./mean(xerr(2:3)));
-fprintf('North vs. South: %.2f sigma \n',abs(x(5)-x(4))./mean(xerr(4:5)));
-fprintf('East vs. West  : %.2f sigma \n',abs(x(7)-x(6))./mean(xerr(6:7)));
+
+% uncertainty on difference through error prob. 
+Sigma1 =  abs(x(3)-x(2))./sqrt(xerr(2)^2+xerr(3)^2);
+Sigma2 =  abs(x(4)-x(5))./sqrt(xerr(4)^2+xerr(5)^2);
+Sigma3 =  abs(x(6)-x(7))./sqrt(xerr(6)^2+xerr(7)^2);
+
+
+fprintf('Inner vs. Outer: %.2f sigma \n',Sigma1);%abs(x(3)-x(2))./mean(xerr(2:3)));
+fprintf('North vs. South: %.2f sigma \n',Sigma2);%abs(x(5)-x(4))./mean(xerr(4:5)));
+fprintf('East vs. West  : %.2f sigma \n',Sigma3);%abs(x(7)-x(6))./mean(xerr(6:7)));
+
+
 
 % sigma with respect to random half
 Sigma = (x-mean(mNuSq_rand))./std(mNuSq_rand);

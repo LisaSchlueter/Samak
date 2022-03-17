@@ -10,6 +10,7 @@ FitPar(3,:) = FitPar(3,:) - mean(FitPar(3,:));
 FitPar(4,:) = (FitPar(4,:) - mean(FitPar(4,:))).*100;
 
 CorrMat = corrcoef(FitPar');
+[~,StdCorrMat,~] = corrcoeff_err(FitPar);
  %% plot
 for i=1:4
     for j=1:4
@@ -25,8 +26,12 @@ for i=1:4
             ax = gca;
             MakePretty
             hold on;
-            pnone = plot(NaN,NaN,'w.');
-            leg = legend(pnone,sprintf('%.2f',CorrMat(i,j)),'Location','northwest');
+            pnone = plot(NaN,NaN,'wo','MarkerFaceColor','none','MarkerEdgeColor','none');
+            if round(StdCorrMat(i,j),2)==0
+                leg = legend(pnone,sprintf('%.2f \\pm %.3f',CorrMat(i,j),StdCorrMat(i,j)),'Location','northwest');
+            else
+                leg = legend(pnone,sprintf('%.2f \\pm %.2f',CorrMat(i,j),StdCorrMat(i,j)),'Location','northwest');
+            end
             PrettyLegendFormat(leg);
             leg.ItemTokenSize = [0,0];
             leg.TextColor = rgb('DeepPink');
@@ -39,11 +44,15 @@ for i=1:4
         %% x-y labels
         if i==4 % bottom row
             if j==1
-                lStr = sprintf('\\Delta{\\itm}_\\nu^2 (eV^2)');
+                lStr = sprintf('\\Delta{\\itm}_\\nu^{ 2} (eV^{ 2})');
                 ylabel(sprintf('\\Delta{\\itN}_{sig.} (%%)'));
-                 ax.YLabel.Position(1) = -4.9;
+                if max(FitPar(1,:))<2.2 %KNm2
+                  ax.YLabel.Position(1) = -2.3;
+                else
+                     ax.YLabel.Position(1) = -5.4;
+                end
             elseif j==2
-                lStr = sprintf('\\Delta{\\itE}_0^{fit} (eV)');
+                lStr = sprintf('\\Delta{\\itE}_0^{ fit} (eV)');
             elseif j==4
                 lStr = sprintf('\\Delta{\\itN}_{sig.} (%%)');
             elseif j==3
@@ -52,19 +61,29 @@ for i=1:4
             xlabel(lStr); 
         elseif j==1 % first column
             if i==1
-                lStr = sprintf('\\Delta{\\itm}_\\nu^2 (eV^2)');
+                lStr = sprintf('\\Delta{\\itm}_\\nu^{ 2} (eV^{ 2})');
             elseif i==2
-                lStr = sprintf('\\Delta{\\itE}_0^{fit} (eV)');
+                lStr = sprintf('\\Delta{\\itE}_0^{ fit} (eV)');
             elseif i==4
                 lStr = sprintf('\\Delta{\\itN}_{sig.} (%%)');
             elseif i==3
                 lStr = sprintf('\\Delta{\\itB}_{base} (mcps)');
             end
             ylabel(lStr);
-            if i==1
-                ax.YLabel.Position(1) = -5.4;
-            elseif i==3
-                ax.YLabel.Position(1) = -4.92;
+            if max(FitPar(1,:))>2.2
+                % KNM1
+               % if i==1
+                    ax.YLabel.Position(1) = -5.4;
+              %  elseif i==3
+               %     ax.YLabel.Position(1) = -4.92;
+              %  end
+            else
+                % KNM2
+                if i==1
+                    ax.YLabel.Position(1) = -2.3;
+                elseif i==3
+                    ax.YLabel.Position(1) = -2.3;
+                end
             end
         end
         
@@ -92,26 +111,58 @@ for i=1:4
         end
         
         % axis limits
-        if j==1
-            xlim([-3.5 3.1])
-        elseif j==2
-            xlim([-0.25 0.25])
-            xticks([-0.2 0 0.2]);
-        elseif j==4
-            xlim([-1.3 1.5]) 
-        elseif j==3
-             xlim([-3 3]) 
-        end
-   
-        if i==1 && j~=i
-            ylim([-3.5 3.1])
-        elseif i==2 && j~=i
-            ylim([-0.25 0.25])
-            yticks([-0.2 0 0.2]);
-        elseif i==4 && j~=i
-            ylim([-1.3 1.5])
-        elseif i==3&& j~=i
-            ylim([-3 3])
+        if max(FitPar(1,:))>2.2
+            % KNM1
+            if j==1
+                xlim([-3.5 3.1])
+            elseif j==2
+                xlim([-0.25 0.25])
+                xticks([-0.2 0 0.2]);
+            elseif j==4
+                xlim([-1.3 1.5])
+            elseif j==3
+                xlim([-3 3])
+            end
+            
+            if i==1 && j~=i
+                ylim([-3.5 3.1])
+            elseif i==2 && j~=i
+                ylim([-0.25 0.25])
+                yticks([-0.2 0 0.2]);
+            elseif i==4 && j~=i
+                ylim([-1.3 1.5])
+            elseif i==3&& j~=i
+                ylim([-3 3])
+            end
+        else   
+            % KNM2
+            if j==1
+                xlim([-1.5 1.5])
+            elseif j==2
+                xlim([-0.14 0.14])
+                xticks([-0.1 0 0.1]);
+            elseif j==4
+                xlim([-1.1 1.1])
+                xticks([-0.7 0 0.7])
+            elseif j==3
+                xlim([-2.5 2.5])
+            end
+            
+            if i==1 && j~=i
+                ylim([-1.5 1,5])
+            elseif i==2 && j~=i
+                ylim([-0.14 0.14])
+                xticks([-0.1 0 0.1]);
+            elseif i==4 && j~=i
+                ylim([-1.1 1.1])   
+                yticks([-0.7 0 0.7])
+                if j~=1
+                    yticklabels('');
+                end
+            elseif i==3&& j~=i
+                ylim([-2.5 2.5])
+            end
+        
         end
     end
 end

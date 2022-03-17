@@ -3,17 +3,18 @@
 freePar = 'mNu E0 Bkg Norm';
 DataType = 'Real';
 range = 40;                % fit range in eV below endpoint
-AltRunList = 'KNM2_Up';       % defines alternative pixel list
-RecomputeFlag = 'OFF';
-FSDFlag = 'KNM2';
-
+AltRunList = 'KNM2_Prompt';       % defines alternative pixel list
+RecomputeFlag = 'ON';
+FSDFlag = 'KNM2_0p1eV';
+BKG_PtSlope = 3*1e-06;
 % label
 savedir = [getenv('SamakPath'),'knm2ana/knm2_AltRunPixLists/results/'];
-savename = sprintf('%sknm2_AltRunList_%s_%s_%s_%.0feV_%s.mat',...
-    savedir,AltRunList,DataType,strrep(freePar,' ',''),range,FSDFlag);
+savename = sprintf('%sknm2_AltRunList_%s_%s_%s_%.0feV_%s_BkgPt%.2g.mat',...
+    savedir,AltRunList,DataType,strrep(freePar,' ',''),range,FSDFlag,BKG_PtSlope*1e6);
 
 if exist(savename,'file') && strcmp(RecomputeFlag,'OFF')
     load(savename);
+    fprintf('load result from %s \n',savename);
 else
     SigmaSq =  0.0124+0.0025;
     RunAnaArg = {'RunList',AltRunList,...     % define run number -> see GetRunList
@@ -28,7 +29,8 @@ else
         'DopplerEffectFlag','FSD',...
         'RingMerge','Full',...
         'FSD_Sigma',sqrt(SigmaSq),...
-        'TwinBias_FSDSigma',sqrt(SigmaSq)};
+        'TwinBias_FSDSigma',sqrt(SigmaSq),...
+        'BKG_PtSlope',BKG_PtSlope};
     
     M = MultiRunAnalysis(RunAnaArg{:});          % init model, read data
     M.exclDataStart = M.GetexclDataStart(range); % set fit range
@@ -46,4 +48,5 @@ else
     
     MakeDir(savedir);
     save(savename,'FitResult','RunList','Q_i','mNuSq','E0','mNuSqErr','E0Err','RunAnaArg');
+    fprintf('save result to %s \n',savename);
 end

@@ -135,7 +135,7 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                 case {'AziHalfNS','AziHalfEW'}
                     [obj.PixList,obj.RingPixList] = AziHalfPatch2PixelCombi(obj.RingList,obj.PixList,obj.RingMerge);
                     obj.RingList = 1:2;
-                case {'Slice','Slice2','Slice3','Slice4'}
+                case {'Slice','Slice2','Slice3','Slice4','Slice3_1'}
                     [obj.PixList,obj.RingPixList] = Slice2PixelCombi(obj.PixList,obj.RingMerge);
                     obj.RingList = 1:numel(obj.RingPixList); % now psuedo-rings (before, no meaning in slice mode)
             end

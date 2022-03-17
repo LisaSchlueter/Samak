@@ -43,22 +43,28 @@ fprintf('Net time [-300,+135] eV: %.1f hours \n',TimeAll);
 fprintf('Net time background %.1f hours (%.1f%% (90 eV), %.1f%% (40 eV))\n',TimeBkg,1e2*TimeBkg/Time90,1e2*TimeBkg/Time40);
 
 %% number of electrons: analysis interval
-BkgRate = d.A.ModelObj.BKG_RateSec;
-Nbkg_qU  = d.A.RunData.qUfrac(d.A.exclDataStart:end).*d.A.RunData.TimeSec.*BkgRate;
-Nbkg     = sum(Nbkg_qU);
-Nall    = sum(d.A.RunData.TBDIS(d.A.exclDataStart:end));
-Nsig = Nall-Nbkg;
+BkgRate       = d.A.ModelObj.BKG_RateSec;
+Nbkg_qU       = d.A.RunData.qUfrac(d.A.exclDataStart:end).*d.A.RunData.TimeSec.*BkgRate;
+Nbkg          = sum(Nbkg_qU);
+Nbkg_sig      = sum(Nbkg_qU(1:end-5)); % only signal points
+Nall          = sum(d.A.RunData.TBDIS(d.A.exclDataStart:end));
+Nall_model    = sum(d.A.ModelObj.TBDIS(d.A.exclDataStart:end));
+Nsig          = Nall-Nbkg;
 
-fprintf('---------- 40 eV interval ----------------\n');
-fprintf('Total      number electrons %.2e \n',Nall);
-fprintf('Signal     number electrons %.2e \n',Nsig);
-fprintf('Background number electrons %.2e \n',Nbkg);
+fprintf('---------- 40 eV interval (%.0f scan steps) ----------------\n',numel(d.A.RunData.qU(d.A.exclDataStart:end)));
+fprintf('Total      number electrons %.2fe6\n',Nall.*1e-06);
+fprintf('Signal     number electrons %.2fe6\n',Nsig.*1e-06);
+fprintf('Background number electrons %.2fe6 (all points) \n',Nbkg.*1e-06);
+fprintf('Background number electrons %.2fe6 (only signal points) \n',Nbkg_sig.*1e-06);
+fprintf('------------------------------------------------------------\n');
+
 
 %% signal to background
 Nsig_qU = d.A.RunData.TBDIS(d.A.exclDataStart:end)-Nbkg_qU;
 SB_qU = Nsig_qU./Nbkg_qU;
 fprintf('--------------------------------\n');
-fprintf('Tot signal to background   %.2f \n',Nsig/Nbkg);
+fprintf('Tot signal to background  (all points) %.2f \n',Nsig/Nbkg);
+fprintf('Tot signal to background  (signal points) %.2f \n',Nsig/Nbkg_sig);
 fprintf('Mean signal to background   %.2f \n',mean(SB_qU));
 fprintf('Min signal to background   %.2f \n',min(SB_qU));
 fprintf('Max signal to background   %.2f \n',max(SB_qU));
@@ -68,7 +74,7 @@ fprintf('Colun density %.2f x e17 \n',d.A.RunData.WGTS_CD_MolPerCm2*1e-17);
 fprintf('Atomic purity %.2f %% \n',1e2*d.A.ModelObj.WGTS_epsT);
 
 
-std(d.A.SingleRunData.WGTS_MolFrac_TT)
+std(d.A.SingleRunData.WGTS_MolFrac_TT);
 Activity = 2.*d.A.RunData.WGTS_CD_MolPerCm2.*d.A.ModelObj.WGTS_epsT.*pi*4.5^2.*d.A.ModelObj.TdecayC;
 fprintf('Activity %.2e \n',Activity)
 fprintf('TT %.2f %% \n',1e2*d.A.ModelObj.WGTS_MolFrac_TT);

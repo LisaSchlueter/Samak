@@ -68,6 +68,29 @@ elseif strcmp(RingMerge,'Slice4')
         SliceAngPos(i,3) = PixPos_deg_u(4*i-1);
         SliceAngPos(i,4) = PixPos_deg_u(4*i);
     end
+elseif strcmp(RingMerge,'Slice3_1')
+    % stack 3 into 1, but start with 345° instead of 0°
+    nSlice = nSlice_i/3;
+    SlicePixList = cell(nSlice,1);
+    SliceAngPos  = zeros(nSlice,3);
+    for i=1:nSlice
+        if i==1
+            Idx1 = numel(PixPos_deg_u);
+            Idx2 = 3*i-2;
+            Idx3 = 3*i-1;
+        else
+            Idx1 = 3*i-3;
+            Idx2 = 3*i-2;
+            Idx3 = 3*i-1;
+        end
+        SlicePixList{i} = PixList_all(PixPos_deg==PixPos_deg_u(Idx1) | PixPos_deg==PixPos_deg_u(Idx2)...
+            | PixPos_deg==PixPos_deg_u(Idx3));
+        Pix_plot(SlicePixList{i}) = i; % for sanity plot
+        SliceAngPos(i,1) = PixPos_deg_u(Idx1);
+        SliceAngPos(i,2) = PixPos_deg_u(Idx2);
+        SliceAngPos(i,3) = PixPos_deg_u(Idx3);
+        
+    end
 end
 
 %  FPDViewer(Pix_plot) % sanity plot

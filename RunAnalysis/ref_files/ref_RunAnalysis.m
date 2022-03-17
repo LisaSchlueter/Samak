@@ -69,7 +69,7 @@ p.addParameter('BKG_RateRingSec','');
 p.addParameter('FPD_Segmentation','OFF',@(x) ismember(x,{'OFF','SINGLEPIXEL','MULTIPIXEL','RING'}));
 p.addParameter('PixList',1:148,@(x)isfloat(x));
 p.addParameter('RingList',1:12,@(x)isfloat(x));
-p.addParameter('RingMerge','Default',@(x)ismember(x,{'Default','None','Full','Half','Azi','AziHalfNS','AziHalfEW','Slice','Slice2','Slice3','Slice4'}));
+p.addParameter('RingMerge','Default',@(x)ismember(x,{'Default','None','Full','Half','Azi','AziHalfNS','AziHalfEW','Slice','Slice2','Slice3','Slice4','Slice3_1'}));
 p.addParameter('FSD_Sigma','',@(x)isfloat(x) || isempty(x)); % std of gaussian or width of rectangle
 p.addParameter('BKG_PtSlope',0,@(x)isfloat(x));    
 

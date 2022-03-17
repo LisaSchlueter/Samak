@@ -1,24 +1,24 @@
 % unblinded fit with penning trap background slope
 range     = 40;
 freePar   = 'mNu E0 Bkg Norm';
-chi2      = 'chi2CMShape';
+chi2      = 'chi2Stat+';%CMShape';
 DataType  = 'Real';
-AnaFlag   = 'StackPixel';%'Ring';
-RingMerge = 'None';
+AnaFlag   = 'StackPixel';
+RingMerge = 'Full';
 DopplerEffectFlag = 'FSD';
 BKG_PtSlope = 3*1e-06;
 TwinBias_BKG_PtSlope = 3*1e-06;
-FSDFlag   = 'KNM2_0p1eV';
+FSDFlag   = 'KNM2';%_0p1eV';
 
-PullFlag = 99;%[7,24]; %24 = 3.0 mucps/s
+PullFlag = 99;%6;%[7,24]; %24 = 3.0 mucps/s
 
-if strcmp(AnaFlag,'Ring') 
+if strcmp(AnaFlag,'Ring')
     if strcmp(RingMerge,'Full')
         AnaStr = AnaFlag;
-         SysBudget = 41;
+        SysBudget = 41;
     else
         AnaStr = sprintf('Ring%s',RingMerge);
-         SysBudget = 40;
+        SysBudget = 40;
     end
 else
     SysBudget = 40;
@@ -50,7 +50,7 @@ if any(PullFlag~=99)
     if numel(PullFlag)==2
         savename = strrep(savename,'.mat',sprintf('_pull%.0f_%.0f.mat',PullFlag(1),PullFlag(2)));
     else
-    savename = strrep(savename,'.mat',sprintf('_pull%.0f.mat',PullFlag));
+        savename = strrep(savename,'.mat',sprintf('_pull%.0f.mat',PullFlag));
     end
 end
 
@@ -61,12 +61,12 @@ else
     
     
     
-     if strcmp(RingMerge,'None') && strcmp(chi2,'chi2CMShape') && strcmp(AnaFlag,'Ring')
-         chi2tmp = 'chi2Stat';
-     else
-         chi2tmp  = chi2;
-     end
-     
+    if strcmp(RingMerge,'None') && strcmp(chi2,'chi2CMShape') && strcmp(AnaFlag,'Ring')
+        chi2tmp = 'chi2Stat';
+    else
+        chi2tmp  = chi2;
+    end
+    
     RunAnaArg = {'RunList','KNM2_Prompt',...
         'DataType',DataType,...
         'fixPar',freePar,...
@@ -98,27 +98,27 @@ else
     if  contains(freePar,'BkgPTSlope') && contains(freePar,'BkgSlope')  && strcmp(chi2,'chi2CMShape')
         A.ComputeCM('BkgPTCM','OFF','BkgCM','OFF');
     elseif  contains(freePar,'BkgSlope') && strcmp(chi2,'chi2CMShape')
-         A.ComputeCM('BkgPTCM','ON','BkgCM','OFF');
+        A.ComputeCM('BkgPTCM','ON','BkgCM','OFF');
     elseif contains(freePar,'BkgPTSlope') && strcmp(chi2,'chi2CMShape')
-         A.ComputeCM('BkgPTCM','OFF','BkgCM','ON');
+        A.ComputeCM('BkgPTCM','OFF','BkgCM','ON');
     end
     
     if strcmp(RingMerge,'None') && strcmp(chi2,'chi2CMShape') && strcmp(AnaFlag,'Ring')
         A.chi2 = chi2;
         A.ComputeCM('SysEffects',  struct(...
-                        'RF_EL','OFF',...   % Response Function(RF) EnergyLoss
-                        'RF_BF','OFF',...   % RF B-Fields
-                        'RF_RX','OFF',...   % Column Density, inel cross ection
-                        'FSD','ON',...
-                        'TASR','ON',...
-                        'TCoff_RAD','OFF',...
-                        'TCoff_OTHER','ON',...
-                        'DOPoff','OFF',...
-                        'Stack','OFF',...
-                        'FPDeff','ON',...
-                        'LongPlasma','ON'),...
-                        'BkgPTCM','ON',...
-                        'BkgCM','ON');
+            'RF_EL','OFF',...   % Response Function(RF) EnergyLoss
+            'RF_BF','OFF',...   % RF B-Fields
+            'RF_RX','OFF',...   % Column Density, inel cross ection
+            'FSD','ON',...
+            'TASR','ON',...
+            'TCoff_RAD','OFF',...
+            'TCoff_OTHER','ON',...
+            'DOPoff','OFF',...
+            'Stack','OFF',...
+            'FPDeff','ON',...
+            'LongPlasma','ON'),...
+            'BkgPTCM','ON',...
+            'BkgCM','ON');
     else
         
     end
@@ -130,14 +130,40 @@ end
 %%
 
 %A.PlotFit;
-fprintf('m_nu^2 = %.3f + %.3f %.3f eV^2       , ',FitResult.par(1),FitResult.errPos(1),FitResult.errNeg(1))
-fprintf('mean err = %.3f eV^2 \n',(FitResult.errPos(1)-FitResult.errNeg(1))/2)
+fprintf('============================================\n');
+
+fprintf(2,'m_nu^2 = %.3f + %.2f %.2f eV^2, ',FitResult.par(1),FitResult.errPos(1),FitResult.errNeg(1))
+fprintf('mean err = %.2f eV^2 \n',(FitResult.errPos(1)-FitResult.errNeg(1))/2)
 fprintf('E_0 = %.3f + %.3f eV  \n',FitResult.par(2)+A.ModelObj.Q_i,FitResult.err(2))
+
+if strcmp(A.AnaFlag,'Ring')
+    for r=1:A.nRings
+        fprintf('B Ring %.0f = %.1f + %.1f mcps  (%.0f pixel)\n',...
+            r,(FitResult.par(2+r)+A.ModelObj.BKG_RateSec_i(r)).*1e3,1e3.*FitResult.err(2+r),numel(A.RingPixList{r}))
+    end
+    fprintf('Sum B: %.1f +- %.1f mcps (%.0f pixel) \n',sum((FitResult.par(2+(1:A.nRings))+A.ModelObj.BKG_RateSec_i).*1e3),...
+        1e3.*sqrt(sum(FitResult.err(2+(1:1:A.nRings)).^2)),numel(A.PixList))   
+else
+    fprintf('B  = %.1f + %.1f mcps  \n',...
+        (FitResult.par(3)+A.ModelObj.BKG_RateSec_i).*1e3,1e3.*FitResult.err(3));
+end
+if strcmp(A.AnaFlag,'Ring')
+    for r=1:A.nRings
+        fprintf('N Ring %.0f = %.3f + %.3f  \n',r,(FitResult.par(2+A.nRings+r)+1),FitResult.err(2+A.nRings+r));
+    end   
+    fprintf('Mean N: %.3f +- %.3f \n',mean((FitResult.par(6+(1:1:A.nRings)))+1),...
+        sqrt(sum(FitResult.err(6+(1:1:A.nRings)).^2)))
+else
+    fprintf('N  = %.3f + %.3f mcps  \n',...
+        (FitResult.par(4)+1),FitResult.err(4));
+end
 fprintf('chi2 = %.3f (%.0f dof), p = %.3f  \n',FitResult.chi2min,FitResult.dof,1-chi2cdf(FitResult.chi2min,FitResult.dof));
+fprintf('============================================\n ');
 
 %%
 
 Plot = 'OFF';
+A.ErrorBarScaling = 50;
 if strcmp(Plot,'ON')
     if strcmp(AnaFlag,'StackPixel')
         A.PlotFit('LabelFlag','FinalKNM1',...
@@ -150,17 +176,16 @@ if strcmp(Plot,'ON')
             'qUDisp','Abs',...
             'TickDir','Out');
     else
-        % A.PlotResidualsMultiRing('saveplot','ON','YLimRes',[-2.4 2.6])
-        A.PlotFit('ring',1,...
-            'saveplot','pdf',...
-            'ErrorBarScaling',50,...
-            'Colors','RGB',...
-            'FitResultsFlag','OFF',...
-            'qUDisp','Abs',...
-            'TickDir','In',...
-            'YLimRes',[-2.2,2.9],...
-            'DisplayStyle','PRL');
-        %A.PlotFitMultiRing('PlotPar','qU','savePlot','ON')
+        if A.nRings<=4
+            A.PlotResidualsMultiRing('saveplot','pdf','YLimRes',[-3 3],'DisplayMTD','OFF','Colors','BW','XLims',[-42 138]);
+        else
+            A.PlotResidualsMultiRing('saveplot','pdf','YLimRes',[-3.5 3.5],'DisplayMTD','OFF','Colors','BW','XLims',[-42 138]);
+            
+        end
+        A.PlotSpectrumMultiRing('SavePlot','ON','DisPlayStyle','Rel');
+        A.PlotFitMultiRing('PlotPar','Bkg','savePlot','ON','linFitFlag','OFF','RefLine','ON');
+        A.PlotFitMultiRing('PlotPar','Norm','savePlot','ON','linFitFlag','OFF','RefLine','ON');
+        A.PlotFitMultiRing('PlotPar','E0eff','savePlot','ON','linFitFlag','ON','RefLine','ON');
     end
 end
 %  A.FitCM_Obj.PlotCM('qUWindowIndexMax',10,'qUWindowIndexMin',40,'saveplot',...

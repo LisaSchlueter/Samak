@@ -3,14 +3,14 @@ chi2 = 'chi2CMShape';
 qURange  = [95,20];
 NonPoissonScaleFactor = 1.112;
 fitter = 'minuit';
-nSamples = 1000;
+nSamples = 1;%1000;
 
 savedir = [getenv('SamakPath'),'knm2ana/knm2_qUScan/results/'];
-savename = sprintf('%sknm2_qUScan_MC_%.0feV_to_%.0feV_%s_NP%.3f_%s.mat',...
+savename_randMC = sprintf('%sknm2_qUScan_MC_%.0feV_to_%.0feV_%s_NP%.3f_%s.mat',...
     savedir,qURange(1),qURange(2),chi2,NonPoissonScaleFactor,fitter);
 
-if exist(savename,'file')
-    load(savename);
+if exist(savename_randMC,'file')
+    load(savename_randMC);
 else
     SigmaSq =  0.0124+0.0025;
     BKG_PtSlope = 3*1e-06;

@@ -1,19 +1,18 @@
 % Uniform fit on KNM2 data
 % Random half of all golden runs
-% March 2020, Lisa
-nFits = 500;
+% March 2022, Lisa
+nRandPixList = 2000;
 freePar = 'mNu E0 Bkg Norm';
 DataType = 'Real';
 RunList = 'KNM2_Prompt';
 range = 40;               % fit range in eV below endpoint
-FSDFlag = 'KNM2';
+FSDFlag = 'KNM2_0p1eV';
+BKG_PtSlope = 3*1e-06;
 savedir = [getenv('SamakPath'),'knm2ana/knm2_AltRunPixLists/results/'];
-savename = sprintf('%sknm2_PixListRandHalf_%s_%s_%.0feV_%.0ffits_%s.mat',...
-            savedir,DataType,strrep(freePar,' ',''),range,nFits,FSDFlag);
+savename = sprintf('%sknm2_PixListRandHalf_%s_%s_%.0feV_%.0ffits_%s_BkgPT%.2gmucpsPers.mat',...
+            savedir,DataType,strrep(freePar,' ',''),range,nRandPixList,FSDFlag,BKG_PtSlope*1e6);
+       
 % draw random pixels
-PixList_def = GetPixList('Knm2');
-nPix = numel(PixList_def);
-
 if exist(savename,'file')
     load(savename)
 else
@@ -32,34 +31,50 @@ else
         'TwinBias_Q',18573.7,...
         'DopplerEffectFlag','FSD',...
         'FSD_Sigma',sqrt(SigmaSq),...
-        'TwinBias_FSDSigma',sqrt(SigmaSq)};
+        'TwinBias_FSDSigma',sqrt(SigmaSq),...
+        'BKG_PtSlope',BKG_PtSlope};
     
-    for i=1:nFits
+    M = MultiRunAnalysis(RunAnaArg{:});
+    M.exclDataStart = M.GetexclDataStart(range);
+    
+    PixList_gold = M.PixList; % regular golden pixel list
+    nPix = numel(M.PixList);
+    nPixHalf     = ceil(nPix/2);           % take only half of all runs
+    
+    D = copy(repmat(M,nRandPixList,1));
+    D = reshape(D,numel(D),1);
+    
+    FitResults = cell(nRandPixList,1);
+    PixLists   = cell(nRandPixList,1);
+    
+    parfor i=1:nRandPixList
         RandIndex    = randperm(nPix);         % randomly permute runlist indices
-        nPixHalf     = ceil(nPix/2);           % take only half of all runs
-        PixList{i}   = PixList_def(RandIndex(1:nPixHalf));
+        PixLists{i}   = PixList_gold(RandIndex(1:nPixHalf));
         
-        %% build object of MultiRunAnalysis class
-        D = MultiRunAnalysis(RunAnaArg{:},'PixList',PixList{i});    
-        D.exclDataStart = D.GetexclDataStart(range); % find correct data, where to cut spectrum     
-        %% Fit -> fit results are in property: A.FitResult
-        D.InitModelObj_Norm_BKG('RecomputeFlag','ON');
-        D.Fit;
+        D(i).PixList =  PixLists{i};
+        D(i).StackRuns('CutOnSC','OFF','SCsigma',3,'CutOnFitSingleRuns','OFF');
         
-        % save
-        FitResult{i} = D.FitResult;
+        D(i).SimulateStackRuns;
+        D(i).exclDataStart = D(i).GetexclDataStart(40);
+        D(i).Fit; 
+        
+        FitResults{i} = D(i).FitResult;
     end
-    Q_i     = D.ModelObj.Q_i;
-    RunList = D.RunList;
-    PixList  = cell2mat(PixList);
-    E0       = cellfun(@(x) x.par(2),FitResult);
-    E0Err    = cellfun(@(x) x.err(2),FitResult);
-    mNuSq    = cellfun(@(x) x.par(1),FitResult);
-    mNuSqErr = cellfun(@(x) x.err(1),FitResult);
     
-    MakeDir(savedir);
-    save(savename,'PixList','FitResult','RunAnaArg','Q_i','RunList',...
-        'E0','E0Err','mNuSq','mNuSqErr');
+    save(savename,'FitResults','PixLists','M','RunAnaArg');
+    fprintf('save to %s \n',savename);
+    
+%     Q_i     = D.ModelObj.Q_i;
+%     RunList = D.RunList;
+%     PixList  = cell2mat(PixList);
+%     E0       = cellfun(@(x) x.par(2),FitResult);
+%     E0Err    = cellfun(@(x) x.err(2),FitResult);
+%     mNuSq    = cellfun(@(x) x.par(1),FitResult);
+%     mNuSqErr = cellfun(@(x) x.err(1),FitResult);
+%     
+%     MakeDir(savedir);
+%     save(savename,'PixList','FitResult','RunAnaArg','Q_i','RunList',...
+%         'E0','E0Err','mNuSq','mNuSqErr');
 end
 
 %%

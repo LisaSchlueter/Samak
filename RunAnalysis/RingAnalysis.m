@@ -106,15 +106,20 @@ classdef RingAnalysis < handle
                 for i=1:obj.nRings
                     progressbar(i/obj.nRings);
                     obj.MultiObj(i).Fit;
-                    %obj.MultiObj(i).Fit;
+                    obj.MultiObj(i).Fit; % irregularities observed... repeat fit to double check
+%                     if obj.MultiObj(i).FitResult.err(1)<0.05
+%                         % sometime fit doesn work properly -> nu-mass error tiny, reason unknown
+%                         % repeat fit often works
+%                         obj.MultiObj(i).Fit;
+%                     end
                     par(i,:) = obj.MultiObj(i).FitResult.par;
                     err(i,:) = obj.MultiObj(i).FitResult.err;
-                    chi2min(i) = obj.MultiObj(i).FitResult.chi2min;                 
+                    chi2min(i) = obj.MultiObj(i).FitResult.chi2min;
                     dof(i) = obj.MultiObj(i).FitResult.dof;
                     
                     if isfield(obj.MultiObj(i).FitResult,'errNeg')
-                       errNeg(i,1:4) = obj.MultiObj(i).FitResult.errNeg;
-                       errPos(i,1:4) = obj.MultiObj(i).FitResult.errPos;
+                        errNeg(i,1:4) = obj.MultiObj(i).FitResult.errNeg;
+                        errPos(i,1:4) = obj.MultiObj(i).FitResult.errPos;
                     end
                     
                     if strcmp(AsymErr,'ON') % asymmetric uncertainties on neutrino mass
@@ -163,13 +168,14 @@ classdef RingAnalysis < handle
             yErr   = obj.FitResult.err;%(:,PlotPar);
             yErr   = yErr(:,PlotPar);
                  
-            if isfield(obj.FitResult,'errNeg') && PlotPar==1
+            if isfield(obj.FitResult,'errNeg') && PlotPar==1 
+                fprintf('switch to asymmetric errors for PlotPar %.0f \n',PlotPar)
                 yErr = 0.5*(abs(obj.FitResult.errNeg(:,PlotPar))+obj.FitResult.errPos(:,PlotPar));
-                if any(yErr<1e-2)
-                    Index = yErr<1e-2;
-                    meanYerr = mean(yErr(~Index));
-                     yErr(Index) = meanYerr;
-                end
+%                 if any(yErr<1e-2)
+%                     Index = yErr<1e-2;
+%                     meanYerr = mean(yErr(~Index));
+%                      yErr(Index) = meanYerr;
+%                 end
             elseif PlotPar==2
                 y = y+obj.RunAnaObj.ModelObj.Q_i;
             elseif PlotPar==3
@@ -182,13 +188,13 @@ classdef RingAnalysis < handle
                 y = 1+y;
             end
             
-            if any(yErr<1e-2) && PlotPar==2
-                % temporary solution for plot:
-                % scale weird error up to average error (for lin fit)
-                Index = yErr<1e-2;
-                meanYerr = mean(yErr(~Index));
-                yErr(Index) = meanYerr;
-            end
+%             if any(yErr<1e-2) && PlotPar==2
+%                 % temporary solution for plot:
+%                 % scale weird error up to average error (for lin fit)
+%                 Index = yErr<1e-2;
+%                 meanYerr = mean(yErr(~Index));
+%                 yErr(Index) = meanYerr;
+%             end
             
              if strcmp(PlotMode,'Rel')
                   meanPar = wmean(y,1./yErr.^2);
@@ -386,8 +392,11 @@ classdef RingAnalysis < handle
                 end
             end
             
-            
-            xlim([min(obj.RingList)-0.2,max(obj.RingList)+0.2])
+            if obj.nRings<10
+                xlim([min(obj.RingList)-0.2,max(obj.RingList)+0.2])
+            else
+                xlim([min(obj.RingList)-0.5,max(obj.RingList)+0.5])
+            end
             leg.Location = 'northwest';
            % set(leg.BoxFace, 'ColorType','truecoloralpha', 'ColorData',uint8(255*[1;1;1;0.5]));
        

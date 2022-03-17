@@ -7,7 +7,7 @@ p.addParameter('RunNr',56709,@(x)isfloat(x));
 p.parse(varargin{:});
 myRunNr = p.Results.RunNr;
 
-filename = [getenv('SamakPath'),'knm2ana/knm2_AltRunPixLists/KNM2ScanDirection.txt'];
+filename = [getenv('SamakPath'),'knm2ana/knm2_AltRunPixLists/results/KNM2ScanDirection.txt'];
 d = importdata(filename);
 
 RunList   = d(:,1);

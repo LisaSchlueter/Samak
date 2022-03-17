@@ -21,11 +21,10 @@ else
 end
 
 %%
- corrplot_Uniform(d.FitPar(1:4,:))
- 
+ corrplot_Uniform(d.FitPar(1:4,:)) 
  pltdir  = [getenv('SamakPath'),'knm1ana/knm1_FitRandData/plots/'];
  MakeDir(pltdir);
- pltname = sprintf('%sknm1_Correlations.png',pltdir);
- print(pltname,'-dpng','-r400');
-% export_fig(pltname);
- fprintf('save plot to %s \n',pltname);
+ pltname = sprintf('%sknm1_Correlations.pdf',pltdir);
+ %print(pltname,'-dpng','-r400');
+ export_fig(pltname);
+ %fprintf('save plot to %s \n',pltname);
