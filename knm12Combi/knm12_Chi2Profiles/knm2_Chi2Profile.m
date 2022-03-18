@@ -1,5 +1,5 @@
 % KNM-2 chi2-profile
-
+% for knm12 combination
 %% settings
 range                 = 40;
 freePar               = 'mNu E0 Bkg Norm';

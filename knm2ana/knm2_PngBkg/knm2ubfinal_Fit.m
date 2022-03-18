@@ -1,16 +1,16 @@
 % unblinded fit with penning trap background slope
 range     = 40;
-freePar   = 'mNu E0 Bkg Norm';
-chi2      = 'chi2Stat+';%CMShape';
+freePar   = 'mNu E0 Bkg Norm qU';
+chi2      = 'chi2CMShape';
 DataType  = 'Real';
-AnaFlag   = 'StackPixel';
+AnaFlag   = 'Ring';
 RingMerge = 'Full';
 DopplerEffectFlag = 'FSD';
 BKG_PtSlope = 3*1e-06;
 TwinBias_BKG_PtSlope = 3*1e-06;
-FSDFlag   = 'KNM2';%_0p1eV';
+FSDFlag   = 'KNM2';
 
-PullFlag = 99;%6;%[7,24]; %24 = 3.0 mucps/s
+PullFlag = 99;%99;%6;%[7,24]; %24 = 3.0 mucps/s
 
 if strcmp(AnaFlag,'Ring')
     if strcmp(RingMerge,'Full')
@@ -162,7 +162,7 @@ fprintf('============================================\n ');
 
 %%
 
-Plot = 'OFF';
+Plot = 'ON';
 A.ErrorBarScaling = 50;
 if strcmp(Plot,'ON')
     if strcmp(AnaFlag,'StackPixel')
@@ -183,8 +183,8 @@ if strcmp(Plot,'ON')
             
         end
         A.PlotSpectrumMultiRing('SavePlot','ON','DisPlayStyle','Rel');
-        A.PlotFitMultiRing('PlotPar','Bkg','savePlot','ON','linFitFlag','OFF','RefLine','ON');
-        A.PlotFitMultiRing('PlotPar','Norm','savePlot','ON','linFitFlag','OFF','RefLine','ON');
+        A.PlotFitMultiRing('PlotPar','Bkg','savePlot','ON','linFitFlag','ON','RefLine','ON');
+        A.PlotFitMultiRing('PlotPar','Norm','savePlot','ON','linFitFlag','ON','RefLine','ON');
         A.PlotFitMultiRing('PlotPar','E0eff','savePlot','ON','linFitFlag','ON','RefLine','ON');
     end
 end
@@ -195,4 +195,22 @@ end
 % % 'ON','CovMatInput',A.FitCMFracShape,...
 % % 'savename',sprintf('KNM2_Final_%s',AnaFlag));
 
-%%
+%% some statistics: runs test on residuals
+Residuals_abs  = A.RunData.TBDIS(A.exclDataStart:end,:)-A.ModelObj.TBDIS(A.exclDataStart:end,:);
+DiagErr = sqrt(reshape(diag(A.FitCMShape),A.ModelObj.nqU,A.nRings));
+Residuals_norm = Residuals_abs./DiagErr(A.exclDataStart:end,:);
+
+MaxDeviation =  max(Residuals_norm); % maximal sigma for each rings
+
+% runstest for each ring
+pRuns = zeros(A.nRings,1);
+for i=1:A.nRings
+[~,pRuns(i)] = runstest(Residuals_norm(:,i));
+fprintf('runs test ring %.0f, p = %.2f\n',i,pRuns(i));
+end
+
+
+
+
+
+

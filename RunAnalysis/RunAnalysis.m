@@ -4912,7 +4912,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             savePlot    = p.Results.savePlot;
             Blind       = p.Results.Blind;
             RefLine     = p.Results.RefLine; % at weighted mean
-            LocalFontSize = 20;
+            LocalFontSize = 25;
             switch PlotPar
                 case 'qU'
                     yErr  = obj.FitResult.err(2*obj.nRings+9:3*obj.nRings+8);
@@ -4949,7 +4949,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
             PlotStyle = {'.','Color',rgb('DodgerBlue'),'LineWidth',2,...
                 'MarkerSize',20,'CapSize',0};
             
-            fig1 = figure('Units','normalized','Position',[0.1,0.1,0.5,0.4]);
+            fig1 = figure('Units','normalized','Position',[0.1,0.1,0.5,0.5]);
             if ismember(PlotPar,{'qU','mTSq'})
                 plot(linspace(-5,obj.nRings+1,10),zeros(10,1),'LineWidth',2,'Color',rgb('Silver'));
                 hold on;
@@ -4988,13 +4988,18 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                     ylim([min(y-yErr)-0.02,0.05+max(y+yErr)]);
                     ax = gca;
                     ax.YAxis.Exponent = 0;
-                    yticks(round(min(y-yErr)-0.02,1):0.04:round(max(y+yErr)+0.05,1));
+                    ylim([min(y-yErr)-0.02,max(y+yErr)+0.08]);
+                    yticks(round(min(y-yErr)-0.02,1):0.04:round(max(y+yErr)+0.1,1));
                     ax.YAxis.TickLabelFormat ='%.2f';
                 else
                     ylim([ymin*0.8,max(y+yErr)*1.5]);
                 end
             elseif strcmp(PlotPar,'Norm')
-                ylim([min(y-yErr)-2e-03 max(y+yErr)+2e-03]);
+                if strcmp(linFitFlag,'ON')
+                    ylim([min(y-yErr)-1e-03 max(y+yErr)+5e-03]);
+                else
+                    ylim([min(y-yErr)-2e-03 max(y+yErr)+2e-03]);
+                end
             elseif strcmp(PlotPar,'Bkg')
                 ylim([min(y)-0.05 max(y)+0.05]);
             end
@@ -5025,22 +5030,33 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                  pconst = 1-chi2cdf(chi2const,numel(y)-1);
                  
                  leg = legend([pmean,plin],...%{\\itE}_0^{fit} + \\langle\\Delta{\\itqU}\\rangle 
-                     sprintf('Mean = %.2f eV',Emean),...
+                     sprintf('{\\itE}_0^{fit} +\\langle\\Delta{\\itqU}\\rangle = %.2f eV',Emean),...
                      sprintf('Slope = (%.0f \\pm %.0f) meV/pseudo-ring',1e3.*linFitpar(1),1e3.*linFiterr(1)));%,1-chi2cdf(linFitchi2min,linFitdof)));        
-                 fprintf('constant mean: %.2f eV, pvalue = %.2f \n',Emean,pconst);          
+                 fprintf('constant mean: %.2f eV, pvalue = %2g \n',Emean,pconst);          
              elseif strcmp(PlotPar,'E0eff') && strcmp(RefLine,'ON')
                  Emean = wmean(y,1./yErr.^2);
                  chi2const = sum((Emean-y).^2./yErr.^2);
                  pconst = 1-chi2cdf(chi2const,numel(y)-1);
                  leg = legend(pmean,...
                      sprintf('{\\itE}_0^{fit} + \\langle\\Delta{\\itqU}\\rangle = %.2f eV',Emean));
-             elseif strcmp(PlotPar,'Norm') && strcmp(RefLine,'ON')
-                  Nmean = wmean(y,1./yErr.^2);
-                  chi2const = sum((Nmean-y).^2./yErr.^2);
+            elseif strcmp(PlotPar,'Norm') && strcmp(RefLine,'ON') && strcmp(linFitFlag,'ON')
+                 t.delete;
+                Nmean = wmean(y,1./yErr.^2);
+                chi2const = sum((Nmean-y).^2./yErr.^2);
+                pconst = 1-chi2cdf(chi2const,numel(y)-1);
+                leg = legend([pmean,plin],...
+                    sprintf('\\langle{\\itN}_{sig.}\\rangle = %.3f',Nmean),...
+                    sprintf('Slope = (%.1f \\pm %.1f) \\times 10^{-3} /pseudo-ring',1e3.*linFitpar(1),1e3.*linFiterr(1)));
+                fprintf('constant mean: %.3f, pvalue = %2g \n',Nmean,pconst);
+                 fprintf('linear fit: (%.2e +- %.2e) /pseudo-ring, pvalue = %.4f \n',linFitpar(1),linFiterr(1),1-chi2cdf(linFitchi2min,linFitdof)); 
+              
+            elseif strcmp(PlotPar,'Norm') && strcmp(RefLine,'ON')
+                Nmean = wmean(y,1./yErr.^2);
+                chi2const = sum((Nmean-y).^2./yErr.^2);
                   pconst = 1-chi2cdf(chi2const,numel(y)-1);
                   leg = legend(pmean,...
                       sprintf('\\langle{\\itN}_{sig.}\\rangle = %.3f',Nmean));
-                  fprintf('constant mean: %.3f, pvalue = %.2f \n',Nmean,pconst);
+                  fprintf('constant mean: %.3f, pvalue = %2g \n',Nmean,pconst);
             elseif strcmp(PlotPar,'Bkg') && strcmp(RefLine,'ON') && strcmp(linFitFlag,'ON')
                 t.delete;
                 Nmean = wmean(y,1./yErr.^2);
@@ -5049,18 +5065,18 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                 leg = legend([pmean,plin],...
                     sprintf('\\langle{\\itB}_{base}\\rangle = %.2f mcps per pixel , \\Sigma {\\itB}_{base} = %.1f mcps',...              
                 Nmean,sum(1e3.*(obj.FitResult.par(3:2+obj.nRings)+obj.ModelObj.BKG_RateSec_i))),...
-                    sprintf('Slope = (%.3f \\pm %.3f) (mcps per pixel)/pseudo-ring',linFitpar(1),linFiterr(1)));
+                    sprintf('Slope = (%.3f \\pm %.3f) mcps per pixel/pseudo-ring',linFitpar(1),linFiterr(1)));
                 fprintf('linear fit: (%.3f +- %.3f) (mcps per pixel)/pseudo-ring, pvalue = %.4f \n',linFitpar(1),linFiterr(1),1-chi2cdf(linFitchi2min,linFitdof)); 
-                fprintf('constant mean: %.1f mcps per pixel , pvalue = %.2g \n',Nmean,pconst);
+                fprintf('constant mean: %.1f mcps per pixel , pvalue = %2g \n',Nmean,pconst);
             elseif strcmp(PlotPar,'Bkg') && strcmp(RefLine,'ON')
-          
                 Nmean = wmean(y,1./yErr.^2);
                 chi2const = sum((Nmean-y).^2./yErr.^2);
                 pconst = 1-chi2cdf(chi2const,numel(y)-1);
                 leg = legend(pmean,...
                     sprintf('\\langle{\\itB}_{base}\\rangle = %.2f mcps per pixel , \\Sigma {\\itB}_{base} = %.1f mcps',...              
                 Nmean,sum(1e3.*(obj.FitResult.par(3:2+obj.nRings)+obj.ModelObj.BKG_RateSec_i))));
-                    fprintf('constant mean: %.1f mcps per pixel , pvalue = %.2g \n',Nmean,pconst);
+                    fprintf('constant mean: %.1f mcps per pixel , pvalue = %2g \n',Nmean,pconst);
+           
             end
             
             if exist('leg','var')

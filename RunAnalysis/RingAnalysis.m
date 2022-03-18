@@ -1,5 +1,5 @@
 classdef RingAnalysis < handle
-    %% 
+    %%
     % class to facilitate ring fits using the MultiRunAnalysis/RunAnalysis class
     % FPD segmentation is off, ringwise fit achieved with PixList
     %
@@ -12,7 +12,7 @@ classdef RingAnalysis < handle
     properties (Access=public)
         RunAnaObj; % Mother Object: defines RunList, Column Density, Stacking Cuts,....
         MultiObj;  % n*RunAnaObj, 1 for each ring
-        nRings;    
+        nRings;
         RingList;
         FitResult;
     end
@@ -56,7 +56,7 @@ classdef RingAnalysis < handle
                 obj.MultiObj = arrayfun(@(x) RunAnalysis(CommonArg{:},'RunNr',obj.RunAnaObj.RunNr,...
                     'PixList',cell2mat(x)),obj.RunAnaObj.RingPixList);
             else %MultiRunAnalysis Object
-              RunList = strrep(strrep(obj.RunAnaObj.StackFileName,obj.RunAnaObj.SetTwinOrFakeFileName,''),'Twin','');
+                RunList = strrep(strrep(obj.RunAnaObj.StackFileName,obj.RunAnaObj.SetTwinOrFakeFileName,''),'Twin','');
                 obj.MultiObj = arrayfun(@(x) MultiRunAnalysis(CommonArg{:},'RunList',RunList,...
                     'PixList',cell2mat(x)),(obj.RunAnaObj.RingPixList));
             end
@@ -107,11 +107,11 @@ classdef RingAnalysis < handle
                     progressbar(i/obj.nRings);
                     obj.MultiObj(i).Fit;
                     obj.MultiObj(i).Fit; % irregularities observed... repeat fit to double check
-%                     if obj.MultiObj(i).FitResult.err(1)<0.05
-%                         % sometime fit doesn work properly -> nu-mass error tiny, reason unknown
-%                         % repeat fit often works
-%                         obj.MultiObj(i).Fit;
-%                     end
+                    %                     if obj.MultiObj(i).FitResult.err(1)<0.05
+                    %                         % sometime fit doesn work properly -> nu-mass error tiny, reason unknown
+                    %                         % repeat fit often works
+                    %                         obj.MultiObj(i).Fit;
+                    %                     end
                     par(i,:) = obj.MultiObj(i).FitResult.par;
                     err(i,:) = obj.MultiObj(i).FitResult.err;
                     chi2min(i) = obj.MultiObj(i).FitResult.chi2min;
@@ -162,20 +162,20 @@ classdef RingAnalysis < handle
             PlotMode     = p.Results.PlotMode;
             Blind        = p.Results.Blind;
             YLim         = p.Results.YLim;
-          
+            
             y      = obj.FitResult.par;%(:,PlotPar);
             y      = y(:,PlotPar);
             yErr   = obj.FitResult.err;%(:,PlotPar);
             yErr   = yErr(:,PlotPar);
-                 
-            if isfield(obj.FitResult,'errNeg') && PlotPar==1 
+            
+            if isfield(obj.FitResult,'errNeg') && PlotPar==1
                 fprintf('switch to asymmetric errors for PlotPar %.0f \n',PlotPar)
                 yErr = 0.5*(abs(obj.FitResult.errNeg(:,PlotPar))+obj.FitResult.errPos(:,PlotPar));
-%                 if any(yErr<1e-2)
-%                     Index = yErr<1e-2;
-%                     meanYerr = mean(yErr(~Index));
-%                      yErr(Index) = meanYerr;
-%                 end
+                %                 if any(yErr<1e-2)
+                %                     Index = yErr<1e-2;
+                %                     meanYerr = mean(yErr(~Index));
+                %                      yErr(Index) = meanYerr;
+                %                 end
             elseif PlotPar==2
                 y = y+obj.RunAnaObj.ModelObj.Q_i;
             elseif PlotPar==3
@@ -183,35 +183,35 @@ classdef RingAnalysis < handle
                 nPixperPseudoRing = cell2mat(arrayfun(@(x) numel(x.PixList),obj.MultiObj,'UniformOutput',0)); %number of pixels per ring
                 y = 1e3.*(y+BKG_i)./nPixperPseudoRing; % background per pixel within each pseudo-ring (mcps)
                 yErr = yErr./nPixperPseudoRing.*1e3; % in mcps
-                 BKG_Tot = sum(y.*nPixperPseudoRing);
+                BKG_Tot = sum(y.*nPixperPseudoRing);
             elseif PlotPar==4
                 y = 1+y;
             end
             
-%             if any(yErr<1e-2) && PlotPar==2
-%                 % temporary solution for plot:
-%                 % scale weird error up to average error (for lin fit)
-%                 Index = yErr<1e-2;
-%                 meanYerr = mean(yErr(~Index));
-%                 yErr(Index) = meanYerr;
-%             end
+            %             if any(yErr<1e-2) && PlotPar==2
+            %                 % temporary solution for plot:
+            %                 % scale weird error up to average error (for lin fit)
+            %                 Index = yErr<1e-2;
+            %                 meanYerr = mean(yErr(~Index));
+            %                 yErr(Index) = meanYerr;
+            %             end
             
-             if strcmp(PlotMode,'Rel')
-                  meanPar = wmean(y,1./yErr.^2);
+            if strcmp(PlotMode,'Rel')
+                meanPar = wmean(y,1./yErr.^2);
             elseif strcmp(PlotMode,'Abs')
-                 meanPar = 0; 
+                meanPar = 0;
             end
             
             %% linear fit
             if strcmp(linFitFlag,'ON')
                 [linFitpar, linFiterr, linFitchi2min,linFitdof] =...
                     linFit(obj.RingList',y-meanPar,yErr);
-%                 % tmp
-%                 corrcoeff = -0.94872; % from minuit terminal output...
-%                 linFitCovMat = [1,corrcoeff;corrcoeff,1].*linFiterr.*linFiterr';
-%                 linFitParSamples = mvnrnd(linFitpar,linFitCovMat,1e3)';
-%                 linFitSamples = linFitParSamples(1,:).*obj.RingList'-linFitParSamples(2,:);
-%                 linFitStd = std(linFitSamples,0,2);
+                %                 % tmp
+                %                 corrcoeff = -0.94872; % from minuit terminal output...
+                %                 linFitCovMat = [1,corrcoeff;corrcoeff,1].*linFiterr.*linFiterr';
+                %                 linFitParSamples = mvnrnd(linFitpar,linFitCovMat,1e3)';
+                %                 linFitSamples = linFitParSamples(1,:).*obj.RingList'-linFitParSamples(2,:);
+                %                 linFitStd = std(linFitSamples,0,2);
             end
             %% label
             range = round(abs(obj.RunAnaObj.ModelObj.qU(obj.RunAnaObj.exclDataStart)-obj.RunAnaObj.ModelObj.Q_i),0);
@@ -228,32 +228,32 @@ classdef RingAnalysis < handle
             
             if strcmp(linFitFlag,'ON')
                 l = plot(obj.RingList,(linFitpar(1).*obj.RingList+linFitpar(2)),'-','Color',obj.RunAnaObj.PlotColor,'LineWidth',2);
-%                 ylinFit = (linFitpar(1).*obj.RingList+linFitpar(2))./ScaleFactor';
-%                 ylinErrFit =((linFitpar(1)+linFiterr(1)).*obj.RingList+linFitpar(2))./ScaleFactor';
-%                 [l,a] =  boundedline(obj.RingList,ylinFit,ylinErrFit);
-%                 l.Color = obj.RunAnaObj.PlotColor; l.LineWidth=2;
-%                 a.FaceColor = rgb('PowderBlue'); a.FaceAlpha = 0.5;
+                %                 ylinFit = (linFitpar(1).*obj.RingList+linFitpar(2))./ScaleFactor';
+                %                 ylinErrFit =((linFitpar(1)+linFiterr(1)).*obj.RingList+linFitpar(2))./ScaleFactor';
+                %                 [l,a] =  boundedline(obj.RingList,ylinFit,ylinErrFit);
+                %                 l.Color = obj.RunAnaObj.PlotColor; l.LineWidth=2;
+                %                 a.FaceColor = rgb('PowderBlue'); a.FaceAlpha = 0.5;
             end
             
-          %  if PlotPar == 3            
-%                 e = errorbar(obj.RingList,1e3.*((y+BKG_i')./ScaleFactor'),1e3.*yErr,'.',...
-%                 'LineWidth',2,'LineStyle','none','MarkerSize',22,...
-%                 'Color',rgb('Orange'),'MarkerFaceColor',rgb('Orange'));
-                %'Color',obj.RunAnaObj.PlotColor,'MarkerFaceColor',obj.RunAnaObj.PlotColor);
-           
-%             else
-                e = errorbar(obj.RingList,y-meanPar,yErr,'.',...
+            %  if PlotPar == 3
+            %                 e = errorbar(obj.RingList,1e3.*((y+BKG_i')./ScaleFactor'),1e3.*yErr,'.',...
+            %                 'LineWidth',2,'LineStyle','none','MarkerSize',22,...
+            %                 'Color',rgb('Orange'),'MarkerFaceColor',rgb('Orange'));
+            %'Color',obj.RunAnaObj.PlotColor,'MarkerFaceColor',obj.RunAnaObj.PlotColor);
+            
+            %             else
+            e = errorbar(obj.RingList,y-meanPar,yErr,'.',...
                 'LineWidth',2,'LineStyle','none','MarkerSize',22,...
                 'Color',obj.RunAnaObj.PlotColor,'MarkerFaceColor',obj.RunAnaObj.PlotColor);
             %  'Color',rgb('Orange'),'MarkerFaceColor',rgb('Orange'));
- %           end
+            %           end
             e.CapSize = 0;
             PrettyFigureFormat('FontSize',25);
-           
+            
             if strcmp(obj.RunAnaObj.RunData.RunName,'KNM2_Prompt')
                 obj.RunAnaObj.RunData.RunName = 'KNM2 data';
             end
-            if strcmp(linFitFlag,'ON') %&& PlotPar ~= 3 
+            if strcmp(linFitFlag,'ON') %&& PlotPar ~= 3
                 runname = strrep(obj.RunAnaObj.RunData.RunName,'_',' ');
                 if contains(runname,'afterFix')
                     runname = 'KNM2 after RW fix I';
@@ -261,24 +261,34 @@ classdef RingAnalysis < handle
                     runname = 'KNM2 after RW fix II';
                 end
                 
-%                 if linFitpar(1)<0.03
-%                     if PlotPar==1
-%                         linFitleg =  sprintf('Linear fit %.1f \\pm %.1f meV^2/ring , p-value = %.2f',linFitpar(1)*1e3,linFiterr(1)*1e3,1-chi2cdf(linFitchi2min,linFitdof));
-%                     elseif PlotPar==2
-%                         linFitleg =  sprintf('Linear fit %.1f \\pm %.1f meV/ring , p-value = %.2f ',linFitpar(1)*1e3,linFiterr(1)*1e3,1-chi2cdf(linFitchi2min,linFitdof));
-%                     end
-%                 else
-                    if PlotPar==1
-                        linFitleg =  sprintf('Linear slope: (%.2f \\pm %.2f) eV^{ 2} per pseudo-ring ',linFitpar(1),linFiterr(1));%,1-chi2cdf(linFitchi2min,linFitdof));%, {\\it p} = %.2f
-                  
-                    elseif PlotPar==2
+                %                 if linFitpar(1)<0.03
+                %                     if PlotPar==1
+                %                         linFitleg =  sprintf('Linear fit %.1f \\pm %.1f meV^2/ring , p-value = %.2f',linFitpar(1)*1e3,linFiterr(1)*1e3,1-chi2cdf(linFitchi2min,linFitdof));
+                %                     elseif PlotPar==2
+                %                         linFitleg =  sprintf('Linear fit %.1f \\pm %.1f meV/ring , p-value = %.2f ',linFitpar(1)*1e3,linFiterr(1)*1e3,1-chi2cdf(linFitchi2min,linFitdof));
+                %                     end
+                %                 else
+                if PlotPar==1
+                    linFitleg =  sprintf('Linear slope: (%.2f \\pm %.2f) eV^{ 2} per pseudo-ring ',linFitpar(1),linFiterr(1));%,1-chi2cdf(linFitchi2min,linFitdof));%, {\\it p} = %.2f
+                    
+                elseif PlotPar==2
+                    if round(linFitpar(1),2) <0.1 || round(linFiterr(1),2)<0.1
+                        linFitleg =  sprintf('Linear slope: (%.0f \\pm %.0f) meV per pseudo-ring',1e3.*linFitpar(1),1e3.*linFiterr(1));%,1-chi2cdf(linFitchi2min,linFitdof));
+                    else
                         linFitleg =  sprintf('Linear slope: (%.2f \\pm %.2f) eV per pseudo-ring',linFitpar(1),linFiterr(1));%,1-chi2cdf(linFitchi2min,linFitdof));
-                    elseif PlotPar==3
-                        linFitleg =  sprintf('Linear slope: (%.2f \\pm %.2f) mcps per pseudo-ring',linFitpar(1),linFiterr(1));%,1-chi2cdf(linFitchi2min,linFitdof));
-                    elseif PlotPar==4
-                         linFitleg =  sprintf('Linear slope: (%.1g \\pm %.1g) per pseudo-ring',linFitpar(1),linFiterr(1));%,1-chi2cdf(linFitchi2min,linFitdof));
                     end
-%                 end
+                elseif PlotPar==3
+                    if round(linFiterr(1),2)>=0.01
+                        linFitleg =  sprintf('Linear slope: (%.2f \\pm %.2f) mcps per pseudo-ring',linFitpar(1),linFiterr(1));%,1-chi2cdf(linFitchi2min,linFitdof));
+                    else
+                        linFitleg =  sprintf('Linear slope: (%.3f \\pm %.3f) mcps per pseudo-ring',linFitpar(1),linFiterr(1));%,1-chi2cdf(linFitchi2min,linFitdof));
+                        
+                    end
+                    
+                elseif PlotPar==4
+                    linFitleg =  sprintf('Linear slope: (%.1g \\pm %.1g) per pseudo-ring',linFitpar(1),linFiterr(1));%,1-chi2cdf(linFitchi2min,linFitdof));
+                end
+                %                 end
                 leg = legend([e,l],sprintf('Pseudo-ring-wise fits'),linFitleg);% (%s),runname
             else
                 leg = legend(e,sprintf('%s',strrep(obj.RunAnaObj.RunData.RunName,'_',' ')));
@@ -287,22 +297,22 @@ classdef RingAnalysis < handle
             legend box off;
             leg.FontSize= get(gca,'FontSize');
             PrettyLegendFormat(leg);
-           % leg.EdgeColor = rgb('Silver');
+            % leg.EdgeColor = rgb('Silver');
             if PlotPar==1
                 ystr = sprintf('{\\itm}_\\nu^2');
                 yUnit = sprintf('(eV^{ 2})');
             elseif PlotPar==2
-                 ystr = sprintf('{\\itE}_0^{fit}');
+                ystr = sprintf('{\\itE}_0^{fit}');
                 yUnit = sprintf('(eV)');
             elseif PlotPar==3
-                 ystr = sprintf('{\\itB}_{base}');
+                ystr = sprintf('{\\itB}_{base}');
                 yUnit = sprintf(' per pixel (mcps)');
             elseif  PlotPar==11
                 ystr = sprintf('{\\itqU}_{offset}');
                 yUnit = sprintf('(eV)');
             elseif  PlotPar==4
                 ystr = sprintf('{\\itN}');
-                yUnit = '';              
+                yUnit = '';
             end
             if strcmp(PlotMode,'Rel')
                 ylabel(sprintf('%s - \\langle%s\\rangle %s',ystr,ystr,yUnit));
@@ -318,12 +328,12 @@ classdef RingAnalysis < handle
                 t =title(sprintf('%.0f stacked runs (%.0f - %.0f) - %.0f pixels - %.0f eV range - \\langle{\\itm}_\\nu^2\\rangle = %.2f eV^2 ',...
                     numel(obj.RunAnaObj.StackedRuns),obj.RunAnaObj.RunList(1),obj.RunAnaObj.RunList(end),numel(obj.RunAnaObj.PixList),range, mean(y)));
             elseif PlotPar==2
-               t = title(sprintf('%.0f stacked runs (%.0f - %.0f) - %.0f pixels - %.0f eV range - \\langle{\\itE}_0^{fit}\\rangle = %.2f eV',...
-                   numel(obj.RunAnaObj.StackedRuns),obj.RunAnaObj.RunList(1),obj.RunAnaObj.RunList(end),numel(obj.RunAnaObj.PixList),range, meanPar + obj.RunAnaObj.ModelObj.Q_i));
+                t = title(sprintf('%.0f stacked runs (%.0f - %.0f) - %.0f pixels - %.0f eV range - \\langle{\\itE}_0^{fit}\\rangle = %.2f eV',...
+                    numel(obj.RunAnaObj.StackedRuns),obj.RunAnaObj.RunList(1),obj.RunAnaObj.RunList(end),numel(obj.RunAnaObj.PixList),range, meanPar + obj.RunAnaObj.ModelObj.Q_i));
                 AnaType = 'E0';
             elseif PlotPar==3
-               t= title(sprintf('%.0f stacked runs (%.0f - %.0f) - %.0f pixels - %.0f eV range - B_{Tot} = %.1f mcps',...
-                   numel(obj.RunAnaObj.StackedRuns),obj.RunAnaObj.RunList(1),obj.RunAnaObj.RunList(end),numel(obj.RunAnaObj.PixList),range, 1e3*BKG_Tot));
+                t= title(sprintf('%.0f stacked runs (%.0f - %.0f) - %.0f pixels - %.0f eV range - B_{Tot} = %.1f mcps',...
+                    numel(obj.RunAnaObj.StackedRuns),obj.RunAnaObj.RunList(1),obj.RunAnaObj.RunList(end),numel(obj.RunAnaObj.PixList),range, 1e3*BKG_Tot));
                 AnaType = 'BKG';
             elseif PlotPar==4
                 AnaType = 'Normalization';
@@ -340,14 +350,14 @@ classdef RingAnalysis < handle
                 t = title(sprintf('%.0f stacked runs (%.0f - %.0f) - %.0f pixels - %.0f eV range',...
                     numel(obj.RunAnaObj.StackedRuns),obj.RunAnaObj.RunList(1),obj.RunAnaObj.RunList(end),numel(obj.RunAnaObj.PixList),range));
             end
-             t.FontWeight = 'normal';
-             t.FontSize = get(gca,'FontSize');
-             t.delete;
-             
+            t.FontWeight = 'normal';
+            t.FontSize = get(gca,'FontSize');
+            t.delete;
+            
             switch obj.RunAnaObj.RingMerge
                 case 'Half'
                     xticks([1 2])
-                  %  xticklabels({'1-6','7-12'})
+                    %  xticklabels({'1-6','7-12'})
                     xticklabels({'Bullseye & 1-5','6-11'});
                 case 'InnerPseudo3'
                     xticks([1]);
@@ -371,9 +381,9 @@ classdef RingAnalysis < handle
             set(gca,'XMinorTick','off');
             
             if PlotPar==2 && strcmp(PlotMode,'Abs')
-                yticks([18572.1:0.2:18575]) 
+                %yticks([18572.1:0.2:18575])
             elseif PlotPar==4 && strcmp(PlotMode,'Abs')
-                   
+                
             end
             
             if ~isempty(YLim)
@@ -398,8 +408,8 @@ classdef RingAnalysis < handle
                 xlim([min(obj.RingList)-0.5,max(obj.RingList)+0.5])
             end
             leg.Location = 'northwest';
-           % set(leg.BoxFace, 'ColorType','truecoloralpha', 'ColorData',uint8(255*[1;1;1;0.5]));
-       
+            % set(leg.BoxFace, 'ColorType','truecoloralpha', 'ColorData',uint8(255*[1;1;1;0.5]));
+            
             if strcmp(SavePlot,'ON')
                 savedir = [getenv('SamakPath'),sprintf('tritium-data/plots/%s/SingleRingFit/',obj.RunAnaObj.DataSet)];
                 MakeDir(savedir);
@@ -419,23 +429,31 @@ classdef RingAnalysis < handle
                     AnaType,obj.RunAnaObj.ModelObj.TD,range,obj.RunAnaObj.RingMerge,freePar,obj.RunAnaObj.DataType,Blind,RoiStr,MosStr);
                 export_fig(gcf,[savedir,savename]);
                 fprintf('Save plot to %s \n',[savedir,savename])
+                
+                if strcmp(linFitFlag,'ON')
+                    linFitp = 1-chi2cdf(linFitchi2min,linFitdof);
+                    linFitData  =  [linFitpar,linFitchi2min,linFitp;linFiterr,linFitdof,0];
+                    linFitfile = strrep([savedir,savename],'.pdf','_LinFitResult');
+                    Write2Txt('filename',linFitfile,'Format','txt','variable',linFitData',...
+                        'variableName','slope   offset   chi2min/dof  pvalue','nCol',size(linFitData,2));
+                end
             end
-%             N = 10000;
-%             e = repmat([obj.FitResult.err(:,2)]',N,1);
-%             a = randn(N,numel(obj.FitResult.err(:,2)));
-%             d = e.*a;
-%             stdsim = std(d,0,2);
-%             
-%             fighist = figure;
-%             h = histogram(stdsim,'Normalization','probability');
-%             
-%             dataknm1 = [(obj.FitResult.par(:,PlotPar)-meanPar)./ScaleFactor] ;
-%             stddata = std(dataknm1);
-%             hold on
-%             line([stddata stddata], [0 max(h.Values)],'Color','Red');
-%             hold off
-%             PrettyFigureFormat
-         
+            %             N = 10000;
+            %             e = repmat([obj.FitResult.err(:,2)]',N,1);
+            %             a = randn(N,numel(obj.FitResult.err(:,2)));
+            %             d = e.*a;
+            %             stdsim = std(d,0,2);
+            %
+            %             fighist = figure;
+            %             h = histogram(stdsim,'Normalization','probability');
+            %
+            %             dataknm1 = [(obj.FitResult.par(:,PlotPar)-meanPar)./ScaleFactor] ;
+            %             stddata = std(dataknm1);
+            %             hold on
+            %             line([stddata stddata], [0 max(h.Values)],'Color','Red');
+            %             hold off
+            %             PrettyFigureFormat
+            
         end
         function AverageFitResults(obj,varargin)
             % Constant Fit of Fit ParameterAvPar
@@ -448,17 +466,17 @@ classdef RingAnalysis < handle
             disp([ obj.FitResult.par(:,1) obj.FitResult.err(:,1)]);
             %[ round(18573.7+obj.FitResult.par(:,2),3) round(obj.FitResult.err(:,2),3)]
             
-             %% Cte fit
+            %% Cte fit
             tmparg = sprintf(['set pri -10;  fix 1 ; min ; minos ;'],'');
             Data = [obj.RingList',obj.FitResult.par(:,AvPar),obj.FitResult.err(:,AvPar)];
             parInit = [0 0];
             Args   = {parInit, Data, '-c', tmparg};
             [par, err, chi2min, ~] = fminuit('chi2lin',Args{:});
-            dof = numel(obj.FitResult.par(:,AvPar))-numel(parInit)+1;     
+            dof = numel(obj.FitResult.par(:,AvPar))-numel(parInit)+1;
             
-                        
+            
             fig2 = figure('Renderer','opengl');
-            set(fig2,'units','normalized','pos',[0.1, 0.1,0.9,0.7]);  
+            set(fig2,'units','normalized','pos',[0.1, 0.1,0.9,0.7]);
             
             e = errorbar(obj.RingList,(obj.FitResult.par(:,AvPar)),obj.FitResult.err(:,AvPar),'o',...
                 'LineWidth',2,'LineStyle','none','MarkerSize',8,'Color',obj.RunAnaObj.PlotColor,'MarkerFaceColor',obj.RunAnaObj.PlotColor);
@@ -491,7 +509,7 @@ classdef RingAnalysis < handle
             end
             xlim([min(obj.RingList)-0.5,max(obj.RingList)+0.5]);
             title(mytitle);
-
+            
             PrettyFigureFormat;
             
         end
