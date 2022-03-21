@@ -1004,7 +1004,7 @@ classdef SterileAnalysis < handle
                 dRAA1 = importdata(filenameRAA1,'file');
                 dRAA2 = importdata(filenameRAA2,'file');  
                 pRAA_GA = plot([dRAA1.sith4_X(1),dRAA1.sith4_X,dRAA1.sith4_X(end)],...
-                         [1e5,dRAA1.m4_Y,1e5],'-','LineWidth',2,'Color',rgb('ForestGreen'));
+                         [1e5,dRAA1.m4_Y,1e5],'-','LineWidth',2,'Color',rgb('ForestGreen'));%ForestGreen
                 plot(dRAA2.sith4_X,dRAA2.m4_Y,'-','LineWidth',pRAA_GA.LineWidth,'Color',pRAA_GA.Color);
                 legHandle{numel(legHandle)+1} = pRAA_GA;
                 legStr = [legStr,{sprintf('RAA + GA 95%% C.L.')}];%-PRD 83, 073006 (2011) -
@@ -1022,7 +1022,7 @@ classdef SterileAnalysis < handle
                 
                 xRAA = dRAA1(1:15:end,1);
                 yRAA = smooth(dRAA1(1:15:end,2),5);
-                pRAA = plot(xRAA,yRAA,'-','LineWidth',2,'Color',rgb('SeaGreen'));%ForestGreen
+                pRAA = plot(xRAA,yRAA,'-','LineWidth',2,'Color',rgb('Lime'));%SeaGreen
                 plot(dRAA2(1:15:end,1),smooth(dRAA2(1:15:end,2),5),'-','LineWidth',pRAA.LineWidth,'Color',pRAA.Color);
                 plot(dRAA3(1:15:end,1),smooth(dRAA3(1:15:end,2),5),'-','LineWidth',pRAA.LineWidth,'Color',pRAA.Color);
                
@@ -1083,7 +1083,7 @@ classdef SterileAnalysis < handle
                 fBest2b = sprintf('%scontour_BestGAcombi_2sigma_b.txt',savedirOther);
                 dataBest2a = importdata(fBest2a);
                 dataBest2b = importdata(fBest2b);
-                pBest = plot(dataBest2a(:,1),dataBest2a(:,2),'-','LineWidth',2,'Color',rgb('Lime'));
+                pBest = plot(dataBest2a(:,1),dataBest2a(:,2),'-','LineWidth',2,'Color',rgb('ForestGreen'));%Lime
                 plot(dataBest2b(:,1),dataBest2b(:,2),pBest.LineStyle,'LineWidth',pBest.LineWidth,'Color',pBest.Color);
                 %extend to large m4
                 plot(ones(1,1e2).*dataBest2a(end,1),linspace(dataBest2a(end,2),2e3,1e2),pBest.LineStyle,'LineWidth',pBest.LineWidth,'Color',pBest.Color);

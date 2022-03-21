@@ -1664,6 +1664,15 @@ classdef RunSensitivity < handle
                     export_fig(f55,strrep(savefile,'.png','.pdf'));
                 end
                 fprintf('Save plot to %s \n',savefile);
+                
+                % save also combi file for later use
+%                 savefile2 = strrep(strrep(savefile,'plots/',''),'.png','.mat');
+%                 
+%                 MultiLpar = obj.MultiLpar;
+%                 SysEffectsAll = obj.SysEffectsAll;
+%                 CovMatFrac = obj.CovMatFrac;
+%                 CovMatShape = obj.CovMatShape;
+%                 save(savefile2,'MultiLpar','SysEffectsAll','NPcomponent','CovMatFrac','CovMatShape');
             end
         end
         function PlotScan(obj,varargin)

@@ -1,6 +1,6 @@
 % Calculte and/or plot systematics breakdown for KNM2 unblinding 1
 range = 40;
-DataType = 'Real';
+DataType = 'Twin';
 SigmaSq =  0.0124+0.0025;
 PullFlag = 99;
 freePar = 'mNu E0 Bkg Norm qU';

@@ -93,8 +93,8 @@ set(gca,'FontSize',24);
 ax.XLabel.FontSize = 26;
 ax.YLabel.FontSize = 26;
 
-%% legend
-mNuStr = sprintf('{\\itm}_\\nu^2 = 0 eV^2');
+% legend
+mNuStr = sprintf('{\\itm}_\\nu^{ 2} = 0 eV^2');
 legStrCombi = legStr;
 if strcmp(FinalSensitivity,'ON')
     legStrCombi{end-1} = [legStr{end-1},' sensitivity'];
@@ -143,6 +143,32 @@ end
 set(gca,'FontSize',LocalFontSize);
 ax.XLabel.FontSize = LocalFontSize;
 ax.YLabel.FontSize = LocalFontSize;
+ColorOsci_i = arrayfun(@(x) x.Color,legHandleAll(1:8),'UniformOutput',false);
+%% some modifications for snowmass
+
+PrettyFigureFormat;
+ax.Position(1) = 0.1;
+leg.FontSize = 15.5;
+set(gca,'TickDir','out');
+
+% permute oscillation exp colors
+ColorOsci = ColorOsci_i{5};
+ColorOsci = [ColorOsci;cell2mat(ColorOsci_i(1:4)')];
+
+for i=1:5
+    legHandleAll(i).Color = ColorOsci(i,:);
+end
+
+% change gallium anomlies colors/RAA
+%legHandleAll(7).Color = ColorOsci_i{8};
+legHandleAll(11).Color = legHandleAll(12).Color;
+legHandleAll(12).Color = rgb('Salmon');
+legHandleAll(13).Color= rgb('DarkTurquoise');
+legHandleAll(15).Color ='k';
+
+plotname = sprintf('%sKSN2_Comparison_%.2gCL.pdf',extractBefore(S.DefPlotName,'GridSearch'),S.ConfLevel);
+export_fig(gcf,plotname);
+fprintf('save plot to %s \n',plotname)         
 
 
 %% save as pdf

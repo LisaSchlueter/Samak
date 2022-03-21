@@ -96,7 +96,7 @@ if strcmp(RingMerge,'None') && strcmp(chi2,'chi2CMShape') && strcmp(AnaFlag,'Rin
 end
 
 ProfileResult = A.ComputeChi2Profile('Parameter','mNu','nFit',30,...
-    'ParMin',-0.5,'ParMax',1);;
+    'ParMin',-0.5,'ParMax',1);
 
 
 

@@ -1,3 +1,5 @@
+% comparison plot of unblinded fit results and upper limits
+
 Uniform = 'ON';
 MR4 = 'OFF';
 MR4qU = 'ON';
@@ -13,7 +15,7 @@ if strcmp(Uniform,'ON')
     filecm   = [CommonStrCM,'_StackPixel_KNM2_SysBudget40.mat'];
     dUstat    = importdata(fileStat);
     dUcm      = importdata(filecm);
-    x = [dUstat.FitResult.par(1),dUcm.FitResult.par(1)];
+    x      = [dUstat.FitResult.par(1),dUcm.FitResult.par(1)];
 end
 
 if strcmp(MR4,'ON')
@@ -31,7 +33,7 @@ if strcmp(MR4qU,'ON')
     dMR4qUcm   = importdata(filecm);
     x = [x,dMR4qUstat.FitResult.par(1),dMR4qUcm.FitResult.par(1)];
 end
-%%
+
 if strcmp(MR12qU,'ON')
      fileStat = strrep([CommonStrStat,'_RingNone_KNM2_pull6.mat'],strrep(freePar,' ',''),[strrep(freePar,' ',''),'qU']);
     dMR12stat = importdata(fileStat);
@@ -41,8 +43,26 @@ if strcmp(MR12qU,'ON')
     x = [x,dMR12stat.FitResult.par(1),dMR12cm.FitResult.par(1)];
 end
 
+%% load upper limit as a function of best fit
+savenameFC = sprintf('%sknm2ub2_mNuLimits_%s.mat',savedir,'FC');
+savenameLT = sprintf('%sknm2ub2_mNuLimits_%s.mat',savedir,'LT');
+dFC = importdata(savenameFC);
+dLT = importdata(savenameLT);
+
+UpperLimFC = sqrt(interp1(dFC.mNuMeasured_v,dFC.mNuSqLimit_v,x,'spline'));
+UpperLimLT = sqrt(interp1(dLT.mNuMeasured_v,dLT.mNuSqLimit_v,x,'spline'));
+%
 %% plot
-f1 = figure('Units','normalized','Position',[0.1,0.1,0.4,0.6]);
+LocalFontSize = 18;
+UpperLim = 'ON';
+close all
+if strcmp(UpperLim,'ON')
+    f1 = figure('Units','normalized','Position',[0.1,0.1,0.6,0.45]);
+    s1 = subplot(1,3,1:2);
+else
+    f1 = figure('Units','normalized','Position',[0.1,0.1,0.4,0.6]);
+end
+
 CommonPlotArg = {'CapSize',0,'LineWidth',2};
 
 pmean = plot(mean(x).*ones(1,10),linspace(0,1e2,10),'LineStyle',':','Color',rgb('Silver'),'LineWidth',2);
@@ -94,7 +114,7 @@ end
 pcm   = plot(0,1e2,'LineWidth',2,'Color',rgb('DodgerBlue'));
 pstat =  plot(0,1e2,'LineWidth',2,'Color',rgb('Orange'));
 %
-PrettyFigureFormat('FontSize',22)
+
 ylim([y(1)-0.1,y(end)+0.22]);%+0.18]);
 if strcmp(MR12qU,'ON')
     if strcmp(MR4,'ON')
@@ -107,10 +127,55 @@ else
 end
 set(gca,'YMinorTick','off');
 yticklabels(legStr);
-xlabel(sprintf('{\\itm}_\\nu^2 (eV^2)'));
+xlabel(sprintf('{\\itm}_\\nu^2 (eV^{ 2})'));
 leg = legend([pstat,pcm],'Stat. only','Stat. and syst.','EdgeColor',rgb('Silver'),'Location','northwest');
 PrettyLegendFormat(leg);
+PrettyFigureFormat('FontSize',LocalFontSize)
 xlim([-0.1,0.65])
+ax1 = gca;
+ax1.YAxis.FontSize = ax1.XLabel.FontSize;
+leg.FontSize = get(gca,'FontSize')+2;
+
+if strcmp(UpperLim,'ON')
+    s2 = subplot(1,3,3);
+    PArg = {'MarkerSize',8,'Color',rgb('DodgerBlue'),'MarkerFaceColor',rgb('DodgerBlue'),'LineWidth',2};
+    plot(UpperLimFC(2),y(2),'o',PArg{:});
+    hold on;
+    plot(UpperLimFC(4),y(4),'s',PArg{:});
+    plot(UpperLimFC(6),y(6),'*',PArg{:});
+    
+    % UpLT = plot(UpperLimLT(1:2:end),y(1:2:end),'d','MarkerSize',6,'Color',rgb('Orange'));
+    % plot(UpperLimLT(2:2:end),y(2:2:end),'x','MarkerSize',6,'Color',rgb('DodgerBlue'));
+    linkaxes([s1,s2],'y');
+    
+    xlabel(sprintf('Upper Limit in {\\itm}_\\nu (eV)\n at 90%% C.L.'));
+     PrettyFigureFormat('FontSize',LocalFontSize)
+    ylim([y(1)-0.1,y(end)+0.22]);%+0.18]);
+    if strcmp(MR12qU,'ON')
+        if strcmp(MR4,'ON')
+            yticks([y(1)+0.05,y(3)+0.05,y(5)+0.05]);
+        else
+            yticks([y(1)+0.05,y(3)+0.05,y(end)]);
+        end
+    else
+        yticks([y(1)+0.05,y(3)+0.05]);
+    end
+    yticklabels([])
+    set(gca,'YMinorTick','off'); 
+   
+    xlim([0.886 0.915])
+    xticks([0.89:0.01:0.91])
+   
+end
+
+ax2 = gca;
+ax1.Position(2) = 0.18;
+ax2.Position(2) = 0.18;
+ax2.Position(1) = 0.635;
+ax2.Position(3) = 0.2;
+ax1.XLabel.Position(2) = ax2.XLabel.Position(2);
+
+%
 plotdir = strrep(savedir,'results','plots');
-plotname = sprintf('%sknm2ub1_FitResultOverview_mNuSq.png',plotdir);
-print(plotname,'-dpng','-r350');
+plotname = sprintf('%sknm2ubfinal_FitResultOverview_mNuSq_UpLim%s.pdf',plotdir,UpperLim);
+export_fig(plotname);

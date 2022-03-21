@@ -16,7 +16,7 @@ SysEffectLeg      = {'Theoretical corrections';...
     'Magnetic fields';...
     sprintf('Number of scatterings \\rho{\\itd}\\sigma');...%  
     'Detector efficiency';...
-    sprintf('Background {\\itqU} slope');...
+    sprintf('Retarding-potential dependent background');...% sprintf('Background {\\itqU} slope');...
    };
 
 % PlotColor = {rgb('PowderBlue'),rgb('DodgerBlue'),rgb('GoldenRod'),rgb('ForestGreen'),...
@@ -69,10 +69,10 @@ y = SingleBarY_data;
 %%
 
 f55 = figure('Name','MultiBarPlot','Renderer','painters');
-set(f55, 'Units', 'normalized', 'Position', [0.1, 0.1, 0.7, 0.8]);
+set(f55, 'Units', 'normalized', 'Position', [0.1, 0.1, 0.8, 0.8]);
 
-leg_str = {'Background rate', SysEffectLeg{:},'Statistics','Total'};
-LocalFontSize = 27;
+leg_str = {'Non-Poisson background over-dispersion', SysEffectLeg{:},'Statistics','Total'};
+LocalFontSize = 22;
 [y,ia] = sort(y,'descend');
 leg_str = leg_str(ia);
 
@@ -100,7 +100,7 @@ for i=1:numel(y)
     t{i}= text(2.1,SingleBarX(i),tstr,...
         'HorizontalAlignment','right','FontSize',LocalFontSize-2,...
         'Interpreter','tex',...
-        'FontName','Times New Roman');
+        'FontName','Helvetica');
     
 %     % add sensitivity as reference line
 %     btwin{i}  = barh(SingleBarX(i),SingleBarY_twin(i));
@@ -125,7 +125,7 @@ for i=1:numel(y)
      t{i}= text(5,SingleBarX(i),tstr,...
         'HorizontalAlignment','right','FontSize',LocalFontSize-2,...
         'Interpreter','tex',...
-        'FontName','Times New Roman',...
+        'FontName','Helvetica',...
         'Color',rgb('DimGray'));
 end
 
@@ -138,7 +138,7 @@ cl = 0.683;
     xlabel(sprintf('1\\sigma uncertainty on {\\itm}^2_\\nu at %.1f%% C.L. (eV^{ 2})',cl*100));
  %   xlabel(sprintf('1\\sigma sensitivity on {\\itm}^2_\\nu at %.0f%% C.L. (eV^{ 2})',cl*100));
 
-PRLFormat;
+PrettyFigureFormat
 set(gca,'FontSize',LocalFontSize);
 % no y-ticks
 set(gca,'YMinorTick','off');

@@ -5,7 +5,7 @@
 %% settings
 Mode        = 'LT';  % FC = Feldman Cousin, LT = Lokov Tkachov
 Sensitivity = 'OFF'; % OFF= show best fit, ON = show sensitivity only
-SavePlot    = 'OFF';
+SavePlot    = 'ON';
 range = 40;
 chi2 = 'chi2CMShape';
 SysBudget = 40;
@@ -66,7 +66,6 @@ switch Mode
             'Style','Pretty','XLim',[-1.25,1.25],'mNuSq_bf',mNuSq_bf);
 end
 %% get limit as function of m_measured
-%savedir  = [getenv('SamakPath'),'knm2ana/knm2_unblindingFinal/results/'];
 savedir  = [getenv('SamakPath'),'knm2ana/knm2_PngBkg/results/'];
 savename = sprintf('%sknm2ub2_mNuLimits_%s.mat',savedir,Mode);
 if exist(savename,'file') 

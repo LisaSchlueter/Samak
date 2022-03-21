@@ -1,14 +1,14 @@
 % Uniform fit on KNM2 data/twins
 % March 2022, Lisa
 
-chi2 = 'chi2Stat';
+chi2 = 'chi2CMShape';
 qURange  = [95,20];
-NonPoissonScaleFactor = 1;%.112;
+NonPoissonScaleFactor = 1.112;
 fitter = 'minuit';
 Chi2Profile = 'OFF';
 % create mini short cut file for plotting
 savedir = [getenv('SamakPath'),'knm2ana/knm2_qUScan/results/'];
-savename = sprintf('%sknm2_qUScan_Mini_%.0feV_to_%.0feV_%s_NP%.3f_%s_profilechi2%s.mat',...
+savename = sprintf('%sknm2_qUScanTwin_Mini_%.0feV_to_%.0feV_%s_NP%.3f_%s_profilechi2%s.mat',...
     savedir,qURange(1),qURange(2),chi2,NonPoissonScaleFactor,fitter,Chi2Profile);
 
 if exist(savename,'file')
@@ -21,7 +21,7 @@ else
     SysBudget = 40;
     
     RunAnaArg = {'RunList','KNM2_Prompt',...
-        'DataType','Real',...
+        'DataType','Twin',...
         'fixPar','mNu E0 Bkg Norm',...
         'RadiativeFlag','ON',...
         'DopplerEffectFlag','FSD',...
@@ -41,9 +41,11 @@ else
     D = MultiRunAnalysis(RunAnaArg{:});
     range = 40;               % fit range in eV below endpoint
     D.exclDataStart = D.GetexclDataStart(range); % find correct data, where to cut spectrum
+   
     %% extra label for qU-scan with "wrong" energy loss function
     saveStr = sprintf('_%s_BkgPt%.3gmuCpsPerkeV',ELossFlag,BKG_PtSlope.*1e6);
     %%
+    
     % qU Scan
  [parqU, errqU, chi2qU, dofqU] = ...
         D.qUScan('qURange',qURange,'RecomputeFlag','OFF','Chi2Profile',Chi2Profile,...

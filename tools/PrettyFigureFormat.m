@@ -5,7 +5,7 @@ p.addParameter('FontSize',20,@(x)isfloat(x));
 p.parse(varargin{:});
 FontSize = p.Results.FontSize;
 
-FontName = 'Helvetica';%'Helvetica';%'Helvetica';%'Deja Vous Sans';
+FontName = 'Arial';%'Helvetica';%'Helvetica';%'Helvetica';%'Deja Vous Sans';
 FontWeight = 'normal';
 set(gca,'FontName',FontName,'FontSize',FontSize-4,'FontWeight',FontWeight)
 set(get(gca,'XLabel'),'FontName',FontName,'FontSize',FontSize,'FontWeight',FontWeight);
