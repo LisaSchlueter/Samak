@@ -16,10 +16,10 @@ end
 R = d.A;
 
 %% number of electrons: analysis interval based on DATA + fitted steady-state background rate 
-R_i_bkg   = R.ModelObj.BKG_RateSec;
-Nbkg_qU   = R.RunData.qUfrac(R.exclDataStart:end).*R.RunData.TimeSec.*R_i_bkg;
+Rate_qU_bkg   = R.ModelObj.BKG_RateSec;
+Nbkg_qU   = R.RunData.qUfrac(R.exclDataStart:end).*R.RunData.TimeSec.*Rate_qU_bkg;
 Nbkg      = sum(Nbkg_qU);
-Nbkg_qU_sig  = R.RunData.qUfrac(R.exclDataStart:end-5).*R.RunData.TimeSec.*R_i_bkg; % only signal points
+Nbkg_qU_sig  = R.RunData.qUfrac(R.exclDataStart:end-5).*R.RunData.TimeSec.*Rate_qU_bkg; % only signal points
 Nbkg_sig  = sum(Nbkg_qU_sig); % only signal points
 Nall      = sum(R.RunData.TBDIS(R.exclDataStart:end));
 Nsig      = Nall-Nbkg;
@@ -94,20 +94,21 @@ export_fig(pltfile);
 %Counts_qU_AnaRange = R.RunData.TBDIS(R.exclDataStart:end);
 %Counts_AnaRange = sum(Counts_qU_AnaRange);
 
-Idx = 1:numel(R.RunData.qU); %R.exclDataStart
+Idx = R.exclDataStart:numel(R.RunData.qU); 
 t_i = (R.RunData.qUfrac(Idx).*R.RunData.TimeSec);
-R_i = R.RunData.TBDIS(Idx)./t_i;%R.exclDataStart:end
-R_i_bkg = 0.22.*ones(numel(R_i),1); %cps
-R_bkg = sum(R_i_bkg);
-R_i_sig = R_i-R_i_bkg;
-R_sig = sum(R_i_sig);
+Rate_qU = R.RunData.TBDIS(Idx)./t_i;
+Rate_qU_bkg = 0.22.*ones(numel(Rate_qU),1); %cps
+Rate_qU_sig = Rate_qU-Rate_qU_bkg;
+
+Rate_bkg = sum(Rate_qU_bkg);
+R_sig = sum(Rate_qU_sig);
 
 %calculate signal to background with summed rates (what was done in PRD review)
-Sig2Bkg_Rates = sum(R_i_sig)./mean(R_i_bkg);
+Sig2Bkg_Rates = sum(Rate_qU_sig)./mean(Rate_qU_bkg);
 
 %calculate signal to background with summed counts
-Sig2Bkg_Counts = sum(R_i_sig.*t_i)./sum(R_i_bkg.*t_i);
-Sig2Bkg_Counts_qU = (R_i_sig.*t_i)./(R_i_bkg.*t_i);
+Sig2Bkg_Counts = sum(Rate_qU_sig.*t_i)./sum(Rate_qU_bkg.*t_i);
+Sig2Bkg_Counts_qU = (Rate_qU_sig.*t_i)./(Rate_qU_bkg.*t_i);
 
 %% interpolate 
 qU_all = R.RunData.qU-R.ModelObj.Q;
@@ -127,12 +128,12 @@ end
 %% full intervall (-300)
 
 t_i = [R.RunData.qUfrac;R.RunData.qUfrac_RM].*R.RunData.TimeSec;
-R_i = [R.RunData.TBDIS;R.RunData.TBDIS_RM]./t_i;%R.exclDataStart:end
-R_i_bkg = 0.22.*ones(numel(R_i),1); %cps
-R_bkg = sum(R_i_bkg);
-R_i_sig = R_i-R_i_bkg;
-R_sig = sum(R_i_sig);
-Sig2Bkg_Counts = sum(R_i_sig.*t_i)./sum(R_i_bkg.*t_i);
+Rate_qU = [R.RunData.TBDIS;R.RunData.TBDIS_RM]./t_i;%R.exclDataStart:end
+Rate_qU_bkg = 0.22.*ones(numel(Rate_qU),1); %cps
+Rate_bkg = sum(Rate_qU_bkg);
+Rate_qU_sig = Rate_qU-Rate_qU_bkg;
+R_sig = sum(Rate_qU_sig);
+Sig2Bkg_Counts = sum(Rate_qU_sig.*t_i)./sum(Rate_qU_bkg.*t_i);
 
 
 

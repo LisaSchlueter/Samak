@@ -1,11 +1,11 @@
 range   = 40;
 freePar = 'mNu E0 Bkg Norm BkgSlope';
-chi2    = 'chi2Stat';%CMShape';
+chi2    = 'chi2CMShape';
 SysBudget = 40;
 DataType = 'Real';
-AnaFlag = 'StackPixel';%StackPixel';
-PullFlag = 10;% 99 == No pull
-BkgSlopeSigma = 4.74.*1e-06;
+AnaFlag = 'StackPixel';
+PullFlag = 10;% 99 == No pull, 10 == background slope constrain with variable sigma
+BkgSlopeSigma = 4.74.*1e-06; %  
 BKG_PtSlope = 3*1e-06;
 
 savedir = [getenv('SamakPath'),'knm2ana/knm2_PngBkg/results/'];
@@ -26,7 +26,7 @@ if ~strcmp(chi2,'chi2Stat')
     savename = strrep(savename,'.mat',sprintf('_SysBudget%.0f.mat',SysBudget));
 end
 
-if exist(savename,'file')
+if exist(savename,'file') 
     load(savename,'FitResult','RunAnaArg','A');
 else
     SigmaSq =  0.0124+0.0025;
@@ -37,7 +37,7 @@ else
         'fixPar',freePar,...
         'RadiativeFlag','ON',...
         'minuitOpt','min ; minos',...
-        'FSDFlag','KNM2',...
+        'FSDFlag','KNM2_0p1eV',...
         'ELossFlag','KatrinT2A20',...
         'SysBudget',SysBudget,...
         'AnaFlag',AnaFlag,...
@@ -58,7 +58,6 @@ else
     if ~strcmp(chi2,'chi2Stat')
         A.NonPoissonScaleFactor = 1.112;
         A.SetNPfactor;
-        
         A.chi2 = chi2;
         A.ComputeCM('BkgCM','OFF');
     end

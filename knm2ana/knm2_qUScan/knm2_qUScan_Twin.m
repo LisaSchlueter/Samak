@@ -1,9 +1,9 @@
 % Uniform fit on KNM2 data/twins
 % March 2022, Lisa
 
-chi2 = 'chi2CMShape';
+chi2 = 'chi2Stat';%CMShape';
 qURange  = [95,20];
-NonPoissonScaleFactor = 1.112;
+NonPoissonScaleFactor = 1;%.112;
 fitter = 'minuit';
 Chi2Profile = 'OFF';
 % create mini short cut file for plotting
@@ -47,13 +47,13 @@ else
     %%
     
     % qU Scan
- [parqU, errqU, chi2qU, dofqU] = ...
+ [parqU, errqU, chi2qU, dofqU,~,~,err_mNuSq_Asym] = ...
         D.qUScan('qURange',qURange,'RecomputeFlag','OFF','Chi2Profile',Chi2Profile,...
         'RefLine',40,...
-        'saveplot','OFF','ErrorBarScaling',1,'saveStr',saveStr,'HoldOn','OFF','CorrMean','OFF');
+        'saveplot','OFF','ErrorBarScaling',1,'saveStr',saveStr,'HoldOn','ON1','CorrMean','OFF');
     
     
-    save(savename,'parqU','errqU','chi2qU','dofqU','D','RunAnaArg');
+    save(savename,'parqU','errqU','chi2qU','dofqU','err_mNuSq_Asym','D','RunAnaArg');
 end
 %%
 
@@ -61,7 +61,7 @@ end
  [parqU, errqU, chi2qU, dofqU,e1,pref,err_mNuSq_Asym] = ...
         D.qUScan('qURange',qURange,'RecomputeFlag','OFF','Chi2Profile',Chi2Profile,...
         'RefLine',40,...
-        'saveplot','ON','ErrorBarScaling',1,'saveStr',saveStr,'HoldOn','OFF','CorrMean','OFF');
+        'saveplot','OFF','ErrorBarScaling',1,'saveStr',saveStr,'HoldOn','ON1','CorrMean','OFF');
     
     
     

@@ -51,3 +51,5 @@ savedir = [getenv('SamakPath'),'knm1ana/knm1_unblinding/results/'];
 savename = sprintf('%sknm1_ConfidenceBelt_%s.mat',savedir,Mode);
 save(savename,'S');
 end
+
+

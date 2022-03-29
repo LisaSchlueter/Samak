@@ -3,11 +3,11 @@ chi2 = 'chi2CMShape';
 qURange  = [95,20];
 NonPoissonScaleFactor = 1.112;
 fitter = 'minuit';
-nSamples = 1;%1000;
+nSamples = 100;
 
 savedir = [getenv('SamakPath'),'knm2ana/knm2_qUScan/results/'];
-savename_randMC = sprintf('%sknm2_qUScan_MC_%.0feV_to_%.0feV_%s_NP%.3f_%s.mat',...
-    savedir,qURange(1),qURange(2),chi2,NonPoissonScaleFactor,fitter);
+savename_randMC = sprintf('%sknm2_qUScan_MC_%.0feV_to_%.0feV_%s_NP%.3f_%s_%.0fsamples.mat',...
+    savedir,qURange(1),qURange(2),chi2,NonPoissonScaleFactor,fitter,nSamples);
 
 if exist(savename_randMC,'file')
     load(savename_randMC);
@@ -61,7 +61,7 @@ else
     parfor i=1:nSamples
         D(i).SimulateStackRuns;
         D(i).RunData.TBDIS = TBDIS_r(i,:)';
-        D(i).Fit;
+        %D(i).Fit;
         
         [parqU, errqU, chi2qU, dofqU] =  D(i).qUScan(...
             'qURange',qURange,...

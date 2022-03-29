@@ -41,11 +41,15 @@ MeVDiffErr3 = abs(1e3.*RateDiffErr3./qUSlope_absAll);
 %% rates:
 fprintf('                               Period1                    Period 2:               Period3 \n');
 for i=1:numel(MeVDiff1)
-   
-fprintf('Ring %.2g (%.0f) MeV diff:   %.1f +- %.1f meV             %.1f +- %.1f meV          %.1f +- %.1f meV \n',...
-    i,numel(MeVDiff1),MeVDiff1(i),MeVDiffErr1(i),MeVDiff2(i),MeVDiffErr2(i),MeVDiff3(i),MeVDiffErr3(i));
-
+    
+    fprintf('Ring %.2g (%.0f) meV diff:   %.1f +- %.1f meV             %.1f +- %.1f meV          %.1f +- %.1f meV \n',...
+        i,numel(MeVDiff1),MeVDiff1(i),MeVDiffErr1(i),MeVDiff2(i),MeVDiffErr2(i),MeVDiff3(i),MeVDiffErr3(i));
 end
+
+
+fprintf('Max radial diff:           %.1f meV                       %.1f meV                  %.1f meV \n',...
+    max(MeVDiff1)-min(MeVDiff1), max(MeVDiff2)-min(MeVDiff2), max(MeVDiff3)-min(MeVDiff3));
+
 
 
 

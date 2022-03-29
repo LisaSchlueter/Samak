@@ -2423,10 +2423,14 @@ classdef MultiRunAnalysis < RunAnalysis & handle
                      sprintf('\\langle{\\itN}_{sig.}\\rangle = %.2f %s (std = %.2f)',ymean,yUnit,std(y)));%pval
             else
                 if strcmp(ShowRWPeriods,'ON') && strcmp(Parameter,'E0')
+                    wMean = wmean(y,1./yErr.^2); eMean = std(y)./sqrt(numel(y));
+                    wMean1 = wmean(y(Idx1),1./yErr(Idx1).^2);  eMean1 = std(y(Idx1))./sqrt(numel(Idx1));
+                    wMean2 = wmean(y(Idx2),1./yErr(Idx2).^2);  eMean2 = std(y(Idx2))./sqrt(numel(Idx2));
+                    wMean3 = wmean(y(Idx3),1./yErr(Idx3).^2);  eMean3 = std(y(Idx3))./sqrt(numel(Idx3));
                     leg = legend([e1,l1,e2,l2,e3,l3],...
-                        sprintf('%s scan-wise fits (P1)',upper(obj.DataSet)), sprintf('\\langle\\DeltaE_0\\rangle = (%.0f \\pm %.0f) m%s , \\sigma = %.2f eV',1e3.*(mean(y(Idx1))-mean(y)),1e3.*std(y(Idx1))./numel(Idx1),yUnit,std(y(Idx1))),...
-                        sprintf('%s scan-wise fits (P2)',upper(obj.DataSet)), sprintf('\\langle\\DeltaE_0\\rangle = (%.0f \\pm %.0f) m%s , \\sigma = %.2f eV',1e3.*(mean(y(Idx2))-mean(y)),1e3.*std(y(Idx2))./numel(Idx2),yUnit,std(y(Idx2))),...
-                        sprintf('%s scan-wise fits (P3)',upper(obj.DataSet)),sprintf('\\langle\\DeltaE_0\\rangle = (%.0f \\pm %.0f) m%s , \\sigma = %.2f eV',1e3.*(mean(y(Idx3))-mean(y)),1e3.*std(y(Idx3))./numel(Idx3),yUnit,std(y(Idx3))));
+                        sprintf('%s scan-wise fits (P1)',upper(obj.DataSet)), sprintf('\\langle\\DeltaE_0\\rangle = (%.0f \\pm %.0f) m%s , \\sigma = %.2f eV',1e3.*(wMean1-wMean),1e3.*eMean1,yUnit,std(y(Idx1))),...
+                        sprintf('%s scan-wise fits (P2)',upper(obj.DataSet)), sprintf('\\langle\\DeltaE_0\\rangle = (%.0f \\pm %.0f) m%s , \\sigma = %.2f eV',1e3.*(wMean2-wMean),1e3.*eMean2,yUnit,std(y(Idx2))),...
+                        sprintf('%s scan-wise fits (P3)',upper(obj.DataSet)),sprintf('\\langle\\DeltaE_0\\rangle = (%.0f \\pm %.0f) m%s , \\sigma = %.2f eV',1e3.*(wMean3-wMean),1e3.*eMean3,yUnit,std(y(Idx3))));
                     leg.NumColumns = 3;
                    
                 else

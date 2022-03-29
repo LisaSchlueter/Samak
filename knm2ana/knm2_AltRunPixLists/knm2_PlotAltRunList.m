@@ -65,7 +65,7 @@ for i=1:numel(AltRunLists)+1
 end
 
 %% plot
-RandList = 'OFF';
+RandList = 'ON';
 LocalFontSize = 18;
 figureHandle = figure('Units','normalized','Position',[0.1,0.1,0.6,0.5]);
 s1 = subplot(1,4,1:3);
@@ -74,10 +74,11 @@ if strcmp(RandList,'ON')
     nRunList = 2000;
     chi2 = 'chi2Stat';
     NP = 1.064;
-    savenameRand = [savedir,sprintf('RandomHalfRunList_Unblinded_%s_NP%2g_%.0ffits_merged.mat',chi2,NP,nRunList)];
+    savenameRand = [savedir,'knm2_RunListRandHalf_Real_mNuE0BkgNorm_40eV_2000fits_KNM2_0p1eV_BkgPT3mucpsPers.mat'];    
+   % sprintf('RandomHalfRunList_Unblinded_%s_NP%2g_%.0ffits_merged.mat',chi2,NP,nRunList)];
     frand = importdata(savenameRand);
     mNuSq_rand =  cell2mat(cellfun(@(x) x.par(1),frand.FitResults,'UniformOutput',0));
-    [l,a_rand] = boundedline(mean(mNuSq_rand).*ones(10,1),linspace(-1,numel(AltRunLists)+1,10),std(mNuSq_rand).*ones(10,1),'orientation','horiz');
+    [l,a_rand] = boundedline(mean(mNuSq_rand).*ones(10,1),linspace(-1,numel(AltRunLists)+3,10),std(mNuSq_rand).*ones(10,1),'orientation','horiz');
     hold on
     l.LineStyle = 'none'; l.Color = rgb('DimGray'); l.LineWidth = 2;
     a_rand.FaceColor = rgb('Silver');
@@ -137,7 +138,7 @@ end
 
 % save plot
 pltname = [strrep(savedir,'results','plots'),'knm2_AltRunLists.pdf'];
-% export_fig(gcf,pltname);
+ export_fig(gcf,pltname);
 
  %% how many results lie within the 1sigma band from the random half?
 mNuSq_low =  mean(mNuSq_rand)-std(mNuSq_rand);
@@ -148,6 +149,12 @@ Frac = sum(LogIdx)./numel(LogIdx);
 fprintf('%.0f out of %.0f (%.1f%%) fit results are within 1sigma\n',sum(LogIdx),numel(LogIdx),1e2*Frac);
  
 %% calculate sigmas
-Sigma = (mNuSq_v-mean(mNuSq_rand))./std(mNuSq_rand);
+Sigmas = (mNuSq_v-mean(mNuSq_rand))./std(mNuSq_rand);
+
+
+%% upward/downward scans
+mNuSqDiff = abs(mNuSq_v(2)-mNuSq_v(3));
+mNuSqDifferr = sqrt(mNuSqErr_v(2)^2+mNuSqErr_v(3)^2);
+Sigma = mNuSqDiff./mNuSqDifferr;
 
 

@@ -90,18 +90,65 @@ plotname1 = sprintf('%sknm2_BkgSlope_FixedVsFree_ScatterHist.png',plotdir);
 ScatterHist2(FitPar(1,:),FitPar(12,:).*1e6,'RefLine','ON',...
     'xName',sprintf('{\\itm}_\\nu^2 (eV^2)'),'yname',sprintf('{\\it B} slope (mcps / keV)'),...
     'SaveAs',plotname1);
+
+
+%% scatter plot m2, bkg slope
+CorrMat = corrcoef(FitPar(1,:),FitPar(12,:));
+CorrMat_i = corrcoef(FitPar'); % correlation matrix
+
+nReSample = 5;%1e4;
+
+RandIdx = randi(size(FitPar,2),[size(FitPar,2),nReSample]);
+CorrMat_sample = zeros(2,2,nReSample);
+
+for i=1:nReSample
+    CorrMat_sample(:,:,i) = corrcoef(FitPar([1,12],RandIdx(:,i)')');
+end
+MeanCorrMat = mean(CorrMat_sample,3);
+StdCorrMat = std(CorrMat_sample,0,3);
+
+%%
+
+f1 = figure('Units','normalized','Position',[0.1,0.1,0.4,0.4]);
+LineArg = {':','LineWidth',2,'Color',rgb('Gray')};
+plot(linspace(-5,5,1e2),linspace(1e6.*median(FitPar(12,:)),1e6.*median(FitPar(12,:)),1e2),LineArg{:});
+hold on;
+plot(linspace(median(FitPar(1,:)),median(FitPar(1,:)),1e2),linspace(-50,50,1e2),LineArg{:});
+p = dscatter(FitPar(1,:)',FitPar(12,:)'.*1e6);
+pnone = plot(NaN,NaN,'wo','MarkerFaceColor','none','MarkerEdgeColor','none');
+
+leg = legend(pnone,sprintf('\\rho = %.2f \\pm %.2f',CorrMat(2),StdCorrMat(2)),'Location','northwest');
+PrettyLegendFormat(leg);
+leg.ItemTokenSize = [0,0];
+leg.TextColor = rgb('DeepPink');
+leg.FontSize = 16;
+
+xlabel(sprintf('{\\itm}_\\nu^{ 2} (eV^{ 2})'));
+ylabel(sprintf('{\\its}_{qU} (mcps/keV)'));
+PrettyFigureFormat('FontSize',18);
+
+%t = text(-1.46,3,'median','FontSize',get(gca,'FontSize')+2,'Color',rgb('Gray'));
+%t2 = text(0.06,48,'median','FontSize',get(gca,'FontSize')+2,'Rotation',270,'Color',rgb('Gray'));
+xlim([-1.5 1.5]);
+ylim([-50 50]);
+
+plotname = sprintf('%sknm2_BkgSlope_FixedVsFree.pdf',plotdir);
+export_fig(plotname);
+
 %% plot neutrino mass w and w/o bkg slope
 GetFigure;
-h1 = histogram(FitPar(1,:)-FitParCM(1,:),'FaceColor',rgb('DodgerBlue'),'FaceAlpha',1);
-xlabel(sprintf('{\\itm}_{{\\itB} slope free}^2 - {\\itm}_{{\\itB} slope fixed}^2 (eV^2)'))
+h1 = histogram(FitPar(1,:)-FitParCM(1,:),'FaceColor',rgb('DodgerBlue'),'FaceAlpha',0.8,'EdgeColor',rgb('Blue'));
+xlabel(sprintf('\\Delta{\\itm}_\\nu^2 (eV^{ 2})'));%sprintf('{\\itm}_\\nu^2 - {\\itm}_{{\\itB} slope fixed}^2 (eV^2)'))
 ylabel('Occurence')
-leg = legend(sprintf('Mean = %.1g eV^2',mean(FitPar(1,:)-FitParCM(1,:))),...
-    'EdgeColor',rgb('Silver'),'Location','northwest');
+leg = legend(sprintf('Median = %.1g eV^2, std = %.1g eV^2',median(FitPar(1,:)-FitParCM(1,:)),std(FitPar(1,:)-FitParCM(1,:))),...
+   'Location','northwest');
+PrettyLegendFormat(leg);
 PrettyFigureFormat('FontSize',22)
-t = title(sprintf('{\\itB} slope constraint in CovMat = %.1f mcps / keV',FitParStd.*1e6),...
-    'FontWeight','normal','FontSize',get(gca,'FontSize'));
-plotname2 = sprintf('%sknm2_BkgSlope_FixedVsFree_mNuSq.png',plotdir);
-print(plotname2,'-dpng','-r450');
+% t = title(sprintf('{\\itB} slope constraint in CovMat = %.1f mcps / keV',FitParStd.*1e6),...
+%     'FontWeight','normal','FontSize',get(gca,'FontSize'));
+plotname2 = sprintf('%sknm2_BkgSlope_FixedVsFree_mNuSq.pdf',plotdir);
+export_fig(plotname2);
+%print(plotname2,'-dpng','-r450');
 %% plot uncertainties on neutrino mass
 GetFigure;
 ErrBfree  = FitErr(1,FitErr(1,:)>0.05 & FitErr(1,:)<0.8);

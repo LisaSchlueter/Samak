@@ -3,7 +3,7 @@ range     = 40;
 freePar   = 'mNu E0 Bkg Norm qU';
 chi2      = 'chi2CMShape';
 DataType  = 'Real';
-AnaFlag   = 'Ring';
+AnaFlag   = 'Ring';%StackPixel';
 RingMerge = 'Full';
 DopplerEffectFlag = 'FSD';
 BKG_PtSlope = 3*1e-06;
@@ -134,14 +134,26 @@ fprintf('============================================\n');
 
 fprintf(2,'m_nu^2 = %.3f + %.2f %.2f eV^2, ',FitResult.par(1),FitResult.errPos(1),FitResult.errNeg(1))
 fprintf('mean err = %.2f eV^2 \n',(FitResult.errPos(1)-FitResult.errNeg(1))/2)
-fprintf('E_0 = %.3f + %.3f eV  \n',FitResult.par(2)+A.ModelObj.Q_i,FitResult.err(2))
+if strcmp(A.AnaFlag,'Ring')
+    RingIdx = 2*A.nRings+9:3*A.nRings+8;
+    E0eff    = FitResult.par(2)+A.ModelObj.Q_i+FitResult.par(RingIdx);
+    E0effErr = sqrt(FitResult.err(2).^2+FitResult.err(RingIdx).^2);
+    for r=1:A.nRings
+        fprintf('E_0 Ring %.0f = %.3f + %.3f eV  \n',r,E0eff(r),E0effErr(r))
+    end
+    MeanE0eff = wmean(E0eff,1./E0effErr.^2);
+    MeanE0effErr = sqrt(sum(E0effErr.^2))./sqrt(A.nRings);
+    fprintf(2,'E_0 Mean    = %.3f + %.3f eV  \n',MeanE0eff,MeanE0effErr)
+else
+    fprintf('E_0 = %.3f + %.3f eV  \n',FitResult.par(2)+A.ModelObj.Q_i,FitResult.err(2))
+end
 
 if strcmp(A.AnaFlag,'Ring')
     for r=1:A.nRings
         fprintf('B Ring %.0f = %.1f + %.1f mcps  (%.0f pixel)\n',...
             r,(FitResult.par(2+r)+A.ModelObj.BKG_RateSec_i(r)).*1e3,1e3.*FitResult.err(2+r),numel(A.RingPixList{r}))
     end
-    fprintf('Sum B: %.1f +- %.1f mcps (%.0f pixel) \n',sum((FitResult.par(2+(1:A.nRings))+A.ModelObj.BKG_RateSec_i).*1e3),...
+    fprintf(2,'Sum B: %.1f +- %.1f mcps (%.0f pixel) \n',sum((FitResult.par(2+(1:A.nRings))+A.ModelObj.BKG_RateSec_i).*1e3),...
         1e3.*sqrt(sum(FitResult.err(2+(1:1:A.nRings)).^2)),numel(A.PixList))   
 else
     fprintf('B  = %.1f + %.1f mcps  \n',...
@@ -151,8 +163,8 @@ if strcmp(A.AnaFlag,'Ring')
     for r=1:A.nRings
         fprintf('N Ring %.0f = %.3f + %.3f  \n',r,(FitResult.par(2+A.nRings+r)+1),FitResult.err(2+A.nRings+r));
     end   
-    fprintf('Mean N: %.3f +- %.3f \n',mean((FitResult.par(6+(1:1:A.nRings)))+1),...
-        sqrt(sum(FitResult.err(6+(1:1:A.nRings)).^2)))
+    fprintf(2,'Mean N: %.3f +- %.3f \n',mean((FitResult.par(6+(1:1:A.nRings)))+1),...
+        sqrt(sum(FitResult.err(6+(1:1:A.nRings)).^2))./sqrt(A.nRings))
 else
     fprintf('N  = %.3f + %.3f mcps  \n',...
         (FitResult.par(4)+1),FitResult.err(4));
@@ -162,7 +174,7 @@ fprintf('============================================\n ');
 
 %%
 
-Plot = 'ON';
+Plot = 'OFF';
 A.ErrorBarScaling = 50;
 if strcmp(Plot,'ON')
     if strcmp(AnaFlag,'StackPixel')
