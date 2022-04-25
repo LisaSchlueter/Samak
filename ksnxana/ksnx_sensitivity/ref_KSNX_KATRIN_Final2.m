@@ -1,13 +1,14 @@
 function TritiumObject = ref_KSNX_KATRIN_Final2(varargin)
 
 
-TDMode = 'DataTBD';
+
 % use MTD from KNM1
 MTD = importdata([getenv('SamakPath'),'tritium-data/mat/Knm1/51536.mat']);
 
 % ---------------------------------------------------------------------- %
 % WGTS
 p = inputParser;
+p.addParameter('TDMode','DataTBD',@(x)ischar(x));
 p.addParameter('WGTS_CD_MolPerCm2',5*1e17,@(x)isfloat(x) && x>0);
 p.addParameter('WGTS_CD_MolPerCm2_SubRun','',@(x)isfloat(x));
 p.addParameter('WGTS_MolFrac_TT',0.95,@(x)isfloat(x) && x>0);
@@ -72,6 +73,7 @@ WGTS_MolFrac_TT_SubRun   = p.Results.WGTS_MolFrac_TT_SubRun;
 WGTS_B_T                 = p.Results.WGTS_B_T;
 
 % Parameters: Calculation precision
+TDMode                   = p.Results.TDMode;
 nTeBinningFactor         = p.Results.nTeBinningFactor;
 qU                       = p.Results.qU;
 qUfrac                   = p.Results.qUfrac;

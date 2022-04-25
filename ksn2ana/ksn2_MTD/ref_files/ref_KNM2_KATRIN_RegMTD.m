@@ -4,7 +4,7 @@ function TritiumObject = ref_KNM2_KATRIN_RegMTD(varargin)
 TDMode = 'DataTBD';
 
 % use configuration from KNM2
-DataKNM2   = importdata([getenv('SamakPath'),'tritium-data/mat/TwinKnm2/Twin57136_E018573.70eV_FSDsigma0.122eV.mat']);
+DataKNM2   = importdata([getenv('SamakPath'),'tritium-data/mat/Knm2/57136.mat']);
 qU         = mean(DataKNM2.qU,2);
 qUfrac     = mean(DataKNM2.qUfrac,2);
 TimeSec    = 361*mean(DataKNM2.TimeSec);

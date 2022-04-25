@@ -6,14 +6,15 @@ DataType = 'Twin';
 nGridSteps = 30;
 range = 40;
 InterpMode = 'spline';
+CL =  chi2cdf(1,1);
 savedir = [getenv('SamakPath'),'ksn2ana/ksn2_Systematics/results/'];
-savename = sprintf('%sksn2_SystBreakdown_StatOverSyst_%s_%.0feV_RasterScan%s_%sInterp.mat',...
-    savedir,DataType,range,RasterScan,InterpMode);
+savename = sprintf('%sksn2_SystBreakdown_StatOverSyst_%s_%.0feV_RasterScan%s_%sInterp_%.2gCL.mat',...
+    savedir,DataType,range,RasterScan,InterpMode,CL);
 if exist(savename,'file')
     d = importdata(savename);
     fprintf('load file %s \n',savename);
 else
-    fprintf('file not found %s \n Run ksn2_SystBreakdown_StatOverSyst.m',savename);
+    fprintf(2,'file not found %s \n Run ksn2_SystBreakdown_StatOverSyst.m \n',savename);
 end
 
 %%
@@ -37,7 +38,14 @@ for i=1:d.nSys
     
 end
 pStat = plot(d.sin2t4_Stat(1,:),d.mNu4Sq(1,:),'LineWidth',3,'Color',rgb('Silver'));
-xlabel(sprintf('|{\\itU}_{e4}|^2 sensitivity at 68.3%% C.L. '))%\\sigma_{syst.}
+if CL==0.95
+    xlabel(sprintf('|{\\itU}_{e4}|^2 sensitivity at 95%% C.L.'))%\\sigma_{syst.}
+elseif CL ==chi2cdf(1,1)
+    xlabel(sprintf('|{\\itU}_{e4}|^2 sensitivity at 68.3%% C.L.'))%\\sigma_{syst.}
+else
+    xlabel(sprintf('|{\\itU}_{e4}|^2 sensitivity at %.1f%% C.L.',CL*100))%\\sigma_{syst.}
+end
+
 ylabel(sprintf('{\\itm}_4^2 (eV^{ 2})'));
 xlim([2e-04 0.5]);
 ylim([1.3 38^2])
@@ -46,8 +54,11 @@ set(gca,'FontSize',LocalFontSize);
 set(gca,'XScale','log');
 set(gca,'YScale','log');
 ax1 = gca;
-xlim([3e-04 0.5])
-
+if CL==0.95
+    xlim([3e-04 0.5])
+else
+    xlim([1e-04 0.5])
+end
 % legend
 SysEffectLabel = {'Statistical uncertainty',...1
     'Combined systematic uncertainties',...2
@@ -118,7 +129,8 @@ ax1.YLabel.FontSize = LocalFontSize;
 ax2.XLabel.FontSize = LocalFontSize;
 %%
 plotdir = [getenv('SamakPath'),'ksn2ana/ksn2_Systematics/plots/'];
-pltname = sprintf('%sksn2_SystBreakdown_%s_CombiPlt.pdf',plotdir,DataType);
+pltname = sprintf('%sksn2_SystBreakdown_%s_CombiPlt_%.2gCL.pdf',plotdir,DataType,CL);
 export_fig(pltname);
+fprintf('save plot to %s \n',pltname);
 %pltname = sprintf('%sksn2_SystBreakdown_%s_CombiPlt.png',plotdir,DataType);
 %print(pltname,'-dpng','-r350');

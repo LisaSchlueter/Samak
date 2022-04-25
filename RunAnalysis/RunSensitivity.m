@@ -1874,16 +1874,16 @@ classdef RunSensitivity < handle
                 LineArg = {'Color',rgb('ForestGreen'),'MarkerFaceColor',rgb('PaleGreen'),'LineWidth',4,'MarkerSize',0.01};
                 AreaArg = {'FaceColor',rgb('PaleGreen'),'FaceAlpha',0.1,'LineStyle','none'};
             end
-            
+            interpMode = 'lin';%'spline';
             x1Index = find(~isnan(obj.FC_x1),1);
             plotX1 = linspace(min(obj.FC_x1(x1Index:end)),max(obj.FC_x1),1000)';
-            plotY1 = interp1(obj.FC_x1(x1Index:end),obj.FC_mNuSqTrue(x1Index:end),plotX1,'spline');
+            plotY1 = interp1(obj.FC_x1(x1Index:end),obj.FC_mNuSqTrue(x1Index:end),plotX1,interpMode);
             plotX2 = linspace(min(obj.FC_x2),max(obj.FC_x2),1000)';
-            plotY2 = interp1(obj.FC_x2,obj.FC_mNuSqTrue,plotX2,'spline');
+            plotY2 = interp1(obj.FC_x2,obj.FC_mNuSqTrue,plotX2,interpMode);
             
               switch Lokov
                 case 'ON'
-                 SensitivityLimit = interp1(obj.FC_x1(x1Index:end),obj.FC_mNuSqTrue(x1Index:end),0,'spline');  
+                 SensitivityLimit = interp1(obj.FC_x1(x1Index:end),obj.FC_mNuSqTrue(x1Index:end),0,interpMode);  
                  xIndex = (plotX1<=0);
                  plotY1(xIndex) = SensitivityLimit;
                  mNuSqTrue  = obj.FC_mNuSqTrue;

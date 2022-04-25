@@ -393,7 +393,7 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
                 MtotSq = 1.5356; % nuclear matrix element for T2
                 dE = -0.0097; % relativistic and 1/E^^ correction near tritium end point
                 cTot = 1.18;
-                Ekin = @(E) 0.5*obj.me.*(1-obj.me.^2./(obj.me+E).^2);
+                Ekin = @(E) 0.5*obj.me.*(1-obj.me.^2./(obj.me+E).^2);% non-relativistik kinetic energy
                 Eryd = obj.Eryd*1e3; % rydberg energy in eV
                 obj.ISXsection = @(E) (4*pi*obj.bohrR^2)./(Ekin(E)./Eryd).*...
                     (MtotSq.*log(4*cTot.*Ekin(E)./Eryd)+dE);
@@ -843,7 +843,7 @@ classdef WGTSMACE < FPD & handle %!dont change superclass without modifying pars
         end
         function [fscatn,fscatnE] = ComputeELossFunction(obj,varargin)
              %% Computating of empirical energy loss function and convolutions
-        % Parameterization see SSC paper
+           % Parameterization see SSC paper
             % output: fscatn  -> energy loss function handle for all scatterings
             %         fscatnE -> energy loss function evaluated at energy E
             

@@ -115,15 +115,31 @@ end
 f1 = figure('Units','normalized','Position',[0.1,0.1,0.5,0.4]);
 
 %Diff = [diff(AngleDeg_m)',360-AngleDeg_m(end)]';
+FitPar = 4;
+x    = d.FitResult.par(:,FitPar);
+if FitPar==1
+    xErr =d.mNuSqErr; % mean asymmetric errors
+else
+    xErr = d.FitResult.err(:,FitPar);
+end
 
-wmeanAll = wmean(d.mNuSq(InclIdx),1./d.mNuSqErr(InclIdx).^2);
+if FitPar==3
+    nPix = cellfun(@(x) numel(x),d.PixList);
+    x = (x+d.BKG_i).*1e3./nPix;
+    xErr = xErr.*1e3./nPix;
+elseif FitPar==2
+    x = x+d.Q_i;
+elseif FitPar==4
+    x = x+1;
+end
+wmeanAll = wmean(x(InclIdx),1./xErr(InclIdx).^2);
 
 %if strcmp(AltPixList,'Slice3')
 Threshold = 128;
-wmean1 = wmean(d.mNuSq(AngleDeg_m<=Threshold & InclIdx),1./d.mNuSqErr(AngleDeg_m<=Threshold & InclIdx).^2);
-wmean2 = wmean(d.mNuSq(AngleDeg_m>Threshold & InclIdx),1./d.mNuSqErr(AngleDeg_m>Threshold & InclIdx).^2);
-Errwmean1 = mean(d.mNuSqErr(AngleDeg_m<=Threshold & InclIdx))./sqrt(sum(AngleDeg_m<=Threshold & InclIdx));
-Errwmean2 = mean(d.mNuSqErr(AngleDeg_m>Threshold & InclIdx)./sqrt(sum(AngleDeg_m>Threshold & InclIdx)));
+wmean1 = wmean(x(AngleDeg_m<=Threshold & InclIdx),1./xErr(AngleDeg_m<=Threshold & InclIdx).^2);
+wmean2 = wmean(x(AngleDeg_m>Threshold & InclIdx),1./xErr(AngleDeg_m>Threshold & InclIdx).^2);
+Errwmean1 = mean(xErr(AngleDeg_m<=Threshold & InclIdx))./sqrt(sum(AngleDeg_m<=Threshold & InclIdx));
+Errwmean2 = mean(xErr(AngleDeg_m>Threshold & InclIdx)./sqrt(sum(AngleDeg_m>Threshold & InclIdx)));
 if ~strcmp(AltPixList,{'Slice','Slice3_1'})
     pm1 = plot([min(min(d.SliceAngPos(find(AngleDeg_m<=Threshold),:))) max(max(d.SliceAngPos(find(AngleDeg_m<=Threshold),:)))],...
         wmean1.*ones(2,1),'LineWidth',3,'Color',rgb('Gold'));
@@ -140,19 +156,27 @@ elseif strcmp(AltPixList,'Slice3_1')
         sprintf('knm1_AltRunList_%s_NP%2g_KNM1.mat',chi2,NP)];
     du = importdata(fUniform);
     
-    wMeanAll =  wmean(d.mNuSq,1./d.mNuSqErr.^2);
-    ErrMeanAll =  mean(d.mNuSqErr)./sqrt(numel(d.mNuSqErr));
-    pu =   plot([-10 370], du.FitResult.par(1).*ones(2,1),':','LineWidth',3,'Color',rgb('Silver'));
+    wMeanAll =  wmean(x,1./xErr.^2);
+    ErrMeanAll =  mean(xErr)./sqrt(numel(xErr));
+    xu = du.FitResult.par(FitPar);
+    if FitPar==3
+        xu = ((xu+du.BKG_i).*1e3)./117;
+    elseif FitPar==2
+            xu = xu+d.Q_i;
+    elseif FitPar==4
+        xu = xu+1;
+    end
+    pu =   plot([-10 370], xu.*ones(2,1),':','LineWidth',3,'Color',rgb('Silver'));
     hold on;
 end
 %end
 
-e1 = errorbar(AngleDeg_m(InclIdx),d.mNuSq(InclIdx),d.mNuSqErr(InclIdx),'k.','MarkerSize',20,'CapSize',0,'LineWidth',2);%'Color',rgb('DodgerBlue'));
+e1 = errorbar(AngleDeg_m(InclIdx),x(InclIdx),xErr(InclIdx),'k.','MarkerSize',20,'CapSize',0,'LineWidth',2,'Color',rgb('DodgerBlue'));
 hold on
 if any(InclIdx==0)
     angle = AngleDeg_m(~InclIdx);
-    mnu = d.mNuSq(~InclIdx);
-    mnuerr = d.mNuSqErr(~InclIdx);
+    mnu = x(~InclIdx);
+    mnuerr = xErr(~InclIdx);
     ym = ylim;
     for i=1:numel(mnu)
         %  e1 = errorbar(AngleDeg_m(~InclIdx),d.mNuSq(~InclIdx),d.mNuSqErr(~InclIdx),'.','Color',rgb('Silver'),'MarkerSize',20,'CapSize',0,'LineWidth',1);
@@ -161,7 +185,18 @@ if any(InclIdx==0)
     end
 end
 xlabel('Mean azimuth angle');
+if FitPar==1
 ylabel(sprintf('{\\itm}_\\nu^2 (eV^{ 2})'));
+elseif FitPar==2
+    ylabel(sprintf('{\\itE}_0(eV)'));
+    ax = gca;
+    ax.YAxis.Exponent =0;
+    ylim(18573+[-0.05 1.5])
+elseif FitPar==3
+        ylabel(sprintf('{\\itB}_{base} per pixel (mcps)'));
+elseif FitPar==4
+     ylabel(sprintf('1+{\\itN}_{sig.}'));
+end
 PrettyFigureFormat('FontSize',18);
 
 xlim([-9 360]);
@@ -177,30 +212,38 @@ if ~strcmp(AltPixList,{'Slice','Slice3_1'})
     leg.ItemTokenSize = [40,18];
     leg.Location = 'north';
 elseif strcmp(AltPixList,{'Slice3_1'})
-    leg = legend([e1,pu],sprintf('Pseudo-slice-wise fits'),...
-        sprintf('Uniform fit'));
+    if FitPar==3
+        leg = legend([e1,pu],sprintf('Pseudo-slice-wise fits'),...
+            sprintf('Uniform fit'));
+    else
+        leg = legend([e1,pu],sprintf('Pseudo-slice-wise fits'),...
+            sprintf('Uniform fit'));
+    end
     PrettyLegendFormat(leg);
     leg.NumColumns =2;
     leg.FontSize = get(gca,'FontSize')+4;
     leg.ItemTokenSize = [25,18];
     leg.Location = 'north';
+    
+   
 end
 
-if strcmp(AltPixList,'Slice3')
-    ylim([-17,10]);
-elseif strcmp(AltPixList,'Slice3_1')
-    e1.Color = rgb('DodgerBlue');
-    ylim([-16,8]);
-    leg.Location = 'southwest';
-elseif strcmp(AltPixList,'Slice4')
-    ylim([-10,10]);
-elseif strcmp(AltPixList,'Slice2')
-    ylim([-15,13]);
+if FitPar==1
+    if strcmp(AltPixList,'Slice3')
+        ylim([-17,10]);
+    elseif strcmp(AltPixList,'Slice3_1')
+        e1.Color = rgb('DodgerBlue');
+        ylim([-16,8]);
+        leg.Location = 'southwest';
+    elseif strcmp(AltPixList,'Slice4')
+        ylim([-10,10]);
+    elseif strcmp(AltPixList,'Slice2')
+        ylim([-15,13]);
+    end
 end
 
 
-
-pname3 = sprintf('%sknm1_AltPixList_%s_mNuSq.pdf',pltdir,AltPixList);
+pname3 = sprintf('%sknm1_AltPixList_%s_%.0f.pdf',pltdir,AltPixList,FitPar);
 export_fig(pname3);
 fprintf('save plot to %s \n',pname3);
 

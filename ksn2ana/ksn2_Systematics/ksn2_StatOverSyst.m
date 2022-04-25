@@ -2,10 +2,12 @@
 % raster scan
 % compare variances
 %% settings that might change
-chi2 = 'chi2CMShape';
-DataType = 'Twin';
+chi2       = 'chi2CMShape';
+DataType   = 'Twin';
 nGridSteps = 30;
-range = 40;
+range      = 40;
+CL         =  chi2cdf(1,1);
+
 %% configure RunAnalysis object
 if strcmp(chi2,'chi2Stat')
     NonPoissonScaleFactor = 1;
@@ -48,7 +50,8 @@ SterileArg = {'RunAnaObj',A,... % Mother Object: defines RunList, Column Density
     'SysEffect','all',...
     'RandMC','OFF',...
     'range',range,...
-    'LoadGridArg',LoadGridArg};
+    'LoadGridArg',LoadGridArg,...
+    'ConfLevel',CL};
 
 %%
 S = SterileAnalysis(SterileArg{:});
@@ -57,6 +60,11 @@ S = SterileAnalysis(SterileArg{:});
 
 savedir = [getenv('SamakPath'),'ksn2ana/ksn2_Systematics/results/'];
 savename = sprintf('%sksn2_StatOverSyst_%s.mat',savedir,DataType);
+
+if CL~=0.95
+    savename = strrep(savename,'.mat',sprintf('%.2gCL.mat',CL));
+end
+
 if ~exist(savename,'file')
     save(savename,'mNu4Sq','sin2t4_Stat','sin2t4_Tot','sin2t4_Sys');
 end

@@ -71,8 +71,9 @@ for i=1:numel(RunLists)
         R.Fit;
         FitResult = R.FitResult;
         nRuns = R.nRuns;
+        BKG_i = R.ModelObj.BKG_RateSec_i;
         TimeSec = sum(R.RunData.TimeSec.*R.RunData.qUfrac(R.exclDataStart:end)); % measurement time in analysis interval
-        save(filename,'FitResult','nRuns','TimeSec','RunAnaArg','range');
+        save(filename,'FitResult','nRuns','TimeSec','RunAnaArg','range','BKG_i');
         fprintf('save file %s \n',filename);
     end
 end

@@ -7,6 +7,7 @@ Mode        = 'FC';  % FC = Feldman Cousin, LT = Lokov Tkachov
 Sensitivity = 'OFF'; % OFF= show best fit, ON = show sensitivity only
 SavePlot    = 'ON';
 Style = 'Pretty';
+
 RunAnaArg = {'RunList','KNM1',...
     'fixPar','mNu E0 Norm Bkg',...%free par
     'exclDataStart',13,...

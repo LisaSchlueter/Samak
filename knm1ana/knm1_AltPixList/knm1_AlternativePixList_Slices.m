@@ -6,8 +6,8 @@ DataType = 'Real';
 range = 40;                % fit range in eV below endpoint
 chi2 = 'chi2Stat';
 NP = 1.064;
-RecomputeFlag = 'OFF';
-AltPixList ='Slice3_1';  % defines alternative pixel list
+RecomputeFlag = 'ON';
+AltPixList ='Slice3';  % defines alternative pixel list
 % label
 savedir = [getenv('SamakPath'),'knm1ana/knm1_AltPixList/results/'];
 savename = sprintf('%sknm1_PixListAlt_%s_%s_%s_%.0feV_%s_%2g.mat',...
@@ -40,7 +40,9 @@ else
     RunList = M.RunList;
     Q_i = M.ModelObj.Q_i;
     [~,~,SliceAngPos] = Slice2PixelCombi(M.PixList,AltPixList);
-      
+     
+    BKG_i = arrayfun(@(x) x.ModelObj.BKG_RateSec_i,R.MultiObj);
+    
     if ismember(AltPixList,{'Slice2','Slice3','Slice4'})
         SliceAngPos_m = mean(SliceAngPos,2); %average over 2 stacked slices
     end
@@ -52,7 +54,7 @@ else
     E0Err    = FitResult.err(:,2);
     
     MakeDir(savedir);
-    save(savename,'FitResult','PixList','RunList','Q_i','mNuSq','E0','mNuSqErr','E0Err','RunAnaArg','SliceAngPos');
+    save(savename,'FitResult','PixList','RunList','Q_i','mNuSq','E0','mNuSqErr','E0Err','RunAnaArg','SliceAngPos','BKG_i');
 end
 
 

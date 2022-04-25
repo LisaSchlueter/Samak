@@ -61,32 +61,44 @@ if strcmp(ReDrawSkeleton,'ON')
             thStop_clock = 90-rad2deg(th2);    thStop_clock(thStop_clock<0) = thStop_clock(thStop_clock<0)+360;
             
             if abs(thStart_clock-thStop_clock)>90+1e-05 && thStop_clock>thStart_clock
-                    thStart_clock = 360+thStart_clock;
-                    %thStop_clock=360-thStop_clock;
+                thStart_clock = 360+thStart_clock;
+                %thStop_clock=360-thStop_clock;
             end
             AngleDeg(pix+1) = mean([thStop_clock,thStart_clock]);
             if AngleDeg(pix+1)==360
                 AngleDeg(pix+1)=0;
             end
-           % theta_clock = 90-rad2deg(theta);
-           % theta_clock(theta_clock<0) = theta_clock(theta_clock<0)+360;  
-           % AngleRad(pix+1) = mean(theta_clock(theta_clock~=0));
-              
             % xx and yy are the position of the numbers in each segment
-            %         xx = 0.13+0.775/2 + ((rStart(ii)+rEnd(ii))/2*cos((th1+th2)/2))/(9/0.775);
             xx = 0.114523809523810+0.682738095238095/2 + ((rStart(ii)+rEnd(ii))/2*cos((th1+th2)/2))/(9/0.682738095238095);
             yy = 0.11+0.815/2 + ((rStart(ii)+rEnd(ii))/2*sin((th1+th2)/2))/(9/0.815);
             if strcmp(Label,'ON')
-            TextHandle{pix+1} = annotation(gcf,'textbox',[xx yy 0.0 0.0],'Color','k',...
-                'String',num2str(pix),'FontSize',10,'Margin',0,'FontWeight','bold',...
-                'HorizontalAlignment','center','VerticalAlignment','middle');
+                
+                %                 TextHandle{pix+1} = annotation(gcf,'textbox',[xx yy 0.0 0.0],'Color','k',...
+                %                     'String',num2str(pix),'FontSize',10,'Margin',0,'FontWeight','bold',...
+                %                     'HorizontalAlignment','center','VerticalAlignment','middle');
+                %
+                meanR = rStart(ii)+0.5.*(rEnd(ii)-rStart(ii));
+              
+                rad2deg(median(theta))+2.0282;
+                TextHandle{pix+1} =  text(meanR.*cos(median(theta)),meanR.*sin(median(theta)),max(data)+1e-05,num2str(pix),...
+                    'FontSize',10,'FontWeight','bold','HorizontalAlignment','center');
+                  
+               if pix>63
+                   meanDeg = mean([rad2deg(th1),rad2deg(th2)]);    
+                   meanDeg(meanDeg>=180)= meanDeg (meanDeg>=180)-180;
+                    if meanDeg>90
+                    end
+                  
+                    TextHandle{pix+1}.Rotation = meanDeg-90;
+                end
             end
-           
+            
+            
             pix = pix + 1;
             
-        end    
+        end
     end
- 
+    
     % Set all lines to color black
     tmp = findall(gca,'Type','line');
     detLines = tmp(1:148);
@@ -172,6 +184,7 @@ if strcmp(Label,'ON') && strcmp(ReDrawSkeleton,'ON')
             TextHandle{i}.delete;
         end
     end
+    a = 1;
 end
 
 end
@@ -218,5 +231,6 @@ set(surfaceObject,'EdgeColor','none');
 if exist('color','var')
     set(surfaceObject,'FaceColor',color);
 end
-
+% ax = gca;
+% ax.SortMethod='ChildOrder';
 end

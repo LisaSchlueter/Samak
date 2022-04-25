@@ -3,7 +3,7 @@ chi2 = 'chi2CMShape';
 qURange  = [95,20];
 NonPoissonScaleFactor = 1.112;
 fitter = 'minuit';
-nSamples = 100;
+nSamples = 1000;
 
 savedir = [getenv('SamakPath'),'knm2ana/knm2_qUScan/results/'];
 savename_randMC = sprintf('%sknm2_qUScan_MC_%.0feV_to_%.0feV_%s_NP%.3f_%s_%.0fsamples.mat',...
@@ -58,29 +58,47 @@ else
     chi2min = zeros(nFits,nSamples);
     dof = zeros(nFits,1);
     
-    parfor i=1:nSamples
-        D(i).SimulateStackRuns;
-        D(i).RunData.TBDIS = TBDIS_r(i,:)';
-        %D(i).Fit;
-        
-        [parqU, errqU, chi2qU, dofqU] =  D(i).qUScan(...
-            'qURange',qURange,...
-            'saveplot','OFF',...
-            'RecomputeFlag','ON',...
-            'CorrMean','OFF',...
-            'HoldOn','OFF',...
-            'RelFlag','OFF',...
-            'saveStr','',...
-            'RefLine','OFF',...
-            'saveResult','OFF',...
-            'PlotResult','OFF');
-        
-        par(:,:,i)   = parqU(1:4,:);
-        err(:,:,i)   = errqU(1:4,:);
-        chi2min(:,i) = chi2qU;
-        dof = dofqU;
-    end
+    ForFactor = 50;
     
+    for k=1:ForFactor
+        nSamples_Start = (k-1)*nSamples/ForFactor+1;
+        nSamples_Stop = k*nSamples/ForFactor;
+        nSamples_k = nSamples_Start:1:nSamples_Stop;
+        
+        savename_tmp = strrep(savename_randMC,'.mat',sprintf('_%.0fto%.0f.mat',nSamples_k(1),nSamples_k(end)));
+        if exist(savename_tmp,'file')
+            d = importdata(savename_tmp);
+            par(:,:,nSamples_k)   = d.par(:,:,nSamples_k);
+            err(:,:,nSamples_k)   = d.err(:,:,nSamples_k);
+            chi2min(:,nSamples_k) = d.chi2min(:,nSamples_k);
+        elseif ~exist(savename_tmp,'file')
+            parfor i=nSamples_k
+                D(i).SimulateStackRuns;
+                D(i).RunData.TBDIS = TBDIS_r(i,:)';
+                %D(i).Fit;
+                
+                [parqU, errqU, chi2qU, dofqU] =  D(i).qUScan(...
+                    'qURange',qURange,...
+                    'saveplot','OFF',...
+                    'RecomputeFlag','ON',...
+                    'CorrMean','OFF',...
+                    'HoldOn','OFF',...
+                    'RelFlag','OFF',...
+                    'saveStr','',...
+                    'RefLine','OFF',...
+                    'saveResult','OFF',...
+                    'PlotResult','OFF');
+                
+                par(:,:,i)   = parqU(1:4,:);
+                err(:,:,i)   = errqU(1:4,:);
+                chi2min(:,i) = chi2qU;
+                dof = dofqU;
+            end
+            
+            savename_tmp = strrep(savename_randMC,'.mat',sprintf('_%.0fto%.0f.mat',nSamples_k(1),nSamples_k(end)));
+            save(savename_tmp,'par','err','chi2min','dof','nSamples_k');
+        end
+    end
     
     % save
     save(savename_randMC,'par','err','chi2min','dof',...
@@ -90,4 +108,4 @@ else
 end
 
 
-    
+

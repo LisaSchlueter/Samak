@@ -1,9 +1,9 @@
 % unblinded fit with penning trap background slope
 range     = 40;
-freePar   = 'mNu E0 Bkg Norm qU';
+freePar   = 'mNu E0 Bkg Norm';
 chi2      = 'chi2CMShape';
 DataType  = 'Real';
-AnaFlag   = 'Ring';%StackPixel';
+AnaFlag   = 'StackPixel';
 RingMerge = 'Full';
 DopplerEffectFlag = 'FSD';
 BKG_PtSlope = 3*1e-06;

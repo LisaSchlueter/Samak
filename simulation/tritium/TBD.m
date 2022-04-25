@@ -386,8 +386,8 @@ classdef TBD < handle & WGTSMACE & matlab.mixin.Copyable %!dont change superclas
             % Kinematics - WARNING - MOVED - HERE AFTER
             SetKinVariables(obj);
             
-            % Initialize Response Function (RF)
-            InitializeRF(obj);
+             % Initialize Response Function (RF)
+             InitializeRF(obj);
             
             % Compute Normalization Factor
             ComputeFracTBDtail(obj);         % <-- calculated live

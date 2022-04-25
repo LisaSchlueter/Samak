@@ -9,9 +9,11 @@ DataType = 'Twin';
 nGridSteps = 30;
 range = 40;
 InterpMode = 'spline';
+CL =  0.95;%chi2cdf(1,1);
+
 savedir = [getenv('SamakPath'),'ksn2ana/ksn2_Systematics/results/'];
-savename = sprintf('%sksn2_SystBreakdown_StatOverSyst_%s_%.0feV_RasterScan%s_%sInterp.mat',...
-    savedir,DataType,range,RasterScan,InterpMode);
+savename = sprintf('%sksn2_SystBreakdown_StatOverSyst_%s_%.0feV_RasterScan%s_%sInterp_%.2gCL.mat',...
+    savedir,DataType,range,RasterScan,InterpMode,CL);
 if exist(savename,'file')  
     load(savename);
      fprintf('load file %s \n',savename);
@@ -52,12 +54,13 @@ else
         'SysEffect','all',...
         'RandMC','OFF',...
         'range',range,...
-        'LoadGridArg',LoadGridArg};
+        'LoadGridArg',LoadGridArg,...
+        'ConfLevel',CL};
     
     %%
     S = SterileAnalysis(SterileArg{:});
     S.InterpMode = InterpMode;
-    %%
+    %
     SysEffectsAll   = {'all','LongPlasma','BkgPT','NP','RF_BF','FSD', 'Bkg', 'RF_RX','FPDeff',...
         'TASR','RF_EL' ,'Stack','TCoff_OTHER'};
     SysEffectLabel    = {'Total'; 'Plasma';'Penning background';'Non-Poisson background';...

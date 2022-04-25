@@ -179,8 +179,8 @@ fprintf('E0 (KNM-1) = %.2f +- %.2f eV \n',d.FitResult.par(2)+d.K1.ModelObj.Q_i,d
 fprintf('E0 (KNM-2) = %.2f +- %.2f eV \n',d.FitResult.par(3)+d.K2.ModelObj.Q_i,d.FitResult.err(3));
 fprintf('B  (KNM-1) = %.1f +- %.1f mcps \n',1e3.*(d.FitResult.par(4)+d.K1.ModelObj.BKG_RateSec_i),1e3*d.FitResult.err(4));
 fprintf('B  (KNM-2) = %.1f +- %.1f mcps \n',1e3*(d.FitResult.par(5)+d.K2.ModelObj.BKG_RateSec_i),1e3*d.FitResult.err(5));
-fprintf('N  (KNM-1) = %.2f +- %.2f  \n',(d.FitResult.par(6)+1),d.FitResult.err(6));
-fprintf('N  (KNM-2) = %.2f +- %.2f  \n',(d.FitResult.par(7)+1),d.FitResult.err(7));
+fprintf('N  (KNM-1) = %.3f +- %.3f  \n',(d.FitResult.par(6)+1),d.FitResult.err(6));
+fprintf('N  (KNM-2) = %.3f +- %.3f  \n',(d.FitResult.par(7)+1),d.FitResult.err(7));
 fprintf('chi^2_min  = %.1f (%.0f dof)\n',d.FitResult.chi2min,27+28-7)
 fprintf('- ---------------------------------\n');
 
@@ -205,15 +205,16 @@ if strcmp(Plot,'ON')
     
     set(gca,'YScale','log');
     leg = legend([data1,data2,fit1,fit2],...
-        sprintf('KNM-1 data with 1\\sigma error bars \\times 50'),sprintf('KNM-2 data with 1\\sigma error bars \\times 50'),...
-        'Best fit model','Best fit model');
+        sprintf('KNM1 data with 1\\sigma error bars \\times 50'),sprintf('KNM2 data with 1\\sigma error bars \\times 50'),...
+        'Best-fit model','Best-fit model');
     PrettyLegendFormat(leg);
     leg.NumColumns = 2;
     ax1 = gca;
     Pos_i = ax1.Position;
     ax1.Position = [Pos_i(1),Pos_i(2)+0.05,Pos_i(3),Pos_i(4)];
     ylim([0.11,1e2]);
-    
+   xticklabels('');  
+  
     s2 = subplot(4,1,4);
     pr1 = plot(d.K1.RunData.qU-18574,(d.K1.ModelObj.TBDIS-d.K1.RunData.TBDIS)./sqrt(d.K1.RunData.TBDIS),'.:','MarkerSize',15,'LineWidth',2,'Color',data1.Color);
     hold on;
@@ -226,12 +227,12 @@ if strcmp(Plot,'ON')
     xlabel('Retarding potential - 18574 (eV)');
     ylabel(sprintf('Residuals (\\sigma)'));
     ylim([-3 3]);
-    ax1 = gca;
-    Pos_i = ax1.Position;
-    ax1.Position = [Pos_i(1),Pos_i(2)+0.01,Pos_i(3),Pos_i(4)+0.09];
-    
+    ax2 = gca;
+    Pos_i = ax2.Position;
+    ax2.Position = [Pos_i(1),Pos_i(2)+0.01,Pos_i(3),Pos_i(4)+0.09];
+    ax2.YLabel.Position(1) = ax1.YLabel.Position(1);
     %% save plot
     plotdir = strrep(savedir,'results','plots');
-    plotname = sprintf('%sknm2_CombiFitUniform.png',plotdir);
-    print(gcf,plotname,'-dpng','-r300');
+    plotname = sprintf('%sknm2_CombiFitUniform.pdf',plotdir);
+    export_fig(gcf,plotname);%,'-dpng','-r300');
 end
