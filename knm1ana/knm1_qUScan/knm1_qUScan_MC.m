@@ -87,7 +87,6 @@ if ~exist('mNuSq_mu','var')
     nqU = arrayfun(@(x) numel(qU(x:end)),exclDataStart_v)';
     dof = nqU-4;
     
-   
     %% next step: prepare results for plot
     mNuSq_abs = squeeze(par(1,:,:));               %(absolute fit values)
     mNuSq_40eV = mNuSq_abs(exclDataStart_v(13),:); % result in 40 eV range (standard analysis interval);

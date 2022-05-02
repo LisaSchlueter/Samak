@@ -4141,23 +4141,34 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                         %x = x+0.5;
                     end
                     
-                    if strcmp(randMC,'ON') && strcmp(obj.DataSet,'Knm1')
-                        nSamples = 1e3;
-                        savedir = [getenv('SamakPath'),'knm1ana/knm1_qUScan/results/'];
-                        savenameMC = sprintf('%sknm1_qUScan_MC_%.0feV_to_%.0feV_%s_NP%2g_%.0fsamples.mat',...
-                            savedir,qURange(1),qURange(2),obj.chi2,obj.NonPoissonScaleFactor,nSamples);
+                    if strcmp(randMC,'ON')
+                         nSamples = 1e3;
+                        if strcmp(obj.DataSet,'Knm1')
+                            savedir = [getenv('SamakPath'),'knm1ana/knm1_qUScan/results/'];
+                            savenameMC = sprintf('%sknm1_qUScan_MC_%.0feV_to_%.0feV_%s_NP%2g_%.0fsamples.mat',...
+                                savedir,qURange(1),qURange(2),obj.chi2,obj.NonPoissonScaleFactor,nSamples);
+                            AnaIdx = 13;
+                        elseif strcmp(obj.DataSet,'Knm2')
+                            savedir = [getenv('SamakPath'),'knm2ana/knm2_qUScan/results/'];
+                            savenameMC = sprintf('%sknm2_qUScan_MC_%.0feV_to_%.0feV_%s_NP%2g_minuit_%.0fsamples.mat',...
+                                savedir,qURange(1),qURange(2),obj.chi2,obj.NonPoissonScaleFactor,nSamples);
+                            AnaIdx = 11; 
+                        else
+                            fprtinf(2,'Not available for data set %s \n',obj.DataSet)
+                            return
+                        end
                         dMC = importdata(savenameMC);
                         if i==1
-                            mu  = dMC.mNuSq_mu+y(13);
+                            mu  = dMC.mNuSq_mu+y(AnaIdx);
                             std = dMC.mNuSq_std;
                         elseif i==2
-                            mu  = dMC.E0_mu+y(13);
+                            mu  = dMC.E0_mu+y(AnaIdx);
                             std = dMC.E0_std;
                         elseif i==3
-                            mu  = 1e3.*dMC.B_mu+y(13);
+                            mu  = 1e3.*dMC.B_mu+y(AnaIdx);
                             std = 1e3.*dMC.B_std;
                         elseif i==4
-                            mu  = dMC.N_mu+y(13);
+                            mu  = dMC.N_mu+y(AnaIdx);
                             std = dMC.N_std;
                         end
                         [l,arand] = boundedline(dMC.qU(dMC.exclDataStart_v)-18574,mu,std);
@@ -4252,7 +4263,7 @@ classdef RunAnalysis < handle & matlab.mixin.Copyable
                     if i~=5 && strcmp(CorrMean,'ON') && ~strcmp(HoldOn,'ON')
                         leg = legend([e1,pref],legstr,'correlated weighted mean');
                     elseif ~strcmp(RefLine,'OFF')
-                        if strcmp(randMC,'ON') && strcmp(obj.DataSet,'Knm1') && i<5
+                        if strcmp(randMC,'ON')  && i<5 %&& strcmp(obj.DataSet,'Knm1')
                             leg = legend([pref,arand],'Standard analysis range', sprintf('Expected 1\\sigma variation'));
                         else
                             leg = legend([pref],'Standard analysis range');

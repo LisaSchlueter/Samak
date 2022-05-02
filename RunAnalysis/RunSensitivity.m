@@ -1010,6 +1010,57 @@ classdef RunSensitivity < handle
             %save
             obj.FC_mNuSqTrue = mNuSq_t';
         end
+        function ComputeNeyman_Asimov(obj,varargin)
+               
+            p=inputParser;
+            p.addParameter('mNuSq_t',0.2,@(x)isfloat(x));
+            p.addParameter('nSamples',10000,@(x)isfloat(x));
+            p.addParameter('nSamplesAsimov',300,@(x)isfloat(x));
+            p.addParameter('ReFit','OFF',@(x)isfmember(x,{'ON','OFF'}));
+            p.addParameter('Mode','TwoSided',@(x)ismember(x,{'TwoSided','OneSided'}));
+            p.parse(varargin{:});
+            mNuSq_t     = p.Results.mNuSq_t; % true neutrino masses in simulation
+            nSamples    = p.Results.nSamples;
+            nSamplesAsimov = p.Results.nSamplesAsimov;
+            Mode          = p.Results.Mode;
+            %init
+            obj.FC_DeltaChi2  = zeros(numel(mNuSq_t),nSamples);
+            obj.FC_DeltaChi2C = zeros(numel(mNuSq_t),1);
+            obj.FC_mNuSqFit   = zeros(numel(mNuSq_t),nSamples);
+            obj.FC_x1         = zeros(numel(mNuSq_t),1);
+            obj.FC_x2         = zeros(numel(mNuSq_t),1);
+            obj.FC_PDF        = zeros(numel(mNuSq_t),nSamples);
+            obj.FC_CumProb    = zeros(numel(mNuSq_t),nSamples);
+            
+            for i=1:numel(mNuSq_t)
+                % Get Delta Chi2 Curve
+                [mNuSq,DeltaChi2,Chi2True,~] = obj.FC_ComputeDeltaChi2LookupTables('mNuSq_t',mNuSq_t(i),'nSamples',nSamplesAsimov);
+                
+                % Convert Chi2True into Probability
+                Prob_tmp = exp(-Chi2True./2);
+                Prob = Prob_tmp;%./simpsons(mNuSq,Prob_tmp); % normalization
+                CumProb_tmp = GetCDF(mNuSq,Prob);
+                
+                % find acceptance region
+                [CumProb,ia,~] = unique(CumProb_tmp);
+                obj.FC_x1(i) = interp1(CumProb,mNuSq(ia),(1-obj.ConfLevel)/2,'spline');
+                if i~=1
+                    if obj.FC_x1(i)-obj.FC_x1(i-1)<0
+                        % should always be more positive! try piecewise
+                        % cubic interpolation instead
+                        obj.FC_x1(i) = interp1(CumProb,mNuSq(ia),(1-obj.ConfLevel)/2,'pchip');
+                    end
+                end
+                
+                if strcmp(Mode,'TwoSided')
+                    obj.FC_x2(i)= interp1(CumProb,mNuSq(ia),(1+obj.ConfLevel)/2,'spline');
+                elseif strcmp(Mode,'OneSided')
+                    obj.FC_x1(i) = -1e3;
+                    obj.FC_x2(i) = interp1(CumProb,mNuSq(ia),obj.ConfLevel,'spline');
+                end
+                
+            end
+        end
     end
     methods % systematics
         function SensitivitySys(obj)

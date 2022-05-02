@@ -49,9 +49,34 @@ S.RunAnaObj.DataType = 'Twin';
 S.LoadGridFile('CheckSmallerN','ON',S.LoadGridArg{:},'ExtmNu4Sq','OFF');
 S.Interp1Grid('RecomputeFlag','ON','MinM4Sq',1,'MaxM4Sq',40^2);
 S.ContourPlot; close;
-chi2_T = S.chi2;
-sin2T4_contourT = S.sin2T4_contour;
-mNu4Sq_contourT = S.mNu4Sq_contour;
+
+% chi2_T = S.chi2;
+% sin2T4_contourT = S.sin2T4_contour;
+% mNu4Sq_contourT = S.mNu4Sq_contour;
+% 
+% chi2 = S.chi2;
+% chi2ref = S.chi2_ref;
+% sin2T4 = S.sin2T4;
+% mNu4Sq = S.mNu4Sq;
+% sin2T4_contour = S.sin2T4_contour;
+% mNu4Sq_contour = S.mNu4Sq_contour;
+% 
+% Twin_mNu4Sq = 92.7;
+% Twin_sin2T4 = 0.024;
+% S.Twin_mNu4Sq = Twin_mNu4Sq;
+% S.Twin_sin2T4 = Twin_sin2T4;
+% S.LoadGridFile('CheckSmallerN','ON',S.LoadGridArg{:},'ExtmNu4Sq','OFF');
+% S.Interp1Grid('RecomputeFlag','ON','MinM4Sq',1,'MaxM4Sq',40^2);
+% S.ContourPlot('BestFit','ON'); close;
+% 
+% chi2_1 = S.chi2;
+% chi2ref_1 = S.chi2_ref;
+% sin2T4_1 = S.sin2T4;
+% mNu4Sq_1 = S.mNu4Sq;
+% sin2T4_contour_1 = S.sin2T4_contour;
+% mNu4Sq_contour_1 = S.mNu4Sq_contour;
+% sin2T4_bf = S.sin2T4_bf;
+% mNu4Sq_bf = S.mNu4Sq_bf;
 %%
 % data
 S.RunAnaObj.DataType = 'Real';

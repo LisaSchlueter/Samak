@@ -1264,7 +1264,7 @@ classdef SterileAnalysis < handle
               fprintf('save plot to %s \n',plotname);
           end
         end
-        function GridPlot(obj,varargin)
+        function fHandle = GridPlot(obj,varargin)
             p = inputParser;
             p.addParameter('CL',obj.ConfLevel,@(x)isfloat(x));
             p.addParameter('HoldOn','OFF',@(x) ismember(x,{'ON','OFF'}));
@@ -1293,8 +1293,9 @@ classdef SterileAnalysis < handle
             
             if strcmp(HoldOn,'ON')
                 hold on
+                fHandle = 0;
             else
-            GetFigure;
+                fHandle = GetFigure;
             end
             surf(obj.sin2T4,obj.mNu4Sq,chi2grid-obj.chi2_ref,'EdgeColor','interp','FaceColor','interp');
             %% best fit

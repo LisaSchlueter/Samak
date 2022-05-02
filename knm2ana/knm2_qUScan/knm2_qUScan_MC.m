@@ -107,5 +107,54 @@ else
     fprintf('save file to %s\n',savename_randMC);
 end
 
-
+if ~exist('mNuSq_mu','var')
+    
+    nqU = arrayfun(@(x) numel(qU(x:end)),exclDataStart_v)';
+    dof = nqU-4;
+    
+    %% next step: prepare results for plot
+    mNuSq_abs = squeeze(par(1,:,:));               %(absolute fit values)
+    mNuSq_40eV = mNuSq_abs(exclDataStart_v(11),:); % result in 40 eV range (standard analysis interval);
+    mNuSq_rel = mNuSq_abs-mNuSq_40eV;              % relative to 40eV result
+      
+    mNuSq_mu = mean(mNuSq_rel,2);
+    mNuSq_std =std(mNuSq_rel,0,2);
+    
+    GetFigure;
+    boundedline(qU(exclDataStart_v)-18574,mNuSq_mu,mNuSq_std);
+    grid on
+    
+    E0_abs = squeeze(par(2,:,:))+T.ModelObj.Q_i;               %(absolute fit values)
+    E0_40eV = E0_abs(exclDataStart_v(11),:); % result in 40 eV range (standard analysis interval);
+    E0_rel = E0_abs-E0_40eV;              % relative to 40eV result
+    % remove the same outliers
+  
+    E0_mu = mean(E0_rel,2);
+    E0_std =std(E0_rel,0,2);
+    
+    B_abs = squeeze(par(3,:,:))+T.ModelObj.BKG_RateSec_i ;     %(absolute fit values)
+    B_40eV = B_abs(exclDataStart_v(11),:); % result in 40 eV range (standard analysis interval);
+    B_rel = B_abs-B_40eV;              % relative to 40eV result
+    B_mu = mean(B_rel,2);
+    B_std =std(B_rel,0,2);
+    
+    N_abs = squeeze(par(4,:,:))+1;     %(absolute fit values)
+    N_40eV = N_abs(exclDataStart_v(11),:); % result in 40 eV range (standard analysis interval);
+    N_rel = N_abs-N_40eV;              % relative to 40eV result
+    N_mu = mean(N_rel,2);
+    N_std =std(N_rel,0,2);
+    
+    % p-value doesn't make that much sense, because not gaussian. will not include in display
+    p_abs = 1-chi2cdf(chi2min,repmat(dof,1,nSamples));  
+    p_mu = mean(p_abs,2);
+    p_std =std(p_abs,0,2);
+    
+    save(savename_randMC,...
+        'mNuSq_mu','mNuSq_std','mNuSq_rel','mNuSq_abs',...
+        'E0_mu','E0_std','E0_rel','E0_abs',...
+        'B_mu','B_std','B_rel','B_abs',...
+        'N_mu','N_std','N_rel','N_abs',...
+        'dof','nqU',...
+        'p_abs','p_mu','p_std','-append');
+end
 
