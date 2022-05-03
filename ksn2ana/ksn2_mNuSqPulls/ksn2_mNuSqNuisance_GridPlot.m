@@ -1,4 +1,5 @@
 % ksn2 grid plot with free nu-mass and isolines
+
 %% settings that might change
 chi2 = 'chi2CMShape';
 DataType = 'Real';

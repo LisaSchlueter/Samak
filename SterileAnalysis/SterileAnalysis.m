@@ -1690,7 +1690,11 @@ classdef SterileAnalysis < handle
            
             obj.RunAnaObj.fixPar = 'mNu E0 Norm Bkg'; obj.RunAnaObj.InitFitPar;
             obj.RunAnaObj.pullFlag = 99;
-            obj.LoadGridFile('CheckSmallerN','ON',obj.LoadGridArg{:},'ExtmNu4Sq','ON');
+            if strcmp(obj.RunAnaObj.DataSet,'Knm1')
+                obj.LoadGridFile('CheckSmallerN','ON',obj.LoadGridArg{:},'ExtmNu4Sq','OFF');
+            elseif strcmp(obj.RunAnaObj.DataSet,'Knm2')
+                obj.LoadGridFile('CheckSmallerN','ON',obj.LoadGridArg{:},'ExtmNu4Sq','ON');
+            end
             obj.Interp1Grid('RecomputeFlag','ON');
             pFree = obj.ContourPlot('CL',obj.ConfLevel,'HoldOn',HoldOn,...
                 'Color',rgb('ForestGreen'),'LineStyle','-','BestFit',BestFit,'MarkerStyle','x');

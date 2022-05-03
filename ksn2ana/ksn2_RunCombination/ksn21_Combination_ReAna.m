@@ -194,7 +194,7 @@ SigmaBF2 = ConvertCLStd('Mode','CL2Sigma','CL',SignificanceBF_2,'nPar',2);
 SigmaBF12 = ConvertCLStd('Mode','CL2Sigma','CL',SignificanceBF_12,'nPar',2);
 %
 if strcmp(DataType,'Real')
-    ExtLeg = 'ON';
+    ExtLeg = 'OFF';
      % plot best fits on top (KSN-1 is hidden otherwise)
     pbf1 = plot(sin2T4_bf_1,mNu4Sq_bf_1,'*','MarkerSize',9,'Color',p1tot.Color,'LineWidth',p1tot.LineWidth);
 else
@@ -243,6 +243,8 @@ end
  ylabel(sprintf('{\\itm}_4^2 (eV^{ 2})'));
  export_fig([savefile,'.pdf']);
  fprintf('save plot to %s \n',savefile);
+ 
+ return
  %% save mini result file for compatibility test
 savedir = [getenv('SamakPath'),'ksn2ana/ksn2_RunCombination/results/'];
 MakeDir(savedir)

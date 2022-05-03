@@ -40,7 +40,7 @@ ranges = sort(round(-qU(1:RangeStandard)));
 
 for i=1:numel(ranges)
     if i>=2
-        Real = MultiRunAnalysis(RunAnaArg{:});
+        Real = MultiRunAnalysis(RunAnaArg{:}); % re-init for sanity
     end
     Real.exclDataStart = Real.GetexclDataStart(ranges(i));
     %% configure Sterile analysis object
@@ -56,6 +56,4 @@ for i=1:numel(ranges)
     S.GridSearch('ExtmNu4Sq','OFF','mNu4SqTestGrid',2);
     
 end
-
-
 

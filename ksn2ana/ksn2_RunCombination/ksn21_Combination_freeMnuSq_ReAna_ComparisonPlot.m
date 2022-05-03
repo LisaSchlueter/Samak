@@ -2,14 +2,14 @@
 % combine ksn1 and ksn2, nu-mass free
 % plot with ksn1, ksn2, ksn1+2
 chi2          = 'chi2CMShape';
-DataType      = 'Real';
+DataType      = 'Twin';
 nGridStepsCommon  = 30;
-freePar       = 'E0 Bkg Norm';
+freePar       = 'mNu E0 Bkg Norm';
 range         = 40;
 extraStr = '_ReAna';
 FixBfK2 = 'OFF';
 N4 = 'OFF';
-ExtLeg = 'ON';
+ExtLeg = 'OFF';
 savedir = [getenv('SamakPath'),'/SterileAnalysis/GridSearchFiles/Combi/',DataType,'/'];
 MakeDir(savedir)
 savename = sprintf('%sKSN12Combi%s_GridSearch_%s_%s_Uniform_%s_%.0fnGrid.mat',...
@@ -94,7 +94,7 @@ switch KSN1config
         S.RunAnaObj.FSDFlag = 'KNM2_0p1eV';
         S.RunAnaObj.ModelObj.BKG_PtSlope = -2.2*1e-06;
         S.LoadGridArg = {'mNu4SqTestGrid',2};
-        S.InterpMode = 'Mix';
+        S.InterpMode = 'spline';
         % load map
         S.LoadGridFile(S.LoadGridArg{:});
         S.Interp1Grid('RecomputeFlag','ON','Maxm4Sq',36^2);
@@ -119,8 +119,8 @@ if strcmp(DataType,'Real')
     mNu4Sq_1_contour = S.mNu4Sq_contour;
     sin2T4_k1_contour = S.sin2T4_contour;
 else
-    mNu4Sq_1_contour = S.mNu4Sq_contour(:,3);
-    sin2T4_k1_contour = S.sin2T4_contour(:,3);
+    mNu4Sq_1_contour = S.mNu4Sq_contour(:,2);
+    sin2T4_k1_contour = S.sin2T4_contour(:,2);
 end
 
 dof1 = S.dof;

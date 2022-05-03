@@ -33,29 +33,51 @@ RunAnaArg = {'RunList','KNM1',...
 %% configure RunAnalysis object
 Real = MultiRunAnalysis(RunAnaArg{:});
 
-% define fit ranges
+%% define fit ranges
 RangeStandard = Real.GetexclDataStart(40);
 qU = round(Real.RunData.qU-18575);
 ranges = sort(round(-qU(1:RangeStandard)));
 
-for i=1:numel(ranges)
-    if i>=2
-        Real = MultiRunAnalysis(RunAnaArg{:});
-    end
-    Real.exclDataStart = Real.GetexclDataStart(ranges(i));
-    %% configure Sterile analysis object
-    SterileArg = {'RunAnaObj',Real,... % Mother Object: defines RunList, Column Density, Stacking Cuts,....
+%ranges = [ranges_All(1:9);ranges_All(12:13)];
+  SterileArg = {'RunAnaObj',Real,... % Mother Object: defines RunList, Column Density, Stacking Cuts,....
         'nGridSteps',nGridSteps,...
         'SmartGrid','OFF',...
         'RecomputeFlag','OFF',...
         'SysEffect','all',...
         'RandMC','OFF',...
-        'range',ranges(i)};
+        'range',40,...
+        'LoadGridArg',{'ExtmNu4Sq','OFF','mNu4SqTestGrid',2},...
+        'ConfLevel',0.99};
+     S = SterileAnalysis(SterileArg{:});
     
-    S = SterileAnalysis(SterileArg{:});
-    S.GridSearch('ExtmNu4Sq','OFF','mNu4SqTestGrid',2);
+ %
+for i=1:numel(ranges)
+    Real.exclDataStart = Real.GetexclDataStart(ranges(i));
+    % configure Sterile analysis object
+  
+    S.range = ranges(i);
+    S.LoadGridFile(S.LoadGridArg{:});
+   
+   S.Interp1Grid;
+   if i==1
+       S.ContourPlot('BestFit','ON');
+   else
+       S.ContourPlot('BestFit','ON','HoldOn','ON','Color',S.PlotColors{i},'LineStyle',S.PlotLines{i});
+   end
+    
     
 end
 
+%%
 
+Real.exclDataStart = Real.GetexclDataStart(ranges(end));
+% configure Sterile analysis object
+S.ConfLevel = 99;
+S.range = ranges(end);
+S.LoadGridFile(S.LoadGridArg{:});
+S.InterpMode = 'spline';
+S.Interp1Grid;
+S.GridPlot('BestFit','ON');
 
+ 
+ 

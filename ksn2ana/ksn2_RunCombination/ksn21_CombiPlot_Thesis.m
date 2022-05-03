@@ -1,11 +1,11 @@
 % ksn2+1 compare results ksn1 and ksn2 stand-alone
-% in ksn2 paper!
+% in phd thesis
 % load results fro MiniFiles
 chi2 = 'chi2CMShape';
 DataType = 'Real';
 range = 40;
-BF = 'ON';
-LocalFontSize = 24;
+BF = 'OFF';
+LocalFontSize = 19;
 %% load ksn-2 only results
 savedir = [getenv('SamakPath'),'SterileAnalysis/MiniFiles/KSN2/'];
 savefilemNuFix = sprintf('%sKSN2contour_%s_%s_%s_%.0feV.mat',savedir,DataType,'E0NormBkg',chi2,range);
@@ -29,8 +29,8 @@ fprintf('load %s \n',savefileCombimNuFree);
 
 legHandle = cell(0,0);
 legStr = '';
-GetFigure;
-
+%GetFigure;
+f1 = figure('Units','normalized','Position',[0.1,0.1,0.5,0.45]);
 % combi
 pCombimNuFix = plot(dCombi.sin2T4_contour_12,dCombi.mNu4Sq_contour_12,'-','LineWidth',3,'Color',rgb('Navy'));
 hold on;
@@ -46,8 +46,8 @@ p2mNuFree = plot(dmNu.sin2T4_contour,dmNu.mNu4Sq_contour,'-.','LineWidth',3,'Col
 
 
 
-xlim([3e-03 0.5]);
-ylim([0.3 2200]);
+xlim([4e-03 0.5]);
+ylim([1 2000]);
 yticks([0.1,1,10,100,1e3]);
 
 if strcmp(BF,'ON')
@@ -79,32 +79,26 @@ leg = legend([p1mNuFix,p2mNuFix,pCombimNuFix,p1mNuFree,p2mNuFree,pCombimNuFree],
 
 PrettyLegendFormat(leg);
 leg.NumColumns = 2;
-leg.FontSize = LocalFontSize;
-%PrettyFigureFormat('FontSize',22);
-PRLFormat;
-set(gca,'FontSize',LocalFontSize);
+PrettyFigureFormat('FontSize',LocalFontSize);
+leg.FontSize = LocalFontSize-2;
 
-%ax = gca;
-%ax.FontSize =  26;
-leg.FontSize = 26;
-% ax.XLabel.FontSize = 30;
-% ax.YLabel.FontSize = 30;
 
 axleg=axes('Position',get(gca,'Position'),'Visible','Off');
 hl2 = legend(axleg,[pNone,pNone2],...
     sprintf('{\\itm}_\\nu^2 = 0 eV^2'),...
     sprintf('{\\itm}_\\nu^2 free'),...
     'Location','southwest','box','off');
-hl2.FontSize = LocalFontSize;
+hl2.FontSize = LocalFontSize-2;
 hl2.NumColumns = 2;
-PRLFormat;
-hl2.Position(2) = 0.41;
+PrettyFigureFormat('FontSize',LocalFontSize);
+hl2.Position(2) = 0.33;
 hl2.Position(1)  = 0.105;
 hl2.ItemTokenSize = [12,5];
 ax = gca;
 ax.XLabel.FontSize = LocalFontSize;
 ax.YLabel.FontSize = LocalFontSize;
 %%
+
 pltdir = [getenv('SamakPath'),'ksn2ana/ksn2_RunCombination/plots/'];
 MakeDir(pltdir);
 pltname = sprintf('%sksn21_CombiPlot_%s.png',pltdir,DataType);

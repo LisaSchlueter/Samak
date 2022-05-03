@@ -7,7 +7,7 @@ DataType = 'Real';%'Twin';%'Real';
 nGridSteps = 40;
 range = 40;
 Mode = 'Compute';
-LocalFontSize = 24;
+LocalFontSize = 19;
 %% configure RunAnalysis object
 if strcmp(chi2,'chi2Stat')
     NonPoissonScaleFactor = 1;
@@ -67,7 +67,8 @@ else
     BF = 'OFF';
 end
 Splines = 'ON';
-f = GetFigure;
+%f = GetFigure;
+f1 = figure('Units','normalized','Position',[0.1,0.1,0.5,0.45]);
 %f.Renderer = 'painters';
 %
 for i=1:numel(ContourVec)
@@ -94,7 +95,9 @@ pFix.LineStyle = '-.';
 pFree.LineWidth = 3;
 
 %
-leg = legend([pFix,pFree,p1],...
+pNone = plot3(NaN,NaN,NaN,'w','LineWidth',0.1);
+leg = legend([pNone,pFix,pFree,p1],...
+    'KNM2',...
     sprintf('I)  Fixed {\\itm}_\\nu^2 = 0 eV^2'),...
     sprintf('II) Free {\\itm}_\\nu^2 unconstrained'),...
     sprintf('Isoline: {\\itm}_\\nu^2 (eV^2) best fit for II)'),...
@@ -103,22 +106,21 @@ if strcmp(DataType,'Twin')
     legend boxon
     PrettyLegendFormat(leg,'alpha',0.5);
 end
-%%
+%
 
 title('');
-
-PRLFormat;set(gca,'FontSize',LocalFontSize);
-%PrettyFigureFormat('FontSize',LocalFontSize);
-
-leg.FontSize = LocalFontSize;%-2;
-leg.Position(2) = 0.275;
+%
+%PRLFormat;set(gca,'FontSize',LocalFontSize);
+PrettyFigureFormat('FontSize',LocalFontSize);
+leg.FontSize = LocalFontSize-2;
+leg.Position(2) = 0.24;
 ax = gca;
- ax.XLabel.FontSize = LocalFontSize;
- ax.YLabel.FontSize = LocalFontSize;
+% ax.XLabel.FontSize = LocalFontSize;
+% ax.YLabel.FontSize = LocalFontSize;
 
 ylim([0.1 2e3]);
 yticks([0.1 1 10 100 1e3])
-xlim([2e-03 0.5]);
+xlim([4e-03 0.5]);
 set(gca,'YScale','log')
 set(gca,'XScale','log')
 % make nice labels by hand
@@ -144,32 +146,32 @@ if strcmp(DataType,'Real')
         t9.delete;
     tx9.delete;
     end
-    t1 = annotation('rectangle',[0.82,0.24,0.07,0.05],'FaceColor',rgb('White'),'Color','none');
-    tx1 = annotation('textbox',[0.82,0.302,0.05,0.001],'String',0.28,BoxArg{:});
+    t1 = annotation('rectangle',[0.82,0.2,0.07,0.05],'FaceColor',rgb('White'),'Color','none');
+    tx1 = annotation('textbox',[0.82,0.27,0.05,0.001],'String',0.28,BoxArg{:});
     
-    t2 = annotation('rectangle',[0.84,0.34,0.03,0.04],'FaceColor',rgb('White'),'Color','none');
-    tx2 = annotation('textbox',[0.84,0.387,0.05,0.005],'String',0,BoxArg{:});
+    t2 = annotation('rectangle',[0.84,0.3,0.03,0.04],'FaceColor',rgb('White'),'Color','none');
+    tx2 = annotation('textbox',[0.84,0.35,0.05,0.005],'String',0,BoxArg{:});
 
-    t3 = annotation('ellipse',[0.83,0.4,0.04,0.05],'FaceColor',rgb('White'),'Color','none'); 
-    tx3 = annotation('textbox',[0.83,0.451,0.01,0.01],'String','-1',BoxArg{:});
+    t3 = annotation('ellipse',[0.83,0.37,0.04,0.05],'FaceColor',rgb('White'),'Color','none'); 
+    tx3 = annotation('textbox',[0.835,0.42,0.01,0.01],'String','-1',BoxArg{:});
  
-    t4 = annotation('ellipse',[0.8,0.56,0.047,0.06],'FaceColor',rgb('White'),'Color','none');
-    tx4 = annotation('textbox',[0.8,0.575,0.05,0.05],'String','-5',BoxArg{:});
+    t4 = annotation('ellipse',[0.8,0.57,0.047,0.06],'FaceColor',rgb('White'),'Color','none');
+    tx4 = annotation('textbox',[0.8,0.585,0.05,0.05],'String','-5',BoxArg{:});
   
-    t5 = annotation('rectangle',[0.735,0.715,0.04,0.04],'FaceColor',rgb('White'),'Color','none');
-    tx5 = annotation('textbox',[0.73,0.74,0.05,0.03],'String','10',BoxArg{:});
+    t5 = annotation('rectangle',[0.732,0.7,0.04,0.04],'FaceColor',rgb('White'),'Color','none');
+    tx5 = annotation('textbox',[0.73,0.72,0.05,0.03],'String','10',BoxArg{:});
   
     t6 = annotation('rectangle',[0.53,0.81,0.03,0.04],'FaceColor',rgb('White'),'Color','none');
-    tx6 = annotation('textbox',[0.53,0.81,0.05,0.05],'String','2',BoxArg{:});
+    tx6 = annotation('textbox',[0.53,0.82,0.05,0.05],'String','2',BoxArg{:});
   
-    t7 = annotation('rectangle',[0.425,0.81,0.02,0.03],'FaceColor',rgb('White'),'Color','none');
-    tx7 = annotation('textbox',[0.42,0.81,0.05,0.05],'String','1',BoxArg{:});   
+    t7 = annotation('rectangle',[0.425,0.82,0.02,0.03],'FaceColor',rgb('White'),'Color','none');
+    tx7 = annotation('textbox',[0.42,0.82,0.05,0.05],'String','1',BoxArg{:});   
  
     t8 = annotation('rectangle',[0.302,0.62,0.07,0.05],'FaceColor',rgb('White'),'Color','none');
-    tx8 = annotation('textbox',[0.3,0.655,0.05,0.02],'String','0.28',BoxArg{:});
+    tx8 = annotation('textbox',[0.305,0.64,0.05,0.02],'String','0.28',BoxArg{:});
    
     t9 = annotation('rectangle',[0.2,0.88,0.07,0.04],'FaceColor',rgb('White'),'Color','none');
-    tx9 = annotation('textbox',[0.2,0.875,0.05,0.05],'String','0.28',BoxArg{:});
+    tx9 = annotation('textbox',[0.2,0.874,0.05,0.05],'String','0.28',BoxArg{:});
 end
 
 %% save

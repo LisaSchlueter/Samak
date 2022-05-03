@@ -124,27 +124,30 @@ MakeDir(plotdir);
 %% plot slope from linear fit
 close all
 %GetFigure
-figureHandle = figure('Units','normalized','Position',[0.1,0.1,0.5,0.55]);
- %surf(sin2T4_allgrid,mNu4Sq_allgrid,SlopeFit,'EdgeColor','none');
-% hold on;
-% [~,ct] = contour3(sin2T4_allgrid,mNu4Sq_allgrid,SlopeFit,[-0.1,0,0.1],'Color',rgb('Black'),...
-%     'ShowText','on','LineWidth',2.5);
+LocalFontSize = 18;
+figureHandle = figure('Units','normalized','Position',[0.1,0.1,0.55,0.5]);
+
 ContourVec = [-2,-1,-0.5,-0.25,-0.1,-0.05,-0.01,0,0.01,0.05,0.1,0.2];
 surf(sin2T4_allgrid,mNu4Sq_allgrid,SlopeFit-1e-02,'EdgeColor','interp','FaceColor','interp');
 hold on;
 [M,ct] = contour3(sin2T4_allgrid,mNu4Sq_allgrid,SlopeFit,ContourVec,...
     'ShowText','off','LineWidth',2.5,'LabelSpacing',180,'LineColor',rgb('Black'));
-%clabel(M,ct,'FontSize',26,'FontName','Times New Roman','Color',ct.LineColor);
+%clabel(M,ct,'FontSize',26,'FontName',FontType,'Color',ct.LineColor);
 set(gca,'XScale','log');
 set(gca,'YScale','log');
 view(2);
+colormap(spring);
 c = colorbar; 
-c.Location = 'northoutside';
-c.Ticks = (-1:0.2:0.1);
+c.Location = 'eastoutside';
+c.Ticks = (-1:0.2:0.2);
+c.Limits = [-1 0.2];
 c.Label.String = sprintf('\\alpha_{slope}');%sprintf('Slope {\\ita}  ({\\itm}_\\nu^2 = {\\ita} \\cdot {\\itm}_4^2 + offset)');
 c.LineWidth = 1.5;
-grid off; 
-PRLFormat;
+grid off;
+
+
+%PRLFormat;
+PrettyFigureFormat;
 set(gca,'FontSize',LocalFontSize);
 ax = gca;
 
@@ -153,13 +156,14 @@ ylim([0.1 1600]);
 xlim([1e-03 0.5])
 xlabel(sprintf('|{\\itU}_{e4}|^2'));
 ylabel(sprintf('{\\itm}_4^2 (eV^2)'));
-ax.XLabel.FontSize = LocalFontSize+4;
-ax.YLabel.FontSize = LocalFontSize+4;
+ax.XLabel.FontSize = LocalFontSize+2;
+ax.YLabel.FontSize = LocalFontSize+2;
 
 c.Label.FontSize = ax.XLabel.FontSize;
 %ax.Position(3) = 0.65;
 ax.Position(1) = 0.165;
-ax.Position(4) = 0.67;
+ax.Position(4) = 0.77;
+ax.Position(3) = 0.7;
 % by hand: text boxes:
 % t.delete;
 % t2.delete;
@@ -171,21 +175,22 @@ ax.Position(4) = 0.67;
 % t8.delete;
 % t9.delete;
 % t10.delete;
-t = text(0.0089,0.15,0.17,'-0.01','FontSize',LocalFontSize,'FontName','Times New Roman','Rotation',90) ;
-t2 = text(0.043,0.15,0.17,'-0.05','FontSize',LocalFontSize,'FontName','Times New Roman','Rotation',90) ;
-t3 = text(0.081,0.15,0.17,'-0.1','FontSize',LocalFontSize,'FontName','Times New Roman','Rotation',90) ;
-t4 = text(0.172,0.15,0.17,'-0.25','FontSize',LocalFontSize,'FontName','Times New Roman','Rotation',90) ;
-t5 = text(0.282,0.15,0.17,'-0.5','FontSize',LocalFontSize,'FontName','Times New Roman','Rotation',90) ;
-t6 = text(0.421,0.15,0.17,'-1','FontSize',LocalFontSize,'FontName','Times New Roman','Rotation',90) ;
-t7 = text(0.0015,43,0.17,'0','FontSize',LocalFontSize,'FontName','Times New Roman','Rotation',0) ;
-t8 = text(0.025,170,0.17,'0.01','FontSize',LocalFontSize,'FontName','Times New Roman','Rotation',30) ;
-t9 = text(0.115,140,0.17,'0.05','FontSize',LocalFontSize,'FontName','Times New Roman','Rotation',40) ;
-t10 = text(0.238,150,0.17,'0.1','FontSize',LocalFontSize,'FontName','Times New Roman','Rotation',50) ;
+FontType = get(gca,'FontName');
+t = text(0.0089,0.15,0.17,'-0.01','FontSize',LocalFontSize,'FontName',FontType,'Rotation',90) ;
+t2 = text(0.043,0.15,0.17,'-0.05','FontSize',LocalFontSize,'FontName',FontType,'Rotation',90) ;
+t3 = text(0.081,0.15,0.17,'-0.1','FontSize',LocalFontSize,'FontName',FontType,'Rotation',90) ;
+t4 = text(0.172,0.15,0.17,'-0.25','FontSize',LocalFontSize,'FontName',FontType,'Rotation',90) ;
+t5 = text(0.282,0.15,0.17,'-0.5','FontSize',LocalFontSize,'FontName',FontType,'Rotation',90) ;
+t6 = text(0.421,0.15,0.17,'-1','FontSize',LocalFontSize,'FontName',FontType,'Rotation',90) ;
+t7 = text(0.0015,43,0.17,'0','FontSize',LocalFontSize,'FontName',FontType,'Rotation',0) ;
+t8 = text(0.025,170,0.17,'0.01','FontSize',LocalFontSize,'FontName',FontType,'Rotation',30) ;
+t9 = text(0.115,140,0.17,'0.05','FontSize',LocalFontSize,'FontName',FontType,'Rotation',40) ;
+t10 = text(0.238,150,0.17,'0.1','FontSize',LocalFontSize,'FontName',FontType,'Rotation',50) ;
 ax = gca;
 ax.SortMethod='ChildOrder';
 %
 
-
+%
 plotname = sprintf('%sksn2_NuMassCorrelationFit.pdf',plotdir);
 %plotname = sprintf('%sksn2_NuMassCorrelationFit_%s_%.0fGrid_%.0ffits_LinSlope.pdf',plotdir,DataType,nStepsAll,nSteps);
 export_fig(plotname);

@@ -5,7 +5,7 @@ RecomputeFlag = 'OFF';
 
 %% KNM-1 Model
 chi2          = 'chi2CMShape';
-DataType      = 'Twin';
+DataType      = 'Real';
 nGridSteps    = 30;
 freePar       = 'mNu E0 Bkg Norm';
 range         = 40;
