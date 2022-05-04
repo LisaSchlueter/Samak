@@ -40,11 +40,18 @@ ranges = sort(round(-qU(1:RangeStandard)));
 
 if strcmp(DataType,'Real')
     if contains(freePar,'mNu')
+        nGridSteps = 40;
         LoadGridArg = {'ExtmNu4Sq','OFF','mNu4SqTestGrid',5} ;
     else
+        nGridSteps = 30;
         LoadGridArg = {'ExtmNu4Sq','ON','mNu4SqTestGrid',5} ;
     end
 else
+    if contains(freePar,'mNu')
+        nGridSteps = 40;
+    else
+        nGridSteps = 30;
+    end
     LoadGridArg = {'ExtmNu4Sq','OFF','mNu4SqTestGrid',5} ;
 end
 
@@ -56,7 +63,7 @@ end
         'LoadGridArg',LoadGridArg,...
         'nGridSteps',nGridSteps };
     
-for i=numel(ranges):-1:1
+for i=ranges(end)%numel(ranges):-1:1
     if i<numel(ranges)
         Real = MultiRunAnalysis(RunAnaArg{:}); % re-init for sanity
     end
@@ -65,6 +72,5 @@ for i=numel(ranges):-1:1
 
     S = SterileAnalysis(SterileArg{:},'range',ranges(i));
     S.GridSearch(S.LoadGridArg{:});
-    
 end
 

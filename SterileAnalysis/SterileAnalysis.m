@@ -2567,6 +2567,7 @@ classdef SterileAnalysis < handle
             
             GetFigure; 
             % 1. NW
+            obj.InterpMode = 'lin';
             obj.LoadGridFile(obj.LoadGridArg{:},'Negsin2T4','ON');
             obj.Interp1Grid;
             chi2grid1 = obj.chi2;
@@ -2579,7 +2580,11 @@ classdef SterileAnalysis < handle
             set(gca,'XScale','log')
             set(gca,'YScale','log')
             xlim([-0.5 -1e-03]);
-            ylim([0.1,40^2]);
+            if strcmp(obj.RunAnaObj.DataSet,'Knm2')
+                ylim([0.1,40^2]);
+            else
+                ylim([1,40^2])
+            end
             view([0 0 1])
             grid off
             ylabel(sprintf('{\\itm}_4^2 (eV^2)'));
@@ -2613,10 +2618,13 @@ classdef SterileAnalysis < handle
                 
             s2 = subplot(2,2,2); 
             surf(obj.sin2T4,obj.mNu4Sq,chi2grid1-obj.chi2_ref,'EdgeColor','interp','FaceColor','interp');
-             PrettyFigureFormat; 
-             xlim([1e-03,1]);
-             ylim([0.1,40^2]);
-            
+            PrettyFigureFormat;
+            xlim([1e-03,1]);
+            if strcmp(obj.RunAnaObj.DataSet,'Knm2')
+                ylim([0.1,40^2]);
+            else
+                ylim([1,40^2])
+            end
             zlim([0 zlimMax])
             set(gca,'XScale','log')
             set(gca,'YScale','log')
@@ -2630,13 +2638,20 @@ classdef SterileAnalysis < handle
             
             obj.LoadGridFile(obj.LoadGridArg{:},'Extsin2T4','ON');
             obj.InterpMode = 'spline';
-            obj.Interp1Grid('Maxm4Sq',34^2); 
-            obj.FindBestFit; 
+            obj.Interp1Grid('Maxm4Sq',34^2);
+            obj.FindBestFit;
             obj.InterpMode = 'lin';
+            
+            if  obj.chi2_bf<2 && strcmp(obj.RunAnaObj.DataType,'Real')
+                 obj.LoadGridFile(obj.LoadGridArg{:},'Extsin2T4','ON');
+                obj.Interp1Grid('Maxm4Sq',34^2);
+                obj.FindBestFit;
+            end
             
             mNu4Sq_bf(2)  = obj.mNu4Sq_bf;
             sin2T4_bf(2) = obj.sin2T4_bf;
             chi2_bf(2)    = obj.chi2_bf;
+            
             if chi2_bf(2)<obj.chi2_Null
                 hold on;
                 pbf{2} = plot3(sin2T4_bf(2),mNu4Sq_bf(2),2,'x','Color',rgb('White'),'LineWidth',2,'MarkerSize',8);
@@ -2662,7 +2677,12 @@ classdef SterileAnalysis < handle
             view([0 0 1])
             ax3 = gca;
             xlim([-0.5,-1e-03]);
-            ylim([-40^2,-0.1]);
+            if strcmp(obj.RunAnaObj.DataSet,'Knm2')
+                ylim([-40^2,-0.1]);
+            else
+                ylim([-40^2,-1]);
+            end
+            
              xticks(sort(-PltxTics));
              yticks(sort(-PltyTics));
              yticklabels({'-10^3','-10^2','-10^1','-10^0',''})
@@ -2694,7 +2714,11 @@ classdef SterileAnalysis < handle
             surf(obj.sin2T4,obj.mNu4Sq,chi2grid1-obj.chi2_ref,'EdgeColor','interp','FaceColor','interp');
             PrettyFigureFormat;
             xlim([1e-03,1]);
-            ylim([-40^2,-0.1]);        
+              if strcmp(obj.RunAnaObj.DataSet,'Knm2')
+                ylim([-40^2,-0.1]);
+            else
+                ylim([-40^2,-1]);
+            end       
             zlim([0 zlimMax])
             set(gca,'XScale','log')
             set(gca,'YScale','log')

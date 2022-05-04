@@ -9,7 +9,7 @@ RecomputeFlag = 'OFF';
 savedir = [getenv('SamakPath'),'ksn2ana/ksn2_WilksTheorem/results/'];
 
 if Twin_sin2T4==0 && Twin_mNu4Sq==0
-    savefile = sprintf('%sksn21_WilksTheorem_NullHypothesis_Interp%s.mat',...
+    savefile = sprintf('%sksn21_WilksTheorem_NullHypothesis_Interp%s2.mat',...
         savedir,InterpMode);
 else
     savefile = sprintf('%sksn21_WilksTheorem_mNu4Sq-%.1feV2_sin2T4-%.3g_Interp%s.mat',...
@@ -77,6 +77,9 @@ else
     S.InterpMode = InterpMode;
     S.LoadGridArg = {'mNu4SqTestGrid',2,'ExtmNu4Sq','ON'};
     
+%     mNu4Sq_contourk2 = cell(NrandMC1,1);
+%     sin2T4_contourk2 = cell(NrandMC1,1);
+    
     % first part: load files
     progressbar('Merge files for WT');
     for i=1:NrandMC1
@@ -88,6 +91,10 @@ else
         TBDIS_mc(i,:) = S.RandMC_TBDIS;
         S.RandMC_TBDIS = [];
         chi2_nullk2(i) = S.chi2_Null;
+        
+%         S.ContourPlot; close;
+%         mNu4Sq_contourk2{i} = S.mNu4Sq_contour;
+%         sin2T4_contourk2{i} = S.sin2T4_contour;
     end
     mNu4Sq_grid = S.mNu4Sq;
     sin2T4_grid = S.sin2T4;
@@ -100,6 +107,7 @@ else
     chi2_grid  = chi2_grid(IdxNonId);
     TBDIS_mc   = TBDIS_mc(IdxNonId,:);
     chi2_nullk2 = chi2_nullk2(IdxNonId);
+    
     
     %% ksn-2 second part
     randMC_new  = 1:1250;

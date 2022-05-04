@@ -1,6 +1,6 @@
 % ksn2 calculate chi2 grid search
 %% settings that might change
-nGridSteps            = 50;
+nGridSteps            = 30;
 DataType              = 'Real';
 range                 = 40;
 chi2                  = 'chi2CMShape';
@@ -11,7 +11,7 @@ if strcmp(chi2,'chi2Stat')
 elseif  strcmp(chi2,'chi2CMShape')
     NonPoissonScaleFactor = 1.064;
 end
-Real = MultiRunAnalysis('RunList','KNM1',...
+A = MultiRunAnalysis('RunList','KNM1',...
     'chi2',chi2,...
     'DataType',DataType,...
     'fixPar',freePar,...
@@ -25,9 +25,9 @@ Real = MultiRunAnalysis('RunList','KNM1',...
     'RadiativeFlag','ON',...
     'DopplerEffectFlag','FSD',...
     'BKG_PtSlope',-2.2*1e-06);
-Real.exclDataStart = Real.GetexclDataStart(range);
+A.exclDataStart = A.GetexclDataStart(range);
 %% configure Sterile analysis object
-SterileArg = {'RunAnaObj',Real,... % Mother Object: defines RunList, Column Density, Stacking Cuts,....
+SterileArg = {'RunAnaObj',A,... % Mother Object: defines RunList, Column Density, Stacking Cuts,....
     'nGridSteps',nGridSteps,...
     'SmartGrid','OFF',...
     'RecomputeFlag','OFF',...
@@ -36,15 +36,24 @@ SterileArg = {'RunAnaObj',Real,... % Mother Object: defines RunList, Column Dens
     'range',range};
 
 S = SterileAnalysis(SterileArg{:});
-S.GridSearch('ExtmNu4Sq','OFF','mNu4SqTestGrid',2);
 
 
-
-
-% %% new for ringberg slides
-% S.LoadGridFile('ExtmNu4Sq','OFF','mNu4SqTestGrid',2);
-% S.Interp1Grid;
-% S.ContourPlotOsci('DayaBay','ON','DoubleChooz','ON','SavePlot','ON','Style','PRL','BestFit','ON','Color',rgb('SkyBlue'));
+CommonArg = {'ExtmNu4Sq','ON','mNu4SqTestGrid',2};
 %%
+A = MultiRunAnalysis(RunAnaArg{:});
+S = SterileAnalysis('RunAnaObj',A,SterileArg{:});
+S.GridSearch(CommonArg {:},'Extsin2T4','ON');
+
+A = MultiRunAnalysis(RunAnaArg{:});
+S = SterileAnalysis('RunAnaObj',A,SterileArg{:});
+S.GridSearch(CommonArg {:},'Negsin2T4','ON','Extsin2T4','OFF');
+
+A = MultiRunAnalysis(RunAnaArg{:});
+S = SterileAnalysis('RunAnaObj',A,SterileArg{:});
+S.GridSearch(CommonArg {:},'NegmNu4Sq','ON','Extsin2T4','ON');
+
+A = MultiRunAnalysis(RunAnaArg{:});
+S = SterileAnalysis('RunAnaObj',A,SterileArg{:});
+S.GridSearch(CommonArg {:},'Negsin2T4','ON','NegmNu4Sq','ON','Extsin2T4','OFF');
 
 

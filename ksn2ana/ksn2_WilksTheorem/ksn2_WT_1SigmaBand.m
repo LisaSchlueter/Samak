@@ -1,33 +1,22 @@
-% 1 sigma cnotour band from randomized mc study
-% ksn1+2 combination
-InterpMode = 'lin';
-Twin_sin2T4 = 0;
-Twin_mNu4Sq = 0;
-RecomputeFlag = 'OFF';
+% plot with 1 sigma sensitivity band 
+% load randmoized mc contours
+
+DataSet = 'KNM1';
+if strcmp(DataSet,'KNM2')
 savedir = [getenv('SamakPath'),'ksn2ana/ksn2_WilksTheorem/results/'];
-
-if Twin_sin2T4==0 && Twin_mNu4Sq==0
-    savefile = sprintf('%sksn21_WilksTheorem_NullHypothesis_Interp%s.mat',...
-        savedir,InterpMode);
+savefile = sprintf('%sksn2_WilksTheorem_NullHypothesis_Interplin_1000samples.mat',savedir);
 else
-    savefile = sprintf('%sksn21_WilksTheorem_mNu4Sq-%.1feV2_sin2T4-%.3g_Interp%s.mat',...
-        savedir,Twin_mNu4Sq,Twin_sin2T4,InterpMode);
+    savedir = [getenv('SamakPath'),'ksn1ana/ksn1_WilksTheorem/results/'];
+savefile = sprintf('%sksn1_WilksTheorem_40range_chi2CMShape_Mix.mat',savedir);
 end
-
-if exist(savefile,'file') && strcmp(RecomputeFlag,'OFF')
-    fprintf('savefile already created \n');
-   d = importdata(savefile);
-  % load(savefile)
-else
-    return
-end
-
-%% load ksn12 result
+d = importdata(savefile);
+% load ksn1 and 2 results
 CombiDir = sprintf('%sksn2ana/ksn2_RunCombination/results/',getenv('SamakPath'));
 fileT = sprintf('%sksn21_Combination_ReAna_Twin.mat',CombiDir);
 fileD = sprintf('%sksn21_Combination_ReAna_Real.mat',CombiDir);
 dCT = importdata(fileT);
 dCD = importdata(fileD);
+
 %% interpolate
 mNu4Sq_contour = d.mNu4Sq_contour(~d.ClosedLog95);
 sin2T4_contour = d.sin2T4_contour(~d.ClosedLog95);
@@ -52,9 +41,8 @@ sin2T4 = zeros(sum(~d.ClosedLog95),1e3);
     
     
     sin2T4 = sin2T4(InclIdx,:);
-    %%
-    GetFigure;
- %%   ksn1+2 combined
+    
+      GetFigure;
  sin2T4mean  = mean(sin2T4);
  sin2T4std   = std(sin2T4);
 [l,a] = boundedline(sin2T4mean,mNu4Sq,sin2T4std,'orientation','horiz');
@@ -63,10 +51,13 @@ hold on;
 pNone = plot(NaN,NaN,'w','LineStyle','none');
 a.FaceColor = rgb('LightGray');
 hold on;
-%pA = plot(mean(sin2T4),mNu4Sq,'-','LineWidth',2);
-pD = plot(dCD.sin2T4_contour_12,dCD.mNu4Sq_contour_12,'-','LineWidth',3.5,'Color',rgb('Navy'));
-pT = plot(dCT.sin2T4_contour_12,dCT.mNu4Sq_contour_12,'-.','LineWidth',2.5,'Color',rgb('DimGray'));
-
+if strcmp(DataSet,'KNM2')
+    pD = plot(dCD.sin2T4_contour_2,dCD.mNu4Sq_contour_2,'-','LineWidth',3.5,'Color',rgb('DodgerBlue'));
+    pT = plot(dCT.sin2T4_contour_2,dCT.mNu4Sq_contour_2,'-.','LineWidth',2.5,'Color',rgb('DimGray'));
+else
+    pD = plot(dCD.sin2T4_contour_1,dCD.mNu4Sq_contour_1,'-','LineWidth',3.5,'Color',rgb('SkyBlue'));
+    pT = plot(dCT.sin2T4_contour_1,dCT.mNu4Sq_contour_1,'-.','LineWidth',2.5,'Color',rgb('DimGray'));
+end
 set(gca,'XScale','log');
 set(gca,'YScale','log');
 xlim([3e-03 0.5]);
@@ -78,12 +69,13 @@ leg = legend([pNone,pT,a,pD],...
     sprintf('\nCase I) {\\itm}_\\nu^2 = 0 eV^2'),...
     'Sensitivity (Asimov)',...
     sprintf('1\\sigma sensitivity band'),...
-    'KNM1+2 data exclusion',...
+    sprintf('%s data exclusion',DataSet),...
     'Location','southwest');PrettyLegendFormat(leg);
 
-CombiPltDir = strrep(CombiDir,'results','plots');
+
+CombiPltDir = strrep(savedir,'results','plots');
 MakeDir(CombiPltDir);
-pltname = sprintf('%sksn21_1SigmaBand.png',CombiPltDir);
+pltname = sprintf('%s%s_WT_1SigmaBand.png',CombiPltDir,DataSet);
 print(pltname,'-dpng','-r350');
 fprintf('save plot to %s \n',pltname);
 

@@ -1,12 +1,15 @@
 % ksn2 calculate chi2 grid search
 %% settings that might change
-nGridSteps            = 30;
 DataType              = 'Real';
 range                 = 40;
 chi2                  = 'chi2CMShape';
-freePar               = 'E0 Norm Bkg';
+freePar               = 'mNu E0 Norm Bkg';
 
-
+if contains(freePar,'mNu')
+    nGridSteps = 40;
+else
+    nGridSteps = 30;
+end
 
 if strcmp(chi2,'chi2Stat')
     NonPoissonScaleFactor = 1;
@@ -38,7 +41,7 @@ RangeStandard = Real.GetexclDataStart(40);
 qU = round(Real.RunData.qU-18575);
 ranges = sort(round(-qU(1:RangeStandard)));
 
-for i=1:numel(ranges)
+for i=ranges(end)%1:numel(ranges)
     if i>=2
         Real = MultiRunAnalysis(RunAnaArg{:});
     end
