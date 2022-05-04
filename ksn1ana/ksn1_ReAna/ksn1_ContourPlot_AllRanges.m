@@ -74,10 +74,18 @@ Real.exclDataStart = Real.GetexclDataStart(ranges(end));
 % configure Sterile analysis object
 S.ConfLevel = 99;
 S.range = ranges(end);
+%%
+S.RunAnaObj.FSDFlag = 'KNM2_0p1eV';
 S.LoadGridFile(S.LoadGridArg{:});
 S.InterpMode = 'spline';
 S.Interp1Grid;
-S.GridPlot('BestFit','ON');
+S.ContourPlot('BestFit','ON');
+
+S.RunAnaObj.FSDFlag = 'KNM2';
+S.LoadGridFile(S.LoadGridArg{:});
+S.InterpMode = 'spline';
+S.Interp1Grid;
+S.ContourPlot('BestFit','ON','HoldOn','ON','Color',rgb('Orange'),'LineStyle','-.','MarkerStyle','o');
 
  
  
