@@ -3,7 +3,7 @@
 chi2 = 'chi2CMShape';
 DataType = 'Real';
 range = 40;
-freePar = 'E0 Norm Bkg';
+freePar = 'mNu E0 Norm Bkg';
 %% configure RunAnalysis object
 if strcmp(chi2,'chi2Stat')
     NonPoissonScaleFactor = 1;
@@ -63,7 +63,7 @@ end
         'LoadGridArg',LoadGridArg,...
         'nGridSteps',nGridSteps };
     
-for i=ranges(end)%numel(ranges):-1:1
+for i=numel(ranges):-1:1
     if i<numel(ranges)
         Real = MultiRunAnalysis(RunAnaArg{:}); % re-init for sanity
     end

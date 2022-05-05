@@ -5,13 +5,13 @@ DataType              = 'Real';
 range                 = 40;
 chi2                  = 'chi2CMShape';
 freePar               = 'E0 Norm Bkg';
-%% configure RunAnalysis object
+% configure RunAnalysis object
 if strcmp(chi2,'chi2Stat')
     NonPoissonScaleFactor = 1;
 elseif  strcmp(chi2,'chi2CMShape')
     NonPoissonScaleFactor = 1.064;
 end
-A = MultiRunAnalysis('RunList','KNM1',...
+RunAnaArg = {'RunList','KNM1',...
     'chi2',chi2,...
     'DataType',DataType,...
     'fixPar',freePar,...
@@ -24,10 +24,10 @@ A = MultiRunAnalysis('RunList','KNM1',...
     'SynchrotronFlag','ON',...
     'RadiativeFlag','ON',...
     'DopplerEffectFlag','FSD',...
-    'BKG_PtSlope',-2.2*1e-06);
-A.exclDataStart = A.GetexclDataStart(range);
+    'BKG_PtSlope',-2.2*1e-06};
+
 %% configure Sterile analysis object
-SterileArg = {'RunAnaObj',A,... % Mother Object: defines RunList, Column Density, Stacking Cuts,....
+SterileArg = {... % Mother Object: defines RunList, Column Density, Stacking Cuts,....
     'nGridSteps',nGridSteps,...
     'SmartGrid','OFF',...
     'RecomputeFlag','OFF',...
@@ -35,13 +35,12 @@ SterileArg = {'RunAnaObj',A,... % Mother Object: defines RunList, Column Density
     'RandMC','OFF',...
     'range',range};
 
-S = SterileAnalysis(SterileArg{:});
-
-
 CommonArg = {'ExtmNu4Sq','ON','mNu4SqTestGrid',2};
-%%
+%
 A = MultiRunAnalysis(RunAnaArg{:});
 S = SterileAnalysis('RunAnaObj',A,SterileArg{:});
+
+%%
 S.GridSearch(CommonArg {:},'Extsin2T4','ON');
 
 A = MultiRunAnalysis(RunAnaArg{:});
@@ -57,3 +56,6 @@ S = SterileAnalysis('RunAnaObj',A,SterileArg{:});
 S.GridSearch(CommonArg {:},'Negsin2T4','ON','NegmNu4Sq','ON','Extsin2T4','OFF');
 
 
+%%
+S.LoadGridArg = CommonArg;
+S.PlotQuadrant('SavePlot','OFF');

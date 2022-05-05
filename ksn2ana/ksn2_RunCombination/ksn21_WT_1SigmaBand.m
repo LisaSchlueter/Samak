@@ -66,7 +66,8 @@ hold on;
 %pA = plot(mean(sin2T4),mNu4Sq,'-','LineWidth',2);
 pD = plot(dCD.sin2T4_contour_12,dCD.mNu4Sq_contour_12,'-','LineWidth',3.5,'Color',rgb('Navy'));
 pT = plot(dCT.sin2T4_contour_12,dCT.mNu4Sq_contour_12,'-.','LineWidth',2.5,'Color',rgb('DimGray'));
-
+ pDbf = plot(dCD.sin2T4_bf_12,dCD.mNu4Sq_bf_12, 'p','MarkerIndices',[1,1],'MarkerFaceColor',pD.Color,...
+       'LineWidth',1,'Color',pD.Color,'MarkerSize',17);
 set(gca,'XScale','log');
 set(gca,'YScale','log');
 xlim([3e-03 0.5]);

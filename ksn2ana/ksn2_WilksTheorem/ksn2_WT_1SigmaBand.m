@@ -54,9 +54,16 @@ hold on;
 if strcmp(DataSet,'KNM2')
     pD = plot(dCD.sin2T4_contour_2,dCD.mNu4Sq_contour_2,'-','LineWidth',3.5,'Color',rgb('DodgerBlue'));
     pT = plot(dCT.sin2T4_contour_2,dCT.mNu4Sq_contour_2,'-.','LineWidth',2.5,'Color',rgb('DimGray'));
+    
+%    pDbf = plot(0.3,10, 'p','MarkerIndices',[1,1],'MarkerFaceColor',pD.Color,...
+%        'LineWidth',1,'Color',pD.Color,'MarkerSize',17);
+ t.delete;  t = text(0.25,25,sprintf('Best fit: \n{\\itm}_4^2 = 0.28 eV^2 \n|{\\itU}_{e4}|^2 = 1.0'),...
+     'FontSize',18,'Color',pD.Color,'HorizontalAlignment','center');
 else
     pD = plot(dCD.sin2T4_contour_1,dCD.mNu4Sq_contour_1,'-','LineWidth',3.5,'Color',rgb('SkyBlue'));
     pT = plot(dCT.sin2T4_contour_1,dCT.mNu4Sq_contour_1,'-.','LineWidth',2.5,'Color',rgb('DimGray'));
+      pDbf = plot(dCD.sin2T4_bf_1,dCD.mNu4Sq_bf_1, 'p','MarkerIndices',[1,1],'MarkerFaceColor',pD.Color,...
+       'LineWidth',1,'Color',pD.Color,'MarkerSize',17);
 end
 set(gca,'XScale','log');
 set(gca,'YScale','log');

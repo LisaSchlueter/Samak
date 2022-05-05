@@ -1,11 +1,12 @@
 % look at sensitivity contour from KNM-2 like simulation with flat MTD
 
 FakeInitFile = @ref_KNM2_KATRIN_IsoStatMTD;
+FakeInitFile = @ref_KNM2_KATRIN_IsoStatMTD_Bkg0mcps;
 range = 40;
-freePar = 'mNu E0 Norm Bkg';
+freePar = 'E0 Norm Bkg';
 nGridSteps = 25;
 
-%% tritium run model
+% tritium run model
 F = RunAnalysis('RunNr',1,...
     'DataType','Fake',...
     'FakeInitFile',FakeInitFile,...
@@ -21,6 +22,7 @@ F = RunAnalysis('RunNr',1,...
 
 F.exclDataStart = F.GetexclDataStart(range);
 
+
 %% configure Sterile analysis object
 SterileArg = {'RunAnaObj',F,... % Mother Object: defines RunList, Column Density, Stacking Cuts,....
     'nGridSteps',nGridSteps,...
@@ -30,7 +32,8 @@ SterileArg = {'RunAnaObj',F,... % Mother Object: defines RunList, Column Density
     'RandMC','OFF',...
     'range',range};
 S = SterileAnalysis(SterileArg{:});
-S.GridSearch;
+S.GridSearch('mNu4SqTestGrid',2);
+return
 %%
 S.LoadGridFile
 S.Interp1Grid;

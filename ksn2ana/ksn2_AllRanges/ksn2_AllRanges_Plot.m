@@ -86,3 +86,8 @@ for i=1:numel(ranges)
     HoldOn = 'ON';
 end
 
+%%
+% S.RunAnaObj.fixPar = ConvertFixPar('freePar','mNu E0 Bkg Norm','nPar',S.RunAnaObj.nPar);
+% S.LoadGridFile(S.LoadGridArg{:});
+%     S.Interp1Grid;
+%     S.ContourPlot('BestFit','ON','HoldOn',HoldOn,'Color',S.PlotColors{i},'LineStyle',S.PlotLines{i});

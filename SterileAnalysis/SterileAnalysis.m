@@ -2543,7 +2543,7 @@ classdef SterileAnalysis < handle
         function [sin2T4_bf,mNu4Sq_bf,chi2_bf,DeltaChi2,Sigma] = PlotQuadrant(obj,varargin)
             % plot 4 quadrant grid  plot of physical and nonphysical parameter space
             p = inputParser;
-            p.addParameter('SavePlot','ON',@(x)ismember(x,{'ON','OFF','png'}));
+            p.addParameter('SavePlot','png',@(x)ismember(x,{'ON','OFF','png'}));
             p.parse(varargin{:});
             SavePlot = p.Results.SavePlot;
             PltxTics = [1e-03,1e-02,1e-01,0.5,1];
@@ -2580,11 +2580,8 @@ classdef SterileAnalysis < handle
             set(gca,'XScale','log')
             set(gca,'YScale','log')
             xlim([-0.5 -1e-03]);
-            if strcmp(obj.RunAnaObj.DataSet,'Knm2')
-                ylim([0.1,40^2]);
-            else
-                ylim([1,40^2])
-            end
+            ylim([0.1,40^2]);
+    
             view([0 0 1])
             grid off
             ylabel(sprintf('{\\itm}_4^2 (eV^2)'));
@@ -2620,11 +2617,7 @@ classdef SterileAnalysis < handle
             surf(obj.sin2T4,obj.mNu4Sq,chi2grid1-obj.chi2_ref,'EdgeColor','interp','FaceColor','interp');
             PrettyFigureFormat;
             xlim([1e-03,1]);
-            if strcmp(obj.RunAnaObj.DataSet,'Knm2')
-                ylim([0.1,40^2]);
-            else
-                ylim([1,40^2])
-            end
+            ylim([0.1,40^2]);
             zlim([0 zlimMax])
             set(gca,'XScale','log')
             set(gca,'YScale','log')
@@ -2677,12 +2670,8 @@ classdef SterileAnalysis < handle
             view([0 0 1])
             ax3 = gca;
             xlim([-0.5,-1e-03]);
-            if strcmp(obj.RunAnaObj.DataSet,'Knm2')
-                ylim([-40^2,-0.1]);
-            else
-                ylim([-40^2,-1]);
-            end
-            
+            ylim([-40^2,-0.1]);
+
              xticks(sort(-PltxTics));
              yticks(sort(-PltyTics));
              yticklabels({'-10^3','-10^2','-10^1','-10^0',''})
@@ -2710,15 +2699,13 @@ classdef SterileAnalysis < handle
             obj.Interp1Grid;
             chi2grid1 = obj.chi2;
             chi2grid1((chi2grid1-obj.chi2_ref)>obj.DeltaChi2) =  NaN;
-            s3 = subplot(2,2,4);
+            
+            s4 = subplot(2,2,4);
             surf(obj.sin2T4,obj.mNu4Sq,chi2grid1-obj.chi2_ref,'EdgeColor','interp','FaceColor','interp');
             PrettyFigureFormat;
             xlim([1e-03,1]);
-              if strcmp(obj.RunAnaObj.DataSet,'Knm2')
-                ylim([-40^2,-0.1]);
-            else
-                ylim([-40^2,-1]);
-            end       
+            ylim([-40^2,-0.1]);
+      
             zlim([0 zlimMax])
             set(gca,'XScale','log')
             set(gca,'YScale','log')
@@ -2739,12 +2726,12 @@ classdef SterileAnalysis < handle
             mNu4Sq_bf(4)  = obj.mNu4Sq_bf;
             sin2T4_bf(4) = obj.sin2T4_bf;
             chi2_bf(4)    = obj.chi2_bf;
-             if chi2_bf(4)<obj.chi2_Null
-            hold on;
-            pbf{4} = plot3(sin2T4_bf(4),mNu4Sq_bf(4),2,'x','Color',rgb('White'),'LineWidth',2,'MarkerSize',8);
-             leg = legend(pbf{1},sprintf('Best fit \\chi^2 = %.1f',chi2_bf(4)),'Location','southwest');
-                PrettyLegendFormat(leg); 
-             end
+            if chi2_bf(4)<obj.chi2_Null
+                hold on;
+                pbf{4} = plot3(sin2T4_bf(4),mNu4Sq_bf(4),2,'x','Color',rgb('White'),'LineWidth',2,'MarkerSize',8);
+                leg = legend(pbf{4},sprintf('Best fit \\chi^2 = %.1f',chi2_bf(4)),'Location','northwest');
+                PrettyLegendFormat(leg);
+            end
             [DeltaChi2(4),~,Sigma(4)] =obj.CompareBestFitNull;
             
             %% find global minimum
