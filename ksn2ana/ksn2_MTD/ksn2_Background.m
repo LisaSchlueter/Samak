@@ -33,37 +33,39 @@ SterileArg = {'RunAnaObj',F,... % Mother Object: defines RunList, Column Density
     'range',range};
 S = SterileAnalysis(SterileArg{:});
 S.InterpMode = 'spline';
+
 %% regular KNM-2 MTD
 S.RunAnaObj.FakeInitFile = @ref_KNM2_KATRIN_RegMTD;
 S.LoadGridFile
-S.Interp1Grid('Maxm4Sq',34^2);
+S.Interp1Grid('Maxm4Sq',36^2);
 preg = S.ContourPlot('Color',rgb('DodgerBlue'),'LineStyle','-','HoldOn','OFF');
 mNu4Sq_contour_reg = S.mNu4Sq_contour;
 sin2T4_contour_reg = S.sin2T4_contour;
 
-% 0 mcps
+%% 0 mcps
 S.RunAnaObj.FakeInitFile = @ref_KNM2_KATRIN_RegMTD_Bkg0mcps;
 S.LoadGridFile
-S.Interp1Grid('Maxm4Sq',34^2);
+S.Interp1Grid('Maxm4Sq',35.5^2);
 p0 = S.ContourPlot('Color',rgb('FireBrick'),'LineStyle','-.','HoldOn','ON');
-mNu4Sq_contour_0 = S.mNu4Sq_contour;
-sin2T4_contour_0 = S.sin2T4_contour;
+mNu4Sq_contour_0 = S.mNu4Sq_contour(:,1);
+sin2T4_contour_0 = S.sin2T4_contour(:,1);
 
-% 10 mcps
+%% 10 mcps
+
 S.RunAnaObj.FakeInitFile = @ref_KNM2_KATRIN_RegMTD_Bkg10mcps;
 S.LoadGridFile
-S.Interp1Grid('Maxm4Sq',34^2);
+S.Interp1Grid('Maxm4Sq',36^2);
 p10 = S.ContourPlot('Color',rgb('ForestGreen'),'LineStyle',':','HoldOn','ON');
-mNu4Sq_contour_10 = S.mNu4Sq_contour;
-sin2T4_contour_10 = S.sin2T4_contour;
+mNu4Sq_contour_10 = S.mNu4Sq_contour(:,2);
+sin2T4_contour_10 = S.sin2T4_contour(:,2);
 
-% 100 mcps
+%% 100 mcps
 S.RunAnaObj.FakeInitFile = @ref_KNM2_KATRIN_RegMTD_Bkg100mcps;
 S.LoadGridFile
-S.Interp1Grid('Maxm4Sq',34^2);
+S.Interp1Grid('Maxm4Sq',36^2);
 p100 = S.ContourPlot('Color',rgb('Orange'),'LineStyle','--','HoldOn','ON');
-mNu4Sq_contour_109 = S.mNu4Sq_contour;
-sin2T4_contour_109 = S.sin2T4_contour;
+mNu4Sq_contour_109 = S.mNu4Sq_contour(:,3);
+sin2T4_contour_109 = S.sin2T4_contour(:,3);
 
 % % 100000 mcps / 100 counts
 % S.RunAnaObj.FakeInitFile = @ref_KNM2_KATRIN_RegMTD_Bkg100000mcps;
@@ -73,7 +75,16 @@ sin2T4_contour_109 = S.sin2T4_contour;
 % mNu4Sq_contour_1000 = S.mNu4Sq_contour;
 % sin2T4_contour_1000 = S.sin2T4_contour;
 
-% change title and legend
+
+BKG = [0,0.01,0.1,0.22];
+savedir = [getenv('SamakPath'),'ksn2ana/ksn2_MTD/results/'];
+FakeFileName = extractAfter(func2str(FakeInitFile),'ref_');
+savename = sprintf('%sContour_%s_%s_Backgrounds.mat',savedir,strrep(freePar,' ',''),FakeFileName);
+save(savename,'sin2T4_contour_0','sin2T4_contour_10','sin2T4_contour_109','sin2T4_contour_reg',...
+    'mNu4Sq_contour_0','mNu4Sq_contour_10','mNu4Sq_contour_109','mNu4Sq_contour_reg',...
+    'BKG');
+
+%% change title and legend
 if ~contains(freePar,'mNu')
     title(sprintf('Simulation , {\\itm}_\\nu^2 = 0 eV^2'),'FontSize',get(gca,'FontSize'),'FontWeight','normal');
 else

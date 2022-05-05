@@ -1,6 +1,12 @@
 % look at sensitivity contour from KNM-2 like simulation with regular KSN2- MTD
 % but with 10mcps background
 FakeInitFile = @ref_KNM2_KATRIN_RegMTD_Bkg10mcps;
+savedir = [getenv('SamakPath'),'ksn2ana/ksn2_MTD/results/'];
+FakeFileName = extractAfter(func2str(FakeInitFile),'ref_');
+savename = sprintf('%sContour_%s_%s.mat',savedir,strrep(freePar,' ',''),FakeFileName);
+
+
+
 range = 40;
 freePar = 'E0 Norm Bkg';
 nGridSteps = 25;
@@ -31,3 +37,19 @@ SterileArg = {'RunAnaObj',F,... % Mother Object: defines RunList, Column Density
     'range',range};
 S = SterileAnalysis(SterileArg{:});
 S.GridSearch;
+%%
+S.LoadGridFile;
+S.Interp1Grid('Maxm4Sq',36^2);
+S.ContourPlot;
+%%
+sin2T4_contour = S.sin2T4_contour(:,2);
+mNu4Sq_contour = S.mNu4Sq_contour(:,2);
+MakeDir(savedir);
+save(savename,'sin2T4_contour','mNu4Sq_contour');
+
+
+%%
+GetFigure;
+plot(sin2T4_contour,mNu4Sq_contour);
+set(gca,'YScale','log');
+set(gca,'XScale','log');

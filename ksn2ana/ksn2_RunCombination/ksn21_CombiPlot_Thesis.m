@@ -2,7 +2,7 @@
 % in phd thesis
 % load results fro MiniFiles
 chi2 = 'chi2CMShape';
-DataType = 'Real';
+DataType = 'Twin';
 range = 40;
 BF = 'OFF';
 LocalFontSize = 19;
