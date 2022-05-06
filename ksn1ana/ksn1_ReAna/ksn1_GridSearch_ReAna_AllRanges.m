@@ -40,13 +40,13 @@ Real = MultiRunAnalysis(RunAnaArg{:});
 RangeStandard = Real.GetexclDataStart(40);
 qU = round(Real.RunData.qU-18575);
 ranges = sort(round(-qU(1:RangeStandard)));
-
-for i=ranges(end)%1:numel(ranges)
+%%
+for i=numel(ranges)%1:numel(ranges)
     if i>=2
-        Real = MultiRunAnalysis(RunAnaArg{:});
+       % Real = MultiRunAnalysis(RunAnaArg{:});
     end
     Real.exclDataStart = Real.GetexclDataStart(ranges(i));
-    %% configure Sterile analysis object
+    % configure Sterile analysis object
     SterileArg = {'RunAnaObj',Real,... % Mother Object: defines RunList, Column Density, Stacking Cuts,....
         'nGridSteps',nGridSteps,...
         'SmartGrid','OFF',...

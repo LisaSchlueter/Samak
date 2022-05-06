@@ -44,7 +44,6 @@ preg = S.ContourPlot('Color',rgb('DodgerBlue'),'LineStyle','-','HoldOn','OFF');
 % preg10 = S.ContourPlot('Color',rgb('HotPink'),'LineStyle','-.','HoldOn','ON');
 
 %% flat KNM-2 MTD
-pflat.delete;
 S.RunAnaObj.FakeInitFile = @ref_KNM2_KATRIN_FlatMTD;
 S.LoadGridFile
 S.Interp1Grid('Maxm4Sq',34.9^2);
@@ -56,11 +55,18 @@ pflat = S.ContourPlot('Color',rgb('Orange'),'LineStyle','-','HoldOn','ON');
 % S.Interp1Grid('Maxm4Sq',36^2);
 % plinflat = S.ContourPlot('Color',rgb('FireBrick'),'LineStyle','--','HoldOn','ON');
 
-% isostat KNM-2 MTD
-S.RunAnaObj.FakeInitFile = @ref_KNM2_KATRIN_IsoStatMTD;
-S.LoadGridFile
-S.Interp1Grid('Maxm4Sq',36^2);
+%% isostat KNM-2 MTD
+piso.delete;
+S.RunAnaObj.FakeInitFile = @ref_KNM2_KATRIN_IsoStatMTD_new;
+S.LoadGridFile('mNu4SqTestGrid',2)
+S.Interp1Grid('Maxm4Sq',40^2);
 piso = S.ContourPlot('Color',rgb('ForestGreen'),'LineStyle',':','HoldOn','ON');
+
+
+S.RunAnaObj.FakeInitFile = @ref_KNM2_KATRIN_IsoStatMTD_Bkg0mcps_new;
+S.LoadGridFile('mNu4SqTestGrid',2)
+S.Interp1Grid('Maxm4Sq',40^2);
+piso2 = S.ContourPlot('Color',rgb('FireBrick'),'LineStyle','-.','HoldOn','ON');
 %% change title and legend
 if ~contains(freePar,'mNu')
     title(sprintf('Simulation , {\\itm}_\\nu^2 = 0 eV^2'),'FontSize',get(gca,'FontSize'),'FontWeight','normal');

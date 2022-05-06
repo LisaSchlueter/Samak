@@ -97,7 +97,16 @@ switch KSN1config
         S.InterpMode = 'spline';
         % load map
         S.LoadGridFile(S.LoadGridArg{:});
+         S.Interp1Grid('RecomputeFlag','ON','Maxm4Sq',15^2);
+        S.FindBestFit;
+        chi2_bf = S.chi2_ref;
+        mNuSq_bf = S.mNuSq_bf;
+        sin2T4_bf = S.sin2T4_bf;
+         S.LoadGridFile(S.LoadGridArg{:});
         S.Interp1Grid('RecomputeFlag','ON','Maxm4Sq',36^2);
+        S.chi2_ref = chi2_bf;
+        S.mNuSq_bf = mNuSq_bf;
+        S.sin2T4_bf = sin2T4_bf;
 end
 
 if strcmp(DataType,'Real')
@@ -114,7 +123,7 @@ chi2ref_k1= S.chi2_ref;
 sum(sum(isnan(S.chi2)))
 
 % plot
-[p1tot,~,pbf1] = S.ContourPlot('BestFit',BF,'CL',95,'HoldOn','OFF','Color',rgb('FireBrick'),'LineStyle',':','MarkerStyle','*');
+[p1tot,~,pbf1] = S.ContourPlot('ReCalcBF','OFF','BestFit',BF,'CL',95,'HoldOn','OFF','Color',rgb('FireBrick'),'LineStyle',':','MarkerStyle','*');
 if strcmp(DataType,'Real')
     mNu4Sq_1_contour = S.mNu4Sq_contour;
     sin2T4_k1_contour = S.sin2T4_contour;
@@ -149,6 +158,7 @@ S.RunAnaObj.ModelObj.BKG_PtSlope = 3.*1e-06;
 S.RunAnaObj.chi2 = 'chi2CMShape';
 S.LoadGridFile('CheckLarger','OFF','mNu4SqTestGrid',5,'ExtmNu4Sq','OFF');            
 S.Interp1Grid('RecomputeFlag','ON');
+S.ContourPlot; close;
 mNu4Sq_k2 = S.mNu4Sq;
 sin2T4_k2 = S.sin2T4;
 chi2_k2   = S.chi2;

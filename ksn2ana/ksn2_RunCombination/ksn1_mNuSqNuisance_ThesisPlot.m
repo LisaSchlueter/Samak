@@ -180,7 +180,8 @@ if strcmp(DataType,'Real')
     tx4 = annotation('textbox',[0.235,0.68,0.05,0.05],'String',0,BoxArg{:});
 end
 
-% save
+return
+%% save
 axes.SortMethod='ChildOrder';
 name_i = strrep(S.DefPlotName,'_mNuE0BkgNorm','');
 plotname = sprintf('%s_mNuSqOverviewmNuSq_%.2gCL.png',name_i,S.ConfLevel);
