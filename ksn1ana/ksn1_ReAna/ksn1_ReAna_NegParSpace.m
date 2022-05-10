@@ -3,14 +3,15 @@
 DataType              = 'Real';
 range                 = 40;
 chi2                  = 'chi2CMShape';
-freePar               = 'mNu E0 Norm Bkg';
+freePar               = 'E0 Norm Bkg';
+Mode = 'Disp';
 
 if contains(freePar,'mNu')
     nGridSteps = 40;
     Extsin2T4 = 'OFF';
 else
     nGridSteps = 30;
-     Extsin2T4 = 'ON';
+    Extsin2T4 = 'ON';
 end
 
 % configure RunAnalysis object
@@ -49,21 +50,26 @@ A = MultiRunAnalysis(RunAnaArg{:});
 S = SterileAnalysis('RunAnaObj',A,SterileArg{:});
 
 %%
-S.GridSearch(CommonArg {:},'Extsin2T4',Extsin2T4);
-
-A = MultiRunAnalysis(RunAnaArg{:});
-S = SterileAnalysis('RunAnaObj',A,SterileArg{:});
-S.GridSearch(CommonArg {:},'Negsin2T4','ON','Extsin2T4','OFF');
-
-A = MultiRunAnalysis(RunAnaArg{:});
-S = SterileAnalysis('RunAnaObj',A,SterileArg{:});
-S.GridSearch(CommonArg {:},'NegmNu4Sq','ON','Extsin2T4',Extsin2T4);
-
-A = MultiRunAnalysis(RunAnaArg{:});
-S = SterileAnalysis('RunAnaObj',A,SterileArg{:});
-S.GridSearch(CommonArg {:},'Negsin2T4','ON','NegmNu4Sq','ON','Extsin2T4','OFF');
-
-
+switch Mode
+    case 'Calc'
+        S.GridSearch(CommonArg {:},'Extsin2T4',Extsin2T4);
+        
+        A = MultiRunAnalysis(RunAnaArg{:});
+        S = SterileAnalysis('RunAnaObj',A,SterileArg{:});
+        S.GridSearch(CommonArg {:},'Negsin2T4','ON','Extsin2T4','OFF');
+        
+        A = MultiRunAnalysis(RunAnaArg{:});
+        S = SterileAnalysis('RunAnaObj',A,SterileArg{:});
+        S.GridSearch(CommonArg {:},'NegmNu4Sq','ON','Extsin2T4',Extsin2T4);
+        
+        A = MultiRunAnalysis(RunAnaArg{:});
+        S = SterileAnalysis('RunAnaObj',A,SterileArg{:});
+        S.GridSearch(CommonArg {:},'Negsin2T4','ON','NegmNu4Sq','ON','Extsin2T4','OFF');
+        
+    case 'Disp'
+        S.LoadGridArg = CommonArg;
+        S.PlotQuadrant('SavePlot','png')
+end
 %%
 % S.LoadGridArg = CommonArg;
 % S.PlotQuadrant('SavePlot','OFF');

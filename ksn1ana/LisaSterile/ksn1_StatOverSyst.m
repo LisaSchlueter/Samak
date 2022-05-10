@@ -3,7 +3,7 @@
 % Lisa, April 2020
 %% settings
 
-CL  =95;%68.27;        % 1 sigma
+CL  =68.27;        % 1 sigma
 Npar = 1;           % confidence level condition for Npar parameter
 SavePlot = 'OFF';
 PlotSplines = 'ON'; % plot smooth spline instead of points -> fails for closed contours

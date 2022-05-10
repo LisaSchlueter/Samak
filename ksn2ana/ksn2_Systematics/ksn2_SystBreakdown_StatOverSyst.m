@@ -9,7 +9,7 @@ DataType = 'Twin';
 nGridSteps = 30;
 range = 40;
 InterpMode = 'spline';
-CL =  0.95;%chi2cdf(1,1);
+CL = chi2cdf(1,1);
 
 savedir = [getenv('SamakPath'),'ksn2ana/ksn2_Systematics/results/'];
 savename = sprintf('%sksn2_SystBreakdown_StatOverSyst_%s_%.0feV_RasterScan%s_%sInterp_%.2gCL.mat',...

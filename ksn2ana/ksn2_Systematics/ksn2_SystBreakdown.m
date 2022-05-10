@@ -114,7 +114,7 @@ for i=1:numel(SysEffectsAll)
     end
 end
 
-%%
+%
 set(gca,'XScale','log');
 set(gca,'YScale','log');
 xlabel(sprintf('|{\\itU}_{e4}|^2'));
@@ -190,7 +190,8 @@ plotname999 = sprintf('%sBudget%.0f_SystBreakdownDiff.png',extractBefore(S.DefPl
 print(f999,plotname999,'-dpng','-r300');
 fprintf('save plot to %s \n',plotname999)
 
-% save zoom
+%% save zoom
+return
 ylim([250 400])
 xlim([1.5e-05 3.5e-02])
 plotname999 = sprintf('%sBudget%.0f_SystBreakdownDiffZoom.png',extractBefore(S.DefPlotName,'Budget'),A.SysBudget);

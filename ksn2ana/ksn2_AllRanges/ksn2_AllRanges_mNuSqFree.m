@@ -1,18 +1,13 @@
-% ksn2 chi2 grid - non physical parameter space 4 quadrants
-% ksn2 plot chi2 grid search
-% 4 quadrants
+% ksn2 90 eV range with free mNu
+% remove not converged grid point 
+% and plot contour
 %% settings that might change
 freePar = 'mNu E0 Norm Bkg';
 chi2 = 'chi2CMShape';
 DataType = 'Real';
+nGridSteps = 45;
+range = 90;
 
-range = 40;
-
-if contains(freePar,'mNu')
-    nGridSteps = 40;
-else
-    nGridSteps = 30;
-end
 %% configure RunAnalysis object
 if strcmp(chi2,'chi2Stat')
     NonPoissonScaleFactor = 1;
@@ -47,14 +42,42 @@ SterileArg = {... % Mother Object: defines RunList, Column Density, Stacking Cut
     'SysEffect','all',...
     'RandMC','OFF',...
     'range',range,...
-    'LoadGridArg',{'ExtmNu4Sq','ON','mNu4SqTestGrid',5},...
+    'LoadGridArg',{'ExtmNu4Sq','OFF','mNu4SqTestGrid',5},...
     'InterpMode','lin'};
 S = SterileAnalysis('RunAnaObj',A,SterileArg{:});
+
 %%
-[sin2T4_bf,mNu4Sq_bf,chi2_bf,DeltaChi2,Sigma] = S.PlotQuadrant('SavePlot','png');
-% NE,NW,SW,SE
-% load
+S.InterpMode = 'spline';
+S.LoadGridFile(S.LoadGridArg{:});
+S.Interp1Grid;
+S.GridPlot('Contour','ON','BestFit','ON');
+%%
+S.InterpMode = 'lin';
+S.Interp1Grid('nInter',70)
+S.GridPlot('Contour','ON');
+chi2_ref = S.chi2_ref;
 
-% find best fit
+S.sin2T4 = S.sin2T4';
+S.mNu4Sq = S.mNu4Sq';
+%S.chi2 = S.chi2';
+S.InterpMode = 'spline';
+S.Interp1Grid('nInter',1000)
+S.chi2_ref = chi2_ref;
+S.GridPlot('Contour','ON');
 
-% plot
+%%
+
+%  
+% S.mNu4Sq(:,13) = [];
+% S.sin2T4(:,13) = [];
+% S.chi2(13,:) = [];
+
+S.Interp1Grid;
+S.chi2_ref = 27;
+S.ConfLevel = 99;
+S.GridPlot('BestFit','ON');
+
+
+
+
+

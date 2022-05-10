@@ -49,8 +49,9 @@ end
 ylabel(sprintf('{\\itm}_4^2 (eV^{ 2})'));
 xlim([2e-04 0.5]);
 ylim([1.3 38^2])
-PRLFormat;
-set(gca,'FontSize',LocalFontSize);
+% PRLFormat;
+% set(gca,'FontSize',LocalFontSize);
+PrettyFigureFormat('FontSize',LocalFontSize);
 set(gca,'XScale','log');
 set(gca,'YScale','log');
 ax1 = gca;
@@ -99,8 +100,9 @@ end
 pStat = plot(d.sin2t4_Stat(1,:).^2./d.sin2t4_Tot(1,:).^2,d.mNu4Sq(1,:),...
     'LineWidth',3,'Color',rgb('Silver'),'LineStyle','-');
 xlabel(sprintf('\\sigma^2 / \\sigma_{total}^2'))
-PRLFormat;
-set(gca,'FontSize',LocalFontSize);
+PrettyFigureFormat('FontSize',LocalFontSize);
+%PRLFormat;
+%set(gca,'FontSize',LocalFontSize);
 set(gca,'XScale','lin');
 set(gca,'YScale','log');
 linkaxes([s1,s2],'y');
@@ -121,8 +123,11 @@ ax2.Position(3) = 0.22;%19;
 ax2.Position(1) = 0.61;
 
 leg.NumColumns = 3;
-leg.Position(1) = 0.058;%3;
-leg.FontSize = LocalFontSize; %16.5
+%leg.Position(1) = 0.058;%3;
+%leg.FontSize = LocalFontSize; %16.5
+leg.FontSize = 14.4;
+leg.Position(1) = 0.053;
+leg.Position(2) = 0.71;
 
 ax1.XLabel.FontSize = LocalFontSize;
 ax1.YLabel.FontSize = LocalFontSize;

@@ -5,9 +5,11 @@ DataType = 'Twin';
 nGridSteps = 30;
 range = 40;
 InterpMode = 'spline';
+CL = chi2cdf(1,1);
+
 savedir = [getenv('SamakPath'),'ksn2ana/ksn2_Systematics/results/'];
-savename = sprintf('%sksn2_SystBreakdown_StatOverSyst_%s_%.0feV_RasterScan%s_%sInterp.mat',...
-    savedir,DataType,range,'ON',InterpMode);
+savename = sprintf('%sksn2_SystBreakdown_StatOverSyst_%s_%.0feV_RasterScan%s_%sInterp_%.2gCL.mat',...
+    savedir,DataType,range,'ON',InterpMode,CL);
 if exist(savename,'file')
     d = importdata(savename);
     fprintf('load file %s \n',savename);
@@ -31,12 +33,12 @@ Summary = [StatAll,StatLow,StatUp;SysAll',SysLow',SysUp'];
 %% print
 fprintf('===================================================================================  \n');
 fprintf('                                   Median all      ,    Median m4^2<600 eV^2   , Median m4^2>600 eV^2\n');
-fprintf('Stat. only               :           %.3f         ,     %.3f                  , %.3f \n',Summary(1,:));
+fprintf('Stat. only               :           %.2f         ,     %.2f                  , %.2f \n',Summary(1,:));
 for i=1:d.nSys
     labeltmp = d.SysEffectLabel{i};
     if numel(labeltmp)<25
         labeltmp = [labeltmp,'                                    '];
     end
-fprintf('%s:           %.3f         ,     %.3f                  , %.3f \n',labeltmp(1:25),Summary(i+1,:))
+fprintf('%s:           %.2f         ,     %.2f                  , %.2f \n',labeltmp(1:25),Summary(i+1,:))
 end
 fprintf('===================================================================================  \n');

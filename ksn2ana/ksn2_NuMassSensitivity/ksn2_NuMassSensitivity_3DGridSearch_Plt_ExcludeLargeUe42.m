@@ -2,7 +2,7 @@
 % perform grid searches for differed nu-masses
 % exclude large mixings
 %% settings that might change
-DataType = 'Twin';
+DataType = 'Real';
 switch DataType
     case 'Twin'
         FixmNuSq_all = -1.0:0.1:1.5;
