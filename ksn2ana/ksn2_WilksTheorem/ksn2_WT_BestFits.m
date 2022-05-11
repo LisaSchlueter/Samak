@@ -12,14 +12,21 @@ switch Hypothesis
         Twin_sin2T4 = 0;
         Twin_mNu4Sq = 0;
         chi2 = 'chi2CMShape';
-       randMC_new  = [1:1250];
-    case 'H1' 
+        randMC_new  = [1:1250];
+    case 'H1'
         randMC = [1:1500];
         Twin_sin2T4 = 0.0240;
         Twin_mNu4Sq = 92.7;
         chi2 = 'chi2CMShape';
         MergeNew = 'OFF'; % nothing new
         NrandMC = numel(randMC);
+    case 'H2'
+        randMC      = 1:1500;
+        Twin_sin2T4 = 0.07;
+        Twin_mNu4Sq = 20;
+        chi2        = 'chi2CMShape';
+        MergeNew    = 'OFF'; % nothing new
+          NrandMC = numel(randMC);
 end
 
 if strcmp(MergeNew,'ON')
@@ -72,11 +79,13 @@ ylabel(sprintf('{\\itm}_4^2 (eV^2)'));
 
 xlim([1e-03,0.5]);
 ylim([0.1,2000]);
-leg = legend([h,pAsimov],sprintf('Best fits %.0f pseudo-experiments',NrandMC),sprintf('Sensitivity (%.0f%% C.L.)',95),'EdgeColor',rgb('Silver'),'Location','southwest');
+leg = legend([h,pAsimov],sprintf('Best fits %.0f pseudo-experiments',NrandMC),sprintf('KNM2 sensitivity at %.0f%% C.L.',95),'EdgeColor',rgb('Silver'),'Location','southwest');
 PrettyLegendFormat(leg);
 
 if strcmp(SavePlt,'ON')
-    plotnameContourBf = strrep(strrep(savefile,'results','plots'),'.mat','_BestFits.png');
+    %plotnameContourBf = strrep(strrep(savefile,'results','plots'),'.mat','_BestFits.png');
+    pltdir= strrep(savedir,'results','plots');
+    plotnameContourBf = sprintf('%sksn2_WT_BestFits%s',pltdir,Hypothesis);
     print(gcf,plotnameContourBf,'-dpng','-r450');
     fprintf('save plot to %s \n',plotnameContourBf);
 end

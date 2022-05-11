@@ -5,6 +5,7 @@ range                 = 40;
 chi2                  = 'chi2CMShape';
 freePar               = 'mNu E0 Norm Bkg';
 
+
 if contains(freePar,'mNu')
     nGridSteps = 40;
 else
@@ -40,10 +41,12 @@ Real = MultiRunAnalysis(RunAnaArg{:});
 RangeStandard = Real.GetexclDataStart(40);
 qU = round(Real.RunData.qU-18575);
 ranges = sort(round(-qU(1:RangeStandard)));
+
+
 %%
 for i=numel(ranges)%1:numel(ranges)
     if i>=2
-       % Real = MultiRunAnalysis(RunAnaArg{:});
+        % Real = MultiRunAnalysis(RunAnaArg{:});
     end
     Real.exclDataStart = Real.GetexclDataStart(ranges(i));
     % configure Sterile analysis object

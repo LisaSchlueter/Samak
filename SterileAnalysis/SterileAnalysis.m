@@ -471,7 +471,7 @@ classdef SterileAnalysis < handle
             
             fprintf('Grid interpolation sucessfull \n');
         end
-        function FindBestFit(obj,varargin)
+        function BestFit = FindBestFit(obj,varargin)
             % best fit parameters of m4 and sin2t4
             % based on interpolated grid
             p = inputParser;
@@ -544,6 +544,23 @@ classdef SterileAnalysis < handle
                 %                 obj.LoadGridFile;
                 %                 obj.Interp1Grid;
             end
+           
+            freePar = ConvertFixPar('FreePar',obj.RunAnaObj.fixPar,'Mode','Reverse','nPar',obj.RunAnaObj.nPar);
+            nqU = numel(obj.RunAnaObj.RunData.qU(obj.RunAnaObj.exclDataStart:end));
+            if contains(freePar,'mNu')
+                dof = nqU-6;
+            else
+                dof = nqU-5;
+            end
+            
+            
+            BestFit = struct('mNu4Sq',obj.mNu4Sq_bf,...
+                'sin2T4',obj.sin2T4_bf,...
+                'mNuSq',obj.mNuSq_bf,...
+                'E0',obj.E0_bf,...
+                'chi2min',obj.chi2_bf,...
+                'dof',dof);
+            
         end
         function [DeltaChi2, SignificanceBF,SignificanceSigma] = CompareBestFitNull(obj,varargin)
             if isempty(obj.chi2_bf)
@@ -661,21 +678,28 @@ classdef SterileAnalysis < handle
             
             NP_prev = obj.RunAnaObj.NonPoissonScaleFactor;
             
+            % stat. only
             obj.RunAnaObj.chi2 = 'chi2Stat';
             obj.RunAnaObj.NonPoissonScaleFactor = 1;
             obj.LoadGridFile(obj.LoadGridArg{:});
-            obj.Interp1Grid('RecomputeFlag','ON','nInter',1e3,'Maxm4Sq',38^2);
+            if strcmp(obj.RunAnaObj.DataSet,'Knm2')
+                Maxm4Sq = 38^2;
+            else
+                 Maxm4Sq = 36.5^2;
+            end
+            obj.Interp1Grid('RecomputeFlag','ON','nInter',1e3,'Maxm4Sq',Maxm4Sq);
             obj.ContourPlot('RasterScan',RasterScan); close;
             mNu4Sq_Stat = obj.mNu4Sq_contour;
             sin2t4_Stat = obj.sin2T4_contour;
             
+            % stat + syst.
             if ~strcmp(obj.SysEffect,'NP')
                 obj.RunAnaObj.chi2 = 'chi2CMShape';
             end
             obj.RunAnaObj.NonPoissonScaleFactor = NP_prev;
             obj.LoadGridFile(obj.LoadGridArg{:});
-            obj.Interp1Grid('RecomputeFlag','ON','nInter',1e3,'Maxm4Sq',38^2);
-            obj.ContourPlot('RasterScan',RasterScan); close;
+            obj.Interp1Grid('RecomputeFlag','ON','nInter',1e3,'Maxm4Sq',Maxm4Sq);
+            obj.ContourPlot('RasterScan',RasterScan,'HoldOn','OFF','LineStyle',':','Color',rgb('Orange')); close;
             mNu4Sq_Tot = obj.mNu4Sq_contour;
             sin2t4_Tot = obj.sin2T4_contour;
             
@@ -3229,10 +3253,13 @@ classdef SterileAnalysis < handle
                 extraStr = [extraStr,sprintf('_FixmNuSq%.2feV2',FixmNuSq)];
             end
             
-            if strcmp(obj.RunAnaObj.DataSet,'Knm1')
-                if  obj.RunAnaObj.NonPoissonScaleFactor~=1 && obj.RunAnaObj.NonPoissonScaleFactor~=1.064
-                    extraStr = [extraStr,sprintf('_NP%.3f',obj.RunAnaObj.NonPoissonScaleFactor)];
-                end
+            if strcmp(obj.RunAnaObj.DataSet,'Knm1') 
+                if strcmp(obj.RunAnaObj.chi2,'chi2Stat') && obj.RunAnaObj.NonPoissonScaleFactor~=1
+                    extraStr = [extraStr,sprintf('_NP%.4g',obj.RunAnaObj.NonPoissonScaleFactor)];
+                elseif strcmp(obj.RunAnaObj.chi2,'chi2CMShape') && obj.RunAnaObj.NonPoissonScaleFactor~=1.064
+                    extraStr = [extraStr,sprintf('_NP%.4g',obj.RunAnaObj.NonPoissonScaleFactor)];
+                end      
+                 
                 if obj.RunAnaObj.ModelObj.BKG_PtSlope ~=0
                     % twin (KNM-2): twin or model BKG_PtSlope not default 3e-06
                     extraStr = [extraStr,sprintf('_BkgPtSlope%.3gmuCpsS',...

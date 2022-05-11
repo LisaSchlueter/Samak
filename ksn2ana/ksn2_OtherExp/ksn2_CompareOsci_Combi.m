@@ -136,20 +136,19 @@ if LegLog==2
    ax.Position(2) = 0.2;
    ax.Position(4) = 0.65;
    ax.Position(3) = 0.45;
-   LocalFontSize = 12;
+   LocalFontSize = 13;
    leg.FontSize = LocalFontSize;
 end
-
-set(gca,'FontSize',LocalFontSize);
-ax.XLabel.FontSize = LocalFontSize;
-ax.YLabel.FontSize = LocalFontSize;
-ColorOsci_i = arrayfun(@(x) x.Color,legHandleAll(1:8),'UniformOutput',false);
-%% some modifications for snowmass
-
 PrettyFigureFormat;
+set(gca,'FontSize',LocalFontSize);
+ax.XLabel.FontSize = LocalFontSize+2;
+ax.YLabel.FontSize = LocalFontSize+2;
+ColorOsci_i = arrayfun(@(x) x.Color,legHandleAll(1:8),'UniformOutput',false);
+% some modifications for snowmass
+
 ax.Position(1) = 0.1;
-leg.FontSize = 15.5;
-set(gca,'TickDir','out');
+%leg.FontSize = 15.5;
+%set(gca,'TickDir','out');
 
 % permute oscillation exp colors
 ColorOsci = ColorOsci_i{5};
@@ -165,7 +164,7 @@ legHandleAll(11).Color = legHandleAll(12).Color;
 legHandleAll(12).Color = rgb('Salmon');
 legHandleAll(13).Color= rgb('DarkTurquoise');
 legHandleAll(15).Color ='k';
-
+%
 plotname = sprintf('%sKSN2_Comparison_%.2gCL.pdf',extractBefore(S.DefPlotName,'GridSearch'),S.ConfLevel);
 export_fig(gcf,plotname);
 fprintf('save plot to %s \n',plotname)         

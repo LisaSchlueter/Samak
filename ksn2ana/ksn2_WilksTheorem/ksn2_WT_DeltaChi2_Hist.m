@@ -1,7 +1,7 @@
 % Test of Wilk's theorem (coverage)
 % chi2 distribution of best fits
 Hypothesis = 'H2';
-InterpMode = 'lin';
+InterpMode = 'Mix';
 SavePlt = 'ON';
 MergeNew = 'ON';
 RmDuplicates = 'ON';
@@ -61,24 +61,38 @@ chi2_delta(chi2_delta<0) = 0;
 plotdir = strrep(savedir,'results','plots');
 MakeDir(plotdir);
 %chi2_delta = ReCalc_chi2Null_i- chi2_bf;
-GetFigure;
+f1 = figure('Units','normalized','Position',[0.1,0.1,0.5,0.45]);
 % chi2_delta(chi2_delta<0) = 0;
-hchi2 = histogram(chi2_delta,'BinWidth',0.3,...
+hchi2 = histogram(chi2_delta,'BinWidth',0.4,...
     'FaceAlpha',1,'FaceColor',rgb('DeepSkyBlue'),'EdgeColor',rgb('SteelBlue'),'Normalization','probability');
 hold on;
+
 x = linspace(0,dof*10,1e3);
 y = chi2pdf(x,dof);
 pchi2 = plot(x,y*hchi2.BinWidth,'Color',rgb('Black'),'LineWidth',2);
-PrettyFigureFormat('FontSize',22);
-xlabel(sprintf('\\chi^2_{null} - \\chi^2_{min} (%.0f dof)',dof));
-ylabel('Frequency');
-%title(resultsStr,'FontWeight','normal','FontSize',get(gca,'FontSize'))
-leg = legend([hchi2,pchi2],sprintf('%.0f pseudo-experiments',numel(chi2_bf)),...
-                 sprintf('\\chi^2 distribution for %.0f dof',dof),...
-                 'EdgeColor',rgb('Silver'));
-xlim([0 15]);
 
-plotnameChi2 = strrep(strrep(savefile,'results','plots'),'.mat','_DeltaChi2Dist.png');
-print(gcf,plotnameChi2,'-dpng','-r450');
-fprintf('save plot to %s \n',plotnameChi2);
+xlabel(sprintf('\\Delta\\chi^2'));
+ylabel('Frequency');
+PrettyFigureFormat('FontSize',24);
+%title(resultsStr,'FontWeight','normal','FontSize',get(gca,'FontSize'))
+pNone = plot(NaN,NaN,'w','LineStyle','none');
+leg = legend([hchi2,pNone,pchi2],sprintf('%.0f KNM2 pseudo-experiments',numel(chi2_bf)),...
+    sprintf('with MC truth: {\\itm}_4^2 = %.3g eV^2, |{\\itU}_{e4}|^2 = %.2g',Twin_mNu4Sq,Twin_sin2T4),...
+                 sprintf('Chi-squared distribution for %.0f dof',dof),...
+                 'EdgeColor',rgb('Silver'));
+PrettyLegendFormat(leg);
+leg.FontSize = get(gca,'FontSize')+2;
+xlim([0 15]);
+%%
+%pltname = strrep(strrep(savefile,'results','plots'),'.mat','_DeltaChi2Dist.png');
+%print(gcf,pltname,'-dpng','-r450');
+ pltdir= strrep(savedir,'results','plots');
+ pltname = sprintf('%sksn2_WT_DeltaChi2Hist%s.pdf',pltdir,Hypothesis);
+   export_fig(pltname);
+    
+
+fprintf('save plot to %s \n',pltname);
 %export_fig(gcf,strrep(plotnameChi2,'.png','.pdf'));
+%%
+
+ 

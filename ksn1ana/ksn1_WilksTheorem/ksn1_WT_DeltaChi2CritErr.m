@@ -1,59 +1,33 @@
-% estimate uncertainty on delta chi^2 crit. with bootstrapping
-Hypothesis = 'H2';
-SavePlt = 'ON';
-MergeNew = 'ON';
-RmDuplicates = 'ON';
+range = 40;%
+SavePlt = 'OFF';
+chi2Str = 'chi2CMShape';
+InterpMode = 'lin';
+savedir = [getenv('SamakPath'),'ksn1ana/ksn1_WilksTheorem/results/'];
+MakeDir(savedir);
+savename = sprintf('%sksn1_WilksTheorem_%.0frange_%s_%s.mat',savedir,range,chi2Str,InterpMode);
 
-Mode = 'Empirical';%'Theo';% use theoretical chi^2 function'Empirical';
-
-switch Hypothesis
-    case 'H0'
-        randMC =[1001:1260,1294:1300,1349:1500];%11:1e3;
-        Twin_sin2T4 = 0;
-        Twin_mNu4Sq = 0;
-        chi2 = 'chi2CMShape';
-        randMC_new  = 1:1250;
-        InterpMode = 'lin';
-    case 'H1'
-        randMC = 1:1500;
-        Twin_sin2T4 = 0.0240;
-        Twin_mNu4Sq = 92.7;
-        chi2 = 'chi2CMShape';
-        MergeNew = 'OFF'; % nothing new
-        InterpMode = 'Mix';
-    case 'H2'
-        randMC      = 1:1500;
-        Twin_sin2T4 = 0.07;
-        Twin_mNu4Sq = 20;
-        chi2        = 'chi2CMShape';
-        MergeNew    = 'OFF'; % nothing new
-end
-
-if strcmp(MergeNew,'ON')
-    MergeStr = sprintf('_MergeNew%.0f',numel(randMC_new));
-    NrandMC = numel(randMC)+numel(randMC_new);
+if exist(savename,'file')
+    d = importdata(savename);
+    fprintf('load %s\n',savename);
 else
-    MergeStr = '';
-    NrandMC = numel(randMC);
-end
-
-savedir = [getenv('SamakPath'),'ksn2ana/ksn2_WilksTheorem/results/'];
-
-if Twin_sin2T4==0 && Twin_mNu4Sq==0
-    savefile = sprintf('%sksn2_WilksTheorem_NullHypothesis_Interp%s_%.0fsamples%s_RmDouble%s.mat',...
-        savedir,InterpMode,numel(randMC),MergeStr,RmDuplicates);
-else
-    savefile = sprintf('%sksn2_WilksTheorem_mNu4Sq-%.1feV2_sin2T4-%.3g_Interp%s_%.0fsamples.mat',...
-        savedir,Twin_mNu4Sq,Twin_sin2T4,InterpMode,numel(randMC));
-end
-
-if exist(savefile,'file')
-    load(savefile);
-    fprintf('load file from %s \n',savefile);
-else
-    fprintf('file does not exist: %s \n',savefile);
+    fprintf(2,'file not found, run ksn1_WT_MergeFiles.m \n');
     return
 end
+
+chi2_delta = d.chi2min_null-d.chi2min_bf;
+%% DeltaChi2 distribution (best fit - null chi2)
+dof = 2;
+chi2_delta(chi2_delta<0) = 0;
+PlotDeltaChi2 = sort(chi2_delta);%unique(chi2_delta);%
+DeltaChi2CDF = arrayfun(@(x) sum(PlotDeltaChi2<=x)./numel(PlotDeltaChi2),PlotDeltaChi2);
+
+% calculate 95 quantile: interpolation
+[DeltaChi2CDFquantile,ia] = unique(DeltaChi2CDF);
+DeltaChi2CrApprox = interp1(DeltaChi2CDFquantile,PlotDeltaChi2(ia),0.95,'lin');%quantile(PlotDeltaChi2,0.95);% PlotDeltaChi2(find(abs(DeltaChi2CDF-0.95)==min(abs(DeltaChi2CDF-0.95)),1));
+x = linspace(0,max(PlotDeltaChi2),1e3);
+DeltaChi2CDFTheo = chi2cdf(x,dof);
+xInter = linspace(0,10,1e2);
+DeltaChi2CrTheo = interp1(chi2cdf(xInter,dof),xInter,0.95,'spline');
 
 %% mean: calculate 95 quantile: interpolation
 chi2_delta(chi2_delta<0) = 0;
@@ -64,7 +38,7 @@ DeltaChi2Cr = interp1(DeltaChi2CDFquantile,PlotDeltaChi2(ia),0.95,'spline');%qua
 
 if strcmp(Mode,'Empirical')
     %% bootstrapping error: re-sampling with double counting
-    nSamples = 1e3;
+    nSamples = 5e3;
     tmp                   = repmat(chi2_delta,1,nSamples);
     chi2_delta_resample   = tmp(randi(numel(chi2_delta),numel(chi2_delta),nSamples))+rand(numel(chi2_delta),nSamples).*1e-5; %
     chi2_delta_resample   = sort(chi2_delta_resample,1);
@@ -93,7 +67,7 @@ else
     u = linspace(0,1,1e3);
     chi2_delta_resample = interp1(cdf,x,rand(numel(chi2_delta),nSamples),'spline');
     DeltaChi2CDF_resample = zeros(nSamples,numel(chi2_delta));
-    
+     
     DeltaChi2Cr_reSample  = zeros(nSamples,1);
     DeltaChi2Cr_reSample2  = zeros(nSamples,1);
     for j=1:nSamples
@@ -107,21 +81,17 @@ else
     
     MeanChi2Crit = mean(DeltaChi2Cr_reSample);
     MedChi2Crit = median(DeltaChi2Cr_reSample);
-    StdChi2Crit =std(DeltaChi2Cr_reSample);
-    %     GetFigure
-    %     h1 = histogram(deltachi2_samples(:,1),'Normalization','probability');
-    %     hold on;
-    %     plot(x,pdf.*h1.BinWidth)
+    StdChi2Crit =std(DeltaChi2Cr_reSample);  
+%     GetFigure
+%     h1 = histogram(deltachi2_samples(:,1),'Normalization','probability');
+%     hold on;
+%     plot(x,pdf.*h1.BinWidth)
 end
 %%
 fprintf('delta chi^2 crit = %.2f (mean) %.2f (median) +- %.2f \n',MeanChi2Crit,MedChi2Crit,StdChi2Crit)
-GetFigure;
-histogram(DeltaChi2Cr_reSample,'FaceAlpha',0.2)
-hold on
-histogram(DeltaChi2Cr_reSample2,'FaceAlpha',0.2)
-hold off;
-legend('Interp','Quantile')
-
-
-
-
+% GetFigure;
+% histogram(DeltaChi2Cr_reSample,'FaceAlpha',0.2)
+% hold on
+% histogram(DeltaChi2Cr_reSample2,'FaceAlpha',0.2)
+% hold off;
+% legend('Interp','Quantile')

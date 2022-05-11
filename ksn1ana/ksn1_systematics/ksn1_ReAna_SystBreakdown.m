@@ -3,7 +3,7 @@
 nGridSteps            = 30;
 DataType              = 'Twin';
 range                 = 40;
-chi2                  = 'chi2CMShape';
+chi2                  = 'chi2Stat';
 freePar               = 'E0 Norm Bkg';
 %% configure RunAnalysis object
 
@@ -31,8 +31,11 @@ SterileArg = {'RunAnaObj',A,... % Mother Object: defines RunList, Column Density
     'RandMC','OFF',...
     'range',range};
 S = SterileAnalysis(SterileArg{:});
+S.LoadGridArg = {'ExtmNu4Sq','OFF','mNu4SqTestGrid',2};
+
 S.GridSearch('ExtmNu4Sq','OFF','mNu4SqTestGrid',2);
 
+return
 SysEffectsAll   = {'Stat','BkgPT','NP','FSD', 'RF_BF','Bkg','TASR','RF_EL',...
     'RF_RX','FPDeff','Stack','TCoff_OTHER','all'};
 
